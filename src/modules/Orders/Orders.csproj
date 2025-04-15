@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\Users\Users.csproj" />
+    <ProjectReference Include="..\Products\Products.csproj" />
+  </ItemGroup>
+
+</Project> 

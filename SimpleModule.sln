@@ -1,0 +1,64 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A1B2C3D4-E5F6-47A8-B9C0-D1E2F3A4B5C6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "modules", "modules", "{B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleModule.Core", "src\SimpleModule.Core\SimpleModule.Core.csproj", "{C1D2E3F4-G5H6-49C0-D1E2-F3A4B5C6D7E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleModule.Generator", "src\SimpleModule.Generator\SimpleModule.Generator.csproj", "{D1E2F3G4-H5I6-50D1-E2F3-A4B5C6D7E8F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleModule.Api", "src\SimpleModule.Api\SimpleModule.Api.csproj", "{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users", "src\modules\Users\Users.csproj", "{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Products", "src\modules\Products\Products.csproj", "{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders", "src\modules\Orders\Orders.csproj", "{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C1D2E3F4-G5H6-49C0-D1E2-F3A4B5C6D7E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1D2E3F4-G5H6-49C0-D1E2-F3A4B5C6D7E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1D2E3F4-G5H6-49C0-D1E2-F3A4B5C6D7E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1D2E3F4-G5H6-49C0-D1E2-F3A4B5C6D7E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1E2F3G4-H5I6-50D1-E2F3-A4B5C6D7E8F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1E2F3G4-H5I6-50D1-E2F3-A4B5C6D7E8F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1E2F3G4-H5I6-50D1-E2F3-A4B5C6D7E8F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1E2F3G4-H5I6-50D1-E2F3-A4B5C6D7E8F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C1D2E3F4-G5H6-49C0-D1E2-F3A4B5C6D7E8} = {A1B2C3D4-E5F6-47A8-B9C0-D1E2F3A4B5C6}
+		{D1E2F3G4-H5I6-50D1-E2F3-A4B5C6D7E8F9} = {A1B2C3D4-E5F6-47A8-B9C0-D1E2F3A4B5C6}
+		{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0} = {A1B2C3D4-E5F6-47A8-B9C0-D1E2F3A4B5C6}
+		{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
+		{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
+		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
+		{B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7} = {A1B2C3D4-E5F6-47A8-B9C0-D1E2F3A4B5C6}
+	EndGlobalSection
+EndGlobal
