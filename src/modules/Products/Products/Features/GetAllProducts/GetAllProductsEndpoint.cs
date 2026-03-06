@@ -9,10 +9,13 @@ public static class GetAllProductsEndpoint
 {
     public static void Map(IEndpointRouteBuilder group)
     {
-        group.MapGet("/", async (IProductContracts productContracts) =>
-        {
-            var products = await productContracts.GetAllProductsAsync();
-            return Results.Ok(products);
-        });
+        group.MapGet(
+            "/",
+            async (IProductContracts productContracts) =>
+            {
+                var products = await productContracts.GetAllProductsAsync();
+                return TypedResults.Ok(products);
+            }
+        );
     }
 }
