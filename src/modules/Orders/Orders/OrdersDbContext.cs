@@ -71,7 +71,9 @@ public class OrdersDbContext(
                 new Order
                 {
                     Id = i,
-                    UserId = orderFaker.Random.Int(1, 10),
+                    UserId = orderFaker
+                        .Random.Int(1, 10)
+                        .ToString(System.Globalization.CultureInfo.InvariantCulture),
                     Total = Math.Round(total, 2),
                     CreatedAt = orderFaker.Date.Recent(30).ToUniversalTime(),
                 }

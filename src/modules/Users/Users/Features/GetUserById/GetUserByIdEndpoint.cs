@@ -10,13 +10,18 @@ public static class GetUserByIdEndpoint
 {
     public static void Map(IEndpointRouteBuilder group)
     {
-        group.MapGet(
-            "/{id}",
-            async Task<Results<Ok<User>, NotFound>> (int id, IUserContracts userContracts) =>
-            {
-                var user = await userContracts.GetUserByIdAsync(id);
-                return user is not null ? TypedResults.Ok(user) : TypedResults.NotFound();
-            }
-        );
+        group
+            .MapGet(
+                "/{id}",
+                async Task<Results<Ok<UserDto>, NotFound>> (
+                    string id,
+                    IUserContracts userContracts
+                ) =>
+                {
+                    var user = await userContracts.GetUserByIdAsync(id);
+                    return user is not null ? TypedResults.Ok(user) : TypedResults.NotFound();
+                }
+            )
+            .RequireAuthorization();
     }
 }

@@ -9,13 +9,15 @@ public static class GetAllUsersEndpoint
 {
     public static void Map(IEndpointRouteBuilder group)
     {
-        group.MapGet(
-            "/",
-            async (IUserContracts userContracts) =>
-            {
-                var users = await userContracts.GetAllUsersAsync();
-                return TypedResults.Ok(users);
-            }
-        );
+        group
+            .MapGet(
+                "/",
+                async (IUserContracts userContracts) =>
+                {
+                    var users = await userContracts.GetAllUsersAsync();
+                    return TypedResults.Ok(users);
+                }
+            )
+            .RequireAuthorization();
     }
 }

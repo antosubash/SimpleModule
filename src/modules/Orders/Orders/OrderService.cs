@@ -79,7 +79,7 @@ public partial class OrderService(
     private static partial void LogOrderCreated(
         ILogger logger,
         int orderId,
-        int userId,
+        string userId,
         decimal total
     );
 }

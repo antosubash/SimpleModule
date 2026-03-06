@@ -1,0 +1,10 @@
+@page "/oauth-callback"
+@model SimpleModule.Api.Pages.OAuthCallbackModel
+@{
+    ViewData["Title"] = "Authenticating...";
+}
+<p style="text-align:center;color:#666;">Completing authentication...</p>
+<script>
+    // Forward the authorization code back to the index page
+    window.location.href = '/' + window.location.search;
+</script>

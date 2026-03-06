@@ -52,7 +52,7 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task CreateOrderAsync_WithValidUserAndProduct_CalculatesCorrectTotal()
     {
-        _users.GetUserByIdAsync(1).Returns(new User { Id = 1, Name = "Test" });
+        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
         _products
             .GetProductByIdAsync(1)
             .Returns(
@@ -66,25 +66,25 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = 1,
+            UserId = "1",
             Items = [new OrderItem { ProductId = 1, Quantity = 3 }],
         };
 
         var order = await _sut.CreateOrderAsync(request);
 
         order.Total.Should().Be(75.00m);
-        order.UserId.Should().Be(1);
+        order.UserId.Should().Be("1");
         order.Items.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task CreateOrderAsync_WithInvalidUser_ThrowsNotFoundException()
     {
-        _users.GetUserByIdAsync(999).Returns((User?)null);
+        _users.GetUserByIdAsync("999").Returns((UserDto?)null);
 
         var request = new CreateOrderRequest
         {
-            UserId = 999,
+            UserId = "999",
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
@@ -96,12 +96,12 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task CreateOrderAsync_WithInvalidProduct_ThrowsNotFoundException()
     {
-        _users.GetUserByIdAsync(1).Returns(new User { Id = 1, Name = "Test" });
+        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
         _products.GetProductByIdAsync(999).Returns((Product?)null);
 
         var request = new CreateOrderRequest
         {
-            UserId = 1,
+            UserId = "1",
             Items = [new OrderItem { ProductId = 999, Quantity = 1 }],
         };
 
@@ -121,7 +121,7 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task GetOrderByIdAsync_ReturnsMatchingOrder()
     {
-        _users.GetUserByIdAsync(1).Returns(new User { Id = 1, Name = "Test" });
+        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
         _products
             .GetProductByIdAsync(1)
             .Returns(
@@ -135,7 +135,7 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = 1,
+            UserId = "1",
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 

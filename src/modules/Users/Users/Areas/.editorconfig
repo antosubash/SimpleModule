@@ -1,0 +1,11 @@
+# Scaffolded Identity UI pages — suppress code analysis warnings
+[*.cs]
+dotnet_diagnostic.CA1054.severity = none
+dotnet_diagnostic.CA1056.severity = none
+dotnet_diagnostic.CA1307.severity = none
+dotnet_diagnostic.CA1308.severity = none
+dotnet_diagnostic.CA1819.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1863.severity = none
+dotnet_diagnostic.CA1873.severity = none
+dotnet_diagnostic.IDE0161.severity = none
