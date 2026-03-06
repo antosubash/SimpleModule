@@ -12,7 +12,10 @@ public static class GetProductByIdEndpoint
     {
         group.MapGet(
             "/{id}",
-            async Task<Results<Ok<Product>, NotFound>> (int id, IProductContracts productContracts) =>
+            async Task<Results<Ok<Product>, NotFound>> (
+                int id,
+                IProductContracts productContracts
+            ) =>
             {
                 var product = await productContracts.GetProductByIdAsync(id);
                 return product is not null ? TypedResults.Ok(product) : TypedResults.NotFound();

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="1.1.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="FluentAssertions" Version="8.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\modules\Users\Users\Users.csproj" />
+    <ProjectReference Include="..\..\..\src\modules\Users\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
+  </ItemGroup>
+</Project>
