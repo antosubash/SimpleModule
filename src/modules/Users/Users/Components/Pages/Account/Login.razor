@@ -1,0 +1,145 @@
+@page "/Identity/Account/Login"
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager Navigation
+
+<PageTitle>Log in - SimpleModule</PageTitle>
+
+<h1>Log in</h1>
+<div>
+    <div>
+        <section>
+            <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+                <DataAnnotationsValidator />
+                <h2>Use a local account to log in.</h2>
+                <hr />
+                <ValidationSummary class="text-danger" role="alert" />
+                @if (_errors.Count > 0)
+                {
+                    <div class="text-danger" role="alert">
+                        <ul style="list-style:none;padding:0;">
+                            @foreach (var error in _errors)
+                            {
+                                <li>@error</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label for="Input.Email" class="form-label">Email</label>
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                </div>
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.Password" type="password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <label for="Input.Password" class="form-label">Password</label>
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
+                </div>
+                <div class="checkbox mb-3">
+                    <label class="form-label">
+                        <InputCheckbox @bind-Value="Input.RememberMe" class="form-check-input" />
+                        Remember me?
+                    </label>
+                </div>
+                <div>
+                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                </div>
+                <div>
+                    <p><a href="/Identity/Account/ForgotPassword">Forgot your password?</a></p>
+                    <p><a href="/Identity/Account/Register?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">Register as a new user</a></p>
+                    <p><a href="/Identity/Account/ResendEmailConfirmation">Resend email confirmation</a></p>
+                </div>
+            </EditForm>
+        </section>
+    </div>
+    <div>
+        <section>
+            <h3>Use another service to log in.</h3>
+            <hr />
+            @if (_externalLogins.Count == 0)
+            {
+                <div>
+                    <p>There are no external authentication services configured.</p>
+                </div>
+            }
+            else
+            {
+                <form id="external-account" action="/Identity/Account/ExternalLogin" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="returnUrl" value="@(ReturnUrl ?? "/")" />
+                    <div>
+                        <p>
+                            @foreach (var provider in _externalLogins)
+                            {
+                                <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                            }
+                        </p>
+                    </div>
+                </form>
+            }
+        </section>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromForm]
+    public InputModel Input { get; set; } = default!;
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private IList<AuthenticationScheme> _externalLogins = [];
+    private readonly List<string> _errors = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        if (HttpContext is not null)
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+        _externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+    }
+
+    private async Task LoginUser()
+    {
+        var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in.");
+            Navigation.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+            return;
+        }
+        if (result.RequiresTwoFactor)
+        {
+            Navigation.NavigateTo($"/Identity/Account/LoginWith2fa?returnUrl={Uri.EscapeDataString(ReturnUrl ?? "/")}&rememberMe={Input.RememberMe}", forceLoad: true);
+            return;
+        }
+        if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            Navigation.NavigateTo("/Identity/Account/Lockout", forceLoad: true);
+            return;
+        }
+        _errors.Add("Invalid login attempt.");
+    }
+
+    public sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+    }
+}
+
+@using Microsoft.AspNetCore.Authentication

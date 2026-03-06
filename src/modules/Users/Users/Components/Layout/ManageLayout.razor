@@ -1,0 +1,27 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<h1>Manage your account</h1>
+
+<div>
+    <h2>Change your account settings</h2>
+    <hr />
+    <div style="display:flex;gap:24px;">
+        <div style="min-width:180px;">
+            <ManageNav ActivePage="@GetActivePage()" />
+        </div>
+        <div style="flex:1;">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    private string GetActivePage()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var path = uri.AbsolutePath.TrimEnd('/');
+        var lastSegment = path.Split('/').LastOrDefault() ?? "";
+        return lastSegment == "Manage" ? "Index" : lastSegment;
+    }
+}

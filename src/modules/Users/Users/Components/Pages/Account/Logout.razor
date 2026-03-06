@@ -1,0 +1,36 @@
+@page "/Identity/Account/Logout"
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Logout> Logger
+@inject NavigationManager Navigation
+
+<PageTitle>Log out - SimpleModule</PageTitle>
+
+<header>
+    <h1>Log out</h1>
+    @if (HttpContext?.User?.Identity?.IsAuthenticated == true)
+    {
+        <form method="post" @formname="logout" @onsubmit="OnSubmitAsync">
+            <AntiforgeryToken />
+            <button type="submit" class="btn btn-primary">Click here to Logout</button>
+        </form>
+    }
+    else
+    {
+        <p>You have successfully logged out of the application.</p>
+    }
+</header>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private async Task OnSubmitAsync()
+    {
+        await SignInManager.SignOutAsync();
+        Logger.LogInformation("User logged out.");
+        Navigation.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
+    }
+}

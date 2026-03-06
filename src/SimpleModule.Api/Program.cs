@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
+using SimpleModule.Api.Components;
 using SimpleModule.Core;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
@@ -36,9 +38,10 @@ builder.Services.AddSwaggerGen(options =>
     );
     options.AddSecurityRequirement(doc =>
     {
-        var scheme = doc.Components?.SecuritySchemes?.ContainsKey("oauth2") == true
-            ? new OpenApiSecuritySchemeReference("oauth2", doc)
-            : null;
+        var scheme =
+            doc.Components?.SecuritySchemes?.ContainsKey("oauth2") == true
+                ? new OpenApiSecuritySchemeReference("oauth2", doc)
+                : null;
         if (scheme is null)
             return new OpenApiSecurityRequirement();
         return new OpenApiSecurityRequirement { { scheme, ["openid", "profile", "email"] } };
@@ -47,8 +50,8 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-// Razor Pages for Identity UI
-builder.Services.AddRazorPages();
+// Blazor SSR
+builder.Services.AddRazorComponents();
 
 // Register event bus
 builder.Services.AddScoped<IEventBus, EventBus>();
@@ -56,11 +59,23 @@ builder.Services.AddScoped<IEventBus, EventBus>();
 // Register all modules
 builder.Services.AddModules(builder.Configuration);
 
-// Override default auth scheme — OpenIddict validation for Bearer tokens
+// Smart auth: Bearer header → OpenIddict validation; otherwise → Identity cookies
+builder.Services.AddAuthentication()
+    .AddPolicyScheme("SmartAuth", null!, options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+            if (authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true)
+                return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+            return IdentityConstants.ApplicationScheme;
+        };
+    });
 builder.Services.Configure<AuthenticationOptions>(options =>
 {
-    options.DefaultAuthenticateScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    options.DefaultScheme = "SmartAuth";
+    options.DefaultAuthenticateScheme = "SmartAuth";
+    options.DefaultChallengeScheme = "SmartAuth";
 });
 builder.Services.AddAuthorization();
 
@@ -91,12 +106,14 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
 
 // Health endpoints
 app.MapHealthChecks("/health");
 
-// Identity UI pages
-app.MapRazorPages();
+// Blazor SSR
+app.MapRazorComponents<App>()
+    .AddAdditionalAssemblies(typeof(SimpleModule.Users.UsersModule).Assembly);
 
 // Automatically map all module endpoints
 app.MapModuleEndpoints();
