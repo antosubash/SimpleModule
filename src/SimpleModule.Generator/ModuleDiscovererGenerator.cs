@@ -20,43 +20,39 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 var moduleAttributeSymbol = compilation.GetTypeByMetadataName(
                     "SimpleModule.Core.ModuleAttribute"
                 );
+                var dtoAttributeSymbol = compilation.GetTypeByMetadataName(
+                    "SimpleModule.Core.DtoAttribute"
+                );
                 if (moduleAttributeSymbol is null)
                     return;
 
-                var modules = new List<string>();
-                var moduleAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+                var modules = new List<ModuleInfo>();
 
                 foreach (var reference in compilation.References)
                 {
                     if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assemblySymbol)
                         continue;
 
-                    var assemblyModules = new List<string>();
-                    FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, assemblyModules);
-                    if (assemblyModules.Count > 0)
-                    {
-                        modules.AddRange(assemblyModules);
-                        moduleAssemblies.Add(assemblySymbol);
-                    }
+                    FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules);
                 }
 
-                // Check current assembly too
-                var currentModules = new List<string>();
-                FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, currentModules);
-                if (currentModules.Count > 0)
-                {
-                    modules.AddRange(currentModules);
-                    moduleAssemblies.Add(compilation.Assembly);
-                }
+                FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, modules);
 
                 if (modules.Count == 0)
                     return;
 
-                // Find DTO types in module assemblies
                 var dtoTypes = new List<DtoTypeInfo>();
-                foreach (var assembly in moduleAssemblies)
+                if (dtoAttributeSymbol is not null)
                 {
-                    FindDtoTypes(assembly.GlobalNamespace, moduleAttributeSymbol, dtoTypes);
+                    foreach (var reference in compilation.References)
+                    {
+                        if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assemblySymbol)
+                            continue;
+
+                        FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
+                    }
+
+                    FindDtoTypes(compilation.Assembly.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
                 }
 
                 GenerateModuleExtensions(spc, modules, dtoTypes.Count > 0);
@@ -71,7 +67,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
     private static void FindModuleTypes(
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol moduleAttributeSymbol,
-        List<string> modules
+        List<ModuleInfo> modules
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
@@ -86,7 +82,12 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 {
                     if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, moduleAttributeSymbol))
                     {
-                        modules.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                        modules.Add(new ModuleInfo
+                        {
+                            FullyQualifiedName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                            HasConfigureServices = DeclaresMethod(typeSymbol, "ConfigureServices"),
+                            HasConfigureEndpoints = DeclaresMethod(typeSymbol, "ConfigureEndpoints"),
+                        });
                         break;
                     }
                 }
@@ -94,9 +95,19 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         }
     }
 
+    private static bool DeclaresMethod(INamedTypeSymbol typeSymbol, string methodName)
+    {
+        foreach (var member in typeSymbol.GetMembers(methodName))
+        {
+            if (member is IMethodSymbol)
+                return true;
+        }
+        return false;
+    }
+
     private static void FindDtoTypes(
         INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol moduleAttributeSymbol,
+        INamedTypeSymbol dtoAttributeSymbol,
         List<DtoTypeInfo> dtoTypes
     )
     {
@@ -104,56 +115,119 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         {
             if (member is INamespaceSymbol childNamespace)
             {
-                FindDtoTypes(childNamespace, moduleAttributeSymbol, dtoTypes);
+                FindDtoTypes(childNamespace, dtoAttributeSymbol, dtoTypes);
             }
-            else if (member is INamedTypeSymbol typeSymbol
-                && typeSymbol.TypeKind == TypeKind.Class
-                && typeSymbol.DeclaredAccessibility == Accessibility.Public
-                && !typeSymbol.IsAbstract
-                && !typeSymbol.IsStatic
-                && !HasAttribute(typeSymbol, moduleAttributeSymbol)
-                && typeSymbol.AllInterfaces.Length == 0)
+            else if (member is INamedTypeSymbol typeSymbol)
             {
-                var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var safeName = fqn.Replace("global::", "").Replace(".", "_");
-
-                var properties = new List<DtoPropertyInfo>();
-                foreach (var m in typeSymbol.GetMembers())
+                foreach (var attr in typeSymbol.GetAttributes())
                 {
-                    if (m is IPropertySymbol prop
-                        && prop.DeclaredAccessibility == Accessibility.Public
-                        && !prop.IsStatic
-                        && !prop.IsIndexer
-                        && prop.GetMethod is not null)
+                    if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, dtoAttributeSymbol))
                     {
-                        properties.Add(new DtoPropertyInfo
+                        var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        var safeName = fqn.Replace("global::", "").Replace(".", "_");
+
+                        var properties = new List<DtoPropertyInfo>();
+                        foreach (var m in typeSymbol.GetMembers())
                         {
-                            Name = prop.Name,
-                            TypeFqn = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                            HasSetter = prop.SetMethod is not null
-                                && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                            if (m is IPropertySymbol prop
+                                && prop.DeclaredAccessibility == Accessibility.Public
+                                && !prop.IsStatic
+                                && !prop.IsIndexer
+                                && prop.GetMethod is not null)
+                            {
+                                properties.Add(new DtoPropertyInfo
+                                {
+                                    Name = prop.Name,
+                                    TypeFqn = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                                    HasSetter = prop.SetMethod is not null
+                                        && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                                });
+                            }
+                        }
+
+                        dtoTypes.Add(new DtoTypeInfo
+                        {
+                            FullyQualifiedName = fqn,
+                            SafeName = safeName,
+                            Properties = properties,
                         });
+                        break;
                     }
                 }
-
-                dtoTypes.Add(new DtoTypeInfo
-                {
-                    FullyQualifiedName = fqn,
-                    SafeName = safeName,
-                    Properties = properties,
-                });
             }
         }
     }
 
-    private static bool HasAttribute(INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeSymbol)
+    private static void GenerateModuleExtensions(
+        SourceProductionContext context,
+        List<ModuleInfo> modules,
+        bool hasDtoTypes
+    )
     {
-        foreach (var attr in typeSymbol.GetAttributes())
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#pragma warning disable IL2026");
+        sb.AppendLine("#pragma warning disable IL3050");
+        sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine();
+        sb.AppendLine("namespace SimpleModule.Core;");
+        sb.AppendLine();
+        sb.AppendLine("public static class ModuleExtensions");
+        sb.AppendLine("{");
+        sb.AppendLine("    public static IServiceCollection AddModules(this IServiceCollection services)");
+        sb.AppendLine("    {");
+
+        foreach (var module in modules.Where(m => m.HasConfigureServices))
         {
-            if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attributeSymbol))
-                return true;
+            sb.AppendLine($"        new {module.FullyQualifiedName}().ConfigureServices(services);");
         }
-        return false;
+
+        if (hasDtoTypes)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        services.ConfigureHttpJsonOptions(options =>");
+            sb.AppendLine("        {");
+            sb.AppendLine("            options.SerializerOptions.TypeInfoResolver = System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver.Combine(");
+            sb.AppendLine("                ModulesJsonResolver.Instance,");
+            sb.AppendLine("                new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver());");
+            sb.AppendLine("        });");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("        return services;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource("ModuleExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    }
+
+    private static void GenerateEndpointExtensions(
+        SourceProductionContext context,
+        List<ModuleInfo> modules
+    )
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("using Microsoft.AspNetCore.Builder;");
+        sb.AppendLine();
+        sb.AppendLine("namespace SimpleModule.Core;");
+        sb.AppendLine();
+        sb.AppendLine("public static class EndpointExtensions");
+        sb.AppendLine("{");
+        sb.AppendLine("    public static WebApplication MapModuleEndpoints(this WebApplication app)");
+        sb.AppendLine("    {");
+
+        foreach (var module in modules.Where(m => m.HasConfigureEndpoints))
+        {
+            sb.AppendLine($"        new {module.FullyQualifiedName}().ConfigureEndpoints(app);");
+        }
+
+        sb.AppendLine("        return app;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource("EndpointExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
     private static void GenerateJsonResolver(
@@ -164,8 +238,8 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
         sb.AppendLine("#nullable enable");
-        sb.AppendLine("#pragma warning disable IL2026 // RequiresUnreferencedCode - generated code uses static types only");
-        sb.AppendLine("#pragma warning disable IL3050 // RequiresDynamicCode - generated code uses static types only");
+        sb.AppendLine("#pragma warning disable IL2026");
+        sb.AppendLine("#pragma warning disable IL3050");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Text.Json;");
         sb.AppendLine("using System.Text.Json.Serialization.Metadata;");
@@ -188,7 +262,6 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("        return null;");
         sb.AppendLine("    }");
 
-        // Generate a creator method for each DTO type
         foreach (var dto in dtoTypes)
         {
             sb.AppendLine();
@@ -219,76 +292,11 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         context.AddSource("ModulesJsonResolver.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
-    private static void GenerateModuleExtensions(
-        SourceProductionContext context,
-        List<string> modules,
-        bool hasDtoTypes
-    )
+    private class ModuleInfo
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("// <auto-generated/>");
-        sb.AppendLine("#pragma warning disable IL2026");
-        sb.AppendLine("#pragma warning disable IL3050");
-        sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
-        sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
-        sb.AppendLine();
-        sb.AppendLine("namespace SimpleModule.Core;");
-        sb.AppendLine();
-        sb.AppendLine("public static class ModuleExtensions");
-        sb.AppendLine("{");
-        sb.AppendLine("    public static IServiceCollection AddModules(this IServiceCollection services)");
-        sb.AppendLine("    {");
-
-        foreach (var module in modules)
-        {
-            sb.AppendLine($"        new {module}().ConfigureServices(services);");
-        }
-
-        if (hasDtoTypes)
-        {
-            sb.AppendLine();
-            sb.AppendLine("        services.ConfigureHttpJsonOptions(options =>");
-            sb.AppendLine("        {");
-            sb.AppendLine("            options.SerializerOptions.TypeInfoResolver = System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver.Combine(");
-            sb.AppendLine("                ModulesJsonResolver.Instance,");
-            sb.AppendLine("                new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver());");
-            sb.AppendLine("        });");
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("        return services;");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-
-        context.AddSource("ModuleExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-    }
-
-    private static void GenerateEndpointExtensions(
-        SourceProductionContext context,
-        List<string> modules
-    )
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("// <auto-generated/>");
-        sb.AppendLine("using Microsoft.AspNetCore.Builder;");
-        sb.AppendLine();
-        sb.AppendLine("namespace SimpleModule.Core;");
-        sb.AppendLine();
-        sb.AppendLine("public static class EndpointExtensions");
-        sb.AppendLine("{");
-        sb.AppendLine("    public static WebApplication MapModuleEndpoints(this WebApplication app)");
-        sb.AppendLine("    {");
-
-        foreach (var module in modules)
-        {
-            sb.AppendLine($"        new {module}().ConfigureEndpoints(app);");
-        }
-
-        sb.AppendLine("        return app;");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-
-        context.AddSource("EndpointExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        public string FullyQualifiedName { get; set; } = "";
+        public bool HasConfigureServices { get; set; }
+        public bool HasConfigureEndpoints { get; set; }
     }
 
     private class DtoTypeInfo
