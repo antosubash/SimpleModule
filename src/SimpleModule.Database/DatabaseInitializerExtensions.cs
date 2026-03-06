@@ -33,10 +33,45 @@ public static class DatabaseInitializerExtensions
             }
             else
             {
-                // Shared database already created — create this module's tables
+                // Shared database already created — only create this module's tables if they don't exist
                 var creator = dbContext.GetService<IRelationalDatabaseCreator>();
-                creator.CreateTables();
+                if (!ModuleTablesExist(dbContext, info.ModuleName))
+                {
+                    creator.CreateTables();
+                }
             }
         }
+    }
+
+    private static bool ModuleTablesExist(DbContext dbContext, string moduleName)
+    {
+        var prefix = $"{moduleName}_";
+        var entityTypes = dbContext.Model.GetEntityTypes();
+
+        foreach (var entityType in entityTypes)
+        {
+            var tableName = entityType.GetTableName();
+            if (tableName is null)
+            {
+                continue;
+            }
+
+            // Check for prefixed table (SQLite shared DB) or unprefixed (own DB)
+            var nameToCheck = tableName.StartsWith(prefix, StringComparison.Ordinal)
+                ? tableName
+                : $"{prefix}{tableName}";
+
+            var count = dbContext.Database.SqlQueryRaw<int>(
+                "SELECT COUNT(*) AS \"Value\" FROM sqlite_master WHERE type='table' AND name={0}",
+                nameToCheck
+            );
+
+            if (count.Any(c => c > 0))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

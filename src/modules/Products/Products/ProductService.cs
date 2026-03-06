@@ -1,12 +1,26 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products;
 
-public class ProductService(ProductsDbContext db) : IProductContracts
+public partial class ProductService(ProductsDbContext db, ILogger<ProductService> logger)
+    : IProductContracts
 {
     public async Task<IEnumerable<Product>> GetAllProductsAsync() =>
         await db.Products.ToListAsync();
 
-    public async Task<Product?> GetProductByIdAsync(int id) => await db.Products.FindAsync(id);
+    public async Task<Product?> GetProductByIdAsync(int id)
+    {
+        var product = await db.Products.FindAsync(id);
+        if (product is null)
+        {
+            LogProductNotFound(logger, id);
+        }
+
+        return product;
+    }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Product with ID {ProductId} not found")]
+    private static partial void LogProductNotFound(ILogger logger, int productId);
 }

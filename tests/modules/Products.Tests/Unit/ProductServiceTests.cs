@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Products;
@@ -29,7 +30,7 @@ public sealed class ProductServiceTests : IDisposable
         _db = new ProductsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new ProductService(_db);
+        _sut = new ProductService(_db, NullLogger<ProductService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
