@@ -7,7 +7,7 @@ namespace SimpleModule.Core.Tests;
 public class DtoAttributeTests
 {
     [Dto]
-    private class TestDtoClass { }
+    private sealed class TestDtoClass { }
 
     [Dto]
     private struct TestDtoStruct { }

@@ -32,7 +32,7 @@ public class DtoJsonResolverGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var resolver = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs"))
+            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs", StringComparison.Ordinal))
             .GetText()
             .ToString();
 
@@ -69,7 +69,7 @@ public class DtoJsonResolverGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var resolver = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs"))
+            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs", StringComparison.Ordinal))
             .GetText()
             .ToString();
 
@@ -112,7 +112,7 @@ public class DtoJsonResolverGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var resolver = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs"))
+            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs", StringComparison.Ordinal))
             .GetText()
             .ToString();
 

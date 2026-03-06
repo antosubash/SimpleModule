@@ -8,9 +8,9 @@ namespace SimpleModule.Core.Tests;
 
 public class IModuleTests
 {
-    private class EmptyModule : IModule { }
+    private sealed class EmptyModule : IModule { }
 
-    private class TestModule : IModule
+    private sealed class TestModule : IModule
     {
         public void ConfigureServices(IServiceCollection services)
         {
@@ -23,7 +23,7 @@ public class IModuleTests
         }
     }
 
-    private class TestService { }
+    private sealed class TestService { }
 
     [Fact]
     public void DefaultMethods_DoNotThrow()
