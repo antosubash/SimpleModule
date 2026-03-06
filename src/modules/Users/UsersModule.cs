@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using SimpleModule.Core;
 
 namespace SimpleModule.Users;
@@ -67,7 +66,3 @@ public class User
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 }
-
-[JsonSerializable(typeof(User))]
-[JsonSerializable(typeof(IEnumerable<User>))]
-public partial class UsersJsonContext : JsonSerializerContext;

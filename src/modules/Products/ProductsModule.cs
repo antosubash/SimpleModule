@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using SimpleModule.Core;
 
 namespace SimpleModule.Products;
@@ -83,7 +82,3 @@ public class Product
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
 }
-
-[JsonSerializable(typeof(Product))]
-[JsonSerializable(typeof(IEnumerable<Product>))]
-public partial class ProductsJsonContext : JsonSerializerContext;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -22,15 +23,9 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 if (moduleAttributeSymbol is null)
                     return;
 
-                var jsonContextSymbol = compilation.GetTypeByMetadataName(
-                    "System.Text.Json.Serialization.JsonSerializerContext"
-                );
-
                 var modules = new List<string>();
-                var jsonContexts = new List<string>();
                 var moduleAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
 
-                // First pass: find all module types and track which assemblies contain them
                 foreach (var reference in compilation.References)
                 {
                     if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assemblySymbol)
@@ -54,18 +49,21 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                     moduleAssemblies.Add(compilation.Assembly);
                 }
 
-                // Second pass: find JsonSerializerContext types only in module assemblies
-                foreach (var assembly in moduleAssemblies)
-                {
-                    if (jsonContextSymbol is not null)
-                        FindJsonContexts(assembly.GlobalNamespace, jsonContextSymbol, jsonContexts);
-                }
-
                 if (modules.Count == 0)
                     return;
 
-                GenerateModuleExtensions(spc, modules, jsonContexts);
+                // Find DTO types in module assemblies
+                var dtoTypes = new List<DtoTypeInfo>();
+                foreach (var assembly in moduleAssemblies)
+                {
+                    FindDtoTypes(assembly.GlobalNamespace, moduleAttributeSymbol, dtoTypes);
+                }
+
+                GenerateModuleExtensions(spc, modules, dtoTypes.Count > 0);
                 GenerateEndpointExtensions(spc, modules);
+
+                if (dtoTypes.Count > 0)
+                    GenerateJsonResolver(spc, dtoTypes);
             }
         );
     }
@@ -96,48 +94,141 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         }
     }
 
-    private static void FindJsonContexts(
+    private static void FindDtoTypes(
         INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol jsonContextSymbol,
-        List<string> jsonContexts
+        INamedTypeSymbol moduleAttributeSymbol,
+        List<DtoTypeInfo> dtoTypes
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
             if (member is INamespaceSymbol childNamespace)
             {
-                FindJsonContexts(childNamespace, jsonContextSymbol, jsonContexts);
+                FindDtoTypes(childNamespace, moduleAttributeSymbol, dtoTypes);
             }
             else if (member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Class
                 && typeSymbol.DeclaredAccessibility == Accessibility.Public
                 && !typeSymbol.IsAbstract
-                && InheritsFrom(typeSymbol, jsonContextSymbol))
+                && !typeSymbol.IsStatic
+                && !HasAttribute(typeSymbol, moduleAttributeSymbol)
+                && typeSymbol.AllInterfaces.Length == 0)
             {
-                jsonContexts.Add(typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var safeName = fqn.Replace("global::", "").Replace(".", "_");
+
+                var properties = new List<DtoPropertyInfo>();
+                foreach (var m in typeSymbol.GetMembers())
+                {
+                    if (m is IPropertySymbol prop
+                        && prop.DeclaredAccessibility == Accessibility.Public
+                        && !prop.IsStatic
+                        && !prop.IsIndexer
+                        && prop.GetMethod is not null)
+                    {
+                        properties.Add(new DtoPropertyInfo
+                        {
+                            Name = prop.Name,
+                            TypeFqn = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                            HasSetter = prop.SetMethod is not null
+                                && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                        });
+                    }
+                }
+
+                dtoTypes.Add(new DtoTypeInfo
+                {
+                    FullyQualifiedName = fqn,
+                    SafeName = safeName,
+                    Properties = properties,
+                });
             }
         }
     }
 
-    private static bool InheritsFrom(INamedTypeSymbol type, INamedTypeSymbol baseType)
+    private static bool HasAttribute(INamedTypeSymbol typeSymbol, INamedTypeSymbol attributeSymbol)
     {
-        var current = type.BaseType;
-        while (current is not null)
+        foreach (var attr in typeSymbol.GetAttributes())
         {
-            if (SymbolEqualityComparer.Default.Equals(current, baseType))
+            if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attributeSymbol))
                 return true;
-            current = current.BaseType;
         }
         return false;
+    }
+
+    private static void GenerateJsonResolver(
+        SourceProductionContext context,
+        List<DtoTypeInfo> dtoTypes
+    )
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("#pragma warning disable IL2026 // RequiresUnreferencedCode - generated code uses static types only");
+        sb.AppendLine("#pragma warning disable IL3050 // RequiresDynamicCode - generated code uses static types only");
+        sb.AppendLine("using System;");
+        sb.AppendLine("using System.Text.Json;");
+        sb.AppendLine("using System.Text.Json.Serialization.Metadata;");
+        sb.AppendLine();
+        sb.AppendLine("namespace SimpleModule.Core;");
+        sb.AppendLine();
+        sb.AppendLine("public sealed class ModulesJsonResolver : IJsonTypeInfoResolver");
+        sb.AppendLine("{");
+        sb.AppendLine("    public static readonly ModulesJsonResolver Instance = new();");
+        sb.AppendLine();
+        sb.AppendLine("    public JsonTypeInfo? GetTypeInfo(Type type, JsonSerializerOptions options)");
+        sb.AppendLine("    {");
+
+        foreach (var dto in dtoTypes)
+        {
+            sb.AppendLine($"        if (type == typeof({dto.FullyQualifiedName}))");
+            sb.AppendLine($"            return Create_{dto.SafeName}(options);");
+        }
+
+        sb.AppendLine("        return null;");
+        sb.AppendLine("    }");
+
+        // Generate a creator method for each DTO type
+        foreach (var dto in dtoTypes)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"    private static JsonTypeInfo Create_{dto.SafeName}(JsonSerializerOptions options)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        var info = JsonTypeInfo.CreateJsonTypeInfo<{dto.FullyQualifiedName}>(options);");
+            sb.AppendLine($"        info.CreateObject = static () => new {dto.FullyQualifiedName}();");
+
+            foreach (var prop in dto.Properties)
+            {
+                sb.AppendLine($"        var prop_{prop.Name} = info.CreateJsonPropertyInfo(typeof({prop.TypeFqn}), \"{prop.Name}\");");
+                sb.AppendLine($"        prop_{prop.Name}.Get = static obj => (({dto.FullyQualifiedName})obj).{prop.Name};");
+
+                if (prop.HasSetter)
+                {
+                    sb.AppendLine($"        prop_{prop.Name}.Set = static (obj, val) => (({dto.FullyQualifiedName})obj).{prop.Name} = ({prop.TypeFqn})val!;");
+                }
+
+                sb.AppendLine($"        info.Properties.Add(prop_{prop.Name});");
+            }
+
+            sb.AppendLine("        return info;");
+            sb.AppendLine("    }");
+        }
+
+        sb.AppendLine("}");
+
+        context.AddSource("ModulesJsonResolver.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
     private static void GenerateModuleExtensions(
         SourceProductionContext context,
         List<string> modules,
-        List<string> jsonContexts
+        bool hasDtoTypes
     )
     {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#pragma warning disable IL2026");
+        sb.AppendLine("#pragma warning disable IL3050");
         sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine();
@@ -153,18 +244,14 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             sb.AppendLine($"        new {module}().ConfigureServices(services);");
         }
 
-        if (jsonContexts.Count > 0)
+        if (hasDtoTypes)
         {
             sb.AppendLine();
             sb.AppendLine("        services.ConfigureHttpJsonOptions(options =>");
             sb.AppendLine("        {");
-            sb.AppendLine("            var chain = options.SerializerOptions.TypeInfoResolverChain;");
-
-            foreach (var ctx in jsonContexts)
-            {
-                sb.AppendLine($"            chain.Add({ctx}.Default);");
-            }
-
+            sb.AppendLine("            options.SerializerOptions.TypeInfoResolver = System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver.Combine(");
+            sb.AppendLine("                ModulesJsonResolver.Instance,");
+            sb.AppendLine("                new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver());");
             sb.AppendLine("        });");
         }
 
@@ -202,5 +289,19 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("}");
 
         context.AddSource("EndpointExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    }
+
+    private class DtoTypeInfo
+    {
+        public string FullyQualifiedName { get; set; } = "";
+        public string SafeName { get; set; } = "";
+        public List<DtoPropertyInfo> Properties { get; set; } = new();
+    }
+
+    private class DtoPropertyInfo
+    {
+        public string Name { get; set; } = "";
+        public string TypeFqn { get; set; } = "";
+        public bool HasSetter { get; set; }
     }
 }
