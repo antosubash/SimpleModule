@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
@@ -7,16 +8,25 @@ using SimpleModule.Users.Contracts;
 
 namespace Orders.Tests.Unit;
 
-public class OrderServiceTests
+public sealed class OrderServiceTests : IDisposable
 {
+    private readonly OrdersDbContext _db;
     private readonly IUserContracts _users = Substitute.For<IUserContracts>();
     private readonly IProductContracts _products = Substitute.For<IProductContracts>();
     private readonly OrderService _sut;
 
     public OrderServiceTests()
     {
-        _sut = new OrderService(_users, _products);
+        var options = new DbContextOptionsBuilder<OrdersDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        _db = new OrdersDbContext(options);
+        _db.Database.OpenConnection();
+        _db.Database.EnsureCreated();
+        _sut = new OrderService(_db, _users, _products);
     }
+
+    public void Dispose() => _db.Dispose();
 
     [Fact]
     public async Task CreateOrderAsync_WithValidUserAndProduct_CalculatesCorrectTotal()
@@ -94,7 +104,6 @@ public class OrderServiceTests
     [Fact]
     public async Task GetOrderByIdAsync_ReturnsMatchingOrder()
     {
-        // First create an order
         _users.GetUserByIdAsync(1).Returns(new User { Id = 1, Name = "Test" });
         _products
             .GetProductByIdAsync(1)

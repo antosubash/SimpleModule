@@ -28,7 +28,7 @@ public static class GeneratorTestHelper
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Collections.dll"))
         );
 
-        // Add ASP.NET Core references for IServiceCollection, IEndpointRouteBuilder
+        // Add ASP.NET Core references for IServiceCollection, IEndpointRouteBuilder, IConfiguration
         var aspNetDir = Path.GetDirectoryName(
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location
         );
@@ -41,6 +41,21 @@ public static class GeneratorTestHelper
             if (File.Exists(diAbstractions))
                 references.Add(MetadataReference.CreateFromFile(diAbstractions));
         }
+
+        references.Add(
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.Extensions.Configuration.IConfiguration).Assembly.Location
+            )
+        );
+
+        var configAbstractionsPath = Path.Combine(
+            Path.GetDirectoryName(
+                typeof(Microsoft.Extensions.Configuration.IConfiguration).Assembly.Location
+            )!,
+            "Microsoft.Extensions.Configuration.Abstractions.dll"
+        );
+        if (File.Exists(configAbstractionsPath))
+            references.Add(MetadataReference.CreateFromFile(configAbstractionsPath));
 
         return CSharpCompilation.Create(
             "TestAssembly",

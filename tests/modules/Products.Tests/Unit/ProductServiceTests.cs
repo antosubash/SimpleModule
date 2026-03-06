@@ -1,12 +1,27 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using SimpleModule.Products;
 using SimpleModule.Products.Contracts;
 
 namespace Products.Tests.Unit;
 
-public class ProductServiceTests
+public sealed class ProductServiceTests : IDisposable
 {
-    private readonly ProductService _sut = new();
+    private readonly ProductsDbContext _db;
+    private readonly ProductService _sut;
+
+    public ProductServiceTests()
+    {
+        var options = new DbContextOptionsBuilder<ProductsDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        _db = new ProductsDbContext(options);
+        _db.Database.OpenConnection();
+        _db.Database.EnsureCreated();
+        _sut = new ProductService(_db);
+    }
+
+    public void Dispose() => _db.Dispose();
 
     [Fact]
     public async Task GetAllProductsAsync_ReturnsNonEmptyCollection()
@@ -27,9 +42,9 @@ public class ProductServiceTests
     [Fact]
     public async Task GetProductByIdAsync_ReturnsProductWithMatchingId()
     {
-        var product = await _sut.GetProductByIdAsync(42);
+        var product = await _sut.GetProductByIdAsync(1);
 
         product.Should().NotBeNull();
-        product!.Id.Should().Be(42);
+        product!.Id.Should().Be(1);
     }
 }

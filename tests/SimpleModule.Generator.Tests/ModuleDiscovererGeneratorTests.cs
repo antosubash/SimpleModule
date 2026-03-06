@@ -18,7 +18,7 @@ public class ModuleDiscovererGeneratorTests
             [Module("Test")]
             public class TestModule : IModule
             {
-                public void ConfigureServices(IServiceCollection services) { }
+                public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
                 public void ConfigureEndpoints(IEndpointRouteBuilder endpoints) { }
             }
             """;
@@ -114,7 +114,7 @@ public class ModuleDiscovererGeneratorTests
             [Module("Test")]
             public class TestModule : IModule
             {
-                public void ConfigureServices(IServiceCollection services) { }
+                public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
                 public void ConfigureEndpoints(IEndpointRouteBuilder endpoints) { }
             }
 
@@ -149,14 +149,14 @@ public class ModuleDiscovererGeneratorTests
             [Module("First")]
             public class FirstModule : IModule
             {
-                public void ConfigureServices(IServiceCollection services) { }
+                public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
                 public void ConfigureEndpoints(IEndpointRouteBuilder endpoints) { }
             }
 
             [Module("Second")]
             public class SecondModule : IModule
             {
-                public void ConfigureServices(IServiceCollection services) { }
+                public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
                 public void ConfigureEndpoints(IEndpointRouteBuilder endpoints) { }
             }
             """;

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
@@ -11,8 +13,11 @@ namespace SimpleModule.Users;
 [Module("Users")]
 public class UsersModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDbContext<UsersDbContext>(options =>
+            options.UseSqlite(configuration.GetConnectionString("UsersConnection"))
+        );
         services.AddScoped<IUserContracts, UserService>();
     }
 

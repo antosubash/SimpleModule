@@ -1,12 +1,27 @@
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
 
 namespace Users.Tests.Unit;
 
-public class UserServiceTests
+public sealed class UserServiceTests : IDisposable
 {
-    private readonly UserService _sut = new();
+    private readonly UsersDbContext _db;
+    private readonly UserService _sut;
+
+    public UserServiceTests()
+    {
+        var options = new DbContextOptionsBuilder<UsersDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        _db = new UsersDbContext(options);
+        _db.Database.OpenConnection();
+        _db.Database.EnsureCreated();
+        _sut = new UserService(_db);
+    }
+
+    public void Dispose() => _db.Dispose();
 
     [Fact]
     public async Task GetAllUsersAsync_ReturnsNonEmptyCollection()
@@ -26,9 +41,9 @@ public class UserServiceTests
     [Fact]
     public async Task GetUserByIdAsync_ReturnsUserWithMatchingId()
     {
-        var user = await _sut.GetUserByIdAsync(42);
+        var user = await _sut.GetUserByIdAsync(1);
 
         user.Should().NotBeNull();
-        user!.Id.Should().Be(42);
+        user!.Id.Should().Be(1);
     }
 }
