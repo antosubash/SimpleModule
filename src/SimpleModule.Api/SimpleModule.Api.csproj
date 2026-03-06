@@ -17,8 +17,8 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
-    <ProjectReference Include="..\modules\Users\Users.csproj" />
-    <ProjectReference Include="..\modules\Products\Products.csproj" />
-    <ProjectReference Include="..\modules\Orders\Orders.csproj" />
+    <ProjectReference Include="..\modules\Users\Users\Users.csproj" />
+    <ProjectReference Include="..\modules\Products\Products\Products.csproj" />
+    <ProjectReference Include="..\modules\Orders\Orders\Orders.csproj" />
   </ItemGroup>
 </Project>
