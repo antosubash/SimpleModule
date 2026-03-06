@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Products;
@@ -17,24 +19,33 @@ public class OrdersModule : IModule
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/orders");
-        
-        group.MapGet("/", async (IOrderService orderService) =>
-        {
-            var orders = await orderService.GetAllOrdersAsync();
-            return Results.Ok(orders);
-        });
 
-        group.MapGet("/{id}", async (int id, IOrderService orderService) =>
-        {
-            var order = await orderService.GetOrderByIdAsync(id);
-            return order is not null ? Results.Ok(order) : Results.NotFound();
-        });
+        group.MapGet(
+            "/",
+            async (IOrderService orderService) =>
+            {
+                var orders = await orderService.GetAllOrdersAsync();
+                return Results.Ok(orders);
+            }
+        );
 
-        group.MapPost("/", async (CreateOrderRequest request, IOrderService orderService) =>
-        {
-            var order = await orderService.CreateOrderAsync(request);
-            return Results.Created($"/api/orders/{order.Id}", order);
-        });
+        group.MapGet(
+            "/{id}",
+            async (int id, IOrderService orderService) =>
+            {
+                var order = await orderService.GetOrderByIdAsync(id);
+                return order is not null ? Results.Ok(order) : Results.NotFound();
+            }
+        );
+
+        group.MapPost(
+            "/",
+            async (CreateOrderRequest request, IOrderService orderService) =>
+            {
+                var order = await orderService.CreateOrderAsync(request);
+                return Results.Created($"/api/orders/{order.Id}", order);
+            }
+        );
     }
 }
 
@@ -82,7 +93,7 @@ public class OrderService : IOrderService
             var product = await _productService.GetProductByIdAsync(item.ProductId);
             if (product is null)
                 throw new InvalidOperationException($"Product with ID {item.ProductId} not found");
-            
+
             total += product.Price * item.Quantity;
         }
 
@@ -92,7 +103,7 @@ public class OrderService : IOrderService
             UserId = request.UserId,
             Items = request.Items,
             Total = total,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         _orders.Add(order);
@@ -119,4 +130,4 @@ public class CreateOrderRequest
 {
     public int UserId { get; set; }
     public List<OrderItem> Items { get; set; } = new();
-} 
+}

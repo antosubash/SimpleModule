@@ -23,4 +23,4 @@ app.UseHttpsRedirection();
 // Automatically map all module endpoints
 app.MapModuleEndpoints();
 
-app.Run(); 
+app.Run();

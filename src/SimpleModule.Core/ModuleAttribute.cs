@@ -13,4 +13,4 @@ public sealed class ModuleAttribute : Attribute
         Name = name;
         Version = version;
     }
-} 
+}

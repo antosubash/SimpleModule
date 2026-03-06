@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 
@@ -15,18 +17,24 @@ public class ProductsModule : IModule
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/products");
-        
-        group.MapGet("/", async (IProductService productService) =>
-        {
-            var products = await productService.GetAllProductsAsync();
-            return Results.Ok(products);
-        });
 
-        group.MapGet("/{id}", async (int id, IProductService productService) =>
-        {
-            var product = await productService.GetProductByIdAsync(id);
-            return product is not null ? Results.Ok(product) : Results.NotFound();
-        });
+        group.MapGet(
+            "/",
+            async (IProductService productService) =>
+            {
+                var products = await productService.GetAllProductsAsync();
+                return Results.Ok(products);
+            }
+        );
+
+        group.MapGet(
+            "/{id}",
+            async (int id, IProductService productService) =>
+            {
+                var product = await productService.GetProductByIdAsync(id);
+                return product is not null ? Results.Ok(product) : Results.NotFound();
+            }
+        );
     }
 }
 
@@ -40,16 +48,35 @@ public class ProductService : IProductService
 {
     public Task<IEnumerable<Product>> GetAllProductsAsync()
     {
-        return Task.FromResult<IEnumerable<Product>>(new[]
-        {
-            new Product { Id = 1, Name = "Laptop", Price = 999.99m },
-            new Product { Id = 2, Name = "Smartphone", Price = 699.99m }
-        });
+        return Task.FromResult<IEnumerable<Product>>(
+            new[]
+            {
+                new Product
+                {
+                    Id = 1,
+                    Name = "Laptop",
+                    Price = 999.99m,
+                },
+                new Product
+                {
+                    Id = 2,
+                    Name = "Smartphone",
+                    Price = 699.99m,
+                },
+            }
+        );
     }
 
     public Task<Product?> GetProductByIdAsync(int id)
     {
-        return Task.FromResult<Product?>(new Product { Id = id, Name = $"Product {id}", Price = 100.00m });
+        return Task.FromResult<Product?>(
+            new Product
+            {
+                Id = id,
+                Name = $"Product {id}",
+                Price = 100.00m,
+            }
+        );
     }
 }
 
@@ -58,4 +85,4 @@ public class Product
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal Price { get; set; }
-} 
+}
