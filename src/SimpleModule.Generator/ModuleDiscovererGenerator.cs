@@ -30,13 +30,20 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
                 foreach (var reference in compilation.References)
                 {
-                    if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assemblySymbol)
+                    if (
+                        compilation.GetAssemblyOrModuleSymbol(reference)
+                        is not IAssemblySymbol assemblySymbol
+                    )
                         continue;
 
                     FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules);
                 }
 
-                FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, modules);
+                FindModuleTypes(
+                    compilation.Assembly.GlobalNamespace,
+                    moduleAttributeSymbol,
+                    modules
+                );
 
                 if (modules.Count == 0)
                     return;
@@ -46,13 +53,20 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 {
                     foreach (var reference in compilation.References)
                     {
-                        if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assemblySymbol)
+                        if (
+                            compilation.GetAssemblyOrModuleSymbol(reference)
+                            is not IAssemblySymbol assemblySymbol
+                        )
                             continue;
 
                         FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
                     }
 
-                    FindDtoTypes(compilation.Assembly.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
+                    FindDtoTypes(
+                        compilation.Assembly.GlobalNamespace,
+                        dtoAttributeSymbol,
+                        dtoTypes
+                    );
                 }
 
                 GenerateModuleExtensions(spc, modules, dtoTypes.Count > 0);
@@ -80,14 +94,29 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             {
                 foreach (var attr in typeSymbol.GetAttributes())
                 {
-                    if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, moduleAttributeSymbol))
+                    if (
+                        SymbolEqualityComparer.Default.Equals(
+                            attr.AttributeClass,
+                            moduleAttributeSymbol
+                        )
+                    )
                     {
-                        modules.Add(new ModuleInfo
-                        {
-                            FullyQualifiedName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                            HasConfigureServices = DeclaresMethod(typeSymbol, "ConfigureServices"),
-                            HasConfigureEndpoints = DeclaresMethod(typeSymbol, "ConfigureEndpoints"),
-                        });
+                        modules.Add(
+                            new ModuleInfo
+                            {
+                                FullyQualifiedName = typeSymbol.ToDisplayString(
+                                    SymbolDisplayFormat.FullyQualifiedFormat
+                                ),
+                                HasConfigureServices = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureServices"
+                                ),
+                                HasConfigureEndpoints = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureEndpoints"
+                                ),
+                            }
+                        );
                         break;
                     }
                 }
@@ -121,36 +150,53 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             {
                 foreach (var attr in typeSymbol.GetAttributes())
                 {
-                    if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, dtoAttributeSymbol))
+                    if (
+                        SymbolEqualityComparer.Default.Equals(
+                            attr.AttributeClass,
+                            dtoAttributeSymbol
+                        )
+                    )
                     {
-                        var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        var fqn = typeSymbol.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        );
                         var safeName = fqn.Replace("global::", "").Replace(".", "_");
 
                         var properties = new List<DtoPropertyInfo>();
                         foreach (var m in typeSymbol.GetMembers())
                         {
-                            if (m is IPropertySymbol prop
+                            if (
+                                m is IPropertySymbol prop
                                 && prop.DeclaredAccessibility == Accessibility.Public
                                 && !prop.IsStatic
                                 && !prop.IsIndexer
-                                && prop.GetMethod is not null)
+                                && prop.GetMethod is not null
+                            )
                             {
-                                properties.Add(new DtoPropertyInfo
-                                {
-                                    Name = prop.Name,
-                                    TypeFqn = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                                    HasSetter = prop.SetMethod is not null
-                                        && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
-                                });
+                                properties.Add(
+                                    new DtoPropertyInfo
+                                    {
+                                        Name = prop.Name,
+                                        TypeFqn = prop.Type.ToDisplayString(
+                                            SymbolDisplayFormat.FullyQualifiedFormat
+                                        ),
+                                        HasSetter =
+                                            prop.SetMethod is not null
+                                            && prop.SetMethod.DeclaredAccessibility
+                                                == Accessibility.Public,
+                                    }
+                                );
                             }
                         }
 
-                        dtoTypes.Add(new DtoTypeInfo
-                        {
-                            FullyQualifiedName = fqn,
-                            SafeName = safeName,
-                            Properties = properties,
-                        });
+                        dtoTypes.Add(
+                            new DtoTypeInfo
+                            {
+                                FullyQualifiedName = fqn,
+                                SafeName = safeName,
+                                Properties = properties,
+                            }
+                        );
                         break;
                     }
                 }
@@ -175,12 +221,16 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("public static class ModuleExtensions");
         sb.AppendLine("{");
-        sb.AppendLine("    public static IServiceCollection AddModules(this IServiceCollection services)");
+        sb.AppendLine(
+            "    public static IServiceCollection AddModules(this IServiceCollection services)"
+        );
         sb.AppendLine("    {");
 
         foreach (var module in modules.Where(m => m.HasConfigureServices))
         {
-            sb.AppendLine($"        new {module.FullyQualifiedName}().ConfigureServices(services);");
+            sb.AppendLine(
+                $"        new {module.FullyQualifiedName}().ConfigureServices(services);"
+            );
         }
 
         if (hasDtoTypes)
@@ -188,9 +238,13 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             sb.AppendLine();
             sb.AppendLine("        services.ConfigureHttpJsonOptions(options =>");
             sb.AppendLine("        {");
-            sb.AppendLine("            options.SerializerOptions.TypeInfoResolver = System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver.Combine(");
+            sb.AppendLine(
+                "            options.SerializerOptions.TypeInfoResolver = System.Text.Json.Serialization.Metadata.JsonTypeInfoResolver.Combine("
+            );
             sb.AppendLine("                ModulesJsonResolver.Instance,");
-            sb.AppendLine("                new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver());");
+            sb.AppendLine(
+                "                new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver());"
+            );
             sb.AppendLine("        });");
         }
 
@@ -215,7 +269,9 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("public static class EndpointExtensions");
         sb.AppendLine("{");
-        sb.AppendLine("    public static WebApplication MapModuleEndpoints(this WebApplication app)");
+        sb.AppendLine(
+            "    public static WebApplication MapModuleEndpoints(this WebApplication app)"
+        );
         sb.AppendLine("    {");
 
         foreach (var module in modules.Where(m => m.HasConfigureEndpoints))
@@ -250,7 +306,9 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("{");
         sb.AppendLine("    public static readonly ModulesJsonResolver Instance = new();");
         sb.AppendLine();
-        sb.AppendLine("    public JsonTypeInfo? GetTypeInfo(Type type, JsonSerializerOptions options)");
+        sb.AppendLine(
+            "    public JsonTypeInfo? GetTypeInfo(Type type, JsonSerializerOptions options)"
+        );
         sb.AppendLine("    {");
 
         foreach (var dto in dtoTypes)
@@ -265,19 +323,31 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         foreach (var dto in dtoTypes)
         {
             sb.AppendLine();
-            sb.AppendLine($"    private static JsonTypeInfo Create_{dto.SafeName}(JsonSerializerOptions options)");
+            sb.AppendLine(
+                $"    private static JsonTypeInfo Create_{dto.SafeName}(JsonSerializerOptions options)"
+            );
             sb.AppendLine("    {");
-            sb.AppendLine($"        var info = JsonTypeInfo.CreateJsonTypeInfo<{dto.FullyQualifiedName}>(options);");
-            sb.AppendLine($"        info.CreateObject = static () => new {dto.FullyQualifiedName}();");
+            sb.AppendLine(
+                $"        var info = JsonTypeInfo.CreateJsonTypeInfo<{dto.FullyQualifiedName}>(options);"
+            );
+            sb.AppendLine(
+                $"        info.CreateObject = static () => new {dto.FullyQualifiedName}();"
+            );
 
             foreach (var prop in dto.Properties)
             {
-                sb.AppendLine($"        var prop_{prop.Name} = info.CreateJsonPropertyInfo(typeof({prop.TypeFqn}), \"{prop.Name}\");");
-                sb.AppendLine($"        prop_{prop.Name}.Get = static obj => (({dto.FullyQualifiedName})obj).{prop.Name};");
+                sb.AppendLine(
+                    $"        var prop_{prop.Name} = info.CreateJsonPropertyInfo(typeof({prop.TypeFqn}), \"{prop.Name}\");"
+                );
+                sb.AppendLine(
+                    $"        prop_{prop.Name}.Get = static obj => (({dto.FullyQualifiedName})obj).{prop.Name};"
+                );
 
                 if (prop.HasSetter)
                 {
-                    sb.AppendLine($"        prop_{prop.Name}.Set = static (obj, val) => (({dto.FullyQualifiedName})obj).{prop.Name} = ({prop.TypeFqn})val!;");
+                    sb.AppendLine(
+                        $"        prop_{prop.Name}.Set = static (obj, val) => (({dto.FullyQualifiedName})obj).{prop.Name} = ({prop.TypeFqn})val!;"
+                    );
                 }
 
                 sb.AppendLine($"        info.Properties.Add(prop_{prop.Name});");
@@ -289,7 +359,10 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
         sb.AppendLine("}");
 
-        context.AddSource("ModulesJsonResolver.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        context.AddSource(
+            "ModulesJsonResolver.g.cs",
+            SourceText.From(sb.ToString(), Encoding.UTF8)
+        );
     }
 
     private class ModuleInfo
