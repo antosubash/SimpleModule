@@ -365,21 +365,21 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         );
     }
 
-    private class ModuleInfo
+    private sealed class ModuleInfo
     {
         public string FullyQualifiedName { get; set; } = "";
         public bool HasConfigureServices { get; set; }
         public bool HasConfigureEndpoints { get; set; }
     }
 
-    private class DtoTypeInfo
+    private sealed class DtoTypeInfo
     {
         public string FullyQualifiedName { get; set; } = "";
         public string SafeName { get; set; } = "";
         public List<DtoPropertyInfo> Properties { get; set; } = new();
     }
 
-    private class DtoPropertyInfo
+    private sealed class DtoPropertyInfo
     {
         public string Name { get; set; } = "";
         public string TypeFqn { get; set; } = "";
