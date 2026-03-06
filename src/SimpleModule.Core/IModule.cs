@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace SimpleModule.Core;
 
 public interface IModule

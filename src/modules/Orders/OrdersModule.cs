@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json.Serialization;
 using SimpleModule.Core;
 using SimpleModule.Products;
 using SimpleModule.Users;
@@ -131,3 +128,8 @@ public class CreateOrderRequest
     public int UserId { get; set; }
     public List<OrderItem> Items { get; set; } = new();
 }
+
+[JsonSerializable(typeof(Order))]
+[JsonSerializable(typeof(IEnumerable<Order>))]
+[JsonSerializable(typeof(CreateOrderRequest))]
+public partial class OrdersJsonContext : JsonSerializerContext;
