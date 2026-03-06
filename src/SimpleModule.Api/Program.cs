@@ -1,7 +1,5 @@
 using SimpleModule.Core;
-using SimpleModule.Orders;
-using SimpleModule.Products;
-using SimpleModule.Users;
+using SimpleModule.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +13,7 @@ builder.Services.AddModules(builder.Configuration);
 var app = builder.Build();
 
 // Ensure databases are created with seed data
-using (var scope = app.Services.CreateScope())
-{
-    scope.ServiceProvider.GetRequiredService<UsersDbContext>().Database.EnsureCreated();
-    scope.ServiceProvider.GetRequiredService<ProductsDbContext>().Database.EnsureCreated();
-    scope.ServiceProvider.GetRequiredService<OrdersDbContext>().Database.EnsureCreated();
-}
+app.EnsureModuleDatabases();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

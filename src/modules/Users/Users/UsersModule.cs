@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Features.GetAllUsers;
 using SimpleModule.Users.Features.GetUserById;
@@ -15,9 +15,7 @@ public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<UsersDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("UsersConnection"))
-        );
+        services.AddModuleDbContext<UsersDbContext>(configuration, "Users");
         services.AddScoped<IUserContracts, UserService>();
     }
 

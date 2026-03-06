@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference
       Include="..\SimpleModule.Generator\SimpleModule.Generator.csproj"
       OutputItemType="Analyzer"

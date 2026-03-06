@@ -6,8 +6,8 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Bogus" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\Products.Contracts\Products.Contracts.csproj" />
   </ItemGroup>
 </Project>

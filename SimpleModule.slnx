@@ -8,6 +8,7 @@
     <Folder Name="/src/" />
     <Folder Name="/tests/">
         <Project Path="tests/SimpleModule.Core.Tests/SimpleModule.Core.Tests.csproj" />
+        <Project Path="tests/SimpleModule.Database.Tests/SimpleModule.Database.Tests.csproj" />
         <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
         <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
     </Folder>
@@ -24,5 +25,6 @@
     <Project Path="src/modules/Users/Users/Users.csproj" />
     <Project Path="src/SimpleModule.Api/SimpleModule.Api.csproj" />
     <Project Path="src/SimpleModule.Core/SimpleModule.Core.csproj" />
+    <Project Path="src/SimpleModule.Database/SimpleModule.Database.csproj" />
     <Project Path="src/SimpleModule.Generator/SimpleModule.Generator.csproj" />
 </Solution>

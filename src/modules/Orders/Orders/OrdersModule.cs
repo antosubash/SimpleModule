@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Database;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.Features.CreateOrder;
 using SimpleModule.Orders.Features.GetAllOrders;
@@ -16,9 +16,7 @@ public class OrdersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<OrdersDbContext>(options =>
-            options.UseSqlite(configuration.GetConnectionString("OrdersConnection"))
-        );
+        services.AddModuleDbContext<OrdersDbContext>(configuration, "Orders");
         services.AddScoped<IOrderContracts, OrderService>();
     }
 

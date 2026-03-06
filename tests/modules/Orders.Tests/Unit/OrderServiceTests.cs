@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NSubstitute;
+using SimpleModule.Database;
 using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
@@ -20,7 +22,16 @@ public sealed class OrderServiceTests : IDisposable
         var options = new DbContextOptionsBuilder<OrdersDbContext>()
             .UseSqlite("Data Source=:memory:")
             .Options;
-        _db = new OrdersDbContext(options);
+        var dbOptions = Options.Create(
+            new DatabaseOptions
+            {
+                ModuleConnections = new Dictionary<string, string>
+                {
+                    ["Orders"] = "Data Source=:memory:",
+                },
+            }
+        );
+        _db = new OrdersDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
         _sut = new OrderService(_db, _users, _products);

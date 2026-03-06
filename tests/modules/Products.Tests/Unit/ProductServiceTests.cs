@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SimpleModule.Database;
 using SimpleModule.Products;
 using SimpleModule.Products.Contracts;
 
@@ -15,7 +17,16 @@ public sealed class ProductServiceTests : IDisposable
         var options = new DbContextOptionsBuilder<ProductsDbContext>()
             .UseSqlite("Data Source=:memory:")
             .Options;
-        _db = new ProductsDbContext(options);
+        var dbOptions = Options.Create(
+            new DatabaseOptions
+            {
+                ModuleConnections = new Dictionary<string, string>
+                {
+                    ["Products"] = "Data Source=:memory:",
+                },
+            }
+        );
+        _db = new ProductsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
         _sut = new ProductService(_db);
