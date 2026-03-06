@@ -1,7 +1,4 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json.Serialization;
 using SimpleModule.Core;
 
 namespace SimpleModule.Users;
@@ -11,7 +8,6 @@ public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services)
     {
-        // Register services specific to the Users module
         services.AddScoped<IUserService, UserService>();
     }
 
@@ -71,3 +67,7 @@ public class User
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 }
+
+[JsonSerializable(typeof(User))]
+[JsonSerializable(typeof(IEnumerable<User>))]
+public partial class UsersJsonContext : JsonSerializerContext;
