@@ -1,0 +1,59 @@
+@page "/Identity/Account/ConfirmEmailChange"
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+<PageTitle>Confirm email change - SimpleModule</PageTitle>
+
+<h1>Confirm email change</h1>
+<StatusMessage Message="@_statusMessage" />
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? UserId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? Code { get; set; }
+
+    private string? _statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId is null || Email is null || Code is null)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        var user = await UserManager.FindByIdAsync(UserId);
+        if (user is null)
+        {
+            _statusMessage = "Error changing email.";
+            return;
+        }
+
+        var code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(Code));
+        var result = await UserManager.ChangeEmailAsync(user, Email, code);
+        if (!result.Succeeded)
+        {
+            _statusMessage = "Error changing email.";
+            return;
+        }
+
+        var setUserNameResult = await UserManager.SetUserNameAsync(user, Email);
+        if (!setUserNameResult.Succeeded)
+        {
+            _statusMessage = "Error changing user name.";
+            return;
+        }
+
+        await SignInManager.RefreshSignInAsync(user);
+        _statusMessage = "Thank you for confirming your email change.";
+    }
+}
+
+@using System.Text
+@using Microsoft.AspNetCore.WebUtilities

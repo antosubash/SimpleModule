@@ -1,9 +1,12 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
@@ -102,5 +105,55 @@ public class UsersModule : IModule
         GetAllUsersEndpoint.Map(usersGroup);
         GetUserByIdEndpoint.Map(usersGroup);
         GetCurrentUserEndpoint.Map(usersGroup);
+
+        // Download personal data endpoint (cannot be a Blazor component — returns a file)
+        usersGroup.MapPost(
+            "/download-personal-data",
+            async (
+                HttpContext context,
+                UserManager<ApplicationUser> userManager,
+                ILogger<UsersModule> logger
+            ) =>
+            {
+                var user = await userManager.GetUserAsync(context.User);
+                if (user is null)
+                {
+                    return Results.NotFound();
+                }
+
+                logger.LogInformation("User asked for their personal data.");
+
+                var personalData = new Dictionary<string, string>();
+                var personalDataProps = typeof(ApplicationUser)
+                    .GetProperties()
+                    .Where(prop =>
+                        Attribute.IsDefined(prop, typeof(PersonalDataAttribute))
+                    );
+                foreach (var p in personalDataProps)
+                {
+                    personalData.Add(p.Name, p.GetValue(user)?.ToString() ?? "null");
+                }
+
+                var logins = await userManager.GetLoginsAsync(user);
+                foreach (var l in logins)
+                {
+                    personalData.Add(
+                        $"{l.LoginProvider} external login provider key",
+                        l.ProviderKey
+                    );
+                }
+
+                personalData.Add(
+                    "Authenticator Key",
+                    await userManager.GetAuthenticatorKeyAsync(user) ?? ""
+                );
+
+                return Results.File(
+                    JsonSerializer.SerializeToUtf8Bytes(personalData),
+                    "application/json",
+                    "PersonalData.json"
+                );
+            }
+        ).RequireAuthorization();
     }
 }

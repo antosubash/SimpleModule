@@ -1,0 +1,32 @@
+@page "/Identity/Account/Manage/PersonalData"
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+
+<PageTitle>Personal Data - SimpleModule</PageTitle>
+
+<h3>Personal Data</h3>
+
+<div>
+    <p>Your account contains personal data that you have given us. This page allows you to download or delete that data.</p>
+    <p>
+        <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+    </p>
+    <form action="/api/users/download-personal-data" method="post">
+        <AntiforgeryToken />
+        <button class="btn btn-primary" type="submit">Download</button>
+    </form>
+    <p>
+        <a href="/Identity/Account/Manage/DeletePersonalData" class="btn btn-danger">Delete</a>
+    </p>
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await UserManager.GetUserAsync(HttpContext!.User);
+        if (user is null) { Navigation.NavigateTo("/Identity/Account/Login", forceLoad: true); return; }
+    }
+}

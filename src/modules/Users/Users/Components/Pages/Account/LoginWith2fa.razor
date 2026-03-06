@@ -1,0 +1,106 @@
+@page "/Identity/Account/LoginWith2fa"
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject ILogger<LoginWith2fa> Logger
+@inject NavigationManager Navigation
+
+<PageTitle>Two-factor authentication - SimpleModule</PageTitle>
+
+<h1>Two-factor authentication</h1>
+<hr />
+<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
+<div>
+    <EditForm Model="Input" method="post" OnValidSubmit="OnValidSubmitAsync" FormName="login-with-2fa">
+        <DataAnnotationsValidator />
+        <input type="hidden" name="RememberMe" value="@RememberMe" />
+        <ValidationSummary class="text-danger" role="alert" />
+        @if (_errors.Count > 0)
+        {
+            <div class="text-danger" role="alert">
+                <ul style="list-style:none;padding:0;">
+                    @foreach (var error in _errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            </div>
+        }
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="Input.TwoFactorCode" class="form-control" autocomplete="off" />
+            <label for="Input.TwoFactorCode" class="form-label">Authenticator code</label>
+            <ValidationMessage For="() => Input.TwoFactorCode" class="text-danger" />
+        </div>
+        <div class="checkbox mb-3">
+            <label class="form-label">
+                <InputCheckbox @bind-Value="Input.RememberMachine" />
+                Remember this machine
+            </label>
+        </div>
+        <div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+        </div>
+    </EditForm>
+</div>
+<p>
+    Don't have access to your authenticator device? You can
+    <a href="/Identity/Account/LoginWithRecoveryCode?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">log in with a recovery code</a>.
+</p>
+
+@code {
+    [SupplyParameterFromQuery]
+    public bool RememberMe { get; set; }
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    [SupplyParameterFromForm]
+    public InputModel Input { get; set; } = default!;
+
+    private readonly List<string> _errors = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        var user = await SignInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+        {
+            throw new InvalidOperationException("Unable to load two-factor authentication user.");
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var returnUrl = ReturnUrl ?? "/";
+        var authenticatorCode = Input.TwoFactorCode!.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+        var result = await SignInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, RememberMe, Input.RememberMachine);
+
+        if (result.Succeeded)
+        {
+            Logger.LogInformation("User logged in with 2fa.");
+            Navigation.NavigateTo(returnUrl, forceLoad: true);
+            return;
+        }
+        if (result.IsLockedOut)
+        {
+            Logger.LogWarning("User account locked out.");
+            Navigation.NavigateTo("/Identity/Account/Lockout", forceLoad: true);
+            return;
+        }
+
+        Logger.LogWarning("Invalid authenticator code entered.");
+        _errors.Add("Invalid authenticator code.");
+    }
+
+    public sealed class InputModel
+    {
+        [Required]
+        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Text)]
+        [Display(Name = "Authenticator code")]
+        public string? TwoFactorCode { get; set; }
+
+        [Display(Name = "Remember this machine")]
+        public bool RememberMachine { get; set; }
+    }
+}

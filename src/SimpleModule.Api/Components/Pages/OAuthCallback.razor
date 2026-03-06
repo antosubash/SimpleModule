@@ -1,0 +1,9 @@
+@page "/oauth-callback"
+
+<PageTitle>Authenticating... - SimpleModule</PageTitle>
+
+<p style="text-align:center;color:#666;">Completing authentication...</p>
+<script suppress-error="BL9992">
+    // Forward the authorization code back to the index page
+    window.location.href = '/' + window.location.search;
+</script>

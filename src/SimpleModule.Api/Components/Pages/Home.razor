@@ -1,0 +1,489 @@
+@page "/"
+
+<PageTitle>Home - SimpleModule</PageTitle>
+
+<HeadContent>
+<style>
+    .hero {
+        text-align: center;
+        padding: 48px 0 32px;
+    }
+    .hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .hero .tagline {
+        color: #666;
+        font-size: 1.05rem;
+        margin-bottom: 28px;
+    }
+    .hero .welcome {
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+    .hero .welcome strong {
+        color: #0d6efd;
+    }
+    .btn-group {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-block;
+        padding: 10px 24px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        border: none;
+        font-weight: 500;
+    }
+    .btn-primary { background: #0d6efd; color: #fff; }
+    .btn-primary:hover { background: #0b5ed7; }
+    .btn-outline { background: transparent; color: #0d6efd; border: 1px solid #0d6efd; }
+    .btn-outline:hover { background: #0d6efd; color: #fff; }
+    .btn-danger { background: #dc3545; color: #fff; }
+    .btn-danger:hover { background: #bb2d3b; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .quick-links {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 24px;
+        font-size: 14px;
+    }
+    .quick-links a { color: #666; text-decoration: none; }
+    .quick-links a:hover { color: #0d6efd; }
+    .divider {
+        border: none;
+        border-top: 1px solid #e5e5e5;
+        margin: 32px 0;
+    }
+    .hint-box {
+        background: #fff3cd;
+        border: 1px solid #ffecb5;
+        border-radius: 6px;
+        padding: 16px;
+        margin-top: 24px;
+        font-size: 13px;
+        text-align: left;
+    }
+    .hint-box strong { display: block; margin-bottom: 6px; }
+    .hint-box code { background: #ffeeba; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+
+    /* Auth panel */
+    .panel { margin-bottom: 24px; }
+    .panel h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #0d6efd;
+    }
+    .card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .card h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 14px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #666; }
+    .info-value { font-weight: 500; }
+    .token-box {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 4px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 12px;
+        word-break: break-all;
+        max-height: 120px;
+        overflow-y: auto;
+        margin-top: 8px;
+    }
+    .claims-table {
+        width: 100%;
+        font-size: 13px;
+        border-collapse: collapse;
+        margin-top: 8px;
+    }
+    .claims-table th, .claims-table td {
+        padding: 6px 8px;
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .claims-table th { color: #666; font-weight: 500; }
+    .claims-table td:first-child { font-family: monospace; font-size: 12px; color: #0d6efd; }
+    .response-box {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 4px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 8px;
+    }
+    .api-btn-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-ok { background: #d1e7dd; color: #0f5132; }
+    .status-err { background: #f8d7da; color: #842029; }
+    .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #ccc;
+        border-top-color: #0d6efd;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-left: 6px;
+    }
+    @@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</HeadContent>
+
+<!-- Hero Section -->
+<div class="hero">
+    <h1>SimpleModule</h1>
+    <p class="tagline">Modular monolith framework for .NET &mdash; AOT-compatible, zero reflection</p>
+
+    @if (IsAuthenticated)
+    {
+        <p class="welcome">Welcome back, <strong>@DisplayName</strong></p>
+        <div class="btn-group">
+            <a href="/Identity/Account/Manage" class="btn btn-outline">Manage Account</a>
+            <form method="post" action="/Identity/Account/Logout" style="display:inline" @formname="logout">
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="btn-group">
+            <a href="/Identity/Account/Login" class="btn btn-primary">Login</a>
+            <a href="/Identity/Account/Register" class="btn btn-outline">Register</a>
+        </div>
+
+        @if (IsDevelopment)
+        {
+            <div class="hint-box">
+                <strong>Quick Start (Development Only)</strong>
+                Email: <code>admin@@simplemodule.dev</code> &nbsp; Password: <code>Admin123!</code>
+            </div>
+        }
+    }
+
+    <div class="quick-links">
+        <a href="/swagger">API Docs</a>
+        <a href="/health">Health Check</a>
+    </div>
+</div>
+
+@if (IsAuthenticated)
+{
+    <hr class="divider" />
+
+    <!-- User Info -->
+    <div class="panel">
+        <h2>User Info</h2>
+        <div class="card" id="user-info-card">
+            <div style="color:#999; font-size:14px;">Loading user info<span class="spinner"></span></div>
+        </div>
+    </div>
+
+    <!-- Token Tester -->
+    <div class="panel">
+        <h2>Token Tester</h2>
+        <div class="card">
+            <h3>OAuth2 Authorization Code + PKCE</h3>
+            <p style="font-size:13px;color:#666;margin-bottom:12px;">
+                Obtain an access token using the <code>simplemodule-client</code> application.
+            </p>
+            <button class="btn btn-primary btn-sm" id="btn-get-token" onclick="startOAuthFlow()">
+                Get Access Token
+            </button>
+            <div id="token-result" style="display:none">
+                <div class="token-box" id="token-value"></div>
+                <h3 style="margin-top:12px;">Decoded Claims</h3>
+                <table class="claims-table" id="token-claims"></table>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Tester -->
+    <div class="panel">
+        <h2>API Tester</h2>
+        <div class="card">
+            <h3>Call Protected Endpoints</h3>
+            <div class="api-btn-row">
+                <button class="btn btn-outline btn-sm" onclick="callApi('/api/users/me')">GET /api/users/me</button>
+                <button class="btn btn-outline btn-sm" onclick="callApi('/api/users')">GET /api/users</button>
+                <button class="btn btn-outline btn-sm" onclick="callApi('/api/products')">GET /api/products</button>
+                <button class="btn btn-outline btn-sm" onclick="callApi('/api/orders')">GET /api/orders</button>
+            </div>
+            <div id="api-status" style="font-size:13px;color:#666;margin-bottom:4px;"></div>
+            <div class="response-box" id="api-response">Click an endpoint above to make a request.</div>
+        </div>
+    </div>
+
+    <script suppress-error="BL9992">
+        // --- Helpers ---
+        function clearChildren(el) {
+            while (el.firstChild) el.removeChild(el.firstChild);
+        }
+
+        function createInfoRow(label, value, monospace) {
+            var row = document.createElement('div');
+            row.className = 'info-row';
+            var lbl = document.createElement('span');
+            lbl.className = 'info-label';
+            lbl.textContent = label;
+            var val = document.createElement('span');
+            val.className = 'info-value';
+            if (monospace) val.style.cssText = 'font-family:monospace;font-size:12px';
+            val.textContent = value;
+            row.appendChild(lbl);
+            row.appendChild(val);
+            return row;
+        }
+
+        function createSpinner() {
+            var s = document.createElement('span');
+            s.className = 'spinner';
+            return s;
+        }
+
+        function createStatusBadge(ok, code) {
+            var span = document.createElement('span');
+            span.className = 'status-badge ' + (ok ? 'status-ok' : 'status-err');
+            span.textContent = code;
+            return span;
+        }
+
+        // --- User Info ---
+        (async function loadUserInfo() {
+            var card = document.getElementById('user-info-card');
+            try {
+                var res = await fetch('/api/users/me');
+                if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+                var data = await res.json();
+                clearChildren(card);
+                card.appendChild(createInfoRow('Name', data.displayName || data.name || '-', false));
+                card.appendChild(createInfoRow('Email', data.email || '-', false));
+                card.appendChild(createInfoRow('ID', data.id || '-', true));
+                if (data.roles) {
+                    card.appendChild(createInfoRow('Roles', Array.isArray(data.roles) ? data.roles.join(', ') : data.roles, false));
+                }
+            } catch (e) {
+                clearChildren(card);
+                var err = document.createElement('span');
+                err.style.color = '#dc3545';
+                err.textContent = 'Failed to load: ' + e.message;
+                card.appendChild(err);
+            }
+        })();
+
+        // --- OAuth PKCE Flow ---
+        var accessToken = null;
+
+        function generateCodeVerifier() {
+            var arr = new Uint8Array(32);
+            crypto.getRandomValues(arr);
+            return btoa(String.fromCharCode.apply(null, arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+        }
+
+        async function generateCodeChallenge(verifier) {
+            var data = new TextEncoder().encode(verifier);
+            var hash = await crypto.subtle.digest('SHA-256', data);
+            return btoa(String.fromCharCode.apply(null, new Uint8Array(hash))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+        }
+
+        async function startOAuthFlow() {
+            var btn = document.getElementById('btn-get-token');
+            btn.disabled = true;
+            clearChildren(btn);
+            btn.appendChild(document.createTextNode('Authorizing'));
+            btn.appendChild(createSpinner());
+
+            var verifier = generateCodeVerifier();
+            var challenge = await generateCodeChallenge(verifier);
+            var state = crypto.randomUUID();
+
+            sessionStorage.setItem('pkce_verifier', verifier);
+            sessionStorage.setItem('pkce_state', state);
+
+            var params = new URLSearchParams({
+                response_type: 'code',
+                client_id: 'simplemodule-client',
+                redirect_uri: window.location.origin + '/oauth-callback',
+                scope: 'openid profile email',
+                state: state,
+                code_challenge: challenge,
+                code_challenge_method: 'S256'
+            });
+
+            window.location.href = '/connect/authorize?' + params.toString();
+        }
+
+        // Handle callback if we have a code in the URL
+        (async function handleCallback() {
+            var params = new URLSearchParams(window.location.search);
+            var code = params.get('code');
+            var state = params.get('state');
+            if (!code) return;
+
+            // Clean URL
+            window.history.replaceState({}, '', '/');
+
+            var verifier = sessionStorage.getItem('pkce_verifier');
+            var savedState = sessionStorage.getItem('pkce_state');
+
+            if (state !== savedState) {
+                alert('OAuth state mismatch');
+                return;
+            }
+
+            sessionStorage.removeItem('pkce_verifier');
+            sessionStorage.removeItem('pkce_state');
+
+            try {
+                var res = await fetch('/connect/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        grant_type: 'authorization_code',
+                        client_id: 'simplemodule-client',
+                        code: code,
+                        redirect_uri: window.location.origin + '/oauth-callback',
+                        code_verifier: verifier
+                    })
+                });
+
+                if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+                var data = await res.json();
+                accessToken = data.access_token;
+                showToken(accessToken);
+            } catch (e) {
+                alert('Token exchange failed: ' + e.message);
+            }
+
+            var btn = document.getElementById('btn-get-token');
+            btn.disabled = false;
+            btn.textContent = 'Get Access Token';
+        })();
+
+        function showToken(token) {
+            document.getElementById('token-result').style.display = 'block';
+            document.getElementById('token-value').textContent = token;
+
+            // Decode JWT payload
+            try {
+                var parts = token.split('.');
+                var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+                var table = document.getElementById('token-claims');
+                clearChildren(table);
+
+                var headerRow = document.createElement('tr');
+                var th1 = document.createElement('th');
+                th1.textContent = 'Claim';
+                var th2 = document.createElement('th');
+                th2.textContent = 'Value';
+                headerRow.appendChild(th1);
+                headerRow.appendChild(th2);
+                table.appendChild(headerRow);
+
+                for (var key of Object.keys(payload)) {
+                    var val = payload[key];
+                    var display = (key === 'exp' || key === 'iat' || key === 'nbf')
+                        ? new Date(val * 1000).toLocaleString()
+                        : (typeof val === 'object' ? JSON.stringify(val) : String(val));
+
+                    var tr = document.createElement('tr');
+                    var td1 = document.createElement('td');
+                    td1.textContent = key;
+                    var td2 = document.createElement('td');
+                    td2.textContent = display;
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    table.appendChild(tr);
+                }
+            } catch (e) { /* non-JWT token, skip decode */ }
+        }
+
+        // --- API Tester ---
+        async function callApi(url) {
+            var statusEl = document.getElementById('api-status');
+            var responseEl = document.getElementById('api-response');
+
+            clearChildren(statusEl);
+            statusEl.appendChild(document.createTextNode('Calling ' + url));
+            statusEl.appendChild(createSpinner());
+            responseEl.textContent = '';
+
+            var headers = {};
+            if (accessToken) {
+                headers['Authorization'] = 'Bearer ' + accessToken;
+            }
+
+            try {
+                var res = await fetch(url, { headers: headers });
+
+                clearChildren(statusEl);
+                statusEl.appendChild(createStatusBadge(res.ok, String(res.status)));
+                statusEl.appendChild(document.createTextNode(' ' + res.statusText + ' \u2014 ' + url));
+
+                var text = await res.text();
+                try {
+                    responseEl.textContent = JSON.stringify(JSON.parse(text), null, 2);
+                } catch (e) {
+                    responseEl.textContent = text;
+                }
+            } catch (e) {
+                clearChildren(statusEl);
+                statusEl.appendChild(createStatusBadge(false, 'Error'));
+                statusEl.appendChild(document.createTextNode(' ' + e.message));
+                responseEl.textContent = e.message;
+            }
+        }
+    </script>
+}
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private bool IsAuthenticated => HttpContext?.User?.Identity?.IsAuthenticated == true;
+    private string DisplayName => HttpContext?.User?.Identity?.Name ?? "User";
+    private bool IsDevelopment => Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+}
