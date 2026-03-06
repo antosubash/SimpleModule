@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 
@@ -12,7 +13,7 @@ public class IModuleTests
 
     private sealed class TestModule : IModule
     {
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<TestService>();
         }
@@ -25,13 +26,15 @@ public class IModuleTests
 
     private sealed class TestService { }
 
+    private static IConfiguration CreateEmptyConfiguration() => new ConfigurationBuilder().Build();
+
     [Fact]
     public void DefaultMethods_DoNotThrow()
     {
         IModule module = new EmptyModule();
         var services = new ServiceCollection();
 
-        var act = () => module.ConfigureServices(services);
+        var act = () => module.ConfigureServices(services, CreateEmptyConfiguration());
 
         act.Should().NotThrow();
     }
@@ -42,7 +45,7 @@ public class IModuleTests
         var module = new TestModule();
         var services = new ServiceCollection();
 
-        module.ConfigureServices(services);
+        module.ConfigureServices(services, CreateEmptyConfiguration());
 
         services.Should().Contain(sd => sd.ServiceType == typeof(TestService));
     }

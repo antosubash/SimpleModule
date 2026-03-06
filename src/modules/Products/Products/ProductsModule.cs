@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Products.Contracts;
@@ -11,8 +13,11 @@ namespace SimpleModule.Products;
 [Module("Products")]
 public class ProductsModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDbContext<ProductsDbContext>(options =>
+            options.UseSqlite(configuration.GetConnectionString("ProductsConnection"))
+        );
         services.AddScoped<IProductContracts, ProductService>();
     }
 

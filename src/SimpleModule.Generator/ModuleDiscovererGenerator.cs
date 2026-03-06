@@ -215,6 +215,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("#pragma warning disable IL2026");
         sb.AppendLine("#pragma warning disable IL3050");
         sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
+        sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
@@ -222,14 +223,14 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("public static class ModuleExtensions");
         sb.AppendLine("{");
         sb.AppendLine(
-            "    public static IServiceCollection AddModules(this IServiceCollection services)"
+            "    public static IServiceCollection AddModules(this IServiceCollection services, IConfiguration configuration)"
         );
         sb.AppendLine("    {");
 
         foreach (var module in modules.Where(m => m.HasConfigureServices))
         {
             sb.AppendLine(
-                $"        new {module.FullyQualifiedName}().ConfigureServices(services);"
+                $"        new {module.FullyQualifiedName}().ConfigureServices(services, configuration);"
             );
         }
 
