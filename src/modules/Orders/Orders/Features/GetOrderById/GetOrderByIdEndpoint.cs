@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Orders.Contracts;
 
@@ -9,10 +10,13 @@ public static class GetOrderByIdEndpoint
 {
     public static void Map(IEndpointRouteBuilder group)
     {
-        group.MapGet("/{id}", async (int id, IOrderContracts orderContracts) =>
-        {
-            var order = await orderContracts.GetOrderByIdAsync(id);
-            return order is not null ? Results.Ok(order) : Results.NotFound();
-        });
+        group.MapGet(
+            "/{id}",
+            async Task<Results<Ok<Order>, NotFound>> (int id, IOrderContracts orderContracts) =>
+            {
+                var order = await orderContracts.GetOrderByIdAsync(id);
+                return order is not null ? TypedResults.Ok(order) : TypedResults.NotFound();
+            }
+        );
     }
 }
