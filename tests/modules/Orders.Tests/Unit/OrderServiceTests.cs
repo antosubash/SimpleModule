@@ -1,7 +1,10 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using SimpleModule.Core.Events;
+using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
@@ -15,6 +18,7 @@ public sealed class OrderServiceTests : IDisposable
     private readonly OrdersDbContext _db;
     private readonly IUserContracts _users = Substitute.For<IUserContracts>();
     private readonly IProductContracts _products = Substitute.For<IProductContracts>();
+    private readonly IEventBus _eventBus = Substitute.For<IEventBus>();
     private readonly OrderService _sut;
 
     public OrderServiceTests()
@@ -34,7 +38,13 @@ public sealed class OrderServiceTests : IDisposable
         _db = new OrdersDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new OrderService(_db, _users, _products);
+        _sut = new OrderService(
+            _db,
+            _users,
+            _products,
+            _eventBus,
+            NullLogger<OrderService>.Instance
+        );
     }
 
     public void Dispose() => _db.Dispose();
@@ -68,7 +78,7 @@ public sealed class OrderServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WithInvalidUser_ThrowsInvalidOperationException()
+    public async Task CreateOrderAsync_WithInvalidUser_ThrowsNotFoundException()
     {
         _users.GetUserByIdAsync(999).Returns((User?)null);
 
@@ -80,13 +90,11 @@ public sealed class OrderServiceTests : IDisposable
 
         var act = () => _sut.CreateOrderAsync(request);
 
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage("*User*999*not found*");
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("*User*999*not found*");
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WithInvalidProduct_ThrowsInvalidOperationException()
+    public async Task CreateOrderAsync_WithInvalidProduct_ThrowsNotFoundException()
     {
         _users.GetUserByIdAsync(1).Returns(new User { Id = 1, Name = "Test" });
         _products.GetProductByIdAsync(999).Returns((Product?)null);
@@ -99,9 +107,7 @@ public sealed class OrderServiceTests : IDisposable
 
         var act = () => _sut.CreateOrderAsync(request);
 
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage("*Product*999*not found*");
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*999*not found*");
     }
 
     [Fact]

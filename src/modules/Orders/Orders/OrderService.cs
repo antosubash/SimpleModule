@@ -1,31 +1,52 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Events;
+using SimpleModule.Core.Exceptions;
 using SimpleModule.Orders.Contracts;
+using SimpleModule.Orders.Contracts.Events;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders;
 
-public class OrderService(OrdersDbContext db, IUserContracts users, IProductContracts products)
-    : IOrderContracts
+public partial class OrderService(
+    OrdersDbContext db,
+    IUserContracts users,
+    IProductContracts products,
+    IEventBus eventBus,
+    ILogger<OrderService> logger
+) : IOrderContracts
 {
     public async Task<IEnumerable<Order>> GetAllOrdersAsync() =>
         await db.Orders.Include(o => o.Items).ToListAsync();
 
-    public async Task<Order?> GetOrderByIdAsync(int id) =>
-        await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
+    public async Task<Order?> GetOrderByIdAsync(int id)
+    {
+        var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
+        if (order is null)
+        {
+            LogOrderNotFound(logger, id);
+        }
+
+        return order;
+    }
 
     public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
     {
         var user = await users.GetUserByIdAsync(request.UserId);
         if (user is null)
-            throw new InvalidOperationException($"User with ID {request.UserId} not found");
+        {
+            throw new NotFoundException("User", request.UserId);
+        }
 
         decimal total = 0;
         foreach (var item in request.Items)
         {
             var product = await products.GetProductByIdAsync(item.ProductId);
             if (product is null)
-                throw new InvalidOperationException($"Product with ID {item.ProductId} not found");
+            {
+                throw new NotFoundException("Product", item.ProductId);
+            }
 
             total += product.Price * item.Quantity;
         }
@@ -40,6 +61,25 @@ public class OrderService(OrdersDbContext db, IUserContracts users, IProductCont
 
         db.Orders.Add(order);
         await db.SaveChangesAsync();
+
+        LogOrderCreated(logger, order.Id, order.UserId, order.Total);
+
+        await eventBus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
+
         return order;
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Order with ID {OrderId} not found")]
+    private static partial void LogOrderNotFound(ILogger logger, int orderId);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Order {OrderId} created for user {UserId}, total: {Total}"
+    )]
+    private static partial void LogOrderCreated(
+        ILogger logger,
+        int orderId,
+        int userId,
+        decimal total
+    );
 }
