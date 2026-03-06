@@ -5,6 +5,6 @@ namespace SimpleModule.Orders.Contracts;
 [Dto]
 public class CreateOrderRequest
 {
-    public int UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public List<OrderItem> Items { get; set; } = new();
 }

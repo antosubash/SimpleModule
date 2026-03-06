@@ -2,6 +2,7 @@ namespace SimpleModule.Users.Contracts;
 
 public interface IUserContracts
 {
-    Task<IEnumerable<User>> GetAllUsersAsync();
-    Task<User?> GetUserByIdAsync(int id);
+    Task<IEnumerable<UserDto>> GetAllUsersAsync();
+    Task<UserDto?> GetUserByIdAsync(string id);
+    Task<UserDto?> GetCurrentUserAsync(string userId);
 }

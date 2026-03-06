@@ -4,10 +4,14 @@ namespace SimpleModule.Tests.Shared.Fakes;
 
 public class FakeUserContracts : IUserContracts
 {
-    public List<User> Users { get; set; } = FakeDataGenerators.UserFaker.Generate(3);
+    public List<UserDto> Users { get; set; } = FakeDataGenerators.UserFaker.Generate(3);
 
-    public Task<IEnumerable<User>> GetAllUsersAsync() => Task.FromResult<IEnumerable<User>>(Users);
+    public Task<IEnumerable<UserDto>> GetAllUsersAsync() =>
+        Task.FromResult<IEnumerable<UserDto>>(Users);
 
-    public Task<User?> GetUserByIdAsync(int id) =>
+    public Task<UserDto?> GetUserByIdAsync(string id) =>
         Task.FromResult(Users.FirstOrDefault(u => u.Id == id));
+
+    public Task<UserDto?> GetCurrentUserAsync(string userId) =>
+        Task.FromResult(Users.FirstOrDefault(u => u.Id == userId));
 }

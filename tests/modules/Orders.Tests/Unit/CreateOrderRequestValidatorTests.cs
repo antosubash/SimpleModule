@@ -11,7 +11,7 @@ public sealed class CreateOrderRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            UserId = 1,
+            UserId = "1",
             Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
         };
 
@@ -22,11 +22,11 @@ public sealed class CreateOrderRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithZeroUserId_ReturnsError()
+    public void Validate_WithEmptyUserId_ReturnsError()
     {
         var request = new CreateOrderRequest
         {
-            UserId = 0,
+            UserId = "",
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
@@ -37,11 +37,11 @@ public sealed class CreateOrderRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithNegativeUserId_ReturnsError()
+    public void Validate_WithWhitespaceUserId_ReturnsError()
     {
         var request = new CreateOrderRequest
         {
-            UserId = -1,
+            UserId = "  ",
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
@@ -54,7 +54,7 @@ public sealed class CreateOrderRequestValidatorTests
     [Fact]
     public void Validate_WithEmptyItems_ReturnsError()
     {
-        var request = new CreateOrderRequest { UserId = 1, Items = [] };
+        var request = new CreateOrderRequest { UserId = "1", Items = [] };
 
         var result = CreateOrderRequestValidator.Validate(request);
 
@@ -67,7 +67,7 @@ public sealed class CreateOrderRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            UserId = 1,
+            UserId = "1",
             Items = [new OrderItem { ProductId = 1, Quantity = 0 }],
         };
 
@@ -80,7 +80,7 @@ public sealed class CreateOrderRequestValidatorTests
     [Fact]
     public void Validate_WithMultipleErrors_ReturnsAllErrors()
     {
-        var request = new CreateOrderRequest { UserId = 0, Items = [] };
+        var request = new CreateOrderRequest { UserId = "", Items = [] };
 
         var result = CreateOrderRequestValidator.Validate(request);
 

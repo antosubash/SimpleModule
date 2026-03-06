@@ -10,7 +10,8 @@ public static class ModuleDbContextOptionsBuilder
     public static IServiceCollection AddModuleDbContext<TContext>(
         this IServiceCollection services,
         IConfiguration configuration,
-        string moduleName
+        string moduleName,
+        Action<DbContextOptionsBuilder>? configureOptions = null
     )
         where TContext : DbContext
     {
@@ -39,6 +40,8 @@ public static class ModuleDbContextOptionsBuilder
                     options.UseSqlite(connectionString);
                     break;
             }
+
+            configureOptions?.Invoke(options);
         });
 
         services.AddSingleton(new ModuleDbContextInfo(moduleName, typeof(TContext)));

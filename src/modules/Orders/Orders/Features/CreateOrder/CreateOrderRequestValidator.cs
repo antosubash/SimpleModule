@@ -9,9 +9,9 @@ public static class CreateOrderRequestValidator
     {
         var errors = new Dictionary<string, string[]>();
 
-        if (request.UserId <= 0)
+        if (string.IsNullOrWhiteSpace(request.UserId))
         {
-            errors["UserId"] = ["UserId must be greater than 0."];
+            errors["UserId"] = ["UserId is required."];
         }
 
         if (request.Items is null || request.Items.Count == 0)

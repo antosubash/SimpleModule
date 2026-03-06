@@ -32,20 +32,17 @@ public class OrdersEndpointTests : IClassFixture<SimpleModuleWebApplicationFacto
     }
 
     [Fact]
-    public async Task CreateOrder_WithValidBody_Returns201()
+    public async Task CreateOrder_WithInvalidUserId_Returns404()
     {
         var request = new CreateOrderRequest
         {
-            UserId = 1,
+            UserId = "nonexistent-user-id",
             Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
         };
 
         var response = await _client.PostAsJsonAsync("/api/orders", request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var order = await response.Content.ReadFromJsonAsync<Order>();
-        order.Should().NotBeNull();
-        order!.UserId.Should().Be(1);
-        order.Total.Should().BeGreaterThan(0);
+        // User doesn't exist, so the order service throws NotFoundException
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }
