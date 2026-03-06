@@ -1,10 +1,15 @@
 using Bogus;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users;
 
-public class UsersDbContext(DbContextOptions<UsersDbContext> options) : DbContext(options)
+public class UsersDbContext(
+    DbContextOptions<UsersDbContext> options,
+    IOptions<DatabaseOptions> dbOptions
+) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();
 
@@ -17,6 +22,8 @@ public class UsersDbContext(DbContextOptions<UsersDbContext> options) : DbContex
         });
 
         modelBuilder.Entity<User>().HasData(GenerateSeedUsers());
+
+        modelBuilder.ApplyModuleSchema("Users", dbOptions.Value);
     }
 
     private static User[] GenerateSeedUsers()

@@ -1,10 +1,15 @@
 using Bogus;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SimpleModule.Database;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders;
 
-public class OrdersDbContext(DbContextOptions<OrdersDbContext> options) : DbContext(options)
+public class OrdersDbContext(
+    DbContextOptions<OrdersDbContext> options,
+    IOptions<DatabaseOptions> dbOptions
+) : DbContext(options)
 {
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
@@ -24,6 +29,8 @@ public class OrdersDbContext(DbContextOptions<OrdersDbContext> options) : DbCont
         });
 
         SeedOrders(modelBuilder);
+
+        modelBuilder.ApplyModuleSchema("Orders", dbOptions.Value);
     }
 
     private static void SeedOrders(ModelBuilder modelBuilder)
@@ -50,21 +57,25 @@ public class OrdersDbContext(DbContextOptions<OrdersDbContext> options) : DbCont
                 var price = orderFaker.Random.Decimal(10, 1000);
                 total += price * quantity;
 
-                orderItems.Add(new
-                {
-                    OrderId = i,
-                    ProductId = productId,
-                    Quantity = quantity,
-                });
+                orderItems.Add(
+                    new
+                    {
+                        OrderId = i,
+                        ProductId = productId,
+                        Quantity = quantity,
+                    }
+                );
             }
 
-            orders.Add(new Order
-            {
-                Id = i,
-                UserId = orderFaker.Random.Int(1, 10),
-                Total = Math.Round(total, 2),
-                CreatedAt = orderFaker.Date.Recent(30).ToUniversalTime(),
-            });
+            orders.Add(
+                new Order
+                {
+                    Id = i,
+                    UserId = orderFaker.Random.Int(1, 10),
+                    Total = Math.Round(total, 2),
+                    CreatedAt = orderFaker.Date.Recent(30).ToUniversalTime(),
+                }
+            );
         }
 
         modelBuilder.Entity<Order>().HasData(orders);

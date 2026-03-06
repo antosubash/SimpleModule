@@ -1,5 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SimpleModule.Database;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
 
@@ -15,7 +17,16 @@ public sealed class UserServiceTests : IDisposable
         var options = new DbContextOptionsBuilder<UsersDbContext>()
             .UseSqlite("Data Source=:memory:")
             .Options;
-        _db = new UsersDbContext(options);
+        var dbOptions = Options.Create(
+            new DatabaseOptions
+            {
+                ModuleConnections = new Dictionary<string, string>
+                {
+                    ["Users"] = "Data Source=:memory:",
+                },
+            }
+        );
+        _db = new UsersDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
         _sut = new UserService(_db);
