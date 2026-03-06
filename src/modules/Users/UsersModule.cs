@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 
@@ -16,18 +18,24 @@ public class UsersModule : IModule
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/users");
-        
-        group.MapGet("/", async (IUserService userService) =>
-        {
-            var users = await userService.GetAllUsersAsync();
-            return Results.Ok(users);
-        });
 
-        group.MapGet("/{id}", async (int id, IUserService userService) =>
-        {
-            var user = await userService.GetUserByIdAsync(id);
-            return user is not null ? Results.Ok(user) : Results.NotFound();
-        });
+        group.MapGet(
+            "/",
+            async (IUserService userService) =>
+            {
+                var users = await userService.GetAllUsersAsync();
+                return Results.Ok(users);
+            }
+        );
+
+        group.MapGet(
+            "/{id}",
+            async (int id, IUserService userService) =>
+            {
+                var user = await userService.GetUserByIdAsync(id);
+                return user is not null ? Results.Ok(user) : Results.NotFound();
+            }
+        );
     }
 }
 
@@ -42,11 +50,13 @@ public class UserService : IUserService
     public Task<IEnumerable<User>> GetAllUsersAsync()
     {
         // In a real application, this would fetch from a database
-        return Task.FromResult<IEnumerable<User>>(new[]
-        {
-            new User { Id = 1, Name = "John Doe" },
-            new User { Id = 2, Name = "Jane Smith" }
-        });
+        return Task.FromResult<IEnumerable<User>>(
+            new[]
+            {
+                new User { Id = 1, Name = "John Doe" },
+                new User { Id = 2, Name = "Jane Smith" },
+            }
+        );
     }
 
     public Task<User?> GetUserByIdAsync(int id)
@@ -60,4 +70,4 @@ public class User
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-} 
+}
