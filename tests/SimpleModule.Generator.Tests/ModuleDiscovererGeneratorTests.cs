@@ -26,17 +26,25 @@ public class ModuleDiscovererGeneratorTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        result.GeneratedTrees.Should().Contain(t => t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal));
-        result.GeneratedTrees.Should().Contain(t => t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal));
+        result
+            .GeneratedTrees.Should()
+            .Contain(t => t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal));
+        result
+            .GeneratedTrees.Should()
+            .Contain(t => t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal));
 
         var moduleExt = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal))
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
             .GetText()
             .ToString();
         moduleExt.Should().Contain("new global::TestApp.TestModule()");
 
         var endpointExt = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal))
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal)
+            )
             .GetText()
             .ToString();
         endpointExt.Should().Contain("new global::TestApp.TestModule()");
@@ -62,13 +70,17 @@ public class ModuleDiscovererGeneratorTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var moduleExt = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal))
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
             .GetText()
             .ToString();
         moduleExt.Should().NotContain("EndpointOnlyModule().ConfigureServices");
 
         var endpointExt = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal))
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal)
+            )
             .GetText()
             .ToString();
         endpointExt.Should().Contain("new global::TestApp.EndpointOnlyModule().ConfigureEndpoints");
@@ -119,7 +131,9 @@ public class ModuleDiscovererGeneratorTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t => t.FilePath.EndsWith("ModulesJsonResolver.g.cs", StringComparison.Ordinal));
+            .Contain(t =>
+                t.FilePath.EndsWith("ModulesJsonResolver.g.cs", StringComparison.Ordinal)
+            );
     }
 
     [Fact]
@@ -151,7 +165,9 @@ public class ModuleDiscovererGeneratorTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var moduleExt = result
-            .GeneratedTrees.First(t => t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal))
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
             .GetText()
             .ToString();
         moduleExt.Should().Contain("FirstModule");
