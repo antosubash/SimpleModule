@@ -1,4 +1,4 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -12,11 +12,17 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleModule.Generator", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleModule.Api", "src\SimpleModule.Api\SimpleModule.Api.csproj", "{E1F2G3H4-I5J6-51E2-F3A4-B5C6D7E8F9G0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users", "src\modules\Users\Users.csproj", "{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users", "src\modules\Users\Users\Users.csproj", "{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Products", "src\modules\Products\Products.csproj", "{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Products", "src\modules\Products\Products\Products.csproj", "{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders", "src\modules\Orders\Orders.csproj", "{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders", "src\modules\Orders\Orders\Orders.csproj", "{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Contracts", "src\modules\Users\Users.Contracts\Users.Contracts.csproj", "{FF23ED95-BB52-4C25-B971-2EBD84C9CD65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Products.Contracts", "src\modules\Products\Products.Contracts\Products.Contracts.csproj", "{B34A0F59-EC3A-405E-AAA1-E6BBACE22BBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orders.Contracts", "src\modules\Orders\Orders.Contracts\Orders.Contracts.csproj", "{458BA357-033A-436F-B496-F3F8B116DDC6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +54,18 @@ Global
 		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF23ED95-BB52-4C25-B971-2EBD84C9CD65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF23ED95-BB52-4C25-B971-2EBD84C9CD65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF23ED95-BB52-4C25-B971-2EBD84C9CD65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF23ED95-BB52-4C25-B971-2EBD84C9CD65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B34A0F59-EC3A-405E-AAA1-E6BBACE22BBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B34A0F59-EC3A-405E-AAA1-E6BBACE22BBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B34A0F59-EC3A-405E-AAA1-E6BBACE22BBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B34A0F59-EC3A-405E-AAA1-E6BBACE22BBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{458BA357-033A-436F-B496-F3F8B116DDC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{458BA357-033A-436F-B496-F3F8B116DDC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{458BA357-033A-436F-B496-F3F8B116DDC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{458BA357-033A-436F-B496-F3F8B116DDC6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -59,6 +77,9 @@ Global
 		{F1G2H3I4-J5K6-52F3-A4B5-C6D7E8F9G0H1} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
 		{G1H2I3J4-K5L6-53G4-B5C6-D7E8F9G0H1I2} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
 		{H1I2J3K4-L5M6-54H5-C6D7-E8F9G0H1I2J3} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
+		{FF23ED95-BB52-4C25-B971-2EBD84C9CD65} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
+		{B34A0F59-EC3A-405E-AAA1-E6BBACE22BBB} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
+		{458BA357-033A-436F-B496-F3F8B116DDC6} = {B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7}
 		{B1C2D3E4-F5G6-48B9-C0D1-E2F3A4B5C6D7} = {A1B2C3D4-E5F6-47A8-B9C0-D1E2F3A4B5C6}
 	EndGlobalSection
 EndGlobal
