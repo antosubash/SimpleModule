@@ -6,7 +6,6 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
   </ItemGroup>
 </Project>
