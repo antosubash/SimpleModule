@@ -11,32 +11,32 @@
 <div>
     @if (_isEmailConfirmed)
     {
-        <div class="form-floating mb-3" style="display:flex;align-items:center;gap:8px;">
-            <input value="@_email" class="form-control" placeholder="Please enter your email." disabled />
-            <span style="color:green;font-weight:bold;">&#10003;</span>
-            <label class="form-label">Email</label>
+        <div class="form-group flex items-center gap-2">
+            <input value="@_email" class="w-full" placeholder="Please enter your email." disabled />
+            <span class="text-success font-bold">&#10003;</span>
+            <label>Email</label>
         </div>
     }
     else
     {
-        <div class="form-floating mb-3">
-            <input value="@_email" class="form-control" placeholder="Please enter your email." disabled />
-            <label class="form-label">Email</label>
+        <div class="form-group">
+            <input value="@_email" class="w-full" placeholder="Please enter your email." disabled />
+            <label>Email</label>
             <form method="post" @formname="send-verification" @onsubmit="OnSendVerificationEmailAsync">
                 <AntiforgeryToken />
-                <button type="submit" class="btn btn-link" style="padding:0;">Send verification email</button>
+                <button type="submit" class="btn-ghost text-xs p-0">Send verification email</button>
             </form>
         </div>
     }
     <EditForm Model="Input" method="post" OnValidSubmit="OnChangeEmailAsync" FormName="change-email">
         <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger" role="alert" />
-        <div class="form-floating mb-3">
-            <InputText @bind-Value="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
-            <label for="Input.NewEmail" class="form-label">New email</label>
+        <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
+        <div class="form-group">
+            <InputText @bind-Value="Input.NewEmail" class="w-full" autocomplete="email" aria-required="true" placeholder="Please enter new email." />
+            <label for="Input.NewEmail">New email</label>
             <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
         </div>
-        <button id="change-email-button" type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
+        <button id="change-email-button" type="submit" class="btn-primary btn-lg w-full">Change email</button>
     </EditForm>
 </div>
 

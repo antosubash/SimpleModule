@@ -4,20 +4,26 @@
 
 <PageTitle>Register confirmation - SimpleModule</PageTitle>
 
-<h1>Register confirmation</h1>
-@if (_displayConfirmAccountLink)
-{
-    <p>
-        This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-        Normally this would be emailed: <a id="confirm-link" href="@_emailConfirmationUrl">Click here to confirm your account</a>
-    </p>
-}
-else
-{
-    <p>
-        Please check your email to confirm your account.
-    </p>
-}
+<div class="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-md">
+        <div class="glass-card p-8">
+            <h1>Register confirmation</h1>
+            @if (_displayConfirmAccountLink)
+            {
+                <p>
+                    This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
+                    Normally this would be emailed: <a id="confirm-link" href="@_emailConfirmationUrl">Click here to confirm your account</a>
+                </p>
+            }
+            else
+            {
+                <p>
+                    Please check your email to confirm your account.
+                </p>
+            }
+        </div>
+    </div>
+</div>
 
 @code {
     [SupplyParameterFromQuery]

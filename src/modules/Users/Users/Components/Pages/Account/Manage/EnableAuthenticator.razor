@@ -10,7 +10,7 @@
 <h3>Configure authenticator app</h3>
 <div>
     <p>To use an authenticator app go through the following steps:</p>
-    <ol class="list">
+    <ol class="list-decimal pl-5 space-y-2 text-sm text-text-secondary">
         <li>
             <p>
                 Download a two-factor authenticator app like Microsoft Authenticator for
@@ -23,7 +23,7 @@
         </li>
         <li>
             <p>Scan the QR Code or enter this key <kbd>@_sharedKey</kbd> into your two factor authenticator app. Spaces and casing do not matter.</p>
-            <div class="alert alert-info">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.</div>
+            <div class="alert-info mb-4">Learn how to <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.</div>
             <div id="qrCode"></div>
             <div id="qrCodeData" data-url="@_authenticatorUri"></div>
         </li>
@@ -35,17 +35,17 @@
             <div>
                 <EditForm Model="Input" method="post" OnValidSubmit="OnValidSubmitAsync" FormName="enable-authenticator">
                     <DataAnnotationsValidator />
-                    <div class="form-floating mb-3">
-                        <InputText @bind-Value="Input.Code" class="form-control" autocomplete="off" placeholder="Please enter the code." />
-                        <label for="Input.Code" class="form-label">Verification Code</label>
+                    <div class="form-group">
+                        <InputText @bind-Value="Input.Code" class="w-full" autocomplete="off" placeholder="Please enter the code." />
+                        <label for="Input.Code">Verification Code</label>
                         <ValidationMessage For="() => Input.Code" class="text-danger" />
                     </div>
-                    <button type="submit" class="w-100 btn btn-lg btn-primary">Verify</button>
-                    <ValidationSummary class="text-danger" role="alert" />
+                    <button type="submit" class="btn-primary btn-lg w-full">Verify</button>
+                    <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
                     @if (_errors.Count > 0)
                     {
-                        <div class="text-danger" role="alert">
-                            <ul style="list-style:none;padding:0;">
+                        <div class="alert-danger mb-4 text-sm" role="alert">
+                            <ul class="list-none p-0 m-0 space-y-1">
                                 @foreach (var error in _errors)
                                 {
                                     <li>@error</li>

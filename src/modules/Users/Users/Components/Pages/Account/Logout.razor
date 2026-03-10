@@ -5,20 +5,26 @@
 
 <PageTitle>Log out - SimpleModule</PageTitle>
 
-<header>
-    <h1>Log out</h1>
-    @if (HttpContext?.User?.Identity?.IsAuthenticated == true)
-    {
-        <form method="post" @formname="logout" @onsubmit="OnSubmitAsync">
-            <AntiforgeryToken />
-            <button type="submit" class="btn btn-primary">Click here to Logout</button>
-        </form>
-    }
-    else
-    {
-        <p>You have successfully logged out of the application.</p>
-    }
-</header>
+<div class="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-md">
+        <div class="glass-card p-8">
+            <header>
+                <h1>Log out</h1>
+                @if (HttpContext?.User?.Identity?.IsAuthenticated == true)
+                {
+                    <form method="post" @formname="logout" @onsubmit="OnSubmitAsync">
+                        <AntiforgeryToken />
+                        <button type="submit" class="btn-primary">Click here to Logout</button>
+                    </form>
+                }
+                else
+                {
+                    <p>You have successfully logged out of the application.</p>
+                }
+            </header>
+        </div>
+    </div>
+</div>
 
 @code {
     [CascadingParameter]

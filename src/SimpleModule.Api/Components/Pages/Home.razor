@@ -2,258 +2,103 @@
 
 <PageTitle>Home - SimpleModule</PageTitle>
 
-<HeadContent>
-<style>
-    .hero {
-        text-align: center;
-        padding: 48px 0 32px;
-    }
-    .hero h1 {
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-    }
-    .hero .tagline {
-        color: #666;
-        font-size: 1.05rem;
-        margin-bottom: 28px;
-    }
-    .hero .welcome {
-        font-size: 1.1rem;
-        margin-bottom: 20px;
-    }
-    .hero .welcome strong {
-        color: #0d6efd;
-    }
-    .btn-group {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-    .btn {
-        display: inline-block;
-        padding: 10px 24px;
-        border-radius: 4px;
-        font-size: 14px;
-        cursor: pointer;
-        text-decoration: none;
-        border: none;
-        font-weight: 500;
-    }
-    .btn-primary { background: #0d6efd; color: #fff; }
-    .btn-primary:hover { background: #0b5ed7; }
-    .btn-outline { background: transparent; color: #0d6efd; border: 1px solid #0d6efd; }
-    .btn-outline:hover { background: #0d6efd; color: #fff; }
-    .btn-danger { background: #dc3545; color: #fff; }
-    .btn-danger:hover { background: #bb2d3b; }
-    .btn-sm { padding: 6px 14px; font-size: 13px; }
-    .quick-links {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-        margin-top: 24px;
-        font-size: 14px;
-    }
-    .quick-links a { color: #666; text-decoration: none; }
-    .quick-links a:hover { color: #0d6efd; }
-    .divider {
-        border: none;
-        border-top: 1px solid #e5e5e5;
-        margin: 32px 0;
-    }
-    .hint-box {
-        background: #fff3cd;
-        border: 1px solid #ffecb5;
-        border-radius: 6px;
-        padding: 16px;
-        margin-top: 24px;
-        font-size: 13px;
-        text-align: left;
-    }
-    .hint-box strong { display: block; margin-bottom: 6px; }
-    .hint-box code { background: #ffeeba; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
-
-    /* Auth panel */
-    .panel { margin-bottom: 24px; }
-    .panel h2 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 16px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #0d6efd;
-    }
-    .card {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-        padding: 16px;
-        margin-bottom: 16px;
-    }
-    .card h3 {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 12px;
-    }
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 0;
-        font-size: 14px;
-        border-bottom: 1px solid #e9ecef;
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-label { color: #666; }
-    .info-value { font-weight: 500; }
-    .token-box {
-        background: #1e1e1e;
-        color: #d4d4d4;
-        border-radius: 4px;
-        padding: 12px;
-        font-family: monospace;
-        font-size: 12px;
-        word-break: break-all;
-        max-height: 120px;
-        overflow-y: auto;
-        margin-top: 8px;
-    }
-    .claims-table {
-        width: 100%;
-        font-size: 13px;
-        border-collapse: collapse;
-        margin-top: 8px;
-    }
-    .claims-table th, .claims-table td {
-        padding: 6px 8px;
-        text-align: left;
-        border-bottom: 1px solid #e9ecef;
-    }
-    .claims-table th { color: #666; font-weight: 500; }
-    .claims-table td:first-child { font-family: monospace; font-size: 12px; color: #0d6efd; }
-    .response-box {
-        background: #1e1e1e;
-        color: #d4d4d4;
-        border-radius: 4px;
-        padding: 12px;
-        font-family: monospace;
-        font-size: 12px;
-        white-space: pre-wrap;
-        max-height: 200px;
-        overflow-y: auto;
-        margin-top: 8px;
-    }
-    .api-btn-row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-    }
-    .status-badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 3px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    .status-ok { background: #d1e7dd; color: #0f5132; }
-    .status-err { background: #f8d7da; color: #842029; }
-    .spinner {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid #ccc;
-        border-top-color: #0d6efd;
-        border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-        vertical-align: middle;
-        margin-left: 6px;
-    }
-    @@keyframes spin { to { transform: rotate(360deg); } }
-</style>
-</HeadContent>
-
 <!-- Hero Section -->
-<div class="hero">
-    <h1>SimpleModule</h1>
-    <p class="tagline">Modular monolith framework for .NET &mdash; AOT-compatible, zero reflection</p>
+<div class="flex items-center justify-center min-h-[calc(100vh-16rem)]">
+    <div class="text-center max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold shadow-lg" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</div>
+        <h1 class="text-4xl font-extrabold mb-3 tracking-tight" style="font-family:'Sora',sans-serif;">
+            <span class="gradient-text">SimpleModule</span>
+        </h1>
+        <p class="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
+            Modular monolith framework for .NET &mdash; AOT&#8209;compatible, zero&nbsp;reflection
+        </p>
 
-    @if (IsAuthenticated)
-    {
-        <p class="welcome">Welcome back, <strong>@DisplayName</strong></p>
-        <div class="btn-group">
-            <a href="/Identity/Account/Manage" class="btn btn-outline">Manage Account</a>
-            <form method="post" action="/Identity/Account/Logout" style="display:inline" @formname="logout">
-                <AntiforgeryToken />
-                <button type="submit" class="btn btn-danger">Logout</button>
-            </form>
-        </div>
-    }
-    else
-    {
-        <div class="btn-group">
-            <a href="/Identity/Account/Login" class="btn btn-primary">Login</a>
-            <a href="/Identity/Account/Register" class="btn btn-outline">Register</a>
-        </div>
-
-        @if (IsDevelopment)
+        @if (IsAuthenticated)
         {
-            <div class="hint-box">
-                <strong>Quick Start (Development Only)</strong>
-                Email: <code>admin@@simplemodule.dev</code> &nbsp; Password: <code>Admin123!</code>
+            <p class="text-base mb-6 text-text-secondary">
+                Welcome back, <strong class="text-text font-semibold">@DisplayName</strong>
+            </p>
+            <div class="flex gap-3 justify-center flex-wrap">
+                <a href="/Identity/Account/Manage" class="btn-secondary no-underline">Manage Account</a>
+                <form method="post" action="/Identity/Account/Logout" class="inline" @formname="logout">
+                    <AntiforgeryToken />
+                    <button type="submit" class="btn-ghost text-danger hover:bg-danger-bg">Logout</button>
+                </form>
             </div>
         }
-    }
+        else
+        {
+            <div class="flex gap-3 justify-center flex-wrap">
+                <a href="/Identity/Account/Login" class="btn-primary btn-lg no-underline">Get Started</a>
+                <a href="/Identity/Account/Register" class="btn-secondary btn-lg no-underline">Create Account</a>
+            </div>
 
-    <div class="quick-links">
-        <a href="/swagger">API Docs</a>
-        <a href="/health">Health Check</a>
+            @if (IsDevelopment)
+            {
+                <div class="alert-warning mt-6 text-left text-xs">
+                    <strong class="block mb-1 text-warning">Quick Start (Development Only)</strong>
+                    Email: <code class="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">admin@@simplemodule.dev</code>
+                    &nbsp; Password: <code class="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">Admin123!</code>
+                </div>
+            }
+        }
+
+        <div class="flex gap-5 justify-center mt-8 text-sm">
+            <a href="/swagger" class="text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
+            <span class="text-border">&middot;</span>
+            <a href="/health" class="text-text-muted no-underline hover:text-primary transition-colors">Health Check</a>
+        </div>
     </div>
 </div>
 
 @if (IsAuthenticated)
 {
-    <hr class="divider" />
-
-    <!-- User Info -->
-    <div class="panel">
-        <h2>User Info</h2>
-        <div class="card" id="user-info-card">
-            <div style="color:#999; font-size:14px;">Loading user info<span class="spinner"></span></div>
-        </div>
-    </div>
-
-    <!-- Token Tester -->
-    <div class="panel">
-        <h2>Token Tester</h2>
-        <div class="card">
-            <h3>OAuth2 Authorization Code + PKCE</h3>
-            <p style="font-size:13px;color:#666;margin-bottom:12px;">
-                Obtain an access token using the <code>simplemodule-client</code> application.
-            </p>
-            <button class="btn btn-primary btn-sm" id="btn-get-token" onclick="startOAuthFlow()">
-                Get Access Token
-            </button>
-            <div id="token-result" style="display:none">
-                <div class="token-box" id="token-value"></div>
-                <h3 style="margin-top:12px;">Decoded Claims</h3>
-                <table class="claims-table" id="token-claims"></table>
+    <div class="max-w-3xl mx-auto mt-4">
+        <!-- User Info -->
+        <div class="panel">
+            <h2 class="panel-title">User Info</h2>
+            <div class="glass-card p-5" id="user-info-card">
+                <div class="text-text-muted text-sm flex items-center gap-2">
+                    Loading user info<span class="spinner"></span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- API Tester -->
-    <div class="panel">
-        <h2>API Tester</h2>
-        <div class="card">
-            <h3>Call Protected Endpoints</h3>
-            <div class="api-btn-row">
-                <button class="btn btn-outline btn-sm" onclick="callApi('/api/users/me')">GET /api/users/me</button>
-                <button class="btn btn-outline btn-sm" onclick="callApi('/api/users')">GET /api/users</button>
-                <button class="btn btn-outline btn-sm" onclick="callApi('/api/products')">GET /api/products</button>
-                <button class="btn btn-outline btn-sm" onclick="callApi('/api/orders')">GET /api/orders</button>
+        <!-- Token Tester -->
+        <div class="panel">
+            <h2 class="panel-title">Token Tester</h2>
+            <div class="glass-card p-5">
+                <h3 class="text-sm font-semibold mb-1">OAuth2 Authorization Code + PKCE</h3>
+                <p class="text-xs text-text-muted mb-4">
+                    Obtain an access token using the <code class="bg-surface-raised px-1.5 py-0.5 rounded text-xs font-mono">simplemodule-client</code> application.
+                </p>
+                <button class="btn-primary btn-sm" id="btn-get-token" onclick="startOAuthFlow()">
+                    Get Access Token
+                </button>
+                <div id="token-result" style="display:none">
+                    <div class="code-block break-all max-h-30 mt-4" id="token-value"></div>
+                    <h3 class="text-sm font-semibold mt-4 mb-2">Decoded Claims</h3>
+                    <div class="overflow-auto rounded-xl border border-border">
+                        <table id="token-claims"></table>
+                    </div>
+                </div>
             </div>
-            <div id="api-status" style="font-size:13px;color:#666;margin-bottom:4px;"></div>
-            <div class="response-box" id="api-response">Click an endpoint above to make a request.</div>
+        </div>
+
+        <!-- API Tester -->
+        <div class="panel">
+            <h2 class="panel-title">API Tester</h2>
+            <div class="glass-card p-5">
+                <h3 class="text-sm font-semibold mb-3">Call Protected Endpoints</h3>
+                <div class="flex gap-2 flex-wrap mb-4">
+                    <button class="btn-outline btn-sm" onclick="callApi('/api/users/me')">GET /api/users/me</button>
+                    <button class="btn-outline btn-sm" onclick="callApi('/api/users')">GET /api/users</button>
+                    <button class="btn-outline btn-sm" onclick="callApi('/api/products')">GET /api/products</button>
+                    <button class="btn-outline btn-sm" onclick="callApi('/api/orders')">GET /api/orders</button>
+                </div>
+                <div id="api-status" class="text-xs text-text-muted mb-2 flex items-center gap-2"></div>
+                <div class="code-block whitespace-pre-wrap max-h-50" id="api-response">Click an endpoint above to make a request.</div>
+            </div>
         </div>
     </div>
 
@@ -265,13 +110,12 @@
 
         function createInfoRow(label, value, monospace) {
             var row = document.createElement('div');
-            row.className = 'info-row';
+            row.className = 'flex justify-between items-center py-3 text-sm border-b border-border last:border-b-0';
             var lbl = document.createElement('span');
-            lbl.className = 'info-label';
+            lbl.className = 'text-text-muted text-xs uppercase tracking-wide';
             lbl.textContent = label;
             var val = document.createElement('span');
-            val.className = 'info-value';
-            if (monospace) val.style.cssText = 'font-family:monospace;font-size:12px';
+            val.className = monospace ? 'font-mono text-xs text-text-secondary' : 'font-medium text-text';
             val.textContent = value;
             row.appendChild(lbl);
             row.appendChild(val);
@@ -286,7 +130,7 @@
 
         function createStatusBadge(ok, code) {
             var span = document.createElement('span');
-            span.className = 'status-badge ' + (ok ? 'status-ok' : 'status-err');
+            span.className = ok ? 'badge-success' : 'badge-danger';
             span.textContent = code;
             return span;
         }
@@ -308,7 +152,7 @@
             } catch (e) {
                 clearChildren(card);
                 var err = document.createElement('span');
-                err.style.color = '#dc3545';
+                err.className = 'text-danger text-sm';
                 err.textContent = 'Failed to load: ' + e.message;
                 card.appendChild(err);
             }
@@ -363,7 +207,6 @@
             var state = params.get('state');
             if (!code) return;
 
-            // Clean URL
             window.history.replaceState({}, '', '/');
 
             var verifier = sessionStorage.getItem('pkce_verifier');
@@ -407,7 +250,6 @@
             document.getElementById('token-result').style.display = 'block';
             document.getElementById('token-value').textContent = token;
 
-            // Decode JWT payload
             try {
                 var parts = token.split('.');
                 var payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));

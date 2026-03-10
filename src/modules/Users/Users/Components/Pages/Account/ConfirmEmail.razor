@@ -4,8 +4,14 @@
 
 <PageTitle>Confirm email - SimpleModule</PageTitle>
 
-<h1>Confirm email</h1>
-<StatusMessage Message="@_statusMessage" />
+<div class="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-md">
+        <div class="glass-card p-8">
+            <h1>Confirm email</h1>
+            <StatusMessage Message="@_statusMessage" />
+        </div>
+    </div>
+</div>
 
 @code {
     [SupplyParameterFromQuery]

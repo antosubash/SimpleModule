@@ -10,11 +10,11 @@
 <div>
     <EditForm Model="Input" method="post" OnValidSubmit="OnValidSubmitAsync" FormName="profile">
         <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger" role="alert" />
+        <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
         @if (_errors.Count > 0)
         {
-            <div class="text-danger" role="alert">
-                <ul style="list-style:none;padding:0;">
+            <div class="alert-danger mb-4 text-sm" role="alert">
+                <ul class="list-none p-0 m-0 space-y-1">
                     @foreach (var error in _errors)
                     {
                         <li>@error</li>
@@ -22,16 +22,16 @@
                 </ul>
             </div>
         }
-        <div class="form-floating mb-3">
-            <input value="@_username" class="form-control" placeholder="Please choose your username." disabled />
-            <label class="form-label">Username</label>
+        <div class="form-group">
+            <input value="@_username" class="w-full" placeholder="Please choose your username." disabled />
+            <label>Username</label>
         </div>
-        <div class="form-floating mb-3">
-            <InputText @bind-Value="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
-            <label for="Input.PhoneNumber" class="form-label">Phone number</label>
+        <div class="form-group">
+            <InputText @bind-Value="Input.PhoneNumber" class="w-full" placeholder="Please enter your phone number." />
+            <label for="Input.PhoneNumber">Phone number</label>
             <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
         </div>
-        <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+        <button id="update-profile-button" type="submit" class="btn-primary btn-lg w-full">Save</button>
     </EditForm>
 </div>
 

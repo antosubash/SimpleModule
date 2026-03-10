@@ -8,7 +8,7 @@
 <StatusMessage Message="@_statusMessage" />
 <h3>Disable two-factor authentication (2FA)</h3>
 
-<div class="alert alert-warning" role="alert">
+<div class="alert-warning mb-4" role="alert">
     <p>
         <strong>This action only disables 2FA.</strong>
     </p>
@@ -21,7 +21,7 @@
 <div>
     <form method="post" @formname="disable-2fa" @onsubmit="OnSubmitAsync">
         <AntiforgeryToken />
-        <button class="btn btn-danger" type="submit">Disable 2FA</button>
+        <button class="btn-danger" type="submit">Disable 2FA</button>
     </form>
 </div>
 

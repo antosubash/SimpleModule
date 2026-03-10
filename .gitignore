@@ -403,3 +403,10 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Tailwind CSS standalone CLI
+tools/tailwindcss*
+
+# Playwright CLI
+.playwright-cli/
+.playwright-mcp/

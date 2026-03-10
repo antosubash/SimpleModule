@@ -8,7 +8,7 @@
 
 <h3>Delete Personal Data</h3>
 
-<div class="alert alert-warning" role="alert">
+<div class="alert-warning mb-4" role="alert">
     <p>
         <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
     </p>
@@ -17,11 +17,11 @@
 <div>
     <EditForm Model="Input" method="post" OnValidSubmit="OnValidSubmitAsync" FormName="delete-personal-data">
         <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger" role="alert" />
+        <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
         @if (_errors.Count > 0)
         {
-            <div class="text-danger" role="alert">
-                <ul style="list-style:none;padding:0;">
+            <div class="alert-danger mb-4 text-sm" role="alert">
+                <ul class="list-none p-0 m-0 space-y-1">
                     @foreach (var error in _errors)
                     {
                         <li>@error</li>
@@ -31,13 +31,13 @@
         }
         @if (_requirePassword)
         {
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Password" type="password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
-                <label for="Input.Password" class="form-label">Password</label>
+            <div class="form-group">
+                <InputText @bind-Value="Input.Password" type="password" class="w-full" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
+                <label for="Input.Password">Password</label>
                 <ValidationMessage For="() => Input.Password" class="text-danger" />
             </div>
         }
-        <button class="w-100 btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
+        <button class="btn-danger btn-lg w-full" type="submit">Delete data and close my account</button>
     </EditForm>
 </div>
 

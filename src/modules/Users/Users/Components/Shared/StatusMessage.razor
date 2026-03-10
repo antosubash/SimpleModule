@@ -1,8 +1,16 @@
 @if (!string.IsNullOrEmpty(Message))
 {
-    var statusMessageClass = Message.StartsWith("Error") ? "danger" : "success";
-    <div class="alert alert-@statusMessageClass" role="alert">
-        @Message
+    var isError = Message.StartsWith("Error");
+    <div class="@(isError ? "alert-danger" : "alert-success") mb-5 flex items-start gap-3" role="alert">
+        @if (isError)
+        {
+            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        }
+        else
+        {
+            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        }
+        <span>@Message</span>
     </div>
 }
 

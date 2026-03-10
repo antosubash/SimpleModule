@@ -13,21 +13,21 @@
 {
     if (_recoveryCodesLeft == 0)
     {
-        <div class="alert alert-danger">
+        <div class="alert-danger mb-4">
             <strong>You have no recovery codes left.</strong>
             <p>You must <a href="/Identity/Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
         </div>
     }
     else if (_recoveryCodesLeft == 1)
     {
-        <div class="alert alert-danger">
+        <div class="alert-danger mb-4">
             <strong>You have 1 recovery code left.</strong>
             <p>You can <a href="/Identity/Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
         </div>
     }
     else if (_recoveryCodesLeft <= 3)
     {
-        <div class="alert alert-warning">
+        <div class="alert-warning mb-4">
             <strong>You have @_recoveryCodesLeft recovery codes left.</strong>
             <p>You should <a href="/Identity/Account/Manage/GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
         </div>
@@ -35,24 +35,24 @@
 
     if (_isMachineRemembered)
     {
-        <form method="post" @formname="forget-browser" @onsubmit="OnForgetBrowserAsync" style="display:inline-block">
+        <form method="post" @formname="forget-browser" @onsubmit="OnForgetBrowserAsync" class="inline-block">
             <AntiforgeryToken />
-            <button type="submit" class="btn btn-primary">Forget this browser</button>
+            <button type="submit" class="btn-primary">Forget this browser</button>
         </form>
     }
-    <a href="/Identity/Account/Manage/Disable2fa" class="btn btn-primary">Disable 2FA</a>
-    <a href="/Identity/Account/Manage/GenerateRecoveryCodes" class="btn btn-primary">Reset recovery codes</a>
+    <a href="/Identity/Account/Manage/Disable2fa" class="btn-primary">Disable 2FA</a>
+    <a href="/Identity/Account/Manage/GenerateRecoveryCodes" class="btn-primary">Reset recovery codes</a>
 }
 
 <h4>Authenticator app</h4>
 @if (!_hasAuthenticator)
 {
-    <a href="/Identity/Account/Manage/EnableAuthenticator" class="btn btn-primary">Add authenticator app</a>
+    <a href="/Identity/Account/Manage/EnableAuthenticator" class="btn-primary">Add authenticator app</a>
 }
 else
 {
-    <a href="/Identity/Account/Manage/EnableAuthenticator" class="btn btn-primary">Set up authenticator app</a>
-    <a href="/Identity/Account/Manage/ResetAuthenticator" class="btn btn-primary">Reset authenticator app</a>
+    <a href="/Identity/Account/Manage/EnableAuthenticator" class="btn-primary">Set up authenticator app</a>
+    <a href="/Identity/Account/Manage/ResetAuthenticator" class="btn-primary">Reset authenticator app</a>
 }
 
 @code {
