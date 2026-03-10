@@ -8,38 +8,44 @@
 
 <PageTitle>Register - SimpleModule</PageTitle>
 
-<h1>Register</h1>
-<h2 id="external-login-title">Associate your @ProviderDisplayName account.</h2>
-<hr />
+<div class="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-md">
+        <div class="glass-card p-8">
+            <h1>Register</h1>
+            <h2 id="external-login-title">Associate your @ProviderDisplayName account.</h2>
+            <hr />
 
-<p id="external-login-description" class="text-info">
-    You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
-</p>
+            <p id="external-login-description" class="text-info">
+                You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
+                Please enter an email address for this site below and click the Register button to finish
+                logging in.
+            </p>
 
-<div>
-    <EditForm Model="Input" method="post" OnValidSubmit="OnConfirmationAsync" FormName="external-login-confirmation">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger" role="alert" />
-        @if (_errors.Count > 0)
-        {
-            <div class="text-danger" role="alert">
-                <ul style="list-style:none;padding:0;">
-                    @foreach (var error in _errors)
+            <div>
+                <EditForm Model="Input" method="post" OnValidSubmit="OnConfirmationAsync" FormName="external-login-confirmation">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
+                    @if (_errors.Count > 0)
                     {
-                        <li>@error</li>
+                        <div class="alert-danger mb-4 text-sm" role="alert">
+                            <ul class="list-none p-0 m-0 space-y-1">
+                                @foreach (var error in _errors)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </div>
                     }
-                </ul>
+                    <div class="form-group">
+                        <InputText @bind-Value="Input.Email" class="w-full" autocomplete="email" placeholder="Please enter your email." />
+                        <label for="Input.Email">Email</label>
+                        <ValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    <button type="submit" class="btn-primary btn-lg w-full">Register</button>
+                </EditForm>
             </div>
-        }
-        <div class="form-floating mb-3">
-            <InputText @bind-Value="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email." />
-            <label for="Input.Email" class="form-label">Email</label>
-            <ValidationMessage For="() => Input.Email" class="text-danger" />
         </div>
-        <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-    </EditForm>
+    </div>
 </div>
 
 @code {

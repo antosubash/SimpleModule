@@ -1,17 +1,24 @@
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
 
-<h1>Manage your account</h1>
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-extrabold tracking-tight" style="font-family:'Sora',sans-serif;">
+            <span class="gradient-text">Account Settings</span>
+        </h1>
+        <p class="text-text-muted text-sm mt-1.5">Manage your profile, security, and preferences</p>
+    </div>
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div style="display:flex;gap:24px;">
-        <div style="min-width:180px;">
-            <ManageNav ActivePage="@GetActivePage()" />
-        </div>
-        <div style="flex:1;">
-            @Body
+    <div class="flex flex-col sm:flex-row gap-6">
+        <aside class="sm:w-56 shrink-0">
+            <div class="glass-card p-3 sm:sticky sm:top-20">
+                <ManageNav ActivePage="@GetActivePage()" />
+            </div>
+        </aside>
+        <div class="flex-1 min-w-0">
+            <div class="glass-card p-6 sm:p-8">
+                @Body
+            </div>
         </div>
     </div>
 </div>

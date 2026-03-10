@@ -8,69 +8,70 @@
 
 <PageTitle>Register - SimpleModule</PageTitle>
 
-<h1>Register</h1>
-<div>
-    <div>
-        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
-            <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
-            <ValidationSummary class="text-danger" role="alert" />
-            @if (_errors.Count > 0)
-            {
-                <div class="text-danger" role="alert">
-                    <ul style="list-style:none;padding:0;">
-                        @foreach (var error in _errors)
-                        {
-                            <li>@error</li>
-                        }
-                    </ul>
+<div class="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center text-white text-xl font-bold shadow-lg" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</div>
+            <h1 class="text-2xl font-extrabold tracking-tight" style="font-family:'Sora',sans-serif;">Create an account</h1>
+            <p class="text-text-muted text-sm mt-1.5">Get started with SimpleModule</p>
+        </div>
+
+        <div class="glass-card p-8">
+            <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
+                @if (_errors.Count > 0)
+                {
+                    <div class="alert-danger mb-4 text-sm" role="alert">
+                        <ul class="list-none p-0 m-0 space-y-1">
+                            @foreach (var error in _errors)
+                            {
+                                <li>@error</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                <div class="form-group">
+                    <label for="Input.Email">Email</label>
+                    <InputText @bind-Value="Input.Email" class="w-full" autocomplete="username" aria-required="true" placeholder="you@example.com" />
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
                 </div>
-            }
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label for="Input.Email">Email</label>
-                <ValidationMessage For="() => Input.Email" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="Input.Password">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label for="Input.ConfirmPassword">Confirm Password</label>
-                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-            </div>
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </EditForm>
-    </div>
-    <div>
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            @if (_externalLogins.Count == 0)
-            {
-                <div>
-                    <p>There are no external authentication services configured.</p>
+                <div class="form-group">
+                    <label for="Input.Password">Password</label>
+                    <InputText @bind-Value="Input.Password" type="password" class="w-full" autocomplete="new-password" aria-required="true" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" />
+                    <ValidationMessage For="() => Input.Password" class="text-danger" />
                 </div>
-            }
-            else
+                <div class="form-group">
+                    <label for="Input.ConfirmPassword">Confirm Password</label>
+                    <InputText @bind-Value="Input.ConfirmPassword" type="password" class="w-full" autocomplete="new-password" aria-required="true" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" />
+                    <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                </div>
+                <button id="registerSubmit" type="submit" class="btn-primary btn-lg w-full">Create Account</button>
+            </EditForm>
+
+            @if (_externalLogins.Count > 0)
             {
+                <div class="relative my-6">
+                    <hr />
+                    <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-3 text-xs text-text-muted">or continue with</span>
+                </div>
                 <form id="external-account" action="/Identity/Account/ExternalLogin" method="post">
                     <AntiforgeryToken />
                     <input type="hidden" name="returnUrl" value="@(ReturnUrl ?? "/")" />
-                    <div>
-                        <p>
-                            @foreach (var provider in _externalLogins)
-                            {
-                                <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                            }
-                        </p>
+                    <div class="flex gap-2 flex-wrap">
+                        @foreach (var provider in _externalLogins)
+                        {
+                            <button type="submit" class="btn-secondary flex-1" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                        }
                     </div>
                 </form>
             }
-        </section>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-text-muted">
+            Already have an account?
+            <a href="/Identity/Account/Login" class="text-primary font-medium no-underline hover:underline">Sign in</a>
+        </div>
     </div>
 </div>
 

@@ -6,45 +6,51 @@
 
 <PageTitle>Two-factor authentication - SimpleModule</PageTitle>
 
-<h1>Two-factor authentication</h1>
-<hr />
-<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div>
-    <EditForm Model="Input" method="post" OnValidSubmit="OnValidSubmitAsync" FormName="login-with-2fa">
-        <DataAnnotationsValidator />
-        <input type="hidden" name="RememberMe" value="@RememberMe" />
-        <ValidationSummary class="text-danger" role="alert" />
-        @if (_errors.Count > 0)
-        {
-            <div class="text-danger" role="alert">
-                <ul style="list-style:none;padding:0;">
-                    @foreach (var error in _errors)
+<div class="flex items-center justify-center min-h-[calc(100vh-12rem)]">
+    <div class="w-full max-w-md">
+        <div class="glass-card p-8">
+            <h1>Two-factor authentication</h1>
+            <hr />
+            <p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
+            <div>
+                <EditForm Model="Input" method="post" OnValidSubmit="OnValidSubmitAsync" FormName="login-with-2fa">
+                    <DataAnnotationsValidator />
+                    <input type="hidden" name="RememberMe" value="@RememberMe" />
+                    <ValidationSummary class="alert-danger mb-4 text-sm" role="alert" />
+                    @if (_errors.Count > 0)
                     {
-                        <li>@error</li>
+                        <div class="alert-danger mb-4 text-sm" role="alert">
+                            <ul class="list-none p-0 m-0 space-y-1">
+                                @foreach (var error in _errors)
+                                {
+                                    <li>@error</li>
+                                }
+                            </ul>
+                        </div>
                     }
-                </ul>
+                    <div class="form-group">
+                        <InputText @bind-Value="Input.TwoFactorCode" class="w-full" autocomplete="off" />
+                        <label for="Input.TwoFactorCode">Authenticator code</label>
+                        <ValidationMessage For="() => Input.TwoFactorCode" class="text-danger" />
+                    </div>
+                    <div class="form-group">
+                        <label class="flex items-center gap-2 text-sm text-text-secondary cursor-pointer mb-0">
+                            <InputCheckbox @bind-Value="Input.RememberMachine" class="w-4 h-4 rounded border-border accent-primary" />
+                            Remember this machine
+                        </label>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-primary btn-lg w-full">Log in</button>
+                    </div>
+                </EditForm>
             </div>
-        }
-        <div class="form-floating mb-3">
-            <InputText @bind-Value="Input.TwoFactorCode" class="form-control" autocomplete="off" />
-            <label for="Input.TwoFactorCode" class="form-label">Authenticator code</label>
-            <ValidationMessage For="() => Input.TwoFactorCode" class="text-danger" />
+            <p>
+                Don't have access to your authenticator device? You can
+                <a href="/Identity/Account/LoginWithRecoveryCode?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">log in with a recovery code</a>.
+            </p>
         </div>
-        <div class="checkbox mb-3">
-            <label class="form-label">
-                <InputCheckbox @bind-Value="Input.RememberMachine" />
-                Remember this machine
-            </label>
-        </div>
-        <div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-        </div>
-    </EditForm>
+    </div>
 </div>
-<p>
-    Don't have access to your authenticator device? You can
-    <a href="/Identity/Account/LoginWithRecoveryCode?returnUrl=@Uri.EscapeDataString(ReturnUrl ?? "/")">log in with a recovery code</a>.
-</p>
 
 @code {
     [SupplyParameterFromQuery]

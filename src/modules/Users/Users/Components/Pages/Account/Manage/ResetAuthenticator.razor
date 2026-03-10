@@ -8,7 +8,7 @@
 
 <StatusMessage Message="@_statusMessage" />
 <h3>Reset authenticator key</h3>
-<div class="alert alert-warning" role="alert">
+<div class="alert-warning mb-4" role="alert">
     <p>
         <strong>If you reset your authenticator key your authenticator app will not work until you reconfigure it.</strong>
     </p>
@@ -20,7 +20,7 @@
 <div>
     <form method="post" @formname="reset-authenticator" @onsubmit="OnSubmitAsync">
         <AntiforgeryToken />
-        <button class="btn btn-danger" type="submit">Reset authenticator key</button>
+        <button class="btn-danger" type="submit">Reset authenticator key</button>
     </form>
 </div>
 

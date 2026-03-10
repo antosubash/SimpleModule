@@ -1,45 +1,38 @@
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
 
-<HeadContent>
-    <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #f5f5f5; color: #333; }
-        .container { max-width: 480px; margin: 60px auto; padding: 32px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1, h2, h3, h4 { margin-top: 0; }
-        .text-danger { color: #dc3545; }
-        .form-group, .form-floating { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 4px; font-weight: 500; font-size: 14px; }
-        input[type="email"], input[type="password"], input[type="text"], input[type="tel"] { width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-        input:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 3px rgba(13,110,253,0.15); }
-        .btn-primary, button[type="submit"] { display: inline-block; padding: 10px 24px; background: #0d6efd; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; text-decoration: none; }
-        .btn-primary:hover, button[type="submit"]:hover { background: #0b5ed7; }
-        a { color: #0d6efd; }
-        .validation-message { color: #dc3545; font-size: 12px; }
-        nav { background: #212529; padding: 12px 24px; }
-        nav a { color: #fff; text-decoration: none; margin-right: 16px; }
-    </style>
-</HeadContent>
-
-<nav style="display:flex;align-items:center;">
-    <div>
-        <a href="/">SimpleModule</a>
-        <a href="/swagger">API Docs</a>
-    </div>
-    <div style="margin-left:auto;">
-        @if (HttpContext?.User?.Identity?.IsAuthenticated == true)
-        {
-            <a href="/Identity/Account/Manage" style="font-size:13px;opacity:0.8;">@HttpContext.User.Identity.Name</a>
-        }
-        else
-        {
-            <a href="/Identity/Account/Login" style="font-size:13px;opacity:0.8;">Login</a>
-        }
+<nav class="sticky top-0 z-50 border-b border-border bg-surface-overlay" style="backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
+    <div class="max-w-5xl mx-auto flex items-center px-6 py-3">
+        <div class="flex items-center gap-6">
+            <a href="/" class="flex items-center gap-2.5 no-underline font-bold text-text group" style="font-family:'Sora',sans-serif;">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</span>
+                <span class="text-base">SimpleModule</span>
+            </a>
+            <a href="/swagger" class="text-sm text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
+        </div>
+        <div class="ml-auto flex items-center gap-3">
+            <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised transition-all cursor-pointer bg-transparent border-none" title="Toggle dark mode">
+                <svg class="dark:hidden w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
+                <svg class="hidden dark:block w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+            @if (HttpContext?.User?.Identity?.IsAuthenticated == true)
+            {
+                <a href="/Identity/Account/Manage" class="flex items-center gap-2 text-sm text-text-secondary no-underline hover:text-text transition-colors">
+                    <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">@(HttpContext.User.Identity.Name?.Substring(0, 1).ToUpper())</span>
+                    <span class="hidden sm:inline">@HttpContext.User.Identity.Name</span>
+                </a>
+            }
+            else
+            {
+                <a href="/Identity/Account/Login" class="btn-ghost btn-sm no-underline">Log in</a>
+            }
+        </div>
     </div>
 </nav>
-<div class="container">
+
+<main class="max-w-5xl mx-auto mt-8 mb-16 px-4 sm:px-6">
     @Body
-</div>
+</main>
 
 @code {
     [CascadingParameter]
