@@ -337,8 +337,9 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
             foreach (var prop in dto.Properties)
             {
+                var jsonName = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
                 sb.AppendLine(
-                    $"        var prop_{prop.Name} = info.CreateJsonPropertyInfo(typeof({prop.TypeFqn}), \"{prop.Name}\");"
+                    $"        var prop_{prop.Name} = info.CreateJsonPropertyInfo(typeof({prop.TypeFqn}), \"{jsonName}\");"
                 );
                 sb.AppendLine(
                     $"        prop_{prop.Name}.Get = static obj => (({dto.FullyQualifiedName})obj).{prop.Name};"
