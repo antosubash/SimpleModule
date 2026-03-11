@@ -7,6 +7,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Inertia;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
 
@@ -118,6 +119,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseInertia();
 
 app.UseStaticFiles();
 

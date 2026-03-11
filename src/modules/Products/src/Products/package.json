@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "name": "@simplemodule/products",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

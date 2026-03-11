@@ -12,6 +12,7 @@ using SimpleModule.Core.Constants;
 using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
+using SimpleModule.Users.Features.Admin;
 using SimpleModule.Users.Features.Connect;
 using SimpleModule.Users.Features.GetAllUsers;
 using SimpleModule.Users.Features.GetCurrentUser;
@@ -196,5 +197,9 @@ public class UsersModule : IModule
                 }
             )
             .RequireAuthorization();
+
+        // Admin endpoints
+        AdminUsersEndpoint.Map(endpoints);
+        AdminRolesEndpoint.Map(endpoints);
     }
 }
