@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Generator.Tests.Helpers;
 
 namespace SimpleModule.Generator.Tests;
@@ -342,9 +342,13 @@ public class DtoJsonResolverGenerationTests
 
         var resolver = GetResolver(result);
 
-        resolver.Should().Contain("public sealed class ModulesJsonResolver : IJsonTypeInfoResolver");
+        resolver
+            .Should()
+            .Contain("public sealed class ModulesJsonResolver : IJsonTypeInfoResolver");
         resolver.Should().Contain("public static readonly ModulesJsonResolver Instance = new()");
-        resolver.Should().Contain("public JsonTypeInfo? GetTypeInfo(Type type, JsonSerializerOptions options)");
+        resolver
+            .Should()
+            .Contain("public JsonTypeInfo? GetTypeInfo(Type type, JsonSerializerOptions options)");
     }
 
     [Fact]

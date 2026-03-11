@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -31,9 +31,7 @@ public static class AuthorizationEndpoint
     {
         var request =
             context.GetOpenIddictServerRequest()
-            ?? throw new InvalidOperationException(
-                ErrorMessages.OpenIdConnectRequestMissing
-            );
+            ?? throw new InvalidOperationException(ErrorMessages.OpenIdConnectRequestMissing);
 
         var result = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
 

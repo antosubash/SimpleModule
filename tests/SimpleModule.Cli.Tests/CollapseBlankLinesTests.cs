@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;

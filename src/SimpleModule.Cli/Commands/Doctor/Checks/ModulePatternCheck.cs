@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Commands.Doctor.Checks;
 
@@ -21,14 +21,30 @@ public sealed class ModulePatternCheck : IDoctorCheck
             {
                 var filePath = Path.Combine(moduleDir, fileName);
                 yield return File.Exists(filePath)
-                    ? new CheckResult($"{module}/{fileName}", CheckStatus.Pass, $"{description} exists")
-                    : new CheckResult($"{module}/{fileName}", CheckStatus.Warning, $"{description} missing");
+                    ? new CheckResult(
+                        $"{module}/{fileName}",
+                        CheckStatus.Pass,
+                        $"{description} exists"
+                    )
+                    : new CheckResult(
+                        $"{module}/{fileName}",
+                        CheckStatus.Warning,
+                        $"{description} missing"
+                    );
             }
 
             var featuresDir = Path.Combine(moduleDir, "Features");
             yield return Directory.Exists(featuresDir)
-                ? new CheckResult($"{module}/Features/", CheckStatus.Pass, "Features directory exists")
-                : new CheckResult($"{module}/Features/", CheckStatus.Warning, "Features directory missing");
+                ? new CheckResult(
+                    $"{module}/Features/",
+                    CheckStatus.Pass,
+                    "Features directory exists"
+                )
+                : new CheckResult(
+                    $"{module}/Features/",
+                    CheckStatus.Warning,
+                    "Features directory missing"
+                );
         }
     }
 }

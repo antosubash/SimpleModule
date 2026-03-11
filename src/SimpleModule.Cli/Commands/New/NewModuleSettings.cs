@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -19,7 +19,9 @@ public sealed class NewModuleSettings : CommandSettings
 
         if (!char.IsUpper(Name[0]))
         {
-            throw new InvalidOperationException("Module name must be PascalCase (start with uppercase letter).");
+            throw new InvalidOperationException(
+                "Module name must be PascalCase (start with uppercase letter)."
+            );
         }
 
         return Name;

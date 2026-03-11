@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -43,7 +43,10 @@ public static class DatabaseInitializerExtensions
             {
                 // Shared database already created — only create this module's tables if they don't exist
                 var creator = dbContext.GetService<IRelationalDatabaseCreator>();
-                var provider = DatabaseProviderDetector.Detect(connectionString, dbOptions.Provider);
+                var provider = DatabaseProviderDetector.Detect(
+                    connectionString,
+                    dbOptions.Provider
+                );
                 if (!ModuleTablesExist(dbContext, info.ModuleName, provider))
                 {
                     creator.CreateTables();

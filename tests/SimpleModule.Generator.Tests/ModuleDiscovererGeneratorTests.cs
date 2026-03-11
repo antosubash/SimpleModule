@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Generator.Tests.Helpers;
 
 namespace SimpleModule.Generator.Tests;

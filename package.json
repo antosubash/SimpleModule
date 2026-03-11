@@ -1,9 +1,11 @@
 {
   "private": true,
   "name": "simplemodule",
-  "workspaces": ["src/modules/*/*"],
+  "workspaces": [
+    "src/modules/*/*"
+  ],
   "devDependencies": {
-    "vite": "^6.2.0",
-    "typescript": "^5.8.0"
+    "typescript": "^5.8.0",
+    "vite": "^6.2.0"
   }
 }

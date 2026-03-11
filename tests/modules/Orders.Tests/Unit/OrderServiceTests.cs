@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -53,13 +53,20 @@ public sealed class OrderServiceTests : IDisposable
     public async Task CreateOrderAsync_WithValidUserAndProduct_CalculatesCorrectTotal()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
-        var widget = new Product { Id = 1, Name = "Widget", Price = 25.00m };
+        var widget = new Product
+        {
+            Id = 1,
+            Name = "Widget",
+            Price = 25.00m,
+        };
         _products
             .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
             .Returns(callInfo =>
             {
                 var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
-                return new List<Product> { widget }.Where(p => ids.Contains(p.Id)).ToList() as IReadOnlyList<Product>;
+                return new List<Product> { widget }
+                        .Where(p => ids.Contains(p.Id))
+                        .ToList() as IReadOnlyList<Product>;
             });
 
         var request = new CreateOrderRequest
@@ -122,13 +129,20 @@ public sealed class OrderServiceTests : IDisposable
     public async Task GetOrderByIdAsync_ReturnsMatchingOrder()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
-        var widget = new Product { Id = 1, Name = "Widget", Price = 10.00m };
+        var widget = new Product
+        {
+            Id = 1,
+            Name = "Widget",
+            Price = 10.00m,
+        };
         _products
             .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
             .Returns(callInfo =>
             {
                 var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
-                return new List<Product> { widget }.Where(p => ids.Contains(p.Id)).ToList() as IReadOnlyList<Product>;
+                return new List<Product> { widget }
+                        .Where(p => ids.Contains(p.Id))
+                        .ToList() as IReadOnlyList<Product>;
             });
 
         var request = new CreateOrderRequest

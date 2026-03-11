@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using SimpleModule.Cli.Infrastructure;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -44,7 +44,8 @@ public sealed class NewFeatureSettings : CommandSettings
             Module = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("Select a module:")
-                    .AddChoices(solution.ExistingModules));
+                    .AddChoices(solution.ExistingModules)
+            );
         }
 
         return Module;
@@ -57,7 +58,8 @@ public sealed class NewFeatureSettings : CommandSettings
             HttpMethod = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("HTTP method:")
-                    .AddChoices("GET", "POST", "PUT", "DELETE"));
+                    .AddChoices("GET", "POST", "PUT", "DELETE")
+            );
         }
 
         return HttpMethod.ToUpperInvariant();

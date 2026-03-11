@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -40,7 +40,10 @@ public partial class OpenIddictSeedService(
     {
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
-        if (await manager.FindByClientIdAsync(ClientConstants.ClientId, cancellationToken) is not null)
+        if (
+            await manager.FindByClientIdAsync(ClientConstants.ClientId, cancellationToken)
+            is not null
+        )
         {
             return;
         }
@@ -59,7 +62,10 @@ public partial class OpenIddictSeedService(
                 new Uri($"{baseUrl}{ClientConstants.SwaggerCallbackPath}"),
                 new Uri($"{baseUrl}{ClientConstants.OAuthCallbackPath}"),
             },
-            PostLogoutRedirectUris = { new Uri($"{baseUrl}{ClientConstants.PostLogoutRedirectPath}") },
+            PostLogoutRedirectUris =
+            {
+                new Uri($"{baseUrl}{ClientConstants.PostLogoutRedirectPath}"),
+            },
             Permissions =
             {
                 Permissions.Endpoints.Authorization,
@@ -76,7 +82,9 @@ public partial class OpenIddictSeedService(
         };
 
         // Allow additional redirect URIs from configuration
-        var additionalRedirects = configuration.GetSection(ConfigKeys.OpenIddictAdditionalRedirectUris).Get<string[]>();
+        var additionalRedirects = configuration
+            .GetSection(ConfigKeys.OpenIddictAdditionalRedirectUris)
+            .Get<string[]>();
         if (additionalRedirects is not null)
         {
             foreach (var uri in additionalRedirects)
@@ -137,7 +145,8 @@ public partial class OpenIddictSeedService(
             CreatedAt = DateTime.UtcNow,
         };
 
-        var adminPassword = configuration[ConfigKeys.SeedAdminPassword] ?? SeedConstants.DefaultAdminPassword;
+        var adminPassword =
+            configuration[ConfigKeys.SeedAdminPassword] ?? SeedConstants.DefaultAdminPassword;
         var result = await userManager.CreateAsync(admin, adminPassword);
         if (result.Succeeded)
         {

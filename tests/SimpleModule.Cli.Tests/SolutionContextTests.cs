@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -97,8 +97,9 @@ public sealed class SolutionContextTests : IDisposable
 
         var ctx = SolutionContext.Discover(_tempDir)!;
 
-        ctx.GetModulePath("Invoices").Should().Be(
-            Path.Combine(_tempDir, "src", "modules", "Invoices"));
+        ctx.GetModulePath("Invoices")
+            .Should()
+            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices"));
     }
 
     [Fact]
@@ -108,8 +109,9 @@ public sealed class SolutionContextTests : IDisposable
 
         var ctx = SolutionContext.Discover(_tempDir)!;
 
-        ctx.GetModuleContractsPath("Invoices").Should().Be(
-            Path.Combine(_tempDir, "src", "modules", "Invoices", "Invoices.Contracts"));
+        ctx.GetModuleContractsPath("Invoices")
+            .Should()
+            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "Invoices.Contracts"));
     }
 
     [Fact]
@@ -119,8 +121,9 @@ public sealed class SolutionContextTests : IDisposable
 
         var ctx = SolutionContext.Discover(_tempDir)!;
 
-        ctx.GetModuleProjectPath("Invoices").Should().Be(
-            Path.Combine(_tempDir, "src", "modules", "Invoices", "Invoices"));
+        ctx.GetModuleProjectPath("Invoices")
+            .Should()
+            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "Invoices"));
     }
 
     [Fact]
@@ -130,8 +133,9 @@ public sealed class SolutionContextTests : IDisposable
 
         var ctx = SolutionContext.Discover(_tempDir)!;
 
-        ctx.GetTestProjectPath("Invoices").Should().Be(
-            Path.Combine(_tempDir, "tests", "modules", "Invoices.Tests"));
+        ctx.GetTestProjectPath("Invoices")
+            .Should()
+            .Be(Path.Combine(_tempDir, "tests", "modules", "Invoices.Tests"));
     }
 
     [Fact]

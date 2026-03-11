@@ -1,4 +1,4 @@
-namespace SimpleModule.Cli.Commands.Doctor.Checks;
+﻿namespace SimpleModule.Cli.Commands.Doctor.Checks;
 
 public enum CheckStatus
 {

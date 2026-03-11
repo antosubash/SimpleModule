@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 using SimpleModule.Cli.Templates;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -15,7 +15,9 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
 
         if (Directory.Exists(rootDir) && Directory.GetFileSystemEntries(rootDir).Length > 0)
         {
-            AnsiConsole.MarkupLine($"[red]Directory '{rootDir}' already exists and is not empty.[/]");
+            AnsiConsole.MarkupLine(
+                $"[red]Directory '{rootDir}' already exists and is not empty.[/]"
+            );
             return 1;
         }
 
@@ -47,16 +49,34 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         // Root files
         WriteFile(Path.Combine(rootDir, $"{projectName}.slnx"), templates.Slnx(projectName));
         WriteFile(Path.Combine(rootDir, "Directory.Build.props"), templates.DirectoryBuildProps());
-        WriteFile(Path.Combine(rootDir, "Directory.Packages.props"), templates.DirectoryPackagesProps());
+        WriteFile(
+            Path.Combine(rootDir, "Directory.Packages.props"),
+            templates.DirectoryPackagesProps()
+        );
         WriteFile(Path.Combine(rootDir, "global.json"), templates.GlobalJson());
 
         // Project files
-        WriteFile(Path.Combine(apiDir, $"{projectName}.Api.csproj"), templates.ApiCsproj(projectName));
+        WriteFile(
+            Path.Combine(apiDir, $"{projectName}.Api.csproj"),
+            templates.ApiCsproj(projectName)
+        );
         WriteFile(Path.Combine(apiDir, "Program.cs"), ProjectTemplates.ApiProgram());
-        WriteFile(Path.Combine(coreDir, $"{projectName}.Core.csproj"), templates.CoreCsproj(projectName));
-        WriteFile(Path.Combine(databaseDir, $"{projectName}.Database.csproj"), templates.DatabaseCsproj(projectName));
-        WriteFile(Path.Combine(generatorDir, $"{projectName}.Generator.csproj"), templates.GeneratorCsproj());
-        WriteFile(Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"), templates.TestsSharedCsproj(projectName));
+        WriteFile(
+            Path.Combine(coreDir, $"{projectName}.Core.csproj"),
+            templates.CoreCsproj(projectName)
+        );
+        WriteFile(
+            Path.Combine(databaseDir, $"{projectName}.Database.csproj"),
+            templates.DatabaseCsproj(projectName)
+        );
+        WriteFile(
+            Path.Combine(generatorDir, $"{projectName}.Generator.csproj"),
+            templates.GeneratorCsproj()
+        );
+        WriteFile(
+            Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"),
+            templates.TestsSharedCsproj(projectName)
+        );
 
         AnsiConsole.MarkupLine($"[green]Project '{projectName}' created successfully![/]");
         AnsiConsole.MarkupLine("");

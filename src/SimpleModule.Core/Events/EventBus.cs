@@ -1,12 +1,10 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace SimpleModule.Core.Events;
 
-public sealed partial class EventBus(
-    IServiceProvider serviceProvider,
-    ILogger<EventBus> logger
-) : IEventBus
+public sealed partial class EventBus(IServiceProvider serviceProvider, ILogger<EventBus> logger)
+    : IEventBus
 {
     public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
         where T : IEvent

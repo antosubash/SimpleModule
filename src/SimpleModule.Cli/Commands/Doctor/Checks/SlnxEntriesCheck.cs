@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Commands.Doctor.Checks;
 
@@ -16,8 +16,16 @@ public sealed class SlnxEntriesCheck : IDoctorCheck
         {
             var hasEntry = SlnxManipulator.HasModuleEntry(solution.SlnxPath, module);
             yield return hasEntry
-                ? new CheckResult($"Slnx -> {module}", CheckStatus.Pass, "folder entry exists in .slnx")
-                : new CheckResult($"Slnx -> {module}", CheckStatus.Fail, "missing folder entry in .slnx");
+                ? new CheckResult(
+                    $"Slnx -> {module}",
+                    CheckStatus.Pass,
+                    "folder entry exists in .slnx"
+                )
+                : new CheckResult(
+                    $"Slnx -> {module}",
+                    CheckStatus.Fail,
+                    "missing folder entry in .slnx"
+                );
         }
     }
 }

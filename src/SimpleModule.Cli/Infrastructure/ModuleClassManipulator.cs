@@ -1,8 +1,12 @@
-namespace SimpleModule.Cli.Infrastructure;
+﻿namespace SimpleModule.Cli.Infrastructure;
 
 public static class ModuleClassManipulator
 {
-    public static bool AddFeatureWiring(string moduleFilePath, string moduleName, string featureName)
+    public static bool AddFeatureWiring(
+        string moduleFilePath,
+        string moduleName,
+        string featureName
+    )
     {
         if (!File.Exists(moduleFilePath))
         {
@@ -13,7 +17,9 @@ public static class ModuleClassManipulator
 
         // Add using directive
         var usingNamespace = $"using SimpleModule.{moduleName}.Features.{featureName};";
-        var lastUsingIndex = lines.FindLastIndex(l => l.TrimStart().StartsWith("using ", StringComparison.Ordinal));
+        var lastUsingIndex = lines.FindLastIndex(l =>
+            l.TrimStart().StartsWith("using ", StringComparison.Ordinal)
+        );
 
         if (lastUsingIndex >= 0 && !lines.Any(l => l.Trim() == usingNamespace))
         {
@@ -22,9 +28,16 @@ public static class ModuleClassManipulator
 
         // Add endpoint mapping
         var mapCall = $"        {featureName}Endpoint.Map(group);";
-        var lastMapIndex = lines.FindLastIndex(l => l.Contains(".Map(group);", StringComparison.Ordinal));
+        var lastMapIndex = lines.FindLastIndex(l =>
+            l.Contains(".Map(group);", StringComparison.Ordinal)
+        );
 
-        if (lastMapIndex >= 0 && !lines.Any(l => l.Contains($"{featureName}Endpoint.Map(group);", StringComparison.Ordinal)))
+        if (
+            lastMapIndex >= 0
+            && !lines.Any(l =>
+                l.Contains($"{featureName}Endpoint.Map(group);", StringComparison.Ordinal)
+            )
+        )
         {
             lines.Insert(lastMapIndex + 1, mapCall);
         }

@@ -1,4 +1,4 @@
-using SimpleModule.Core.Constants;
+﻿using SimpleModule.Core.Constants;
 
 namespace SimpleModule.Core.Exceptions;
 

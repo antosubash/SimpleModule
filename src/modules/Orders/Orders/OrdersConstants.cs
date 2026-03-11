@@ -1,4 +1,4 @@
-namespace SimpleModule.Orders;
+﻿namespace SimpleModule.Orders;
 
 public static class OrdersConstants
 {
@@ -15,6 +15,7 @@ public static class OrdersConstants
     {
         public const string UserIdRequired = "UserId is required.";
         public const string AtLeastOneItemRequired = "At least one item is required.";
-        public const string QuantityMustBePositiveFormat = "Items[{0}].Quantity must be greater than 0.";
+        public const string QuantityMustBePositiveFormat =
+            "Items[{0}].Quantity must be greater than 0.";
     }
 }

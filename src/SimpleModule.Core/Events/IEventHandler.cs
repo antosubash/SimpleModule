@@ -1,4 +1,4 @@
-namespace SimpleModule.Core.Events;
+﻿namespace SimpleModule.Core.Events;
 
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix - EventHandler is intentional
 public interface IEventHandler<in T>

@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 using SimpleModule.Cli.Templates;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -15,7 +15,9 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         var solution = SolutionContext.Discover();
         if (solution is null)
         {
-            AnsiConsole.MarkupLine("[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]");
+            AnsiConsole.MarkupLine(
+                "[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]"
+            );
             return 1;
         }
 
@@ -25,7 +27,9 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
             return 1;
         }
 
-        AnsiConsole.MarkupLine($"[blue]Creating module '{moduleName}' (singular: '{singularName}')...[/]");
+        AnsiConsole.MarkupLine(
+            $"[blue]Creating module '{moduleName}' (singular: '{singularName}')...[/]"
+        );
 
         var templates = new ModuleTemplates(solution);
 
@@ -44,24 +48,63 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         Directory.CreateDirectory(integrationTestDir);
 
         // Contracts project files
-        WriteFile(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), templates.ContractsCsproj(moduleName));
-        WriteFile(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"), templates.ContractsInterface(moduleName, singularName));
-        WriteFile(Path.Combine(contractsDir, $"{singularName}.cs"), templates.DtoClass(moduleName, singularName));
-        WriteFile(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"), templates.EventClass(moduleName, singularName));
+        WriteFile(
+            Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"),
+            templates.ContractsCsproj(moduleName)
+        );
+        WriteFile(
+            Path.Combine(contractsDir, $"I{singularName}Contracts.cs"),
+            templates.ContractsInterface(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(contractsDir, $"{singularName}.cs"),
+            templates.DtoClass(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"),
+            templates.EventClass(moduleName, singularName)
+        );
 
         // Module project files
-        WriteFile(Path.Combine(moduleDir, $"{moduleName}.csproj"), templates.ModuleCsproj(moduleName));
-        WriteFile(Path.Combine(moduleDir, $"{moduleName}Module.cs"), templates.ModuleClass(moduleName, singularName));
-        WriteFile(Path.Combine(moduleDir, $"{moduleName}Constants.cs"), templates.ConstantsClass(moduleName, singularName));
-        WriteFile(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"), templates.DbContextClass(moduleName, singularName));
-        WriteFile(Path.Combine(moduleDir, $"{singularName}Service.cs"), templates.ServiceClass(moduleName, singularName));
-        WriteFile(Path.Combine(featuresDir, $"GetAll{moduleName}Endpoint.cs"), templates.GetAllEndpoint(moduleName, singularName));
+        WriteFile(
+            Path.Combine(moduleDir, $"{moduleName}.csproj"),
+            templates.ModuleCsproj(moduleName)
+        );
+        WriteFile(
+            Path.Combine(moduleDir, $"{moduleName}Module.cs"),
+            templates.ModuleClass(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(moduleDir, $"{moduleName}Constants.cs"),
+            templates.ConstantsClass(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(moduleDir, $"{moduleName}DbContext.cs"),
+            templates.DbContextClass(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(moduleDir, $"{singularName}Service.cs"),
+            templates.ServiceClass(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(featuresDir, $"GetAll{moduleName}Endpoint.cs"),
+            templates.GetAllEndpoint(moduleName, singularName)
+        );
 
         // Test project files
-        WriteFile(Path.Combine(testDir, $"{moduleName}.Tests.csproj"), templates.TestCsproj(moduleName));
+        WriteFile(
+            Path.Combine(testDir, $"{moduleName}.Tests.csproj"),
+            templates.TestCsproj(moduleName)
+        );
         WriteFile(Path.Combine(testDir, "GlobalUsings.cs"), templates.GlobalUsings());
-        WriteFile(Path.Combine(unitTestDir, $"{singularName}ServiceTests.cs"), templates.UnitTestSkeleton(moduleName, singularName));
-        WriteFile(Path.Combine(integrationTestDir, $"{moduleName}EndpointTests.cs"), templates.IntegrationTestSkeleton(moduleName, singularName));
+        WriteFile(
+            Path.Combine(unitTestDir, $"{singularName}ServiceTests.cs"),
+            templates.UnitTestSkeleton(moduleName, singularName)
+        );
+        WriteFile(
+            Path.Combine(integrationTestDir, $"{moduleName}EndpointTests.cs"),
+            templates.IntegrationTestSkeleton(moduleName, singularName)
+        );
 
         // Modify solution files
         AnsiConsole.MarkupLine("[blue]Updating solution files...[/]");
@@ -71,7 +114,8 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
 
         ProjectManipulator.AddProjectReference(
             solution.ApiCsprojPath,
-            $@"..\modules\{moduleName}\{moduleName}\{moduleName}.csproj");
+            $@"..\modules\{moduleName}\{moduleName}\{moduleName}.csproj"
+        );
         AnsiConsole.MarkupLine("[green]  + API project reference added[/]");
 
         AnsiConsole.MarkupLine($"[green]Module '{moduleName}' created successfully![/]");

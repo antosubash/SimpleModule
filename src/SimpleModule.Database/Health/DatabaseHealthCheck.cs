@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +9,7 @@ namespace SimpleModule.Database.Health;
 
 public sealed class DatabaseHealthCheck(IServiceProvider serviceProvider) : IHealthCheck
 {
-    private static readonly CompositeFormat CannotConnectFormat = CompositeFormat.Parse(
+    private static readonly CompositeFormat _cannotConnectFormat = CompositeFormat.Parse(
         HealthCheckConstants.CannotConnectFormat
     );
 
@@ -30,7 +30,11 @@ public sealed class DatabaseHealthCheck(IServiceProvider serviceProvider) : IHea
                 if (!await dbContext.Database.CanConnectAsync(cancellationToken))
                 {
                     return HealthCheckResult.Unhealthy(
-                        string.Format(CultureInfo.InvariantCulture, CannotConnectFormat, info.ModuleName)
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            _cannotConnectFormat,
+                            info.ModuleName
+                        )
                     );
                 }
             }

@@ -1,4 +1,4 @@
-using SimpleModule.Core;
+﻿using SimpleModule.Core;
 
 namespace SimpleModule.Users.Contracts;
 

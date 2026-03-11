@@ -1,4 +1,4 @@
-namespace SimpleModule.Users.Contracts;
+﻿namespace SimpleModule.Users.Contracts;
 
 public interface IUserContracts
 {

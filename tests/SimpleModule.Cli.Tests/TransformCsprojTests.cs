@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -31,13 +31,15 @@ public sealed class TransformCsprojTests : IDisposable
     [Fact]
     public void RenamesModuleName()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
                 <ProjectReference Include="..\Orders.Contracts\Orders.Contracts.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         var result = TemplateExtractor.TransformCsproj(path, "Orders", "Invoices");
 
@@ -48,14 +50,16 @@ public sealed class TransformCsprojTests : IDisposable
     [Fact]
     public void StripsProjectReferences()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
                 <ProjectReference Include="..\Core\Core.csproj" />
                 <ProjectReference Include="..\Bogus\Bogus.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         var result = TemplateExtractor.TransformCsproj(path, "Orders", "Invoices", ["Bogus"]);
 
@@ -66,14 +70,16 @@ public sealed class TransformCsprojTests : IDisposable
     [Fact]
     public void StripsPackageReferences()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
                 <PackageReference Include="FluentAssertions" />
                 <PackageReference Include="Bogus" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         var result = TemplateExtractor.TransformCsproj(path, "Orders", "Invoices", ["Bogus"]);
 
@@ -84,7 +90,8 @@ public sealed class TransformCsprojTests : IDisposable
     [Fact]
     public void RemovesEmptyItemGroups()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
                 <PackageReference Include="KeepThis" />
@@ -93,7 +100,8 @@ public sealed class TransformCsprojTests : IDisposable
                 <PackageReference Include="RemoveThis" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         var result = TemplateExtractor.TransformCsproj(path, "X", "Y", ["RemoveThis"]);
 
@@ -107,13 +115,15 @@ public sealed class TransformCsprojTests : IDisposable
     [Fact]
     public void NoStripping_JustRenames()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <RootNamespace>Orders</RootNamespace>
               </PropertyGroup>
             </Project>
-            """);
+            """
+        );
 
         var result = TemplateExtractor.TransformCsproj(path, "Orders", "Invoices");
 
@@ -124,13 +134,15 @@ public sealed class TransformCsprojTests : IDisposable
     [Fact]
     public void OmitsXmlDeclaration()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <TargetFramework>net10.0</TargetFramework>
               </PropertyGroup>
             </Project>
-            """);
+            """
+        );
 
         var result = TemplateExtractor.TransformCsproj(path, "X", "Y");
 

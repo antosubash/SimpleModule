@@ -25,13 +25,20 @@
   </ItemGroup>
   <!-- Tailwind CSS -->
   <PropertyGroup>
-    <TailwindCli Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\tools\tailwindcss.exe</TailwindCli>
-    <TailwindCli Condition="'$(OS)' != 'Windows_NT'">$(MSBuildThisFileDirectory)../../tools/tailwindcss</TailwindCli>
+    <TailwindCli Condition="'$(OS)' == 'Windows_NT'"
+      >$(MSBuildThisFileDirectory)..\..\tools\tailwindcss.exe</TailwindCli
+    >
+    <TailwindCli Condition="'$(OS)' != 'Windows_NT'"
+      >$(MSBuildThisFileDirectory)../../tools/tailwindcss</TailwindCli
+    >
     <TailwindInput>$(MSBuildThisFileDirectory)Styles\app.css</TailwindInput>
     <TailwindOutput>$(MSBuildThisFileDirectory)wwwroot\css\app.css</TailwindOutput>
   </PropertyGroup>
   <Target Name="TailwindBuild" BeforeTargets="Build">
-    <Error Condition="!Exists('$(TailwindCli)')" Text="Tailwind CSS CLI not found at '$(TailwindCli)'. Run tools/download-tailwind.sh (or .ps1 on Windows) to install it." />
+    <Error
+      Condition="!Exists('$(TailwindCli)')"
+      Text="Tailwind CSS CLI not found at '$(TailwindCli)'. Run tools/download-tailwind.sh (or .ps1 on Windows) to install it."
+    />
     <Exec Command="&quot;$(TailwindCli)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
   </Target>
 </Project>

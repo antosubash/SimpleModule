@@ -1,4 +1,4 @@
-using SimpleModule.Users.Contracts;
+﻿using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;
 

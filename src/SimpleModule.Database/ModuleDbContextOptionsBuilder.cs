@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -15,10 +15,13 @@ public static class ModuleDbContextOptionsBuilder
     )
         where TContext : DbContext
     {
-        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseConstants.SectionName));
+        services.Configure<DatabaseOptions>(
+            configuration.GetSection(DatabaseConstants.SectionName)
+        );
 
         var dbOptions =
-            configuration.GetSection(DatabaseConstants.SectionName).Get<DatabaseOptions>() ?? new DatabaseOptions();
+            configuration.GetSection(DatabaseConstants.SectionName).Get<DatabaseOptions>()
+            ?? new DatabaseOptions();
 
         var connectionString = dbOptions.ModuleConnections.TryGetValue(moduleName, out var moduleCs)
             ? moduleCs

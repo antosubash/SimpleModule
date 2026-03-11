@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
 using SimpleModule.Api.Components;
 using SimpleModule.Core;
+using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
-using SimpleModule.Core.Constants;
 using SimpleModule.Database.Health;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,7 +45,13 @@ builder.Services.AddSwaggerGen(options =>
                 : null;
         if (scheme is null)
             return new OpenApiSecurityRequirement();
-        return new OpenApiSecurityRequirement { { scheme, [AuthConstants.OpenIdScope, AuthConstants.ProfileScope, AuthConstants.EmailScope] } };
+        return new OpenApiSecurityRequirement
+        {
+            {
+                scheme,
+                [AuthConstants.OpenIdScope, AuthConstants.ProfileScope, AuthConstants.EmailScope]
+            },
+        };
     });
 });
 builder.Services.AddProblemDetails();
@@ -61,17 +67,22 @@ builder.Services.AddScoped<IEventBus, EventBus>();
 builder.Services.AddModules(builder.Configuration);
 
 // Smart auth: Bearer header → OpenIddict validation; otherwise → Identity cookies
-builder.Services.AddAuthentication()
-    .AddPolicyScheme(AuthConstants.SmartAuthPolicy, null!, options =>
-    {
-        options.ForwardDefaultSelector = context =>
+builder
+    .Services.AddAuthentication()
+    .AddPolicyScheme(
+        AuthConstants.SmartAuthPolicy,
+        null!,
+        options =>
         {
-            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-            if (authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true)
-                return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-            return IdentityConstants.ApplicationScheme;
-        };
-    });
+            options.ForwardDefaultSelector = context =>
+            {
+                var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+                if (authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true)
+                    return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+                return IdentityConstants.ApplicationScheme;
+            };
+        }
+    );
 builder.Services.Configure<AuthenticationOptions>(options =>
 {
     options.DefaultScheme = AuthConstants.SmartAuthPolicy;
@@ -81,8 +92,12 @@ builder.Services.Configure<AuthenticationOptions>(options =>
 builder.Services.AddAuthorization();
 
 // Health checks
-builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>(HealthCheckConstants.DatabaseCheckName, tags: [HealthCheckConstants.ReadyTag]);
+builder
+    .Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>(
+        HealthCheckConstants.DatabaseCheckName,
+        tags: [HealthCheckConstants.ReadyTag]
+    );
 
 var app = builder.Build();
 
@@ -111,18 +126,23 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 // Health endpoints — liveness (no checks) and readiness (database checks)
-app.MapHealthChecks(RouteConstants.HealthLive, new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = _ => false, // No checks — just confirms the process is running
-});
-app.MapHealthChecks(RouteConstants.HealthReady, new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
-});
+app.MapHealthChecks(
+    RouteConstants.HealthLive,
+    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = _ => false, // No checks — just confirms the process is running
+    }
+);
+app.MapHealthChecks(
+    RouteConstants.HealthReady,
+    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
+    }
+);
 
 // Blazor SSR
-app.MapRazorComponents<App>()
-    .AddModuleAssemblies();
+app.MapRazorComponents<App>().AddModuleAssemblies();
 
 // Automatically map all module endpoints
 app.MapModuleEndpoints();

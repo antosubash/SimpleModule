@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -31,7 +31,8 @@ public sealed class ModuleClassManipulatorTests : IDisposable
     [Fact]
     public void AddFeatureWiring_AddsUsingAndMapCall()
     {
-        var path = CreateModuleFile("""
+        var path = CreateModuleFile(
+            """
             using SimpleModule.Orders.Features.GetAllOrders;
 
             namespace SimpleModule.Orders;
@@ -44,7 +45,8 @@ public sealed class ModuleClassManipulatorTests : IDisposable
                     GetAllOrdersEndpoint.Map(group);
                 }
             }
-            """);
+            """
+        );
 
         var result = ModuleClassManipulator.AddFeatureWiring(path, "Orders", "CreateOrder");
 
@@ -57,14 +59,16 @@ public sealed class ModuleClassManipulatorTests : IDisposable
     [Fact]
     public void AddFeatureWiring_ReturnsFalse_WhenPatternNotFound()
     {
-        var path = CreateModuleFile("""
+        var path = CreateModuleFile(
+            """
             namespace SimpleModule.Orders;
 
             public class OrdersModule
             {
                 // No Map(group) pattern
             }
-            """);
+            """
+        );
 
         var result = ModuleClassManipulator.AddFeatureWiring(path, "Orders", "CreateOrder");
 
@@ -74,7 +78,8 @@ public sealed class ModuleClassManipulatorTests : IDisposable
     [Fact]
     public void AddFeatureWiring_DoesNotDuplicate()
     {
-        var path = CreateModuleFile("""
+        var path = CreateModuleFile(
+            """
             using SimpleModule.Orders.Features.GetAllOrders;
             using SimpleModule.Orders.Features.CreateOrder;
 
@@ -89,7 +94,8 @@ public sealed class ModuleClassManipulatorTests : IDisposable
                     CreateOrderEndpoint.Map(group);
                 }
             }
-            """);
+            """
+        );
 
         var result = ModuleClassManipulator.AddFeatureWiring(path, "Orders", "CreateOrder");
 
@@ -102,7 +108,8 @@ public sealed class ModuleClassManipulatorTests : IDisposable
     [Fact]
     public void AddFeatureWiring_InsertsAfterLastUsing()
     {
-        var path = CreateModuleFile("""
+        var path = CreateModuleFile(
+            """
             using Microsoft.AspNetCore.Builder;
             using SimpleModule.Orders.Features.GetAllOrders;
 
@@ -116,15 +123,24 @@ public sealed class ModuleClassManipulatorTests : IDisposable
                     GetAllOrdersEndpoint.Map(group);
                 }
             }
-            """);
+            """
+        );
 
         ModuleClassManipulator.AddFeatureWiring(path, "Orders", "UpdateOrder");
 
         var lines = File.ReadAllLines(path);
-        var usingIndex = Array.FindIndex(lines, l => l.Contains("UpdateOrder", StringComparison.Ordinal) && l.TrimStart().StartsWith("using", StringComparison.Ordinal));
+        var usingIndex = Array.FindIndex(
+            lines,
+            l =>
+                l.Contains("UpdateOrder", StringComparison.Ordinal)
+                && l.TrimStart().StartsWith("using", StringComparison.Ordinal)
+        );
         usingIndex.Should().BeGreaterThan(0, "using should be inserted");
 
-        var mapIndex = Array.FindIndex(lines, l => l.Contains("UpdateOrderEndpoint.Map", StringComparison.Ordinal));
+        var mapIndex = Array.FindIndex(
+            lines,
+            l => l.Contains("UpdateOrderEndpoint.Map", StringComparison.Ordinal)
+        );
         mapIndex.Should().BeGreaterThan(usingIndex, "Map call should come after using");
     }
 }

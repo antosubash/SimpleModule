@@ -1,4 +1,4 @@
-namespace SimpleModule.Database;
+﻿namespace SimpleModule.Database;
 
 public static class DatabaseConstants
 {

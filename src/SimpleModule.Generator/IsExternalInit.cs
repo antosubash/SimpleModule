@@ -1,4 +1,4 @@
-// Polyfill for record types in netstandard2.0
+﻿// Polyfill for record types in netstandard2.0
 using System.ComponentModel;
 
 // ReSharper disable once CheckNamespace

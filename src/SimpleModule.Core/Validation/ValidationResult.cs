@@ -1,4 +1,4 @@
-namespace SimpleModule.Core.Validation;
+﻿namespace SimpleModule.Core.Validation;
 
 public sealed record ValidationResult(bool IsValid, Dictionary<string, string[]> Errors)
 {

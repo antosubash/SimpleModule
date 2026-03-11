@@ -1,4 +1,4 @@
-namespace SimpleModule.Database;
+﻿namespace SimpleModule.Database;
 
 public sealed class DatabaseOptions
 {

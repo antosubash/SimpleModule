@@ -1,4 +1,4 @@
-namespace SimpleModule.Cli.Infrastructure;
+﻿namespace SimpleModule.Cli.Infrastructure;
 
 public static class SlnxManipulator
 {
@@ -26,7 +26,9 @@ public static class SlnxManipulator
             $"{indent}</Folder>",
         };
 
-        var testsIndex = lines.FindIndex(l => l.Contains("<Folder Name=\"/tests/\">", StringComparison.Ordinal));
+        var testsIndex = lines.FindIndex(l =>
+            l.Contains("<Folder Name=\"/tests/\">", StringComparison.Ordinal)
+        );
         if (testsIndex >= 0)
         {
             lines.InsertRange(testsIndex, moduleFolderLines);
@@ -34,7 +36,9 @@ public static class SlnxManipulator
         else
         {
             // Insert before </Solution>
-            var endIndex = lines.FindIndex(l => l.Contains("</Solution>", StringComparison.Ordinal));
+            var endIndex = lines.FindIndex(l =>
+                l.Contains("</Solution>", StringComparison.Ordinal)
+            );
             if (endIndex >= 0)
             {
                 lines.InsertRange(endIndex, moduleFolderLines);
@@ -45,7 +49,8 @@ public static class SlnxManipulator
         var testsModulesEndIndex = FindFolderClosingTag(lines, "/tests/modules/");
         if (testsModulesEndIndex >= 0)
         {
-            var testProjectLine = $"{indent2}<Project Path=\"tests/modules/{moduleName}.Tests/{moduleName}.Tests.csproj\" />";
+            var testProjectLine =
+                $"{indent2}<Project Path=\"tests/modules/{moduleName}.Tests/{moduleName}.Tests.csproj\" />";
             lines.Insert(testsModulesEndIndex, testProjectLine);
         }
 
@@ -80,7 +85,9 @@ public static class SlnxManipulator
 
     private static int FindFolderClosingTag(List<string> lines, string folderName)
     {
-        var folderIndex = lines.FindIndex(l => l.Contains($"<Folder Name=\"{folderName}\">", StringComparison.Ordinal));
+        var folderIndex = lines.FindIndex(l =>
+            l.Contains($"<Folder Name=\"{folderName}\">", StringComparison.Ordinal)
+        );
         if (folderIndex < 0)
         {
             return -1;
