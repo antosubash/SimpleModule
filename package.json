@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "simplemodule",
+  "workspaces": ["src/modules/*/*"],
+  "devDependencies": {
+    "vite": "^6.2.0",
+    "typescript": "^5.8.0"
+  }
+}
