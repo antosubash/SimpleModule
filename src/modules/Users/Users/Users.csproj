@@ -11,4 +11,8 @@
     <ProjectReference Include="..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\Users.Contracts\Users.Contracts.csproj" />
   </ItemGroup>
+  <Target Name="JsBuild" BeforeTargets="Build"
+          Condition="Exists('package.json') And Exists('node_modules')">
+    <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
 </Project>

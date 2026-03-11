@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "@simplemodule/users",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
+}
