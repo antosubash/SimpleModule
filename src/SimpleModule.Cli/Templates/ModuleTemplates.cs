@@ -850,7 +850,7 @@ public sealed class ModuleTemplates
                 <OutputType>Library</OutputType>
               </PropertyGroup>
               <ItemGroup>
-                <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+                <ProjectReference Include="..\..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
               </ItemGroup>
             </Project>
             """;
@@ -864,8 +864,8 @@ public sealed class ModuleTemplates
               </PropertyGroup>
               <ItemGroup>
                 <FrameworkReference Include="Microsoft.AspNetCore.App" />
-                <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
-                <ProjectReference Include="..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
+                <ProjectReference Include="..\..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+                <ProjectReference Include="..\..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
                 <ProjectReference Include="..\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
               </ItemGroup>
             </Project>
@@ -891,9 +891,9 @@ public sealed class ModuleTemplates
                 <PackageReference Include="NSubstitute" />
               </ItemGroup>
               <ItemGroup>
-                <ProjectReference Include="..\..\..\src\modules\{moduleName}\{moduleName}\{moduleName}.csproj" />
-                <ProjectReference Include="..\..\..\src\modules\{moduleName}\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
-                <ProjectReference Include="..\..\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
+                <ProjectReference Include="..\..\src\{moduleName}\{moduleName}.csproj" />
+                <ProjectReference Include="..\..\src\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
+                <ProjectReference Include="..\..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
               </ItemGroup>
             </Project>
             """;

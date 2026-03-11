@@ -21,8 +21,9 @@ public static class SlnxManipulator
         var moduleFolderLines = new[]
         {
             $"{indent}<Folder Name=\"/modules/{moduleName}/\">",
-            $"{indent2}<Project Path=\"src/modules/{moduleName}/{moduleName}.Contracts/{moduleName}.Contracts.csproj\" />",
-            $"{indent2}<Project Path=\"src/modules/{moduleName}/{moduleName}/{moduleName}.csproj\" />",
+            $"{indent2}<Project Path=\"src/modules/{moduleName}/src/{moduleName}.Contracts/{moduleName}.Contracts.csproj\" />",
+            $"{indent2}<Project Path=\"src/modules/{moduleName}/src/{moduleName}/{moduleName}.csproj\" />",
+            $"{indent2}<Project Path=\"src/modules/{moduleName}/tests/{moduleName}.Tests/{moduleName}.Tests.csproj\" />",
             $"{indent}</Folder>",
         };
 
@@ -43,15 +44,6 @@ public static class SlnxManipulator
             {
                 lines.InsertRange(endIndex, moduleFolderLines);
             }
-        }
-
-        // Add test project to /tests/modules/ folder
-        var testsModulesEndIndex = FindFolderClosingTag(lines, "/tests/modules/");
-        if (testsModulesEndIndex >= 0)
-        {
-            var testProjectLine =
-                $"{indent2}<Project Path=\"tests/modules/{moduleName}.Tests/{moduleName}.Tests.csproj\" />";
-            lines.Insert(testsModulesEndIndex, testProjectLine);
         }
 
         File.WriteAllLines(slnxPath, lines);

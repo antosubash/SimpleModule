@@ -111,7 +111,7 @@ public sealed class SolutionContextTests : IDisposable
 
         ctx.GetModuleContractsPath("Invoices")
             .Should()
-            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "Invoices.Contracts"));
+            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "src", "Invoices.Contracts"));
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public sealed class SolutionContextTests : IDisposable
 
         ctx.GetModuleProjectPath("Invoices")
             .Should()
-            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "Invoices"));
+            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "src", "Invoices"));
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public sealed class SolutionContextTests : IDisposable
 
         ctx.GetTestProjectPath("Invoices")
             .Should()
-            .Be(Path.Combine(_tempDir, "tests", "modules", "Invoices.Tests"));
+            .Be(Path.Combine(_tempDir, "src", "modules", "Invoices", "tests", "Invoices.Tests"));
     }
 
     [Fact]

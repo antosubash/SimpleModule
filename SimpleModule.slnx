@@ -13,16 +13,19 @@
     </Folder>
     <Folder Name="/modules/" />
     <Folder Name="/modules/Orders/">
-        <Project Path="src/modules/Orders/Orders.Contracts/Orders.Contracts.csproj" />
-        <Project Path="src/modules/Orders/Orders/Orders.csproj" />
+        <Project Path="src/modules/Orders/src/Orders.Contracts/Orders.Contracts.csproj" />
+        <Project Path="src/modules/Orders/src/Orders/Orders.csproj" />
+        <Project Path="src/modules/Orders/tests/Orders.Tests/Orders.Tests.csproj" />
     </Folder>
     <Folder Name="/modules/Products/">
-        <Project Path="src/modules/Products/Products.Contracts/Products.Contracts.csproj" />
-        <Project Path="src/modules/Products/Products/Products.csproj" />
+        <Project Path="src/modules/Products/src/Products.Contracts/Products.Contracts.csproj" />
+        <Project Path="src/modules/Products/src/Products/Products.csproj" />
+        <Project Path="src/modules/Products/tests/Products.Tests/Products.Tests.csproj" />
     </Folder>
     <Folder Name="/modules/Users/">
-        <Project Path="src/modules/Users/Users.Contracts/Users.Contracts.csproj" />
-        <Project Path="src/modules/Users/Users/Users.csproj" />
+        <Project Path="src/modules/Users/src/Users.Contracts/Users.Contracts.csproj" />
+        <Project Path="src/modules/Users/src/Users/Users.csproj" />
+        <Project Path="src/modules/Users/tests/Users.Tests/Users.Tests.csproj" />
     </Folder>
     <Folder Name="/tests/">
         <Project Path="tests/SimpleModule.Cli.Tests/SimpleModule.Cli.Tests.csproj" />
@@ -30,10 +33,5 @@
         <Project Path="tests/SimpleModule.Database.Tests/SimpleModule.Database.Tests.csproj" />
         <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
         <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
-    </Folder>
-    <Folder Name="/tests/modules/">
-        <Project Path="tests/modules/Orders.Tests/Orders.Tests.csproj" />
-        <Project Path="tests/modules/Products.Tests/Products.Tests.csproj" />
-        <Project Path="tests/modules/Users.Tests/Users.Tests.csproj" />
     </Folder>
 </Solution>

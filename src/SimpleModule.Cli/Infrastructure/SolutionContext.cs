@@ -6,7 +6,7 @@ public sealed class SolutionContext
     public string SlnxPath { get; }
     public string ApiCsprojPath { get; }
     public string ModulesPath { get; }
-    public string TestsModulesPath { get; }
+
     public IReadOnlyList<string> ExistingModules { get; }
 
     private SolutionContext(string rootPath, string slnxPath)
@@ -20,7 +20,6 @@ public sealed class SolutionContext
             "SimpleModule.Api.csproj"
         );
         ModulesPath = Path.Combine(rootPath, "src", "modules");
-        TestsModulesPath = Path.Combine(rootPath, "tests", "modules");
 
         ExistingModules = Directory.Exists(ModulesPath)
             ? Directory
@@ -54,11 +53,11 @@ public sealed class SolutionContext
     public string GetModulePath(string moduleName) => Path.Combine(ModulesPath, moduleName);
 
     public string GetModuleContractsPath(string moduleName) =>
-        Path.Combine(ModulesPath, moduleName, $"{moduleName}.Contracts");
+        Path.Combine(ModulesPath, moduleName, "src", $"{moduleName}.Contracts");
 
     public string GetModuleProjectPath(string moduleName) =>
-        Path.Combine(ModulesPath, moduleName, moduleName);
+        Path.Combine(ModulesPath, moduleName, "src", moduleName);
 
     public string GetTestProjectPath(string moduleName) =>
-        Path.Combine(TestsModulesPath, $"{moduleName}.Tests");
+        Path.Combine(ModulesPath, moduleName, "tests", $"{moduleName}.Tests");
 }
