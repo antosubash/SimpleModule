@@ -13,7 +13,7 @@ public static class GetCurrentUserEndpoint
     {
         group
             .MapGet(
-                "/me",
+                UsersConstants.MeRoute,
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     HttpContext context,
                     IUserContracts userContracts
