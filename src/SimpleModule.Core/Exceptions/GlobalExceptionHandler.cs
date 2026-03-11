@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Constants;
 
 namespace SimpleModule.Core.Exceptions;
 
@@ -18,16 +19,16 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         {
             ValidationException ve => (
                 StatusCodes.Status400BadRequest,
-                "Validation Error",
+                ErrorMessages.ValidationErrorTitle,
                 ve.Errors
             ),
             NotFoundException => (
                 StatusCodes.Status404NotFound,
-                "Not Found",
+                ErrorMessages.NotFoundTitle,
                 (Dictionary<string, string[]>?)null
             ),
-            ConflictException => (StatusCodes.Status409Conflict, "Conflict", null),
-            _ => (StatusCodes.Status500InternalServerError, "Internal Server Error", null),
+            ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
+            _ => (StatusCodes.Status500InternalServerError, ErrorMessages.InternalServerErrorTitle, null),
         };
 
         if (statusCode == StatusCodes.Status500InternalServerError)
@@ -43,11 +44,15 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             );
         }
 
+        var detail = statusCode == StatusCodes.Status500InternalServerError
+            ? ErrorMessages.UnexpectedError
+            : exception.Message;
+
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
             Title = title,
-            Detail = exception.Message,
+            Detail = detail,
         };
 
         if (errors is not null)

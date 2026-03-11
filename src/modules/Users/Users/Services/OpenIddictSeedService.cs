@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Abstractions;
+using SimpleModule.Core.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -10,6 +12,8 @@ namespace SimpleModule.Users.Services;
 
 public partial class OpenIddictSeedService(
     IServiceProvider serviceProvider,
+    IConfiguration configuration,
+    IHostEnvironment hostEnvironment,
     ILogger<OpenIddictSeedService> logger
 ) : IHostedService
 {
@@ -18,8 +22,13 @@ public partial class OpenIddictSeedService(
         using var scope = serviceProvider.CreateScope();
 
         await SeedClientApplicationAsync(scope, cancellationToken);
-        await SeedRolesAsync(scope);
-        await SeedAdminUserAsync(scope);
+
+        // Only seed default roles and admin user in Development
+        if (hostEnvironment.IsDevelopment())
+        {
+            await SeedRolesAsync(scope);
+            await SeedAdminUserAsync(scope);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -31,48 +40,59 @@ public partial class OpenIddictSeedService(
     {
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
-        if (await manager.FindByClientIdAsync("simplemodule-client", cancellationToken) is not null)
+        if (await manager.FindByClientIdAsync(ClientConstants.ClientId, cancellationToken) is not null)
         {
             return;
         }
 
         LogSeedingClient(logger);
 
-        await manager.CreateAsync(
-            new OpenIddictApplicationDescriptor
+        var baseUrl = configuration[ConfigKeys.OpenIddictBaseUrl] ?? ClientConstants.DefaultBaseUrl;
+
+        var descriptor = new OpenIddictApplicationDescriptor
+        {
+            ClientId = ClientConstants.ClientId,
+            DisplayName = ClientConstants.ClientDisplayName,
+            ClientType = ClientTypes.Public,
+            RedirectUris =
             {
-                ClientId = "simplemodule-client",
-                DisplayName = "SimpleModule Client",
-                ClientType = ClientTypes.Public,
-                RedirectUris =
-                {
-                    new Uri("https://localhost:5001/swagger/oauth2-redirect.html"),
-                    new Uri("https://localhost:5001/oauth-callback"),
-                },
-                PostLogoutRedirectUris = { new Uri("https://localhost:5001/") },
-                Permissions =
-                {
-                    Permissions.Endpoints.Authorization,
-                    Permissions.Endpoints.Token,
-                    Permissions.Endpoints.EndSession,
-                    Permissions.GrantTypes.AuthorizationCode,
-                    Permissions.GrantTypes.RefreshToken,
-                    Permissions.ResponseTypes.Code,
-                    Permissions.Scopes.Email,
-                    Permissions.Scopes.Profile,
-                    Permissions.Prefixes.Scope + "roles",
-                },
-                Requirements = { Requirements.Features.ProofKeyForCodeExchange },
+                new Uri($"{baseUrl}{ClientConstants.SwaggerCallbackPath}"),
+                new Uri($"{baseUrl}{ClientConstants.OAuthCallbackPath}"),
             },
-            cancellationToken
-        );
+            PostLogoutRedirectUris = { new Uri($"{baseUrl}{ClientConstants.PostLogoutRedirectPath}") },
+            Permissions =
+            {
+                Permissions.Endpoints.Authorization,
+                Permissions.Endpoints.Token,
+                Permissions.Endpoints.EndSession,
+                Permissions.GrantTypes.AuthorizationCode,
+                Permissions.GrantTypes.RefreshToken,
+                Permissions.ResponseTypes.Code,
+                Permissions.Scopes.Email,
+                Permissions.Scopes.Profile,
+                Permissions.Prefixes.Scope + AuthConstants.RolesScope,
+            },
+            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
+        };
+
+        // Allow additional redirect URIs from configuration
+        var additionalRedirects = configuration.GetSection(ConfigKeys.OpenIddictAdditionalRedirectUris).Get<string[]>();
+        if (additionalRedirects is not null)
+        {
+            foreach (var uri in additionalRedirects)
+            {
+                descriptor.RedirectUris.Add(new Uri(uri));
+            }
+        }
+
+        await manager.CreateAsync(descriptor, cancellationToken);
     }
 
     private async Task SeedRolesAsync(IServiceScope scope)
     {
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
-        if (await roleManager.RoleExistsAsync("Admin"))
+        if (await roleManager.RoleExistsAsync(SeedConstants.AdminRole))
         {
             return;
         }
@@ -82,8 +102,8 @@ public partial class OpenIddictSeedService(
         var result = await roleManager.CreateAsync(
             new ApplicationRole
             {
-                Name = "Admin",
-                Description = "Administrator role with full access",
+                Name = SeedConstants.AdminRole,
+                Description = SeedConstants.AdminRoleDescription,
                 CreatedAt = DateTime.UtcNow,
             }
         );
@@ -101,7 +121,7 @@ public partial class OpenIddictSeedService(
     {
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        if (await userManager.FindByEmailAsync("admin@simplemodule.dev") is not null)
+        if (await userManager.FindByEmailAsync(SeedConstants.AdminEmail) is not null)
         {
             return;
         }
@@ -110,17 +130,18 @@ public partial class OpenIddictSeedService(
 
         var admin = new ApplicationUser
         {
-            UserName = "admin@simplemodule.dev",
-            Email = "admin@simplemodule.dev",
-            DisplayName = "Admin",
+            UserName = SeedConstants.AdminEmail,
+            Email = SeedConstants.AdminEmail,
+            DisplayName = SeedConstants.AdminDisplayName,
             EmailConfirmed = true,
             CreatedAt = DateTime.UtcNow,
         };
 
-        var result = await userManager.CreateAsync(admin, "Admin123!");
+        var adminPassword = configuration[ConfigKeys.SeedAdminPassword] ?? SeedConstants.DefaultAdminPassword;
+        var result = await userManager.CreateAsync(admin, adminPassword);
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(admin, "Admin");
+            await userManager.AddToRoleAsync(admin, SeedConstants.AdminRole);
         }
         else
         {

@@ -1,9 +1,11 @@
+using SimpleModule.Core.Constants;
+
 namespace SimpleModule.Core.Exceptions;
 
 public sealed class ConflictException : Exception
 {
     public ConflictException()
-        : base("A conflict occurred.") { }
+        : base(ErrorMessages.DefaultConflictMessage) { }
 
     public ConflictException(string message)
         : base(message) { }

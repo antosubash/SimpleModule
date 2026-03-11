@@ -11,18 +11,18 @@ using SimpleModule.Orders.Features.GetOrderById;
 
 namespace SimpleModule.Orders;
 
-[Module("Orders")]
+[Module(OrdersConstants.ModuleName)]
 public class OrdersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<OrdersDbContext>(configuration, "Orders");
+        services.AddModuleDbContext<OrdersDbContext>(configuration, OrdersConstants.ModuleName);
         services.AddScoped<IOrderContracts, OrderService>();
     }
 
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/orders");
+        var group = endpoints.MapGroup(OrdersConstants.RoutePrefix);
         GetAllOrdersEndpoint.Map(group);
         GetOrderByIdEndpoint.Map(group);
         CreateOrderEndpoint.Map(group);

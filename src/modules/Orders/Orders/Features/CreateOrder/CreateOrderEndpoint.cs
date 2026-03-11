@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core.Exceptions;
+using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Features.CreateOrder;
@@ -21,7 +22,7 @@ public static class CreateOrderEndpoint
                 }
 
                 var order = await orderContracts.CreateOrderAsync(request);
-                return TypedResults.Created($"/api/orders/{order.Id}", order);
+                return TypedResults.Created($"{OrdersConstants.RoutePrefix}/{order.Id}", order);
             }
         );
     }

@@ -15,16 +15,16 @@ public static class ModuleDbContextOptionsBuilder
     )
         where TContext : DbContext
     {
-        services.Configure<DatabaseOptions>(configuration.GetSection("Database"));
+        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseConstants.SectionName));
 
         var dbOptions =
-            configuration.GetSection("Database").Get<DatabaseOptions>() ?? new DatabaseOptions();
+            configuration.GetSection(DatabaseConstants.SectionName).Get<DatabaseOptions>() ?? new DatabaseOptions();
 
         var connectionString = dbOptions.ModuleConnections.TryGetValue(moduleName, out var moduleCs)
             ? moduleCs
             : dbOptions.DefaultConnection;
 
-        var provider = DatabaseProviderDetector.Detect(connectionString);
+        var provider = DatabaseProviderDetector.Detect(connectionString, dbOptions.Provider);
 
         services.AddDbContext<TContext>(options =>
         {
