@@ -1,9 +1,11 @@
+using SimpleModule.Core.Constants;
+
 namespace SimpleModule.Core.Exceptions;
 
 public sealed class NotFoundException : Exception
 {
     public NotFoundException()
-        : base("The requested resource was not found.") { }
+        : base(ErrorMessages.DefaultNotFoundMessage) { }
 
     public NotFoundException(string message)
         : base(message) { }

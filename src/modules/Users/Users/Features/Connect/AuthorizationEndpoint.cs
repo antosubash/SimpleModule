@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using SimpleModule.Core.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -19,7 +20,7 @@ public static class AuthorizationEndpoint
     {
         endpoints
             .MapMethods(
-                "/connect/authorize",
+                RouteConstants.ConnectAuthorize,
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync
             )
@@ -31,7 +32,7 @@ public static class AuthorizationEndpoint
         var request =
             context.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException(
-                "The OpenID Connect request cannot be retrieved."
+                ErrorMessages.OpenIdConnectRequestMissing
             );
 
         var result = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
@@ -65,7 +66,7 @@ public static class AuthorizationEndpoint
         >();
         var user =
             await userManager.GetUserAsync(result.Principal)
-            ?? throw new InvalidOperationException("The user details cannot be retrieved.");
+            ?? throw new InvalidOperationException(ErrorMessages.UserDetailsMissing);
 
         var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
@@ -113,7 +114,7 @@ public static class AuthorizationEndpoint
 
             case Claims.Role:
                 yield return Destinations.AccessToken;
-                if (identity.HasScope("roles"))
+                if (identity.HasScope(AuthConstants.RolesScope))
                     yield return Destinations.IdentityToken;
                 yield break;
 

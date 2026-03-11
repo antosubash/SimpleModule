@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
+using SimpleModule.Core.Constants;
 using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
@@ -19,7 +20,7 @@ using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users;
 
-[Module("Users")]
+[Module(UsersConstants.ModuleName)]
 public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -27,7 +28,7 @@ public class UsersModule : IModule
         // DbContext with OpenIddict EF Core extension
         services.AddModuleDbContext<UsersDbContext>(
             configuration,
-            "Users",
+            UsersConstants.ModuleName,
             opts => opts.UseOpenIddict()
         );
 
@@ -62,14 +63,32 @@ public class UsersModule : IModule
                 options.AllowRefreshTokenFlow();
 
                 options
-                    .SetAuthorizationEndpointUris("/connect/authorize")
-                    .SetTokenEndpointUris("/connect/token")
-                    .SetEndSessionEndpointUris("/connect/endsession")
-                    .SetUserInfoEndpointUris("/connect/userinfo");
+                    .SetAuthorizationEndpointUris(RouteConstants.ConnectAuthorize)
+                    .SetTokenEndpointUris(RouteConstants.ConnectToken)
+                    .SetEndSessionEndpointUris(RouteConstants.ConnectEndSession)
+                    .SetUserInfoEndpointUris(RouteConstants.ConnectUserInfo);
 
-                options.AddDevelopmentEncryptionCertificate().AddDevelopmentSigningCertificate();
+                var encryptionCertPath = configuration[ConfigKeys.OpenIddictEncryptionCertPath];
+                var signingCertPath = configuration[ConfigKeys.OpenIddictSigningCertPath];
 
-                options.RegisterScopes("openid", "profile", "email", "roles");
+                if (!string.IsNullOrEmpty(encryptionCertPath) && !string.IsNullOrEmpty(signingCertPath))
+                {
+                    // Production: use real certificates
+                    var certPassword = configuration[ConfigKeys.OpenIddictCertPassword];
+                    options.AddEncryptionCertificate(
+                        System.Security.Cryptography.X509Certificates.X509CertificateLoader
+                            .LoadPkcs12FromFile(encryptionCertPath, certPassword));
+                    options.AddSigningCertificate(
+                        System.Security.Cryptography.X509Certificates.X509CertificateLoader
+                            .LoadPkcs12FromFile(signingCertPath, certPassword));
+                }
+                else
+                {
+                    // Development/Testing: use auto-generated development certificates
+                    options.AddDevelopmentEncryptionCertificate().AddDevelopmentSigningCertificate();
+                }
+
+                options.RegisterScopes(AuthConstants.OpenIdScope, AuthConstants.ProfileScope, AuthConstants.EmailScope, AuthConstants.RolesScope);
 
                 options
                     .UseAspNetCore()
@@ -101,14 +120,14 @@ public class UsersModule : IModule
         UserinfoEndpoint.Map(endpoints);
 
         // User API endpoints
-        var usersGroup = endpoints.MapGroup("/api/users");
+        var usersGroup = endpoints.MapGroup(UsersConstants.RoutePrefix);
         GetAllUsersEndpoint.Map(usersGroup);
         GetUserByIdEndpoint.Map(usersGroup);
         GetCurrentUserEndpoint.Map(usersGroup);
 
         // Download personal data endpoint (cannot be a Blazor component — returns a file)
         usersGroup.MapPost(
-            "/download-personal-data",
+            UsersConstants.DownloadPersonalDataRoute,
             async (
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -123,35 +142,36 @@ public class UsersModule : IModule
 
                 logger.LogInformation("User asked for their personal data.");
 
-                var personalData = new Dictionary<string, string>();
-                var personalDataProps = typeof(ApplicationUser)
-                    .GetProperties()
-                    .Where(prop =>
-                        Attribute.IsDefined(prop, typeof(PersonalDataAttribute))
-                    );
-                foreach (var p in personalDataProps)
+                // Manually enumerate personal data properties (AOT-compatible, no reflection)
+                var personalData = new Dictionary<string, string>
                 {
-                    personalData.Add(p.Name, p.GetValue(user)?.ToString() ?? "null");
-                }
+                    [PersonalDataKeys.Id] = user.Id ?? PersonalDataKeys.NullPlaceholder,
+                    [PersonalDataKeys.UserName] = user.UserName ?? PersonalDataKeys.NullPlaceholder,
+                    [PersonalDataKeys.Email] = user.Email ?? PersonalDataKeys.NullPlaceholder,
+                    [PersonalDataKeys.PhoneNumber] = user.PhoneNumber ?? PersonalDataKeys.NullPlaceholder,
+                    [PersonalDataKeys.DisplayName] = user.DisplayName,
+                    [PersonalDataKeys.CreatedAt] = user.CreatedAt.ToString("O"),
+                    [PersonalDataKeys.LastLoginAt] = user.LastLoginAt?.ToString("O") ?? PersonalDataKeys.NullPlaceholder,
+                };
 
                 var logins = await userManager.GetLoginsAsync(user);
                 foreach (var l in logins)
                 {
                     personalData.Add(
-                        $"{l.LoginProvider} external login provider key",
+                        $"{l.LoginProvider} {PersonalDataKeys.ExternalLoginSuffix}",
                         l.ProviderKey
                     );
                 }
 
                 personalData.Add(
-                    "Authenticator Key",
+                    PersonalDataKeys.AuthenticatorKey,
                     await userManager.GetAuthenticatorKeyAsync(user) ?? ""
                 );
 
                 return Results.File(
                     JsonSerializer.SerializeToUtf8Bytes(personalData),
-                    "application/json",
-                    "PersonalData.json"
+                    PersonalDataKeys.PersonalDataContentType,
+                    PersonalDataKeys.PersonalDataFileName
                 );
             }
         ).RequireAuthorization();

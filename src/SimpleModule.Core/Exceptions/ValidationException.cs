@@ -1,3 +1,5 @@
+using SimpleModule.Core.Constants;
+
 namespace SimpleModule.Core.Exceptions;
 
 public sealed class ValidationException : Exception
@@ -5,7 +7,7 @@ public sealed class ValidationException : Exception
     public Dictionary<string, string[]> Errors { get; }
 
     public ValidationException()
-        : base("One or more validation errors occurred.")
+        : base(ErrorMessages.DefaultValidationMessage)
     {
         Errors = new Dictionary<string, string[]>();
     }
@@ -17,7 +19,7 @@ public sealed class ValidationException : Exception
     }
 
     public ValidationException(Dictionary<string, string[]> errors)
-        : base("One or more validation errors occurred.")
+        : base(ErrorMessages.DefaultValidationMessage)
     {
         Errors = errors;
     }
