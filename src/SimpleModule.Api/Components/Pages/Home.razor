@@ -2,58 +2,48 @@
 
 <PageTitle>Home - SimpleModule</PageTitle>
 
-<!-- Hero Section -->
-<div class="flex items-center justify-center min-h-[calc(100vh-16rem)]">
-    <div class="text-center max-w-lg mx-auto">
-        <div class="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold shadow-lg" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</div>
-        <h1 class="text-4xl font-extrabold mb-3 tracking-tight" style="font-family:'Sora',sans-serif;">
-            <span class="gradient-text">SimpleModule</span>
-        </h1>
-        <p class="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
-            Modular monolith framework for .NET &mdash; AOT&#8209;compatible, zero&nbsp;reflection
-        </p>
-
-        @if (IsAuthenticated)
-        {
-            <p class="text-base mb-6 text-text-secondary">
-                Welcome back, <strong class="text-text font-semibold">@DisplayName</strong>
-            </p>
-            <div class="flex gap-3 justify-center flex-wrap">
-                <a href="/Identity/Account/Manage" class="btn-secondary no-underline">Manage Account</a>
-                <form method="post" action="/Identity/Account/Logout" class="inline" @formname="logout">
-                    <AntiforgeryToken />
-                    <button type="submit" class="btn-ghost text-danger hover:bg-danger-bg">Logout</button>
-                </form>
-            </div>
-        }
-        else
-        {
-            <div class="flex gap-3 justify-center flex-wrap">
-                <a href="/Identity/Account/Login" class="btn-primary btn-lg no-underline">Get Started</a>
-                <a href="/Identity/Account/Register" class="btn-secondary btn-lg no-underline">Create Account</a>
-            </div>
-
-            @if (IsDevelopment)
-            {
-                <div class="alert-warning mt-6 text-left text-xs">
-                    <strong class="block mb-1 text-warning">Quick Start (Development Only)</strong>
-                    Email: <code class="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">admin@@simplemodule.dev</code>
-                    &nbsp; Password: <code class="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">Admin123!</code>
-                </div>
-            }
-        }
-
-        <div class="flex gap-5 justify-center mt-8 text-sm">
-            <a href="/swagger" class="text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
-            <span class="text-border">&middot;</span>
-            <a href="/health" class="text-text-muted no-underline hover:text-primary transition-colors">Health Check</a>
-        </div>
-    </div>
-</div>
-
 @if (IsAuthenticated)
 {
-    <div class="max-w-3xl mx-auto mt-4">
+    <!-- Dashboard View -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold tracking-tight" style="font-family:'Sora',sans-serif;">
+            Welcome back, <span class="gradient-text">@DisplayName</span>
+        </h1>
+        <p class="text-text-muted text-sm mt-1">Here's your development dashboard</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <a href="/Identity/Account/Manage" class="dash-card no-underline group">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center text-primary bg-primary-subtle">
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </span>
+                <span class="text-sm font-semibold text-text group-hover:text-primary transition-colors">Account</span>
+            </div>
+            <p class="text-xs text-text-muted">Manage your profile and security settings</p>
+        </a>
+        <a href="/swagger" class="dash-card no-underline group">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center text-accent bg-success-bg">
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                </span>
+                <span class="text-sm font-semibold text-text group-hover:text-primary transition-colors">API Docs</span>
+            </div>
+            <p class="text-xs text-text-muted">Explore endpoints and test requests</p>
+        </a>
+        <a href="/health/live" class="dash-card no-underline group">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center text-info bg-info-bg">
+                    <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                </span>
+                <span class="text-sm font-semibold text-text group-hover:text-primary transition-colors">Health</span>
+            </div>
+            <p class="text-xs text-text-muted">Check system status and diagnostics</p>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- User Info -->
         <div class="panel">
             <h2 class="panel-title">User Info</h2>
@@ -84,21 +74,21 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- API Tester -->
-        <div class="panel">
-            <h2 class="panel-title">API Tester</h2>
-            <div class="glass-card p-5">
-                <h3 class="text-sm font-semibold mb-3">Call Protected Endpoints</h3>
-                <div class="flex gap-2 flex-wrap mb-4">
-                    <button class="btn-outline btn-sm" onclick="callApi('/api/users/me')">GET /api/users/me</button>
-                    <button class="btn-outline btn-sm" onclick="callApi('/api/users')">GET /api/users</button>
-                    <button class="btn-outline btn-sm" onclick="callApi('/api/products')">GET /api/products</button>
-                    <button class="btn-outline btn-sm" onclick="callApi('/api/orders')">GET /api/orders</button>
-                </div>
-                <div id="api-status" class="text-xs text-text-muted mb-2 flex items-center gap-2"></div>
-                <div class="code-block whitespace-pre-wrap max-h-50" id="api-response">Click an endpoint above to make a request.</div>
+    <!-- API Tester (full width) -->
+    <div class="panel mt-2">
+        <h2 class="panel-title">API Tester</h2>
+        <div class="glass-card p-5">
+            <h3 class="text-sm font-semibold mb-3">Call Protected Endpoints</h3>
+            <div class="flex gap-2 flex-wrap mb-4">
+                <button class="btn-outline btn-sm" onclick="callApi('/api/users/me')">GET /api/users/me</button>
+                <button class="btn-outline btn-sm" onclick="callApi('/api/users')">GET /api/users</button>
+                <button class="btn-outline btn-sm" onclick="callApi('/api/products')">GET /api/products</button>
+                <button class="btn-outline btn-sm" onclick="callApi('/api/orders')">GET /api/orders</button>
             </div>
+            <div id="api-status" class="text-xs text-text-muted mb-2 flex items-center gap-2"></div>
+            <div class="code-block whitespace-pre-wrap max-h-50" id="api-response">Click an endpoint above to make a request.</div>
         </div>
     </div>
 
@@ -319,6 +309,41 @@
             }
         }
     </script>
+}
+else
+{
+    <!-- Landing View -->
+    <div class="flex items-center justify-center min-h-[calc(100vh-16rem)]">
+        <div class="text-center max-w-lg mx-auto">
+            <div class="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold shadow-lg" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</div>
+            <h1 class="text-4xl font-extrabold mb-3 tracking-tight" style="font-family:'Sora',sans-serif;">
+                <span class="gradient-text">SimpleModule</span>
+            </h1>
+            <p class="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
+                Modular monolith framework for .NET &mdash; AOT&#8209;compatible, zero&nbsp;reflection
+            </p>
+
+            <div class="flex gap-3 justify-center flex-wrap">
+                <a href="/Identity/Account/Login" class="btn-primary btn-lg no-underline">Get Started</a>
+                <a href="/Identity/Account/Register" class="btn-secondary btn-lg no-underline">Create Account</a>
+            </div>
+
+            @if (IsDevelopment)
+            {
+                <div class="alert-warning mt-6 text-left text-xs">
+                    <strong class="block mb-1 text-warning">Quick Start (Development Only)</strong>
+                    Email: <code class="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">admin@@simplemodule.dev</code>
+                    &nbsp; Password: <code class="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">Admin123!</code>
+                </div>
+            }
+
+            <div class="flex gap-5 justify-center mt-8 text-sm">
+                <a href="/swagger" class="text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
+                <span class="text-border">&middot;</span>
+                <a href="/health/live" class="text-text-muted no-underline hover:text-primary transition-colors">Health Check</a>
+            </div>
+        </div>
+    </div>
 }
 
 @code {

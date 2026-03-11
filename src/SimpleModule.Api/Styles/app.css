@@ -415,6 +415,81 @@
 }
 
 /* ============================================================
+   User Dropdown
+   ============================================================ */
+.user-dropdown-wrap {
+  position: relative;
+}
+.user-dropdown-trigger {
+  @apply flex items-center gap-2 px-2 py-1.5 rounded-xl cursor-pointer transition-all duration-200 border-none bg-transparent;
+}
+.user-dropdown-trigger:hover {
+  @apply bg-surface-raised;
+}
+.user-dropdown-trigger[aria-expanded="true"] {
+  @apply bg-surface-raised;
+}
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 240px;
+  @apply bg-surface border border-border rounded-xl shadow-lg;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 100;
+}
+.user-dropdown.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.dark .user-dropdown {
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.06), 0 20px 40px -8px rgba(0, 0, 0, 0.6);
+}
+.user-dropdown-header {
+  @apply px-4 py-3 border-b border-border;
+}
+.user-dropdown-body {
+  @apply py-1.5;
+}
+.user-dropdown-item {
+  @apply flex items-center gap-2.5 px-4 py-2 text-sm text-text-secondary no-underline transition-colors duration-150 cursor-pointer;
+}
+.user-dropdown-item:hover {
+  @apply bg-surface-raised text-text;
+}
+.user-dropdown-divider {
+  @apply border-t border-border my-1.5;
+}
+.user-dropdown-item.danger {
+  @apply text-danger;
+}
+.user-dropdown-item.danger:hover {
+  @apply bg-danger-bg text-danger;
+}
+
+/* ============================================================
+   Dashboard Cards
+   ============================================================ */
+.dash-card {
+  @apply bg-surface border border-border rounded-2xl p-5 transition-all duration-200;
+}
+.dash-card:hover {
+  @apply border-border-strong shadow-md;
+}
+.dash-stat {
+  @apply text-2xl font-bold tracking-tight;
+  font-family: 'Sora', system-ui, sans-serif;
+}
+.dash-label {
+  @apply text-xs text-text-muted uppercase tracking-wider font-medium mt-1;
+}
+
+
+/* ============================================================
    Validation
    ============================================================ */
 .validation-message {
