@@ -4,4 +4,5 @@ public interface IProductContracts
 {
     Task<IEnumerable<Product>> GetAllProductsAsync();
     Task<Product?> GetProductByIdAsync(int id);
+    Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<int> ids);
 }

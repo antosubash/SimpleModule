@@ -4,8 +4,25 @@
         <Platform Name="x64" />
         <Platform Name="x86" />
     </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/SimpleModule.Api/SimpleModule.Api.csproj" />
+        <Project Path="src/SimpleModule.Core/SimpleModule.Core.csproj" />
+        <Project Path="src/SimpleModule.Database/SimpleModule.Database.csproj" />
+        <Project Path="src/SimpleModule.Generator/SimpleModule.Generator.csproj" />
+    </Folder>
     <Folder Name="/modules/" />
-    <Folder Name="/src/" />
+    <Folder Name="/modules/Orders/">
+        <Project Path="src/modules/Orders/Orders.Contracts/Orders.Contracts.csproj" />
+        <Project Path="src/modules/Orders/Orders/Orders.csproj" />
+    </Folder>
+    <Folder Name="/modules/Products/">
+        <Project Path="src/modules/Products/Products.Contracts/Products.Contracts.csproj" />
+        <Project Path="src/modules/Products/Products/Products.csproj" />
+    </Folder>
+    <Folder Name="/modules/Users/">
+        <Project Path="src/modules/Users/Users.Contracts/Users.Contracts.csproj" />
+        <Project Path="src/modules/Users/Users/Users.csproj" />
+    </Folder>
     <Folder Name="/tests/">
         <Project Path="tests/SimpleModule.Core.Tests/SimpleModule.Core.Tests.csproj" />
         <Project Path="tests/SimpleModule.Database.Tests/SimpleModule.Database.Tests.csproj" />
@@ -17,14 +34,4 @@
         <Project Path="tests/modules/Products.Tests/Products.Tests.csproj" />
         <Project Path="tests/modules/Users.Tests/Users.Tests.csproj" />
     </Folder>
-    <Project Path="src/modules/Orders/Orders.Contracts/Orders.Contracts.csproj" />
-    <Project Path="src/modules/Orders/Orders/Orders.csproj" />
-    <Project Path="src/modules/Products/Products.Contracts/Products.Contracts.csproj" />
-    <Project Path="src/modules/Products/Products/Products.csproj" />
-    <Project Path="src/modules/Users/Users.Contracts/Users.Contracts.csproj" />
-    <Project Path="src/modules/Users/Users/Users.csproj" />
-    <Project Path="src/SimpleModule.Api/SimpleModule.Api.csproj" />
-    <Project Path="src/SimpleModule.Core/SimpleModule.Core.csproj" />
-    <Project Path="src/SimpleModule.Database/SimpleModule.Database.csproj" />
-    <Project Path="src/SimpleModule.Generator/SimpleModule.Generator.csproj" />
 </Solution>
