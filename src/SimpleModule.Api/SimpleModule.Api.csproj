@@ -41,4 +41,15 @@
     />
     <Exec Command="&quot;$(TailwindCli)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
   </Target>
+  <!-- Vite: Build React host app -->
+  <Target Name="ViteBuild" BeforeTargets="Build" Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(MSBuildThisFileDirectory)..\..\node_modules'))">
+    <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
+  </Target>
+  <!-- Extract TypeScript type definitions from source generator output -->
+  <Target Name="ExtractDtoTypeScript" AfterTargets="CoreCompile" Condition="Exists('$(IntermediateOutputPath)SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/DtoTypeScript.g.cs')">
+    <Exec
+      Command="node &quot;$(MSBuildThisFileDirectory)..\..\tools\extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/DtoTypeScript.g.cs&quot; &quot;$(MSBuildThisFileDirectory)ClientApp/types&quot;"
+      WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+  </Target>
 </Project>

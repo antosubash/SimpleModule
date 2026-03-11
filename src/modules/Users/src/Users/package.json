@@ -2,13 +2,19 @@
   "private": true,
   "name": "@simplemodule/users",
   "scripts": {
-    "build": "vite build",
-    "watch": "vite build --watch"
+    "build": "vite build && cross-env VITE_BUILD_TARGET=pages vite build",
+    "build:lib": "vite build",
+    "build:pages": "cross-env VITE_BUILD_TARGET=pages vite build",
+    "watch": "cross-env VITE_BUILD_TARGET=pages vite build --watch"
   },
   "dependencies": {
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/qrcode": "^1.5.6"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

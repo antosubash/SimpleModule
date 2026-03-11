@@ -14,8 +14,8 @@
   <Target
     Name="JsBuild"
     BeforeTargets="Build"
-    Condition="Exists('package.json') And Exists('node_modules')"
+    Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(MSBuildThisFileDirectory)..\..\..\..\..\..\node_modules'))"
   >
-    <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="npx vite build &amp;&amp; npx cross-env VITE_BUILD_TARGET=pages npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 </Project>
