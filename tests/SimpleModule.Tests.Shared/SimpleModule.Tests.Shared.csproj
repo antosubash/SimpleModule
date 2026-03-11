@@ -15,8 +15,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\SimpleModule.Api\SimpleModule.Api.csproj" />
-    <ProjectReference Include="..\..\src\modules\Users\Users.Contracts\Users.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\modules\Products\Products.Contracts\Products.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\modules\Orders\Orders.Contracts\Orders.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\modules\Products\src\Products.Contracts\Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\modules\Orders\src\Orders.Contracts\Orders.Contracts.csproj" />
   </ItemGroup>
 </Project>

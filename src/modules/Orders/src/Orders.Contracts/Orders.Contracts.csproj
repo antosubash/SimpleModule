@@ -4,6 +4,6 @@
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
   </ItemGroup>
 </Project>

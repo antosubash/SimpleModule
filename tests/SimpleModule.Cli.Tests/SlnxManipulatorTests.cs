@@ -93,7 +93,7 @@ public sealed class SlnxManipulatorTests : IDisposable
         var content = File.ReadAllText(path);
         content.Should().Contain("/modules/Invoices/");
         content.Should().Contain("Invoices.Contracts/Invoices.Contracts.csproj");
-        content.Should().Contain("Invoices/Invoices/Invoices.csproj");
+        content.Should().Contain("Invoices/src/Invoices/Invoices.csproj");
     }
 
     [Fact]

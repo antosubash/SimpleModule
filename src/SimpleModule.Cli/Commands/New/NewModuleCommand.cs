@@ -114,15 +114,15 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
 
         ProjectManipulator.AddProjectReference(
             solution.ApiCsprojPath,
-            $@"..\modules\{moduleName}\{moduleName}\{moduleName}.csproj"
+            $@"..\modules\{moduleName}\src\{moduleName}\{moduleName}.csproj"
         );
         AnsiConsole.MarkupLine("[green]  + API project reference added[/]");
 
         AnsiConsole.MarkupLine($"[green]Module '{moduleName}' created successfully![/]");
         AnsiConsole.MarkupLine("");
         AnsiConsole.MarkupLine("[dim]Files created:[/]");
-        AnsiConsole.MarkupLine($"[dim]  src/modules/{moduleName}/ (10 files)[/]");
-        AnsiConsole.MarkupLine($"[dim]  tests/modules/{moduleName}.Tests/ (3 files)[/]");
+        AnsiConsole.MarkupLine($"[dim]  src/modules/{moduleName}/src/ (10 files)[/]");
+        AnsiConsole.MarkupLine($"[dim]  src/modules/{moduleName}/tests/ (3 files)[/]");
 
         return 0;
     }

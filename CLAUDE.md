@@ -25,14 +25,15 @@ dotnet run --project src/SimpleModule.Api
 ## Adding a New Module
 
 1. Create folder `src/modules/<Name>/`
-2. Create `src/modules/<Name>/<Name>.Contracts/` with:
+2. Create `src/modules/<Name>/src/<Name>.Contracts/` with:
    - `<Name>.Contracts.csproj` (references Core only, uses `Microsoft.NET.Sdk`)
    - `I<Name>Contracts.cs` — public interface for cross-module use
    - Shared DTO types marked with `[Dto]`
-3. Create `src/modules/<Name>/<Name>/` with:
+3. Create `src/modules/<Name>/src/<Name>/` with:
    - `<Name>.csproj` (references Core + `<Name>.Contracts`; uses `Microsoft.NET.Sdk` with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`)
    - `<Name>Module.cs` — implements `IModule` with `[Module("Name")]`
    - `Features/<FeatureName>/` folders containing endpoint and handler classes
    - Register the contract interface against implementation in `ConfigureServices`
-4. Add `ProjectReference` to `src/SimpleModule.Api/SimpleModule.Api.csproj` pointing to `<Name>/<Name>.csproj`
-5. Add both projects to `SimpleModule.sln`
+4. Create `src/modules/<Name>/tests/<Name>.Tests/` with test project
+5. Add `ProjectReference` to `src/SimpleModule.Api/SimpleModule.Api.csproj` pointing to `<Name>/src/<Name>.csproj`
+6. Add all projects to `SimpleModule.slnx`

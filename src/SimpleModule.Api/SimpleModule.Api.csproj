@@ -19,9 +19,9 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
-    <ProjectReference Include="..\modules\Users\Users\Users.csproj" />
-    <ProjectReference Include="..\modules\Products\Products\Products.csproj" />
-    <ProjectReference Include="..\modules\Orders\Orders\Orders.csproj" />
+    <ProjectReference Include="..\modules\Users\src\Users\Users.csproj" />
+    <ProjectReference Include="..\modules\Products\src\Products\Products.csproj" />
+    <ProjectReference Include="..\modules\Orders\src\Orders\Orders.csproj" />
   </ItemGroup>
   <!-- Tailwind CSS -->
   <PropertyGroup>

@@ -29,12 +29,9 @@ public sealed class ProjectTemplates
             && !line.TrimStart().StartsWith("<Folder Name=\"/modules/\"", StringComparison.Ordinal)
         );
 
-        // Strip module folder closing tags that are now orphaned
-        // Keep only the empty /modules/ folder line
+        // Strip /tests/modules/ folder entirely (module tests are now inside each module)
         lines.RemoveAll(line =>
             line.Contains("/tests/modules/", StringComparison.Ordinal)
-            && !line.TrimStart()
-                .StartsWith("<Folder Name=\"/tests/modules/\"", StringComparison.Ordinal)
         );
 
         // Remove CLI project entry
@@ -378,7 +375,6 @@ public sealed class ProjectTemplates
                 <Folder Name="/tests/">
                     <Project Path="tests/{projectName}.Tests.Shared/{projectName}.Tests.Shared.csproj" />
                 </Folder>
-                <Folder Name="/tests/modules/" />
             </Solution>
             """;
 

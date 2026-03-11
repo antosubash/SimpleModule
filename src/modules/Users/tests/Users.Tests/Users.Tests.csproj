@@ -12,11 +12,12 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\modules\Products\Products\Products.csproj" />
-    <ProjectReference Include="..\..\..\src\modules\Products\Products.Contracts\Products.Contracts.csproj" />
-    <ProjectReference Include="..\..\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Users\Users.csproj" />
+    <ProjectReference Include="..\..\src\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>
