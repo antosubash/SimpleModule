@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Bogus;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;

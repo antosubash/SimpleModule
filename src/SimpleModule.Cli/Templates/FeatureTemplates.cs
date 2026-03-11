@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Templates;
 
@@ -15,19 +15,34 @@ public sealed class FeatureTemplates
         _refSingular = _refModule is not null ? ModuleTemplates.GetSingularName(_refModule) : null;
     }
 
-    public string Endpoint(string moduleName, string featureName, string httpMethod, string route, string singularName)
+    public string Endpoint(
+        string moduleName,
+        string featureName,
+        string httpMethod,
+        string route,
+        string singularName
+    )
     {
         // Try to read the reference endpoint and adapt it
         if (_refModule is not null)
         {
             var refPath = Path.Combine(
                 _solution.GetModuleProjectPath(_refModule),
-                "Features", $"GetAll{_refModule}", $"GetAll{_refModule}Endpoint.cs");
+                "Features",
+                $"GetAll{_refModule}",
+                $"GetAll{_refModule}Endpoint.cs"
+            );
 
             if (File.Exists(refPath))
             {
                 return AdaptEndpointFromReference(
-                    refPath, moduleName, featureName, httpMethod, route, singularName);
+                    refPath,
+                    moduleName,
+                    featureName,
+                    httpMethod,
+                    route,
+                    singularName
+                );
             }
         }
 
@@ -42,12 +57,17 @@ public sealed class FeatureTemplates
             var refValidators = Directory.GetFiles(
                 _solution.GetModuleProjectPath(_refModule),
                 "*Validator.cs",
-                SearchOption.AllDirectories);
+                SearchOption.AllDirectories
+            );
 
             if (refValidators.Length > 0)
             {
                 return AdaptValidatorFromReference(
-                    refValidators[0], moduleName, featureName, singularName);
+                    refValidators[0],
+                    moduleName,
+                    featureName,
+                    singularName
+                );
             }
         }
 
@@ -55,27 +75,39 @@ public sealed class FeatureTemplates
     }
 
     private string AdaptEndpointFromReference(
-        string refPath, string moduleName, string featureName,
-        string httpMethod, string route, string singularName)
+        string refPath,
+        string moduleName,
+        string featureName,
+        string httpMethod,
+        string route,
+        string singularName
+    )
     {
         // Read the reference endpoint
         var content = File.ReadAllText(refPath);
 
         // Replace module/feature names
         content = TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
 
         // Replace the feature folder namespace
         content = content.Replace(
             $"Features.GetAll{moduleName}",
             $"Features.{featureName}",
-            StringComparison.Ordinal);
+            StringComparison.Ordinal
+        );
 
         // Replace the class name
         content = content.Replace(
             $"GetAll{moduleName}Endpoint",
             $"{featureName}Endpoint",
-            StringComparison.Ordinal);
+            StringComparison.Ordinal
+        );
 
         // Replace HTTP method
         var mapMethod = httpMethod.ToUpperInvariant() switch
@@ -88,10 +120,7 @@ public sealed class FeatureTemplates
         content = content.Replace("MapGet", mapMethod, StringComparison.Ordinal);
 
         // Replace route
-        content = content.Replace(
-            "\"/" + "\"",
-            $"\"{route}\"",
-            StringComparison.Ordinal);
+        content = content.Replace("\"/" + "\"", $"\"{route}\"", StringComparison.Ordinal);
 
         // For non-GET methods, adjust return type
         if (!string.Equals(httpMethod, "GET", StringComparison.OrdinalIgnoreCase))
@@ -113,7 +142,10 @@ public sealed class FeatureTemplates
 
             foreach (var line in lines)
             {
-                if (!inLambda && line.Contains($"(I{singularName}Contracts", StringComparison.Ordinal))
+                if (
+                    !inLambda
+                    && line.Contains($"(I{singularName}Contracts", StringComparison.Ordinal)
+                )
                 {
                     inLambda = true;
                     lambdaBraceDepth = 0;
@@ -159,34 +191,46 @@ public sealed class FeatureTemplates
         // The reference has "/" as route, we need to replace it
         if (route != "/")
         {
-            content = content.Replace(
-                "\"/\"",
-                $"\"{route}\"",
-                StringComparison.Ordinal);
+            content = content.Replace("\"/\"", $"\"{route}\"", StringComparison.Ordinal);
         }
 
         return content;
     }
 
     private string AdaptValidatorFromReference(
-        string refPath, string moduleName, string featureName, string singularName)
+        string refPath,
+        string moduleName,
+        string featureName,
+        string singularName
+    )
     {
         var content = File.ReadAllText(refPath);
 
         // Replace module names
         content = TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
 
         // Replace the feature-specific class name and namespace
         var refFileName = Path.GetFileNameWithoutExtension(refPath);
-        content = content.Replace(refFileName, $"{featureName}RequestValidator", StringComparison.Ordinal);
+        content = content.Replace(
+            refFileName,
+            $"{featureName}RequestValidator",
+            StringComparison.Ordinal
+        );
 
         // Replace the feature namespace
         var lines = content.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
         for (var i = 0; i < lines.Count; i++)
         {
-            if (lines[i].Contains("namespace ", StringComparison.Ordinal) &&
-                lines[i].Contains(".Features.", StringComparison.Ordinal))
+            if (
+                lines[i].Contains("namespace ", StringComparison.Ordinal)
+                && lines[i].Contains(".Features.", StringComparison.Ordinal)
+            )
             {
                 // Extract the namespace prefix and replace the feature name
                 var nsPrefix = lines[i][..lines[i].IndexOf(".Features.", StringComparison.Ordinal)];
@@ -199,7 +243,9 @@ public sealed class FeatureTemplates
         // Simplify: replace specific validation logic with TODO
         // Find method body and replace with generic content
         var resultLines = content.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
-        var methodStart = resultLines.FindIndex(l => l.Contains("Validate(", StringComparison.Ordinal));
+        var methodStart = resultLines.FindIndex(l =>
+            l.Contains("Validate(", StringComparison.Ordinal)
+        );
         if (methodStart >= 0)
         {
             // Find the opening brace after the method declaration
@@ -211,7 +257,9 @@ public sealed class FeatureTemplates
                 var braceEnd = braceStart + 1;
                 while (braceEnd < resultLines.Count && depth > 0)
                 {
-                    depth += resultLines[braceEnd].Count(c => c == '{') - resultLines[braceEnd].Count(c => c == '}');
+                    depth +=
+                        resultLines[braceEnd].Count(c => c == '{')
+                        - resultLines[braceEnd].Count(c => c == '}');
                     braceEnd++;
                 }
 
@@ -241,7 +289,12 @@ public sealed class FeatureTemplates
     }
 
     private static string FallbackEndpoint(
-        string moduleName, string featureName, string httpMethod, string route, string singularName)
+        string moduleName,
+        string featureName,
+        string httpMethod,
+        string route,
+        string singularName
+    )
     {
         var mapMethod = httpMethod.ToUpperInvariant() switch
         {
@@ -285,23 +338,26 @@ public sealed class FeatureTemplates
     }
 
     private static string FallbackValidator(
-        string moduleName, string featureName, string singularName) =>
+        string moduleName,
+        string featureName,
+        string singularName
+    ) =>
         $$"""
-        using SimpleModule.Core.Validation;
-        using SimpleModule.{{moduleName}}.Contracts;
+            using SimpleModule.Core.Validation;
+            using SimpleModule.{{moduleName}}.Contracts;
 
-        namespace SimpleModule.{{moduleName}}.Features.{{featureName}};
+            namespace SimpleModule.{{moduleName}}.Features.{{featureName}};
 
-        public static class {{featureName}}RequestValidator
-        {
-            public static ValidationResult Validate({{singularName}} request)
+            public static class {{featureName}}RequestValidator
             {
-                var errors = new Dictionary<string, string[]>();
+                public static ValidationResult Validate({{singularName}} request)
+                {
+                    var errors = new Dictionary<string, string[]>();
 
-                // TODO: add validation rules
+                    // TODO: add validation rules
 
-                return errors.Count > 0 ? ValidationResult.WithErrors(errors) : ValidationResult.Success;
+                    return errors.Count > 0 ? ValidationResult.WithErrors(errors) : ValidationResult.Success;
+                }
             }
-        }
-        """;
+            """;
 }

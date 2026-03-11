@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Commands.Doctor.Checks;
+﻿using SimpleModule.Cli.Commands.Doctor.Checks;
 using SimpleModule.Cli.Infrastructure;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -12,7 +12,9 @@ public sealed class DoctorCommand : Command<DoctorSettings>
         var solution = SolutionContext.Discover();
         if (solution is null)
         {
-            AnsiConsole.MarkupLine("[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]");
+            AnsiConsole.MarkupLine(
+                "[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]"
+            );
             return 1;
         }
 
@@ -72,10 +74,14 @@ public sealed class DoctorCommand : Command<DoctorSettings>
         AnsiConsole.MarkupLine("");
         if (failCount > 0)
         {
-            AnsiConsole.MarkupLine($"[red]{failCount} failure(s)[/], [yellow]{warnCount} warning(s)[/]");
+            AnsiConsole.MarkupLine(
+                $"[red]{failCount} failure(s)[/], [yellow]{warnCount} warning(s)[/]"
+            );
             if (!settings.Fix)
             {
-                AnsiConsole.MarkupLine("[dim]Run with --fix to auto-fix missing slnx entries and project references.[/]");
+                AnsiConsole.MarkupLine(
+                    "[dim]Run with --fix to auto-fix missing slnx entries and project references.[/]"
+                );
             }
 
             return 1;
@@ -83,7 +89,9 @@ public sealed class DoctorCommand : Command<DoctorSettings>
 
         if (warnCount > 0)
         {
-            AnsiConsole.MarkupLine($"[green]All checks passed[/] with [yellow]{warnCount} warning(s)[/]");
+            AnsiConsole.MarkupLine(
+                $"[green]All checks passed[/] with [yellow]{warnCount} warning(s)[/]"
+            );
         }
         else
         {
@@ -113,8 +121,11 @@ public sealed class DoctorCommand : Command<DoctorSettings>
                 var moduleName = result.Name["API -> ".Length..];
                 ProjectManipulator.AddProjectReference(
                     solution.ApiCsprojPath,
-                    $@"..\modules\{moduleName}\{moduleName}\{moduleName}.csproj");
-                AnsiConsole.MarkupLine($"[green]  Fixed: added {moduleName} reference to API csproj[/]");
+                    $@"..\modules\{moduleName}\{moduleName}\{moduleName}.csproj"
+                );
+                AnsiConsole.MarkupLine(
+                    $"[green]  Fixed: added {moduleName} reference to API csproj[/]"
+                );
             }
         }
 

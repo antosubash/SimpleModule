@@ -1,4 +1,4 @@
-namespace SimpleModule.Products;
+﻿namespace SimpleModule.Products;
 
 public static class ProductsConstants
 {

@@ -1,4 +1,4 @@
-namespace SimpleModule.Cli.Infrastructure;
+﻿namespace SimpleModule.Cli.Infrastructure;
 
 public sealed class SolutionContext
 {
@@ -13,12 +13,18 @@ public sealed class SolutionContext
     {
         RootPath = rootPath;
         SlnxPath = slnxPath;
-        ApiCsprojPath = Path.Combine(rootPath, "src", "SimpleModule.Api", "SimpleModule.Api.csproj");
+        ApiCsprojPath = Path.Combine(
+            rootPath,
+            "src",
+            "SimpleModule.Api",
+            "SimpleModule.Api.csproj"
+        );
         ModulesPath = Path.Combine(rootPath, "src", "modules");
         TestsModulesPath = Path.Combine(rootPath, "tests", "modules");
 
         ExistingModules = Directory.Exists(ModulesPath)
-            ? Directory.GetDirectories(ModulesPath)
+            ? Directory
+                .GetDirectories(ModulesPath)
                 .Select(Path.GetFileName)
                 .Where(n => n is not null)
                 .Cast<string>()
@@ -45,8 +51,7 @@ public sealed class SolutionContext
         return null;
     }
 
-    public string GetModulePath(string moduleName) =>
-        Path.Combine(ModulesPath, moduleName);
+    public string GetModulePath(string moduleName) => Path.Combine(ModulesPath, moduleName);
 
     public string GetModuleContractsPath(string moduleName) =>
         Path.Combine(ModulesPath, moduleName, $"{moduleName}.Contracts");

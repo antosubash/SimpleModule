@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Core.Validation;
 
 namespace SimpleModule.Core.Tests;
@@ -26,10 +26,7 @@ public class ValidationResultTests
     [Fact]
     public void WithErrors_IsNotValid_ContainsErrors()
     {
-        var errors = new Dictionary<string, string[]>
-        {
-            ["Field"] = ["Error message"],
-        };
+        var errors = new Dictionary<string, string[]> { ["Field"] = ["Error message"] };
 
         var result = ValidationResult.WithErrors(errors);
 

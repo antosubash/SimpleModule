@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Core.Exceptions;
 
 namespace SimpleModule.Core.Tests;

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -8,15 +8,12 @@ public sealed class RemoveBraceBlocksTests
     [Fact]
     public void RemovesSingleLineBlock()
     {
-        var lines = new List<string>
-        {
-            "keep1",
-            "remove this { something; }",
-            "keep2",
-        };
+        var lines = new List<string> { "keep1", "remove this { something; }", "keep2" };
 
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.Contains("remove this", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.Contains("remove this", StringComparison.Ordinal)
+        );
 
         result.Should().Equal("keep1", "keep2");
     }
@@ -24,17 +21,12 @@ public sealed class RemoveBraceBlocksTests
     [Fact]
     public void RemovesMultiLineBlock_BraceOnSameLine()
     {
-        var lines = new List<string>
-        {
-            "keep1",
-            "if (condition) {",
-            "    body;",
-            "}",
-            "keep2",
-        };
+        var lines = new List<string> { "keep1", "if (condition) {", "    body;", "}", "keep2" };
 
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.Contains("if (condition)", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.Contains("if (condition)", StringComparison.Ordinal)
+        );
 
         result.Should().Equal("keep1", "keep2");
     }
@@ -42,18 +34,12 @@ public sealed class RemoveBraceBlocksTests
     [Fact]
     public void RemovesMultiLineBlock_BraceOnNextLine()
     {
-        var lines = new List<string>
-        {
-            "keep1",
-            "void Method()",
-            "{",
-            "    body;",
-            "}",
-            "keep2",
-        };
+        var lines = new List<string> { "keep1", "void Method()", "{", "    body;", "}", "keep2" };
 
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.Contains("void Method", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.Contains("void Method", StringComparison.Ordinal)
+        );
 
         result.Should().Equal("keep1", "keep2");
     }
@@ -72,8 +58,10 @@ public sealed class RemoveBraceBlocksTests
             "after",
         };
 
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.Contains("void Method", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.Contains("void Method", StringComparison.Ordinal)
+        );
 
         result.Should().Equal("before", "after");
     }
@@ -94,8 +82,10 @@ public sealed class RemoveBraceBlocksTests
             "keep3",
         };
 
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.StartsWith("remove", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.StartsWith("remove", StringComparison.Ordinal)
+        );
 
         result.Should().Equal("keep1", "keep2", "keep3");
     }
@@ -124,8 +114,10 @@ public sealed class RemoveBraceBlocksTests
             "after",
         };
 
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.Contains("Entity<Item>", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.Contains("Entity<Item>", StringComparison.Ordinal)
+        );
 
         result.Should().Equal("before", "after");
     }
@@ -141,20 +133,17 @@ public sealed class RemoveBraceBlocksTests
     {
         // A predicate match on a line with no braces and no subsequent braces
         // should remove just that line (when the NEXT line doesn't have an opening brace)
-        var lines = new List<string>
-        {
-            "before",
-            "SeedOrders(modelBuilder);",
-            "after",
-        };
+        var lines = new List<string> { "before", "SeedOrders(modelBuilder);", "after" };
 
         // Since "SeedOrders" has no braces, seenOpenBrace stays false,
         // skipping stays true until a brace is seen. The next line "after"
         // has no brace either, so it's also skipped.
         // This is by design — the method is meant for brace blocks.
         // For single-line removal, use List.RemoveAll instead.
-        var result = TemplateExtractor.RemoveBraceBlocks(lines,
-            line => line.Contains("SeedOrders", StringComparison.Ordinal));
+        var result = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line => line.Contains("SeedOrders", StringComparison.Ordinal)
+        );
 
         // The predicate line is always removed. If no opening brace is found,
         // it continues scanning until one is found.

@@ -1,4 +1,4 @@
-namespace SimpleModule.Users;
+﻿namespace SimpleModule.Users;
 
 public static class UsersConstants
 {

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -10,9 +10,16 @@ public sealed class ReplaceModuleNamesTests
     {
         var content = "namespace SimpleModule.Orders; class Order { route = \"/orders\" }";
         var result = TemplateExtractor.ReplaceModuleNames(
-            content, "Orders", "Order", "Invoices", "Invoice");
+            content,
+            "Orders",
+            "Order",
+            "Invoices",
+            "Invoice"
+        );
 
-        result.Should().Be("namespace SimpleModule.Invoices; class Invoice { route = \"/invoices\" }");
+        result
+            .Should()
+            .Be("namespace SimpleModule.Invoices; class Invoice { route = \"/invoices\" }");
     }
 
     [Fact]
@@ -21,7 +28,12 @@ public sealed class ReplaceModuleNamesTests
         // "Orders" contains "Order" — plural must be replaced first
         var content = "Orders Order orders";
         var result = TemplateExtractor.ReplaceModuleNames(
-            content, "Orders", "Order", "Products", "Product");
+            content,
+            "Orders",
+            "Order",
+            "Products",
+            "Product"
+        );
 
         result.Should().Be("Products Product products");
     }
@@ -31,7 +43,12 @@ public sealed class ReplaceModuleNamesTests
     {
         var content = "MapGroup(\"/orders\")";
         var result = TemplateExtractor.ReplaceModuleNames(
-            content, "Orders", "Order", "Invoices", "Invoice");
+            content,
+            "Orders",
+            "Order",
+            "Invoices",
+            "Invoice"
+        );
 
         result.Should().Be("MapGroup(\"/invoices\")");
     }
@@ -41,7 +58,12 @@ public sealed class ReplaceModuleNamesTests
     {
         var content = "ORDERS orders Orders";
         var result = TemplateExtractor.ReplaceModuleNames(
-            content, "Orders", "Order", "Invoices", "Invoice");
+            content,
+            "Orders",
+            "Order",
+            "Invoices",
+            "Invoice"
+        );
 
         // "ORDERS" is not matched (Ordinal comparison), "orders" is matched as lowercase
         result.Should().Be("ORDERS invoices Invoices");
@@ -50,15 +72,19 @@ public sealed class ReplaceModuleNamesTests
     [Fact]
     public void EmptyContent_ReturnsEmpty()
     {
-        TemplateExtractor.ReplaceModuleNames("", "Orders", "Order", "Invoices", "Invoice")
-            .Should().BeEmpty();
+        TemplateExtractor
+            .ReplaceModuleNames("", "Orders", "Order", "Invoices", "Invoice")
+            .Should()
+            .BeEmpty();
     }
 
     [Fact]
     public void NoMatches_ReturnsOriginal()
     {
         var content = "something unrelated";
-        TemplateExtractor.ReplaceModuleNames(content, "Orders", "Order", "Invoices", "Invoice")
-            .Should().Be(content);
+        TemplateExtractor
+            .ReplaceModuleNames(content, "Orders", "Order", "Invoices", "Invoice")
+            .Should()
+            .Be(content);
     }
 }

@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Templates;
 
@@ -15,8 +15,10 @@ public sealed class ModuleTemplates
         _refModule = solution.ExistingModules.Count > 0 ? solution.ExistingModules[0] : null;
         _refSingular = _refModule is not null ? GetSingularName(_refModule) : null;
         _otherModuleNames = _refModule is not null
-            ? solution.ExistingModules
-                .Where(m => !string.Equals(m, _refModule, StringComparison.OrdinalIgnoreCase))
+            ? solution
+                .ExistingModules.Where(m =>
+                    !string.Equals(m, _refModule, StringComparison.OrdinalIgnoreCase)
+                )
                 .ToList()
             : [];
     }
@@ -43,10 +45,7 @@ public sealed class ModuleTemplates
         }
 
         // Strip references to other modules and non-essential packages
-        var stripPatterns = _otherModuleNames
-            .Select(m => m)
-            .Append("Bogus")
-            .ToList();
+        var stripPatterns = _otherModuleNames.Select(m => m).Append("Bogus").ToList();
 
         return TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns);
     }
@@ -79,15 +78,27 @@ public sealed class ModuleTemplates
         // (e.g., List<OrderItem> won't exist in the new module)
         var knownTypes = new HashSet<string>(StringComparer.Ordinal)
         {
-            "int", "string", "decimal", "double", "float", "bool", "long",
-            "DateTime", "DateTimeOffset", "Guid", "byte", "short",
+            "int",
+            "string",
+            "decimal",
+            "double",
+            "float",
+            "bool",
+            "long",
+            "DateTime",
+            "DateTimeOffset",
+            "Guid",
+            "byte",
+            "short",
         };
 
         lines.RemoveAll(line =>
         {
             var trimmed = line.TrimStart();
-            if (!trimmed.StartsWith("public ", StringComparison.Ordinal) ||
-                !trimmed.Contains("{ get;", StringComparison.Ordinal))
+            if (
+                !trimmed.StartsWith("public ", StringComparison.Ordinal)
+                || !trimmed.Contains("{ get;", StringComparison.Ordinal)
+            )
             {
                 return false;
             }
@@ -118,7 +129,12 @@ public sealed class ModuleTemplates
 
         var content = string.Join(Environment.NewLine, lines);
         return TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     public string EventClass(string moduleName, string singularName)
@@ -130,20 +146,31 @@ public sealed class ModuleTemplates
         }
 
         return TemplateExtractor.ReadAndTransform(
-            refPath, _refModule!, _refSingular!, moduleName, singularName);
+            refPath,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     public string GetAllEndpoint(string moduleName, string singularName)
     {
         var refPath = RefModulePath(
-            Path.Combine("Features", $"GetAll{_refModule}", $"GetAll{_refModule}Endpoint.cs"));
+            Path.Combine("Features", $"GetAll{_refModule}", $"GetAll{_refModule}Endpoint.cs")
+        );
         if (refPath is null)
         {
             return FallbackGetAllEndpoint(moduleName, singularName);
         }
 
         return TemplateExtractor.ReadAndTransform(
-            refPath, _refModule!, _refSingular!, moduleName, singularName);
+            refPath,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     public string ConstantsClass(string moduleName, string singularName)
@@ -155,7 +182,12 @@ public sealed class ModuleTemplates
         }
 
         return TemplateExtractor.ReadAndTransform(
-            refPath, _refModule!, _refSingular!, moduleName, singularName);
+            refPath,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     public string GlobalUsings()
@@ -188,9 +220,11 @@ public sealed class ModuleTemplates
         lines.RemoveAll(line =>
         {
             var trimmed = line.TrimStart();
-            if (trimmed.StartsWith("Task<", StringComparison.Ordinal) ||
-                trimmed.StartsWith("Task ", StringComparison.Ordinal) ||
-                trimmed.StartsWith("ValueTask", StringComparison.Ordinal))
+            if (
+                trimmed.StartsWith("Task<", StringComparison.Ordinal)
+                || trimmed.StartsWith("Task ", StringComparison.Ordinal)
+                || trimmed.StartsWith("ValueTask", StringComparison.Ordinal)
+            )
             {
                 methodCount++;
                 return methodCount > 1;
@@ -201,7 +235,12 @@ public sealed class ModuleTemplates
 
         var content = string.Join(Environment.NewLine, lines);
         return TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     public string ModuleClass(string moduleName, string singularName)
@@ -219,27 +258,34 @@ public sealed class ModuleTemplates
         foreach (var line in lines)
         {
             // Detect feature using lines like "using SimpleModule.Orders.Features.CreateOrder;"
-            if (line.Contains($".Features.", StringComparison.Ordinal) &&
-                !line.Contains($".Features.GetAll", StringComparison.Ordinal))
+            if (
+                line.Contains($".Features.", StringComparison.Ordinal)
+                && !line.Contains($".Features.GetAll", StringComparison.Ordinal)
+            )
             {
                 stripPatterns.Add(line.Trim());
             }
         }
 
         // Strip extra feature using lines
-        lines.RemoveAll(line =>
-            stripPatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
+        lines.RemoveAll(line => stripPatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
 
         // Strip extra Map calls (keep only GetAll)
         lines.RemoveAll(line =>
-            line.Contains(".Map(group);", StringComparison.Ordinal) &&
-            !line.Contains($"GetAll", StringComparison.Ordinal));
+            line.Contains(".Map(group);", StringComparison.Ordinal)
+            && !line.Contains($"GetAll", StringComparison.Ordinal)
+        );
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
 
         var content = string.Join(Environment.NewLine, lines);
         return TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     // ── Complex C# files (read structure + strip + rename) ──────────
@@ -258,7 +304,8 @@ public sealed class ModuleTemplates
 
         // Strip other module references
         lines.RemoveAll(line =>
-            otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
+            otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal))
+        );
 
         // Keep only the first DbSet property
         var dbSetCount = 0;
@@ -277,19 +324,26 @@ public sealed class ModuleTemplates
         var primaryEntity = _refSingular!;
 
         // Remove entity config blocks for non-primary entities
-        lines = TemplateExtractor.RemoveBraceBlocks(lines, line =>
-            line.Contains("modelBuilder.Entity<", StringComparison.Ordinal) &&
-            !line.Contains($"modelBuilder.Entity<{primaryEntity}>", StringComparison.Ordinal));
+        lines = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line =>
+                line.Contains("modelBuilder.Entity<", StringComparison.Ordinal)
+                && !line.Contains($"modelBuilder.Entity<{primaryEntity}>", StringComparison.Ordinal)
+        );
 
         // Remove Seed method calls
         lines.RemoveAll(line =>
-            line.TrimStart().StartsWith("Seed", StringComparison.Ordinal) &&
-            line.Contains("(modelBuilder)", StringComparison.Ordinal));
+            line.TrimStart().StartsWith("Seed", StringComparison.Ordinal)
+            && line.Contains("(modelBuilder)", StringComparison.Ordinal)
+        );
 
         // Remove Seed method definitions
-        lines = TemplateExtractor.RemoveBraceBlocks(lines, line =>
-            line.Contains("static void Seed", StringComparison.Ordinal) ||
-            line.Contains("static void seed", StringComparison.Ordinal));
+        lines = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line =>
+                line.Contains("static void Seed", StringComparison.Ordinal)
+                || line.Contains("static void seed", StringComparison.Ordinal)
+        );
 
         // Simplify the primary entity config — keep only HasKey
         var inEntityConfig = false;
@@ -299,8 +353,10 @@ public sealed class ModuleTemplates
 
         foreach (var line in lines)
         {
-            if (!inEntityConfig &&
-                line.Contains($"modelBuilder.Entity<{primaryEntity}>", StringComparison.Ordinal))
+            if (
+                !inEntityConfig
+                && line.Contains($"modelBuilder.Entity<{primaryEntity}>", StringComparison.Ordinal)
+            )
             {
                 inEntityConfig = true;
                 entityBraceDepth = 0;
@@ -320,9 +376,11 @@ public sealed class ModuleTemplates
                     keptHasKey = true;
                     simplifiedLines.Add(line);
                 }
-                else if (line.TrimStart().StartsWith('{') ||
-                         line.TrimStart().StartsWith('}') ||
-                         line.TrimStart().StartsWith("});", StringComparison.Ordinal))
+                else if (
+                    line.TrimStart().StartsWith('{')
+                    || line.TrimStart().StartsWith('}')
+                    || line.TrimStart().StartsWith("});", StringComparison.Ordinal)
+                )
                 {
                     simplifiedLines.Add(line);
                 }
@@ -356,7 +414,12 @@ public sealed class ModuleTemplates
 
         var content = string.Join(Environment.NewLine, simplifiedLines);
         return TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     public string ServiceClass(string moduleName, string singularName)
@@ -374,11 +437,14 @@ public sealed class ModuleTemplates
 
         // Strip other module usings
         lines.RemoveAll(line =>
-            line.TrimStart().StartsWith("using ", StringComparison.Ordinal) &&
-            otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
+            line.TrimStart().StartsWith("using ", StringComparison.Ordinal)
+            && otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal))
+        );
 
         // Strip using for logging if present
-        lines.RemoveAll(line => line.Contains("using Microsoft.Extensions.Logging;", StringComparison.Ordinal));
+        lines.RemoveAll(line =>
+            line.Contains("using Microsoft.Extensions.Logging;", StringComparison.Ordinal)
+        );
 
         // Find the class declaration and simplify constructor params
         // Keep only the DbContext param, remove cross-module and infrastructure deps
@@ -389,7 +455,8 @@ public sealed class ModuleTemplates
             .ToList();
 
         lines.RemoveAll(line =>
-            crossModuleTypes.Any(t => line.Contains(t, StringComparison.Ordinal)));
+            crossModuleTypes.Any(t => line.Contains(t, StringComparison.Ordinal))
+        );
 
         // Simplify .Include() calls (navigation properties may not exist in new module)
         for (var i = 0; i < lines.Count; i++)
@@ -418,7 +485,10 @@ public sealed class ModuleTemplates
                     }
                 }
 
-                lines[i] = string.Concat(lines[i].AsSpan(0, includeStart), lines[i].AsSpan(includeEnd));
+                lines[i] = string.Concat(
+                    lines[i].AsSpan(0, includeStart),
+                    lines[i].AsSpan(includeEnd)
+                );
             }
         }
 
@@ -480,19 +550,25 @@ public sealed class ModuleTemplates
         lines = filteredLines;
 
         // Remove all methods except GetAll (expression-bodied or block-bodied)
-        lines = TemplateExtractor.RemoveBraceBlocks(lines, line =>
-        {
-            var trimmed = line.TrimStart();
-            if ((trimmed.StartsWith("public async", StringComparison.Ordinal) ||
-                 trimmed.StartsWith("public Task", StringComparison.Ordinal) ||
-                 trimmed.StartsWith("public ValueTask", StringComparison.Ordinal)) &&
-                !trimmed.Contains("GetAll", StringComparison.Ordinal))
+        lines = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line =>
             {
-                return true;
-            }
+                var trimmed = line.TrimStart();
+                if (
+                    (
+                        trimmed.StartsWith("public async", StringComparison.Ordinal)
+                        || trimmed.StartsWith("public Task", StringComparison.Ordinal)
+                        || trimmed.StartsWith("public ValueTask", StringComparison.Ordinal)
+                    ) && !trimmed.Contains("GetAll", StringComparison.Ordinal)
+                )
+                {
+                    return true;
+                }
 
-            return false;
-        });
+                return false;
+            }
+        );
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
 
@@ -511,7 +587,12 @@ public sealed class ModuleTemplates
 
         var content = string.Join(Environment.NewLine, lines);
         return TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     // ── Test files ──────────────────────────────────────────────────
@@ -527,11 +608,16 @@ public sealed class ModuleTemplates
         // Read the reference for namespace convention
         var lines = File.ReadAllLines(refPath);
         var namespaceLine = lines.FirstOrDefault(l =>
-            l.TrimStart().StartsWith("namespace ", StringComparison.Ordinal));
-        var refNamespace = namespaceLine?.Trim().TrimEnd(';') ?? $"namespace {_refModule}.Tests.Unit";
+            l.TrimStart().StartsWith("namespace ", StringComparison.Ordinal)
+        );
+        var refNamespace =
+            namespaceLine?.Trim().TrimEnd(';') ?? $"namespace {_refModule}.Tests.Unit";
 
-        var targetNamespace = refNamespace
-            .Replace(_refModule!, moduleName, StringComparison.Ordinal);
+        var targetNamespace = refNamespace.Replace(
+            _refModule!,
+            moduleName,
+            StringComparison.Ordinal
+        );
 
         return $$"""
             using FluentAssertions;
@@ -564,21 +650,25 @@ public sealed class ModuleTemplates
 
         // Strip cross-module usings
         lines.RemoveAll(line =>
-            line.TrimStart().StartsWith("using ", StringComparison.Ordinal) &&
-            otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
+            line.TrimStart().StartsWith("using ", StringComparison.Ordinal)
+            && otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal))
+        );
 
         // Keep only the first test method (GetAll returns 200), remove others
         var testCount = 0;
-        lines = TemplateExtractor.RemoveBraceBlocks(lines, line =>
-        {
-            if (line.Contains("[Fact]", StringComparison.Ordinal))
+        lines = TemplateExtractor.RemoveBraceBlocks(
+            lines,
+            line =>
             {
-                testCount++;
-                return testCount > 1;
-            }
+                if (line.Contains("[Fact]", StringComparison.Ordinal))
+                {
+                    testCount++;
+                    return testCount > 1;
+                }
 
-            return false;
-        });
+                return false;
+            }
+        );
 
         // Also remove the [Fact] attribute lines for stripped tests
         // (RemoveBraceBlocks removes from the line AFTER [Fact], so we need to handle this differently)
@@ -589,7 +679,12 @@ public sealed class ModuleTemplates
 
         var content = string.Join(Environment.NewLine, lines);
         return TemplateExtractor.ReplaceModuleNames(
-            content, _refModule!, _refSingular!, moduleName, singularName);
+            content,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
     }
 
     // ── Utility ─────────────────────────────────────────────────────
@@ -650,9 +745,7 @@ public sealed class ModuleTemplates
 
     private List<string> OtherModuleStripPatterns()
     {
-        return _otherModuleNames
-            .Select(m => $"SimpleModule.{m}")
-            .ToList();
+        return _otherModuleNames.Select(m => $"SimpleModule.{m}").ToList();
     }
 
     private static void FixTrailingComma(List<string> lines)
@@ -661,20 +754,23 @@ public sealed class ModuleTemplates
         for (var i = 0; i < lines.Count - 1; i++)
         {
             var trimmedNext = lines[i + 1].TrimStart();
-            if (trimmedNext.StartsWith(')') &&
-                lines[i].TrimEnd().EndsWith(','))
+            if (trimmedNext.StartsWith(')') && lines[i].TrimEnd().EndsWith(','))
             {
                 lines[i] = lines[i].TrimEnd()[..^1];
             }
         }
     }
 
-    private static List<string> KeepFirstTestMethod(List<string> lines, List<string> otherModulePatterns)
+    private static List<string> KeepFirstTestMethod(
+        List<string> lines,
+        List<string> otherModulePatterns
+    )
     {
         // Strip cross-module usings
         lines.RemoveAll(line =>
-            line.TrimStart().StartsWith("using ", StringComparison.Ordinal) &&
-            otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
+            line.TrimStart().StartsWith("using ", StringComparison.Ordinal)
+            && otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal))
+        );
 
         // Find test methods and keep only the first one
         var result = new List<string>();
@@ -748,252 +844,252 @@ public sealed class ModuleTemplates
 
     private static string FallbackContractsCsproj() =>
         """
-        <Project Sdk="Microsoft.NET.Sdk">
-          <PropertyGroup>
-            <TargetFramework>net10.0</TargetFramework>
-            <OutputType>Library</OutputType>
-          </PropertyGroup>
-          <ItemGroup>
-            <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
-          </ItemGroup>
-        </Project>
-        """;
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <OutputType>Library</OutputType>
+              </PropertyGroup>
+              <ItemGroup>
+                <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+              </ItemGroup>
+            </Project>
+            """;
 
     private static string FallbackModuleCsproj(string moduleName) =>
         $"""
-        <Project Sdk="Microsoft.NET.Sdk">
-          <PropertyGroup>
-            <TargetFramework>net10.0</TargetFramework>
-            <OutputType>Library</OutputType>
-          </PropertyGroup>
-          <ItemGroup>
-            <FrameworkReference Include="Microsoft.AspNetCore.App" />
-            <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
-            <ProjectReference Include="..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
-            <ProjectReference Include="..\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
-          </ItemGroup>
-        </Project>
-        """;
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <OutputType>Library</OutputType>
+              </PropertyGroup>
+              <ItemGroup>
+                <FrameworkReference Include="Microsoft.AspNetCore.App" />
+                <ProjectReference Include="..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+                <ProjectReference Include="..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
+                <ProjectReference Include="..\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
+              </ItemGroup>
+            </Project>
+            """;
 
     private static string FallbackTestCsproj(string moduleName) =>
         $"""
-        <Project Sdk="Microsoft.NET.Sdk">
-          <PropertyGroup>
-            <TargetFramework>net10.0</TargetFramework>
-            <IsPackable>false</IsPackable>
-            <OutputType>Exe</OutputType>
-          </PropertyGroup>
-          <ItemGroup>
-            <FrameworkReference Include="Microsoft.AspNetCore.App" />
-          </ItemGroup>
-          <ItemGroup>
-            <PackageReference Include="xunit.v3" />
-            <PackageReference Include="xunit.runner.visualstudio" />
-            <PackageReference Include="Microsoft.NET.Test.Sdk" />
-            <PackageReference Include="FluentAssertions" />
-            <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
-            <PackageReference Include="NSubstitute" />
-          </ItemGroup>
-          <ItemGroup>
-            <ProjectReference Include="..\..\..\src\modules\{moduleName}\{moduleName}\{moduleName}.csproj" />
-            <ProjectReference Include="..\..\..\src\modules\{moduleName}\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
-            <ProjectReference Include="..\..\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
-          </ItemGroup>
-        </Project>
-        """;
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <IsPackable>false</IsPackable>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+              <ItemGroup>
+                <FrameworkReference Include="Microsoft.AspNetCore.App" />
+              </ItemGroup>
+              <ItemGroup>
+                <PackageReference Include="xunit.v3" />
+                <PackageReference Include="xunit.runner.visualstudio" />
+                <PackageReference Include="Microsoft.NET.Test.Sdk" />
+                <PackageReference Include="FluentAssertions" />
+                <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+                <PackageReference Include="NSubstitute" />
+              </ItemGroup>
+              <ItemGroup>
+                <ProjectReference Include="..\..\..\src\modules\{moduleName}\{moduleName}\{moduleName}.csproj" />
+                <ProjectReference Include="..\..\..\src\modules\{moduleName}\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
+                <ProjectReference Include="..\..\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
+              </ItemGroup>
+            </Project>
+            """;
 
     private static string FallbackContractsInterface(string moduleName, string singularName) =>
         $$"""
-        namespace SimpleModule.{{moduleName}}.Contracts;
+            namespace SimpleModule.{{moduleName}}.Contracts;
 
-        public interface I{{singularName}}Contracts
-        {
-            Task<IEnumerable<{{singularName}}>> GetAll{{moduleName}}Async();
-        }
-        """;
+            public interface I{{singularName}}Contracts
+            {
+                Task<IEnumerable<{{singularName}}>> GetAll{{moduleName}}Async();
+            }
+            """;
 
     private static string FallbackDtoClass(string moduleName, string singularName) =>
         $$"""
-        using SimpleModule.Core;
+            using SimpleModule.Core;
 
-        namespace SimpleModule.{{moduleName}}.Contracts;
+            namespace SimpleModule.{{moduleName}}.Contracts;
 
-        [Dto]
-        public class {{singularName}}
-        {
-            public int Id { get; set; }
-            public string Name { get; set; } = string.Empty;
-            public DateTime CreatedAt { get; set; }
-        }
-        """;
+            [Dto]
+            public class {{singularName}}
+            {
+                public int Id { get; set; }
+                public string Name { get; set; } = string.Empty;
+                public DateTime CreatedAt { get; set; }
+            }
+            """;
 
     private static string FallbackEventClass(string moduleName, string singularName) =>
         $$"""
-        using SimpleModule.Core.Events;
+            using SimpleModule.Core.Events;
 
-        namespace SimpleModule.{{moduleName}}.Contracts.Events;
+            namespace SimpleModule.{{moduleName}}.Contracts.Events;
 
-        public sealed record {{singularName}}CreatedEvent(int {{singularName}}Id) : IEvent;
-        """;
+            public sealed record {{singularName}}CreatedEvent(int {{singularName}}Id) : IEvent;
+            """;
 
     private static string FallbackModuleClass(string moduleName, string singularName) =>
         $$"""
-        using Microsoft.AspNetCore.Builder;
-        using Microsoft.AspNetCore.Routing;
-        using Microsoft.Extensions.Configuration;
-        using Microsoft.Extensions.DependencyInjection;
-        using SimpleModule.Core;
-        using SimpleModule.Database;
-        using SimpleModule.{{moduleName}}.Contracts;
-        using SimpleModule.{{moduleName}}.Features.GetAll{{moduleName}};
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+            using SimpleModule.Core;
+            using SimpleModule.Database;
+            using SimpleModule.{{moduleName}}.Contracts;
+            using SimpleModule.{{moduleName}}.Features.GetAll{{moduleName}};
 
-        namespace SimpleModule.{{moduleName}};
+            namespace SimpleModule.{{moduleName}};
 
-        [Module({{moduleName}}Constants.ModuleName)]
-        public class {{moduleName}}Module : IModule
-        {
-            public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+            [Module({{moduleName}}Constants.ModuleName)]
+            public class {{moduleName}}Module : IModule
             {
-                services.AddModuleDbContext<{{moduleName}}DbContext>(configuration, {{moduleName}}Constants.ModuleName);
-                services.AddScoped<I{{singularName}}Contracts, {{singularName}}Service>();
-            }
+                public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+                {
+                    services.AddModuleDbContext<{{moduleName}}DbContext>(configuration, {{moduleName}}Constants.ModuleName);
+                    services.AddScoped<I{{singularName}}Contracts, {{singularName}}Service>();
+                }
 
-            public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
-            {
-                var group = endpoints.MapGroup({{moduleName}}Constants.RoutePrefix);
-                GetAll{{moduleName}}Endpoint.Map(group);
+                public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
+                {
+                    var group = endpoints.MapGroup({{moduleName}}Constants.RoutePrefix);
+                    GetAll{{moduleName}}Endpoint.Map(group);
+                }
             }
-        }
-        """;
+            """;
 
     private static string FallbackConstantsClass(string moduleName, string singularName) =>
         $$"""
-        namespace SimpleModule.{{moduleName}};
+            namespace SimpleModule.{{moduleName}};
 
-        public static class {{moduleName}}Constants
-        {
-            public const string ModuleName = "{{moduleName}}";
-            public const string RoutePrefix = "/api/{{moduleName.ToLowerInvariant()}}";
-
-            public static class Fields
+            public static class {{moduleName}}Constants
             {
-                public const string Name = "Name";
-            }
+                public const string ModuleName = "{{moduleName}}";
+                public const string RoutePrefix = "/api/{{moduleName.ToLowerInvariant()}}";
 
-            public static class ValidationMessages
-            {
-                public const string NameRequired = "Name is required.";
+                public static class Fields
+                {
+                    public const string Name = "Name";
+                }
+
+                public static class ValidationMessages
+                {
+                    public const string NameRequired = "Name is required.";
+                }
             }
-        }
-        """;
+            """;
 
     private static string FallbackDbContextClass(string moduleName, string singularName) =>
         $$"""
-        using Microsoft.EntityFrameworkCore;
-        using Microsoft.Extensions.Options;
-        using SimpleModule.Database;
-        using SimpleModule.{{moduleName}}.Contracts;
+            using Microsoft.EntityFrameworkCore;
+            using Microsoft.Extensions.Options;
+            using SimpleModule.Database;
+            using SimpleModule.{{moduleName}}.Contracts;
 
-        namespace SimpleModule.{{moduleName}};
+            namespace SimpleModule.{{moduleName}};
 
-        public class {{moduleName}}DbContext(
-            DbContextOptions<{{moduleName}}DbContext> options,
-            IOptions<DatabaseOptions> dbOptions
-        ) : DbContext(options)
-        {
-            public DbSet<{{singularName}}> {{moduleName}} => Set<{{singularName}}>();
-
-            protected override void OnModelCreating(ModelBuilder modelBuilder)
+            public class {{moduleName}}DbContext(
+                DbContextOptions<{{moduleName}}DbContext> options,
+                IOptions<DatabaseOptions> dbOptions
+            ) : DbContext(options)
             {
-                modelBuilder.Entity<{{singularName}}>(entity =>
-                {
-                    entity.HasKey(e => e.Id);
-                });
+                public DbSet<{{singularName}}> {{moduleName}} => Set<{{singularName}}>();
 
-                modelBuilder.ApplyModuleSchema("{{moduleName}}", dbOptions.Value);
+                protected override void OnModelCreating(ModelBuilder modelBuilder)
+                {
+                    modelBuilder.Entity<{{singularName}}>(entity =>
+                    {
+                        entity.HasKey(e => e.Id);
+                    });
+
+                    modelBuilder.ApplyModuleSchema("{{moduleName}}", dbOptions.Value);
+                }
             }
-        }
-        """;
+            """;
 
     private static string FallbackServiceClass(string moduleName, string singularName) =>
         $$"""
-        using Microsoft.EntityFrameworkCore;
-        using SimpleModule.{{moduleName}}.Contracts;
+            using Microsoft.EntityFrameworkCore;
+            using SimpleModule.{{moduleName}}.Contracts;
 
-        namespace SimpleModule.{{moduleName}};
+            namespace SimpleModule.{{moduleName}};
 
-        public class {{singularName}}Service({{moduleName}}DbContext db) : I{{singularName}}Contracts
-        {
-            public async Task<IEnumerable<{{singularName}}>> GetAll{{moduleName}}Async() =>
-                await db.{{moduleName}}.ToListAsync();
-        }
-        """;
+            public class {{singularName}}Service({{moduleName}}DbContext db) : I{{singularName}}Contracts
+            {
+                public async Task<IEnumerable<{{singularName}}>> GetAll{{moduleName}}Async() =>
+                    await db.{{moduleName}}.ToListAsync();
+            }
+            """;
 
     private static string FallbackGetAllEndpoint(string moduleName, string singularName) =>
         $$"""
-        using Microsoft.AspNetCore.Builder;
-        using Microsoft.AspNetCore.Http;
-        using Microsoft.AspNetCore.Routing;
-        using SimpleModule.{{moduleName}}.Contracts;
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Http;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.{{moduleName}}.Contracts;
 
-        namespace SimpleModule.{{moduleName}}.Features.GetAll{{moduleName}};
+            namespace SimpleModule.{{moduleName}}.Features.GetAll{{moduleName}};
 
-        public static class GetAll{{moduleName}}Endpoint
-        {
-            public static void Map(IEndpointRouteBuilder group)
+            public static class GetAll{{moduleName}}Endpoint
             {
-                group.MapGet(
-                    "/",
-                    async (I{{singularName}}Contracts contracts) =>
-                    {
-                        var items = await contracts.GetAll{{moduleName}}Async();
-                        return TypedResults.Ok(items);
-                    }
-                );
+                public static void Map(IEndpointRouteBuilder group)
+                {
+                    group.MapGet(
+                        "/",
+                        async (I{{singularName}}Contracts contracts) =>
+                        {
+                            var items = await contracts.GetAll{{moduleName}}Async();
+                            return TypedResults.Ok(items);
+                        }
+                    );
+                }
             }
-        }
-        """;
+            """;
 
     private static string FallbackUnitTestSkeleton(string moduleName, string singularName) =>
         $$"""
-        using FluentAssertions;
+            using FluentAssertions;
 
-        namespace {{moduleName}}.Tests.Unit;
+            namespace {{moduleName}}.Tests.Unit;
 
-        public sealed class {{singularName}}ServiceTests
-        {
-            [Fact]
-            public void Placeholder_ShouldPass()
+            public sealed class {{singularName}}ServiceTests
             {
-                true.Should().BeTrue();
+                [Fact]
+                public void Placeholder_ShouldPass()
+                {
+                    true.Should().BeTrue();
+                }
             }
-        }
-        """;
+            """;
 
     private static string FallbackIntegrationTestSkeleton(string moduleName, string singularName) =>
         $$"""
-        using System.Net;
-        using FluentAssertions;
-        using SimpleModule.Tests.Shared.Fixtures;
+            using System.Net;
+            using FluentAssertions;
+            using SimpleModule.Tests.Shared.Fixtures;
 
-        namespace {{moduleName}}.Tests.Integration;
+            namespace {{moduleName}}.Tests.Integration;
 
-        public class {{moduleName}}EndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
-        {
-            private readonly HttpClient _client;
-
-            public {{moduleName}}EndpointTests(SimpleModuleWebApplicationFactory factory)
+            public class {{moduleName}}EndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
             {
-                _client = factory.CreateClient();
-            }
+                private readonly HttpClient _client;
 
-            [Fact]
-            public async Task GetAll{{moduleName}}_Returns200()
-            {
-                var response = await _client.GetAsync("/api/{{moduleName.ToLowerInvariant()}}");
+                public {{moduleName}}EndpointTests(SimpleModuleWebApplicationFactory factory)
+                {
+                    _client = factory.CreateClient();
+                }
 
-                response.StatusCode.Should().Be(HttpStatusCode.OK);
+                [Fact]
+                public async Task GetAll{{moduleName}}_Returns200()
+                {
+                    var response = await _client.GetAsync("/api/{{moduleName.ToLowerInvariant()}}");
+
+                    response.StatusCode.Should().Be(HttpStatusCode.OK);
+                }
             }
-        }
-        """;
+            """;
 }

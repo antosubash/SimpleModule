@@ -1,4 +1,4 @@
-namespace SimpleModule.Core.Constants;
+﻿namespace SimpleModule.Core.Constants;
 
 public static class ErrorMessages
 {
@@ -15,6 +15,7 @@ public static class ErrorMessages
     public const string DefaultConflictMessage = "A conflict occurred.";
 
     // OpenID Connect errors
-    public const string OpenIdConnectRequestMissing = "The OpenID Connect request cannot be retrieved.";
+    public const string OpenIdConnectRequestMissing =
+        "The OpenID Connect request cannot be retrieved.";
     public const string UserDetailsMissing = "The user details cannot be retrieved.";
 }

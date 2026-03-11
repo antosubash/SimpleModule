@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Generator.Tests.Helpers;
 
 namespace SimpleModule.Generator.Tests;
@@ -25,7 +25,9 @@ public class ModuleExtensionsGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var moduleExt = GetGeneratedSource(result, "ModuleExtensions.g.cs");
-        moduleExt.Should().Contain("s_TestApp_ServiceOnlyModule.ConfigureServices(services, configuration)");
+        moduleExt
+            .Should()
+            .Contain("s_TestApp_ServiceOnlyModule.ConfigureServices(services, configuration)");
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
         endpointExt.Should().NotContain("ServiceOnlyModule");
@@ -77,7 +79,11 @@ public class ModuleExtensionsGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var moduleExt = GetGeneratedSource(result, "ModuleExtensions.g.cs");
-        moduleExt.Should().Contain("internal static readonly global::TestApp.TestModule s_TestApp_TestModule = new();");
+        moduleExt
+            .Should()
+            .Contain(
+                "internal static readonly global::TestApp.TestModule s_TestApp_TestModule = new();"
+            );
     }
 
     [Fact]
@@ -100,7 +106,9 @@ public class ModuleExtensionsGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
-        endpointExt.Should().Contain("ModuleExtensions.s_TestApp_TestModule.ConfigureEndpoints(app)");
+        endpointExt
+            .Should()
+            .Contain("ModuleExtensions.s_TestApp_TestModule.ConfigureEndpoints(app)");
     }
 
     [Fact]
@@ -283,8 +291,11 @@ public class ModuleExtensionsGenerationTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        result.GeneratedTrees.Should()
-            .Contain(t => t.FilePath.EndsWith("RazorComponentExtensions.g.cs", StringComparison.Ordinal));
+        result
+            .GeneratedTrees.Should()
+            .Contain(t =>
+                t.FilePath.EndsWith("RazorComponentExtensions.g.cs", StringComparison.Ordinal)
+            );
     }
 
     [Fact]

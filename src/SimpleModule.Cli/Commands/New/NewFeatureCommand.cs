@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 using SimpleModule.Cli.Templates;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -12,13 +12,17 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
         var solution = SolutionContext.Discover();
         if (solution is null)
         {
-            AnsiConsole.MarkupLine("[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]");
+            AnsiConsole.MarkupLine(
+                "[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]"
+            );
             return 1;
         }
 
         if (solution.ExistingModules.Count == 0)
         {
-            AnsiConsole.MarkupLine("[red]No modules found. Create a module first with 'sm new module'.[/]");
+            AnsiConsole.MarkupLine(
+                "[red]No modules found. Create a module first with 'sm new module'.[/]"
+            );
             return 1;
         }
 
@@ -31,32 +35,51 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
 
         var templates = new FeatureTemplates(solution);
 
-        var featureDir = Path.Combine(solution.GetModuleProjectPath(moduleName), "Features", featureName);
+        var featureDir = Path.Combine(
+            solution.GetModuleProjectPath(moduleName),
+            "Features",
+            featureName
+        );
         Directory.CreateDirectory(featureDir);
 
         // Create endpoint
         var endpointPath = Path.Combine(featureDir, $"{featureName}Endpoint.cs");
-        File.WriteAllText(endpointPath, templates.Endpoint(moduleName, featureName, httpMethod, route, singularName));
+        File.WriteAllText(
+            endpointPath,
+            templates.Endpoint(moduleName, featureName, httpMethod, route, singularName)
+        );
         AnsiConsole.MarkupLine($"[green]  + {featureName}Endpoint.cs[/]");
 
         // Create validator if requested
         if (includeValidator)
         {
             var validatorPath = Path.Combine(featureDir, $"{featureName}RequestValidator.cs");
-            File.WriteAllText(validatorPath, templates.Validator(moduleName, featureName, singularName));
+            File.WriteAllText(
+                validatorPath,
+                templates.Validator(moduleName, featureName, singularName)
+            );
             AnsiConsole.MarkupLine($"[green]  + {featureName}RequestValidator.cs[/]");
         }
 
         // Wire into module class
-        var moduleFilePath = Path.Combine(solution.GetModuleProjectPath(moduleName), $"{moduleName}Module.cs");
+        var moduleFilePath = Path.Combine(
+            solution.GetModuleProjectPath(moduleName),
+            $"{moduleName}Module.cs"
+        );
         if (ModuleClassManipulator.AddFeatureWiring(moduleFilePath, moduleName, featureName))
         {
-            AnsiConsole.MarkupLine($"[green]  + Wired {featureName}Endpoint into {moduleName}Module.cs[/]");
+            AnsiConsole.MarkupLine(
+                $"[green]  + Wired {featureName}Endpoint into {moduleName}Module.cs[/]"
+            );
         }
         else
         {
-            AnsiConsole.MarkupLine($"[yellow]  ! Could not auto-wire into {moduleName}Module.cs. Add manually:[/]");
-            AnsiConsole.MarkupLine($"[yellow]    using SimpleModule.{moduleName}.Features.{featureName};[/]");
+            AnsiConsole.MarkupLine(
+                $"[yellow]  ! Could not auto-wire into {moduleName}Module.cs. Add manually:[/]"
+            );
+            AnsiConsole.MarkupLine(
+                $"[yellow]    using SimpleModule.{moduleName}.Features.{featureName};[/]"
+            );
             AnsiConsole.MarkupLine($"[yellow]    {featureName}Endpoint.Map(group);[/]");
         }
 

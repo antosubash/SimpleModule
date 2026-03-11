@@ -1,4 +1,4 @@
-namespace SimpleModule.Products.Contracts;
+﻿namespace SimpleModule.Products.Contracts;
 
 public interface IProductContracts
 {

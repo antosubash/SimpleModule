@@ -1,4 +1,4 @@
-using Bogus;
+﻿using Bogus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;

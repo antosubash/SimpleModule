@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -31,17 +31,25 @@ public sealed class ReadAndTransformTests : IDisposable
     [Fact]
     public void ReplacesModuleNamesInFile()
     {
-        var path = CreateFile("OrderService.cs", """
+        var path = CreateFile(
+            "OrderService.cs",
+            """
             namespace SimpleModule.Orders;
 
             public class OrderService : IOrderContracts
             {
                 // route: /orders
             }
-            """);
+            """
+        );
 
         var result = TemplateExtractor.ReadAndTransform(
-            path, "Orders", "Order", "Invoices", "Invoice");
+            path,
+            "Orders",
+            "Order",
+            "Invoices",
+            "Invoice"
+        );
 
         result.Should().Contain("namespace SimpleModule.Invoices;");
         result.Should().Contain("InvoiceService");
@@ -52,17 +60,25 @@ public sealed class ReadAndTransformTests : IDisposable
     [Fact]
     public void StripsLinesContainingPatterns()
     {
-        var path = CreateFile("Test.cs", """
+        var path = CreateFile(
+            "Test.cs",
+            """
             using SimpleModule.Core;
             using SimpleModule.Products.Contracts;
             using SimpleModule.Users.Contracts;
 
             namespace SimpleModule.Orders;
-            """);
+            """
+        );
 
         var result = TemplateExtractor.ReadAndTransform(
-            path, "Orders", "Order", "Invoices", "Invoice",
-            stripLinesContaining: ["SimpleModule.Products", "SimpleModule.Users"]);
+            path,
+            "Orders",
+            "Order",
+            "Invoices",
+            "Invoice",
+            stripLinesContaining: ["SimpleModule.Products", "SimpleModule.Users"]
+        );
 
         result.Should().Contain("SimpleModule.Core");
         result.Should().NotContain("Products");
@@ -75,11 +91,18 @@ public sealed class ReadAndTransformTests : IDisposable
         var path = CreateFile("Test.cs", "a\nremove1\n\nremove2\n\nb");
 
         var result = TemplateExtractor.ReadAndTransform(
-            path, "X", "X", "Y", "Y",
-            stripLinesContaining: ["remove1", "remove2"]);
+            path,
+            "X",
+            "X",
+            "Y",
+            "Y",
+            stripLinesContaining: ["remove1", "remove2"]
+        );
 
         // After stripping, blank lines should be collapsed
-        result.Should().NotContain(Environment.NewLine + Environment.NewLine + Environment.NewLine);
+        result
+            .Should()
+            .NotContain(Environment.NewLine + Environment.NewLine + Environment.NewLine);
     }
 
     [Fact]
@@ -88,7 +111,12 @@ public sealed class ReadAndTransformTests : IDisposable
         var path = CreateFile("Simple.cs", "class Order { }");
 
         var result = TemplateExtractor.ReadAndTransform(
-            path, "Orders", "Order", "Invoices", "Invoice");
+            path,
+            "Orders",
+            "Order",
+            "Invoices",
+            "Invoice"
+        );
 
         result.Should().Be("class Invoice { }");
     }

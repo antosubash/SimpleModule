@@ -1,4 +1,4 @@
-namespace SimpleModule.Core.Events;
+﻿namespace SimpleModule.Core.Events;
 
 public interface IEventBus
 {

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Tests;
@@ -31,13 +31,15 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void HasProjectReference_ReturnsFalse_WhenNotPresent()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <ItemGroup>
                 <ProjectReference Include="..\Core\Core.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         ProjectManipulator.HasProjectReference(path, "Invoices").Should().BeFalse();
     }
@@ -45,13 +47,15 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void HasProjectReference_ReturnsTrue_WhenPresent()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <ItemGroup>
                 <ProjectReference Include="..\modules\Invoices\Invoices\Invoices.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         ProjectManipulator.HasProjectReference(path, "Invoices").Should().BeTrue();
     }
@@ -59,13 +63,15 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void HasProjectReference_IsCaseInsensitive()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <ItemGroup>
                 <ProjectReference Include="..\modules\invoices\invoices\invoices.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
         ProjectManipulator.HasProjectReference(path, "Invoices").Should().BeTrue();
     }
@@ -73,16 +79,21 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void AddProjectReference_AddsAfterLastReference()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <ItemGroup>
                 <ProjectReference Include="..\Core\Core.csproj" />
                 <ProjectReference Include="..\modules\Orders\Orders\Orders.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
-        ProjectManipulator.AddProjectReference(path, @"..\modules\Invoices\Invoices\Invoices.csproj");
+        ProjectManipulator.AddProjectReference(
+            path,
+            @"..\modules\Invoices\Invoices\Invoices.csproj"
+        );
 
         var content = File.ReadAllText(path);
         content.Should().Contain("Invoices.csproj");
@@ -91,15 +102,20 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void AddProjectReference_DoesNotDuplicate()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <ItemGroup>
                 <ProjectReference Include="..\modules\Invoices\Invoices\Invoices.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
-        ProjectManipulator.AddProjectReference(path, @"..\modules\Invoices\Invoices\Invoices.csproj");
+        ProjectManipulator.AddProjectReference(
+            path,
+            @"..\modules\Invoices\Invoices\Invoices.csproj"
+        );
 
         var content = File.ReadAllText(path);
         var count = content.Split("Invoices.csproj").Length - 1;
@@ -109,15 +125,20 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void AddProjectReference_CreatesItemGroup_WhenNoneExists()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <PropertyGroup>
                 <TargetFramework>net10.0</TargetFramework>
               </PropertyGroup>
             </Project>
-            """);
+            """
+        );
 
-        ProjectManipulator.AddProjectReference(path, @"..\modules\Invoices\Invoices\Invoices.csproj");
+        ProjectManipulator.AddProjectReference(
+            path,
+            @"..\modules\Invoices\Invoices\Invoices.csproj"
+        );
 
         var content = File.ReadAllText(path);
         content.Should().Contain("<ItemGroup>");
@@ -127,15 +148,20 @@ public sealed class ProjectManipulatorTests : IDisposable
     [Fact]
     public void AddProjectReference_PreservesExistingReferences()
     {
-        var path = CreateCsprojFile("""
+        var path = CreateCsprojFile(
+            """
             <Project Sdk="Microsoft.NET.Sdk.Web">
               <ItemGroup>
                 <ProjectReference Include="..\Core\Core.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
 
-        ProjectManipulator.AddProjectReference(path, @"..\modules\Invoices\Invoices\Invoices.csproj");
+        ProjectManipulator.AddProjectReference(
+            path,
+            @"..\modules\Invoices\Invoices\Invoices.csproj"
+        );
 
         var content = File.ReadAllText(path);
         content.Should().Contain("Core.csproj");

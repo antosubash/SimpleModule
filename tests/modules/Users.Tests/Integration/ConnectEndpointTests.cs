@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using FluentAssertions;
 using SimpleModule.Tests.Shared.Fixtures;
 

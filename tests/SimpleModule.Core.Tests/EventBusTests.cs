@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -156,11 +156,15 @@ public sealed class EventBusTests
     {
         CancellationToken receivedToken = default;
         var services = new ServiceCollection();
-        services.AddSingleton<IEventHandler<TestEvent>>(new DelegateHandler((_, ct) =>
-        {
-            receivedToken = ct;
-            return Task.CompletedTask;
-        }));
+        services.AddSingleton<IEventHandler<TestEvent>>(
+            new DelegateHandler(
+                (_, ct) =>
+                {
+                    receivedToken = ct;
+                    return Task.CompletedTask;
+                }
+            )
+        );
         var provider = services.BuildServiceProvider();
         var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
         using var cts = new CancellationTokenSource();
@@ -170,9 +174,8 @@ public sealed class EventBusTests
         receivedToken.Should().Be(cts.Token);
     }
 
-    private sealed class DelegateHandler(
-        Func<TestEvent, CancellationToken, Task> handler
-    ) : IEventHandler<TestEvent>
+    private sealed class DelegateHandler(Func<TestEvent, CancellationToken, Task> handler)
+        : IEventHandler<TestEvent>
     {
         public Task HandleAsync(TestEvent @event, CancellationToken cancellationToken) =>
             handler(@event, cancellationToken);

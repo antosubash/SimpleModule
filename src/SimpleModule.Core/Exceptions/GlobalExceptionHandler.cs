@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Diagnostics;
+﻿using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -28,7 +28,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 (Dictionary<string, string[]>?)null
             ),
             ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
-            _ => (StatusCodes.Status500InternalServerError, ErrorMessages.InternalServerErrorTitle, null),
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.InternalServerErrorTitle,
+                null
+            ),
         };
 
         if (statusCode == StatusCodes.Status500InternalServerError)
@@ -44,9 +48,10 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             );
         }
 
-        var detail = statusCode == StatusCodes.Status500InternalServerError
-            ? ErrorMessages.UnexpectedError
-            : exception.Message;
+        var detail =
+            statusCode == StatusCodes.Status500InternalServerError
+                ? ErrorMessages.UnexpectedError
+                : exception.Message;
 
         var problemDetails = new ProblemDetails
         {

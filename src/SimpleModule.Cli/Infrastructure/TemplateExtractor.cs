@@ -1,4 +1,4 @@
-using System.Xml;
+﻿using System.Xml;
 using System.Xml.Linq;
 
 namespace SimpleModule.Cli.Infrastructure;
@@ -10,16 +10,20 @@ public static class TemplateExtractor
     /// </summary>
     public static string ReadAndTransform(
         string filePath,
-        string fromPlural, string fromSingular,
-        string toPlural, string toSingular,
-        IReadOnlyList<string>? stripLinesContaining = null)
+        string fromPlural,
+        string fromSingular,
+        string toPlural,
+        string toSingular,
+        IReadOnlyList<string>? stripLinesContaining = null
+    )
     {
         var lines = File.ReadAllLines(filePath).ToList();
 
         if (stripLinesContaining is { Count: > 0 })
         {
             lines.RemoveAll(line =>
-                stripLinesContaining.Any(p => line.Contains(p, StringComparison.Ordinal)));
+                stripLinesContaining.Any(p => line.Contains(p, StringComparison.Ordinal))
+            );
         }
 
         // Remove consecutive blank lines left by stripping
@@ -34,8 +38,10 @@ public static class TemplateExtractor
     /// </summary>
     public static string TransformCsproj(
         string filePath,
-        string fromModule, string toModule,
-        IReadOnlyList<string>? stripReferencesContaining = null)
+        string fromModule,
+        string toModule,
+        IReadOnlyList<string>? stripReferencesContaining = null
+    )
     {
         var doc = XDocument.Load(filePath);
         var root = doc.Root!;
@@ -74,8 +80,11 @@ public static class TemplateExtractor
     /// </summary>
     public static string ReplaceModuleNames(
         string content,
-        string fromPlural, string fromSingular,
-        string toPlural, string toSingular)
+        string fromPlural,
+        string fromSingular,
+        string toPlural,
+        string toSingular
+    )
     {
         // Replace plural first (e.g., "Orders" → "Invoices")
         content = content.Replace(fromPlural, toPlural, StringComparison.Ordinal);
@@ -85,14 +94,18 @@ public static class TemplateExtractor
         content = content.Replace(
             fromPlural.ToLowerInvariant(),
             toPlural.ToLowerInvariant(),
-            StringComparison.Ordinal);
+            StringComparison.Ordinal
+        );
         return content;
     }
 
     /// <summary>
     /// Removes brace-balanced blocks starting from lines matching a predicate.
     /// </summary>
-    public static List<string> RemoveBraceBlocks(List<string> lines, Func<string, bool> blockStartPredicate)
+    public static List<string> RemoveBraceBlocks(
+        List<string> lines,
+        Func<string, bool> blockStartPredicate
+    )
     {
         var result = new List<string>();
         var skipping = false;
@@ -171,12 +184,19 @@ public static class TemplateExtractor
     }
 
     private static void RemoveMatchingElements(
-        XElement root, string elementName, string attributeName,
-        IReadOnlyList<string> patterns)
+        XElement root,
+        string elementName,
+        string attributeName,
+        IReadOnlyList<string> patterns
+    )
     {
         var toRemove = root.Descendants(elementName)
-            .Where(el => patterns.Any(p =>
-                el.Attribute(attributeName)?.Value?.Contains(p, StringComparison.OrdinalIgnoreCase) == true))
+            .Where(el =>
+                patterns.Any(p =>
+                    el.Attribute(attributeName)
+                        ?.Value?.Contains(p, StringComparison.OrdinalIgnoreCase) == true
+                )
+            )
             .ToList();
 
         foreach (var el in toRemove)

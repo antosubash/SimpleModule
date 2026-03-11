@@ -1,15 +1,16 @@
+﻿using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using SimpleModule.Core.Exceptions;
-using System.Text.Json;
 
 namespace SimpleModule.Core.Tests;
 
 public class GlobalExceptionHandlerTests
 {
-    private readonly GlobalExceptionHandler _handler =
-        new(NullLogger<GlobalExceptionHandler>.Instance);
+    private readonly GlobalExceptionHandler _handler = new(
+        NullLogger<GlobalExceptionHandler>.Instance
+    );
 
     private static DefaultHttpContext CreateHttpContext()
     {
@@ -28,10 +29,7 @@ public class GlobalExceptionHandlerTests
     public async Task ValidationException_Returns400_WithErrors()
     {
         var context = CreateHttpContext();
-        var errors = new Dictionary<string, string[]>
-        {
-            ["Name"] = ["Name is required"],
-        };
+        var errors = new Dictionary<string, string[]> { ["Name"] = ["Name is required"] };
         var exception = new ValidationException(errors);
 
         var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
@@ -90,10 +88,14 @@ public class GlobalExceptionHandlerTests
         var doc = await ReadResponseBodyAsync(context);
         doc.RootElement.GetProperty("title").GetString().Should().Be("Internal Server Error");
         // Should NOT leak the internal exception message
-        doc.RootElement.GetProperty("detail").GetString()
-            .Should().NotContain("Sensitive internal error details");
-        doc.RootElement.GetProperty("detail").GetString()
-            .Should().Be("An unexpected error occurred. Please try again later.");
+        doc.RootElement.GetProperty("detail")
+            .GetString()
+            .Should()
+            .NotContain("Sensitive internal error details");
+        doc.RootElement.GetProperty("detail")
+            .GetString()
+            .Should()
+            .Be("An unexpected error occurred. Please try again later.");
     }
 
     [Fact]
@@ -105,8 +107,10 @@ public class GlobalExceptionHandlerTests
         await _handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var doc = await ReadResponseBodyAsync(context);
-        doc.RootElement.GetProperty("detail").GetString()
-            .Should().Be("One or more validation errors occurred.");
+        doc.RootElement.GetProperty("detail")
+            .GetString()
+            .Should()
+            .Be("One or more validation errors occurred.");
     }
 
     [Fact]
@@ -118,8 +122,10 @@ public class GlobalExceptionHandlerTests
         await _handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var doc = await ReadResponseBodyAsync(context);
-        doc.RootElement.GetProperty("detail").GetString()
-            .Should().Be("User with ID abc-123 not found");
+        doc.RootElement.GetProperty("detail")
+            .GetString()
+            .Should()
+            .Be("User with ID abc-123 not found");
     }
 
     [Fact]
@@ -128,10 +134,16 @@ public class GlobalExceptionHandlerTests
         var context = CreateHttpContext();
 
         var result1 = await _handler.TryHandleAsync(
-            context, new ValidationException(), CancellationToken.None);
+            context,
+            new ValidationException(),
+            CancellationToken.None
+        );
         context = CreateHttpContext();
         var result2 = await _handler.TryHandleAsync(
-            context, new InvalidOperationException("any"), CancellationToken.None);
+            context,
+            new InvalidOperationException("any"),
+            CancellationToken.None
+        );
 
         result1.Should().BeTrue();
         result2.Should().BeTrue();

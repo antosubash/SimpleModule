@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using SimpleModule.Database;
 
 namespace SimpleModule.Database.Tests;

@@ -1,4 +1,4 @@
-namespace SimpleModule.Core.Constants;
+﻿namespace SimpleModule.Core.Constants;
 
 public static class HealthCheckConstants
 {

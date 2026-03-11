@@ -1,4 +1,4 @@
-using SimpleModule.Cli.Infrastructure;
+﻿using SimpleModule.Cli.Infrastructure;
 
 namespace SimpleModule.Cli.Commands.Doctor.Checks;
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -61,11 +61,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules);
         }
 
-        FindModuleTypes(
-            compilation.Assembly.GlobalNamespace,
-            moduleAttributeSymbol,
-            modules
-        );
+        FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, modules);
 
         if (modules.Count == 0)
             return DiscoveryData.Empty;
@@ -84,11 +80,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
             }
 
-            FindDtoTypes(
-                compilation.Assembly.GlobalNamespace,
-                dtoAttributeSymbol,
-                dtoTypes
-            );
+            FindDtoTypes(compilation.Assembly.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
         }
 
         var componentBaseSymbol = compilation.GetTypeByMetadataName(
@@ -96,14 +88,12 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         );
         if (componentBaseSymbol is not null)
         {
-            var assembliesWithComponents =
-                new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+            var assembliesWithComponents = new HashSet<IAssemblySymbol>(
+                SymbolEqualityComparer.Default
+            );
             foreach (var reference in compilation.References)
             {
-                if (
-                    compilation.GetAssemblyOrModuleSymbol(reference)
-                    is not IAssemblySymbol asm
-                )
+                if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
                     continue;
 
                 if (HasComponentBaseDescendant(asm.GlobalNamespace, componentBaseSymbol))
@@ -135,8 +125,11 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 .Select(d => new DtoTypeInfoRecord(
                     d.FullyQualifiedName,
                     d.SafeName,
-                    d.Properties
-                        .Select(p => new DtoPropertyInfoRecord(p.Name, p.TypeFqn, p.HasSetter))
+                    d.Properties.Select(p => new DtoPropertyInfoRecord(
+                            p.Name,
+                            p.TypeFqn,
+                            p.HasSetter
+                        ))
                         .ToImmutableArray()
                 ))
                 .ToImmutableArray()
@@ -306,9 +299,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         foreach (var module in modules.Where(m => m.HasConfigureServices))
         {
             var fieldName = GetModuleFieldName(module.FullyQualifiedName);
-            sb.AppendLine(
-                $"        {fieldName}.ConfigureServices(services, configuration);"
-            );
+            sb.AppendLine($"        {fieldName}.ConfigureServices(services, configuration);");
         }
 
         if (hasDtoTypes)
@@ -362,10 +353,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
 
-        context.AddSource(
-            "EndpointExtensions.g.cs",
-            SourceText.From(sb.ToString(), Encoding.UTF8)
-        );
+        context.AddSource("EndpointExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
     private static void GenerateJsonResolver(
@@ -499,9 +487,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine(
             "    public static RazorComponentsEndpointConventionBuilder AddModuleAssemblies("
         );
-        sb.AppendLine(
-            "        this RazorComponentsEndpointConventionBuilder builder)"
-        );
+        sb.AppendLine("        this RazorComponentsEndpointConventionBuilder builder)");
         sb.AppendLine("    {");
 
         if (razorModules.Count > 0)
@@ -550,8 +536,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
         public bool Equals(DiscoveryData other)
         {
-            return Modules.SequenceEqual(other.Modules)
-                && DtoTypes.SequenceEqual(other.DtoTypes);
+            return Modules.SequenceEqual(other.Modules) && DtoTypes.SequenceEqual(other.DtoTypes);
         }
 
         public override int GetHashCode()

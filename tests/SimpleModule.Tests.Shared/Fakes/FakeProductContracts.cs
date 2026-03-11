@@ -1,4 +1,4 @@
-using SimpleModule.Products.Contracts;
+﻿using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;
 
@@ -16,6 +16,7 @@ public class FakeProductContracts : IProductContracts
     {
         var idSet = ids.ToHashSet();
         return Task.FromResult<IReadOnlyList<Product>>(
-            Products.Where(p => idSet.Contains(p.Id)).ToList());
+            Products.Where(p => idSet.Contains(p.Id)).ToList()
+        );
     }
 }

@@ -1,4 +1,4 @@
-namespace SimpleModule.Cli.Infrastructure;
+﻿namespace SimpleModule.Cli.Infrastructure;
 
 public static class ProjectManipulator
 {
@@ -63,15 +63,19 @@ public static class ProjectManipulator
         else
         {
             // No ProjectReference found, add ItemGroup before </Project>
-            var endIndex = lines.FindIndex(l => l.TrimStart().StartsWith("</Project>", StringComparison.Ordinal));
+            var endIndex = lines.FindIndex(l =>
+                l.TrimStart().StartsWith("</Project>", StringComparison.Ordinal)
+            );
             if (endIndex >= 0)
             {
-                lines.InsertRange(endIndex,
-                [
-                    "  <ItemGroup>",
-                    $"    <ProjectReference Include=\"{referencePath}\" />",
-                    "  </ItemGroup>",
-                ]);
+                lines.InsertRange(
+                    endIndex,
+                    [
+                        "  <ItemGroup>",
+                        $"    <ProjectReference Include=\"{referencePath}\" />",
+                        "  </ItemGroup>",
+                    ]
+                );
             }
         }
 
@@ -87,6 +91,6 @@ public static class ProjectManipulator
 
         var content = File.ReadAllText(csprojPath);
         return content.Contains(moduleName, StringComparison.OrdinalIgnoreCase)
-               && content.Contains("<ProjectReference", StringComparison.Ordinal);
+            && content.Contains("<ProjectReference", StringComparison.Ordinal);
     }
 }

@@ -1,4 +1,4 @@
-namespace SimpleModule.Database;
+﻿namespace SimpleModule.Database;
 
 public static class DatabaseProviderDetector
 {
@@ -8,19 +8,35 @@ public static class DatabaseProviderDetector
     /// </summary>
     public static DatabaseProvider Detect(string connectionString, string? explicitProvider = null)
     {
-        if (!string.IsNullOrWhiteSpace(explicitProvider)
-            && Enum.TryParse<DatabaseProvider>(explicitProvider, ignoreCase: true, out var parsed))
+        if (
+            !string.IsNullOrWhiteSpace(explicitProvider)
+            && Enum.TryParse<DatabaseProvider>(explicitProvider, ignoreCase: true, out var parsed)
+        )
         {
             return parsed;
         }
 
-        if (connectionString.Contains(DatabaseConstants.PostgresHostPrefix, StringComparison.OrdinalIgnoreCase))
+        if (
+            connectionString.Contains(
+                DatabaseConstants.PostgresHostPrefix,
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
             return DatabaseProvider.PostgreSql;
 
         if (
-            connectionString.Contains(DatabaseConstants.SqlServerCatalogPrefix, StringComparison.OrdinalIgnoreCase)
-            || connectionString.Contains(DatabaseConstants.SqlServerLocalPrefix, StringComparison.OrdinalIgnoreCase)
-            || connectionString.Contains(DatabaseConstants.SqlServerExpressionPrefix, StringComparison.OrdinalIgnoreCase)
+            connectionString.Contains(
+                DatabaseConstants.SqlServerCatalogPrefix,
+                StringComparison.OrdinalIgnoreCase
+            )
+            || connectionString.Contains(
+                DatabaseConstants.SqlServerLocalPrefix,
+                StringComparison.OrdinalIgnoreCase
+            )
+            || connectionString.Contains(
+                DatabaseConstants.SqlServerExpressionPrefix,
+                StringComparison.OrdinalIgnoreCase
+            )
         )
             return DatabaseProvider.SqlServer;
 

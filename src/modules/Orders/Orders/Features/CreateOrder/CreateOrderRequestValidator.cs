@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using SimpleModule.Core.Validation;
 using SimpleModule.Orders;
@@ -8,7 +8,7 @@ namespace SimpleModule.Orders.Features.CreateOrder;
 
 public static class CreateOrderRequestValidator
 {
-    private static readonly CompositeFormat QuantityMustBePositiveFormat = CompositeFormat.Parse(
+    private static readonly CompositeFormat _quantityMustBePositiveFormat = CompositeFormat.Parse(
         OrdersConstants.ValidationMessages.QuantityMustBePositiveFormat
     );
 
@@ -18,12 +18,18 @@ public static class CreateOrderRequestValidator
 
         if (string.IsNullOrWhiteSpace(request.UserId))
         {
-            errors[OrdersConstants.Fields.UserId] = [OrdersConstants.ValidationMessages.UserIdRequired];
+            errors[OrdersConstants.Fields.UserId] =
+            [
+                OrdersConstants.ValidationMessages.UserIdRequired,
+            ];
         }
 
         if (request.Items is null || request.Items.Count == 0)
         {
-            errors[OrdersConstants.Fields.Items] = [OrdersConstants.ValidationMessages.AtLeastOneItemRequired];
+            errors[OrdersConstants.Fields.Items] =
+            [
+                OrdersConstants.ValidationMessages.AtLeastOneItemRequired,
+            ];
         }
         else
         {
@@ -32,7 +38,13 @@ public static class CreateOrderRequestValidator
             {
                 if (request.Items[i].Quantity <= 0)
                 {
-                    itemErrors.Add(string.Format(CultureInfo.InvariantCulture, QuantityMustBePositiveFormat, i));
+                    itemErrors.Add(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            _quantityMustBePositiveFormat,
+                            i
+                        )
+                    );
                 }
             }
 
