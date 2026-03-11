@@ -11,4 +11,11 @@ public class FakeProductContracts : IProductContracts
 
     public Task<Product?> GetProductByIdAsync(int id) =>
         Task.FromResult(Products.FirstOrDefault(p => p.Id == id));
+
+    public Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<int> ids)
+    {
+        var idSet = ids.ToHashSet();
+        return Task.FromResult<IReadOnlyList<Product>>(
+            Products.Where(p => idSet.Contains(p.Id)).ToList());
+    }
 }

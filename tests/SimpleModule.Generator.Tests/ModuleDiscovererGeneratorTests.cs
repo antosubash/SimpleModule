@@ -39,7 +39,9 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        moduleExt.Should().Contain("new global::TestApp.TestModule()");
+        moduleExt.Should().Contain("s_TestApp_TestModule");
+        moduleExt.Should().Contain("global::TestApp.TestModule");
+        moduleExt.Should().Contain(".ConfigureServices(services, configuration)");
 
         var endpointExt = result
             .GeneratedTrees.First(t =>
@@ -47,7 +49,7 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        endpointExt.Should().Contain("new global::TestApp.TestModule()");
+        endpointExt.Should().Contain("s_TestApp_TestModule.ConfigureEndpoints(app)");
     }
 
     [Fact]
@@ -83,7 +85,7 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        endpointExt.Should().Contain("new global::TestApp.EndpointOnlyModule().ConfigureEndpoints");
+        endpointExt.Should().Contain("s_TestApp_EndpointOnlyModule.ConfigureEndpoints(app)");
     }
 
     [Fact]

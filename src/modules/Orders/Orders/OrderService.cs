@@ -39,17 +39,19 @@ public partial class OrderService(
             throw new NotFoundException("User", request.UserId);
         }
 
-        decimal total = 0;
+        var productIds = request.Items.Select(i => i.ProductId).Distinct();
+        var productList = await products.GetProductsByIdsAsync(productIds);
+        var productMap = productList.ToDictionary(p => p.Id);
+
         foreach (var item in request.Items)
         {
-            var product = await products.GetProductByIdAsync(item.ProductId);
-            if (product is null)
+            if (!productMap.ContainsKey(item.ProductId))
             {
                 throw new NotFoundException("Product", item.ProductId);
             }
-
-            total += product.Price * item.Quantity;
         }
+
+        var total = request.Items.Sum(item => productMap[item.ProductId].Price * item.Quantity);
 
         var order = new Order
         {

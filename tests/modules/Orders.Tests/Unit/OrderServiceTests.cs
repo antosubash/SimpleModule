@@ -53,16 +53,14 @@ public sealed class OrderServiceTests : IDisposable
     public async Task CreateOrderAsync_WithValidUserAndProduct_CalculatesCorrectTotal()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        var widget = new Product { Id = 1, Name = "Widget", Price = 25.00m };
         _products
-            .GetProductByIdAsync(1)
-            .Returns(
-                new Product
-                {
-                    Id = 1,
-                    Name = "Widget",
-                    Price = 25.00m,
-                }
-            );
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .Returns(callInfo =>
+            {
+                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                return new List<Product> { widget }.Where(p => ids.Contains(p.Id)).ToList() as IReadOnlyList<Product>;
+            });
 
         var request = new CreateOrderRequest
         {
@@ -97,7 +95,9 @@ public sealed class OrderServiceTests : IDisposable
     public async Task CreateOrderAsync_WithInvalidProduct_ThrowsNotFoundException()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
-        _products.GetProductByIdAsync(999).Returns((Product?)null);
+        _products
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .Returns(new List<Product>() as IReadOnlyList<Product>);
 
         var request = new CreateOrderRequest
         {
@@ -122,16 +122,14 @@ public sealed class OrderServiceTests : IDisposable
     public async Task GetOrderByIdAsync_ReturnsMatchingOrder()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        var widget = new Product { Id = 1, Name = "Widget", Price = 10.00m };
         _products
-            .GetProductByIdAsync(1)
-            .Returns(
-                new Product
-                {
-                    Id = 1,
-                    Name = "Widget",
-                    Price = 10.00m,
-                }
-            );
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .Returns(callInfo =>
+            {
+                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                return new List<Product> { widget }.Where(p => ids.Contains(p.Id)).ToList() as IReadOnlyList<Product>;
+            });
 
         var request = new CreateOrderRequest
         {

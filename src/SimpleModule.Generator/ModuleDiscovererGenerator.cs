@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -11,70 +13,133 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var compilationProvider = context.CompilationProvider;
+        // Extract an equatable data model from the compilation so the incremental
+        // pipeline can cache results and skip re-generation when nothing changes.
+        var dataProvider = context.CompilationProvider.Select(
+            static (compilation, _) => ExtractDiscoveryData(compilation)
+        );
 
         context.RegisterSourceOutput(
-            compilationProvider,
-            static (spc, compilation) =>
+            dataProvider,
+            static (spc, data) =>
             {
-                var moduleAttributeSymbol = compilation.GetTypeByMetadataName(
-                    "SimpleModule.Core.ModuleAttribute"
-                );
-                var dtoAttributeSymbol = compilation.GetTypeByMetadataName(
-                    "SimpleModule.Core.DtoAttribute"
-                );
-                if (moduleAttributeSymbol is null)
+                if (data.Modules.Length == 0)
                     return;
 
-                var modules = new List<ModuleInfo>();
+                GenerateModuleExtensions(spc, data.Modules, data.DtoTypes.Length > 0);
+                GenerateEndpointExtensions(spc, data.Modules);
+                GenerateRazorComponentExtensions(spc, data.Modules);
 
-                foreach (var reference in compilation.References)
-                {
-                    if (
-                        compilation.GetAssemblyOrModuleSymbol(reference)
-                        is not IAssemblySymbol assemblySymbol
-                    )
-                        continue;
-
-                    FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules);
-                }
-
-                FindModuleTypes(
-                    compilation.Assembly.GlobalNamespace,
-                    moduleAttributeSymbol,
-                    modules
-                );
-
-                if (modules.Count == 0)
-                    return;
-
-                var dtoTypes = new List<DtoTypeInfo>();
-                if (dtoAttributeSymbol is not null)
-                {
-                    foreach (var reference in compilation.References)
-                    {
-                        if (
-                            compilation.GetAssemblyOrModuleSymbol(reference)
-                            is not IAssemblySymbol assemblySymbol
-                        )
-                            continue;
-
-                        FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
-                    }
-
-                    FindDtoTypes(
-                        compilation.Assembly.GlobalNamespace,
-                        dtoAttributeSymbol,
-                        dtoTypes
-                    );
-                }
-
-                GenerateModuleExtensions(spc, modules, dtoTypes.Count > 0);
-                GenerateEndpointExtensions(spc, modules);
-
-                if (dtoTypes.Count > 0)
-                    GenerateJsonResolver(spc, dtoTypes);
+                if (data.DtoTypes.Length > 0)
+                    GenerateJsonResolver(spc, data.DtoTypes);
             }
+        );
+    }
+
+    private static DiscoveryData ExtractDiscoveryData(Compilation compilation)
+    {
+        var moduleAttributeSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.ModuleAttribute"
+        );
+        if (moduleAttributeSymbol is null)
+            return DiscoveryData.Empty;
+
+        var dtoAttributeSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.DtoAttribute"
+        );
+
+        var modules = new List<ModuleInfo>();
+
+        foreach (var reference in compilation.References)
+        {
+            if (
+                compilation.GetAssemblyOrModuleSymbol(reference)
+                is not IAssemblySymbol assemblySymbol
+            )
+                continue;
+
+            FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules);
+        }
+
+        FindModuleTypes(
+            compilation.Assembly.GlobalNamespace,
+            moduleAttributeSymbol,
+            modules
+        );
+
+        if (modules.Count == 0)
+            return DiscoveryData.Empty;
+
+        var dtoTypes = new List<DtoTypeInfo>();
+        if (dtoAttributeSymbol is not null)
+        {
+            foreach (var reference in compilation.References)
+            {
+                if (
+                    compilation.GetAssemblyOrModuleSymbol(reference)
+                    is not IAssemblySymbol assemblySymbol
+                )
+                    continue;
+
+                FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
+            }
+
+            FindDtoTypes(
+                compilation.Assembly.GlobalNamespace,
+                dtoAttributeSymbol,
+                dtoTypes
+            );
+        }
+
+        var componentBaseSymbol = compilation.GetTypeByMetadataName(
+            "Microsoft.AspNetCore.Components.ComponentBase"
+        );
+        if (componentBaseSymbol is not null)
+        {
+            var assembliesWithComponents =
+                new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+            foreach (var reference in compilation.References)
+            {
+                if (
+                    compilation.GetAssemblyOrModuleSymbol(reference)
+                    is not IAssemblySymbol asm
+                )
+                    continue;
+
+                if (HasComponentBaseDescendant(asm.GlobalNamespace, componentBaseSymbol))
+                    assembliesWithComponents.Add(asm);
+            }
+
+            foreach (var module in modules)
+            {
+                var metadataName = module.FullyQualifiedName.Replace("global::", "");
+                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+                if (
+                    typeSymbol is not null
+                    && assembliesWithComponents.Contains(typeSymbol.ContainingAssembly)
+                )
+                    module.HasRazorComponents = true;
+            }
+        }
+
+        return new DiscoveryData(
+            modules
+                .Select(m => new ModuleInfoRecord(
+                    m.FullyQualifiedName,
+                    m.HasConfigureServices,
+                    m.HasConfigureEndpoints,
+                    m.HasRazorComponents
+                ))
+                .ToImmutableArray(),
+            dtoTypes
+                .Select(d => new DtoTypeInfoRecord(
+                    d.FullyQualifiedName,
+                    d.SafeName,
+                    d.Properties
+                        .Select(p => new DtoPropertyInfoRecord(p.Name, p.TypeFqn, p.HasSetter))
+                        .ToImmutableArray()
+                ))
+                .ToImmutableArray()
         );
     }
 
@@ -206,7 +271,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
     private static void GenerateModuleExtensions(
         SourceProductionContext context,
-        List<ModuleInfo> modules,
+        ImmutableArray<ModuleInfoRecord> modules,
         bool hasDtoTypes
     )
     {
@@ -222,6 +287,17 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("public static class ModuleExtensions");
         sb.AppendLine("{");
+
+        // Generate shared module instances
+        foreach (var module in modules)
+        {
+            var fieldName = GetModuleFieldName(module.FullyQualifiedName);
+            sb.AppendLine(
+                $"    internal static readonly {module.FullyQualifiedName} {fieldName} = new();"
+            );
+        }
+
+        sb.AppendLine();
         sb.AppendLine(
             "    public static IServiceCollection AddModules(this IServiceCollection services, IConfiguration configuration)"
         );
@@ -229,8 +305,9 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
         foreach (var module in modules.Where(m => m.HasConfigureServices))
         {
+            var fieldName = GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine(
-                $"        new {module.FullyQualifiedName}().ConfigureServices(services, configuration);"
+                $"        {fieldName}.ConfigureServices(services, configuration);"
             );
         }
 
@@ -259,7 +336,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
     private static void GenerateEndpointExtensions(
         SourceProductionContext context,
-        List<ModuleInfo> modules
+        ImmutableArray<ModuleInfoRecord> modules
     )
     {
         var sb = new StringBuilder();
@@ -277,19 +354,23 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
         foreach (var module in modules.Where(m => m.HasConfigureEndpoints))
         {
-            sb.AppendLine($"        new {module.FullyQualifiedName}().ConfigureEndpoints(app);");
+            var fieldName = GetModuleFieldName(module.FullyQualifiedName);
+            sb.AppendLine($"        ModuleExtensions.{fieldName}.ConfigureEndpoints(app);");
         }
 
         sb.AppendLine("        return app;");
         sb.AppendLine("    }");
         sb.AppendLine("}");
 
-        context.AddSource("EndpointExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        context.AddSource(
+            "EndpointExtensions.g.cs",
+            SourceText.From(sb.ToString(), Encoding.UTF8)
+        );
     }
 
     private static void GenerateJsonResolver(
         SourceProductionContext context,
-        List<DtoTypeInfo> dtoTypes
+        ImmutableArray<DtoTypeInfoRecord> dtoTypes
     )
     {
         var sb = new StringBuilder();
@@ -367,11 +448,176 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         );
     }
 
+    private static bool HasComponentBaseDescendant(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol componentBaseSymbol
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                if (HasComponentBaseDescendant(childNamespace, componentBaseSymbol))
+                    return true;
+            }
+            else if (member is INamedTypeSymbol typeSymbol)
+            {
+                if (InheritsFrom(typeSymbol, componentBaseSymbol))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool InheritsFrom(INamedTypeSymbol typeSymbol, INamedTypeSymbol baseType)
+    {
+        var current = typeSymbol.BaseType;
+        while (current is not null)
+        {
+            if (SymbolEqualityComparer.Default.Equals(current, baseType))
+                return true;
+            current = current.BaseType;
+        }
+        return false;
+    }
+
+    private static void GenerateRazorComponentExtensions(
+        SourceProductionContext context,
+        ImmutableArray<ModuleInfoRecord> modules
+    )
+    {
+        var razorModules = modules.Where(m => m.HasRazorComponents).ToList();
+
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("using Microsoft.AspNetCore.Builder;");
+        sb.AppendLine();
+        sb.AppendLine("namespace SimpleModule.Core;");
+        sb.AppendLine();
+        sb.AppendLine("public static class RazorComponentExtensions");
+        sb.AppendLine("{");
+        sb.AppendLine(
+            "    public static RazorComponentsEndpointConventionBuilder AddModuleAssemblies("
+        );
+        sb.AppendLine(
+            "        this RazorComponentsEndpointConventionBuilder builder)"
+        );
+        sb.AppendLine("    {");
+
+        if (razorModules.Count > 0)
+        {
+            sb.AppendLine("        builder.AddAdditionalAssemblies(");
+            for (var i = 0; i < razorModules.Count; i++)
+            {
+                var suffix = i < razorModules.Count - 1 ? "," : ");";
+                sb.AppendLine(
+                    $"            typeof({razorModules[i].FullyQualifiedName}).Assembly{suffix}"
+                );
+            }
+        }
+
+        sb.AppendLine("        return builder;");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource(
+            "RazorComponentExtensions.g.cs",
+            SourceText.From(sb.ToString(), Encoding.UTF8)
+        );
+    }
+
+    private static string GetModuleFieldName(string fullyQualifiedName)
+    {
+        var name = fullyQualifiedName.Replace("global::", "").Replace(".", "_");
+        return $"s_{name}";
+    }
+
+    #region Equatable data model for incremental caching
+
+    // These record types implement value equality so the incremental generator
+    // pipeline can detect when the extracted data hasn't changed and skip
+    // re-generating source files.
+
+    private readonly record struct DiscoveryData(
+        ImmutableArray<ModuleInfoRecord> Modules,
+        ImmutableArray<DtoTypeInfoRecord> DtoTypes
+    )
+    {
+        public static readonly DiscoveryData Empty = new(
+            ImmutableArray<ModuleInfoRecord>.Empty,
+            ImmutableArray<DtoTypeInfoRecord>.Empty
+        );
+
+        public bool Equals(DiscoveryData other)
+        {
+            return Modules.SequenceEqual(other.Modules)
+                && DtoTypes.SequenceEqual(other.DtoTypes);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                foreach (var m in Modules)
+                    hash = hash * 31 + m.GetHashCode();
+                foreach (var d in DtoTypes)
+                    hash = hash * 31 + d.GetHashCode();
+                return hash;
+            }
+        }
+    }
+
+    private readonly record struct ModuleInfoRecord(
+        string FullyQualifiedName,
+        bool HasConfigureServices,
+        bool HasConfigureEndpoints,
+        bool HasRazorComponents
+    );
+
+    private readonly record struct DtoTypeInfoRecord(
+        string FullyQualifiedName,
+        string SafeName,
+        ImmutableArray<DtoPropertyInfoRecord> Properties
+    )
+    {
+        public bool Equals(DtoTypeInfoRecord other)
+        {
+            return FullyQualifiedName == other.FullyQualifiedName
+                && SafeName == other.SafeName
+                && Properties.SequenceEqual(other.Properties);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 31 + FullyQualifiedName.GetHashCode();
+                hash = hash * 31 + SafeName.GetHashCode();
+                foreach (var p in Properties)
+                    hash = hash * 31 + p.GetHashCode();
+                return hash;
+            }
+        }
+    }
+
+    private readonly record struct DtoPropertyInfoRecord(
+        string Name,
+        string TypeFqn,
+        bool HasSetter
+    );
+
+    #endregion
+
+    #region Mutable working types (used during symbol traversal only)
+
     private sealed class ModuleInfo
     {
         public string FullyQualifiedName { get; set; } = "";
         public bool HasConfigureServices { get; set; }
         public bool HasConfigureEndpoints { get; set; }
+        public bool HasRazorComponents { get; set; }
     }
 
     private sealed class DtoTypeInfo
@@ -387,4 +633,6 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         public string TypeFqn { get; set; } = "";
         public bool HasSetter { get; set; }
     }
+
+    #endregion
 }
