@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@inject NavigationManager Navigation
 
 <nav class="sticky top-0 z-50 border-b border-border bg-surface-overlay" style="backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
     <div class="max-w-6xl mx-auto flex items-center px-6 py-3">
@@ -12,6 +11,8 @@
             {
                 <div class="hidden sm:flex items-center gap-1">
                     <a href="/" class="@NavLinkClass("/")">Dashboard</a>
+                    <a href="/admin/users" class="@NavLinkClass("/admin/users")">Users</a>
+                    <a href="/admin/roles" class="@NavLinkClass("/admin/roles")">Roles</a>
                     <a href="/swagger" class="@NavLinkClass("/swagger")">API Docs</a>
                     <a href="/health/live" class="@NavLinkClass("/health/live")">Health</a>
                 </div>
@@ -53,6 +54,15 @@
                                 Security
                             </a>
                             <div class="user-dropdown-divider"></div>
+                            <a href="/admin/users" class="user-dropdown-item">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                Manage Users
+                            </a>
+                            <a href="/admin/roles" class="user-dropdown-item">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                Manage Roles
+                            </a>
+                            <div class="user-dropdown-divider"></div>
                             <form method="post" action="/Identity/Account/Logout" @formname="nav-logout" id="nav-logout-form">
                                 <AntiforgeryToken />
                                 <button type="submit" class="user-dropdown-item danger w-full text-left bg-transparent border-none" style="font-family:inherit;font-size:inherit;">
@@ -77,36 +87,7 @@
     @Body
 </main>
 
-<script suppress-error="BL9992">
-    function toggleUserMenu() {
-        var dropdown = document.getElementById('user-dropdown');
-        var btn = document.getElementById('user-menu-btn');
-        var chevron = document.getElementById('user-menu-chevron');
-        var isOpen = dropdown.classList.contains('open');
-        if (isOpen) {
-            dropdown.classList.remove('open');
-            btn.setAttribute('aria-expanded', 'false');
-            chevron.style.transform = '';
-        } else {
-            dropdown.classList.add('open');
-            btn.setAttribute('aria-expanded', 'true');
-            chevron.style.transform = 'rotate(180deg)';
-        }
-    }
-    document.addEventListener('click', function(e) {
-        var wrap = document.getElementById('user-menu');
-        if (wrap && !wrap.contains(e.target)) {
-            var dropdown = document.getElementById('user-dropdown');
-            var btn = document.getElementById('user-menu-btn');
-            var chevron = document.getElementById('user-menu-chevron');
-            if (dropdown && dropdown.classList.contains('open')) {
-                dropdown.classList.remove('open');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
-                if (chevron) chevron.style.transform = '';
-            }
-        }
-    });
-</script>
+<script suppress-error="BL9992" src="/js/shell.js"></script>
 
 @code {
     [CascadingParameter]
@@ -119,8 +100,8 @@
 
     private string NavLinkClass(string path)
     {
-        var uri = new Uri(Navigation.Uri);
-        var isActive = uri.AbsolutePath.Equals(path, StringComparison.OrdinalIgnoreCase);
+        var currentPath = HttpContext?.Request.Path.ToString() ?? "";
+        var isActive = currentPath.Equals(path, StringComparison.OrdinalIgnoreCase);
         return isActive
             ? "text-sm font-medium text-primary no-underline px-3 py-1.5 rounded-lg bg-primary-subtle transition-all duration-200"
             : "text-sm text-text-muted no-underline px-3 py-1.5 rounded-lg hover:text-text hover:bg-surface-raised transition-all duration-200";
