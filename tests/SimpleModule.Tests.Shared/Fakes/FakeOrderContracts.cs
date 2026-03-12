@@ -27,4 +27,29 @@ public class FakeOrderContracts : IOrderContracts
         Orders.Add(order);
         return Task.FromResult(order);
     }
+
+    public Task<Order> UpdateOrderAsync(int id, UpdateOrderRequest request)
+    {
+        var order = Orders.FirstOrDefault(o => o.Id == id);
+        if (order is null)
+        {
+            throw new SimpleModule.Core.Exceptions.NotFoundException("Order", id);
+        }
+
+        order.UserId = request.UserId;
+        order.Items = request.Items;
+        return Task.FromResult(order);
+    }
+
+    public Task DeleteOrderAsync(int id)
+    {
+        var order = Orders.FirstOrDefault(o => o.Id == id);
+        if (order is null)
+        {
+            throw new SimpleModule.Core.Exceptions.NotFoundException("Order", id);
+        }
+
+        Orders.Remove(order);
+        return Task.CompletedTask;
+    }
 }

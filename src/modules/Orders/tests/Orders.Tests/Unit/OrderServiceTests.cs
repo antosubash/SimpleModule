@@ -157,4 +157,88 @@ public sealed class OrderServiceTests : IDisposable
         found.Should().NotBeNull();
         found!.Id.Should().Be(created.Id);
     }
+
+    [Fact]
+    public async Task UpdateOrderAsync_WithValidData_UpdatesOrder()
+    {
+        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        var widget = new Product { Id = 1, Name = "Widget", Price = 10.00m };
+        _products
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .Returns(callInfo =>
+            {
+                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                return new List<Product> { widget }
+                        .Where(p => ids.Contains(p.Id))
+                        .ToList() as IReadOnlyList<Product>;
+            });
+
+        var createRequest = new CreateOrderRequest
+        {
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+        };
+        var created = await _sut.CreateOrderAsync(createRequest);
+
+        var updateRequest = new UpdateOrderRequest
+        {
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 5 }],
+        };
+        var updated = await _sut.UpdateOrderAsync(created.Id, updateRequest);
+
+        updated.Total.Should().Be(50.00m);
+        updated.Items.Should().HaveCount(1);
+        updated.Items[0].Quantity.Should().Be(5);
+    }
+
+    [Fact]
+    public async Task UpdateOrderAsync_WithNonExistentOrder_ThrowsNotFoundException()
+    {
+        var request = new UpdateOrderRequest
+        {
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+        };
+
+        var act = () => _sut.UpdateOrderAsync(99999, request);
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Order*99999*not found*");
+    }
+
+    [Fact]
+    public async Task DeleteOrderAsync_WithExistingOrder_RemovesOrder()
+    {
+        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        var widget = new Product { Id = 1, Name = "Widget", Price = 10.00m };
+        _products
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .Returns(callInfo =>
+            {
+                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                return new List<Product> { widget }
+                        .Where(p => ids.Contains(p.Id))
+                        .ToList() as IReadOnlyList<Product>;
+            });
+
+        var createRequest = new CreateOrderRequest
+        {
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+        };
+        var created = await _sut.CreateOrderAsync(createRequest);
+
+        await _sut.DeleteOrderAsync(created.Id);
+
+        var found = await _sut.GetOrderByIdAsync(created.Id);
+        found.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteOrderAsync_WithNonExistentOrder_ThrowsNotFoundException()
+    {
+        var act = () => _sut.DeleteOrderAsync(99999);
+
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Order*99999*not found*");
+    }
 }

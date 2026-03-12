@@ -71,6 +71,59 @@ public partial class OrderService(
         return order;
     }
 
+    public async Task<Order> UpdateOrderAsync(int id, UpdateOrderRequest request)
+    {
+        var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
+        if (order is null)
+        {
+            throw new NotFoundException("Order", id);
+        }
+
+        var user = await users.GetUserByIdAsync(request.UserId);
+        if (user is null)
+        {
+            throw new NotFoundException("User", request.UserId);
+        }
+
+        var productIds = request.Items.Select(i => i.ProductId).Distinct();
+        var productList = await products.GetProductsByIdsAsync(productIds);
+        var productMap = productList.ToDictionary(p => p.Id);
+
+        foreach (var item in request.Items)
+        {
+            if (!productMap.ContainsKey(item.ProductId))
+            {
+                throw new NotFoundException("Product", item.ProductId);
+            }
+        }
+
+        var total = request.Items.Sum(item => productMap[item.ProductId].Price * item.Quantity);
+
+        order.UserId = request.UserId;
+        order.Items = request.Items;
+        order.Total = total;
+
+        await db.SaveChangesAsync();
+
+        LogOrderUpdated(logger, order.Id, order.UserId, order.Total);
+
+        return order;
+    }
+
+    public async Task DeleteOrderAsync(int id)
+    {
+        var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+        if (order is null)
+        {
+            throw new NotFoundException("Order", id);
+        }
+
+        db.Orders.Remove(order);
+        await db.SaveChangesAsync();
+
+        LogOrderDeleted(logger, id);
+    }
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Order with ID {OrderId} not found")]
     private static partial void LogOrderNotFound(ILogger logger, int orderId);
 
@@ -84,4 +137,18 @@ public partial class OrderService(
         string userId,
         decimal total
     );
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Order {OrderId} updated for user {UserId}, total: {Total}"
+    )]
+    private static partial void LogOrderUpdated(
+        ILogger logger,
+        int orderId,
+        string userId,
+        decimal total
+    );
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Order {OrderId} deleted")]
+    private static partial void LogOrderDeleted(ILogger logger, int orderId);
 }

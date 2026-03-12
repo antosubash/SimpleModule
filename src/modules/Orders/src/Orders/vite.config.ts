@@ -8,7 +8,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'Pages/index.ts'),
       formats: ['es'],
-      fileName: () => 'Products.pages.js',
+      fileName: () => 'Orders.pages.js',
     },
     outDir: 'wwwroot',
     emptyOutDir: false,
