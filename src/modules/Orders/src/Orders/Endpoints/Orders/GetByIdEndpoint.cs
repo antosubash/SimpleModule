@@ -1,16 +1,17 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Orders.Contracts;
 
-namespace SimpleModule.Orders.Features.GetOrderById;
+namespace SimpleModule.Orders.Endpoints.Orders;
 
-public static class GetOrderByIdEndpoint
+public class GetByIdEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group.MapGet(
+        app.MapGet(
             "/{id}",
             async Task<Results<Ok<Order>, NotFound>> (int id, IOrderContracts orderContracts) =>
             {

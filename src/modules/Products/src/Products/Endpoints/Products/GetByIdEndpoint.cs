@@ -1,16 +1,17 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Products.Contracts;
 
-namespace SimpleModule.Products.Features.GetProductById;
+namespace SimpleModule.Products.Endpoints.Products;
 
-public static class GetProductByIdEndpoint
+public class GetByIdEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group.MapGet(
+        app.MapGet(
             "/{id}",
             async Task<Results<Ok<Product>, NotFound>> (
                 int id,

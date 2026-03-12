@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
@@ -7,7 +7,7 @@ using OpenIddict.Server.AspNetCore;
 using SimpleModule.Core.Constants;
 using SimpleModule.Users.Entities;
 
-namespace SimpleModule.Users.Features.Connect;
+namespace SimpleModule.Users.Endpoints.Connect;
 
 public static class LogoutEndpoint
 {

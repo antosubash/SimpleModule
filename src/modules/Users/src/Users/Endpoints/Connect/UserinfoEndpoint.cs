@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
@@ -9,7 +9,7 @@ using SimpleModule.Core.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace SimpleModule.Users.Features.Connect;
+namespace SimpleModule.Users.Endpoints.Connect;
 
 public static class UserinfoEndpoint
 {

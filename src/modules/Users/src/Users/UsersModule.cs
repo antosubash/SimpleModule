@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -12,17 +12,15 @@ using SimpleModule.Core.Constants;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Endpoints.Admin;
+using SimpleModule.Users.Endpoints.Connect;
+using SimpleModule.Users.Endpoints.Users;
 using SimpleModule.Users.Entities;
-using SimpleModule.Users.Features.Admin;
-using SimpleModule.Users.Features.Connect;
-using SimpleModule.Users.Features.GetAllUsers;
-using SimpleModule.Users.Features.GetCurrentUser;
-using SimpleModule.Users.Features.GetUserById;
 using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users;
 
-[Module(UsersConstants.ModuleName)]
+[Module(UsersConstants.ModuleName, RoutePrefix = UsersConstants.RoutePrefix)]
 public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -228,9 +226,9 @@ public class UsersModule : IModule
 
         // User API endpoints
         var usersGroup = endpoints.MapGroup(UsersConstants.RoutePrefix);
-        GetAllUsersEndpoint.Map(usersGroup);
-        GetUserByIdEndpoint.Map(usersGroup);
-        GetCurrentUserEndpoint.Map(usersGroup);
+        GetAllEndpoint.Map(usersGroup);
+        GetByIdEndpoint.Map(usersGroup);
+        GetCurrentEndpoint.Map(usersGroup);
 
         // Download personal data endpoint (cannot be a Blazor component — returns a file)
         usersGroup

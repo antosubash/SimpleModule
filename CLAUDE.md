@@ -5,7 +5,7 @@ Modular monolith framework for .NET with compile-time module discovery via Rosly
 ## Architecture
 
 - **SimpleModule.Core** — `IModule` interface + `[Module]` attribute. References `Microsoft.AspNetCore.App` framework.
-- **SimpleModule.Generator** — Incremental source generator (`netstandard2.0`) that discovers `[Module]`-decorated classes across referenced assemblies and generates `AddModules()` / `MapModuleEndpoints()` extension methods with direct `new` calls (no DI for module resolution).
+- **SimpleModule.Generator** — Incremental source generator (`netstandard2.0`) that discovers `[Module]`-decorated classes and `IEndpoint` implementors across referenced assemblies and generates `AddModules()` / `MapModuleEndpoints()` extension methods with direct `new` calls (no DI for module resolution). Endpoints implementing `IEndpoint` are auto-registered under the module's `RoutePrefix`.
 - **SimpleModule.Api** — Host app (net10.0, PublishAot). References Core, Generator (as Analyzer), and all module projects.
 - **src/modules/** — Each module is a class library (net10.0) referencing Core + `Microsoft.AspNetCore.App` framework.
 
@@ -31,9 +31,10 @@ dotnet run --project src/SimpleModule.Api
    - Shared DTO types marked with `[Dto]`
 3. Create `src/modules/<Name>/src/<Name>/` with:
    - `<Name>.csproj` (references Core + `<Name>.Contracts`; uses `Microsoft.NET.Sdk` with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`)
-   - `<Name>Module.cs` — implements `IModule` with `[Module("Name")]`
-   - `Features/<FeatureName>/` folders containing endpoint and handler classes
+   - `<Name>Module.cs` — implements `IModule` with `[Module("Name", RoutePrefix = "<Name>Constants.RoutePrefix")]`
+   - `Endpoints/<Name>/` folder containing endpoint classes implementing `IEndpoint` (auto-discovered by source generator)
    - Register the contract interface against implementation in `ConfigureServices`
+   - **Escape hatch**: For endpoints that can't be auto-discovered (e.g., different route groups, auth endpoints), implement `ConfigureEndpoints` on the module class
 4. Create `src/modules/<Name>/tests/<Name>.Tests/` with test project
 5. Add `ProjectReference` to `src/SimpleModule.Api/SimpleModule.Api.csproj` pointing to `<Name>/src/<Name>.csproj`
 6. Add all projects to `SimpleModule.slnx`

@@ -28,9 +28,9 @@ public sealed class FeatureTemplates
         {
             var refPath = Path.Combine(
                 _solution.GetModuleProjectPath(_refModule),
-                "Features",
-                $"GetAll{_refModule}",
-                $"GetAll{_refModule}Endpoint.cs"
+                "Endpoints",
+                _refModule,
+                "GetAllEndpoint.cs"
             );
 
             if (File.Exists(refPath))
@@ -95,16 +95,16 @@ public sealed class FeatureTemplates
             singularName
         );
 
-        // Replace the feature folder namespace
+        // Replace the endpoint namespace
         content = content.Replace(
-            $"Features.GetAll{moduleName}",
-            $"Features.{featureName}",
+            $"Endpoints.{moduleName}",
+            $"Endpoints.{moduleName}",
             StringComparison.Ordinal
         );
 
         // Replace the class name
         content = content.Replace(
-            $"GetAll{moduleName}Endpoint",
+            "GetAllEndpoint",
             $"{featureName}Endpoint",
             StringComparison.Ordinal
         );
@@ -229,12 +229,15 @@ public sealed class FeatureTemplates
         {
             if (
                 lines[i].Contains("namespace ", StringComparison.Ordinal)
-                && lines[i].Contains(".Features.", StringComparison.Ordinal)
+                && lines[i].Contains(".Endpoints.", StringComparison.Ordinal)
             )
             {
-                // Extract the namespace prefix and replace the feature name
-                var nsPrefix = lines[i][..lines[i].IndexOf(".Features.", StringComparison.Ordinal)];
-                lines[i] = $"{nsPrefix}.Features.{featureName};";
+                // Extract the namespace prefix and replace the endpoint namespace
+                var nsPrefix = lines[i][..lines[i].IndexOf(".Endpoints.", StringComparison.Ordinal)];
+                var moduleSuffix = lines[i].Contains(';', StringComparison.Ordinal)
+                    ? lines[i][(lines[i].IndexOf(".Endpoints.", StringComparison.Ordinal) + ".Endpoints.".Length)..lines[i].IndexOf(';', StringComparison.Ordinal)]
+                    : moduleName;
+                lines[i] = $"{nsPrefix}.Endpoints.{moduleSuffix};";
             }
         }
 
@@ -316,15 +319,16 @@ public sealed class FeatureTemplates
             using Microsoft.AspNetCore.Builder;
             using Microsoft.AspNetCore.Http;
             using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
             using SimpleModule.{{moduleName}}.Contracts;
 
-            namespace SimpleModule.{{moduleName}}.Features.{{featureName}};
+            namespace SimpleModule.{{moduleName}}.Endpoints.{{moduleName}};
 
-            public static class {{featureName}}Endpoint
+            public class {{featureName}}Endpoint : IEndpoint
             {
-                public static void Map(IEndpointRouteBuilder group)
+                public void Map(IEndpointRouteBuilder app)
                 {
-                    group.{{mapMethod}}(
+                    app.{{mapMethod}}(
                         "{{route}}",
                         async (I{{singularName}}Contracts contracts) =>
                         {
@@ -346,7 +350,7 @@ public sealed class FeatureTemplates
             using SimpleModule.Core.Validation;
             using SimpleModule.{{moduleName}}.Contracts;
 
-            namespace SimpleModule.{{moduleName}}.Features.{{featureName}};
+            namespace SimpleModule.{{moduleName}}.Endpoints.{{moduleName}};
 
             public static class {{featureName}}RequestValidator
             {

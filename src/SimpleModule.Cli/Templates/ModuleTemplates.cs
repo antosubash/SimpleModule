@@ -157,7 +157,7 @@ public sealed class ModuleTemplates
     public string GetAllEndpoint(string moduleName, string singularName)
     {
         var refPath = RefModulePath(
-            Path.Combine("Features", $"GetAll{_refModule}", $"GetAll{_refModule}Endpoint.cs")
+            Path.Combine("Endpoints", _refModule!, $"GetAllEndpoint.cs")
         );
         if (refPath is null)
         {
@@ -251,29 +251,12 @@ public sealed class ModuleTemplates
             return FallbackModuleClass(moduleName, singularName);
         }
 
-        // Strip using directives and Map calls for features other than GetAll
-        var stripPatterns = new List<string>();
         var lines = File.ReadAllLines(refPath).ToList();
 
-        foreach (var line in lines)
-        {
-            // Detect feature using lines like "using SimpleModule.Orders.Features.CreateOrder;"
-            if (
-                line.Contains($".Features.", StringComparison.Ordinal)
-                && !line.Contains($".Features.GetAll", StringComparison.Ordinal)
-            )
-            {
-                stripPatterns.Add(line.Trim());
-            }
-        }
-
-        // Strip extra feature using lines
-        lines.RemoveAll(line => stripPatterns.Any(p => line.Contains(p, StringComparison.Ordinal)));
-
-        // Strip extra Map calls (keep only GetAll)
+        // Strip using directives for Endpoints (auto-discovered, not needed in module)
         lines.RemoveAll(line =>
-            line.Contains(".Map(group);", StringComparison.Ordinal)
-            && !line.Contains($"GetAll", StringComparison.Ordinal)
+            line.Contains($".Endpoints.", StringComparison.Ordinal)
+            && line.TrimStart().StartsWith("using ", StringComparison.Ordinal)
         );
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
@@ -934,30 +917,21 @@ public sealed class ModuleTemplates
 
     private static string FallbackModuleClass(string moduleName, string singularName) =>
         $$"""
-            using Microsoft.AspNetCore.Builder;
-            using Microsoft.AspNetCore.Routing;
             using Microsoft.Extensions.Configuration;
             using Microsoft.Extensions.DependencyInjection;
             using SimpleModule.Core;
             using SimpleModule.Database;
             using SimpleModule.{{moduleName}}.Contracts;
-            using SimpleModule.{{moduleName}}.Features.GetAll{{moduleName}};
 
             namespace SimpleModule.{{moduleName}};
 
-            [Module({{moduleName}}Constants.ModuleName)]
+            [Module({{moduleName}}Constants.ModuleName, RoutePrefix = {{moduleName}}Constants.RoutePrefix)]
             public class {{moduleName}}Module : IModule
             {
                 public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
                 {
                     services.AddModuleDbContext<{{moduleName}}DbContext>(configuration, {{moduleName}}Constants.ModuleName);
                     services.AddScoped<I{{singularName}}Contracts, {{singularName}}Service>();
-                }
-
-                public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
-                {
-                    var group = endpoints.MapGroup({{moduleName}}Constants.RoutePrefix);
-                    GetAll{{moduleName}}Endpoint.Map(group);
                 }
             }
             """;
@@ -1030,15 +1004,16 @@ public sealed class ModuleTemplates
             using Microsoft.AspNetCore.Builder;
             using Microsoft.AspNetCore.Http;
             using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
             using SimpleModule.{{moduleName}}.Contracts;
 
-            namespace SimpleModule.{{moduleName}}.Features.GetAll{{moduleName}};
+            namespace SimpleModule.{{moduleName}}.Endpoints.{{moduleName}};
 
-            public static class GetAll{{moduleName}}Endpoint
+            public class GetAllEndpoint : IEndpoint
             {
-                public static void Map(IEndpointRouteBuilder group)
+                public void Map(IEndpointRouteBuilder app)
                 {
-                    group.MapGet(
+                    app.MapGet(
                         "/",
                         async (I{{singularName}}Contracts contracts) =>
                         {

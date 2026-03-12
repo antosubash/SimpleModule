@@ -1,21 +1,21 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Core.Exceptions;
-using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
 
-namespace SimpleModule.Orders.Features.CreateOrder;
+namespace SimpleModule.Orders.Endpoints.Orders;
 
-public static class CreateOrderEndpoint
+public class CreateEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group.MapPost(
+        app.MapPost(
             "/",
             async (CreateOrderRequest request, IOrderContracts orderContracts) =>
             {
-                var validation = CreateOrderRequestValidator.Validate(request);
+                var validation = CreateRequestValidator.Validate(request);
                 if (!validation.IsValid)
                 {
                     throw new ValidationException(validation.Errors);

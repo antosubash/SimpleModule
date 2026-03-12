@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
@@ -8,12 +8,10 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Products.Contracts;
-using SimpleModule.Products.Features.GetAllProducts;
-using SimpleModule.Products.Features.GetProductById;
 
 namespace SimpleModule.Products;
 
-[Module(ProductsConstants.ModuleName)]
+[Module(ProductsConstants.ModuleName, RoutePrefix = ProductsConstants.RoutePrefix)]
 public class ProductsModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -40,11 +38,7 @@ public class ProductsModule : IModule
 
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup(ProductsConstants.RoutePrefix);
-        GetAllProductsEndpoint.Map(group);
-        GetProductByIdEndpoint.Map(group);
-
-        // Inertia page
+        // Inertia page (not auto-discovered — uses a different route group)
         endpoints
             .MapGroup("/products")
             .MapGet(

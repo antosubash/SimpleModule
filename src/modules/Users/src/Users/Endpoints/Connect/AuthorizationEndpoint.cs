@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -12,7 +12,7 @@ using SimpleModule.Core.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace SimpleModule.Users.Features.Connect;
+namespace SimpleModule.Users.Endpoints.Connect;
 
 public static class AuthorizationEndpoint
 {
