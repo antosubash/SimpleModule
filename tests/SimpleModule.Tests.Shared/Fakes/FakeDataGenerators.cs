@@ -45,4 +45,33 @@ public static class FakeDataGenerators
                 f => f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture)
             )
             .RuleFor(r => r.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)));
+
+    public static Faker<UpdateOrderRequest> UpdateOrderRequestFaker { get; } =
+        new Faker<UpdateOrderRequest>()
+            .RuleFor(
+                r => r.UserId,
+                f => f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture)
+            )
+            .RuleFor(r => r.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)));
+
+    public static Faker<CreateProductRequest> CreateProductRequestFaker { get; } =
+        new Faker<CreateProductRequest>()
+            .RuleFor(r => r.Name, f => f.Commerce.ProductName())
+            .RuleFor(r => r.Price, f => f.Finance.Amount(1, 1000));
+
+    public static Faker<UpdateProductRequest> UpdateProductRequestFaker { get; } =
+        new Faker<UpdateProductRequest>()
+            .RuleFor(r => r.Name, f => f.Commerce.ProductName())
+            .RuleFor(r => r.Price, f => f.Finance.Amount(1, 1000));
+
+    public static Faker<CreateUserRequest> CreateUserRequestFaker { get; } =
+        new Faker<CreateUserRequest>()
+            .RuleFor(r => r.Email, f => f.Internet.Email())
+            .RuleFor(r => r.DisplayName, f => f.Person.FullName)
+            .RuleFor(r => r.Password, _ => "TestPass1234");
+
+    public static Faker<UpdateUserRequest> UpdateUserRequestFaker { get; } =
+        new Faker<UpdateUserRequest>()
+            .RuleFor(r => r.Email, f => f.Internet.Email())
+            .RuleFor(r => r.DisplayName, f => f.Person.FullName);
 }

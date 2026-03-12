@@ -229,6 +229,9 @@ public class UsersModule : IModule
         GetAllEndpoint.Map(usersGroup);
         GetByIdEndpoint.Map(usersGroup);
         GetCurrentEndpoint.Map(usersGroup);
+        CreateEndpoint.Map(usersGroup);
+        UpdateEndpoint.Map(usersGroup);
+        DeleteEndpoint.Map(usersGroup);
 
         // Download personal data endpoint (cannot be a Blazor component — returns a file)
         usersGroup

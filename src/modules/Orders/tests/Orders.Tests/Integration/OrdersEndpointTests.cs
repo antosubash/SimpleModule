@@ -45,4 +45,26 @@ public class OrdersEndpointTests : IClassFixture<SimpleModuleWebApplicationFacto
         // User doesn't exist, so the order service throws NotFoundException
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task UpdateOrder_WithNonExistentId_Returns404()
+    {
+        var request = new UpdateOrderRequest
+        {
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+        };
+
+        var response = await _client.PutAsJsonAsync("/api/orders/99999", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteOrder_WithNonExistentId_Returns404()
+    {
+        var response = await _client.DeleteAsync("/api/orders/99999");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 }

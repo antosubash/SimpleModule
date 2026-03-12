@@ -4,6 +4,7 @@ using System.Security.Claims;
 using FluentAssertions;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 
 namespace Users.Tests.Integration;
 
@@ -70,6 +71,69 @@ public class UsersEndpointTests : IClassFixture<SimpleModuleWebApplicationFactor
         );
 
         var response = await client.GetAsync("/api/users/me");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task CreateUser_Unauthenticated_ReturnsUnauthorized()
+    {
+        var request = new CreateUserRequest
+        {
+            Email = "new@test.com",
+            DisplayName = "New User",
+            Password = "TestPass1234",
+        };
+
+        var response = await _unauthenticatedClient.PostAsJsonAsync("/api/users", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task CreateUser_Authenticated_Returns201()
+    {
+        var client = _factory.CreateAuthenticatedClient();
+        var request = new CreateUserRequest
+        {
+            Email = "newuser@test.com",
+            DisplayName = "New User",
+            Password = "TestPass1234",
+        };
+
+        var response = await client.PostAsJsonAsync("/api/users", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task UpdateUser_Unauthenticated_ReturnsUnauthorized()
+    {
+        var request = new UpdateUserRequest
+        {
+            Email = "updated@test.com",
+            DisplayName = "Updated",
+        };
+
+        var response = await _unauthenticatedClient.PutAsJsonAsync("/api/users/some-id", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteUser_Unauthenticated_ReturnsUnauthorized()
+    {
+        var response = await _unauthenticatedClient.DeleteAsync("/api/users/some-id");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteUser_Authenticated_WithNonExistentId_Returns404()
+    {
+        var client = _factory.CreateAuthenticatedClient();
+
+        var response = await client.DeleteAsync("/api/users/nonexistent-id");
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
