@@ -44,45 +44,32 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => router.get('/admin/users')}
-          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          &larr; Back
-        </button>
-        <h1 className="text-3xl font-bold">Edit User</h1>
+    <div className="max-w-3xl">
+      <div className="flex items-center gap-3 mb-1">
+        <a href="/admin/users" className="text-text-muted hover:text-text transition-colors no-underline">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+          <span className="gradient-text">Edit User</span>
+        </h1>
       </div>
-
-      <div className="mb-6 text-sm text-gray-500 dark:text-gray-400">
-        <span>Created: {new Date(user.createdAt).toLocaleString()}</span>
+      <p className="text-text-muted text-sm ml-7 mb-6">
+        Created: {new Date(user.createdAt).toLocaleString()}
         {user.lastLoginAt && (
           <span className="ml-4">Last login: {new Date(user.lastLoginAt).toLocaleString()}</span>
         )}
-      </div>
+      </p>
 
-      {/* User Details Form */}
-      <form onSubmit={handleSubmit} className="mb-8 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <form onSubmit={handleSubmit} className="glass-card p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Details</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Display Name</label>
-            <input
-              type="text"
-              name="displayName"
-              defaultValue={user.displayName}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" name="displayName" defaultValue={user.displayName} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              defaultValue={user.email}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="email" name="email" defaultValue={user.email} />
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -90,21 +77,15 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
               name="emailConfirmed"
               id="emailConfirmed"
               defaultChecked={user.emailConfirmed}
-              className="rounded border-gray-300"
+              className="accent-primary"
             />
-            <label htmlFor="emailConfirmed" className="text-sm">Email confirmed</label>
+            <label htmlFor="emailConfirmed" className="text-sm mb-0">Email confirmed</label>
           </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Save Details
-          </button>
+          <button type="submit" className="btn-primary">Save Details</button>
         </div>
       </form>
 
-      {/* Roles Form */}
-      <form onSubmit={handleRolesSubmit} className="mb-8 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <form onSubmit={handleRolesSubmit} className="glass-card p-6 mb-6">
         <h2 className="text-lg font-semibold mb-4">Roles</h2>
         <div className="space-y-2 mb-4">
           {allRoles.map((role) => (
@@ -115,50 +96,36 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
                 value={role.name ?? ''}
                 id={`role-${role.id}`}
                 defaultChecked={userRoles.includes(role.name ?? '')}
-                className="rounded border-gray-300"
+                className="accent-primary"
               />
-              <label htmlFor={`role-${role.id}`} className="text-sm">
+              <label htmlFor={`role-${role.id}`} className="text-sm mb-0">
                 {role.name}
                 {role.description && (
-                  <span className="text-gray-500 ml-1">— {role.description}</span>
+                  <span className="text-text-muted ml-1">&mdash; {role.description}</span>
                 )}
               </label>
             </div>
           ))}
           {allRoles.length === 0 && (
-            <p className="text-sm text-gray-500">No roles defined.</p>
+            <p className="text-sm text-text-muted">No roles defined.</p>
           )}
         </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Save Roles
-        </button>
+        <button type="submit" className="btn-primary">Save Roles</button>
       </form>
 
-      {/* Lock/Unlock */}
-      <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="glass-card p-6">
         <h2 className="text-lg font-semibold mb-4">Account Status</h2>
         {user.isLockedOut ? (
           <div>
-            <p className="text-sm text-red-600 dark:text-red-400 mb-3">This account is locked.</p>
-            <button
-              onClick={handleUnlock}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
+            <p className="text-sm text-danger mb-3">This account is locked.</p>
+            <button onClick={handleUnlock} className="btn-primary" style={{ background: 'var(--color-success)' }}>
               Unlock Account
             </button>
           </div>
         ) : (
           <div>
-            <p className="text-sm text-green-600 dark:text-green-400 mb-3">This account is active.</p>
-            <button
-              onClick={handleLock}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Lock Account
-            </button>
+            <p className="text-sm text-success mb-3">This account is active.</p>
+            <button onClick={handleLock} className="btn-danger">Lock Account</button>
           </div>
         )}
       </div>

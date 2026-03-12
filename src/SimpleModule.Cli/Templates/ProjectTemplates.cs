@@ -30,9 +30,7 @@ public sealed class ProjectTemplates
         );
 
         // Strip /tests/modules/ folder entirely (module tests are now inside each module)
-        lines.RemoveAll(line =>
-            line.Contains("/tests/modules/", StringComparison.Ordinal)
-        );
+        lines.RemoveAll(line => line.Contains("/tests/modules/", StringComparison.Ordinal));
 
         // Remove CLI project entry
         lines.RemoveAll(line => line.Contains("SimpleModule.Cli", StringComparison.Ordinal));

@@ -28,10 +28,15 @@ public class ProductsModule : IModule
         GetProductByIdEndpoint.Map(group);
 
         // Inertia page
-        endpoints.MapGroup("/products").MapGet(
-            "/browse",
-            async (IProductContracts products) =>
-                Inertia.Render("Products/Browse", new { products = await products.GetAllProductsAsync() })
-        );
+        endpoints
+            .MapGroup("/products")
+            .MapGet(
+                "/browse",
+                async (IProductContracts products) =>
+                    Inertia.Render(
+                        "Products/Browse",
+                        new { products = await products.GetAllProductsAsync() }
+                    )
+            );
     }
 }

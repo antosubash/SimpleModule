@@ -32,10 +32,14 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Users</h1>
-        <span className="text-gray-500">{totalCount} total</span>
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+            <span className="gradient-text">Users</span>
+          </h1>
+          <p className="text-text-muted text-sm mt-1">{totalCount} total users</p>
+        </div>
       </div>
 
       <form onSubmit={handleSearch} className="mb-6 flex gap-2">
@@ -44,45 +48,39 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Search by name or email..."
-          className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1"
         />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
+        <button type="submit" className="btn-primary">
           Search
         </button>
       </form>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="glass-card overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead>
             <tr>
-              <th className="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Name</th>
-              <th className="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Email</th>
-              <th className="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Roles</th>
-              <th className="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Status</th>
-              <th className="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400">Created</th>
-              <th className="px-4 py-3 text-sm font-medium text-gray-500 dark:text-gray-400"></th>
+              <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Roles</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Created</th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody>
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <td className="px-4 py-3 font-medium">{user.displayName || '—'}</td>
-                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+              <tr key={user.id} className="hover:bg-surface-raised transition-colors">
+                <td className="px-4 py-3 font-medium text-text">{user.displayName || '\u2014'}</td>
+                <td className="px-4 py-3 text-text-secondary">
                   {user.email}
                   {!user.emailConfirmed && (
-                    <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">unverified</span>
+                    <span className="ml-2 badge-warning">unverified</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1 flex-wrap">
                     {user.roles.map((role) => (
-                      <span
-                        key={role}
-                        className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                      >
+                      <span key={role} className="badge-info">
                         {role}
                       </span>
                     ))}
@@ -90,18 +88,18 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
                 </td>
                 <td className="px-4 py-3">
                   {user.isLockedOut ? (
-                    <span className="text-red-600 dark:text-red-400 text-sm">Locked</span>
+                    <span className="badge-danger">Locked</span>
                   ) : (
-                    <span className="text-green-600 dark:text-green-400 text-sm">Active</span>
+                    <span className="badge-success">Active</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
+                <td className="px-4 py-3 text-sm text-text-muted">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3">
                   <button
                     onClick={() => router.get(`/admin/users/${user.id}/edit`)}
-                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                    className="text-primary hover:text-primary-hover text-sm font-medium bg-transparent border-none cursor-pointer"
                   >
                     Edit
                   </button>
@@ -117,17 +115,17 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
           <button
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+            className="btn-secondary btn-sm disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="px-3 py-1 text-gray-600 dark:text-gray-400">
+          <span className="px-3 py-1 text-text-muted text-sm">
             Page {page} of {totalPages}
           </span>
           <button
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+            className="btn-secondary btn-sm disabled:opacity-50"
           >
             Next
           </button>

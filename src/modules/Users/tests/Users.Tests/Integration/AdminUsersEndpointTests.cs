@@ -73,11 +73,13 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     public async Task UpdateUser_NonexistentId_ReturnsNotFound()
     {
         var client = CreateAdminClient();
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["displayName"] = "New Name",
-            ["email"] = "new@example.com",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["displayName"] = "New Name",
+                ["email"] = "new@example.com",
+            }
+        );
         var response = await client.PostAsync("/admin/users/nonexistent-id", content);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -86,10 +88,9 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     public async Task SetRoles_NonexistentId_ReturnsNotFound()
     {
         var client = CreateAdminClient();
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["roles"] = "Admin",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string> { ["roles"] = "Admin" }
+        );
         var response = await client.PostAsync("/admin/users/nonexistent-id/roles", content);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }

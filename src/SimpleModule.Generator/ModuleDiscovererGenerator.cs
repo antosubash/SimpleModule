@@ -473,10 +473,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("*/");
         sb.AppendLine("#endif");
 
-        context.AddSource(
-            "DtoTypeScript.g.cs",
-            SourceText.From(sb.ToString(), Encoding.UTF8)
-        );
+        context.AddSource("DtoTypeScript.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
     private static string MapCSharpTypeToTypeScript(string typeFqn)
@@ -484,18 +481,29 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         var type = typeFqn.Replace("global::", "");
 
         // Nullable<T> → T | null
-        if (type.StartsWith("System.Nullable<", StringComparison.Ordinal) && type.EndsWith(">", StringComparison.Ordinal))
+        if (
+            type.StartsWith("System.Nullable<", StringComparison.Ordinal)
+            && type.EndsWith(">", StringComparison.Ordinal)
+        )
         {
-            var inner = type.Substring("System.Nullable<".Length, type.Length - "System.Nullable<".Length - 1);
+            var inner = type.Substring(
+                "System.Nullable<".Length,
+                type.Length - "System.Nullable<".Length - 1
+            );
             return MapCSharpTypeToTypeScript(inner) + " | null";
         }
 
         // Collection types
-        if (type.StartsWith("System.Collections.Generic.List<", StringComparison.Ordinal)
+        if (
+            type.StartsWith("System.Collections.Generic.List<", StringComparison.Ordinal)
             || type.StartsWith("System.Collections.Generic.IList<", StringComparison.Ordinal)
             || type.StartsWith("System.Collections.Generic.IEnumerable<", StringComparison.Ordinal)
-            || type.StartsWith("System.Collections.Generic.IReadOnlyList<", StringComparison.Ordinal)
-            || type.StartsWith("System.Collections.Generic.ICollection<", StringComparison.Ordinal))
+            || type.StartsWith(
+                "System.Collections.Generic.IReadOnlyList<",
+                StringComparison.Ordinal
+            )
+            || type.StartsWith("System.Collections.Generic.ICollection<", StringComparison.Ordinal)
+        )
         {
             var start = type.IndexOf('<') + 1;
             var inner = type.Substring(start, type.Length - start - 1);
@@ -513,7 +521,10 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             "double" or "System.Double" => "number",
             "decimal" or "System.Decimal" => "number",
             "bool" or "System.Boolean" => "boolean",
-            "System.DateTime" or "System.DateTimeOffset" or "System.DateOnly" or "System.TimeOnly" => "string",
+            "System.DateTime"
+            or "System.DateTimeOffset"
+            or "System.DateOnly"
+            or "System.TimeOnly" => "string",
             "System.Guid" => "string",
             _ => "any",
         };
