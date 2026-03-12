@@ -2,10 +2,8 @@
   "private": true,
   "name": "@simplemodule/users",
   "scripts": {
-    "build": "vite build && cross-env VITE_BUILD_TARGET=pages vite build",
-    "build:lib": "vite build",
-    "build:pages": "cross-env VITE_BUILD_TARGET=pages vite build",
-    "watch": "cross-env VITE_BUILD_TARGET=pages vite build --watch"
+    "build": "vite build",
+    "watch": "vite build --watch"
   },
   "dependencies": {
     "qrcode": "^1.5.4"

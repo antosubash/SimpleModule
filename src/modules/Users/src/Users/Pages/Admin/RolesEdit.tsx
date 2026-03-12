@@ -26,65 +26,48 @@ export default function RolesEdit({ role, users }: Props) {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => router.get('/admin/roles')}
-          className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          &larr; Back
-        </button>
-        <h1 className="text-3xl font-bold">Edit Role</h1>
+    <div className="max-w-xl">
+      <div className="flex items-center gap-3 mb-1">
+        <a href="/admin/roles" className="text-text-muted hover:text-text transition-colors no-underline">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+          <span className="gradient-text">Edit Role</span>
+        </h1>
       </div>
+      <p className="text-text-muted text-sm ml-7 mb-6">
+        Created: {new Date(role.createdAt).toLocaleString()}
+      </p>
 
-      <form onSubmit={handleSubmit} className="mb-8 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <form onSubmit={handleSubmit} className="glass-card p-6 mb-6">
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Name</label>
-            <input
-              type="text"
-              name="name"
-              defaultValue={role.name}
-              required
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" name="name" defaultValue={role.name} required />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
-            <input
-              type="text"
-              name="description"
-              defaultValue={role.description ?? ''}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <input type="text" name="description" defaultValue={role.description ?? ''} />
           </div>
-          <div className="text-sm text-gray-500">
-            Created: {new Date(role.createdAt).toLocaleString()}
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Save
-          </button>
+          <button type="submit" className="btn-primary">Save</button>
         </div>
       </form>
 
-      <div className="p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="glass-card p-6">
         <h2 className="text-lg font-semibold mb-4">Assigned Users ({users.length})</h2>
         {users.length === 0 ? (
-          <p className="text-sm text-gray-500">No users assigned to this role.</p>
+          <p className="text-sm text-text-muted">No users assigned to this role.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-2" style={{ listStyle: 'none' }}>
             {users.map((user) => (
-              <li key={user.id} className="flex justify-between items-center py-2">
+              <li key={user.id} className="flex justify-between items-center py-2 border-t border-border">
                 <div>
-                  <span className="font-medium">{user.displayName || '—'}</span>
-                  <span className="text-gray-500 ml-2 text-sm">{user.email}</span>
+                  <span className="font-medium text-text">{user.displayName || '\u2014'}</span>
+                  <span className="text-text-muted ml-2 text-sm">{user.email}</span>
                 </div>
                 <button
                   onClick={() => router.get(`/admin/users/${user.id}/edit`)}
-                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm"
+                  className="text-primary hover:text-primary-hover text-sm font-medium bg-transparent border-none cursor-pointer"
                 >
                   Edit
                 </button>

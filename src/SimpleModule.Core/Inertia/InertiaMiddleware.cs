@@ -9,21 +9,26 @@ public static class InertiaMiddleware
 
     public static IApplicationBuilder UseInertia(this IApplicationBuilder app)
     {
-        return app.Use(async (context, next) =>
-        {
-            context.Response.Headers["X-Inertia-Version"] = Version;
-
-            if (context.Request.Headers.ContainsKey("X-Inertia")
-                && context.Request.Method == "GET"
-                && context.Request.Headers["X-Inertia-Version"].FirstOrDefault() != Version)
+        return app.Use(
+            async (context, next) =>
             {
-                context.Response.StatusCode = 409;
-                context.Response.Headers["X-Inertia-Location"] = context.Request.GetEncodedUrl();
-                return;
-            }
+                context.Response.Headers["X-Inertia-Version"] = Version;
 
-            await next();
-        });
+                if (
+                    context.Request.Headers.ContainsKey("X-Inertia")
+                    && context.Request.Method == "GET"
+                    && context.Request.Headers["X-Inertia-Version"].FirstOrDefault() != Version
+                )
+                {
+                    context.Response.StatusCode = 409;
+                    context.Response.Headers["X-Inertia-Location"] =
+                        context.Request.GetEncodedUrl();
+                    return;
+                }
+
+                await next();
+            }
+        );
     }
 
     private static string GetEncodedUrl(this HttpRequest request)

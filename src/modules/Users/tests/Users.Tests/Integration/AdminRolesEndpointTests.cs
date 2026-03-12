@@ -64,14 +64,15 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     public async Task CreateRole_WithEmptyName_Redirects()
     {
         var client = CreateAdminClient();
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["name"] = "",
-            ["description"] = "Test",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string> { ["name"] = "", ["description"] = "Test" }
+        );
         // Disable auto-redirect to check the redirect status
         var handler = _factory.Server.CreateHandler();
-        using var noRedirectClient = new HttpClient(handler) { BaseAddress = _factory.Server.BaseAddress };
+        using var noRedirectClient = new HttpClient(handler)
+        {
+            BaseAddress = _factory.Server.BaseAddress,
+        };
         noRedirectClient.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
         var claims = $"{ClaimTypes.Role}=Admin;{ClaimTypes.NameIdentifier}=test-user-id";
         noRedirectClient.DefaultRequestHeaders.Add("X-Test-Claims", claims);
@@ -93,11 +94,13 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     public async Task UpdateRole_NonexistentId_ReturnsNotFound()
     {
         var client = CreateAdminClient();
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["name"] = "Updated",
-            ["description"] = "Updated description",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["name"] = "Updated",
+                ["description"] = "Updated description",
+            }
+        );
         var response = await client.PostAsync("/admin/roles/nonexistent-id", content);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
