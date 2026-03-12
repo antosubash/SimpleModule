@@ -422,3 +422,6 @@ src/SimpleModule.Api/wwwroot/css/app.css
 
 # Vite app bundle output
 src/SimpleModule.Api/wwwroot/js/app.js
+
+# Vendor ESM bundles (built by build-vendors.mjs)
+src/SimpleModule.Api/wwwroot/js/vendor/
