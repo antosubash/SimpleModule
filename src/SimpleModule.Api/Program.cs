@@ -71,6 +71,9 @@ builder.Services.AddScoped<IEventBus, EventBus>();
 // Register all modules
 builder.Services.AddModules(builder.Configuration);
 
+// Collect module menu items into a singleton registry
+builder.Services.CollectModuleMenuItems();
+
 // Smart auth: Bearer header → OpenIddict validation; otherwise → Identity cookies
 builder
     .Services.AddAuthentication()
