@@ -1,4 +1,6 @@
+@using SimpleModule.Core.Menu
 @inherits LayoutComponentBase
+@inject IMenuRegistry MenuRegistry
 
 <nav class="sticky top-0 z-50 border-b border-border bg-surface-overlay" style="backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
     <div class="max-w-6xl mx-auto flex items-center px-6 py-3">
@@ -11,15 +13,23 @@
             {
                 <div class="hidden sm:flex items-center gap-1">
                     <a href="/" class="@NavLinkClass("/")">Dashboard</a>
-                    <a href="/admin/users" class="@NavLinkClass("/admin/users")">Users</a>
-                    <a href="/admin/roles" class="@NavLinkClass("/admin/roles")">Roles</a>
+                    @foreach (var item in NavbarItems.Where(i => i.RequiresAuth))
+                    {
+                        <a href="@item.Url" class="@NavLinkClass(item.Url)">@item.Label</a>
+                    }
                     <a href="/swagger" class="@NavLinkClass("/swagger")">API Docs</a>
                     <a href="/health/live" class="@NavLinkClass("/health/live")">Health</a>
                 </div>
             }
             else
             {
-                <a href="/swagger" class="text-sm text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
+                <div class="hidden sm:flex items-center gap-1">
+                    @foreach (var item in NavbarItems.Where(i => !i.RequiresAuth))
+                    {
+                        <a href="@item.Url" class="@NavLinkClass(item.Url)">@item.Label</a>
+                    }
+                    <a href="/swagger" class="text-sm text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
+                </div>
             }
         </div>
         <div class="ml-auto flex items-center gap-3">
@@ -41,27 +51,21 @@
                             <div class="text-xs text-text-muted truncate mt-0.5">@UserEmail</div>
                         </div>
                         <div class="user-dropdown-body">
-                            <a href="/Identity/Account/Manage" class="user-dropdown-item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                Account Settings
-                            </a>
-                            <a href="/Identity/Account/Manage/Email" class="user-dropdown-item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                Email
-                            </a>
-                            <a href="/Identity/Account/Manage/TwoFactorAuthentication" class="user-dropdown-item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                Security
-                            </a>
-                            <div class="user-dropdown-divider"></div>
-                            <a href="/admin/users" class="user-dropdown-item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                Manage Users
-                            </a>
-                            <a href="/admin/roles" class="user-dropdown-item">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                                Manage Roles
-                            </a>
+                            @{
+                                string? lastGroup = null;
+                                foreach (var item in DropdownItems)
+                                {
+                                    if (lastGroup is not null && item.Group != lastGroup)
+                                    {
+                                        <div class="user-dropdown-divider"></div>
+                                    }
+                                    lastGroup = item.Group;
+                                    <a href="@item.Url" class="user-dropdown-item">
+                                        @((MarkupString)item.Icon)
+                                        @item.Label
+                                    </a>
+                                }
+                            }
                             <div class="user-dropdown-divider"></div>
                             <form method="post" action="/Identity/Account/Logout" @formname="nav-logout" id="nav-logout-form">
                                 <AntiforgeryToken />
@@ -97,6 +101,9 @@
     private string DisplayName => HttpContext?.User?.Identity?.Name ?? "User";
     private string UserEmail => HttpContext?.User?.Identity?.Name ?? "";
     private string UserInitial => (HttpContext?.User?.Identity?.Name ?? "U").Substring(0, 1).ToUpper();
+
+    private IReadOnlyList<MenuItem> NavbarItems => MenuRegistry.GetItems(MenuSection.Navbar);
+    private IReadOnlyList<MenuItem> DropdownItems => MenuRegistry.GetItems(MenuSection.UserDropdown);
 
     private string NavLinkClass(string path)
     {
