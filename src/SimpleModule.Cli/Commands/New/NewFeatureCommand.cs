@@ -1,4 +1,4 @@
-﻿using SimpleModule.Cli.Infrastructure;
+using SimpleModule.Cli.Infrastructure;
 using SimpleModule.Cli.Templates;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -35,15 +35,15 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
 
         var templates = new FeatureTemplates(solution);
 
-        var featureDir = Path.Combine(
+        var endpointsDir = Path.Combine(
             solution.GetModuleProjectPath(moduleName),
-            "Features",
-            featureName
+            "Endpoints",
+            moduleName
         );
-        Directory.CreateDirectory(featureDir);
+        Directory.CreateDirectory(endpointsDir);
 
-        // Create endpoint
-        var endpointPath = Path.Combine(featureDir, $"{featureName}Endpoint.cs");
+        // Create endpoint (implements IEndpoint — auto-discovered by source generator)
+        var endpointPath = Path.Combine(endpointsDir, $"{featureName}Endpoint.cs");
         File.WriteAllText(
             endpointPath,
             templates.Endpoint(moduleName, featureName, httpMethod, route, singularName)
@@ -53,7 +53,7 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
         // Create validator if requested
         if (includeValidator)
         {
-            var validatorPath = Path.Combine(featureDir, $"{featureName}RequestValidator.cs");
+            var validatorPath = Path.Combine(endpointsDir, $"{featureName}RequestValidator.cs");
             File.WriteAllText(
                 validatorPath,
                 templates.Validator(moduleName, featureName, singularName)
@@ -61,29 +61,9 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
             AnsiConsole.MarkupLine($"[green]  + {featureName}RequestValidator.cs[/]");
         }
 
-        // Wire into module class
-        var moduleFilePath = Path.Combine(
-            solution.GetModuleProjectPath(moduleName),
-            $"{moduleName}Module.cs"
+        AnsiConsole.MarkupLine(
+            $"[green]Endpoint '{featureName}' added to '{moduleName}' (auto-discovered via IEndpoint).[/]"
         );
-        if (ModuleClassManipulator.AddFeatureWiring(moduleFilePath, moduleName, featureName))
-        {
-            AnsiConsole.MarkupLine(
-                $"[green]  + Wired {featureName}Endpoint into {moduleName}Module.cs[/]"
-            );
-        }
-        else
-        {
-            AnsiConsole.MarkupLine(
-                $"[yellow]  ! Could not auto-wire into {moduleName}Module.cs. Add manually:[/]"
-            );
-            AnsiConsole.MarkupLine(
-                $"[yellow]    using SimpleModule.{moduleName}.Features.{featureName};[/]"
-            );
-            AnsiConsole.MarkupLine($"[yellow]    {featureName}Endpoint.Map(group);[/]");
-        }
-
-        AnsiConsole.MarkupLine($"[green]Feature '{featureName}' added to '{moduleName}'.[/]");
         return 0;
     }
 }

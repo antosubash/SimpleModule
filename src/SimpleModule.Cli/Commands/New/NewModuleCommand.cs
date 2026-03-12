@@ -37,13 +37,13 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         var contractsDir = solution.GetModuleContractsPath(moduleName);
         var moduleDir = solution.GetModuleProjectPath(moduleName);
         var eventsDir = Path.Combine(contractsDir, "Events");
-        var featuresDir = Path.Combine(moduleDir, "Features", $"GetAll{moduleName}");
+        var endpointsDir = Path.Combine(moduleDir, "Endpoints", moduleName);
         var testDir = solution.GetTestProjectPath(moduleName);
         var unitTestDir = Path.Combine(testDir, "Unit");
         var integrationTestDir = Path.Combine(testDir, "Integration");
 
         Directory.CreateDirectory(eventsDir);
-        Directory.CreateDirectory(featuresDir);
+        Directory.CreateDirectory(endpointsDir);
         Directory.CreateDirectory(unitTestDir);
         Directory.CreateDirectory(integrationTestDir);
 
@@ -87,7 +87,7 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
             templates.ServiceClass(moduleName, singularName)
         );
         WriteFile(
-            Path.Combine(featuresDir, $"GetAll{moduleName}Endpoint.cs"),
+            Path.Combine(endpointsDir, "GetAllEndpoint.cs"),
             templates.GetAllEndpoint(moduleName, singularName)
         );
 

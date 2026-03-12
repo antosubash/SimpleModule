@@ -1,12 +1,11 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using SimpleModule.Core.Validation;
-using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
 
-namespace SimpleModule.Orders.Features.CreateOrder;
+namespace SimpleModule.Orders.Endpoints.Orders;
 
-public static class CreateOrderRequestValidator
+public static class CreateRequestValidator
 {
     private static readonly CompositeFormat _quantityMustBePositiveFormat = CompositeFormat.Parse(
         OrdersConstants.ValidationMessages.QuantityMustBePositiveFormat

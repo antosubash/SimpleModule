@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
 using SimpleModule.Orders.Contracts;
-using SimpleModule.Orders.Features.CreateOrder;
+using SimpleModule.Orders.Endpoints.Orders;
 
 namespace Orders.Tests.Unit;
 
-public sealed class CreateOrderRequestValidatorTests
+public sealed class CreateRequestValidatorTests
 {
     [Fact]
     public void Validate_WithValidRequest_ReturnsSuccess()
@@ -15,7 +15,7 @@ public sealed class CreateOrderRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
         };
 
-        var result = CreateOrderRequestValidator.Validate(request);
+        var result = CreateRequestValidator.Validate(request);
 
         result.IsValid.Should().BeTrue();
         result.Errors.Should().BeEmpty();
@@ -30,7 +30,7 @@ public sealed class CreateOrderRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
-        var result = CreateOrderRequestValidator.Validate(request);
+        var result = CreateRequestValidator.Validate(request);
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainKey("UserId");
@@ -45,7 +45,7 @@ public sealed class CreateOrderRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
-        var result = CreateOrderRequestValidator.Validate(request);
+        var result = CreateRequestValidator.Validate(request);
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainKey("UserId");
@@ -56,7 +56,7 @@ public sealed class CreateOrderRequestValidatorTests
     {
         var request = new CreateOrderRequest { UserId = "1", Items = [] };
 
-        var result = CreateOrderRequestValidator.Validate(request);
+        var result = CreateRequestValidator.Validate(request);
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainKey("Items");
@@ -71,7 +71,7 @@ public sealed class CreateOrderRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 0 }],
         };
 
-        var result = CreateOrderRequestValidator.Validate(request);
+        var result = CreateRequestValidator.Validate(request);
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainKey("Items");
@@ -82,7 +82,7 @@ public sealed class CreateOrderRequestValidatorTests
     {
         var request = new CreateOrderRequest { UserId = "", Items = [] };
 
-        var result = CreateOrderRequestValidator.Validate(request);
+        var result = CreateRequestValidator.Validate(request);
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainKey("UserId");

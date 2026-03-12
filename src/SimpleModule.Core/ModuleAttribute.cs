@@ -7,6 +7,7 @@ public sealed class ModuleAttribute : Attribute
 {
     public string Name { get; }
     public string Version { get; }
+    public string RoutePrefix { get; set; } = "";
 
     public ModuleAttribute(string name, string version = "1.0.0")
     {

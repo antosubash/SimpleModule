@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -52,6 +52,10 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             "SimpleModule.Core.DtoAttribute"
         );
 
+        var endpointInterfaceSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IEndpoint"
+        );
+
         var modules = new List<ModuleInfo>();
 
         foreach (var reference in compilation.References)
@@ -69,6 +73,25 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
         if (modules.Count == 0)
             return DiscoveryData.Empty;
+
+        // Discover IEndpoint implementors per module assembly
+        if (endpointInterfaceSymbol is not null)
+        {
+            foreach (var module in modules)
+            {
+                var metadataName = module.FullyQualifiedName.Replace("global::", "");
+                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+                if (typeSymbol is null)
+                    continue;
+
+                var assembly = typeSymbol.ContainingAssembly;
+                FindEndpointTypes(
+                    assembly.GlobalNamespace,
+                    endpointInterfaceSymbol,
+                    module.Endpoints
+                );
+            }
+        }
 
         var dtoTypes = new List<DtoTypeInfo>();
         if (dtoAttributeSymbol is not null)
@@ -123,7 +146,11 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                     m.HasConfigureServices,
                     m.HasConfigureEndpoints,
                     m.HasConfigureMenu,
-                    m.HasRazorComponents
+                    m.HasRazorComponents,
+                    m.RoutePrefix,
+                    m.Endpoints
+                        .Select(e => new EndpointInfoRecord(e.FullyQualifiedName))
+                        .ToImmutableArray()
                 ))
                 .ToImmutableArray(),
             dtoTypes
@@ -164,6 +191,19 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                         )
                     )
                     {
+                        var routePrefix = "";
+                        foreach (var namedArg in attr.NamedArguments)
+                        {
+                            if (
+                                namedArg.Key == "RoutePrefix"
+                                && namedArg.Value.Value is string prefix
+                            )
+                            {
+                                routePrefix = prefix;
+                                break;
+                            }
+                        }
+
                         modules.Add(
                             new ModuleInfo
                             {
@@ -179,6 +219,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                                     "ConfigureEndpoints"
                                 ),
                                 HasConfigureMenu = DeclaresMethod(typeSymbol, "ConfigureMenu"),
+                                RoutePrefix = routePrefix,
                             }
                         );
                         break;
@@ -186,6 +227,52 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 }
             }
         }
+    }
+
+    private static void FindEndpointTypes(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol endpointInterfaceSymbol,
+        List<EndpointInfo> endpoints
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                FindEndpointTypes(childNamespace, endpointInterfaceSymbol, endpoints);
+            }
+            else if (member is INamedTypeSymbol typeSymbol)
+            {
+                if (
+                    !typeSymbol.IsAbstract
+                    && !typeSymbol.IsStatic
+                    && ImplementsInterface(typeSymbol, endpointInterfaceSymbol)
+                )
+                {
+                    endpoints.Add(
+                        new EndpointInfo
+                        {
+                            FullyQualifiedName = typeSymbol.ToDisplayString(
+                                SymbolDisplayFormat.FullyQualifiedFormat
+                            ),
+                        }
+                    );
+                }
+            }
+        }
+    }
+
+    private static bool ImplementsInterface(
+        INamedTypeSymbol typeSymbol,
+        INamedTypeSymbol interfaceSymbol
+    )
+    {
+        foreach (var iface in typeSymbol.AllInterfaces)
+        {
+            if (SymbolEqualityComparer.Default.Equals(iface, interfaceSymbol))
+                return true;
+        }
+        return false;
     }
 
     private static bool DeclaresMethod(INamedTypeSymbol typeSymbol, string methodName)
@@ -339,6 +426,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
         sb.AppendLine("using Microsoft.AspNetCore.Builder;");
+        sb.AppendLine("using Microsoft.AspNetCore.Routing;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
@@ -349,12 +437,52 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         );
         sb.AppendLine("    {");
 
+        // Auto-registered endpoints (IEndpoint implementors)
+        foreach (var module in modules)
+        {
+            if (module.Endpoints.Length == 0)
+                continue;
+
+            sb.AppendLine();
+            sb.AppendLine(
+                $"        // Auto-registered endpoints for {module.FullyQualifiedName}"
+            );
+            sb.AppendLine("        {");
+
+            if (!string.IsNullOrEmpty(module.RoutePrefix))
+            {
+                sb.AppendLine(
+                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\");"
+                );
+                foreach (var endpoint in module.Endpoints)
+                {
+                    sb.AppendLine(
+                        $"            new {endpoint.FullyQualifiedName}().Map(group);"
+                    );
+                }
+            }
+            else
+            {
+                foreach (var endpoint in module.Endpoints)
+                {
+                    sb.AppendLine(
+                        $"            new {endpoint.FullyQualifiedName}().Map(app);"
+                    );
+                }
+            }
+
+            sb.AppendLine("        }");
+        }
+
+        // Manual ConfigureEndpoints (escape hatch)
         foreach (var module in modules.Where(m => m.HasConfigureEndpoints))
         {
             var fieldName = GetModuleFieldName(module.FullyQualifiedName);
+            sb.AppendLine();
             sb.AppendLine($"        ModuleExtensions.{fieldName}.ConfigureEndpoints(app);");
         }
 
+        sb.AppendLine();
         sb.AppendLine("        return app;");
         sb.AppendLine("    }");
         sb.AppendLine("}");
@@ -691,8 +819,41 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         bool HasConfigureServices,
         bool HasConfigureEndpoints,
         bool HasConfigureMenu,
-        bool HasRazorComponents
-    );
+        bool HasRazorComponents,
+        string RoutePrefix,
+        ImmutableArray<EndpointInfoRecord> Endpoints
+    )
+    {
+        public bool Equals(ModuleInfoRecord other)
+        {
+            return FullyQualifiedName == other.FullyQualifiedName
+                && HasConfigureServices == other.HasConfigureServices
+                && HasConfigureEndpoints == other.HasConfigureEndpoints
+                && HasConfigureMenu == other.HasConfigureMenu
+                && HasRazorComponents == other.HasRazorComponents
+                && RoutePrefix == other.RoutePrefix
+                && Endpoints.SequenceEqual(other.Endpoints);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 31 + FullyQualifiedName.GetHashCode();
+                hash = hash * 31 + HasConfigureServices.GetHashCode();
+                hash = hash * 31 + HasConfigureEndpoints.GetHashCode();
+                hash = hash * 31 + HasConfigureMenu.GetHashCode();
+                hash = hash * 31 + HasRazorComponents.GetHashCode();
+                hash = hash * 31 + (RoutePrefix ?? "").GetHashCode();
+                foreach (var e in Endpoints)
+                    hash = hash * 31 + e.GetHashCode();
+                return hash;
+            }
+        }
+    }
+
+    private readonly record struct EndpointInfoRecord(string FullyQualifiedName);
 
     private readonly record struct DtoTypeInfoRecord(
         string FullyQualifiedName,
@@ -738,6 +899,13 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         public bool HasConfigureEndpoints { get; set; }
         public bool HasConfigureMenu { get; set; }
         public bool HasRazorComponents { get; set; }
+        public string RoutePrefix { get; set; } = "";
+        public List<EndpointInfo> Endpoints { get; set; } = new();
+    }
+
+    private sealed class EndpointInfo
+    {
+        public string FullyQualifiedName { get; set; } = "";
     }
 
     private sealed class DtoTypeInfo

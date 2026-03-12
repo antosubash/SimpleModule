@@ -33,17 +33,17 @@ public sealed class ModulePatternCheck : IDoctorCheck
                     );
             }
 
-            var featuresDir = Path.Combine(moduleDir, "Features");
-            yield return Directory.Exists(featuresDir)
+            var endpointsDir = Path.Combine(moduleDir, "Endpoints");
+            yield return Directory.Exists(endpointsDir)
                 ? new CheckResult(
-                    $"{module}/Features/",
+                    $"{module}/Endpoints/",
                     CheckStatus.Pass,
-                    "Features directory exists"
+                    "Endpoints directory exists"
                 )
                 : new CheckResult(
-                    $"{module}/Features/",
+                    $"{module}/Endpoints/",
                     CheckStatus.Warning,
-                    "Features directory missing"
+                    "Endpoints directory missing"
                 );
         }
     }

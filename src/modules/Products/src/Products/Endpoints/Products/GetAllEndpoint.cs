@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Products.Contracts;
 
-namespace SimpleModule.Products.Features.GetAllProducts;
+namespace SimpleModule.Products.Endpoints.Products;
 
-public static class GetAllProductsEndpoint
+public class GetAllEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group.MapGet(
+        app.MapGet(
             "/",
             async (IProductContracts productContracts) =>
             {

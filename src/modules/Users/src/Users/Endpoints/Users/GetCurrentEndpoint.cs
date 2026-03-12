@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Extensions;
 
-namespace SimpleModule.Users.Features.GetCurrentUser;
+namespace SimpleModule.Users.Endpoints.Users;
 
-public static class GetCurrentUserEndpoint
+public static class GetCurrentEndpoint
 {
     public static void Map(IEndpointRouteBuilder group)
     {

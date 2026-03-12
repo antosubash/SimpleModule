@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Entities;
 
-namespace SimpleModule.Users.Features.Admin;
+namespace SimpleModule.Users.Endpoints.Admin;
 
 public static class AdminRolesEndpoint
 {

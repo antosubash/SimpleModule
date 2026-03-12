@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Features.GetUserById;
+namespace SimpleModule.Users.Endpoints.Users;
 
-public static class GetUserByIdEndpoint
+public static class GetByIdEndpoint
 {
     public static void Map(IEndpointRouteBuilder group)
     {
