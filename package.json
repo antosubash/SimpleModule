@@ -5,7 +5,7 @@
     "src/modules/*/src/*",
     "src/SimpleModule.Client",
     "src/SimpleModule.Theme.Default",
-    "src/SimpleModule.Api/ClientApp"
+    "src/SimpleModule.Host/ClientApp"
   ],
   "scripts": {
     "lint": "biome lint ./src",

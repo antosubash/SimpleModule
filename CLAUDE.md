@@ -10,7 +10,7 @@ Modular monolith framework for .NET with compile-time module discovery via Rosly
 
 ```bash
 dotnet build
-dotnet run --project src/SimpleModule.Api          # runs on https://localhost:5001
+dotnet run --project src/SimpleModule.Host          # runs on https://localhost:5001
 ```
 
 ## Frontend (npm workspaces)
@@ -23,7 +23,7 @@ npm run lint                         # lint only
 npm run format                       # format only (with write)
 ```
 
-Workspaces: `src/modules/*/src/*` and `src/SimpleModule.Api/ClientApp`.
+Workspaces: `src/modules/*/src/*` and `src/SimpleModule.Host/ClientApp`.
 
 ## Testing
 
@@ -41,11 +41,11 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 
 - **SimpleModule.Core** — `IModule` interface, `[Module]` attribute, `IEndpoint` interface, `[Dto]` attribute, menu system (`IMenuRegistry`), event bus (`IEventBus`), Inertia integration.
 - **SimpleModule.Generator** — Roslyn `IIncrementalGenerator` (netstandard2.0). Scans referenced assemblies for `[Module]` classes, `IEndpoint` implementors, and `[Dto]` types. Generates: `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()`, AOT JSON serializers, TypeScript interface definitions, Razor component assembly discovery.
-- **SimpleModule.Api** — Host app (net10.0, PublishAot). Calls generated extension methods in `Program.cs`. Custom Inertia middleware bridges Blazor SSR → React.
+- **SimpleModule.Host** — Host app (net10.0, PublishAot). Calls generated extension methods in `Program.cs`. Custom Inertia middleware bridges Blazor SSR → React.
 
 ### Frontend (React + Inertia.js)
 
-- **ClientApp** (`src/SimpleModule.Api/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Products/Browse` → imports `/_content/Products/Products.pages.js`).
+- **ClientApp** (`src/SimpleModule.Host/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Products/Browse` → imports `/_content/Products/Products.pages.js`).
 - **Module pages** — Each module builds its React pages via Vite in library mode → `{ModuleName}.pages.js` in module's `wwwroot/`. Entry point: `Pages/index.ts` exporting a `pages` record mapping route names to components.
 - **Type generation** — `[Dto]` types → source generator embeds TS interfaces → `tools/extract-ts-types.mjs` writes `.ts` files to `ClientApp/types/`.
 
@@ -80,7 +80,7 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
    - Register contract interface in `ConfigureServices`
    - **Escape hatch**: For non-standard routes, implement `ConfigureEndpoints` on the module class
 4. Create `src/modules/<Name>/tests/<Name>.Tests/` with xUnit test project
-5. Add `ProjectReference` to `src/SimpleModule.Api/SimpleModule.Api.csproj`
+5. Add `ProjectReference` to `src/SimpleModule.Host/SimpleModule.Host.csproj`
 6. Add all projects to `SimpleModule.slnx`
 
 ## Linting & Formatting

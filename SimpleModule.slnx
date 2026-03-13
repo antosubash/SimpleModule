@@ -5,7 +5,7 @@
         <Platform Name="x86" />
     </Configurations>
     <Folder Name="/src/">
-        <Project Path="src/SimpleModule.Api/SimpleModule.Api.csproj" />
+        <Project Path="src/SimpleModule.Host/SimpleModule.Host.csproj" />
         <Project Path="src/SimpleModule.Core/SimpleModule.Core.csproj" />
         <Project Path="src/SimpleModule.Database/SimpleModule.Database.csproj" />
         <Project Path="src/SimpleModule.Generator/SimpleModule.Generator.csproj" />

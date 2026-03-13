@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { dirname, resolve } from 'path';
 
 const inputFile = process.argv[2];
-const outputDir = process.argv[3] || 'src/SimpleModule.Api/ClientApp/types';
+const outputDir = process.argv[3] || 'src/SimpleModule.Host/ClientApp/types';
 
 if (!inputFile) {
   console.error('Usage: node extract-ts-types.mjs <DtoTypeScript.g.cs> <output-dir>');

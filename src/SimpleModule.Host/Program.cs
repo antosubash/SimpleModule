@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
-using SimpleModule.Api.Components;
+using SimpleModule.Host.Components;
 using SimpleModule.Blazor;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;

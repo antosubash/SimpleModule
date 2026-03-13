@@ -145,7 +145,7 @@ public sealed class SolutionContextTests : IDisposable
 
         var ctx = SolutionContext.Discover(_tempDir)!;
 
-        ctx.ApiCsprojPath.Should().Contain("SimpleModule.Api");
+        ctx.ApiCsprojPath.Should().Contain("SimpleModule.Host");
         ctx.ApiCsprojPath.Should().EndWith(".csproj");
     }
 }
