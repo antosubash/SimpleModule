@@ -63,7 +63,10 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddRazorComponents();
 
 // Inertia page renderer (renders Inertia HTML shell via Blazor SSR)
-builder.Services.AddSimpleModuleBlazor();
+builder.Services.AddSimpleModuleBlazor(options =>
+{
+    options.ShellComponent = typeof(InertiaShell);
+});
 
 // Register event bus
 builder.Services.AddScoped<IEventBus, EventBus>();
