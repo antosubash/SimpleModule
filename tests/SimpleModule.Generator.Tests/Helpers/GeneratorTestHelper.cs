@@ -57,6 +57,18 @@ public static class GeneratorTestHelper
         if (File.Exists(configAbstractionsPath))
             references.Add(MetadataReference.CreateFromFile(configAbstractionsPath));
 
+        // Add ASP.NET Core HTTP abstractions (for IResult)
+        references.Add(
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.AspNetCore.Http.IResult).Assembly.Location
+            )
+        );
+
+        // Add System.Threading.Tasks for Task<T>
+        var tasksPath = Path.Combine(runtimeDir, "System.Threading.Tasks.dll");
+        if (File.Exists(tasksPath))
+            references.Add(MetadataReference.CreateFromFile(tasksPath));
+
         return CSharpCompilation.Create(
             "TestAssembly",
             syntaxTrees,

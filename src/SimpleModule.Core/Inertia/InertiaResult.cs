@@ -12,7 +12,7 @@ public static class Inertia
 
 internal sealed class InertiaResult : IResult
 {
-    private static readonly JsonSerializerOptions CamelCaseOptions = new()
+    private static readonly JsonSerializerOptions _camelCaseOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
@@ -45,7 +45,7 @@ internal sealed class InertiaResult : IResult
             return;
         }
 
-        var pageJson = JsonSerializer.Serialize(pageData, CamelCaseOptions);
+        var pageJson = JsonSerializer.Serialize(pageData, _camelCaseOptions);
 
         var renderer = httpContext.RequestServices.GetRequiredService<IInertiaPageRenderer>();
         await renderer.RenderPageAsync(httpContext, pageJson);

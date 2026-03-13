@@ -1,7 +1,8 @@
-import Browse from './Browse';
-import Create from './Create';
-import Edit from './Edit';
-import Manage from './Manage';
+// Auto-generated from view endpoints — do not edit
+import Browse from '../Views/Browse';
+import Create from '../Views/Create';
+import Edit from '../Views/Edit';
+import Manage from '../Views/Manage';
 
 export const pages: Record<string, any> = {
   'Products/Browse': Browse,
