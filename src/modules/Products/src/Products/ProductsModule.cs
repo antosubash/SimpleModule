@@ -5,14 +5,13 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
-using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products;
 
-[Module(ProductsConstants.ModuleName, RoutePrefix = ProductsConstants.RoutePrefix)]
+[Module(ProductsConstants.ModuleName, RoutePrefix = ProductsConstants.RoutePrefix, ViewPrefix = "/products")]
 public class ProductsModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -51,42 +50,6 @@ public class ProductsModule : IModule
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/products");
-
-        // Browse page (public)
-        group.MapGet(
-            "/browse",
-            async (IProductContracts products) =>
-                Inertia.Render(
-                    "Products/Browse",
-                    new { products = await products.GetAllProductsAsync() }
-                )
-        );
-
-        // Manage page
-        group.MapGet(
-            "/manage",
-            async (IProductContracts products) =>
-                Inertia.Render(
-                    "Products/Manage",
-                    new { products = await products.GetAllProductsAsync() }
-                )
-        );
-
-        // Create page
-        group.MapGet("/create", () => Inertia.Render("Products/Create"));
-
-        // Edit page
-        group.MapGet(
-            "/{id}/edit",
-            async (int id, IProductContracts products) =>
-            {
-                var product = await products.GetProductByIdAsync(id);
-                if (product is null)
-                    return Results.NotFound();
-
-                return Inertia.Render("Products/Edit", new { product });
-            }
-        );
 
         // Create product (POST)
         group.MapPost(
