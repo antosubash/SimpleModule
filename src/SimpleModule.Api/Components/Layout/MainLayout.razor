@@ -1,6 +1,6 @@
 @using SimpleModule.Core.Menu
+@using SimpleModule.Blazor.Components
 @inherits LayoutComponentBase
-@inject IMenuRegistry MenuRegistry
 
 <nav class="sticky top-0 z-50 border-b border-border bg-surface-overlay" style="backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
     <div class="max-w-6xl mx-auto flex items-center px-6 py-3">
@@ -9,74 +9,24 @@
                 <span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</span>
                 <span class="text-base">SimpleModule</span>
             </a>
-            @if (IsAuthenticated)
-            {
-                <div class="hidden sm:flex items-center gap-1">
+            <ModuleNav IsAuthenticated="@IsAuthenticated">
+                <AuthenticatedPrefix>
                     <a href="/" class="@NavLinkClass("/")">Dashboard</a>
-                    @foreach (var item in NavbarItems.Where(i => i.RequiresAuth))
-                    {
-                        <a href="@item.Url" class="@NavLinkClass(item.Url)">@item.Label</a>
-                    }
+                </AuthenticatedPrefix>
+                <AuthenticatedSuffix>
                     <a href="/swagger" class="@NavLinkClass("/swagger")">API Docs</a>
                     <a href="/health/live" class="@NavLinkClass("/health/live")">Health</a>
-                </div>
-            }
-            else
-            {
-                <div class="hidden sm:flex items-center gap-1">
-                    @foreach (var item in NavbarItems.Where(i => !i.RequiresAuth))
-                    {
-                        <a href="@item.Url" class="@NavLinkClass(item.Url)">@item.Label</a>
-                    }
+                </AuthenticatedSuffix>
+                <AnonymousSuffix>
                     <a href="/swagger" class="text-sm text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
-                </div>
-            }
+                </AnonymousSuffix>
+            </ModuleNav>
         </div>
         <div class="ml-auto flex items-center gap-3">
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised transition-all cursor-pointer bg-transparent border-none" title="Toggle dark mode">
-                <svg class="dark:hidden w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>
-                <svg class="hidden dark:block w-[18px] h-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            </button>
+            <DarkModeToggle />
             @if (IsAuthenticated)
             {
-                <div class="user-dropdown-wrap" id="user-menu">
-                    <button class="user-dropdown-trigger" onclick="toggleUserMenu()" aria-expanded="false" id="user-menu-btn">
-                        <span class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">@UserInitial</span>
-                        <span class="hidden sm:block text-sm font-medium text-text max-w-[140px] truncate">@DisplayName</span>
-                        <svg class="w-4 h-4 text-text-muted transition-transform duration-200" id="user-menu-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="user-dropdown" id="user-dropdown">
-                        <div class="user-dropdown-header">
-                            <div class="text-sm font-semibold text-text truncate">@DisplayName</div>
-                            <div class="text-xs text-text-muted truncate mt-0.5">@UserEmail</div>
-                        </div>
-                        <div class="user-dropdown-body">
-                            @{
-                                string? lastGroup = null;
-                                foreach (var item in DropdownItems)
-                                {
-                                    if (lastGroup is not null && item.Group != lastGroup)
-                                    {
-                                        <div class="user-dropdown-divider"></div>
-                                    }
-                                    lastGroup = item.Group;
-                                    <a href="@item.Url" class="user-dropdown-item">
-                                        @((MarkupString)item.Icon)
-                                        @item.Label
-                                    </a>
-                                }
-                            }
-                            <div class="user-dropdown-divider"></div>
-                            <form method="post" action="/Identity/Account/Logout" @formname="nav-logout" id="nav-logout-form">
-                                <AntiforgeryToken />
-                                <button type="submit" class="user-dropdown-item danger w-full text-left bg-transparent border-none" style="font-family:inherit;font-size:inherit;">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                                    Log out
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <UserDropdown DisplayName="@DisplayName" UserEmail="@UserEmail" UserInitial="@UserInitial" />
             }
             else
             {
@@ -101,9 +51,6 @@
     private string DisplayName => HttpContext?.User?.Identity?.Name ?? "User";
     private string UserEmail => HttpContext?.User?.Identity?.Name ?? "";
     private string UserInitial => (HttpContext?.User?.Identity?.Name ?? "U").Substring(0, 1).ToUpper();
-
-    private IReadOnlyList<MenuItem> NavbarItems => MenuRegistry.GetItems(MenuSection.Navbar);
-    private IReadOnlyList<MenuItem> DropdownItems => MenuRegistry.GetItems(MenuSection.UserDropdown);
 
     private string NavLinkClass(string path)
     {
