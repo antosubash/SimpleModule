@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "SimpleModule.Api": {
+    "SimpleModule.Host": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,

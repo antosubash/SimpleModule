@@ -11,7 +11,7 @@ public sealed class ProjectReferenceCheck : IDoctorCheck
             yield return new CheckResult(
                 "API csproj",
                 CheckStatus.Fail,
-                "SimpleModule.Api.csproj not found"
+                "SimpleModule.Host.csproj not found"
             );
             yield break;
         }

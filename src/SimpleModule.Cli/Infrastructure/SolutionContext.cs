@@ -16,8 +16,8 @@ public sealed class SolutionContext
         ApiCsprojPath = Path.Combine(
             rootPath,
             "src",
-            "SimpleModule.Api",
-            "SimpleModule.Api.csproj"
+            "SimpleModule.Host",
+            "SimpleModule.Host.csproj"
         );
         ModulesPath = Path.Combine(rootPath, "src", "modules");
 
