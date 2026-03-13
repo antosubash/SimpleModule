@@ -9,6 +9,7 @@
         <Project Path="src/SimpleModule.Core/SimpleModule.Core.csproj" />
         <Project Path="src/SimpleModule.Database/SimpleModule.Database.csproj" />
         <Project Path="src/SimpleModule.Generator/SimpleModule.Generator.csproj" />
+        <Project Path="src/SimpleModule.Blazor/SimpleModule.Blazor.csproj" />
         <Project Path="src/SimpleModule.Cli/SimpleModule.Cli.csproj" />
     </Folder>
     <Folder Name="/modules/" />
