@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defaultVendors, vendorBuildPlugin, vendorPaths } from '@simplemodule/client';
+import { defaultVendors, vendorBuildPlugin, vendorPaths } from '@simplemodule/client/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 

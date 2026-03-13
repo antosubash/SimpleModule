@@ -13,6 +13,9 @@
         <Project Path="src/SimpleModule.Cli/SimpleModule.Cli.csproj" />
     </Folder>
     <Folder Name="/modules/" />
+    <Folder Name="/modules/Dashboard/">
+        <Project Path="src/modules/Dashboard/src/Dashboard/Dashboard.csproj" />
+    </Folder>
     <Folder Name="/modules/Orders/">
         <Project Path="src/modules/Orders/src/Orders.Contracts/Orders.Contracts.csproj" />
         <Project Path="src/modules/Orders/src/Orders/Orders.csproj" />

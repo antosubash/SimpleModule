@@ -24,7 +24,10 @@ export default function Roles({ roles }: Props) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+          <h1
+            className="text-2xl font-extrabold tracking-tight"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
             <span className="gradient-text">Roles</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">Manage application roles</p>
@@ -49,9 +52,7 @@ export default function Roles({ roles }: Props) {
             {roles.map((role) => (
               <tr key={role.id} className="hover:bg-surface-raised transition-colors">
                 <td className="px-4 py-3 font-medium text-text">{role.name}</td>
-                <td className="px-4 py-3 text-text-secondary">
-                  {role.description || '\u2014'}
-                </td>
+                <td className="px-4 py-3 text-text-secondary">{role.description || '\u2014'}</td>
                 <td className="px-4 py-3">
                   <span className="badge-info">{role.userCount}</span>
                 </td>

@@ -25,10 +25,24 @@ export default function Edit({ product }: Props) {
   return (
     <div className="max-w-xl">
       <div className="flex items-center gap-3 mb-1">
-        <a href="/products/manage" className="text-text-muted hover:text-text transition-colors no-underline">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        <a
+          href="/products/manage"
+          className="text-text-muted hover:text-text transition-colors no-underline"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
         </a>
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+        <h1
+          className="text-2xl font-extrabold tracking-tight"
+          style={{ fontFamily: "'Sora', sans-serif" }}
+        >
           <span className="gradient-text">Edit Product</span>
         </h1>
       </div>
@@ -42,16 +56,29 @@ export default function Edit({ product }: Props) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Price</label>
-            <input type="number" name="price" defaultValue={product.price} required min="0.01" step="0.01" />
+            <input
+              type="number"
+              name="price"
+              defaultValue={product.price}
+              required
+              min="0.01"
+              step="0.01"
+            />
           </div>
-          <button type="submit" className="btn-primary">Save</button>
+          <button type="submit" className="btn-primary">
+            Save
+          </button>
         </div>
       </form>
 
       <div className="glass-card p-6">
         <h2 className="text-lg font-semibold mb-3">Danger Zone</h2>
-        <p className="text-sm text-text-muted mb-3">Permanently delete this product. This action cannot be undone.</p>
-        <button onClick={handleDelete} className="btn-danger">Delete Product</button>
+        <p className="text-sm text-text-muted mb-3">
+          Permanently delete this product. This action cannot be undone.
+        </p>
+        <button onClick={handleDelete} className="btn-danger">
+          Delete Product
+        </button>
       </div>
     </div>
   );

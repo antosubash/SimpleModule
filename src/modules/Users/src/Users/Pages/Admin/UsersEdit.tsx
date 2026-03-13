@@ -46,10 +46,24 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
   return (
     <div className="max-w-3xl">
       <div className="flex items-center gap-3 mb-1">
-        <a href="/admin/users" className="text-text-muted hover:text-text transition-colors no-underline">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        <a
+          href="/admin/users"
+          className="text-text-muted hover:text-text transition-colors no-underline"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
         </a>
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+        <h1
+          className="text-2xl font-extrabold tracking-tight"
+          style={{ fontFamily: "'Sora', sans-serif" }}
+        >
           <span className="gradient-text">Edit User</span>
         </h1>
       </div>
@@ -79,9 +93,13 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
               defaultChecked={user.emailConfirmed}
               className="accent-primary"
             />
-            <label htmlFor="emailConfirmed" className="text-sm mb-0">Email confirmed</label>
+            <label htmlFor="emailConfirmed" className="text-sm mb-0">
+              Email confirmed
+            </label>
           </div>
-          <button type="submit" className="btn-primary">Save Details</button>
+          <button type="submit" className="btn-primary">
+            Save Details
+          </button>
         </div>
       </form>
 
@@ -106,11 +124,11 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
               </label>
             </div>
           ))}
-          {allRoles.length === 0 && (
-            <p className="text-sm text-text-muted">No roles defined.</p>
-          )}
+          {allRoles.length === 0 && <p className="text-sm text-text-muted">No roles defined.</p>}
         </div>
-        <button type="submit" className="btn-primary">Save Roles</button>
+        <button type="submit" className="btn-primary">
+          Save Roles
+        </button>
       </form>
 
       <div className="glass-card p-6">
@@ -118,14 +136,20 @@ export default function UsersEdit({ user, userRoles, allRoles }: Props) {
         {user.isLockedOut ? (
           <div>
             <p className="text-sm text-danger mb-3">This account is locked.</p>
-            <button onClick={handleUnlock} className="btn-primary" style={{ background: 'var(--color-success)' }}>
+            <button
+              onClick={handleUnlock}
+              className="btn-primary"
+              style={{ background: 'var(--color-success)' }}
+            >
               Unlock Account
             </button>
           </div>
         ) : (
           <div>
             <p className="text-sm text-success mb-3">This account is active.</p>
-            <button onClick={handleLock} className="btn-danger">Lock Account</button>
+            <button onClick={handleLock} className="btn-danger">
+              Lock Account
+            </button>
           </div>
         )}
       </div>
