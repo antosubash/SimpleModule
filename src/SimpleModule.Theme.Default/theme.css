@@ -1,0 +1,539 @@
+/* ============================================================
+   SimpleModule Design System — Bold & Modern
+   Gradient accents · Glass morphism · Dark mode
+   ============================================================ */
+
+@theme {
+  /* --- Primary Gradient Endpoints --- */
+  --color-primary: #0d9488;
+  --color-primary-hover: #0f766e;
+  --color-primary-light: #2dd4bf;
+  --color-primary-subtle: rgba(13, 148, 136, 0.08);
+  --color-primary-ring: rgba(13, 148, 136, 0.25);
+
+  /* --- Accent: Emerald --- */
+  --color-accent: #059669;
+  --color-accent-hover: #047857;
+
+  /* --- Semantic: Success --- */
+  --color-success: #16a34a;
+  --color-success-light: #4ade80;
+  --color-success-bg: rgba(22, 163, 74, 0.1);
+  --color-success-text: #15803d;
+
+  /* --- Semantic: Danger --- */
+  --color-danger: #e11d48;
+  --color-danger-hover: #be123c;
+  --color-danger-bg: rgba(225, 29, 72, 0.08);
+  --color-danger-text: #9f1239;
+
+  /* --- Semantic: Warning --- */
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-warning-border: rgba(217, 119, 6, 0.2);
+  --color-warning-text: #92400e;
+
+  /* --- Semantic: Info --- */
+  --color-info: #0ea5e9;
+  --color-info-bg: rgba(14, 165, 233, 0.08);
+
+  /* --- Surfaces (Light) --- */
+  --color-surface: #ffffff;
+  --color-surface-raised: #f8fafc;
+  --color-surface-sunken: #f1f5f9;
+  --color-surface-overlay: rgba(255, 255, 255, 0.8);
+
+  /* --- Text (Light) --- */
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #ffffff;
+
+  /* --- Borders (Light) --- */
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  /* --- Code --- */
+  --color-code-bg: #1e293b;
+  --color-code-text: #e2e8f0;
+
+  /* --- Misc --- */
+  --color-dark: #0f172a;
+  --color-muted: #94a3b8;
+  --color-ring: rgba(13, 148, 136, 0.4);
+}
+
+/* ============================================================
+   Dark Mode Overrides
+   ============================================================ */
+.dark {
+  --color-primary-subtle: rgba(13, 148, 136, 0.15);
+  --color-primary-ring: rgba(13, 148, 136, 0.35);
+
+  --color-success-bg: rgba(74, 222, 128, 0.12);
+  --color-success-text: #86efac;
+
+  --color-danger-bg: rgba(225, 29, 72, 0.12);
+  --color-danger-text: #fda4af;
+
+  --color-warning-bg: rgba(217, 119, 6, 0.12);
+  --color-warning-border: rgba(217, 119, 6, 0.3);
+  --color-warning-text: #fcd34d;
+
+  --color-info-bg: rgba(14, 165, 233, 0.12);
+
+  --color-surface: #0f172a;
+  --color-surface-raised: #1e293b;
+  --color-surface-sunken: #0b1120;
+  --color-surface-overlay: rgba(15, 23, 42, 0.85);
+
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #0f172a;
+
+  --color-border: #1e293b;
+  --color-border-strong: #334155;
+
+  --color-code-bg: #020617;
+  --color-code-text: #e2e8f0;
+}
+
+/* ============================================================
+   Base Layer
+   ============================================================ */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface-sunken text-text transition-colors duration-300;
+    font-family: "DM Sans", system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0;
+    font-family: "Sora", "DM Sans", system-ui, sans-serif;
+    @apply font-bold tracking-tight text-text;
+  }
+
+  h1 {
+    @apply text-2xl;
+  }
+  h2 {
+    @apply text-xl;
+  }
+  h3 {
+    @apply text-lg;
+  }
+
+  label {
+    @apply block mb-1.5 font-medium text-sm text-text-secondary;
+  }
+
+  input[type="email"],
+  input[type="password"],
+  input[type="text"],
+  input[type="tel"] {
+    @apply w-full px-4 py-3 bg-surface border border-border rounded-xl text-sm text-text transition-all duration-200 placeholder-text-muted;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus {
+    @apply outline-none border-primary ring-4 ring-primary-ring;
+  }
+
+  a {
+    @apply text-primary transition-colors duration-150;
+  }
+  a:hover {
+    @apply text-primary-hover;
+  }
+
+  hr {
+    @apply border-t border-border my-6;
+  }
+
+  ::selection {
+    background: rgba(13, 148, 136, 0.2);
+  }
+}
+
+/* ============================================================
+   Component Layer
+   ============================================================ */
+@layer components {
+  /* --- Glass Card --- */
+  .glass-card {
+    @apply bg-surface-overlay border border-border rounded-2xl shadow-lg;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .dark .glass-card {
+    @apply shadow-2xl;
+    box-shadow:
+      0 0 0 1px rgba(148, 163, 184, 0.05),
+      0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  /* --- Buttons (base via shared selector) --- */
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger,
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer no-underline transition-all duration-200 ease-out border-none;
+  }
+  .btn-primary:active,
+  .btn-secondary:active,
+  .btn-ghost:active,
+  .btn-danger:active,
+  .btn-outline:active {
+    transform: scale(0.97);
+  }
+
+  .btn-primary {
+    @apply text-white;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    @apply bg-surface text-text border border-border;
+  }
+  .btn-secondary:hover {
+    @apply bg-surface-raised border-border-strong;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-text-secondary;
+  }
+  .btn-ghost:hover {
+    @apply bg-primary-subtle text-primary;
+  }
+
+  .btn-danger {
+    @apply text-white bg-danger;
+    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.25);
+  }
+  .btn-danger:hover {
+    @apply bg-danger-hover;
+    box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    @apply bg-transparent text-primary border-2 border-primary/30;
+  }
+  .btn-outline:hover {
+    @apply bg-primary-subtle border-primary;
+  }
+
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-xs rounded-lg;
+  }
+
+  .btn-lg {
+    @apply px-8 py-3.5 text-base;
+  }
+
+  /* --- Input with label group --- */
+  .form-group {
+    @apply mb-5;
+  }
+
+  /* --- Badges (base via shared selector) --- */
+  .badge-success,
+  .badge-danger,
+  .badge-warning,
+  .badge-info {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-success {
+    @apply bg-success-bg text-success-text;
+  }
+  .badge-danger {
+    @apply bg-danger-bg text-danger-text;
+  }
+  .badge-warning {
+    @apply bg-warning-bg text-warning-text;
+  }
+  .badge-info {
+    @apply bg-info-bg text-primary;
+  }
+
+  /* --- Alerts (base via shared selector) --- */
+  .alert-success,
+  .alert-danger,
+  .alert-warning,
+  .alert-info {
+    @apply p-4 rounded-xl text-sm border;
+  }
+  .alert-success {
+    @apply bg-success-bg border-success/20 text-success-text;
+  }
+  .alert-danger {
+    @apply bg-danger-bg border-danger/20 text-danger-text;
+  }
+  .alert-warning {
+    @apply bg-warning-bg border-warning-border text-warning-text;
+  }
+  .alert-info {
+    @apply bg-info-bg border-info/20 text-primary;
+  }
+
+  /* --- Code Block --- */
+  .code-block {
+    @apply bg-code-bg text-code-text rounded-xl p-4 font-mono text-xs overflow-auto border border-border;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+  }
+
+  /* --- Section Panel --- */
+  .panel {
+    @apply mb-8;
+  }
+  .panel-title {
+    @apply text-base font-bold mb-4 pb-3 flex items-center gap-2;
+    font-family: "Sora", system-ui, sans-serif;
+  }
+  .panel-title::before {
+    content: "";
+    @apply w-1 h-5 rounded-full;
+    background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+  }
+
+  /* --- Card --- */
+  .card {
+    @apply bg-surface border border-border rounded-2xl p-5 transition-all duration-200;
+  }
+  .card:hover {
+    @apply border-border-strong;
+  }
+
+  /* --- Nav Link --- */
+  .nav-link-active,
+  .nav-link-inactive {
+    @apply block px-4 py-2.5 rounded-xl text-sm no-underline transition-all duration-150;
+  }
+  .nav-link-active {
+    @apply bg-primary-subtle text-primary font-semibold;
+  }
+  .nav-link-inactive {
+    @apply text-text-secondary;
+  }
+  .nav-link-inactive:hover {
+    @apply bg-surface-raised text-text;
+  }
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+  }
+}
+
+/* ============================================================
+   Animated Background Mesh
+   ============================================================ */
+@layer components {
+  .bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background: var(--color-surface-sunken);
+  }
+  .bg-mesh::before,
+  .bg-mesh::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    animation: mesh-float 20s ease-in-out infinite;
+  }
+  .bg-mesh::before {
+    width: 600px;
+    height: 600px;
+    background: var(--color-primary);
+    top: -10%;
+    right: -10%;
+  }
+  .bg-mesh::after {
+    width: 500px;
+    height: 500px;
+    background: var(--color-accent);
+    bottom: -10%;
+    left: -10%;
+    animation-delay: -10s;
+    animation-direction: reverse;
+  }
+  .dark .bg-mesh::before,
+  .dark .bg-mesh::after {
+    opacity: 0.08;
+  }
+  @keyframes mesh-float {
+    0%,
+    100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(40px, -30px) scale(1.05);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.95);
+    }
+  }
+
+  /* --- Spinner --- */
+  .spinner {
+    @apply inline-block w-4 h-4 border-2 border-border border-t-primary rounded-full animate-spin align-middle ml-2;
+  }
+
+  /* --- User Dropdown --- */
+  .user-dropdown-wrap {
+    position: relative;
+  }
+  .user-dropdown-trigger {
+    @apply flex items-center gap-2 px-2 py-1.5 rounded-xl cursor-pointer transition-all duration-200 border-none bg-transparent;
+  }
+  .user-dropdown-trigger:hover {
+    @apply bg-surface-raised;
+  }
+  .user-dropdown-trigger[aria-expanded="true"] {
+    @apply bg-surface-raised;
+  }
+  .user-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    width: 240px;
+    @apply bg-surface border border-border rounded-xl shadow-lg;
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+    pointer-events: none;
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    z-index: 100;
+  }
+  .user-dropdown.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .dark .user-dropdown {
+    box-shadow:
+      0 0 0 1px rgba(148, 163, 184, 0.06),
+      0 20px 40px -8px rgba(0, 0, 0, 0.6);
+  }
+  .user-dropdown-header {
+    @apply px-4 py-3 border-b border-border;
+  }
+  .user-dropdown-body {
+    @apply py-1.5;
+  }
+  .user-dropdown-item {
+    @apply flex items-center gap-2.5 px-4 py-2 text-sm text-text-secondary no-underline transition-colors duration-150 cursor-pointer;
+  }
+  .user-dropdown-item:hover {
+    @apply bg-surface-raised text-text;
+  }
+  .user-dropdown-divider {
+    @apply border-t border-border my-1.5;
+  }
+  .user-dropdown-item.danger {
+    @apply text-danger;
+  }
+  .user-dropdown-item.danger:hover {
+    @apply bg-danger-bg text-danger;
+  }
+
+  /* --- Dashboard Cards --- */
+  .dash-card {
+    @apply bg-surface border border-border rounded-2xl p-5 transition-all duration-200;
+  }
+  .dash-card:hover {
+    @apply border-border-strong shadow-md;
+  }
+  .dash-stat {
+    @apply text-2xl font-bold tracking-tight;
+    font-family: "Sora", system-ui, sans-serif;
+  }
+  .dash-label {
+    @apply text-xs text-text-muted uppercase tracking-wider font-medium mt-1;
+  }
+
+  /* --- Validation --- */
+  .validation-message {
+    @apply text-danger text-xs mt-1.5 font-medium;
+  }
+} /* end @layer components */
+
+/* ============================================================
+   Table Styling (in base layer so utilities can override)
+   ============================================================ */
+@layer base {
+  table {
+    @apply w-full text-sm;
+  }
+  table th {
+    @apply text-left text-xs font-semibold text-text-muted uppercase tracking-wider pb-3;
+  }
+  table td {
+    @apply py-2.5 border-t border-border text-text-secondary;
+  }
+
+  /* ---- Scrollbar ---- */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-strong rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-muted;
+  }
+}
