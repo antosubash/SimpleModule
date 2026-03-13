@@ -1,5 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { resolvePage } from '@simplemodule/client';
+import { resolvePage } from '@simplemodule/client/resolve-page';
 import { createRoot } from 'react-dom/client';
 
 createInertiaApp({

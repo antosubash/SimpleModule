@@ -28,10 +28,24 @@ export default function RolesEdit({ role, users }: Props) {
   return (
     <div className="max-w-xl">
       <div className="flex items-center gap-3 mb-1">
-        <a href="/admin/roles" className="text-text-muted hover:text-text transition-colors no-underline">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        <a
+          href="/admin/roles"
+          className="text-text-muted hover:text-text transition-colors no-underline"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
         </a>
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+        <h1
+          className="text-2xl font-extrabold tracking-tight"
+          style={{ fontFamily: "'Sora', sans-serif" }}
+        >
           <span className="gradient-text">Edit Role</span>
         </h1>
       </div>
@@ -49,7 +63,9 @@ export default function RolesEdit({ role, users }: Props) {
             <label className="block text-sm font-medium mb-1">Description</label>
             <input type="text" name="description" defaultValue={role.description ?? ''} />
           </div>
-          <button type="submit" className="btn-primary">Save</button>
+          <button type="submit" className="btn-primary">
+            Save
+          </button>
         </div>
       </form>
 
@@ -60,7 +76,10 @@ export default function RolesEdit({ role, users }: Props) {
         ) : (
           <ul className="space-y-2" style={{ listStyle: 'none' }}>
             {users.map((user) => (
-              <li key={user.id} className="flex justify-between items-center py-2 border-t border-border">
+              <li
+                key={user.id}
+                className="flex justify-between items-center py-2 border-t border-border"
+              >
                 <div>
                   <span className="font-medium text-text">{user.displayName || '\u2014'}</span>
                   <span className="text-text-muted ml-2 text-sm">{user.email}</span>

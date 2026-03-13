@@ -15,9 +15,7 @@ export default function Browse({ products }: { products: Product[] }) {
             className="flex justify-between items-center p-4 rounded-lg border border-gray-200 dark:border-gray-700"
           >
             <span className="font-medium">{p.name}</span>
-            <span className="text-gray-600 dark:text-gray-400">
-              ${p.price.toFixed(2)}
-            </span>
+            <span className="text-gray-600 dark:text-gray-400">${p.price.toFixed(2)}</span>
           </li>
         ))}
       </ul>

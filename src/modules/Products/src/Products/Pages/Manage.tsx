@@ -20,7 +20,10 @@ export default function Manage({ products }: Props) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+          <h1
+            className="text-2xl font-extrabold tracking-tight"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
             <span className="gradient-text">Manage Products</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">{products.length} total products</p>

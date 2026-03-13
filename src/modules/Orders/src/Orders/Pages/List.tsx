@@ -27,7 +27,10 @@ export default function List({ orders }: Props) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+          <h1
+            className="text-2xl font-extrabold tracking-tight"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
             <span className="gradient-text">Orders</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">{orders.length} total orders</p>
@@ -55,7 +58,9 @@ export default function List({ orders }: Props) {
                 <td className="px-4 py-3 font-medium text-text">#{order.id}</td>
                 <td className="px-4 py-3 text-text-secondary">{order.userId}</td>
                 <td className="px-4 py-3">
-                  <span className="badge-info">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+                  <span className="badge-info">
+                    {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                  </span>
                 </td>
                 <td className="px-4 py-3 font-medium text-text">${order.total.toFixed(2)}</td>
                 <td className="px-4 py-3 text-sm text-text-muted">

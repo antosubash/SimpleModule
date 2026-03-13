@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { useState, FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 
 interface User {
   id: string;
@@ -35,7 +35,10 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ fontFamily: "'Sora', sans-serif" }}>
+          <h1
+            className="text-2xl font-extrabold tracking-tight"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
             <span className="gradient-text">Users</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">{totalCount} total users</p>
@@ -73,9 +76,7 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
                 <td className="px-4 py-3 font-medium text-text">{user.displayName || '\u2014'}</td>
                 <td className="px-4 py-3 text-text-secondary">
                   {user.email}
-                  {!user.emailConfirmed && (
-                    <span className="ml-2 badge-warning">unverified</span>
-                  )}
+                  {!user.emailConfirmed && <span className="ml-2 badge-warning">unverified</span>}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1 flex-wrap">
