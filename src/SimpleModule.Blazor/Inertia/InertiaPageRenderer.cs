@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
-using SimpleModule.Api.Components;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.Api.Inertia;
+namespace SimpleModule.Blazor.Inertia;
 
-internal sealed class InertiaPageRenderer(IServiceProvider services, ILoggerFactory loggerFactory)
+public sealed class InertiaPageRenderer(
+    IServiceProvider services,
+    ILoggerFactory loggerFactory,
+    IOptions<InertiaOptions> options)
     : IInertiaPageRenderer
 {
     public async Task RenderPageAsync(HttpContext httpContext, string pageJson)
@@ -14,7 +18,8 @@ internal sealed class InertiaPageRenderer(IServiceProvider services, ILoggerFact
         await using var renderer = new HtmlRenderer(services, loggerFactory);
         var html = await renderer.Dispatcher.InvokeAsync(async () =>
         {
-            var output = await renderer.RenderComponentAsync<InertiaShell>(
+            var output = await renderer.RenderComponentAsync(
+                options.Value.ShellComponent,
                 ParameterView.FromDictionary(
                     new Dictionary<string, object?>
                     {
