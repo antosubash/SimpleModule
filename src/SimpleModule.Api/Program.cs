@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
 using SimpleModule.Api.Components;
-using SimpleModule.Api.Inertia;
+using SimpleModule.Blazor;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
@@ -63,7 +63,7 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddRazorComponents();
 
 // Inertia page renderer (renders Inertia HTML shell via Blazor SSR)
-builder.Services.AddScoped<IInertiaPageRenderer, InertiaPageRenderer>();
+builder.Services.AddSimpleModuleBlazor();
 
 // Register event bus
 builder.Services.AddScoped<IEventBus, EventBus>();
