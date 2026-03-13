@@ -3,9 +3,17 @@
   "name": "simplemodule",
   "workspaces": [
     "src/modules/*/src/*",
+    "src/SimpleModule.Client",
     "src/SimpleModule.Api/ClientApp"
   ],
+  "scripts": {
+    "lint": "biome lint ./src",
+    "format": "biome format --write ./src",
+    "check": "biome check ./src",
+    "check:fix": "biome check --write ./src"
+  },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.4.0",

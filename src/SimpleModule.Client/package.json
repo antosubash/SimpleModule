@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "name": "@simplemodule/client",
+  "type": "module",
+  "main": "src/index.ts",
+  "peerDependencies": {
+    "@inertiajs/react": "^2.0.0",
+    "esbuild": "*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "vite": "^6.0.0"
+  }
+}
