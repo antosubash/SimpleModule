@@ -57,6 +57,10 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             "SimpleModule.Core.IEndpoint"
         );
 
+        var viewEndpointInterfaceSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IViewEndpoint"
+        );
+
         var modules = new List<ModuleInfo>();
 
         foreach (var reference in compilation.References)
@@ -76,7 +80,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             return DiscoveryData.Empty;
 
         // Discover IEndpoint implementors per module assembly.
-        // Endpoints whose FQN contains ".Views." are classified as view endpoints.
+        // Classification is by interface type: IViewEndpoint → view, IEndpoint → API.
         if (endpointInterfaceSymbol is not null)
         {
             foreach (var module in modules)
@@ -90,6 +94,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 FindEndpointTypes(
                     assembly.GlobalNamespace,
                     endpointInterfaceSymbol,
+                    viewEndpointInterfaceSymbol,
                     module.ModuleName,
                     module.Endpoints,
                     module.Views
@@ -147,17 +152,16 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             modules
                 .Select(m => new ModuleInfoRecord(
                     m.FullyQualifiedName,
+                    m.ModuleName,
                     m.HasConfigureServices,
                     m.HasConfigureEndpoints,
                     m.HasConfigureMenu,
                     m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
-                    m.Endpoints
-                        .Select(e => new EndpointInfoRecord(e.FullyQualifiedName))
+                    m.Endpoints.Select(e => new EndpointInfoRecord(e.FullyQualifiedName))
                         .ToImmutableArray(),
-                    m.Views
-                        .Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page))
+                    m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page))
                         .ToImmutableArray()
                 ))
                 .ToImmutableArray(),
@@ -199,9 +203,10 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                         )
                     )
                     {
-                        var moduleName = attr.ConstructorArguments.Length > 0
-                            ? attr.ConstructorArguments[0].Value as string ?? ""
-                            : "";
+                        var moduleName =
+                            attr.ConstructorArguments.Length > 0
+                                ? attr.ConstructorArguments[0].Value as string ?? ""
+                                : "";
                         var routePrefix = "";
                         var viewPrefix = "";
                         foreach (var namedArg in attr.NamedArguments)
@@ -252,6 +257,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
     private static void FindEndpointTypes(
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol endpointInterfaceSymbol,
+        INamedTypeSymbol? viewEndpointInterfaceSymbol,
         string moduleName,
         List<EndpointInfo> endpoints,
         List<ViewInfo> views
@@ -264,6 +270,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 FindEndpointTypes(
                     childNamespace,
                     endpointInterfaceSymbol,
+                    viewEndpointInterfaceSymbol,
                     moduleName,
                     endpoints,
                     views
@@ -274,42 +281,30 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 if (
                     !typeSymbol.IsAbstract
                     && !typeSymbol.IsStatic
-                    && ImplementsInterface(typeSymbol, endpointInterfaceSymbol)
                 )
                 {
                     var fqn = typeSymbol.ToDisplayString(
                         SymbolDisplayFormat.FullyQualifiedFormat
                     );
 
-                    // Check if this endpoint lives in a .Views. namespace
-                    if (fqn.Contains(".Views."))
+                    if (viewEndpointInterfaceSymbol is not null
+                        && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol))
                     {
                         var className = typeSymbol.Name;
-                        // Strip Endpoint/View suffix
                         if (className.EndsWith("Endpoint", StringComparison.Ordinal))
-                            className = className.Substring(
-                                0,
-                                className.Length - "Endpoint".Length
-                            );
+                            className = className.Substring(0, className.Length - "Endpoint".Length);
                         else if (className.EndsWith("View", StringComparison.Ordinal))
-                            className = className.Substring(
-                                0,
-                                className.Length - "View".Length
-                            );
+                            className = className.Substring(0, className.Length - "View".Length);
 
-                        views.Add(
-                            new ViewInfo
-                            {
-                                FullyQualifiedName = fqn,
-                                Page = moduleName + "/" + className,
-                            }
-                        );
+                        views.Add(new ViewInfo
+                        {
+                            FullyQualifiedName = fqn,
+                            Page = moduleName + "/" + className,
+                        });
                     }
-                    else
+                    else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
                     {
-                        endpoints.Add(
-                            new EndpointInfo { FullyQualifiedName = fqn }
-                        );
+                        endpoints.Add(new EndpointInfo { FullyQualifiedName = fqn });
                     }
                 }
             }
@@ -481,6 +476,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("// <auto-generated/>");
         sb.AppendLine("using Microsoft.AspNetCore.Builder;");
         sb.AppendLine("using Microsoft.AspNetCore.Routing;");
+        sb.AppendLine("using Microsoft.AspNetCore.Http;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
@@ -492,43 +488,38 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         sb.AppendLine("    {");
 
         // Auto-registered endpoints (IEndpoint implementors)
+        // Skip modules that define ConfigureEndpoints — they manage their own registration.
         foreach (var module in modules)
         {
-            if (module.Endpoints.Length == 0)
+            if (module.Endpoints.Length == 0 || module.HasConfigureEndpoints)
                 continue;
 
             sb.AppendLine();
-            sb.AppendLine(
-                $"        // Auto-registered endpoints for {module.FullyQualifiedName}"
-            );
+            sb.AppendLine($"        // Auto-registered endpoints for {module.FullyQualifiedName}");
             sb.AppendLine("        {");
 
             if (!string.IsNullOrEmpty(module.RoutePrefix))
             {
                 sb.AppendLine(
-                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\");"
+                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\").WithTags(\"{module.ModuleName}\");"
                 );
                 foreach (var endpoint in module.Endpoints)
                 {
-                    sb.AppendLine(
-                        $"            new {endpoint.FullyQualifiedName}().Map(group);"
-                    );
+                    sb.AppendLine($"            new {endpoint.FullyQualifiedName}().Map(group);");
                 }
             }
             else
             {
                 foreach (var endpoint in module.Endpoints)
                 {
-                    sb.AppendLine(
-                        $"            new {endpoint.FullyQualifiedName}().Map(app);"
-                    );
+                    sb.AppendLine($"            new {endpoint.FullyQualifiedName}().Map(app);");
                 }
             }
 
             sb.AppendLine("        }");
         }
 
-        // Auto-registered view endpoints (IEndpoint in *.Views.* namespace)
+        // Auto-registered view endpoints (IViewEndpoint implementors)
         foreach (var module in modules)
         {
             if (module.Views.Length == 0)
@@ -543,22 +534,18 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             if (!string.IsNullOrEmpty(module.ViewPrefix))
             {
                 sb.AppendLine(
-                    $"            var viewGroup = app.MapGroup(\"{module.ViewPrefix}\");"
+                    $"            var viewGroup = app.MapGroup(\"{module.ViewPrefix}\").WithTags(\"{module.ModuleName}\").ExcludeFromDescription();"
                 );
                 foreach (var view in module.Views)
                 {
-                    sb.AppendLine(
-                        $"            new {view.FullyQualifiedName}().Map(viewGroup);"
-                    );
+                    sb.AppendLine($"            new {view.FullyQualifiedName}().Map(viewGroup);");
                 }
             }
             else
             {
                 foreach (var view in module.Views)
                 {
-                    sb.AppendLine(
-                        $"            new {view.FullyQualifiedName}().Map(app);"
-                    );
+                    sb.AppendLine($"            new {view.FullyQualifiedName}().Map(app);");
                 }
             }
 
@@ -746,9 +733,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
             // Extract module name from FQN (e.g., "global::SimpleModule.Products.ProductsModule" → "Products")
             var fqn = module.FullyQualifiedName.Replace("global::", "");
-            var moduleName = fqn.Contains(".")
-                ? fqn.Substring(fqn.LastIndexOf('.') + 1)
-                : fqn;
+            var moduleName = fqn.Contains(".") ? fqn.Substring(fqn.LastIndexOf('.') + 1) : fqn;
             if (moduleName.EndsWith("Module", StringComparison.Ordinal))
                 moduleName = moduleName.Substring(0, moduleName.Length - "Module".Length);
 
@@ -963,6 +948,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
 
     private readonly record struct ModuleInfoRecord(
         string FullyQualifiedName,
+        string ModuleName,
         bool HasConfigureServices,
         bool HasConfigureEndpoints,
         bool HasConfigureMenu,
@@ -976,6 +962,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         public bool Equals(ModuleInfoRecord other)
         {
             return FullyQualifiedName == other.FullyQualifiedName
+                && ModuleName == other.ModuleName
                 && HasConfigureServices == other.HasConfigureServices
                 && HasConfigureEndpoints == other.HasConfigureEndpoints
                 && HasConfigureMenu == other.HasConfigureMenu
@@ -992,6 +979,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
             {
                 var hash = 17;
                 hash = hash * 31 + FullyQualifiedName.GetHashCode();
+                hash = hash * 31 + (ModuleName ?? "").GetHashCode();
                 hash = hash * 31 + HasConfigureServices.GetHashCode();
                 hash = hash * 31 + HasConfigureEndpoints.GetHashCode();
                 hash = hash * 31 + HasConfigureMenu.GetHashCode();
