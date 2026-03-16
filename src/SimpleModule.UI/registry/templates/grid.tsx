@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
 import { cn } from '../lib/utils';
 
 const gridVariants = cva('grid', {
@@ -27,11 +27,15 @@ const gridVariants = cva('grid', {
   },
 });
 
-interface GridProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof gridVariants> {}
+interface GridProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof gridVariants> {}
 
-const Grid = React.forwardRef<HTMLDivElement, GridProps>(({ className, cols, gap, ...props }, ref) => (
-  <div ref={ref} className={cn(gridVariants({ cols, gap, className }))} {...props} />
-));
+const Grid = React.forwardRef<HTMLDivElement, GridProps>(
+  ({ className, cols, gap, ...props }, ref) => (
+    <div ref={ref} className={cn(gridVariants({ cols, gap, className }))} {...props} />
+  ),
+);
 Grid.displayName = 'Grid';
 
 export { Grid, gridVariants };

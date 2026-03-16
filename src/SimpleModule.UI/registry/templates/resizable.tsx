@@ -10,10 +10,7 @@ const ResizablePanelGroup = React.forwardRef<HTMLDivElement, ResizablePanelGroup
     <div
       ref={ref}
       data-direction={direction}
-      className={cn(
-        'flex h-full w-full data-[direction=vertical]:flex-col',
-        className,
-      )}
+      className={cn('flex h-full w-full data-[direction=vertical]:flex-col', className)}
       {...props}
     />
   ),
@@ -59,7 +56,14 @@ const ResizableHandle = React.forwardRef<HTMLDivElement, ResizableHandleProps>(
     >
       {withHandle && (
         <div className="z-10 flex h-4 w-3 items-center justify-center rounded-sm border border-border bg-surface">
-          <svg className="h-2.5 w-2.5 text-text-muted" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            className="h-2.5 w-2.5 text-text-muted"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <circle cx="9" cy="12" r="1" fill="currentColor" />
             <circle cx="15" cy="12" r="1" fill="currentColor" />
           </svg>

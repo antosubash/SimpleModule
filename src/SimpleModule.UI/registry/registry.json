@@ -39,7 +39,14 @@
     "file": "breadcrumb.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-slot"],
-    "exports": ["Breadcrumb", "BreadcrumbList", "BreadcrumbItem", "BreadcrumbLink", "BreadcrumbPage", "BreadcrumbSeparator"]
+    "exports": [
+      "Breadcrumb",
+      "BreadcrumbList",
+      "BreadcrumbItem",
+      "BreadcrumbLink",
+      "BreadcrumbPage",
+      "BreadcrumbSeparator"
+    ]
   },
   "button": {
     "name": "Button",
@@ -82,7 +89,16 @@
     "dependencies": [],
     "radixPackages": [],
     "extraPackages": ["cmdk"],
-    "exports": ["Command", "CommandInput", "CommandList", "CommandEmpty", "CommandGroup", "CommandItem", "CommandShortcut", "CommandSeparator"]
+    "exports": [
+      "Command",
+      "CommandInput",
+      "CommandList",
+      "CommandEmpty",
+      "CommandGroup",
+      "CommandItem",
+      "CommandShortcut",
+      "CommandSeparator"
+    ]
   },
   "dialog": {
     "name": "Dialog",
@@ -222,14 +238,38 @@
     "file": "sheet.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-dialog"],
-    "exports": ["Sheet", "SheetPortal", "SheetOverlay", "SheetTrigger", "SheetClose", "SheetContent", "SheetHeader", "SheetFooter", "SheetTitle", "SheetDescription"]
+    "exports": [
+      "Sheet",
+      "SheetPortal",
+      "SheetOverlay",
+      "SheetTrigger",
+      "SheetClose",
+      "SheetContent",
+      "SheetHeader",
+      "SheetFooter",
+      "SheetTitle",
+      "SheetDescription"
+    ]
   },
   "sidebar": {
     "name": "Sidebar",
     "file": "sidebar.tsx",
     "dependencies": [],
     "radixPackages": [],
-    "exports": ["SidebarProvider", "Sidebar", "SidebarHeader", "SidebarContent", "SidebarFooter", "SidebarGroup", "SidebarGroupLabel", "SidebarMenu", "SidebarMenuItem", "SidebarMenuButton", "SidebarTrigger", "useSidebar"]
+    "exports": [
+      "SidebarProvider",
+      "Sidebar",
+      "SidebarHeader",
+      "SidebarContent",
+      "SidebarFooter",
+      "SidebarGroup",
+      "SidebarGroupLabel",
+      "SidebarMenu",
+      "SidebarMenuItem",
+      "SidebarMenuButton",
+      "SidebarTrigger",
+      "useSidebar"
+    ]
   },
   "skeleton": {
     "name": "Skeleton",
@@ -292,7 +332,16 @@
     "file": "toast.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-toast"],
-    "exports": ["ToastProvider", "ToastViewport", "Toast", "ToastTitle", "ToastDescription", "ToastClose", "ToastAction", "toastVariants"]
+    "exports": [
+      "ToastProvider",
+      "ToastViewport",
+      "Toast",
+      "ToastTitle",
+      "ToastDescription",
+      "ToastClose",
+      "ToastAction",
+      "toastVariants"
+    ]
   },
   "toggle": {
     "name": "Toggle",

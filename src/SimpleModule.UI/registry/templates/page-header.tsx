@@ -9,7 +9,11 @@ interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
   ({ className, title, description, actions, ...props }, ref) => (
-    <div ref={ref} className={cn('flex items-start justify-between gap-4 mb-6', className)} {...props}>
+    <div
+      ref={ref}
+      className={cn('flex items-start justify-between gap-4 mb-6', className)}
+      {...props}
+    >
       <div>
         <h1
           className="text-2xl font-extrabold tracking-tight"
