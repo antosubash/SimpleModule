@@ -1,5 +1,14 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from '@simplemodule/ui';
 
 interface Product {
   id: number;
@@ -70,10 +79,7 @@ export default function Edit({ order, products }: Props) {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/orders"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
+        <a href="/orders" className="text-text-muted hover:text-text transition-colors no-underline">
           <svg
             className="w-4 h-4"
             fill="none"
@@ -84,102 +90,96 @@ export default function Edit({ order, products }: Props) {
             <path d="M15 19l-7-7 7-7" />
           </svg>
         </a>
-        <h1
-          className="text-2xl font-extrabold tracking-tight"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          <span className="gradient-text">Edit Order #{order.id}</span>
-        </h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">Edit Order #{order.id}</h1>
       </div>
       <p className="text-text-muted text-sm ml-7 mb-6">
         Created: {new Date(order.createdAt).toLocaleString()} &middot; Current total: $
         {order.total.toFixed(2)}
       </p>
 
-      <form onSubmit={handleSubmit} className="glass-card p-6 mb-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">User ID</label>
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium">Items</label>
-              <button
-                type="button"
-                onClick={addItem}
-                className="btn-secondary"
-                style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-              >
-                + Add Item
-              </button>
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="userId">User ID</Label>
+              <Input
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                required
+              />
             </div>
-            <div className="space-y-2">
-              {items.map((item, index) => (
-                <div key={index} className="flex gap-2 items-center">
-                  <select
-                    value={item.productId}
-                    onChange={(e) => updateItem(index, 'productId', Number(e.target.value))}
-                    className="flex-1"
-                  >
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (${p.price.toFixed(2)})
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateItem(index, 'quantity', Math.max(1, Number(e.target.value)))
-                    }
-                    min="1"
-                    style={{ width: '5rem' }}
-                  />
-                  {items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeItem(index)}
-                      className="text-danger hover:text-danger-hover bg-transparent border-none cursor-pointer text-lg"
-                      title="Remove item"
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <Label>Items</Label>
+                <Button type="button" variant="secondary" size="sm" onClick={addItem}>
+                  + Add Item
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {items.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <select
+                      value={item.productId}
+                      onChange={(e) => updateItem(index, 'productId', Number(e.target.value))}
+                      className="flex-1 h-11 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary-ring"
                     >
-                      &times;
-                    </button>
-                  )}
-                </div>
-              ))}
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (${p.price.toFixed(2)})
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        updateItem(index, 'quantity', Math.max(1, Number(e.target.value)))
+                      }
+                      min="1"
+                      className="w-20"
+                    />
+                    {items.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(index)}
+                      >
+                        &times;
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="pt-2 border-t border-border">
-            <div className="flex justify-between items-center text-lg font-semibold">
-              <span>Estimated Total</span>
-              <span>${getTotal().toFixed(2)}</span>
+            <div className="pt-2 border-t border-border">
+              <div className="flex justify-between items-center text-lg font-semibold">
+                <span>Estimated Total</span>
+                <span>${getTotal().toFixed(2)}</span>
+              </div>
             </div>
-          </div>
 
-          <button type="submit" className="btn-primary">
-            Save Changes
-          </button>
-        </div>
-      </form>
+            <Button type="submit">Save Changes</Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="glass-card p-6">
-        <h2 className="text-lg font-semibold mb-3">Danger Zone</h2>
-        <p className="text-sm text-text-muted mb-3">
-          Permanently delete this order. This action cannot be undone.
-        </p>
-        <button onClick={handleDelete} className="btn-danger">
-          Delete Order
-        </button>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-text-muted mb-3">
+            Permanently delete this order. This action cannot be undone.
+          </p>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete Order
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
