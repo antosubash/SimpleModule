@@ -29,6 +29,7 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 GenerateMenuExtensions(spc, data.Modules);
                 GenerateRazorComponentExtensions(spc, data.Modules);
                 GenerateViewPages(spc, data.Modules);
+                GenerateModuleCssProvider(spc, data.Modules);
 
                 if (data.DtoTypes.Length > 0)
                 {

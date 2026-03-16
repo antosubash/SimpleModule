@@ -1,4 +1,5 @@
 // Auto-generated from view endpoints — do not edit
+import './index.css';
 import Browse from '../Views/Browse';
 import Create from '../Views/Create';
 import Edit from '../Views/Edit';

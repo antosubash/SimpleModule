@@ -3,6 +3,7 @@
 <SimpleModule.Blazor.Components.InertiaShell
     PageJson="@PageJson"
     HttpContext="@HttpContext"
+    ModuleCssPaths="@ModuleCssPaths"
     Layout="typeof(SimpleModule.Blazor.Components.Layout.MainLayout)">
     <HeadContent>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -19,4 +20,5 @@
 @code {
     [Parameter] public string PageJson { get; set; } = "";
     [Parameter] public Microsoft.AspNetCore.Http.HttpContext? HttpContext { get; set; }
+    [Parameter] public System.Collections.Generic.IReadOnlyList<string>? ModuleCssPaths { get; set; }
 }
