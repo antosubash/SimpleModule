@@ -12,13 +12,9 @@ namespace SimpleModule.Dashboard;
 [Module(DashboardConstants.ModuleName, RoutePrefix = DashboardConstants.RoutePrefix)]
 public class DashboardModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
-    {
-    }
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration) { }
 
-    public void ConfigureMenu(IMenuBuilder menus)
-    {
-    }
+    public void ConfigureMenu(IMenuBuilder menus) { }
 
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
@@ -28,11 +24,17 @@ public class DashboardModule : IModule
             {
                 var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
                 var displayName = context.User?.Identity?.Name ?? "User";
-                var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+                var isDevelopment =
+                    Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
 
                 return Inertia.Render(
                     "Dashboard/Home",
-                    new { isAuthenticated, displayName, isDevelopment }
+                    new
+                    {
+                        isAuthenticated,
+                        displayName,
+                        isDevelopment,
+                    }
                 );
             }
         );

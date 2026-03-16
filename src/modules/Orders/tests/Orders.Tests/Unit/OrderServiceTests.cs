@@ -162,7 +162,12 @@ public sealed class OrderServiceTests : IDisposable
     public async Task UpdateOrderAsync_WithValidData_UpdatesOrder()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
-        var widget = new Product { Id = 1, Name = "Widget", Price = 10.00m };
+        var widget = new Product
+        {
+            Id = 1,
+            Name = "Widget",
+            Price = 10.00m,
+        };
         _products
             .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
             .Returns(callInfo =>
@@ -210,7 +215,12 @@ public sealed class OrderServiceTests : IDisposable
     public async Task DeleteOrderAsync_WithExistingOrder_RemovesOrder()
     {
         _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
-        var widget = new Product { Id = 1, Name = "Widget", Price = 10.00m };
+        var widget = new Product
+        {
+            Id = 1,
+            Name = "Widget",
+            Price = 10.00m,
+        };
         _products
             .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
             .Returns(callInfo =>

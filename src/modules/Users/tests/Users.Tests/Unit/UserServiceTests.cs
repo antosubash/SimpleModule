@@ -116,7 +116,11 @@ public sealed class UserServiceTests
             .CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>())
             .Returns(
                 IdentityResult.Failed(
-                    new IdentityError { Code = "DuplicateEmail", Description = "Email already taken" }
+                    new IdentityError
+                    {
+                        Code = "DuplicateEmail",
+                        Description = "Email already taken",
+                    }
                 )
             );
 
@@ -142,15 +146,9 @@ public sealed class UserServiceTests
             DisplayName = "Old Name",
         };
         _userManager.FindByIdAsync("1").Returns(appUser);
-        _userManager
-            .UpdateAsync(Arg.Any<ApplicationUser>())
-            .Returns(IdentityResult.Success);
+        _userManager.UpdateAsync(Arg.Any<ApplicationUser>()).Returns(IdentityResult.Success);
 
-        var request = new UpdateUserRequest
-        {
-            Email = "new@test.com",
-            DisplayName = "New Name",
-        };
+        var request = new UpdateUserRequest { Email = "new@test.com", DisplayName = "New Name" };
 
         var user = await _sut.UpdateUserAsync("1", request);
 
@@ -164,11 +162,7 @@ public sealed class UserServiceTests
     {
         _userManager.FindByIdAsync("999").Returns((ApplicationUser?)null);
 
-        var request = new UpdateUserRequest
-        {
-            Email = "test@test.com",
-            DisplayName = "Test",
-        };
+        var request = new UpdateUserRequest { Email = "test@test.com", DisplayName = "Test" };
 
         var act = () => _sut.UpdateUserAsync("999", request);
 
@@ -185,9 +179,7 @@ public sealed class UserServiceTests
             DisplayName = "Test",
         };
         _userManager.FindByIdAsync("1").Returns(appUser);
-        _userManager
-            .DeleteAsync(Arg.Any<ApplicationUser>())
-            .Returns(IdentityResult.Success);
+        _userManager.DeleteAsync(Arg.Any<ApplicationUser>()).Returns(IdentityResult.Success);
 
         await _sut.DeleteUserAsync("1");
 

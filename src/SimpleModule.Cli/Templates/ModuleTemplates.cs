@@ -156,9 +156,7 @@ public sealed class ModuleTemplates
 
     public string GetAllEndpoint(string moduleName, string singularName)
     {
-        var refPath = RefModulePath(
-            Path.Combine("Endpoints", _refModule!, $"GetAllEndpoint.cs")
-        );
+        var refPath = RefModulePath(Path.Combine("Endpoints", _refModule!, $"GetAllEndpoint.cs"));
         if (refPath is null)
         {
             return FallbackGetAllEndpoint(moduleName, singularName);

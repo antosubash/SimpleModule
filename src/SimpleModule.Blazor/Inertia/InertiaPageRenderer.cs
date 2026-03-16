@@ -10,8 +10,8 @@ namespace SimpleModule.Blazor.Inertia;
 public sealed class InertiaPageRenderer(
     IServiceProvider services,
     ILoggerFactory loggerFactory,
-    IOptions<InertiaOptions> options)
-    : IInertiaPageRenderer
+    IOptions<InertiaOptions> options
+) : IInertiaPageRenderer
 {
     public async Task RenderPageAsync(HttpContext httpContext, string pageJson)
     {
