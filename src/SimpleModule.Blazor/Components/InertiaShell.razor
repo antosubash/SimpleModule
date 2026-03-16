@@ -6,13 +6,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    @if (ModuleCssPaths is not null)
-    {
-        @foreach (var cssPath in ModuleCssPaths)
-        {
-            <link rel="stylesheet" href="@cssPath" />
-        }
-    }
     @if (HeadContent is not null)
     {
         @HeadContent
@@ -51,7 +44,6 @@
     [Parameter] public string PageJson { get; set; } = "";
     [Parameter] public Microsoft.AspNetCore.Http.HttpContext? HttpContext { get; set; }
     [Parameter, EditorRequired] public Type Layout { get; set; } = default!;
-    [Parameter] public System.Collections.Generic.IReadOnlyList<string>? ModuleCssPaths { get; set; }
     [Parameter] public RenderFragment? HeadContent { get; set; }
     [Parameter] public RenderFragment? BodyPrefix { get; set; }
     [Parameter] public RenderFragment? BodySuffix { get; set; }

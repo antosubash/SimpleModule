@@ -136,7 +136,7 @@ app.UseHttpsRedirection();
 
 app.UseInertia();
 
-app.UseStaticFiles();
+app.MapStaticAssets();
 
 app.UseAuthentication();
 app.UseAuthorization();

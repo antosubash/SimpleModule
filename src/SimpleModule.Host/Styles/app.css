@@ -2,3 +2,4 @@
 @import "@simplemodule/theme-default/theme.css";
 @source "../../SimpleModule.UI/";
 @source "../../SimpleModule.Blazor/**/*.razor";
+@source "./_scan/";

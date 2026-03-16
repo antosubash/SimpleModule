@@ -3,13 +3,12 @@
 <SimpleModule.Blazor.Components.InertiaShell
     PageJson="@PageJson"
     HttpContext="@HttpContext"
-    ModuleCssPaths="@ModuleCssPaths"
     Layout="typeof(SimpleModule.Blazor.Components.Layout.MainLayout)">
     <HeadContent>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <link rel="stylesheet" href="/css/app.css" />
+        <link rel="stylesheet" href="/css/app.css?v=@CacheBuster" />
         <title>SimpleModule</title>
     </HeadContent>
     <BodyPrefix>
@@ -18,7 +17,8 @@
 </SimpleModule.Blazor.Components.InertiaShell>
 
 @code {
+    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
     [Parameter] public string PageJson { get; set; } = "";
     [Parameter] public Microsoft.AspNetCore.Http.HttpContext? HttpContext { get; set; }
-    [Parameter] public System.Collections.Generic.IReadOnlyList<string>? ModuleCssPaths { get; set; }
 }
