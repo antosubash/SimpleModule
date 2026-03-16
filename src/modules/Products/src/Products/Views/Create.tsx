@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Button, Input, Label, Card, CardContent } from '@simplemodule/ui';
 
 export default function Create() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -20,6 +21,7 @@ export default function Create() {
             stroke="currentColor"
             strokeWidth="2"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path d="M15 19l-7-7 7-7" />
           </svg>
@@ -33,21 +35,21 @@ export default function Create() {
       </div>
       <p className="text-text-muted text-sm ml-7 mb-6">Add a new product</p>
 
-      <form onSubmit={handleSubmit} className="glass-card p-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
-            <input type="text" name="name" required placeholder="Product name" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Price</label>
-            <input type="number" name="price" required min="0.01" step="0.01" placeholder="0.00" />
-          </div>
-          <button type="submit" className="btn-primary">
-            Create
-          </button>
-        </div>
-      </form>
+      <Card className="glass-card">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" name="name" required placeholder="Product name" />
+            </div>
+            <div>
+              <Label htmlFor="price">Price</Label>
+              <Input id="price" name="price" type="number" required min={0.01} step={0.01} placeholder="0.00" />
+            </div>
+            <Button type="submit">Create</Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
