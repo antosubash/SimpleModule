@@ -61,6 +61,12 @@
   --color-dark: #0f172a;
   --color-muted: #94a3b8;
   --color-ring: rgba(13, 148, 136, 0.4);
+
+  /* --- Shadows (themeable) --- */
+  --shadow-primary: 0 4px 14px rgba(13, 148, 136, 0.35);
+  --shadow-primary-hover: 0 6px 20px rgba(13, 148, 136, 0.5);
+  --shadow-danger: 0 4px 14px rgba(225, 29, 72, 0.25);
+  --shadow-danger-hover: 0 6px 20px rgba(225, 29, 72, 0.4);
 }
 
 /* ============================================================
