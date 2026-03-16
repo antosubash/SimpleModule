@@ -5,6 +5,7 @@
     "src/modules/*/src/*",
     "src/SimpleModule.Client",
     "src/SimpleModule.Theme.Default",
+    "src/SimpleModule.UI",
     "src/SimpleModule.Host/ClientApp"
   ],
   "scripts": {
