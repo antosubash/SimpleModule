@@ -1,4 +1,14 @@
 import { router } from '@inertiajs/react';
+import {
+  Badge,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@simplemodule/ui';
 
 interface OrderItem {
   productId: number;
@@ -27,73 +37,62 @@ export default function List({ orders }: Props) {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1
-            className="text-2xl font-extrabold tracking-tight"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            <span className="gradient-text">Orders</span>
-          </h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">Orders</h1>
           <p className="text-text-muted text-sm mt-1">{orders.length} total orders</p>
         </div>
-        <button onClick={() => router.get('/orders/create')} className="btn-primary">
-          Create Order
-        </button>
+        <Button onClick={() => router.get('/orders/create')}>Create Order</Button>
       </div>
 
-      <div className="glass-card overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">User</th>
-              <th className="px-4 py-3">Items</th>
-              <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => (
-              <tr key={order.id} className="hover:bg-surface-raised transition-colors">
-                <td className="px-4 py-3 font-medium text-text">#{order.id}</td>
-                <td className="px-4 py-3 text-text-secondary">{order.userId}</td>
-                <td className="px-4 py-3">
-                  <span className="badge-info">
-                    {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-                  </span>
-                </td>
-                <td className="px-4 py-3 font-medium text-text">${order.total.toFixed(2)}</td>
-                <td className="px-4 py-3 text-sm text-text-muted">
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => router.get(`/orders/${order.id}/edit`)}
-                      className="text-primary hover:text-primary-hover text-sm font-medium bg-transparent border-none cursor-pointer"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(order.id)}
-                      className="text-danger hover:text-danger-hover text-sm font-medium bg-transparent border-none cursor-pointer"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {orders.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-text-muted">
-                  No orders yet. Create your first order!
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>User</TableHead>
+            <TableHead>Items</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {orders.map((order) => (
+            <TableRow key={order.id}>
+              <TableCell className="font-medium">#{order.id}</TableCell>
+              <TableCell className="text-text-secondary">{order.userId}</TableCell>
+              <TableCell>
+                <Badge variant="info">
+                  {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                </Badge>
+              </TableCell>
+              <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
+              <TableCell className="text-sm text-text-muted">
+                {new Date(order.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.get(`/orders/${order.id}/edit`)}
+                  >
+                    Edit
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={() => handleDelete(order.id)}>
+                    Delete
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {orders.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="py-8 text-center text-text-muted">
+                No orders yet. Create your first order!
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
