@@ -39,14 +39,34 @@
     "file": "dialog.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-dialog"],
-    "exports": ["Dialog", "DialogPortal", "DialogOverlay", "DialogClose", "DialogTrigger", "DialogContent", "DialogHeader", "DialogFooter", "DialogTitle", "DialogDescription"]
+    "exports": [
+      "Dialog",
+      "DialogPortal",
+      "DialogOverlay",
+      "DialogClose",
+      "DialogTrigger",
+      "DialogContent",
+      "DialogHeader",
+      "DialogFooter",
+      "DialogTitle",
+      "DialogDescription"
+    ]
   },
   "dropdown-menu": {
     "name": "DropdownMenu",
     "file": "dropdown-menu.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-dropdown-menu"],
-    "exports": ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuSeparator", "DropdownMenuLabel", "DropdownMenuGroup", "DropdownMenuSub"]
+    "exports": [
+      "DropdownMenu",
+      "DropdownMenuTrigger",
+      "DropdownMenuContent",
+      "DropdownMenuItem",
+      "DropdownMenuSeparator",
+      "DropdownMenuLabel",
+      "DropdownMenuGroup",
+      "DropdownMenuSub"
+    ]
   },
   "input": {
     "name": "Input",
@@ -81,7 +101,15 @@
     "file": "select.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-select"],
-    "exports": ["Select", "SelectGroup", "SelectValue", "SelectTrigger", "SelectContent", "SelectItem", "SelectSeparator"]
+    "exports": [
+      "Select",
+      "SelectGroup",
+      "SelectValue",
+      "SelectTrigger",
+      "SelectContent",
+      "SelectItem",
+      "SelectSeparator"
+    ]
   },
   "separator": {
     "name": "Separator",

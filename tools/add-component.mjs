@@ -84,6 +84,7 @@ function installRadixPackages(registry, names) {
   execFileSync('npm', ['install', ...toInstall, '-w', '@simplemodule/ui'], {
     cwd: ROOT,
     stdio: 'inherit',
+    shell: true,
   });
 }
 
