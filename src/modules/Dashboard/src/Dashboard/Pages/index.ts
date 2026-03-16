@@ -1,3 +1,4 @@
+import './index.css';
 import Home from './Home';
 
 // biome-ignore lint/suspicious/noExplicitAny: page components have varying prop types

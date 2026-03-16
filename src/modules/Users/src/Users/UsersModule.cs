@@ -9,10 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
-using SimpleModule.Users.Constants;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
+using SimpleModule.Users.Constants;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Endpoints.Account;
 using SimpleModule.Users.Endpoints.Admin;
 using SimpleModule.Users.Endpoints.Connect;
 using SimpleModule.Users.Endpoints.Users;
@@ -291,6 +292,9 @@ public class UsersModule : IModule
                 }
             )
             .RequireAuthorization();
+
+        // Account security endpoints (2FA)
+        AccountSecurityEndpoint.Map(endpoints);
 
         // Admin endpoints
         AdminUsersEndpoint.Map(endpoints);
