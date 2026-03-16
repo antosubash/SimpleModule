@@ -16,7 +16,11 @@ namespace SimpleModule.Orders;
 [Module(OrdersConstants.ModuleName, RoutePrefix = OrdersConstants.RoutePrefix)]
 public class OrdersModule : IModule
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<OrdersDbContext>(configuration, OrdersConstants.ModuleName);
@@ -40,16 +44,13 @@ public class OrdersModule : IModule
 
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/orders");
+        var group = endpoints.MapGroup("/orders").WithTags(OrdersConstants.ModuleName);
 
         // List orders
         group.MapGet(
             "/",
             async (IOrderContracts orders) =>
-                Inertia.Render(
-                    "Orders/List",
-                    new { orders = await orders.GetAllOrdersAsync() }
-                )
+                Inertia.Render("Orders/List", new { orders = await orders.GetAllOrdersAsync() })
         );
 
         // Create order page
@@ -79,7 +80,11 @@ public class OrdersModule : IModule
                         {
                             id = order.Id,
                             userId = order.UserId,
-                            items = order.Items.Select(i => new { productId = i.ProductId, quantity = i.Quantity }),
+                            items = order.Items.Select(i => new
+                            {
+                                productId = i.ProductId,
+                                quantity = i.Quantity,
+                            }),
                             total = order.Total,
                             createdAt = order.CreatedAt.ToString("O"),
                         },
@@ -102,8 +107,12 @@ public class OrdersModule : IModule
                 var request = new CreateOrderRequest
                 {
                     UserId = body!.UserId,
-                    Items = body.Items
-                        .Select(i => new OrderItem { ProductId = i.ProductId, Quantity = i.Quantity })
+                    Items = body
+                        .Items.Select(i => new OrderItem
+                        {
+                            ProductId = i.ProductId,
+                            Quantity = i.Quantity,
+                        })
                         .ToList(),
                 };
 
@@ -125,8 +134,12 @@ public class OrdersModule : IModule
                 var request = new UpdateOrderRequest
                 {
                     UserId = body!.UserId,
-                    Items = body.Items
-                        .Select(i => new OrderItem { ProductId = i.ProductId, Quantity = i.Quantity })
+                    Items = body
+                        .Items.Select(i => new OrderItem
+                        {
+                            ProductId = i.ProductId,
+                            Quantity = i.Quantity,
+                        })
                         .ToList(),
                 };
 

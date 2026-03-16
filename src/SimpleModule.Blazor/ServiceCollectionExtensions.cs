@@ -8,7 +8,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddSimpleModuleBlazor(
         this IServiceCollection services,
-        Action<InertiaOptions>? configure = null)
+        Action<InertiaOptions>? configure = null
+    )
     {
         services.AddScoped<IInertiaPageRenderer, InertiaPageRenderer>();
         if (configure is not null)

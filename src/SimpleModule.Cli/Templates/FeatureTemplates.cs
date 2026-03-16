@@ -233,9 +233,16 @@ public sealed class FeatureTemplates
             )
             {
                 // Extract the namespace prefix and replace the endpoint namespace
-                var nsPrefix = lines[i][..lines[i].IndexOf(".Endpoints.", StringComparison.Ordinal)];
+                var nsPrefix = lines[i][
+                    ..lines[i].IndexOf(".Endpoints.", StringComparison.Ordinal)
+                ];
                 var moduleSuffix = lines[i].Contains(';', StringComparison.Ordinal)
-                    ? lines[i][(lines[i].IndexOf(".Endpoints.", StringComparison.Ordinal) + ".Endpoints.".Length)..lines[i].IndexOf(';', StringComparison.Ordinal)]
+                    ? lines[i][
+                        (
+                            lines[i].IndexOf(".Endpoints.", StringComparison.Ordinal)
+                            + ".Endpoints.".Length
+                        )..lines[i].IndexOf(';', StringComparison.Ordinal)
+                    ]
                     : moduleName;
                 lines[i] = $"{nsPrefix}.Endpoints.{moduleSuffix};";
             }

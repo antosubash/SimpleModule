@@ -14,6 +14,7 @@ public static class AdminRolesEndpoint
     {
         var group = endpoints
             .MapGroup("/admin/roles")
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // List roles

@@ -56,10 +56,7 @@ public partial class UserService(
         var result = await userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
-            var errors = result.Errors.ToDictionary(
-                e => e.Code,
-                e => new[] { e.Description }
-            );
+            var errors = result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description });
             throw new Core.Exceptions.ValidationException(errors);
         }
 

@@ -225,7 +225,9 @@ public class UsersModule : IModule
         UserinfoEndpoint.Map(endpoints);
 
         // User API endpoints
-        var usersGroup = endpoints.MapGroup(UsersConstants.RoutePrefix);
+        var usersGroup = endpoints
+            .MapGroup(UsersConstants.RoutePrefix)
+            .WithTags(UsersConstants.ModuleName);
         GetAllEndpoint.Map(usersGroup);
         GetByIdEndpoint.Map(usersGroup);
         GetCurrentEndpoint.Map(usersGroup);

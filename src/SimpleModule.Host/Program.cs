@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
-using SimpleModule.Host.Components;
 using SimpleModule.Blazor;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
@@ -11,6 +10,7 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
+using SimpleModule.Host.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

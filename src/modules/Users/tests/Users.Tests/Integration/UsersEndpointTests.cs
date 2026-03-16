@@ -2,9 +2,9 @@
 using System.Net.Http.Json;
 using System.Security.Claims;
 using FluentAssertions;
+using SimpleModule.Tests.Shared.Fakes;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Tests.Shared.Fakes;
 
 namespace Users.Tests.Integration;
 
@@ -109,11 +109,7 @@ public class UsersEndpointTests : IClassFixture<SimpleModuleWebApplicationFactor
     [Fact]
     public async Task UpdateUser_Unauthenticated_ReturnsUnauthorized()
     {
-        var request = new UpdateUserRequest
-        {
-            Email = "updated@test.com",
-            DisplayName = "Updated",
-        };
+        var request = new UpdateUserRequest { Email = "updated@test.com", DisplayName = "Updated" };
 
         var response = await _unauthenticatedClient.PutAsJsonAsync("/api/users/some-id", request);
 

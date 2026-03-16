@@ -16,6 +16,7 @@ public static class AdminUsersEndpoint
     {
         var group = endpoints
             .MapGroup("/admin/users")
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // List users

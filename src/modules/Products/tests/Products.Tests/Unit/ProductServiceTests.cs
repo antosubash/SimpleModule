@@ -102,9 +102,7 @@ public sealed class ProductServiceTests : IDisposable
 
         var act = () => _sut.UpdateProductAsync(99999, request);
 
-        await act.Should()
-            .ThrowAsync<NotFoundException>()
-            .WithMessage("*Product*99999*not found*");
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*99999*not found*");
     }
 
     [Fact]
@@ -124,8 +122,6 @@ public sealed class ProductServiceTests : IDisposable
     {
         var act = () => _sut.DeleteProductAsync(99999);
 
-        await act.Should()
-            .ThrowAsync<NotFoundException>()
-            .WithMessage("*Product*99999*not found*");
+        await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*99999*not found*");
     }
 }

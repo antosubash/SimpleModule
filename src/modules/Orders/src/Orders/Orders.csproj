@@ -10,8 +10,12 @@
     <ProjectReference Include="..\Orders.Contracts\Orders.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Users\src\Users.Contracts\Users.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Products\src\Products.Contracts\Products.Contracts.csproj" />
-    </ItemGroup>
-  <Target Name="JsBuild" BeforeTargets="Build" Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules'))">
+  </ItemGroup>
+  <Target
+    Name="JsBuild"
+    BeforeTargets="Build"
+    Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules'))"
+  >
     <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 </Project>
