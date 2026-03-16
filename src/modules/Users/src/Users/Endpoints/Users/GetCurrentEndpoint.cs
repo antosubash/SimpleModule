@@ -2,18 +2,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Extensions;
 
 namespace SimpleModule.Users.Endpoints.Users;
 
-public static class GetCurrentEndpoint
+public class GetCurrentEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group
-            .MapGet(
-                UsersConstants.MeRoute,
+        app.MapGet(
+                UsersConstants.RoutePrefix + UsersConstants.MeRoute,
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     HttpContext context,
                     IUserContracts userContracts
@@ -29,6 +29,7 @@ public static class GetCurrentEndpoint
                     return user is not null ? TypedResults.Ok(user) : TypedResults.NotFound();
                 }
             )
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization();
     }
 }

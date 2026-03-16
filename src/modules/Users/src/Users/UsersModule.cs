@@ -1,28 +1,19 @@
-using System.Text.Json;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Users.Constants;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Users.Endpoints.Account;
-using SimpleModule.Users.Endpoints.Admin;
-using SimpleModule.Users.Endpoints.Connect;
-using SimpleModule.Users.Endpoints.Users;
 using SimpleModule.Users.Entities;
 using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users;
 
-[Module(UsersConstants.ModuleName, RoutePrefix = UsersConstants.RoutePrefix)]
+[Module(UsersConstants.ModuleName)]
 public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -217,87 +208,5 @@ public class UsersModule : IModule
                 Group = "admin",
             }
         );
-    }
-
-    public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
-    {
-        // OpenIddict Connect endpoints (token endpoint handled automatically by OpenIddict)
-        AuthorizationEndpoint.Map(endpoints);
-        LogoutEndpoint.Map(endpoints);
-        UserinfoEndpoint.Map(endpoints);
-
-        // User API endpoints
-        var usersGroup = endpoints
-            .MapGroup(UsersConstants.RoutePrefix)
-            .WithTags(UsersConstants.ModuleName);
-        GetAllEndpoint.Map(usersGroup);
-        GetByIdEndpoint.Map(usersGroup);
-        GetCurrentEndpoint.Map(usersGroup);
-        CreateEndpoint.Map(usersGroup);
-        UpdateEndpoint.Map(usersGroup);
-        DeleteEndpoint.Map(usersGroup);
-
-        // Download personal data endpoint (cannot be a Blazor component — returns a file)
-        usersGroup
-            .MapPost(
-                UsersConstants.DownloadPersonalDataRoute,
-                async (
-                    HttpContext context,
-                    UserManager<ApplicationUser> userManager,
-                    ILogger<UsersModule> logger
-                ) =>
-                {
-                    var user = await userManager.GetUserAsync(context.User);
-                    if (user is null)
-                    {
-                        return Results.NotFound();
-                    }
-
-                    logger.LogInformation("User asked for their personal data.");
-
-                    // Manually enumerate personal data properties (AOT-compatible, no reflection)
-                    var personalData = new Dictionary<string, string>
-                    {
-                        [PersonalDataKeys.Id] = user.Id ?? PersonalDataKeys.NullPlaceholder,
-                        [PersonalDataKeys.UserName] =
-                            user.UserName ?? PersonalDataKeys.NullPlaceholder,
-                        [PersonalDataKeys.Email] = user.Email ?? PersonalDataKeys.NullPlaceholder,
-                        [PersonalDataKeys.PhoneNumber] =
-                            user.PhoneNumber ?? PersonalDataKeys.NullPlaceholder,
-                        [PersonalDataKeys.DisplayName] = user.DisplayName,
-                        [PersonalDataKeys.CreatedAt] = user.CreatedAt.ToString("O"),
-                        [PersonalDataKeys.LastLoginAt] =
-                            user.LastLoginAt?.ToString("O") ?? PersonalDataKeys.NullPlaceholder,
-                    };
-
-                    var logins = await userManager.GetLoginsAsync(user);
-                    foreach (var l in logins)
-                    {
-                        personalData.Add(
-                            $"{l.LoginProvider} {PersonalDataKeys.ExternalLoginSuffix}",
-                            l.ProviderKey
-                        );
-                    }
-
-                    personalData.Add(
-                        PersonalDataKeys.AuthenticatorKey,
-                        await userManager.GetAuthenticatorKeyAsync(user) ?? ""
-                    );
-
-                    return Results.File(
-                        JsonSerializer.SerializeToUtf8Bytes(personalData),
-                        PersonalDataKeys.PersonalDataContentType,
-                        PersonalDataKeys.PersonalDataFileName
-                    );
-                }
-            )
-            .RequireAuthorization();
-
-        // Account security endpoints (2FA)
-        AccountSecurityEndpoint.Map(endpoints);
-
-        // Admin endpoints
-        AdminUsersEndpoint.Map(endpoints);
-        AdminRolesEndpoint.Map(endpoints);
     }
 }

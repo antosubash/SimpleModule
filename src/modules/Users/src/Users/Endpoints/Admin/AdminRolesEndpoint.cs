@@ -2,55 +2,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using SimpleModule.Core.Inertia;
+using SimpleModule.Core;
 using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Users.Endpoints.Admin;
 
-public static class AdminRolesEndpoint
+public class AdminRolesEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder endpoints)
+    public void Map(IEndpointRouteBuilder app)
     {
-        var group = endpoints
-            .MapGroup("/admin/roles")
+        var group = app.MapGroup("/admin/roles")
             .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
-
-        // List roles
-        group.MapGet(
-            "/",
-            async (
-                RoleManager<ApplicationRole> roleManager,
-                UserManager<ApplicationUser> userManager
-            ) =>
-            {
-                var roles = await roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
-
-                var roleList = new List<object>();
-                foreach (var role in roles)
-                {
-                    var usersInRole = role.Name is not null
-                        ? await userManager.GetUsersInRoleAsync(role.Name)
-                        : [];
-                    roleList.Add(
-                        new
-                        {
-                            id = role.Id,
-                            name = role.Name,
-                            description = role.Description,
-                            userCount = usersInRole.Count,
-                            createdAt = role.CreatedAt.ToString("O"),
-                        }
-                    );
-                }
-
-                return Inertia.Render("Users/Admin/Roles", new { roles = roleList });
-            }
-        );
-
-        // Create role page
-        group.MapGet("/create", () => Inertia.Render("Users/Admin/RolesCreate"));
 
         // Create role
         group.MapPost(
@@ -75,47 +38,6 @@ public static class AdminRolesEndpoint
                     return Results.Redirect("/admin/roles/create");
 
                 return Results.Redirect("/admin/roles");
-            }
-        );
-
-        // Edit role page
-        group.MapGet(
-            "/{id}/edit",
-            async (
-                string id,
-                RoleManager<ApplicationRole> roleManager,
-                UserManager<ApplicationUser> userManager
-            ) =>
-            {
-                var role = await roleManager.FindByIdAsync(id);
-                if (role is null)
-                    return Results.NotFound();
-
-                var usersInRole = role.Name is not null
-                    ? await userManager.GetUsersInRoleAsync(role.Name)
-                    : [];
-
-                return Inertia.Render(
-                    "Users/Admin/RolesEdit",
-                    new
-                    {
-                        role = new
-                        {
-                            id = role.Id,
-                            name = role.Name,
-                            description = role.Description,
-                            createdAt = role.CreatedAt.ToString("O"),
-                        },
-                        users = usersInRole
-                            .Select(u => new
-                            {
-                                id = u.Id,
-                                displayName = u.DisplayName,
-                                email = u.Email,
-                            })
-                            .ToList(),
-                    }
-                );
             }
         );
 

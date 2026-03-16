@@ -5,18 +5,18 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using SimpleModule.Core;
 using SimpleModule.Users.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace SimpleModule.Users.Endpoints.Connect;
 
-public static class UserinfoEndpoint
+public class UserinfoEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder endpoints)
+    public void Map(IEndpointRouteBuilder app)
     {
-        endpoints
-            .MapMethods(
+        app.MapMethods(
                 ConnectRouteConstants.ConnectUserInfo,
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync

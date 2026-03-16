@@ -32,14 +32,23 @@
     <TailwindInput>$(MSBuildProjectDirectory)/Styles/app.css</TailwindInput>
     <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
   </PropertyGroup>
-  <Target Name="CollectModuleAssets" BeforeTargets="TailwindBuild"
-          DependsOnTargets="ResolveStaticWebAssetsConfiguration">
+  <Target
+    Name="CollectModuleAssets"
+    BeforeTargets="TailwindBuild"
+    DependsOnTargets="ResolveStaticWebAssetsConfiguration"
+  >
     <ItemGroup>
-      <_ModulePages Include="@(StaticWebAsset)"
-                    Condition="$([System.String]::Copy('%(Identity)').EndsWith('.pages.js'))" />
+      <_ModulePages
+        Include="@(StaticWebAsset)"
+        Condition="$([System.String]::Copy('%(Identity)').EndsWith('.pages.js'))"
+      />
     </ItemGroup>
     <MakeDir Directories="$(MSBuildProjectDirectory)/Styles/_scan" />
-    <Copy SourceFiles="@(_ModulePages)" DestinationFolder="$(MSBuildProjectDirectory)/Styles/_scan/" SkipUnchangedFiles="true" />
+    <Copy
+      SourceFiles="@(_ModulePages)"
+      DestinationFolder="$(MSBuildProjectDirectory)/Styles/_scan/"
+      SkipUnchangedFiles="true"
+    />
   </Target>
   <Target Name="TailwindBuild" BeforeTargets="Build">
     <Error

@@ -2,17 +2,17 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;
 
-public static class UpdateEndpoint
+public class UpdateEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group
-            .MapPut(
-                "/{id}",
+        app.MapPut(
+                UsersConstants.RoutePrefix + "/{id}",
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     string id,
                     UpdateUserRequest request,
@@ -23,6 +23,7 @@ public static class UpdateEndpoint
                     return TypedResults.Ok(user);
                 }
             )
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization();
     }
 }

@@ -4,17 +4,17 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Server.AspNetCore;
+using SimpleModule.Core;
 using SimpleModule.Users.Constants;
 using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Users.Endpoints.Connect;
 
-public static class LogoutEndpoint
+public class LogoutEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder endpoints)
+    public void Map(IEndpointRouteBuilder app)
     {
-        endpoints
-            .MapMethods(
+        app.MapMethods(
                 ConnectRouteConstants.ConnectEndSession,
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync
