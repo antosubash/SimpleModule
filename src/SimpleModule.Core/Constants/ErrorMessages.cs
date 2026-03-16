@@ -13,9 +13,4 @@ public static class ErrorMessages
     public const string DefaultValidationMessage = "One or more validation errors occurred.";
     public const string DefaultNotFoundMessage = "The requested resource was not found.";
     public const string DefaultConflictMessage = "A conflict occurred.";
-
-    // OpenID Connect errors
-    public const string OpenIdConnectRequestMissing =
-        "The OpenID Connect request cannot be retrieved.";
-    public const string UserDetailsMissing = "The user details cannot be retrieved.";
 }

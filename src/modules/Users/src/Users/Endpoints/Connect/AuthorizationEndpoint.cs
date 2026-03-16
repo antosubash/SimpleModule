@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
-using SimpleModule.Core.Constants;
+using SimpleModule.Users.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -20,7 +20,7 @@ public static class AuthorizationEndpoint
     {
         endpoints
             .MapMethods(
-                RouteConstants.ConnectAuthorize,
+                ConnectRouteConstants.ConnectAuthorize,
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync
             )
@@ -31,7 +31,7 @@ public static class AuthorizationEndpoint
     {
         var request =
             context.GetOpenIddictServerRequest()
-            ?? throw new InvalidOperationException(ErrorMessages.OpenIdConnectRequestMissing);
+            ?? throw new InvalidOperationException(AuthErrorMessages.OpenIdConnectRequestMissing);
 
         var result = await context.AuthenticateAsync(IdentityConstants.ApplicationScheme);
 
@@ -64,7 +64,7 @@ public static class AuthorizationEndpoint
         >();
         var user =
             await userManager.GetUserAsync(result.Principal)
-            ?? throw new InvalidOperationException(ErrorMessages.UserDetailsMissing);
+            ?? throw new InvalidOperationException(AuthErrorMessages.UserDetailsMissing);
 
         var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 

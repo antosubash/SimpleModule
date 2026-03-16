@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
+using SimpleModule.Users.Constants;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Users.Contracts;
@@ -63,10 +64,10 @@ public class UsersModule : IModule
                 options.AllowRefreshTokenFlow();
 
                 options
-                    .SetAuthorizationEndpointUris(RouteConstants.ConnectAuthorize)
-                    .SetTokenEndpointUris(RouteConstants.ConnectToken)
-                    .SetEndSessionEndpointUris(RouteConstants.ConnectEndSession)
-                    .SetUserInfoEndpointUris(RouteConstants.ConnectUserInfo);
+                    .SetAuthorizationEndpointUris(ConnectRouteConstants.ConnectAuthorize)
+                    .SetTokenEndpointUris(ConnectRouteConstants.ConnectToken)
+                    .SetEndSessionEndpointUris(ConnectRouteConstants.ConnectEndSession)
+                    .SetUserInfoEndpointUris(ConnectRouteConstants.ConnectUserInfo);
 
                 var encryptionCertPath = configuration[ConfigKeys.OpenIddictEncryptionCertPath];
                 var signingCertPath = configuration[ConfigKeys.OpenIddictSigningCertPath];

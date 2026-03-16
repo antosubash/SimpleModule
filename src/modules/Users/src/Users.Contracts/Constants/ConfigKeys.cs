@@ -1,4 +1,4 @@
-﻿namespace SimpleModule.Core.Constants;
+namespace SimpleModule.Users.Constants;
 
 public static class ConfigKeys
 {
