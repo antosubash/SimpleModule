@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Button, Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@simplemodule/ui';
 
 interface Product {
   id: number;
@@ -28,54 +29,46 @@ export default function Manage({ products }: Props) {
           </h1>
           <p className="text-text-muted text-sm mt-1">{products.length} total products</p>
         </div>
-        <button onClick={() => router.get('/products/create')} className="btn-primary">
-          Create Product
-        </button>
+        <Button onClick={() => router.get('/products/create')}>Create Product</Button>
       </div>
 
       <div className="glass-card overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Price</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {products.map((product) => (
-              <tr key={product.id} className="hover:bg-surface-raised transition-colors">
-                <td className="px-4 py-3 text-text-muted">#{product.id}</td>
-                <td className="px-4 py-3 font-medium text-text">{product.name}</td>
-                <td className="px-4 py-3 text-text">${product.price.toFixed(2)}</td>
-                <td className="px-4 py-3">
+              <TableRow key={product.id}>
+                <TableCell className="text-text-muted">#{product.id}</TableCell>
+                <TableCell className="font-medium text-text">{product.name}</TableCell>
+                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>
                   <div className="flex gap-3">
-                    <button
-                      onClick={() => router.get(`/products/${product.id}/edit`)}
-                      className="text-primary hover:text-primary-hover text-sm font-medium bg-transparent border-none cursor-pointer"
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => router.get(`/products/${product.id}/edit`)}>
                       Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id, product.name)}
-                      className="text-danger hover:text-danger-hover text-sm font-medium bg-transparent border-none cursor-pointer"
-                    >
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(product.id, product.name)}>
                       Delete
-                    </button>
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {products.length === 0 && (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-text-muted">
+              <TableRow>
+                <TableCell colSpan={4} className="py-8 text-center text-text-muted">
                   No products yet. Create your first product!
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
