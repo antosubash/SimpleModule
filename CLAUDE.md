@@ -60,10 +60,51 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 
 - **No reflection** — source generator emits static `new ModuleName()` calls for AOT.
 - **Source generator must target netstandard2.0** with `IIncrementalGenerator` (not `ISourceGenerator`).
-- **Module class libraries must NOT have `PublishAot`** — only the API project. Modules need `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
+- **Module class libraries must NOT have `PublishAot`** — only the Host project. Modules need `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 - **Module Vite builds use library mode** — externalize React, React-DOM, @inertiajs/react. Inline dynamic imports.
+- **TreatWarningsAsErrors is enabled** globally via `Directory.Build.props` with `AnalysisLevel=latest-all` and `AnalysisMode=All`. Suppressed rules are listed in `.editorconfig`.
+
+## C# Conventions (enforced by .editorconfig)
+
+- **Naming**: Interfaces `IFoo`, public members `PascalCase`, private fields `_camelCase`, locals/params `camelCase`, constants `PascalCase`.
+- **Style**: File-scoped namespaces (error), usings outside namespace (error), prefer `var`.
+- **Tests**: Underscore method names allowed (`Method_Scenario_Expected`). CA2234 (Uri overload) and xUnit1051 (CancellationToken) suppressed in test projects.
+
+## Module Communication
+
+- **Contracts pattern** — each module has a `.Contracts` project with a public interface (e.g., `IProductContracts`) and `[Dto]` types. Other modules depend on contracts, never implementations.
+- **Event bus** — `IEventBus.PublishAsync<T>()` broadcasts to all `IEventHandler<T>` implementations. Handler failures are isolated (collected in `AggregateException`).
+
+## Test Infrastructure
+
+- **`SimpleModule.Tests.Shared`** provides `SimpleModuleWebApplicationFactory` — in-memory SQLite, test auth scheme with `CreateAuthenticatedClient(params Claim[] claims)`, claims passed via `X-Test-Claims` header.
+- **`FakeDataGenerators`** (Bogus) — pre-built fakers for all module DTOs and request types.
+- CI runs tests against both SQLite and PostgreSQL.
+
+## Frontend Packages (`packages/`)
+
+- **@simplemodule/client** — Vite plugin for vendoring, page resolution utility.
+- **@simplemodule/ui** — Radix UI component wrappers with Tailwind. Import components from `@simplemodule/ui/components`, utils from `@simplemodule/ui/lib/utils`.
+- **@simplemodule/theme-default** — Tailwind CSS base theme.
+
+## CLI (`sm` command)
+
+```bash
+sm new project              # scaffold new SimpleModule solution
+sm new module <name>        # create module with contracts, endpoints, tests, events
+sm new feature <name>       # add feature to existing module
+sm doctor [--fix]           # validate project structure, auto-fix issues
+```
+
+## Database
+
+- Multi-provider: SQLite (table prefixes), PostgreSQL/SQL Server (schemas per module).
+- Each module registers `ModuleDbContextInfo` for schema isolation.
+- Uses `EnsureCreated()` — for production migrations, use EF Core migrations per module.
 
 ## Adding a New Module
+
+Use `sm new module <name>` (CLI) or manually:
 
 1. Create `modules/<Name>/`
 2. Create `modules/<Name>/src/<Name>.Contracts/` with:
