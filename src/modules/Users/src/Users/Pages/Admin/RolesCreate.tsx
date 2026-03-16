@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
 
 export default function RolesCreate() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -24,30 +25,25 @@ export default function RolesCreate() {
             <path d="M15 19l-7-7 7-7" />
           </svg>
         </a>
-        <h1
-          className="text-2xl font-extrabold tracking-tight"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          <span className="gradient-text">Create Role</span>
-        </h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">Create Role</h1>
       </div>
       <p className="text-text-muted text-sm ml-7 mb-6">Add a new application role</p>
 
-      <form onSubmit={handleSubmit} className="glass-card p-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
-            <input type="text" name="name" required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <input type="text" name="description" />
-          </div>
-          <button type="submit" className="btn-primary">
-            Create
-          </button>
-        </div>
-      </form>
+      <Card>
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" name="name" required />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input id="description" name="description" />
+            </div>
+            <Button type="submit">Create</Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
