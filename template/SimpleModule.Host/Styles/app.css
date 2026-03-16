@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@simplemodule/theme-default/theme.css";
-@source "../../SimpleModule.UI/";
-@source "../../SimpleModule.Blazor/**/*.razor";
+@source "../../../packages/SimpleModule.UI/";
+@source "../../../framework/SimpleModule.Blazor/**/*.razor";
+@source "../../../modules/**/Components/**/*.razor";
 @source "./_scan/";
