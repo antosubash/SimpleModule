@@ -7,17 +7,20 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Views;
 
-public class EditEndpoint : IEndpoint
+public class EditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/{id}/edit", async (int id, IProductContracts products) =>
-        {
-            var product = await products.GetProductByIdAsync(id);
-            if (product is null)
-                return Results.NotFound();
+        app.MapGet(
+            "/{id}/edit",
+            async (int id, IProductContracts products) =>
+            {
+                var product = await products.GetProductByIdAsync(id);
+                if (product is null)
+                    return Results.NotFound();
 
-            return Inertia.Render("Products/Edit", new { product });
-        });
+                return Inertia.Render("Products/Edit", new { product });
+            }
+        );
     }
 }
