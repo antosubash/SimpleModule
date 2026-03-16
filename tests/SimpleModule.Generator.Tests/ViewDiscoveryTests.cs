@@ -21,7 +21,7 @@ public class ViewDiscoveryTests
 
             namespace TestApp.Views
             {
-                public class CreateEndpoint : IEndpoint
+                public class CreateEndpoint : IViewEndpoint
                 {
                     public void Map(IEndpointRouteBuilder app)
                     {
@@ -41,7 +41,7 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        endpointExt.Should().Contain("var viewGroup = app.MapGroup(\"/test\")");
+        endpointExt.Should().Contain("var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()");
         endpointExt.Should().Contain("new global::TestApp.Views.CreateEndpoint().Map(viewGroup)");
     }
 
@@ -102,7 +102,7 @@ public class ViewDiscoveryTests
 
             namespace TestApp.Views
             {
-                public class BrowseEndpoint : IEndpoint
+                public class BrowseEndpoint : IViewEndpoint
                 {
                     public void Map(IEndpointRouteBuilder app)
                     {
@@ -117,9 +117,7 @@ public class ViewDiscoveryTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t =>
-                t.FilePath.EndsWith("ViewPages_Products.g.cs", StringComparison.Ordinal)
-            );
+            .Contain(t => t.FilePath.EndsWith("ViewPages_Products.g.cs", StringComparison.Ordinal));
 
         var viewPages = result
             .GeneratedTrees.First(t =>
@@ -148,7 +146,7 @@ public class ViewDiscoveryTests
 
             namespace TestApp.Views
             {
-                public class BrowseEndpoint : IEndpoint
+                public class BrowseEndpoint : IViewEndpoint
                 {
                     public void Map(IEndpointRouteBuilder app)
                     {
@@ -156,7 +154,7 @@ public class ViewDiscoveryTests
                     }
                 }
 
-                public class CreateEndpoint : IEndpoint
+                public class CreateEndpoint : IViewEndpoint
                 {
                     public void Map(IEndpointRouteBuilder app)
                     {
@@ -171,9 +169,7 @@ public class ViewDiscoveryTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t =>
-                t.FilePath.EndsWith("ViewPages_Test.g.cs", StringComparison.Ordinal)
-            );
+            .Contain(t => t.FilePath.EndsWith("ViewPages_Test.g.cs", StringComparison.Ordinal));
 
         var viewPages = result
             .GeneratedTrees.First(t =>
@@ -199,10 +195,7 @@ public class ViewDiscoveryTests
             namespace TestApp
             {
                 [Module("Test", RoutePrefix = "/api/test", ViewPrefix = "/test")]
-                public class TestModule : IModule
-                {
-                    public void ConfigureEndpoints(IEndpointRouteBuilder endpoints) { }
-                }
+                public class TestModule : IModule { }
             }
 
             namespace TestApp.Endpoints
@@ -218,7 +211,7 @@ public class ViewDiscoveryTests
 
             namespace TestApp.Views
             {
-                public class BrowseEndpoint : IEndpoint
+                public class BrowseEndpoint : IViewEndpoint
                 {
                     public void Map(IEndpointRouteBuilder app)
                     {
@@ -243,11 +236,8 @@ public class ViewDiscoveryTests
         endpointExt.Should().Contain("new global::TestApp.Endpoints.ListEndpoint().Map(group)");
 
         // Views use ViewPrefix
-        endpointExt.Should().Contain("var viewGroup = app.MapGroup(\"/test\")");
+        endpointExt.Should().Contain("var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()");
         endpointExt.Should().Contain("new global::TestApp.Views.BrowseEndpoint().Map(viewGroup)");
-
-        // ConfigureEndpoints still called
-        endpointExt.Should().Contain("s_TestApp_TestModule.ConfigureEndpoints(app)");
     }
 
     [Fact]
@@ -266,7 +256,7 @@ public class ViewDiscoveryTests
 
             namespace TestApp.Views
             {
-                public class DetailView : IEndpoint
+                public class DetailView : IViewEndpoint
                 {
                     public void Map(IEndpointRouteBuilder app)
                     {
@@ -288,5 +278,45 @@ public class ViewDiscoveryTests
 
         viewPages.Should().Contain("import Detail from '../Views/Detail'");
         viewPages.Should().Contain("'Test/Detail': Detail");
+    }
+
+    [Fact]
+    public void IEndpointInViewsNamespace_DiscoveredAsEndpoint_NotView()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Test", RoutePrefix = "/api/test", ViewPrefix = "/test")]
+                public class TestModule : IModule { }
+            }
+
+            namespace TestApp.Views
+            {
+                public class ListEndpoint : IEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/", () => "list");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var endpointExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("EndpointExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        endpointExt.Should().Contain("new global::TestApp.Views.ListEndpoint().Map(group)");
+        endpointExt.Should().NotContain("viewGroup");
     }
 }
