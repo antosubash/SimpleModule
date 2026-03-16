@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "@simplemodule/app",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch"
+  },
+  "dependencies": {
+    "@inertiajs/react": "^2.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

@@ -5,12 +5,18 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\cli\SimpleModule.Cli\SimpleModule.Cli.csproj" />
+    <ProjectReference Include="..\..\src\Products\Products.csproj" />
+    <ProjectReference Include="..\..\src\Products.Contracts\Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>

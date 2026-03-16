@@ -10,7 +10,7 @@ Modular monolith framework for .NET with compile-time module discovery via Rosly
 
 ```bash
 dotnet build
-dotnet run --project src/SimpleModule.Host          # runs on https://localhost:5001
+dotnet run --project template/SimpleModule.Host     # runs on https://localhost:5001
 ```
 
 ## Frontend (npm workspaces)
@@ -23,7 +23,7 @@ npm run lint                         # lint only
 npm run format                       # format only (with write)
 ```
 
-Workspaces: `src/modules/*/src/*` and `src/SimpleModule.Host/ClientApp`.
+Workspaces: `modules/*/src/*`, `packages/*`, and `template/SimpleModule.Host/ClientApp`.
 
 ## Testing
 
@@ -45,7 +45,7 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 
 ### Frontend (React + Inertia.js)
 
-- **ClientApp** (`src/SimpleModule.Host/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Products/Browse` → imports `/_content/Products/Products.pages.js`).
+- **ClientApp** (`template/SimpleModule.Host/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Products/Browse` → imports `/_content/Products/Products.pages.js`).
 - **Module pages** — Each module builds its React pages via Vite in library mode → `{ModuleName}.pages.js` in module's `wwwroot/`. Entry point: `Pages/index.ts` exporting a `pages` record mapping route names to components.
 - **Type generation** — `[Dto]` types → source generator embeds TS interfaces → `tools/extract-ts-types.mjs` writes `.ts` files to `ClientApp/types/`.
 
@@ -65,12 +65,12 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 
 ## Adding a New Module
 
-1. Create `src/modules/<Name>/`
-2. Create `src/modules/<Name>/src/<Name>.Contracts/` with:
+1. Create `modules/<Name>/`
+2. Create `modules/<Name>/src/<Name>.Contracts/` with:
    - `<Name>.Contracts.csproj` (references Core only, `Microsoft.NET.Sdk`)
    - `I<Name>Contracts.cs` — public interface for cross-module use
    - Shared DTO types marked with `[Dto]`
-3. Create `src/modules/<Name>/src/<Name>/` with:
+3. Create `modules/<Name>/src/<Name>/` with:
    - `<Name>.csproj` (references Core + Contracts; `Microsoft.NET.Sdk` with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`)
    - `<Name>Module.cs` — implements `IModule` with `[Module("Name", RoutePrefix = "...")]`
    - `Endpoints/<Name>/` — endpoint classes implementing `IEndpoint` (auto-discovered)
@@ -79,10 +79,10 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
    - `package.json` — declare React/Inertia as peerDependencies
    - Register contract interface in `ConfigureServices`
    - **Escape hatch**: For non-standard routes, implement `ConfigureEndpoints` on the module class
-4. Create `src/modules/<Name>/tests/<Name>.Tests/` with xUnit test project
-5. Add `ProjectReference` to `src/SimpleModule.Host/SimpleModule.Host.csproj`
+4. Create `modules/<Name>/tests/<Name>.Tests/` with xUnit test project
+5. Add `ProjectReference` to `template/SimpleModule.Host/SimpleModule.Host.csproj`
 6. Add all projects to `SimpleModule.slnx`
 
 ## Linting & Formatting
 
-Biome is configured at repo root (`biome.json`). Covers all `src/**` except `**/wwwroot/**`. Settings: single quotes, semicolons always, 2-space indent, trailing commas, 100-char line width. Tailwind CSS directives enabled.
+Biome is configured at repo root (`biome.json`). Covers `modules/**`, `packages/**`, `template/**` except `**/wwwroot/**`. Settings: single quotes, semicolons always, 2-space indent, trailing commas, 100-char line width. Tailwind CSS directives enabled.
