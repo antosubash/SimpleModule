@@ -1,3 +1,4 @@
+@layer theme, base, components, utilities;
 @import "tailwindcss/theme" layer(theme);
-@import "tailwindcss/utilities";
+@import "tailwindcss/utilities" layer(utilities);
 @import "@simplemodule/theme-default/theme.css";
