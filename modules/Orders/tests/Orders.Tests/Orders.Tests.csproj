@@ -13,8 +13,13 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="NSubstitute" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\..\src\Orders\Orders.csproj" />
+    <ProjectReference Include="..\..\src\Orders.Contracts\Orders.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Users\src\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Products\src\Products.Contracts\Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>
