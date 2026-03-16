@@ -85,4 +85,4 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Publish AOT
-        run: dotnet publish src/SimpleModule.Api/SimpleModule.Api.csproj -c Release
+        run: dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj -c Release

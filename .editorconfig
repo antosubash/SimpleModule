@@ -159,7 +159,7 @@ generated_code = true
 generated_code = true
 
 # ---- Test project relaxations ----
-[{tests,src/modules/*/tests}/**/*.cs]
+[{tests,modules/*/tests}/**/*.cs]
 
 # CA1707 — underscore in test method names (standard convention)
 dotnet_diagnostic.CA1707.severity = none

@@ -14,9 +14,9 @@
     <PackageReference Include="FluentAssertions" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SimpleModule.Api\SimpleModule.Api.csproj" />
-    <ProjectReference Include="..\..\src\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\modules\Products\src\Products.Contracts\Products.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\modules\Orders\src\Orders.Contracts\Orders.Contracts.csproj" />
+    <ProjectReference Include="..\..\template\SimpleModule.Host\SimpleModule.Host.csproj" />
+    <ProjectReference Include="..\..\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Products\src\Products.Contracts\Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Orders\src\Orders.Contracts\Orders.Contracts.csproj" />
   </ItemGroup>
 </Project>

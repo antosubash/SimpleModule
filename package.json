@@ -1,11 +1,31 @@
 {
   "private": true,
   "name": "simplemodule",
+  "version": "0.0.0",
   "workspaces": [
-    "src/modules/*/*"
+    "modules/*/src/*",
+    "packages/SimpleModule.Client",
+    "packages/SimpleModule.Theme.Default",
+    "packages/SimpleModule.UI",
+    "template/SimpleModule.Host/ClientApp"
   ],
+  "scripts": {
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "ui:add": "node tools/add-component.mjs"
+  },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.0",
     "typescript": "^5.8.0",
     "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.2.1"
   }
 }

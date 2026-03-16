@@ -15,6 +15,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,367 @@
+{
+  "accordion": {
+    "name": "Accordion",
+    "file": "accordion.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-accordion"],
+    "exports": ["Accordion", "AccordionItem", "AccordionTrigger", "AccordionContent"]
+  },
+  "aspect-ratio": {
+    "name": "AspectRatio",
+    "file": "aspect-ratio.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-aspect-ratio"],
+    "exports": ["AspectRatio"]
+  },
+  "alert": {
+    "name": "Alert",
+    "file": "alert.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Alert", "AlertTitle", "AlertDescription", "alertVariants"]
+  },
+  "avatar": {
+    "name": "Avatar",
+    "file": "avatar.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-avatar"],
+    "exports": ["Avatar", "AvatarImage", "AvatarFallback"]
+  },
+  "badge": {
+    "name": "Badge",
+    "file": "badge.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Badge", "badgeVariants"]
+  },
+  "breadcrumb": {
+    "name": "Breadcrumb",
+    "file": "breadcrumb.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-slot"],
+    "exports": [
+      "Breadcrumb",
+      "BreadcrumbList",
+      "BreadcrumbItem",
+      "BreadcrumbLink",
+      "BreadcrumbPage",
+      "BreadcrumbSeparator"
+    ]
+  },
+  "button": {
+    "name": "Button",
+    "file": "button.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-slot"],
+    "exports": ["Button", "buttonVariants"]
+  },
+  "card": {
+    "name": "Card",
+    "file": "card.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Card", "CardHeader", "CardTitle", "CardDescription", "CardContent", "CardFooter"]
+  },
+  "checkbox": {
+    "name": "Checkbox",
+    "file": "checkbox.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-checkbox"],
+    "exports": ["Checkbox"]
+  },
+  "collapsible": {
+    "name": "Collapsible",
+    "file": "collapsible.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-collapsible"],
+    "exports": ["Collapsible", "CollapsibleTrigger", "CollapsibleContent"]
+  },
+  "container": {
+    "name": "Container",
+    "file": "container.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Container", "containerVariants"]
+  },
+  "command": {
+    "name": "Command",
+    "file": "command.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "extraPackages": ["cmdk"],
+    "exports": [
+      "Command",
+      "CommandInput",
+      "CommandList",
+      "CommandEmpty",
+      "CommandGroup",
+      "CommandItem",
+      "CommandShortcut",
+      "CommandSeparator"
+    ]
+  },
+  "dialog": {
+    "name": "Dialog",
+    "file": "dialog.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-dialog"],
+    "exports": [
+      "Dialog",
+      "DialogPortal",
+      "DialogOverlay",
+      "DialogClose",
+      "DialogTrigger",
+      "DialogContent",
+      "DialogHeader",
+      "DialogFooter",
+      "DialogTitle",
+      "DialogDescription"
+    ]
+  },
+  "dropdown-menu": {
+    "name": "DropdownMenu",
+    "file": "dropdown-menu.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-dropdown-menu"],
+    "exports": [
+      "DropdownMenu",
+      "DropdownMenuTrigger",
+      "DropdownMenuContent",
+      "DropdownMenuItem",
+      "DropdownMenuSeparator",
+      "DropdownMenuLabel",
+      "DropdownMenuGroup",
+      "DropdownMenuSub"
+    ]
+  },
+  "grid": {
+    "name": "Grid",
+    "file": "grid.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Grid", "gridVariants"]
+  },
+  "hover-card": {
+    "name": "HoverCard",
+    "file": "hover-card.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-hover-card"],
+    "exports": ["HoverCard", "HoverCardTrigger", "HoverCardContent"]
+  },
+  "input": {
+    "name": "Input",
+    "file": "input.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Input", "inputVariants"]
+  },
+  "label": {
+    "name": "Label",
+    "file": "label.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-label"],
+    "exports": ["Label"]
+  },
+  "page-header": {
+    "name": "PageHeader",
+    "file": "page-header.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["PageHeader"]
+  },
+  "popover": {
+    "name": "Popover",
+    "file": "popover.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-popover"],
+    "exports": ["Popover", "PopoverTrigger", "PopoverContent"]
+  },
+  "progress": {
+    "name": "Progress",
+    "file": "progress.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-progress"],
+    "exports": ["Progress"]
+  },
+  "radio-group": {
+    "name": "RadioGroup",
+    "file": "radio-group.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-radio-group"],
+    "exports": ["RadioGroup", "RadioGroupItem"]
+  },
+  "resizable": {
+    "name": "Resizable",
+    "file": "resizable.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["ResizablePanelGroup", "ResizablePanel", "ResizableHandle"]
+  },
+  "scroll-area": {
+    "name": "ScrollArea",
+    "file": "scroll-area.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-scroll-area"],
+    "exports": ["ScrollArea", "ScrollBar"]
+  },
+  "section": {
+    "name": "Section",
+    "file": "section.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Section"]
+  },
+  "select": {
+    "name": "Select",
+    "file": "select.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-select"],
+    "exports": [
+      "Select",
+      "SelectGroup",
+      "SelectValue",
+      "SelectTrigger",
+      "SelectContent",
+      "SelectItem",
+      "SelectSeparator"
+    ]
+  },
+  "separator": {
+    "name": "Separator",
+    "file": "separator.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-separator"],
+    "exports": ["Separator"]
+  },
+  "sheet": {
+    "name": "Sheet",
+    "file": "sheet.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-dialog"],
+    "exports": [
+      "Sheet",
+      "SheetPortal",
+      "SheetOverlay",
+      "SheetTrigger",
+      "SheetClose",
+      "SheetContent",
+      "SheetHeader",
+      "SheetFooter",
+      "SheetTitle",
+      "SheetDescription"
+    ]
+  },
+  "sidebar": {
+    "name": "Sidebar",
+    "file": "sidebar.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": [
+      "SidebarProvider",
+      "Sidebar",
+      "SidebarHeader",
+      "SidebarContent",
+      "SidebarFooter",
+      "SidebarGroup",
+      "SidebarGroupLabel",
+      "SidebarMenu",
+      "SidebarMenuItem",
+      "SidebarMenuButton",
+      "SidebarTrigger",
+      "useSidebar"
+    ]
+  },
+  "skeleton": {
+    "name": "Skeleton",
+    "file": "skeleton.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Skeleton"]
+  },
+  "slider": {
+    "name": "Slider",
+    "file": "slider.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-slider"],
+    "exports": ["Slider"]
+  },
+  "spinner": {
+    "name": "Spinner",
+    "file": "spinner.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Spinner", "spinnerVariants"]
+  },
+  "stack": {
+    "name": "Stack",
+    "file": "stack.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Stack", "stackVariants"]
+  },
+  "switch": {
+    "name": "Switch",
+    "file": "switch.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-switch"],
+    "exports": ["Switch"]
+  },
+  "table": {
+    "name": "Table",
+    "file": "table.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Table", "TableHeader", "TableBody", "TableRow", "TableHead", "TableCell"]
+  },
+  "tabs": {
+    "name": "Tabs",
+    "file": "tabs.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-tabs"],
+    "exports": ["Tabs", "TabsList", "TabsTrigger", "TabsContent"]
+  },
+  "textarea": {
+    "name": "Textarea",
+    "file": "textarea.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Textarea"]
+  },
+  "toast": {
+    "name": "Toast",
+    "file": "toast.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-toast"],
+    "exports": [
+      "ToastProvider",
+      "ToastViewport",
+      "Toast",
+      "ToastTitle",
+      "ToastDescription",
+      "ToastClose",
+      "ToastAction",
+      "toastVariants"
+    ]
+  },
+  "toggle": {
+    "name": "Toggle",
+    "file": "toggle.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-toggle"],
+    "exports": ["Toggle", "toggleVariants"]
+  },
+  "toggle-group": {
+    "name": "ToggleGroup",
+    "file": "toggle-group.tsx",
+    "dependencies": ["toggle"],
+    "radixPackages": ["@radix-ui/react-toggle-group"],
+    "exports": ["ToggleGroup", "ToggleGroupItem"]
+  },
+  "tooltip": {
+    "name": "Tooltip",
+    "file": "tooltip.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-tooltip"],
+    "exports": ["Tooltip", "TooltipTrigger", "TooltipContent", "TooltipProvider"]
+  }
+}
