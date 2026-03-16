@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Server.AspNetCore;
-using SimpleModule.Core.Constants;
+using SimpleModule.Users.Constants;
 using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Users.Endpoints.Connect;
@@ -15,7 +15,7 @@ public static class LogoutEndpoint
     {
         endpoints
             .MapMethods(
-                RouteConstants.ConnectEndSession,
+                ConnectRouteConstants.ConnectEndSession,
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync
             )

@@ -5,6 +5,7 @@ using OpenIddict.Validation.AspNetCore;
 using SimpleModule.Blazor;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
+using SimpleModule.Users.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
@@ -27,8 +28,8 @@ builder.Services.AddSwaggerGen(options =>
             {
                 AuthorizationCode = new OpenApiOAuthFlow
                 {
-                    AuthorizationUrl = new Uri(RouteConstants.ConnectAuthorize, UriKind.Relative),
-                    TokenUrl = new Uri(RouteConstants.ConnectToken, UriKind.Relative),
+                    AuthorizationUrl = new Uri(ConnectRouteConstants.ConnectAuthorize, UriKind.Relative),
+                    TokenUrl = new Uri(ConnectRouteConstants.ConnectToken, UriKind.Relative),
                     Scopes = new Dictionary<string, string>
                     {
                         { AuthConstants.OpenIdScope, "OpenID" },

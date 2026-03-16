@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
-using SimpleModule.Core.Constants;
+using SimpleModule.Users.Constants;
 using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -17,7 +17,7 @@ public static class UserinfoEndpoint
     {
         endpoints
             .MapMethods(
-                RouteConstants.ConnectUserInfo,
+                ConnectRouteConstants.ConnectUserInfo,
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync
             )

@@ -7,6 +7,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="OpenIddict.AspNetCore" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" />
+    <ProjectReference Include="..\..\..\..\SimpleModule.Blazor\SimpleModule.Blazor.csproj" />
     <ProjectReference Include="..\..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\Users.Contracts\Users.Contracts.csproj" />
