@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
@@ -18,25 +18,28 @@ public class DashboardModule : IModule
 
     public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet(
-            "/",
-            (HttpContext context) =>
-            {
-                var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
-                var displayName = context.User?.Identity?.Name ?? "User";
-                var isDevelopment =
-                    Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        endpoints
+            .MapGet(
+                "/",
+                (HttpContext context) =>
+                {
+                    var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
+                    var displayName = context.User?.Identity?.Name ?? "User";
+                    var isDevelopment =
+                        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                        == "Development";
 
-                return Inertia.Render(
-                    "Dashboard/Home",
-                    new
-                    {
-                        isAuthenticated,
-                        displayName,
-                        isDevelopment,
-                    }
-                );
-            }
-        );
+                    return Inertia.Render(
+                        "Dashboard/Home",
+                        new
+                        {
+                            isAuthenticated,
+                            displayName,
+                            isDevelopment,
+                        }
+                    );
+                }
+            )
+            .ExcludeFromDescription();
     }
 }

@@ -41,7 +41,11 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        endpointExt.Should().Contain("var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()");
+        endpointExt
+            .Should()
+            .Contain(
+                "var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()"
+            );
         endpointExt.Should().Contain("new global::TestApp.Views.CreateEndpoint().Map(viewGroup)");
     }
 
@@ -236,7 +240,11 @@ public class ViewDiscoveryTests
         endpointExt.Should().Contain("new global::TestApp.Endpoints.ListEndpoint().Map(group)");
 
         // Views use ViewPrefix
-        endpointExt.Should().Contain("var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()");
+        endpointExt
+            .Should()
+            .Contain(
+                "var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()"
+            );
         endpointExt.Should().Contain("new global::TestApp.Views.BrowseEndpoint().Map(viewGroup)");
     }
 
