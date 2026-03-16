@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
+import { useState } from 'react';
 
 interface Product {
   id: number;
@@ -50,7 +50,10 @@ export default function Create({ products }: Props) {
   return (
     <div className="max-w-2xl">
       <div className="flex items-center gap-3 mb-1">
-        <a href="/orders" className="text-text-muted hover:text-text transition-colors no-underline">
+        <a
+          href="/orders"
+          className="text-text-muted hover:text-text transition-colors no-underline"
+        >
           <svg
             className="w-4 h-4"
             fill="none"

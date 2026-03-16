@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
 import { cn } from '../lib/utils';
 
 const stackVariants = cva('flex', {
@@ -41,11 +41,17 @@ const stackVariants = cva('flex', {
   },
 });
 
-interface StackProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof stackVariants> {}
+interface StackProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof stackVariants> {}
 
 const Stack = React.forwardRef<HTMLDivElement, StackProps>(
   ({ className, direction, gap, align, justify, wrap, ...props }, ref) => (
-    <div ref={ref} className={cn(stackVariants({ direction, gap, align, justify, wrap, className }))} {...props} />
+    <div
+      ref={ref}
+      className={cn(stackVariants({ direction, gap, align, justify, wrap, className }))}
+      {...props}
+    />
   ),
 );
 Stack.displayName = 'Stack';
