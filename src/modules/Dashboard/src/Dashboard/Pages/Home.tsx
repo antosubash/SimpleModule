@@ -1,3 +1,21 @@
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@simplemodule/ui';
 import React from 'react';
 
 interface HomeProps {
@@ -20,76 +38,83 @@ function DashboardView({ displayName }: { displayName: string }) {
   return (
     <>
       <div className="mb-6">
-        <h1
-          className="text-2xl font-extrabold tracking-tight"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          Welcome back, <span className="gradient-text">{displayName}</span>
-        </h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">Welcome back, {displayName}</h1>
         <p className="text-text-muted text-sm mt-1">Here&apos;s your development dashboard</p>
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <a href="/Identity/Account/Manage" className="dash-card no-underline group">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-9 h-9 rounded-xl flex items-center justify-center text-primary bg-primary-subtle">
-              <svg
-                className="w-[18px] h-[18px]"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </span>
-            <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-              Account
-            </span>
-          </div>
-          <p className="text-xs text-text-muted">Manage your profile and security settings</p>
+        <a href="/Identity/Account/Manage" className="no-underline">
+          <Card className="h-full group">
+            <CardContent>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center text-primary bg-primary-subtle">
+                  <svg
+                    className="w-[18px] h-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </span>
+                <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
+                  Account
+                </span>
+              </div>
+              <p className="text-xs text-text-muted">Manage your profile and security settings</p>
+            </CardContent>
+          </Card>
         </a>
-        <a href="/swagger" className="dash-card no-underline group">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-9 h-9 rounded-xl flex items-center justify-center text-accent bg-success-bg">
-              <svg
-                className="w-[18px] h-[18px]"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-            </span>
-            <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-              API Docs
-            </span>
-          </div>
-          <p className="text-xs text-text-muted">Explore endpoints and test requests</p>
+        <a href="/swagger" className="no-underline">
+          <Card className="h-full group">
+            <CardContent>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center text-accent bg-success-bg">
+                  <svg
+                    className="w-[18px] h-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                </span>
+                <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
+                  API Docs
+                </span>
+              </div>
+              <p className="text-xs text-text-muted">Explore endpoints and test requests</p>
+            </CardContent>
+          </Card>
         </a>
-        <a href="/health/live" className="dash-card no-underline group">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="w-9 h-9 rounded-xl flex items-center justify-center text-info bg-info-bg">
-              <svg
-                className="w-[18px] h-[18px]"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </span>
-            <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-              Health
-            </span>
-          </div>
-          <p className="text-xs text-text-muted">Check system status and diagnostics</p>
+        <a href="/health/live" className="no-underline">
+          <Card className="h-full group">
+            <CardContent>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center text-info bg-info-bg">
+                  <svg
+                    className="w-[18px] h-[18px]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </span>
+                <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
+                  Health
+                </span>
+              </div>
+              <p className="text-xs text-text-muted">Check system status and diagnostics</p>
+            </CardContent>
+          </Card>
         </a>
       </div>
 
@@ -163,12 +188,15 @@ function UserInfoPanel() {
   }, []);
 
   return (
-    <div className="panel">
-      <h2 className="panel-title">User Info</h2>
-      <div className="glass-card p-5">
+    <Card>
+      <CardHeader>
+        <CardTitle>User Info</CardTitle>
+      </CardHeader>
+      <CardContent>
         {loading && (
           <div className="text-text-muted text-sm flex items-center gap-2">
-            Loading user info<span className="spinner"></span>
+            Loading user info
+            <Spinner size="sm" />
           </div>
         )}
         {error && <span className="text-danger text-sm">Failed to load: {error}</span>}
@@ -185,8 +213,8 @@ function UserInfoPanel() {
             )}
           </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -240,7 +268,6 @@ function TokenTester() {
 
   const claims = React.useMemo(() => (token ? decodeToken(token) : null), [token]);
 
-  // Handle OAuth callback on mount
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
@@ -307,9 +334,11 @@ function TokenTester() {
   };
 
   return (
-    <div className="panel">
-      <h2 className="panel-title">Token Tester</h2>
-      <div className="glass-card p-5">
+    <Card>
+      <CardHeader>
+        <CardTitle>Token Tester</CardTitle>
+      </CardHeader>
+      <CardContent>
         <h3 className="text-sm font-semibold mb-1">OAuth2 Authorization Code + PKCE</h3>
         <p className="text-xs text-text-muted mb-4">
           Obtain an access token using the{' '}
@@ -318,50 +347,46 @@ function TokenTester() {
           </code>{' '}
           application.
         </p>
-        <button
-          type="button"
-          className="btn-primary btn-sm"
-          disabled={authorizing}
-          onClick={startOAuthFlow}
-        >
+        <Button size="sm" disabled={authorizing} onClick={startOAuthFlow}>
           {authorizing ? (
             <>
-              Authorizing<span className="spinner"></span>
+              Authorizing
+              <Spinner size="sm" />
             </>
           ) : (
             'Get Access Token'
           )}
-        </button>
+        </Button>
         {token && (
           <div>
-            <div className="code-block break-all max-h-30 mt-4">{token}</div>
+            <div className="bg-surface-raised rounded-xl p-3 font-mono text-xs break-all max-h-30 overflow-auto mt-4">
+              {token}
+            </div>
             {claims && (
               <>
                 <h3 className="text-sm font-semibold mt-4 mb-2">Decoded Claims</h3>
-                <div className="overflow-auto rounded-xl border border-border">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Claim</th>
-                        <th>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {claims.map((claim) => (
-                        <tr key={claim.key}>
-                          <td>{claim.key}</td>
-                          <td>{claim.value}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Claim</TableHead>
+                      <TableHead>Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {claims.map((claim) => (
+                      <TableRow key={claim.key}>
+                        <TableCell>{claim.key}</TableCell>
+                        <TableCell>{claim.value}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </>
             )}
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -380,10 +405,8 @@ function ApiTester() {
   } | null>(null);
   const [response, setResponse] = React.useState('Click an endpoint above to make a request.');
 
-  // Retrieve token from TokenTester via sessionStorage or from the page
   const getAccessToken = (): string | null => {
-    // Look for the token in the DOM (code-block element rendered by TokenTester)
-    const codeBlocks = document.querySelectorAll('.code-block');
+    const codeBlocks = document.querySelectorAll('.font-mono.text-xs.break-all');
     for (const block of codeBlocks) {
       const text = block.textContent || '';
       if (text.includes('.') && text.length > 50) {
@@ -426,39 +449,38 @@ function ApiTester() {
   };
 
   return (
-    <div className="panel mt-2">
-      <h2 className="panel-title">API Tester</h2>
-      <div className="glass-card p-5">
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>API Tester</CardTitle>
+      </CardHeader>
+      <CardContent>
         <h3 className="text-sm font-semibold mb-3">Call Protected Endpoints</h3>
         <div className="flex gap-2 flex-wrap mb-4">
           {API_ENDPOINTS.map((url) => (
-            <button
-              type="button"
-              key={url}
-              className="btn-outline btn-sm"
-              onClick={() => callApi(url)}
-            >
+            <Button key={url} variant="outline" size="sm" onClick={() => callApi(url)}>
               GET {url}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="text-xs text-text-muted mb-2 flex items-center gap-2">
           {status?.loading && (
             <>
               Calling {status.url}
-              <span className="spinner"></span>
+              <Spinner size="sm" />
             </>
           )}
           {status && !status.loading && (
             <>
-              <span className={status.ok ? 'badge-success' : 'badge-danger'}>{status.code}</span>{' '}
+              <Badge variant={status.ok ? 'success' : 'danger'}>{status.code}</Badge>{' '}
               {status.error ? status.error : `${status.statusText} \u2014 ${status.url}`}
             </>
           )}
         </div>
-        <div className="code-block whitespace-pre-wrap max-h-50">{response}</div>
-      </div>
-    </div>
+        <div className="bg-surface-raised rounded-xl p-3 font-mono text-xs whitespace-pre-wrap max-h-50 overflow-auto">
+          {response}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -476,37 +498,38 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
         >
           S
         </div>
-        <h1
-          className="text-4xl font-extrabold mb-3 tracking-tight"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          <span className="gradient-text">SimpleModule</span>
-        </h1>
+        <h1 className="text-4xl font-extrabold mb-3 tracking-tight">SimpleModule</h1>
         <p className="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
           Modular monolith framework for .NET &mdash; AOT&#8209;compatible, zero&nbsp;reflection
         </p>
 
         <div className="flex gap-3 justify-center flex-wrap">
-          <a href="/Identity/Account/Login" className="btn-primary btn-lg no-underline">
-            Get Started
-          </a>
-          <a href="/Identity/Account/Register" className="btn-secondary btn-lg no-underline">
-            Create Account
-          </a>
+          <Button asChild size="lg">
+            <a href="/Identity/Account/Login" className="no-underline">
+              Get Started
+            </a>
+          </Button>
+          <Button asChild variant="secondary" size="lg">
+            <a href="/Identity/Account/Register" className="no-underline">
+              Create Account
+            </a>
+          </Button>
         </div>
 
         {isDevelopment && (
-          <div className="alert-warning mt-6 text-left text-xs">
-            <strong className="block mb-1 text-warning">Quick Start (Development Only)</strong>
-            Email:{' '}
-            <code className="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">
-              admin@simplemodule.dev
-            </code>
-            &nbsp; Password:{' '}
-            <code className="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">
-              Admin123!
-            </code>
-          </div>
+          <Alert variant="warning" className="mt-6 text-left text-xs">
+            <AlertTitle>Quick Start (Development Only)</AlertTitle>
+            <AlertDescription>
+              Email:{' '}
+              <code className="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">
+                admin@simplemodule.dev
+              </code>
+              &nbsp; Password:{' '}
+              <code className="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">
+                Admin123!
+              </code>
+            </AlertDescription>
+          </Alert>
         )}
 
         <div className="flex gap-5 justify-center mt-8 text-sm">
