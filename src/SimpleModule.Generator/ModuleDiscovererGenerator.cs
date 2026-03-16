@@ -276,29 +276,31 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
             }
             else if (member is INamedTypeSymbol typeSymbol)
             {
-                if (
-                    !typeSymbol.IsAbstract
-                    && !typeSymbol.IsStatic
-                )
+                if (!typeSymbol.IsAbstract && !typeSymbol.IsStatic)
                 {
-                    var fqn = typeSymbol.ToDisplayString(
-                        SymbolDisplayFormat.FullyQualifiedFormat
-                    );
+                    var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-                    if (viewEndpointInterfaceSymbol is not null
-                        && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol))
+                    if (
+                        viewEndpointInterfaceSymbol is not null
+                        && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol)
+                    )
                     {
                         var className = typeSymbol.Name;
                         if (className.EndsWith("Endpoint", StringComparison.Ordinal))
-                            className = className.Substring(0, className.Length - "Endpoint".Length);
+                            className = className.Substring(
+                                0,
+                                className.Length - "Endpoint".Length
+                            );
                         else if (className.EndsWith("View", StringComparison.Ordinal))
                             className = className.Substring(0, className.Length - "View".Length);
 
-                        views.Add(new ViewInfo
-                        {
-                            FullyQualifiedName = fqn,
-                            Page = moduleName + "/" + className,
-                        });
+                        views.Add(
+                            new ViewInfo
+                            {
+                                FullyQualifiedName = fqn,
+                                Page = moduleName + "/" + className,
+                            }
+                        );
                     }
                     else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
                     {
