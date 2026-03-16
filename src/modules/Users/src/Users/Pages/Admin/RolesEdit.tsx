@@ -1,4 +1,19 @@
 import { router } from '@inertiajs/react';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@simplemodule/ui';
 
 interface RoleDetail {
   id: string;
@@ -42,59 +57,65 @@ export default function RolesEdit({ role, users }: Props) {
             <path d="M15 19l-7-7 7-7" />
           </svg>
         </a>
-        <h1
-          className="text-2xl font-extrabold tracking-tight"
-          style={{ fontFamily: "'Sora', sans-serif" }}
-        >
-          <span className="gradient-text">Edit Role</span>
-        </h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">Edit Role</h1>
       </div>
       <p className="text-text-muted text-sm ml-7 mb-6">
         Created: {new Date(role.createdAt).toLocaleString()}
       </p>
 
-      <form onSubmit={handleSubmit} className="glass-card p-6 mb-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
-            <input type="text" name="name" defaultValue={role.name} required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Description</label>
-            <input type="text" name="description" defaultValue={role.description ?? ''} />
-          </div>
-          <button type="submit" className="btn-primary">
-            Save
-          </button>
-        </div>
-      </form>
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" name="name" defaultValue={role.name} required />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input id="description" name="description" defaultValue={role.description ?? ''} />
+            </div>
+            <Button type="submit">Save</Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <div className="glass-card p-6">
-        <h2 className="text-lg font-semibold mb-4">Assigned Users ({users.length})</h2>
-        {users.length === 0 ? (
-          <p className="text-sm text-text-muted">No users assigned to this role.</p>
-        ) : (
-          <ul className="space-y-2" style={{ listStyle: 'none' }}>
-            {users.map((user) => (
-              <li
-                key={user.id}
-                className="flex justify-between items-center py-2 border-t border-border"
-              >
-                <div>
-                  <span className="font-medium text-text">{user.displayName || '\u2014'}</span>
-                  <span className="text-text-muted ml-2 text-sm">{user.email}</span>
-                </div>
-                <button
-                  onClick={() => router.get(`/admin/users/${user.id}/edit`)}
-                  className="text-primary hover:text-primary-hover text-sm font-medium bg-transparent border-none cursor-pointer"
-                >
-                  Edit
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Assigned Users ({users.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {users.length === 0 ? (
+            <p className="text-sm text-text-muted">No users assigned to this role.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.displayName || '\u2014'}</TableCell>
+                    <TableCell className="text-text-muted">{user.email}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.get(`/admin/users/${user.id}/edit`)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

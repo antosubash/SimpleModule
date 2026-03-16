@@ -1,4 +1,15 @@
 import { router } from '@inertiajs/react';
+import {
+  Badge,
+  Button,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
 
 interface User {
@@ -35,101 +46,98 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1
-            className="text-2xl font-extrabold tracking-tight"
-            style={{ fontFamily: "'Sora', sans-serif" }}
-          >
-            <span className="gradient-text">Users</span>
-          </h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">Users</h1>
           <p className="text-text-muted text-sm mt-1">{totalCount} total users</p>
         </div>
       </div>
 
       <form onSubmit={handleSearch} className="mb-6 flex gap-2">
-        <input
-          type="text"
+        <Input
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Search by name or email..."
           className="flex-1"
         />
-        <button type="submit" className="btn-primary">
-          Search
-        </button>
+        <Button type="submit">Search</Button>
       </form>
 
-      <div className="glass-card overflow-x-auto">
-        <table className="w-full text-left">
-          <thead>
-            <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Roles</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-surface-raised transition-colors">
-                <td className="px-4 py-3 font-medium text-text">{user.displayName || '\u2014'}</td>
-                <td className="px-4 py-3 text-text-secondary">
-                  {user.email}
-                  {!user.emailConfirmed && <span className="ml-2 badge-warning">unverified</span>}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1 flex-wrap">
-                    {user.roles.map((role) => (
-                      <span key={role} className="badge-info">
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  {user.isLockedOut ? (
-                    <span className="badge-danger">Locked</span>
-                  ) : (
-                    <span className="badge-success">Active</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-sm text-text-muted">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => router.get(`/admin/users/${user.id}/edit`)}
-                    className="text-primary hover:text-primary-hover text-sm font-medium bg-transparent border-none cursor-pointer"
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Roles</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.displayName || '\u2014'}</TableCell>
+              <TableCell className="text-text-secondary">
+                {user.email}
+                {!user.emailConfirmed && (
+                  <Badge variant="warning" className="ml-2">
+                    unverified
+                  </Badge>
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-1 flex-wrap">
+                  {user.roles.map((role) => (
+                    <Badge key={role} variant="info">
+                      {role}
+                    </Badge>
+                  ))}
+                </div>
+              </TableCell>
+              <TableCell>
+                {user.isLockedOut ? (
+                  <Badge variant="danger">Locked</Badge>
+                ) : (
+                  <Badge variant="success">Active</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-sm text-text-muted">
+                {new Date(user.createdAt).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.get(`/admin/users/${user.id}/edit`)}
+                >
+                  Edit
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="btn-secondary btn-sm disabled:opacity-50"
           >
             Previous
-          </button>
+          </Button>
           <span className="px-3 py-1 text-text-muted text-sm">
             Page {page} of {totalPages}
           </span>
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="btn-secondary btn-sm disabled:opacity-50"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </div>
