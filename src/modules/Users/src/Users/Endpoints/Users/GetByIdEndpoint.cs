@@ -2,17 +2,17 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;
 
-public static class GetByIdEndpoint
+public class GetByIdEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group
-            .MapGet(
-                "/{id}",
+        app.MapGet(
+                UsersConstants.RoutePrefix + "/{id}",
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     string id,
                     IUserContracts userContracts
@@ -22,6 +22,7 @@ public static class GetByIdEndpoint
                     return user is not null ? TypedResults.Ok(user) : TypedResults.NotFound();
                 }
             )
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization();
     }
 }

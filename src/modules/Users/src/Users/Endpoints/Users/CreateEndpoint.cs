@@ -1,23 +1,24 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;
 
-public static class CreateEndpoint
+public class CreateEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group
-            .MapPost(
-                "/",
+        app.MapPost(
+                UsersConstants.RoutePrefix,
                 async (CreateUserRequest request, IUserContracts userContracts) =>
                 {
                     var user = await userContracts.CreateUserAsync(request);
                     return TypedResults.Created($"{UsersConstants.RoutePrefix}/{user.Id}", user);
                 }
             )
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization();
     }
 }

@@ -1,23 +1,24 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;
 
-public static class DeleteEndpoint
+public class DeleteEndpoint : IEndpoint
 {
-    public static void Map(IEndpointRouteBuilder group)
+    public void Map(IEndpointRouteBuilder app)
     {
-        group
-            .MapDelete(
-                "/{id}",
+        app.MapDelete(
+                UsersConstants.RoutePrefix + "/{id}",
                 async (string id, IUserContracts userContracts) =>
                 {
                     await userContracts.DeleteUserAsync(id);
                     return TypedResults.NoContent();
                 }
             )
+            .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization();
     }
 }
