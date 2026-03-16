@@ -1,1 +1,128 @@
-{}
+{
+  "alert": {
+    "name": "Alert",
+    "file": "alert.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Alert", "AlertTitle", "AlertDescription", "alertVariants"]
+  },
+  "badge": {
+    "name": "Badge",
+    "file": "badge.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Badge", "badgeVariants"]
+  },
+  "button": {
+    "name": "Button",
+    "file": "button.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-slot"],
+    "exports": ["Button", "buttonVariants"]
+  },
+  "card": {
+    "name": "Card",
+    "file": "card.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Card", "CardHeader", "CardTitle", "CardDescription", "CardContent", "CardFooter"]
+  },
+  "checkbox": {
+    "name": "Checkbox",
+    "file": "checkbox.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-checkbox"],
+    "exports": ["Checkbox"]
+  },
+  "dialog": {
+    "name": "Dialog",
+    "file": "dialog.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-dialog"],
+    "exports": ["Dialog", "DialogPortal", "DialogOverlay", "DialogClose", "DialogTrigger", "DialogContent", "DialogHeader", "DialogFooter", "DialogTitle", "DialogDescription"]
+  },
+  "dropdown-menu": {
+    "name": "DropdownMenu",
+    "file": "dropdown-menu.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-dropdown-menu"],
+    "exports": ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuSeparator", "DropdownMenuLabel", "DropdownMenuGroup", "DropdownMenuSub"]
+  },
+  "input": {
+    "name": "Input",
+    "file": "input.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Input", "inputVariants"]
+  },
+  "label": {
+    "name": "Label",
+    "file": "label.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-label"],
+    "exports": ["Label"]
+  },
+  "popover": {
+    "name": "Popover",
+    "file": "popover.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-popover"],
+    "exports": ["Popover", "PopoverTrigger", "PopoverContent"]
+  },
+  "radio-group": {
+    "name": "RadioGroup",
+    "file": "radio-group.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-radio-group"],
+    "exports": ["RadioGroup", "RadioGroupItem"]
+  },
+  "select": {
+    "name": "Select",
+    "file": "select.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-select"],
+    "exports": ["Select", "SelectGroup", "SelectValue", "SelectTrigger", "SelectContent", "SelectItem", "SelectSeparator"]
+  },
+  "separator": {
+    "name": "Separator",
+    "file": "separator.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-separator"],
+    "exports": ["Separator"]
+  },
+  "spinner": {
+    "name": "Spinner",
+    "file": "spinner.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Spinner", "spinnerVariants"]
+  },
+  "switch": {
+    "name": "Switch",
+    "file": "switch.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-switch"],
+    "exports": ["Switch"]
+  },
+  "table": {
+    "name": "Table",
+    "file": "table.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Table", "TableHeader", "TableBody", "TableRow", "TableHead", "TableCell"]
+  },
+  "tabs": {
+    "name": "Tabs",
+    "file": "tabs.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-tabs"],
+    "exports": ["Tabs", "TabsList", "TabsTrigger", "TabsContent"]
+  },
+  "textarea": {
+    "name": "Textarea",
+    "file": "textarea.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Textarea"]
+  }
+}
