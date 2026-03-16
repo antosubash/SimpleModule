@@ -1,4 +1,4 @@
 @import "tailwindcss";
 @import "@simplemodule/theme-default/theme.css";
 @source "../../SimpleModule.UI/";
-@source "../../SimpleModule.Blazor/";
+@source "../../SimpleModule.Blazor/**/*.razor";
