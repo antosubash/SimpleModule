@@ -5,7 +5,7 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.Products.Views;
 
-public class CreateEndpoint : IEndpoint
+public class CreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {

@@ -6,12 +6,17 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Views;
 
-public class ManageEndpoint : IEndpoint
+public class ManageEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/manage", async (IProductContracts products) =>
-            Inertia.Render("Products/Manage",
-                new { products = await products.GetAllProductsAsync() }));
+        app.MapGet(
+            "/manage",
+            async (IProductContracts products) =>
+                Inertia.Render(
+                    "Products/Manage",
+                    new { products = await products.GetAllProductsAsync() }
+                )
+        );
     }
 }
