@@ -4,28 +4,36 @@
         <Platform Name="x64" />
         <Platform Name="x86" />
     </Configurations>
-    <Folder Name="/src/">
-        <Project Path="src/SimpleModule.Api/SimpleModule.Api.csproj" />
-        <Project Path="src/SimpleModule.Core/SimpleModule.Core.csproj" />
-        <Project Path="src/SimpleModule.Database/SimpleModule.Database.csproj" />
-        <Project Path="src/SimpleModule.Generator/SimpleModule.Generator.csproj" />
-        <Project Path="src/SimpleModule.Cli/SimpleModule.Cli.csproj" />
+    <Folder Name="/framework/">
+        <Project Path="framework/SimpleModule.Core/SimpleModule.Core.csproj" />
+        <Project Path="framework/SimpleModule.Generator/SimpleModule.Generator.csproj" />
+        <Project Path="framework/SimpleModule.Database/SimpleModule.Database.csproj" />
+        <Project Path="framework/SimpleModule.Blazor/SimpleModule.Blazor.csproj" />
+    </Folder>
+    <Folder Name="/cli/">
+        <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
     </Folder>
     <Folder Name="/modules/" />
+    <Folder Name="/modules/Dashboard/">
+        <Project Path="modules/Dashboard/src/Dashboard/Dashboard.csproj" />
+    </Folder>
     <Folder Name="/modules/Orders/">
-        <Project Path="src/modules/Orders/src/Orders.Contracts/Orders.Contracts.csproj" />
-        <Project Path="src/modules/Orders/src/Orders/Orders.csproj" />
-        <Project Path="src/modules/Orders/tests/Orders.Tests/Orders.Tests.csproj" />
+        <Project Path="modules/Orders/src/Orders.Contracts/Orders.Contracts.csproj" />
+        <Project Path="modules/Orders/src/Orders/Orders.csproj" />
+        <Project Path="modules/Orders/tests/Orders.Tests/Orders.Tests.csproj" />
     </Folder>
     <Folder Name="/modules/Products/">
-        <Project Path="src/modules/Products/src/Products.Contracts/Products.Contracts.csproj" />
-        <Project Path="src/modules/Products/src/Products/Products.csproj" />
-        <Project Path="src/modules/Products/tests/Products.Tests/Products.Tests.csproj" />
+        <Project Path="modules/Products/src/Products.Contracts/Products.Contracts.csproj" />
+        <Project Path="modules/Products/src/Products/Products.csproj" />
+        <Project Path="modules/Products/tests/Products.Tests/Products.Tests.csproj" />
     </Folder>
     <Folder Name="/modules/Users/">
-        <Project Path="src/modules/Users/src/Users.Contracts/Users.Contracts.csproj" />
-        <Project Path="src/modules/Users/src/Users/Users.csproj" />
-        <Project Path="src/modules/Users/tests/Users.Tests/Users.Tests.csproj" />
+        <Project Path="modules/Users/src/Users.Contracts/Users.Contracts.csproj" />
+        <Project Path="modules/Users/src/Users/Users.csproj" />
+        <Project Path="modules/Users/tests/Users.Tests/Users.Tests.csproj" />
+    </Folder>
+    <Folder Name="/template/">
+        <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
     </Folder>
     <Folder Name="/tests/">
         <Project Path="tests/SimpleModule.Cli.Tests/SimpleModule.Cli.Tests.csproj" />

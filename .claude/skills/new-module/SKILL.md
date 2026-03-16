@@ -58,7 +58,7 @@ public class <Name>Module : IModule
 }
 ```
 
-4. Add `<ProjectReference Include="..\modules\<Name>\<Name>.csproj" />` to `src/SimpleModule.Api/SimpleModule.Api.csproj`
+4. Add `<ProjectReference Include="..\modules\<Name>\<Name>.csproj" />` to `src/SimpleModule.Host/SimpleModule.Host.csproj`
 
 5. Add the project to `SimpleModule.sln` using `dotnet sln add`
 

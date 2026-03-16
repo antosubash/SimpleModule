@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+  </ItemGroup>
+  <Target
+    Name="JsBuild"
+    BeforeTargets="Build"
+    Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules'))"
+  >
+    <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+</Project>

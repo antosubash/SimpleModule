@@ -1,0 +1,180 @@
+import { router } from '@inertiajs/react';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@simplemodule/ui';
+import { useState } from 'react';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+interface OrderItem {
+  productId: number;
+  quantity: number;
+}
+
+interface Order {
+  id: number;
+  userId: string;
+  items: OrderItem[];
+  total: number;
+  createdAt: string;
+}
+
+interface Props {
+  order: Order;
+  products: Product[];
+}
+
+interface ItemRow {
+  productId: number;
+  quantity: number;
+}
+
+export default function Edit({ order, products }: Props) {
+  const [userId, setUserId] = useState(order.userId);
+  const [items, setItems] = useState<ItemRow[]>(
+    order.items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+  );
+
+  function addItem() {
+    setItems([...items, { productId: products[0]?.id ?? 0, quantity: 1 }]);
+  }
+
+  function removeItem(index: number) {
+    setItems(items.filter((_, i) => i !== index));
+  }
+
+  function updateItem(index: number, field: keyof ItemRow, value: number) {
+    const updated = [...items];
+    updated[index] = { ...updated[index], [field]: value };
+    setItems(updated);
+  }
+
+  function getTotal() {
+    return items.reduce((sum, item) => {
+      const product = products.find((p) => p.id === item.productId);
+      return sum + (product?.price ?? 0) * item.quantity;
+    }, 0);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    router.post(`/orders/${order.id}`, { userId, items });
+  }
+
+  function handleDelete() {
+    if (!confirm(`Delete order #${order.id}?`)) return;
+    router.delete(`/orders/${order.id}`);
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <div className="flex items-center gap-3 mb-1">
+        <a
+          href="/orders"
+          className="text-text-muted hover:text-text transition-colors no-underline"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <h1 className="text-2xl font-extrabold tracking-tight">Edit Order #{order.id}</h1>
+      </div>
+      <p className="text-text-muted text-sm ml-7 mb-6">
+        Created: {new Date(order.createdAt).toLocaleString()} &middot; Current total: $
+        {order.total.toFixed(2)}
+      </p>
+
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="userId">User ID</Label>
+              <Input
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <Label>Items</Label>
+                <Button type="button" variant="secondary" size="sm" onClick={addItem}>
+                  + Add Item
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {items.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-center">
+                    <select
+                      value={item.productId}
+                      onChange={(e) => updateItem(index, 'productId', Number(e.target.value))}
+                      className="flex-1 h-11 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary-ring"
+                    >
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} (${p.price.toFixed(2)})
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        updateItem(index, 'quantity', Math.max(1, Number(e.target.value)))
+                      }
+                      min="1"
+                      className="w-20"
+                    />
+                    {items.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(index)}
+                      >
+                        &times;
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border">
+              <div className="flex justify-between items-center text-lg font-semibold">
+                <span>Estimated Total</span>
+                <span>${getTotal().toFixed(2)}</span>
+              </div>
+            </div>
+
+            <Button type="submit">Save Changes</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-text-muted mb-3">
+            Permanently delete this order. This action cannot be undone.
+          </p>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete Order
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

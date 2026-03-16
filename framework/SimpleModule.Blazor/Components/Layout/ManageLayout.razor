@@ -1,0 +1,47 @@
+@inherits LayoutComponentBase
+@layout MainLayout
+@inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider SchemeProvider
+
+<div class="mb-8">
+    <div class="flex items-center gap-3 mb-1">
+        <a href="/" class="text-text-muted hover:text-text transition-colors no-underline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 class="text-2xl font-extrabold tracking-tight" style="font-family:'Sora',sans-serif;">
+            <span class="gradient-text">Account Settings</span>
+        </h1>
+    </div>
+    <p class="text-text-muted text-sm ml-7">Manage your profile, security, and preferences</p>
+</div>
+
+<div class="flex flex-col sm:flex-row gap-6">
+    <aside class="sm:w-56 shrink-0">
+        <div class="glass-card p-3 sm:sticky sm:top-20">
+            <ManageNav ActivePage="@GetActivePage()" HasExternalLogins="@_hasExternalLogins" />
+        </div>
+    </aside>
+    <div class="flex-1 min-w-0">
+        <div class="glass-card p-6 sm:p-8">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _hasExternalLogins;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var schemes = await SchemeProvider.GetAllSchemesAsync();
+        _hasExternalLogins = schemes.Any(s => !string.IsNullOrEmpty(s.DisplayName));
+    }
+
+    private string GetActivePage()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var path = uri.AbsolutePath.TrimEnd('/');
+        var lastSegment = path.Split('/').LastOrDefault() ?? "";
+        return lastSegment == "Manage" ? "Index" : lastSegment;
+    }
+}

@@ -5,6 +5,9 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -12,7 +15,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SimpleModule.Generator\SimpleModule.Generator.csproj" />
-    <ProjectReference Include="..\..\src\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Generator\SimpleModule.Generator.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
   </ItemGroup>
 </Project>

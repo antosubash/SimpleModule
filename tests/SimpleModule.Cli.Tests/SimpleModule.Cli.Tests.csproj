@@ -11,6 +11,6 @@
     <PackageReference Include="FluentAssertions" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SimpleModule.Cli\SimpleModule.Cli.csproj" />
+    <ProjectReference Include="..\..\cli\SimpleModule.Cli\SimpleModule.Cli.csproj" />
   </ItemGroup>
 </Project>
