@@ -12,7 +12,8 @@
     "lint": "biome lint ./src",
     "format": "biome format --write ./src",
     "check": "biome check ./src",
-    "check:fix": "biome check --write ./src"
+    "check:fix": "biome check --write ./src",
+    "ui:add": "node tools/add-component.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
