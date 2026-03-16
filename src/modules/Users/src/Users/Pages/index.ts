@@ -1,4 +1,3 @@
-import './index.css';
 import Disable2fa from './Account/Disable2fa';
 import EnableAuthenticator from './Account/EnableAuthenticator';
 import GenerateRecoveryCodes from './Account/GenerateRecoveryCodes';

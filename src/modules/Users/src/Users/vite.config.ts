@@ -1,10 +1,9 @@
 import { resolve } from 'node:path';
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [tailwindcss(), react()],
+  plugins: [react()],
   define: { 'process.env.NODE_ENV': JSON.stringify('production') },
   build: {
     lib: {
@@ -18,9 +17,6 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react'],
-      output: {
-        assetFileNames: 'Users.[ext]',
-      },
     },
   },
 });

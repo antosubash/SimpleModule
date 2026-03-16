@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.Blazor.Inertia;
@@ -11,8 +10,7 @@ namespace SimpleModule.Blazor.Inertia;
 public sealed class InertiaPageRenderer(
     IServiceProvider services,
     ILoggerFactory loggerFactory,
-    IOptions<InertiaOptions> options,
-    IModuleCssProvider cssProvider
+    IOptions<InertiaOptions> options
 ) : IInertiaPageRenderer
 {
     public async Task RenderPageAsync(HttpContext httpContext, string pageJson)
@@ -27,7 +25,6 @@ public sealed class InertiaPageRenderer(
                     {
                         ["PageJson"] = pageJson,
                         ["HttpContext"] = httpContext,
-                        ["ModuleCssPaths"] = cssProvider.CssPaths,
                     }
                 )
             );
