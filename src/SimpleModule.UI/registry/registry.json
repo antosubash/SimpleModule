@@ -6,6 +6,13 @@
     "radixPackages": ["@radix-ui/react-accordion"],
     "exports": ["Accordion", "AccordionItem", "AccordionTrigger", "AccordionContent"]
   },
+  "aspect-ratio": {
+    "name": "AspectRatio",
+    "file": "aspect-ratio.tsx",
+    "dependencies": [],
+    "radixPackages": ["@radix-ui/react-aspect-ratio"],
+    "exports": ["AspectRatio"]
+  },
   "alert": {
     "name": "Alert",
     "file": "alert.tsx",
@@ -62,6 +69,13 @@
     "radixPackages": ["@radix-ui/react-collapsible"],
     "exports": ["Collapsible", "CollapsibleTrigger", "CollapsibleContent"]
   },
+  "container": {
+    "name": "Container",
+    "file": "container.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Container", "containerVariants"]
+  },
   "command": {
     "name": "Command",
     "file": "command.tsx",
@@ -104,6 +118,13 @@
       "DropdownMenuSub"
     ]
   },
+  "grid": {
+    "name": "Grid",
+    "file": "grid.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Grid", "gridVariants"]
+  },
   "hover-card": {
     "name": "HoverCard",
     "file": "hover-card.tsx",
@@ -124,6 +145,13 @@
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-label"],
     "exports": ["Label"]
+  },
+  "page-header": {
+    "name": "PageHeader",
+    "file": "page-header.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["PageHeader"]
   },
   "popover": {
     "name": "Popover",
@@ -146,12 +174,26 @@
     "radixPackages": ["@radix-ui/react-radio-group"],
     "exports": ["RadioGroup", "RadioGroupItem"]
   },
+  "resizable": {
+    "name": "Resizable",
+    "file": "resizable.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["ResizablePanelGroup", "ResizablePanel", "ResizableHandle"]
+  },
   "scroll-area": {
     "name": "ScrollArea",
     "file": "scroll-area.tsx",
     "dependencies": [],
     "radixPackages": ["@radix-ui/react-scroll-area"],
     "exports": ["ScrollArea", "ScrollBar"]
+  },
+  "section": {
+    "name": "Section",
+    "file": "section.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Section"]
   },
   "select": {
     "name": "Select",
@@ -182,6 +224,13 @@
     "radixPackages": ["@radix-ui/react-dialog"],
     "exports": ["Sheet", "SheetPortal", "SheetOverlay", "SheetTrigger", "SheetClose", "SheetContent", "SheetHeader", "SheetFooter", "SheetTitle", "SheetDescription"]
   },
+  "sidebar": {
+    "name": "Sidebar",
+    "file": "sidebar.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["SidebarProvider", "Sidebar", "SidebarHeader", "SidebarContent", "SidebarFooter", "SidebarGroup", "SidebarGroupLabel", "SidebarMenu", "SidebarMenuItem", "SidebarMenuButton", "SidebarTrigger", "useSidebar"]
+  },
   "skeleton": {
     "name": "Skeleton",
     "file": "skeleton.tsx",
@@ -202,6 +251,13 @@
     "dependencies": [],
     "radixPackages": [],
     "exports": ["Spinner", "spinnerVariants"]
+  },
+  "stack": {
+    "name": "Stack",
+    "file": "stack.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "exports": ["Stack", "stackVariants"]
   },
   "switch": {
     "name": "Switch",
