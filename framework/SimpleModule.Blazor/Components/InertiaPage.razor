@@ -1,6 +1,8 @@
 <div id="app" data-page="@PageJson"></div>
-<script type="module" src="/js/app.js"></script>
+<script type="module" src="/js/app.js?v=@CacheBuster"></script>
 
 @code {
+    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
     [Parameter] public string PageJson { get; set; } = "";
 }

@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
@@ -21,12 +23,12 @@ public class AccountSecurityEndpoint : IEndpoint
         group.MapPost(
             "/TwoFactorAuthentication/forget-browser",
             async (
-                HttpContext context,
+                ClaimsPrincipal principal,
                 UserManager<ApplicationUser> userManager,
                 SignInManager<ApplicationUser> signInManager
             ) =>
             {
-                var user = await userManager.GetUserAsync(context.User);
+                var user = await userManager.GetUserAsync(principal);
                 if (user is null)
                     return Results.Redirect("/Identity/Account/Login");
 
@@ -39,73 +41,71 @@ public class AccountSecurityEndpoint : IEndpoint
         );
 
         // POST /EnableAuthenticator
-        group.MapPost(
-            "/EnableAuthenticator",
-            async (
-                HttpContext context,
-                UserManager<ApplicationUser> userManager,
-                ILogger<UsersModule> logger
-            ) =>
-            {
-                var user = await userManager.GetUserAsync(context.User);
-                if (user is null)
-                    return Results.Redirect("/Identity/Account/Login");
-
-                var form = await context.Request.ReadFormAsync();
-                var code = form["code"].ToString();
-
-                var verificationCode = code.Replace(" ", string.Empty, StringComparison.Ordinal)
-                    .Replace("-", string.Empty, StringComparison.Ordinal);
-
-                var is2faTokenValid = await userManager.VerifyTwoFactorTokenAsync(
-                    user,
-                    userManager.Options.Tokens.AuthenticatorTokenProvider,
-                    verificationCode
-                );
-
-                if (!is2faTokenValid)
+        group
+            .MapPost(
+                "/EnableAuthenticator",
+                async (
+                    [FromForm] string code,
+                    ClaimsPrincipal principal,
+                    UserManager<ApplicationUser> userManager,
+                    ILogger<UsersModule> logger
+                ) =>
                 {
-                    return Results.Redirect(
-                        "/Identity/Account/Manage/EnableAuthenticator?error=invalid-code"
-                    );
-                }
+                    var user = await userManager.GetUserAsync(principal);
+                    if (user is null)
+                        return Results.Redirect("/Identity/Account/Login");
 
-                await userManager.SetTwoFactorEnabledAsync(user, true);
-                logger.LogInformation("User has enabled 2FA with an authenticator app.");
+                    var verificationCode = code.Replace(" ", string.Empty, StringComparison.Ordinal)
+                        .Replace("-", string.Empty, StringComparison.Ordinal);
 
-                if (await userManager.CountRecoveryCodesAsync(user) == 0)
-                {
-                    var recoveryCodes = await userManager.GenerateNewTwoFactorRecoveryCodesAsync(
+                    var is2faTokenValid = await userManager.VerifyTwoFactorTokenAsync(
                         user,
-                        10
+                        userManager.Options.Tokens.AuthenticatorTokenProvider,
+                        verificationCode
                     );
 
-                    return Inertia.Render(
-                        "Users/Account/ShowRecoveryCodes",
-                        new
-                        {
-                            recoveryCodes = recoveryCodes!.ToArray(),
-                            statusMessage = "Your authenticator app has been verified.",
-                        }
+                    if (!is2faTokenValid)
+                    {
+                        return Results.Redirect(
+                            "/Identity/Account/Manage/EnableAuthenticator?error=invalid-code"
+                        );
+                    }
+
+                    await userManager.SetTwoFactorEnabledAsync(user, true);
+                    logger.LogInformation("User has enabled 2FA with an authenticator app.");
+
+                    if (await userManager.CountRecoveryCodesAsync(user) == 0)
+                    {
+                        var recoveryCodes =
+                            await userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+
+                        return Inertia.Render(
+                            "Users/Account/ShowRecoveryCodes",
+                            new
+                            {
+                                recoveryCodes = recoveryCodes!.ToArray(),
+                                statusMessage = "Your authenticator app has been verified.",
+                            }
+                        );
+                    }
+
+                    return Results.Redirect(
+                        "/Identity/Account/Manage/TwoFactorAuthentication?status=authenticator-verified"
                     );
                 }
-
-                return Results.Redirect(
-                    "/Identity/Account/Manage/TwoFactorAuthentication?status=authenticator-verified"
-                );
-            }
-        );
+            )
+            .DisableAntiforgery();
 
         // POST /Disable2fa
         group.MapPost(
             "/Disable2fa",
             async (
-                HttpContext context,
+                ClaimsPrincipal principal,
                 UserManager<ApplicationUser> userManager,
                 ILogger<UsersModule> logger
             ) =>
             {
-                var user = await userManager.GetUserAsync(context.User);
+                var user = await userManager.GetUserAsync(principal);
                 if (user is null)
                     return Results.Redirect("/Identity/Account/Login");
 
@@ -122,13 +122,13 @@ public class AccountSecurityEndpoint : IEndpoint
         group.MapPost(
             "/ResetAuthenticator",
             async (
-                HttpContext context,
+                ClaimsPrincipal principal,
                 UserManager<ApplicationUser> userManager,
                 SignInManager<ApplicationUser> signInManager,
                 ILogger<UsersModule> logger
             ) =>
             {
-                var user = await userManager.GetUserAsync(context.User);
+                var user = await userManager.GetUserAsync(principal);
                 if (user is null)
                     return Results.Redirect("/Identity/Account/Login");
 
@@ -148,12 +148,12 @@ public class AccountSecurityEndpoint : IEndpoint
         group.MapPost(
             "/GenerateRecoveryCodes",
             async (
-                HttpContext context,
+                ClaimsPrincipal principal,
                 UserManager<ApplicationUser> userManager,
                 ILogger<UsersModule> logger
             ) =>
             {
-                var user = await userManager.GetUserAsync(context.User);
+                var user = await userManager.GetUserAsync(principal);
                 if (user is null)
                     return Results.Redirect("/Identity/Account/Login");
 

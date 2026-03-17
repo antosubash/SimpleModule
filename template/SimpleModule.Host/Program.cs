@@ -136,6 +136,27 @@ app.UseHttpsRedirection();
 
 app.UseInertia();
 
+app.Use(
+    async (context, next) =>
+    {
+        var path = context.Request.Path.Value;
+        bool hasVersionParam = context.Request.Query.ContainsKey("v");
+        bool isVendorJs = path is not null
+            && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
+
+        if (hasVersionParam || isVendorJs)
+        {
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+                return Task.CompletedTask;
+            });
+        }
+
+        await next();
+    }
+);
+
 app.MapStaticAssets();
 
 app.UseAuthentication();

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Users.Entities;
@@ -16,50 +17,65 @@ public class AdminRolesEndpoint : IEndpoint
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Create role
-        group.MapPost(
-            "/",
-            async (HttpContext context, RoleManager<ApplicationRole> roleManager) =>
-            {
-                var form = await context.Request.ReadFormAsync();
-                var name = form["name"].ToString().Trim();
-                var description = form["description"].ToString().Trim();
-
-                if (string.IsNullOrEmpty(name))
-                    return Results.Redirect("/admin/roles/create");
-
-                var role = new ApplicationRole
+        group
+            .MapPost(
+                "/",
+                async (
+                    [FromForm] string name,
+                    [FromForm] string? description,
+                    RoleManager<ApplicationRole> roleManager
+                ) =>
                 {
-                    Name = name,
-                    Description = string.IsNullOrEmpty(description) ? null : description,
-                };
+                    var trimmedName = name.Trim();
+                    var trimmedDescription = description?.Trim();
 
-                var result = await roleManager.CreateAsync(role);
-                if (!result.Succeeded)
-                    return Results.Redirect("/admin/roles/create");
+                    if (string.IsNullOrEmpty(trimmedName))
+                        return Results.Redirect("/admin/roles/create");
 
-                return Results.Redirect("/admin/roles");
-            }
-        );
+                    var role = new ApplicationRole
+                    {
+                        Name = trimmedName,
+                        Description = string.IsNullOrEmpty(trimmedDescription)
+                            ? null
+                            : trimmedDescription,
+                    };
+
+                    var result = await roleManager.CreateAsync(role);
+                    if (!result.Succeeded)
+                        return Results.Redirect("/admin/roles/create");
+
+                    return Results.Redirect("/admin/roles");
+                }
+            )
+            .DisableAntiforgery();
 
         // Update role
-        group.MapPost(
-            "/{id}",
-            async (string id, HttpContext context, RoleManager<ApplicationRole> roleManager) =>
-            {
-                var role = await roleManager.FindByIdAsync(id);
-                if (role is null)
-                    return Results.NotFound();
+        group
+            .MapPost(
+                "/{id}",
+                async (
+                    string id,
+                    [FromForm] string name,
+                    [FromForm] string? description,
+                    RoleManager<ApplicationRole> roleManager
+                ) =>
+                {
+                    var role = await roleManager.FindByIdAsync(id);
+                    if (role is null)
+                        return Results.NotFound();
 
-                var form = await context.Request.ReadFormAsync();
-                role.Name = form["name"].ToString().Trim();
-                var description = form["description"].ToString().Trim();
-                role.Description = string.IsNullOrEmpty(description) ? null : description;
+                    role.Name = name.Trim();
+                    var trimmedDescription = description?.Trim();
+                    role.Description = string.IsNullOrEmpty(trimmedDescription)
+                        ? null
+                        : trimmedDescription;
 
-                await roleManager.UpdateAsync(role);
+                    await roleManager.UpdateAsync(role);
 
-                return Results.Redirect($"/admin/roles/{id}/edit");
-            }
-        );
+                    return Results.Redirect($"/admin/roles/{id}/edit");
+                }
+            )
+            .DisableAntiforgery();
 
         // Delete role
         group.MapDelete(
@@ -85,7 +101,7 @@ public class AdminRolesEndpoint : IEndpoint
 
                 await roleManager.DeleteAsync(role);
 
-                return Results.Ok();
+                return Results.Redirect("/admin/roles");
             }
         );
     }

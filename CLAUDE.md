@@ -124,6 +124,55 @@ Use `sm new module <name>` (CLI) or manually:
 5. Add `ProjectReference` to `template/SimpleModule.Host/SimpleModule.Host.csproj`
 6. Add all projects to `SimpleModule.slnx`
 
+## Minimal API Parameter Binding
+
+Reference: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-10.0
+
+### Binding Rules
+
+- **Simple types** (`int`, `string`, etc.): Route → Query → Header (implicit)
+- **Complex types** (classes/records): Body (JSON) for POST/PUT/DELETE, Query for GET (implicit)
+- **DI services**: Auto-injected when registered in the container
+- **Special types**: `HttpContext`, `HttpRequest`, `HttpResponse`, `CancellationToken`, `ClaimsPrincipal` are auto-bound
+
+### When to Use Attributes
+
+- `[FromForm]` — **required** for form data binding (never implicit)
+- `[FromBody]` — explicit body binding (usually implicit for complex types in POST/PUT)
+- `[FromQuery]` — when a parameter name conflicts with a route parameter
+- `[FromRoute]` — when disambiguation is needed
+- `[FromHeader(Name = "X-Header")]` — for HTTP headers
+- `[FromServices]` — rarely needed (DI services are auto-detected)
+- `[AsParameters]` — bind a complex type from multiple sources (route + query + header)
+
+### Correct Patterns
+
+```csharp
+// API: complex type auto-binds from JSON body, service auto-injected
+app.MapPost("/", async (CreateProductRequest request, IProductContracts products) => ...);
+
+// API: route param + body + DI
+app.MapPut("/{id}", async (int id, UpdateProductRequest request, IProductContracts products) => ...);
+
+// View: form data requires [FromForm]
+app.MapPost("/", async ([FromForm] string name, [FromForm] decimal price, IProductContracts products) => ...);
+```
+
+### Anti-patterns (Avoid)
+
+```csharp
+// BAD: manual form reading via HttpContext
+app.MapPost("/", async (HttpContext context, IService svc) => {
+    var form = await context.Request.ReadFormAsync(); // Don't do this
+    var name = form["name"].ToString();
+});
+
+// BAD: manual JSON deserialization
+app.MapPost("/", async (HttpContext context, IService svc) => {
+    var body = await JsonSerializer.DeserializeAsync<MyType>(context.Request.Body); // Don't do this
+});
+```
+
 ## Linting & Formatting
 
 Biome is configured at repo root (`biome.json`). Covers `modules/**`, `packages/**`, `template/**` except `**/wwwroot/**`. Settings: single quotes, semicolons always, 2-space indent, trailing commas, 100-char line width. Tailwind CSS directives enabled.

@@ -40,9 +40,11 @@
     @Body
 </main>
 
-<script suppress-error="BL9992" src="/js/shell.js"></script>
+<script suppress-error="BL9992" src="/js/shell.js?v=@CacheBuster"></script>
 
 @code {
+    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
