@@ -42,4 +42,6 @@
         <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
         <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
     </Folder>
+    <Project Path="SimpleModule.AppHost/SimpleModule.AppHost.csproj" />
+    <Project Path="SimpleModule.ServiceDefaults/SimpleModule.ServiceDefaults.csproj" />
 </Solution>
