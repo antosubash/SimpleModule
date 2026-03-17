@@ -1,10 +1,5 @@
 import { Card, CardContent } from '@simplemodule/ui';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
+import type { Product } from '../types';
 
 export default function Browse({ products }: { products: Product[] }) {
   return (

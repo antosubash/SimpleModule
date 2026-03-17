@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@simplemodule/ui';
 import { useState } from 'react';
+import type { Order, OrderItem } from '../types';
 
 interface Product {
   id: number;
@@ -8,32 +9,14 @@ interface Product {
   price: number;
 }
 
-interface OrderItem {
-  productId: number;
-  quantity: number;
-}
-
-interface Order {
-  id: number;
-  userId: string;
-  items: OrderItem[];
-  total: number;
-  createdAt: string;
-}
-
 interface Props {
   order: Order;
   products: Product[];
 }
 
-interface ItemRow {
-  productId: number;
-  quantity: number;
-}
-
 export default function Edit({ order, products }: Props) {
   const [userId, setUserId] = useState(order.userId);
-  const [items, setItems] = useState<ItemRow[]>(
+  const [items, setItems] = useState<OrderItem[]>(
     order.items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
   );
 
@@ -45,7 +28,7 @@ export default function Edit({ order, products }: Props) {
     setItems(items.filter((_, i) => i !== index));
   }
 
-  function updateItem(index: number, field: keyof ItemRow, value: number) {
+  function updateItem(index: number, field: keyof OrderItem, value: number) {
     const updated = [...items];
     updated[index] = { ...updated[index], [field]: value };
     setItems(updated);

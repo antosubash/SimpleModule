@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <InvariantGlobalization>false</InvariantGlobalization>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.Tests.Shared" />
@@ -69,10 +70,9 @@
   <Target
     Name="ExtractDtoTypeScript"
     AfterTargets="CoreCompile"
-    Condition="Exists('$(IntermediateOutputPath)SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/DtoTypeScript.g.cs')"
   >
     <Exec
-      Command="node &quot;$(RepoRoot)tools\extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/DtoTypeScript.g.cs&quot; &quot;$(MSBuildProjectDirectory)/ClientApp/types&quot;"
+      Command="node &quot;$(RepoRoot)tools\extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
   </Target>

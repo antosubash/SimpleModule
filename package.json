@@ -15,6 +15,7 @@
     "format": "biome format --write .",
     "check": "biome check .",
     "check:fix": "biome check --write .",
+    "generate:types": "dotnet build template/SimpleModule.Host && node tools/extract-ts-types.mjs template/SimpleModule.Host/obj/Debug/net10.0/generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator modules",
     "ui:add": "node tools/add-component.mjs",
     "test:e2e": "npm run test -w tests/e2e",
     "test:e2e:ui": "npm run test:ui -w tests/e2e"
