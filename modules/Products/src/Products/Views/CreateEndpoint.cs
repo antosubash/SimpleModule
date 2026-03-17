@@ -15,17 +15,18 @@ public class CreateEndpoint : IViewEndpoint
         app.MapGet("/create", () => Inertia.Render("Products/Create"));
 
         app.MapPost(
-            "/",
-            async (
-                [FromForm] string name,
-                [FromForm] decimal price,
-                IProductContracts products
-            ) =>
-            {
-                var request = new CreateProductRequest { Name = name, Price = price };
-                await products.CreateProductAsync(request);
-                return Results.Redirect("/products/manage");
-            }
-        ).DisableAntiforgery();
+                "/",
+                async (
+                    [FromForm] string name,
+                    [FromForm] decimal price,
+                    IProductContracts products
+                ) =>
+                {
+                    var request = new CreateProductRequest { Name = name, Price = price };
+                    await products.CreateProductAsync(request);
+                    return Results.Redirect("/products/manage");
+                }
+            )
+            .DisableAntiforgery();
     }
 }

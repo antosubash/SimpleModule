@@ -9,6 +9,195 @@ namespace SimpleModule.Generator;
 
 public partial class ModuleDiscovererGenerator
 {
+    private static readonly DiagnosticDescriptor DuplicateDbSetPropertyName = new(
+        id: "SM0001",
+        title: "Duplicate DbSet property name across modules",
+        messageFormat: "DbSet property name '{0}' is used by multiple modules: {1} (entity {2}) and {3} (entity {4}). Each module must use unique DbSet property names to avoid table name conflicts in the unified HostDbContext.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor EmptyModuleName = new(
+        id: "SM0002",
+        title: "Module has empty name",
+        messageFormat: "Module class '{0}' has an empty [Module] name. Provide a non-empty name: [Module(\"MyModule\")]. An empty name will cause broken route prefixes, schema names, and TypeScript module grouping.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor MultipleIdentityDbContexts = new(
+        id: "SM0003",
+        title: "Multiple IdentityDbContext types found",
+        messageFormat: "Multiple modules define an IdentityDbContext: '{0}' (module {1}) and '{2}' (module {3}). Only one module should provide Identity. The unified HostDbContext can only extend one IdentityDbContext base class.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor DbContextWithNoDbSets = new(
+        id: "SM0004",
+        title: "DbContext has no DbSet properties",
+        messageFormat: "DbContext '{0}' in module '{1}' has no public DbSet<T> properties. No entities from this context will appear in the unified HostDbContext. Add DbSet<T> properties for each entity, or remove this DbContext if it's not needed.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor IdentityDbContextBadTypeArgs = new(
+        id: "SM0005",
+        title: "IdentityDbContext has unexpected type arguments",
+        messageFormat: "IdentityDbContext '{0}' in module '{1}' must extend IdentityDbContext<TUser, TRole, TKey> with exactly 3 type arguments, but {2} were found. Use the 3-argument form: IdentityDbContext<ApplicationUser, ApplicationRole, string>.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor EntityConfigForMissingEntity = new(
+        id: "SM0006",
+        title: "Entity configuration targets entity not in any DbSet",
+        messageFormat: "IEntityTypeConfiguration<{0}> in '{1}' (module '{2}') configures an entity that is not exposed as a DbSet in any module's DbContext. Add a DbSet<{0}> property to a DbContext, or remove this configuration.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor DuplicateEntityConfiguration = new(
+        id: "SM0007",
+        title: "Duplicate entity configuration",
+        messageFormat: "Entity '{0}' has multiple IEntityTypeConfiguration implementations: '{1}' and '{2}'. EF Core only supports one configuration per entity type. Remove the duplicate.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static void ReportDiscoveryDiagnostics(
+        SourceProductionContext context,
+        DiscoveryData data
+    )
+    {
+        // SM0002: Empty module name
+        foreach (var module in data.Modules)
+        {
+            if (string.IsNullOrEmpty(module.ModuleName))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        EmptyModuleName,
+                        Location.None,
+                        module.FullyQualifiedName.Replace("global::", "")
+                    )
+                );
+            }
+        }
+
+        // SM0004: DbContext with no DbSets
+        foreach (var ctx in data.DbContexts)
+        {
+            if (ctx.DbSets.Length == 0 && !ctx.IsIdentityDbContext)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DbContextWithNoDbSets,
+                        Location.None,
+                        ctx.FullyQualifiedName.Replace("global::", ""),
+                        ctx.ModuleName
+                    )
+                );
+            }
+        }
+
+        // SM0003: Multiple IdentityDbContexts
+        DbContextInfoRecord? firstIdentity = null;
+        foreach (var ctx in data.DbContexts)
+        {
+            if (!ctx.IsIdentityDbContext)
+                continue;
+
+            if (firstIdentity is null)
+            {
+                firstIdentity = ctx;
+            }
+            else
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MultipleIdentityDbContexts,
+                        Location.None,
+                        firstIdentity.Value.FullyQualifiedName.Replace("global::", ""),
+                        firstIdentity.Value.ModuleName,
+                        ctx.FullyQualifiedName.Replace("global::", ""),
+                        ctx.ModuleName
+                    )
+                );
+            }
+        }
+
+        // SM0005: IdentityDbContext with wrong type args
+        foreach (var ctx in data.DbContexts)
+        {
+            if (ctx.IsIdentityDbContext && string.IsNullOrEmpty(ctx.IdentityUserTypeFqn))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        IdentityDbContextBadTypeArgs,
+                        Location.None,
+                        ctx.FullyQualifiedName.Replace("global::", ""),
+                        ctx.ModuleName,
+                        0
+                    )
+                );
+            }
+        }
+
+        // SM0006: Entity config for entity not in any DbSet
+        var allEntityFqns = new System.Collections.Generic.HashSet<string>();
+        foreach (var ctx in data.DbContexts)
+        {
+            foreach (var dbSet in ctx.DbSets)
+                allEntityFqns.Add(dbSet.EntityFqn);
+        }
+
+        foreach (var config in data.EntityConfigs)
+        {
+            if (!allEntityFqns.Contains(config.EntityFqn))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        EntityConfigForMissingEntity,
+                        Location.None,
+                        config.EntityFqn.Replace("global::", ""),
+                        config.ConfigFqn.Replace("global::", ""),
+                        config.ModuleName
+                    )
+                );
+            }
+        }
+
+        // SM0007: Duplicate EntityTypeConfiguration for same entity
+        var entityConfigOwners = new System.Collections.Generic.Dictionary<string, string>();
+        foreach (var config in data.EntityConfigs)
+        {
+            if (entityConfigOwners.TryGetValue(config.EntityFqn, out var existing))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DuplicateEntityConfiguration,
+                        Location.None,
+                        config.EntityFqn.Replace("global::", ""),
+                        existing,
+                        config.ConfigFqn.Replace("global::", "")
+                    )
+                );
+            }
+            else
+            {
+                entityConfigOwners[config.EntityFqn] = config.ConfigFqn.Replace("global::", "");
+            }
+        }
+    }
+
     private static void GenerateModuleExtensions(
         SourceProductionContext context,
         ImmutableArray<ModuleInfoRecord> modules,
@@ -307,8 +496,10 @@ public partial class ModuleDiscovererGenerator
         }
 
         // Group DTOs by module name (first namespace segment, e.g. "Products" from "global::Products.Contracts.Product")
-        var moduleGroups =
-            new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<DtoTypeInfoRecord>>();
+        var moduleGroups = new System.Collections.Generic.Dictionary<
+            string,
+            System.Collections.Generic.List<DtoTypeInfoRecord>
+        >();
         foreach (var dto in dtoTypes)
         {
             var moduleName = GetModuleNameFromFqn(dto.FullyQualifiedName);
@@ -340,8 +531,7 @@ public partial class ModuleDiscovererGenerator
                 foreach (var prop in dto.Properties)
                 {
                     var tsType = MapCSharpTypeToTypeScript(prop.TypeFqn, knownDtoTypes);
-                    var camelName =
-                        char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
+                    var camelName = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
                     sb.AppendLine($"  {camelName}: {tsType};");
                 }
                 sb.AppendLine("}");
@@ -532,6 +722,273 @@ public partial class ModuleDiscovererGenerator
             _ => "any",
         };
     }
+
+#pragma warning disable CA1308 // Schema names are conventionally lowercase in PostgreSQL/SQL Server
+    private static void EmitHostDbContext(SourceProductionContext context, DiscoveryData data)
+    {
+        // Abort if any error-level diagnostics were reported (SM0003, SM0005, SM0007)
+        var identityCount = 0;
+        var hasBadIdentityArgs = false;
+        foreach (var ctx in data.DbContexts)
+        {
+            if (ctx.IsIdentityDbContext)
+            {
+                identityCount++;
+                if (string.IsNullOrEmpty(ctx.IdentityUserTypeFqn))
+                    hasBadIdentityArgs = true;
+            }
+        }
+
+        var hasDuplicateConfigs = false;
+        var configEntities = new System.Collections.Generic.HashSet<string>();
+        foreach (var config in data.EntityConfigs)
+        {
+            if (!configEntities.Add(config.EntityFqn))
+                hasDuplicateConfigs = true;
+        }
+
+        if (identityCount > 1 || hasBadIdentityArgs || hasDuplicateConfigs)
+            return;
+
+        // Determine if any module uses IdentityDbContext
+        DbContextInfoRecord? identityContext = null;
+        foreach (var ctx in data.DbContexts)
+        {
+            if (ctx.IsIdentityDbContext)
+            {
+                identityContext = ctx;
+                break;
+            }
+        }
+
+        // Collect all DbSet<T> across modules, deduplicated by entity FQN
+        var seenEntities = new System.Collections.Generic.HashSet<string>();
+        var allDbSets = new System.Collections.Generic.List<(
+            string PropertyName,
+            string EntityFqn,
+            string ModuleName
+        )>();
+        foreach (var ctx in data.DbContexts)
+        {
+            foreach (var dbSet in ctx.DbSets)
+            {
+                if (seenEntities.Add(dbSet.EntityFqn))
+                {
+                    allDbSets.Add((dbSet.PropertyName, dbSet.EntityFqn, ctx.ModuleName));
+                }
+            }
+        }
+
+        // Check for duplicate DbSet property names across modules
+        var propertyNameOwners = new System.Collections.Generic.Dictionary<
+            string,
+            (string EntityFqn, string ModuleName)
+        >();
+        var hasDuplicates = false;
+        foreach (var entry in allDbSets)
+        {
+            if (propertyNameOwners.TryGetValue(entry.PropertyName, out var existing))
+            {
+                // Same entity type with same property name is fine (deduplicated earlier)
+                if (existing.EntityFqn != entry.EntityFqn)
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DuplicateDbSetPropertyName,
+                            Location.None,
+                            entry.PropertyName,
+                            existing.ModuleName,
+                            existing.EntityFqn.Replace("global::", ""),
+                            entry.ModuleName,
+                            entry.EntityFqn.Replace("global::", "")
+                        )
+                    );
+                    hasDuplicates = true;
+                }
+            }
+            else
+            {
+                propertyNameOwners[entry.PropertyName] = (entry.EntityFqn, entry.ModuleName);
+            }
+        }
+
+        if (hasDuplicates)
+            return;
+
+        // Build entity-to-module mapping for schema isolation
+        var entityToModule = new System.Collections.Generic.Dictionary<string, string>();
+        foreach (var entry in allDbSets)
+        {
+            entityToModule[entry.EntityFqn] = entry.ModuleName;
+        }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#pragma warning disable");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine();
+        sb.AppendLine("using Microsoft.EntityFrameworkCore;");
+        sb.AppendLine("using Microsoft.Extensions.Options;");
+        sb.AppendLine("using SimpleModule.Database;");
+
+        if (identityContext != null)
+        {
+            sb.AppendLine("using Microsoft.AspNetCore.Identity.EntityFrameworkCore;");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("namespace SimpleModule.Host;");
+        sb.AppendLine();
+
+        // Class declaration with primary constructor
+        if (identityContext != null)
+        {
+            sb.AppendLine($"public class HostDbContext(");
+            sb.AppendLine("    DbContextOptions<HostDbContext> options,");
+            sb.AppendLine("    IOptions<DatabaseOptions> dbOptions");
+            sb.AppendLine($") : IdentityDbContext<{identityContext.Value.IdentityUserTypeFqn},");
+            sb.AppendLine($"                      {identityContext.Value.IdentityRoleTypeFqn},");
+            sb.AppendLine(
+                $"                      {identityContext.Value.IdentityKeyTypeFqn}>(options)"
+            );
+        }
+        else
+        {
+            sb.AppendLine("public class HostDbContext(");
+            sb.AppendLine("    DbContextOptions<HostDbContext> options,");
+            sb.AppendLine("    IOptions<DatabaseOptions> dbOptions");
+            sb.AppendLine(") : DbContext(options)");
+        }
+
+        sb.AppendLine("{");
+
+        // DbSet properties
+        foreach (var dbSet in allDbSets)
+        {
+            sb.AppendLine($"    public DbSet<{dbSet.EntityFqn}> {dbSet.PropertyName}");
+            sb.AppendLine($"        => Set<{dbSet.EntityFqn}>();");
+            sb.AppendLine();
+        }
+
+        // OnModelCreating
+        sb.AppendLine("    protected override void OnModelCreating(ModelBuilder builder)");
+        sb.AppendLine("    {");
+
+        if (identityContext != null)
+        {
+            sb.AppendLine("        base.OnModelCreating(builder);");
+            sb.AppendLine();
+        }
+
+        // Apply IEntityTypeConfiguration<T> implementations
+        if (data.EntityConfigs.Length > 0)
+        {
+            sb.AppendLine(
+                "        // Apply IEntityTypeConfiguration<T> found in module assemblies"
+            );
+            foreach (var config in data.EntityConfigs)
+            {
+                sb.AppendLine($"        builder.ApplyConfiguration(new {config.ConfigFqn}());");
+            }
+            sb.AppendLine();
+        }
+
+        // Schema isolation (non-SQLite only)
+        sb.AppendLine("        // Schema isolation (PostgreSQL/SQL Server only)");
+        sb.AppendLine("        var provider = DatabaseProviderDetector.Detect(");
+        sb.AppendLine("            dbOptions.Value.DefaultConnection, dbOptions.Value.Provider);");
+        sb.AppendLine("        if (provider != DatabaseProvider.Sqlite)");
+        sb.AppendLine("        {");
+
+        // Group entities by module for schema assignment
+        var moduleNames = new System.Collections.Generic.HashSet<string>();
+        foreach (var entry in allDbSets)
+        {
+            moduleNames.Add(entry.ModuleName);
+        }
+
+        foreach (var entry in allDbSets)
+        {
+            var schema = entry.ModuleName.ToLowerInvariant();
+            sb.AppendLine($"            builder.Entity<{entry.EntityFqn}>()");
+            sb.AppendLine($"                .Metadata.SetSchema(\"{schema}\");");
+        }
+
+        // If there's an IdentityDbContext, assign remaining entities (Identity tables)
+        // to that module's schema
+        if (identityContext != null)
+        {
+            var identitySchema = identityContext.Value.ModuleName.ToLowerInvariant();
+            sb.AppendLine();
+            sb.AppendLine("            // Assign Identity tables to the identity module's schema");
+            sb.AppendLine("            foreach (var entityType in builder.Model.GetEntityTypes())");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (entityType.GetSchema() is null)");
+            sb.AppendLine($"                    entityType.SetSchema(\"{identitySchema}\");");
+            sb.AppendLine("            }");
+        }
+
+        sb.AppendLine("        }");
+
+        // SQLite table prefix isolation
+        sb.AppendLine("        else");
+        sb.AppendLine("        {");
+
+        // For SQLite, apply table prefixes per module
+        foreach (var ctx in data.DbContexts)
+        {
+            var prefix = ctx.ModuleName + "_";
+            foreach (var dbSet in ctx.DbSets)
+            {
+                if (!seenEntities.Contains(dbSet.EntityFqn))
+                    continue;
+                sb.AppendLine(
+                    $"            builder.Entity<{dbSet.EntityFqn}>().ToTable(\"{prefix}\" +"
+                );
+                sb.AppendLine(
+                    $"                (builder.Entity<{dbSet.EntityFqn}>().Metadata.GetTableName() ?? \"{dbSet.PropertyName}\"));"
+                );
+            }
+        }
+
+        // For Identity tables in SQLite, prefix them too
+        if (identityContext != null)
+        {
+            var identityPrefix = identityContext.Value.ModuleName + "_";
+            sb.AppendLine();
+            sb.AppendLine("            // Prefix Identity tables for SQLite");
+            sb.AppendLine("            foreach (var entityType in builder.Model.GetEntityTypes())");
+            sb.AppendLine("            {");
+            sb.AppendLine("                var tableName = entityType.GetTableName();");
+            sb.AppendLine(
+                $"                if (tableName is not null && !tableName.StartsWith(\"{identityPrefix}\", global::System.StringComparison.Ordinal))"
+            );
+
+            // Check it's not already prefixed by another module
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var alreadyPrefixed = false;");
+            foreach (var ctx2 in data.DbContexts)
+            {
+                if (ctx2.FullyQualifiedName == identityContext.Value.FullyQualifiedName)
+                    continue;
+                sb.AppendLine(
+                    $"                    if (tableName.StartsWith(\"{ctx2.ModuleName}_\", global::System.StringComparison.Ordinal)) alreadyPrefixed = true;"
+                );
+            }
+            sb.AppendLine(
+                $"                    if (!alreadyPrefixed) entityType.SetTableName(\"{identityPrefix}\" + tableName);"
+            );
+            sb.AppendLine("                }");
+            sb.AppendLine("            }");
+        }
+
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource("HostDbContext.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    }
+#pragma warning restore CA1308
 
     private static string GetModuleFieldName(string fullyQualifiedName)
     {

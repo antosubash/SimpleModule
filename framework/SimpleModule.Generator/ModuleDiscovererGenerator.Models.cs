@@ -13,17 +13,24 @@ public partial class ModuleDiscovererGenerator
 
     private readonly record struct DiscoveryData(
         ImmutableArray<ModuleInfoRecord> Modules,
-        ImmutableArray<DtoTypeInfoRecord> DtoTypes
+        ImmutableArray<DtoTypeInfoRecord> DtoTypes,
+        ImmutableArray<DbContextInfoRecord> DbContexts,
+        ImmutableArray<EntityConfigInfoRecord> EntityConfigs
     )
     {
         public static readonly DiscoveryData Empty = new(
             ImmutableArray<ModuleInfoRecord>.Empty,
-            ImmutableArray<DtoTypeInfoRecord>.Empty
+            ImmutableArray<DtoTypeInfoRecord>.Empty,
+            ImmutableArray<DbContextInfoRecord>.Empty,
+            ImmutableArray<EntityConfigInfoRecord>.Empty
         );
 
         public bool Equals(DiscoveryData other)
         {
-            return Modules.SequenceEqual(other.Modules) && DtoTypes.SequenceEqual(other.DtoTypes);
+            return Modules.SequenceEqual(other.Modules)
+                && DtoTypes.SequenceEqual(other.DtoTypes)
+                && DbContexts.SequenceEqual(other.DbContexts)
+                && EntityConfigs.SequenceEqual(other.EntityConfigs);
         }
 
         public override int GetHashCode()
@@ -35,6 +42,10 @@ public partial class ModuleDiscovererGenerator
                     hash = hash * 31 + m.GetHashCode();
                 foreach (var d in DtoTypes)
                     hash = hash * 31 + d.GetHashCode();
+                foreach (var c in DbContexts)
+                    hash = hash * 31 + c.GetHashCode();
+                foreach (var e in EntityConfigs)
+                    hash = hash * 31 + e.GetHashCode();
                 return hash;
             }
         }
@@ -126,6 +137,53 @@ public partial class ModuleDiscovererGenerator
         bool HasSetter
     );
 
+    private readonly record struct DbContextInfoRecord(
+        string FullyQualifiedName,
+        string ModuleName,
+        bool IsIdentityDbContext,
+        string IdentityUserTypeFqn,
+        string IdentityRoleTypeFqn,
+        string IdentityKeyTypeFqn,
+        ImmutableArray<DbSetInfoRecord> DbSets
+    )
+    {
+        public bool Equals(DbContextInfoRecord other)
+        {
+            return FullyQualifiedName == other.FullyQualifiedName
+                && ModuleName == other.ModuleName
+                && IsIdentityDbContext == other.IsIdentityDbContext
+                && IdentityUserTypeFqn == other.IdentityUserTypeFqn
+                && IdentityRoleTypeFqn == other.IdentityRoleTypeFqn
+                && IdentityKeyTypeFqn == other.IdentityKeyTypeFqn
+                && DbSets.SequenceEqual(other.DbSets);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 31 + FullyQualifiedName.GetHashCode();
+                hash = hash * 31 + (ModuleName ?? "").GetHashCode();
+                hash = hash * 31 + IsIdentityDbContext.GetHashCode();
+                hash = hash * 31 + (IdentityUserTypeFqn ?? "").GetHashCode();
+                hash = hash * 31 + (IdentityRoleTypeFqn ?? "").GetHashCode();
+                hash = hash * 31 + (IdentityKeyTypeFqn ?? "").GetHashCode();
+                foreach (var d in DbSets)
+                    hash = hash * 31 + d.GetHashCode();
+                return hash;
+            }
+        }
+    }
+
+    private readonly record struct DbSetInfoRecord(string PropertyName, string EntityFqn);
+
+    private readonly record struct EntityConfigInfoRecord(
+        string ConfigFqn,
+        string EntityFqn,
+        string ModuleName
+    );
+
     #endregion
 
     #region Mutable working types (used during symbol traversal only)
@@ -167,6 +225,30 @@ public partial class ModuleDiscovererGenerator
         public string Name { get; set; } = "";
         public string TypeFqn { get; set; } = "";
         public bool HasSetter { get; set; }
+    }
+
+    private sealed class DbContextInfo
+    {
+        public string FullyQualifiedName { get; set; } = "";
+        public string ModuleName { get; set; } = "";
+        public bool IsIdentityDbContext { get; set; }
+        public string IdentityUserTypeFqn { get; set; } = "";
+        public string IdentityRoleTypeFqn { get; set; } = "";
+        public string IdentityKeyTypeFqn { get; set; } = "";
+        public List<DbSetInfo> DbSets { get; set; } = new();
+    }
+
+    private sealed class DbSetInfo
+    {
+        public string PropertyName { get; set; } = "";
+        public string EntityFqn { get; set; } = "";
+    }
+
+    private sealed class EntityConfigInfo
+    {
+        public string ConfigFqn { get; set; } = "";
+        public string EntityFqn { get; set; } = "";
+        public string ModuleName { get; set; } = "";
     }
 
     #endregion
