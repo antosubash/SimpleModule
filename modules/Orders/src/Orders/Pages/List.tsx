@@ -9,19 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
-
-interface OrderItem {
-  productId: number;
-  quantity: number;
-}
-
-interface Order {
-  id: number;
-  userId: string;
-  items: OrderItem[];
-  total: number;
-  createdAt: string;
-}
+import type { Order } from '../types';
 
 interface Props {
   orders: Order[];
