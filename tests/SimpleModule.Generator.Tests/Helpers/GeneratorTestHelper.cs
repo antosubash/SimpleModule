@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Immutable;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using SimpleModule.Generator;
@@ -77,6 +78,56 @@ public static class GeneratorTestHelper
         );
     }
 
+    public static CSharpCompilation CreateCompilationWithEfCore(params string[] sources)
+    {
+        var compilation = CreateCompilation(sources);
+
+        var efCoreReferences = new List<MetadataReference>
+        {
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.EntityFrameworkCore.DbContext).Assembly.Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.EntityFrameworkCore.DbSet<>).Assembly.Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext<,,>)
+                    .Assembly
+                    .Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.AspNetCore.Identity.IdentityUser).Assembly.Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.Extensions.Options.IOptions<>).Assembly.Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(SimpleModule.Database.DatabaseOptions).Assembly.Location
+            ),
+        };
+
+        // Add EF Core abstractions assembly if separate
+        var efCoreDir = Path.GetDirectoryName(
+            typeof(Microsoft.EntityFrameworkCore.DbContext).Assembly.Location
+        )!;
+        var efAbstractions = Path.Combine(
+            efCoreDir,
+            "Microsoft.EntityFrameworkCore.Abstractions.dll"
+        );
+        if (File.Exists(efAbstractions))
+            efCoreReferences.Add(MetadataReference.CreateFromFile(efAbstractions));
+
+        // Add Microsoft.Extensions.Identity.Stores for IdentityUser<TKey>
+        var identityStoresPath = Path.Combine(
+            efCoreDir,
+            "Microsoft.Extensions.Identity.Stores.dll"
+        );
+        if (File.Exists(identityStoresPath))
+            efCoreReferences.Add(MetadataReference.CreateFromFile(identityStoresPath));
+
+        return compilation.AddReferences(efCoreReferences);
+    }
+
     public static GeneratorDriverRunResult RunGenerator(CSharpCompilation compilation)
     {
         var generator = new ModuleDiscovererGenerator();
@@ -85,5 +136,18 @@ public static class GeneratorTestHelper
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
 
         return driver.GetRunResult();
+    }
+
+    public static (
+        GeneratorDriverRunResult Result,
+        ImmutableArray<Diagnostic> Diagnostics
+    ) RunGeneratorWithDiagnostics(CSharpCompilation compilation)
+    {
+        var generator = new ModuleDiscovererGenerator();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics);
+
+        return (driver.GetRunResult(), diagnostics);
     }
 }

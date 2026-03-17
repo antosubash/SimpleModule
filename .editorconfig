@@ -155,6 +155,10 @@ dotnet_diagnostic.IDE0072.severity = none
 [*.Generated.cs]
 generated_code = true
 
+# EF Core migrations (auto-generated — suppress strict analysis)
+[**/Migrations/*.cs]
+generated_code = true
+
 [*.g.cs]
 generated_code = true
 

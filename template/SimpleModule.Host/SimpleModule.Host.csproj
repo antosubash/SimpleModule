@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
     <PackageReference Include="OpenIddict.AspNetCore" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
@@ -67,10 +68,7 @@
     <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
   </Target>
   <!-- Extract TypeScript type definitions from source generator output -->
-  <Target
-    Name="ExtractDtoTypeScript"
-    AfterTargets="CoreCompile"
-  >
+  <Target Name="ExtractDtoTypeScript" AfterTargets="CoreCompile">
     <Exec
       Command="node &quot;$(RepoRoot)tools\extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"

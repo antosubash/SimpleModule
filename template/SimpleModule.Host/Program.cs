@@ -116,8 +116,11 @@ builder
 
 var app = builder.Build();
 
-// Ensure databases are created with seed data
-app.EnsureModuleDatabases();
+// Ensure databases are created with seed data (non-production — production uses EF Core migrations)
+if (!app.Environment.IsProduction())
+{
+    app.EnsureModuleDatabases();
+}
 
 app.UseExceptionHandler();
 
@@ -141,8 +144,8 @@ app.Use(
     {
         var path = context.Request.Path.Value;
         bool hasVersionParam = context.Request.Query.ContainsKey("v");
-        bool isVendorJs = path is not null
-            && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
+        bool isVendorJs =
+            path is not null && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
 
         if (hasVersionParam || isVendorJs)
         {

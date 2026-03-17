@@ -71,6 +71,12 @@ jobs:
         env:
           Database__DefaultConnection: "Host=localhost;Database=simplemodule_test;Username=test;Password=test"
 
+      - name: Verify migrations are up-to-date
+        working-directory: template/SimpleModule.Host
+        env:
+          Database__DefaultConnection: "Host=localhost;Database=simplemodule_test;Username=test;Password=test"
+        run: dotnet ef migrations has-pending-model-changes
+
   publish:
     runs-on: ubuntu-latest
     needs: [test-sqlite, test-postgresql]

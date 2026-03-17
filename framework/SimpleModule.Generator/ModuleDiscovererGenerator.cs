@@ -24,6 +24,8 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 if (data.Modules.Length == 0)
                     return;
 
+                ReportDiscoveryDiagnostics(spc, data);
+
                 GenerateModuleExtensions(spc, data.Modules, data.DtoTypes.Length > 0);
                 GenerateEndpointExtensions(spc, data.Modules);
                 GenerateMenuExtensions(spc, data.Modules);
@@ -34,6 +36,11 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 {
                     GenerateJsonResolver(spc, data.DtoTypes);
                     GenerateTypeScriptDefinitions(spc, data.DtoTypes);
+                }
+
+                if (data.DbContexts.Length > 0)
+                {
+                    EmitHostDbContext(spc, data);
                 }
             }
         );
@@ -97,6 +104,44 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                     module.Endpoints,
                     module.Views
                 );
+            }
+        }
+
+        // Discover DbContext subclasses and IEntityTypeConfiguration<T> per module assembly.
+        // Scan each assembly once, then match DbContexts/configs to the nearest module by namespace.
+        var dbContexts = new List<DbContextInfo>();
+        var entityConfigs = new List<EntityConfigInfo>();
+        var scannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+        foreach (var module in modules)
+        {
+            var metadataName = module.FullyQualifiedName.Replace("global::", "");
+            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+            if (typeSymbol is null)
+                continue;
+
+            var assembly = typeSymbol.ContainingAssembly;
+            if (!scannedAssemblies.Add(assembly))
+                continue;
+
+            // Collect unmatched items from this assembly
+            var rawDbContexts = new List<DbContextInfo>();
+            var rawEntityConfigs = new List<EntityConfigInfo>();
+            FindDbContextTypes(assembly.GlobalNamespace, "", rawDbContexts);
+            FindEntityConfigTypes(assembly.GlobalNamespace, "", rawEntityConfigs);
+
+            // Match each DbContext to the module whose namespace is closest
+            foreach (var ctx in rawDbContexts)
+            {
+                var ctxNs = ctx.FullyQualifiedName.Replace("global::", "");
+                ctx.ModuleName = FindClosestModuleName(ctxNs, modules);
+                dbContexts.Add(ctx);
+            }
+
+            foreach (var cfg in rawEntityConfigs)
+            {
+                var cfgNs = cfg.ConfigFqn.Replace("global::", "");
+                cfg.ModuleName = FindClosestModuleName(cfgNs, modules);
+                entityConfigs.Add(cfg);
             }
         }
 
@@ -174,6 +219,21 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                         ))
                         .ToImmutableArray()
                 ))
+                .ToImmutableArray(),
+            dbContexts
+                .Select(c => new DbContextInfoRecord(
+                    c.FullyQualifiedName,
+                    c.ModuleName,
+                    c.IsIdentityDbContext,
+                    c.IdentityUserTypeFqn,
+                    c.IdentityRoleTypeFqn,
+                    c.IdentityKeyTypeFqn,
+                    c.DbSets.Select(d => new DbSetInfoRecord(d.PropertyName, d.EntityFqn))
+                        .ToImmutableArray()
+                ))
+                .ToImmutableArray(),
+            entityConfigs
+                .Select(e => new EntityConfigInfoRecord(e.ConfigFqn, e.EntityFqn, e.ModuleName))
                 .ToImmutableArray()
         );
     }
@@ -435,5 +495,184 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
             current = current.BaseType;
         }
         return false;
+    }
+
+    private static string FindClosestModuleName(string typeFqn, List<ModuleInfo> modules)
+    {
+        // Match by longest shared namespace prefix between the type and each module class.
+        var bestMatch = "";
+        var bestLength = -1;
+        foreach (var module in modules)
+        {
+            var moduleFqn = module.FullyQualifiedName.Replace("global::", "");
+            var moduleNs = moduleFqn.Contains(".")
+                ? moduleFqn.Substring(0, moduleFqn.LastIndexOf('.'))
+                : "";
+
+            if (
+                typeFqn.StartsWith(moduleNs, StringComparison.Ordinal)
+                && moduleNs.Length > bestLength
+            )
+            {
+                bestLength = moduleNs.Length;
+                bestMatch = module.ModuleName;
+            }
+        }
+
+        return bestMatch.Length > 0 ? bestMatch : modules[0].ModuleName;
+    }
+
+    private static void FindDbContextTypes(
+        INamespaceSymbol namespaceSymbol,
+        string moduleName,
+        List<DbContextInfo> dbContexts
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                FindDbContextTypes(childNamespace, moduleName, dbContexts);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && !typeSymbol.IsAbstract
+                && !typeSymbol.IsStatic
+            )
+            {
+                // Walk base type chain looking for DbContext
+                var isDbContext = false;
+                var isIdentity = false;
+                string identityUserFqn = "";
+                string identityRoleFqn = "";
+                string identityKeyFqn = "";
+
+                var current = typeSymbol.BaseType;
+                while (current is not null)
+                {
+                    var baseFqn = current.OriginalDefinition.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    );
+
+                    if (
+                        baseFqn
+                        == "global::Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext<TUser, TRole, TKey>"
+                    )
+                    {
+                        isDbContext = true;
+                        isIdentity = true;
+                        if (current.TypeArguments.Length >= 3)
+                        {
+                            identityUserFqn = current
+                                .TypeArguments[0]
+                                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            identityRoleFqn = current
+                                .TypeArguments[1]
+                                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            identityKeyFqn = current
+                                .TypeArguments[2]
+                                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        }
+                        break;
+                    }
+
+                    if (baseFqn == "global::Microsoft.EntityFrameworkCore.DbContext")
+                    {
+                        isDbContext = true;
+                        break;
+                    }
+
+                    current = current.BaseType;
+                }
+
+                if (!isDbContext)
+                    continue;
+
+                var info = new DbContextInfo
+                {
+                    FullyQualifiedName = typeSymbol.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    ),
+                    ModuleName = moduleName,
+                    IsIdentityDbContext = isIdentity,
+                    IdentityUserTypeFqn = identityUserFqn,
+                    IdentityRoleTypeFqn = identityRoleFqn,
+                    IdentityKeyTypeFqn = identityKeyFqn,
+                };
+
+                // Collect DbSet<T> properties
+                foreach (var m in typeSymbol.GetMembers())
+                {
+                    if (
+                        m is IPropertySymbol prop
+                        && prop.DeclaredAccessibility == Accessibility.Public
+                        && !prop.IsStatic
+                        && prop.Type is INamedTypeSymbol propType
+                        && propType.IsGenericType
+                        && propType.OriginalDefinition.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        ) == "global::Microsoft.EntityFrameworkCore.DbSet<TEntity>"
+                    )
+                    {
+                        var entityFqn = propType
+                            .TypeArguments[0]
+                            .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        info.DbSets.Add(
+                            new DbSetInfo { PropertyName = prop.Name, EntityFqn = entityFqn }
+                        );
+                    }
+                }
+
+                dbContexts.Add(info);
+            }
+        }
+    }
+
+    private static void FindEntityConfigTypes(
+        INamespaceSymbol namespaceSymbol,
+        string moduleName,
+        List<EntityConfigInfo> entityConfigs
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                FindEntityConfigTypes(childNamespace, moduleName, entityConfigs);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && !typeSymbol.IsAbstract
+                && !typeSymbol.IsStatic
+            )
+            {
+                foreach (var iface in typeSymbol.AllInterfaces)
+                {
+                    if (
+                        iface.IsGenericType
+                        && iface.OriginalDefinition.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        )
+                            == "global::Microsoft.EntityFrameworkCore.IEntityTypeConfiguration<TEntity>"
+                    )
+                    {
+                        var entityFqn = iface
+                            .TypeArguments[0]
+                            .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        entityConfigs.Add(
+                            new EntityConfigInfo
+                            {
+                                ConfigFqn = typeSymbol.ToDisplayString(
+                                    SymbolDisplayFormat.FullyQualifiedFormat
+                                ),
+                                EntityFqn = entityFqn,
+                                ModuleName = moduleName,
+                            }
+                        );
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

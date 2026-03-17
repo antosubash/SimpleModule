@@ -47,11 +47,7 @@ public class AdminUsersEndpoint : IEndpoint
         group
             .MapPost(
                 "/{id}/roles",
-                async (
-                    string id,
-                    HttpContext context,
-                    UserManager<ApplicationUser> userManager
-                ) =>
+                async (string id, HttpContext context, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.FindByIdAsync(id);
                     if (user is null)
