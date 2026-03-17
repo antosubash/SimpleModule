@@ -28,5 +28,5 @@ function Spinner({ className, size, ...props }: SpinnerProps) {
   );
 }
 
-export { Spinner, spinnerVariants };
 export type { SpinnerProps };
+export { Spinner, spinnerVariants };

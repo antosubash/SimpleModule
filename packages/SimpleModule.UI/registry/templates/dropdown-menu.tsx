@@ -71,11 +71,11 @@ DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName;
 
 export {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
   DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuSub,
+  DropdownMenuTrigger,
 };

@@ -46,5 +46,5 @@ const AlertDescription = React.forwardRef<
 ));
 AlertDescription.displayName = 'AlertDescription';
 
-export { Alert, AlertTitle, AlertDescription, alertVariants };
 export type { AlertProps };
+export { Alert, AlertDescription, AlertTitle, alertVariants };
