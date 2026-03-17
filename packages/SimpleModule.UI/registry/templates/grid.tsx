@@ -38,5 +38,5 @@ const Grid = React.forwardRef<HTMLDivElement, GridProps>(
 );
 Grid.displayName = 'Grid';
 
-export { Grid, gridVariants };
 export type { GridProps };
+export { Grid, gridVariants };

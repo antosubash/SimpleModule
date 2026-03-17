@@ -35,5 +35,5 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = 'Input';
 
-export { Input, inputVariants };
 export type { InputProps };
+export { Input, inputVariants };

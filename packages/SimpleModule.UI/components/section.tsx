@@ -22,5 +22,5 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
 );
 Section.displayName = 'Section';
 
-export { Section };
 export type { SectionProps };
+export { Section };

@@ -56,5 +56,5 @@ const Stack = React.forwardRef<HTMLDivElement, StackProps>(
 );
 Stack.displayName = 'Stack';
 
-export { Stack, stackVariants };
 export type { StackProps };
+export { Stack, stackVariants };
