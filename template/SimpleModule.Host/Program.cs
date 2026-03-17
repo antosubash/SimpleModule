@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
@@ -10,6 +11,7 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
+using SimpleModule.Host;
 using SimpleModule.Host.Components;
 using SimpleModule.Users.Constants;
 
@@ -88,6 +90,13 @@ builder.Services.AddScoped<IEventBus, EventBus>();
 // Register all modules
 builder.Services.AddModules(builder.Configuration);
 
+// Register unified HostDbContext for EF Core migrations
+builder.Services.AddModuleDbContext<HostDbContext>(
+    builder.Configuration,
+    "Host",
+    opts => opts.UseOpenIddict()
+);
+
 // Collect module menu items into a singleton registry
 builder.Services.CollectModuleMenuItems();
 
@@ -126,10 +135,12 @@ builder
 
 var app = builder.Build();
 
-// Ensure databases are created with seed data (non-production — production uses EF Core migrations)
+// Apply pending EF Core migrations (production should use explicit migration tooling)
 if (!app.Environment.IsProduction())
 {
-    app.EnsureModuleDatabases();
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<HostDbContext>();
+    await db.Database.MigrateAsync();
 }
 
 app.UseExceptionHandler();
@@ -201,4 +212,4 @@ app.MapModuleEndpoints();
 // Aspire default health endpoints (/health, /alive)
 app.MapDefaultEndpoints();
 
-app.Run();
+await app.RunAsync();
