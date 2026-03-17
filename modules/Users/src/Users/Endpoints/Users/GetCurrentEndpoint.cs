@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -15,11 +16,11 @@ public class GetCurrentEndpoint : IEndpoint
         app.MapGet(
                 UsersConstants.RoutePrefix + UsersConstants.MeRoute,
                 async Task<Results<Ok<UserDto>, NotFound>> (
-                    HttpContext context,
+                    ClaimsPrincipal principal,
                     IUserContracts userContracts
                 ) =>
                 {
-                    var userId = context.User.GetUserId();
+                    var userId = principal.GetUserId();
                     if (string.IsNullOrEmpty(userId))
                     {
                         return TypedResults.NotFound();

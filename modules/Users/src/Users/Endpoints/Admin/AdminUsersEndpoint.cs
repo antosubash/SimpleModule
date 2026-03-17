@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Users.Entities;
@@ -16,48 +17,61 @@ public class AdminUsersEndpoint : IEndpoint
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         // Update user
-        group.MapPost(
-            "/{id}",
-            async (string id, HttpContext context, UserManager<ApplicationUser> userManager) =>
-            {
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                    return Results.NotFound();
+        group
+            .MapPost(
+                "/{id}",
+                async (
+                    string id,
+                    [FromForm] string displayName,
+                    [FromForm] string email,
+                    [FromForm] string? emailConfirmed,
+                    UserManager<ApplicationUser> userManager
+                ) =>
+                {
+                    var user = await userManager.FindByIdAsync(id);
+                    if (user is null)
+                        return Results.NotFound();
 
-                var form = await context.Request.ReadFormAsync();
-                user.DisplayName = form["displayName"].ToString();
-                user.Email = form["email"].ToString();
-                user.EmailConfirmed = form.ContainsKey("emailConfirmed");
+                    user.DisplayName = displayName;
+                    user.Email = email;
+                    user.EmailConfirmed = emailConfirmed is not null;
 
-                await userManager.UpdateAsync(user);
+                    await userManager.UpdateAsync(user);
 
-                return Results.Redirect($"/admin/users/{id}/edit");
-            }
-        );
+                    return Results.Redirect($"/admin/users/{id}/edit");
+                }
+            )
+            .DisableAntiforgery();
 
         // Set roles
-        group.MapPost(
-            "/{id}/roles",
-            async (string id, HttpContext context, UserManager<ApplicationUser> userManager) =>
-            {
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                    return Results.NotFound();
+        group
+            .MapPost(
+                "/{id}/roles",
+                async (
+                    string id,
+                    HttpContext context,
+                    UserManager<ApplicationUser> userManager
+                ) =>
+                {
+                    var user = await userManager.FindByIdAsync(id);
+                    if (user is null)
+                        return Results.NotFound();
 
-                var form = await context.Request.ReadFormAsync();
-                var newRoles = form["roles"]
-                    .ToArray()
-                    .Where(r => !string.IsNullOrEmpty(r))
-                    .ToList();
-                var currentRoles = await userManager.GetRolesAsync(user);
+                    var form = await context.Request.ReadFormAsync();
+                    var newRoles = form["roles"]
+                        .ToArray()
+                        .Where(r => !string.IsNullOrEmpty(r))
+                        .ToList();
+                    var currentRoles = await userManager.GetRolesAsync(user);
 
-                await userManager.RemoveFromRolesAsync(user, currentRoles);
-                if (newRoles.Count > 0)
-                    await userManager.AddToRolesAsync(user, newRoles!);
+                    await userManager.RemoveFromRolesAsync(user, currentRoles);
+                    if (newRoles.Count > 0)
+                        await userManager.AddToRolesAsync(user, newRoles!);
 
-                return Results.Redirect($"/admin/users/{id}/edit");
-            }
-        );
+                    return Results.Redirect($"/admin/users/{id}/edit");
+                }
+            )
+            .DisableAntiforgery();
 
         // Lock account
         group.MapPost(

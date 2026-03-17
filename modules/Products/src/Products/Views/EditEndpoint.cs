@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
@@ -20,6 +21,30 @@ public class EditEndpoint : IViewEndpoint
                     return Results.NotFound();
 
                 return Inertia.Render("Products/Edit", new { product });
+            }
+        );
+
+        app.MapPost(
+            "/{id}",
+            async (
+                int id,
+                [FromForm] string name,
+                [FromForm] decimal price,
+                IProductContracts products
+            ) =>
+            {
+                var request = new UpdateProductRequest { Name = name, Price = price };
+                await products.UpdateProductAsync(id, request);
+                return Results.Redirect($"/products/{id}/edit");
+            }
+        ).DisableAntiforgery();
+
+        app.MapDelete(
+            "/{id}",
+            async (int id, IProductContracts products) =>
+            {
+                await products.DeleteProductAsync(id);
+                return Results.Redirect("/products/manage");
             }
         );
     }

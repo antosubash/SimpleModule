@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -17,12 +18,12 @@ public class DownloadPersonalDataEndpoint : IEndpoint
         app.MapPost(
                 UsersConstants.RoutePrefix + UsersConstants.DownloadPersonalDataRoute,
                 async (
-                    HttpContext context,
+                    ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,
                     ILogger<UsersModule> logger
                 ) =>
                 {
-                    var user = await userManager.GetUserAsync(context.User);
+                    var user = await userManager.GetUserAsync(principal);
                     if (user is null)
                     {
                         return Results.NotFound();

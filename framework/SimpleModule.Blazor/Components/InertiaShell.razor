@@ -6,6 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <meta name="cache-buster" content="@CacheBuster" />
     @if (HeadContent is not null)
     {
         @HeadContent
@@ -41,6 +42,8 @@
 </html>
 
 @code {
+    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
     [Parameter] public string PageJson { get; set; } = "";
     [Parameter] public Microsoft.AspNetCore.Http.HttpContext? HttpContext { get; set; }
     [Parameter, EditorRequired] public Type Layout { get; set; } = default!;
