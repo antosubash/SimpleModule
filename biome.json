@@ -39,6 +39,6 @@
     }
   },
   "files": {
-    "includes": ["modules/**", "packages/**", "template/**", "!**/wwwroot/**"]
+    "includes": ["modules/**", "packages/**", "template/**", "tests/**", "!**/wwwroot/**"]
   }
 }
