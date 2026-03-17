@@ -15,6 +15,16 @@ using SimpleModule.Users.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Aspire service defaults (OpenTelemetry, resilience, service discovery)
+builder.AddServiceDefaults();
+
+// Bridge Aspire-managed connection string to Database options
+var aspireConnectionString = builder.Configuration.GetConnectionString("simplemoduledb");
+if (!string.IsNullOrEmpty(aspireConnectionString))
+{
+    builder.Configuration["Database:DefaultConnection"] = aspireConnectionString;
+}
+
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -187,5 +197,8 @@ app.MapRazorComponents<App>().AddModuleAssemblies();
 
 // Automatically map all module endpoints
 app.MapModuleEndpoints();
+
+// Aspire default health endpoints (/health, /alive)
+app.MapDefaultEndpoints();
 
 app.Run();
