@@ -7,14 +7,17 @@
     "packages/SimpleModule.Client",
     "packages/SimpleModule.Theme.Default",
     "packages/SimpleModule.UI",
-    "template/SimpleModule.Host/ClientApp"
+    "template/SimpleModule.Host/ClientApp",
+    "tests/e2e"
   ],
   "scripts": {
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check .",
     "check:fix": "biome check --write .",
-    "ui:add": "node tools/add-component.mjs"
+    "ui:add": "node tools/add-component.mjs",
+    "test:e2e": "npm run test -w tests/e2e",
+    "test:e2e:ui": "npm run test:ui -w tests/e2e"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
