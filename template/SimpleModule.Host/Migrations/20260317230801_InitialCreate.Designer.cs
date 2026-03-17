@@ -12,7 +12,7 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260317220751_InitialCreate")]
+    [Migration("20260317230801_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -351,7 +351,7 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Total")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -360,6 +360,43 @@ namespace SimpleModule.Host.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Orders", "orders");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 3, 16, 10, 20, 47, 15, DateTimeKind.Utc).AddTicks(1761),
+                            Total = 4205.85m,
+                            UserId = "2"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 3, 9, 18, 57, 18, 178, DateTimeKind.Utc).AddTicks(1275),
+                            Total = 2752.49m,
+                            UserId = "8"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 2, 20, 1, 3, 59, 566, DateTimeKind.Utc).AddTicks(5889),
+                            Total = 192.31m,
+                            UserId = "6"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 2, 28, 12, 35, 49, 235, DateTimeKind.Utc).AddTicks(4033),
+                            Total = 3146.31m,
+                            UserId = "2"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CreatedAt = new DateTime(2026, 3, 14, 1, 15, 36, 679, DateTimeKind.Utc).AddTicks(1240),
+                            Total = 4580.92m,
+                            UserId = "10"
+                        });
                 });
 
             modelBuilder.Entity("SimpleModule.Orders.Contracts.OrderItem", b =>
@@ -376,6 +413,62 @@ namespace SimpleModule.Host.Migrations
                     b.HasKey("OrderId", "ProductId");
 
                     b.ToTable("OrderItems", "orders");
+
+                    b.HasData(
+                        new
+                        {
+                            OrderId = 1,
+                            ProductId = 4,
+                            Quantity = 5
+                        },
+                        new
+                        {
+                            OrderId = 1,
+                            ProductId = 5,
+                            Quantity = 1
+                        },
+                        new
+                        {
+                            OrderId = 1,
+                            ProductId = 6,
+                            Quantity = 1
+                        },
+                        new
+                        {
+                            OrderId = 2,
+                            ProductId = 1,
+                            Quantity = 3
+                        },
+                        new
+                        {
+                            OrderId = 3,
+                            ProductId = 4,
+                            Quantity = 2
+                        },
+                        new
+                        {
+                            OrderId = 3,
+                            ProductId = 5,
+                            Quantity = 4
+                        },
+                        new
+                        {
+                            OrderId = 4,
+                            ProductId = 3,
+                            Quantity = 1
+                        },
+                        new
+                        {
+                            OrderId = 5,
+                            ProductId = 9,
+                            Quantity = 3
+                        },
+                        new
+                        {
+                            OrderId = 5,
+                            ProductId = 6,
+                            Quantity = 5
+                        });
                 });
 
             modelBuilder.Entity("SimpleModule.Products.Contracts.Product", b =>
@@ -391,11 +484,73 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Products", "products");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Fantastic Rubber Shoes",
+                            Price = 99168m
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Fantastic Rubber Bacon",
+                            Price = 44622m
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Fantastic Concrete Bike",
+                            Price = 66012m
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Handcrafted Concrete Keyboard",
+                            Price = 63367m
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Intelligent Frozen Mouse",
+                            Price = 67430m
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Sleek Soft Hat",
+                            Price = 85163m
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Practical Fresh Bike",
+                            Price = 41748m
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "Handmade Steel Ball",
+                            Price = 97556m
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Name = "Ergonomic Fresh Pants",
+                            Price = 92809m
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Name = "Licensed Steel Sausages",
+                            Price = 59260m
+                        });
                 });
 
             modelBuilder.Entity("SimpleModule.Users.Entities.ApplicationRole", b =>

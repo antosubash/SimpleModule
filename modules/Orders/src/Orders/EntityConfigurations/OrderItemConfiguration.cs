@@ -9,5 +9,7 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
     public void Configure(EntityTypeBuilder<OrderItem> builder)
     {
         builder.HasKey("OrderId", nameof(OrderItem.ProductId));
+
+        builder.HasData(OrderConfiguration.GenerateSeedOrderItems());
     }
 }
