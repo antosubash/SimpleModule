@@ -8,6 +8,7 @@
     <NoWarn>CA1308</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="NetEscapades.EnumGenerators" />
     <PackageReference Include="Spectre.Console.Cli" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,8 @@
-﻿namespace SimpleModule.Database;
+﻿using NetEscapades.EnumGenerators;
 
+namespace SimpleModule.Database;
+
+[EnumExtensions]
 public enum DatabaseProvider
 {
     Sqlite,
