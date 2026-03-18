@@ -1,8 +1,9 @@
 using Bogus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
+using SimpleModule.Products.Contracts;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders.EntityConfigurations;
 

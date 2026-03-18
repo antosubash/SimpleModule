@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Ids;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
 

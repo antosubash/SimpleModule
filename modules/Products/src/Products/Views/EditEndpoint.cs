@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
-using SimpleModule.Core.Ids;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Products.Contracts;
 

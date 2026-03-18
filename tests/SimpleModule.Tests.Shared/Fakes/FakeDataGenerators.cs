@@ -1,6 +1,5 @@
 using System.Globalization;
 using Bogus;
-using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Users.Contracts;

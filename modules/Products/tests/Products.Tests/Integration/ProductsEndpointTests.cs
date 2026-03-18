@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using SimpleModule.Core.Ids;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 

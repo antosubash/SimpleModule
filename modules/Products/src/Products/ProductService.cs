@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Ids;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products;

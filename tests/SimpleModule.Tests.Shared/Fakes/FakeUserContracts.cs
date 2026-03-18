@@ -1,5 +1,4 @@
 using System.Globalization;
-using SimpleModule.Core.Ids;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;

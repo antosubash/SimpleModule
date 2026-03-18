@@ -1,9 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
+using SimpleModule.Products.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
+using SimpleModule.Users.Contracts;
 
 namespace Orders.Tests.Integration;
 

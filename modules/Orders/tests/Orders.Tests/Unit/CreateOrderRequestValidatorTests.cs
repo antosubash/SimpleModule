@@ -1,7 +1,8 @@
 using FluentAssertions;
-using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.Endpoints.Orders;
+using SimpleModule.Products.Contracts;
+using SimpleModule.Users.Contracts;
 
 namespace Orders.Tests.Unit;
 

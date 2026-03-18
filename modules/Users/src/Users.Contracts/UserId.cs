@@ -1,6 +1,6 @@
 using Vogen;
 
-namespace SimpleModule.Core.Ids;
+namespace SimpleModule.Users.Contracts;
 
 [ValueObject<string>(conversions: Conversions.SystemTextJson | Conversions.EfCoreValueConverter)]
 public readonly partial struct UserId

@@ -75,8 +75,8 @@ internal static class TypeMappingHelpers
             or "System.TimeOnly" => "string",
             "System.Guid" => "string",
             // Vogen strongly-typed IDs (map to their underlying primitive types)
-            "SimpleModule.Core.Ids.ProductId" or "SimpleModule.Core.Ids.OrderId" => "number",
-            "SimpleModule.Core.Ids.UserId" => "string",
+            "SimpleModule.Products.Contracts.ProductId" or "SimpleModule.Orders.Contracts.OrderId" => "number",
+            "SimpleModule.Users.Contracts.UserId" => "string",
             _ => "any",
         };
     }

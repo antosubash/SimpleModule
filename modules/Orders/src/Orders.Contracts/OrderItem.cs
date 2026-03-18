@@ -1,5 +1,5 @@
 using SimpleModule.Core;
-using SimpleModule.Core.Ids;
+using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Orders.Contracts;
 

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Ids;
 using SimpleModule.Database;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Products.EntityConfigurations;

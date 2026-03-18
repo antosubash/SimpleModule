@@ -1,5 +1,5 @@
 using SimpleModule.Core.Events;
-using SimpleModule.Core.Ids;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders.Contracts.Events;
 
