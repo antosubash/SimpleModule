@@ -177,6 +177,7 @@ internal static class SymbolDiscovery
                     d.Properties.Select(p => new DtoPropertyInfoRecord(
                             p.Name,
                             p.TypeFqn,
+                            p.UnderlyingTypeFqn,
                             p.HasSetter
                         ))
                         .ToImmutableArray()
@@ -395,13 +396,18 @@ internal static class SymbolDiscovery
                                 && prop.GetMethod is not null
                             )
                             {
+                                var resolvedType = ResolveUnderlyingType(prop.Type);
+                                var actualType = prop.Type.ToDisplayString(
+                                    SymbolDisplayFormat.FullyQualifiedFormat
+                                );
                                 properties.Add(
                                     new DtoPropertyInfo
                                     {
                                         Name = prop.Name,
-                                        TypeFqn = prop.Type.ToDisplayString(
-                                            SymbolDisplayFormat.FullyQualifiedFormat
-                                        ),
+                                        TypeFqn = actualType,
+                                        UnderlyingTypeFqn = resolvedType != actualType
+                                            ? resolvedType
+                                            : null,
                                         HasSetter =
                                             prop.SetMethod is not null
                                             && prop.SetMethod.DeclaredAccessibility
@@ -636,5 +642,34 @@ internal static class SymbolDiscovery
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// If the type is a Vogen value object, returns the FQN of its underlying primitive type.
+    /// Otherwise returns the type's own FQN.
+    /// </summary>
+    private static string ResolveUnderlyingType(ITypeSymbol typeSymbol)
+    {
+        foreach (var attr in typeSymbol.GetAttributes())
+        {
+            var attrClass = attr.AttributeClass;
+            if (attrClass is null)
+                continue;
+
+            // Vogen uses generic attribute ValueObjectAttribute<T>
+            if (
+                attrClass.IsGenericType
+                && attrClass.Name == "ValueObjectAttribute"
+                && attrClass.ContainingNamespace.ToDisplayString() == "Vogen"
+                && attrClass.TypeArguments.Length == 1
+            )
+            {
+                return attrClass.TypeArguments[0].ToDisplayString(
+                    SymbolDisplayFormat.FullyQualifiedFormat
+                );
+            }
+        }
+
+        return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
     }
 }

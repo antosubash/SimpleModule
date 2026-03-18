@@ -132,6 +132,7 @@ internal readonly record struct DtoTypeInfoRecord(
 internal readonly record struct DtoPropertyInfoRecord(
     string Name,
     string TypeFqn,
+    string? UnderlyingTypeFqn,
     bool HasSetter
 );
 
@@ -222,6 +223,13 @@ internal sealed class DtoPropertyInfo
 {
     public string Name { get; set; } = "";
     public string TypeFqn { get; set; } = "";
+
+    /// <summary>
+    /// For value objects (e.g. Vogen), the underlying primitive type FQN.
+    /// Null if the type is not a value object wrapper.
+    /// </summary>
+    public string? UnderlyingTypeFqn { get; set; }
+
     public bool HasSetter { get; set; }
 }
 
