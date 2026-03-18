@@ -87,37 +87,37 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEC-01 | — | Pending |
-| SEC-02 | — | Pending |
-| SEC-03 | — | Pending |
-| SEC-04 | — | Pending |
-| SEC-05 | — | Pending |
-| BUG-01 | — | Pending |
-| BUG-02 | — | Pending |
-| BUG-03 | — | Pending |
-| EBUS-01 | — | Pending |
-| EBUS-02 | — | Pending |
-| EBUS-03 | — | Pending |
-| DB-01 | — | Pending |
-| DB-02 | — | Pending |
-| DB-03 | — | Pending |
-| DB-04 | — | Pending |
-| TEST-01 | — | Pending |
-| TEST-02 | — | Pending |
-| TEST-03 | — | Pending |
-| TEST-04 | — | Pending |
-| TEST-05 | — | Pending |
-| TEST-06 | — | Pending |
-| QUAL-01 | — | Pending |
-| QUAL-02 | — | Pending |
-| QUAL-03 | — | Pending |
-| QUAL-04 | — | Pending |
+| SEC-01 | Phase 1: Permission Hardening | Pending |
+| SEC-02 | Phase 1: Permission Hardening | Pending |
+| SEC-03 | Phase 1: Permission Hardening | Pending |
+| SEC-04 | Phase 2: Endpoint Security | Pending |
+| SEC-05 | Phase 2: Endpoint Security | Pending |
+| BUG-01 | Phase 3: CLI Bug Fixes | Pending |
+| BUG-02 | Phase 4: Runtime Bug Fixes | Pending |
+| BUG-03 | Phase 4: Runtime Bug Fixes | Pending |
+| EBUS-01 | Phase 5: EventBus Improvements | Pending |
+| EBUS-02 | Phase 5: EventBus Improvements | Pending |
+| EBUS-03 | Phase 5: EventBus Improvements | Pending |
+| DB-01 | Phase 6: Database Migrations | Pending |
+| DB-02 | Phase 6: Database Migrations | Pending |
+| DB-03 | Phase 6: Database Migrations | Pending |
+| DB-04 | Phase 6: Database Migrations | Pending |
+| TEST-01 | Phase 8: Test Coverage | Pending |
+| TEST-02 | Phase 8: Test Coverage | Pending |
+| TEST-03 | Phase 8: Test Coverage | Pending |
+| TEST-04 | Phase 8: Test Coverage | Pending |
+| TEST-05 | Phase 7: Test Infrastructure Foundation | Pending |
+| TEST-06 | Phase 7: Test Infrastructure Foundation | Pending |
+| QUAL-01 | Phase 9: Code Quality | Pending |
+| QUAL-02 | Phase 9: Code Quality | Pending |
+| QUAL-03 | Phase 9: Code Quality | Pending |
+| QUAL-04 | Phase 3: CLI Bug Fixes | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0
-- Unmapped: 25 ⚠️
+- Mapped to phases: 25
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-18*
-*Last updated: 2026-03-18 after initial definition*
+*Last updated: 2026-03-18 after roadmap creation*
