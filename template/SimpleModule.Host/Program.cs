@@ -140,14 +140,7 @@ if (!app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<HostDbContext>();
-    if (app.Environment.IsDevelopment())
-    {
-        await db.Database.MigrateAsync();
-    }
-    else
-    {
-        await db.Database.EnsureCreatedAsync();
-    }
+    await db.Database.EnsureCreatedAsync();
 }
 
 app.UseExceptionHandler();

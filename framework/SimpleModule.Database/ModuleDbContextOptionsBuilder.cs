@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -43,6 +44,11 @@ public static class ModuleDbContextOptionsBuilder
                     options.UseSqlite(connectionString);
                     break;
             }
+
+            // Suppress PendingModelChangesWarning caused by Vogen ConfigureConventions
+            // value converters that don't change the actual schema
+            options.ConfigureWarnings(w =>
+                w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
             configureOptions?.Invoke(options);
         });
