@@ -46,6 +46,16 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
+    public HttpClient CreateAuthenticatedClient(string[] permissions, params Claim[] additionalClaims)
+    {
+        var claims = new List<Claim>(additionalClaims);
+        foreach (var permission in permissions)
+        {
+            claims.Add(new Claim("permission", permission));
+        }
+        return CreateAuthenticatedClient(claims.ToArray());
+    }
+
     public HttpClient CreateAuthenticatedClient(params Claim[] claims)
     {
         var client = CreateClient();
