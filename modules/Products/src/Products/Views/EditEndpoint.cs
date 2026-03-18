@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Products.Contracts;
 
@@ -14,7 +15,7 @@ public class EditEndpoint : IViewEndpoint
     {
         app.MapGet(
             "/{id}/edit",
-            async (int id, IProductContracts products) =>
+            async (ProductId id, IProductContracts products) =>
             {
                 var product = await products.GetProductByIdAsync(id);
                 if (product is null)
@@ -27,7 +28,7 @@ public class EditEndpoint : IViewEndpoint
         app.MapPost(
                 "/{id}",
                 async (
-                    int id,
+                    ProductId id,
                     [FromForm] string name,
                     [FromForm] decimal price,
                     IProductContracts products
@@ -42,7 +43,7 @@ public class EditEndpoint : IViewEndpoint
 
         app.MapDelete(
             "/{id}",
-            async (int id, IProductContracts products) =>
+            async (ProductId id, IProductContracts products) =>
             {
                 await products.DeleteProductAsync(id);
                 return Results.Redirect("/products/manage");

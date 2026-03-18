@@ -129,7 +129,7 @@ internal sealed class HostDbContextEmitter : IEmitter
         // Class declaration with primary constructor
         if (identityContext != null)
         {
-            sb.AppendLine($"public class HostDbContext(");
+            sb.AppendLine($"public partial class HostDbContext(");
             sb.AppendLine("    DbContextOptions<HostDbContext> options,");
             sb.AppendLine("    IOptions<DatabaseOptions> dbOptions");
             sb.AppendLine($") : IdentityDbContext<{identityContext.Value.IdentityUserTypeFqn},");

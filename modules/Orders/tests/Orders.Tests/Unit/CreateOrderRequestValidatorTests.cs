@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+using FluentAssertions;
+using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.Endpoints.Orders;
 
@@ -11,8 +12,8 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 2 }],
         };
 
         var result = CreateRequestValidator.Validate(request);
@@ -22,27 +23,11 @@ public sealed class CreateRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyUserId_ReturnsError()
+    public void Validate_WithDefaultUserId_ReturnsError()
     {
         var request = new CreateOrderRequest
         {
-            UserId = "",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
-        };
-
-        var result = CreateRequestValidator.Validate(request);
-
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("UserId");
-    }
-
-    [Fact]
-    public void Validate_WithWhitespaceUserId_ReturnsError()
-    {
-        var request = new CreateOrderRequest
-        {
-            UserId = "  ",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
         };
 
         var result = CreateRequestValidator.Validate(request);
@@ -54,7 +39,7 @@ public sealed class CreateRequestValidatorTests
     [Fact]
     public void Validate_WithEmptyItems_ReturnsError()
     {
-        var request = new CreateOrderRequest { UserId = "1", Items = [] };
+        var request = new CreateOrderRequest { UserId = UserId.From("1"), Items = [] };
 
         var result = CreateRequestValidator.Validate(request);
 
@@ -67,8 +52,8 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 0 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 0 }],
         };
 
         var result = CreateRequestValidator.Validate(request);
@@ -80,7 +65,7 @@ public sealed class CreateRequestValidatorTests
     [Fact]
     public void Validate_WithMultipleErrors_ReturnsAllErrors()
     {
-        var request = new CreateOrderRequest { UserId = "", Items = [] };
+        var request = new CreateOrderRequest { Items = [] };
 
         var result = CreateRequestValidator.Validate(request);
 

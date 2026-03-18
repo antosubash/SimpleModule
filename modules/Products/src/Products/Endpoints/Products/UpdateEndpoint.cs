@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Endpoints.Products;
@@ -14,7 +15,7 @@ public class UpdateEndpoint : IEndpoint
         app.MapPut(
             "/{id}",
             async Task<Results<Ok<Product>, NotFound>> (
-                int id,
+                ProductId id,
                 UpdateProductRequest request,
                 IProductContracts productContracts
             ) =>

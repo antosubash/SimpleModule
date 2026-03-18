@@ -1,6 +1,7 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using SimpleModule.Core.Ids;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 
@@ -33,7 +34,7 @@ public class ProductsEndpointTests : IClassFixture<SimpleModuleWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var product = await response.Content.ReadFromJsonAsync<Product>();
         product.Should().NotBeNull();
-        product!.Id.Should().Be(1);
+        product!.Id.Should().Be(ProductId.From(1));
     }
 
     [Fact]

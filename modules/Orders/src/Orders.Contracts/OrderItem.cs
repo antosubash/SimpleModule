@@ -1,10 +1,11 @@
-﻿using SimpleModule.Core;
+using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 
 namespace SimpleModule.Orders.Contracts;
 
 [Dto]
 public class OrderItem
 {
-    public int ProductId { get; set; }
+    public ProductId ProductId { get; set; }
     public int Quantity { get; set; }
 }

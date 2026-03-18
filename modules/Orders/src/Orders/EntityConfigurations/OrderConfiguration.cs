@@ -1,6 +1,7 @@
 using Bogus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.EntityConfigurations;
@@ -10,6 +11,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
     public void Configure(EntityTypeBuilder<Order> builder)
     {
         builder.HasKey(o => o.Id);
+        builder.Property(o => o.Id).ValueGeneratedOnAdd();
         builder.Property(o => o.Total).HasColumnType("decimal(18,2)");
         builder.HasMany(o => o.Items).WithOne().HasForeignKey("OrderId");
 
@@ -40,8 +42,8 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                 orderItems.Add(
                     new
                     {
-                        OrderId = i,
-                        ProductId = productId,
+                        OrderId = OrderId.From(i),
+                        ProductId = ProductId.From(productId),
                         Quantity = quantity,
                     }
                 );
@@ -77,10 +79,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             orders.Add(
                 new Order
                 {
-                    Id = i,
-                    UserId = orderFaker
-                        .Random.Int(1, 10)
-                        .ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    Id = OrderId.From(i),
+                    UserId = UserId.From(
+                        orderFaker
+                            .Random.Int(1, 10)
+                            .ToString(System.Globalization.CultureInfo.InvariantCulture)
+                    ),
                     Total = Math.Round(total, 2),
                     CreatedAt = orderFaker
                         .Date.Between(

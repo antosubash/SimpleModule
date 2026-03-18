@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SimpleModule.Host;
 using SimpleModule.Orders;
 using SimpleModule.Products;
 using SimpleModule.Users;
@@ -29,6 +30,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
+            ReplaceDbContext<HostDbContext>(services, useOpenIddict: true);
             ReplaceDbContext<UsersDbContext>(services, useOpenIddict: true);
             ReplaceDbContext<OrdersDbContext>(services);
             ReplaceDbContext<ProductsDbContext>(services);

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Ids;
 using SimpleModule.Database;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Products.EntityConfigurations;
@@ -17,5 +18,11 @@ public class ProductsDbContext(
     {
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyModuleSchema("Products", dbOptions.Value);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<ProductId>()
+            .HaveConversion<ProductId.EfCoreValueConverter, ProductId.EfCoreValueComparer>();
     }
 }

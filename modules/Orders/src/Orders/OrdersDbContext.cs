@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Ids;
 using SimpleModule.Database;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.EntityConfigurations;
@@ -19,5 +20,15 @@ public class OrdersDbContext(
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
         modelBuilder.ApplyConfiguration(new OrderItemConfiguration());
         modelBuilder.ApplyModuleSchema("Orders", dbOptions.Value);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<OrderId>()
+            .HaveConversion<OrderId.EfCoreValueConverter, OrderId.EfCoreValueComparer>();
+        configurationBuilder.Properties<UserId>()
+            .HaveConversion<UserId.EfCoreValueConverter, UserId.EfCoreValueComparer>();
+        configurationBuilder.Properties<ProductId>()
+            .HaveConversion<ProductId.EfCoreValueConverter, ProductId.EfCoreValueComparer>();
     }
 }
