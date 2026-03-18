@@ -24,7 +24,7 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
 
                 new ModuleExtensionsEmitter().Emit(spc, data);
                 new EndpointExtensionsEmitter().Emit(spc, data);
-                GenerateMenuExtensions(spc, data.Modules);
+                new MenuExtensionsEmitter().Emit(spc, data);
                 GenerateRazorComponentExtensions(spc, data.Modules);
                 GenerateViewPages(spc, data.Modules);
 
