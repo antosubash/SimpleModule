@@ -20,7 +20,7 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 if (data.Modules.Length == 0)
                     return;
 
-                ReportDiscoveryDiagnostics(spc, data);
+                new DiagnosticEmitter().Emit(spc, data);
 
                 GenerateModuleExtensions(spc, data.Modules, data.DtoTypes.Length > 0);
                 GenerateEndpointExtensions(spc, data.Modules);
