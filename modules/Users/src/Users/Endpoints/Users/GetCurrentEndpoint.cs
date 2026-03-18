@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Extensions;
 
@@ -20,13 +21,13 @@ public class GetCurrentEndpoint : IEndpoint
                     IUserContracts userContracts
                 ) =>
                 {
-                    var userId = principal.GetUserId();
-                    if (string.IsNullOrEmpty(userId))
+                    var userIdStr = principal.GetUserId();
+                    if (string.IsNullOrEmpty(userIdStr))
                     {
                         return TypedResults.NotFound();
                     }
 
-                    var user = await userContracts.GetCurrentUserAsync(userId);
+                    var user = await userContracts.GetCurrentUserAsync(UserId.From(userIdStr));
                     return user is not null ? TypedResults.Ok(user) : TypedResults.NotFound();
                 }
             )

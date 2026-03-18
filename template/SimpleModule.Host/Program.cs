@@ -135,12 +135,19 @@ builder
 
 var app = builder.Build();
 
-// Apply pending EF Core migrations (production should use explicit migration tooling)
+// Apply database schema (production should use explicit migration tooling)
 if (!app.Environment.IsProduction())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<HostDbContext>();
-    await db.Database.MigrateAsync();
+    if (app.Environment.IsDevelopment())
+    {
+        await db.Database.MigrateAsync();
+    }
+    else
+    {
+        await db.Database.EnsureCreatedAsync();
+    }
 }
 
 app.UseExceptionHandler();

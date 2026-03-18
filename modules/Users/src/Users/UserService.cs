@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Ids;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
 
@@ -17,9 +18,9 @@ public partial class UserService(
         return users.Select(MapToDto);
     }
 
-    public async Task<UserDto?> GetUserByIdAsync(string id)
+    public async Task<UserDto?> GetUserByIdAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.Value);
         if (user is null)
         {
             LogUserNotFound(logger, id);
@@ -29,7 +30,7 @@ public partial class UserService(
         return MapToDto(user);
     }
 
-    public async Task<UserDto?> GetCurrentUserAsync(string userId)
+    public async Task<UserDto?> GetCurrentUserAsync(UserId userId)
     {
         return await GetUserByIdAsync(userId);
     }
@@ -37,7 +38,7 @@ public partial class UserService(
     private static UserDto MapToDto(ApplicationUser user) =>
         new()
         {
-            Id = user.Id,
+            Id = UserId.From(user.Id),
             Email = user.Email ?? string.Empty,
             DisplayName = user.DisplayName,
             EmailConfirmed = user.EmailConfirmed,
@@ -65,9 +66,9 @@ public partial class UserService(
         return MapToDto(user);
     }
 
-    public async Task<UserDto> UpdateUserAsync(string id, UpdateUserRequest request)
+    public async Task<UserDto> UpdateUserAsync(UserId id, UpdateUserRequest request)
     {
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.Value);
         if (user is null)
         {
             throw new Core.Exceptions.NotFoundException("User", id);
@@ -84,9 +85,9 @@ public partial class UserService(
         return MapToDto(user);
     }
 
-    public async Task DeleteUserAsync(string id)
+    public async Task DeleteUserAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.Value);
         if (user is null)
         {
             throw new Core.Exceptions.NotFoundException("User", id);
@@ -98,7 +99,7 @@ public partial class UserService(
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "User with ID {UserId} not found")]
-    private static partial void LogUserNotFound(ILogger logger, string userId);
+    private static partial void LogUserNotFound(ILogger logger, UserId userId);
 
     [LoggerMessage(
         Level = LogLevel.Information,
@@ -110,5 +111,5 @@ public partial class UserService(
     private static partial void LogUserUpdated(ILogger logger, string userId);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "User {UserId} deleted")]
-    private static partial void LogUserDeleted(ILogger logger, string userId);
+    private static partial void LogUserDeleted(ILogger logger, UserId userId);
 }

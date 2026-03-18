@@ -15,7 +15,7 @@ public static class CreateRequestValidator
     {
         var errors = new Dictionary<string, string[]>();
 
-        if (string.IsNullOrWhiteSpace(request.UserId))
+        if (string.IsNullOrWhiteSpace(request.UserId.Value))
         {
             errors[OrdersConstants.Fields.UserId] =
             [

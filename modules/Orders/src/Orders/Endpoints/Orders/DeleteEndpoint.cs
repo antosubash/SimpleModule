@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
@@ -12,7 +13,7 @@ public class DeleteEndpoint : IEndpoint
     {
         app.MapDelete(
             "/{id}",
-            async (int id, IOrderContracts orderContracts) =>
+            async (OrderId id, IOrderContracts orderContracts) =>
             {
                 await orderContracts.DeleteOrderAsync(id);
                 return TypedResults.NoContent();

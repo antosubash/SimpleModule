@@ -2,9 +2,12 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <DefineConstants>$(DefineConstants);VOGEN_NO_VALIDATION</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="NetEscapades.EnumGenerators" />
+    <PackageReference Include="Vogen" />
   </ItemGroup>
 </Project>

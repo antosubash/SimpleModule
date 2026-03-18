@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
@@ -27,11 +28,11 @@ public class CreateEndpoint : IViewEndpoint
             {
                 var request = new CreateOrderRequest
                 {
-                    UserId = body.UserId,
+                    UserId = UserId.From(body.UserId),
                     Items = body
                         .Items.Select(i => new OrderItem
                         {
-                            ProductId = i.ProductId,
+                            ProductId = ProductId.From(i.ProductId),
                             Quantity = i.Quantity,
                         })
                         .ToList(),

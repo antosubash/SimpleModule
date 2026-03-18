@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Endpoints.Products;
@@ -12,7 +13,7 @@ public class DeleteEndpoint : IEndpoint
     {
         app.MapDelete(
             "/{id}",
-            async (int id, IProductContracts productContracts) =>
+            async (ProductId id, IProductContracts productContracts) =>
             {
                 await productContracts.DeleteProductAsync(id);
                 return TypedResults.NoContent();

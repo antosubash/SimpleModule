@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Ids;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
@@ -14,7 +15,7 @@ public class EditEndpoint : IViewEndpoint
     {
         app.MapGet(
             "/{id}/edit",
-            async (int id, IOrderContracts orders, IProductContracts products) =>
+            async (OrderId id, IOrderContracts orders, IProductContracts products) =>
             {
                 var order = await orders.GetOrderByIdAsync(id);
                 if (order is null)
@@ -26,11 +27,11 @@ public class EditEndpoint : IViewEndpoint
                     {
                         order = new
                         {
-                            id = order.Id,
-                            userId = order.UserId,
+                            id = order.Id.Value,
+                            userId = order.UserId.Value,
                             items = order.Items.Select(i => new
                             {
-                                productId = i.ProductId,
+                                productId = i.ProductId.Value,
                                 quantity = i.Quantity,
                             }),
                             total = order.Total,
@@ -44,15 +45,15 @@ public class EditEndpoint : IViewEndpoint
 
         app.MapPost(
             "/{id}",
-            async (int id, UpdateOrderPayload body, IOrderContracts orders) =>
+            async (OrderId id, UpdateOrderPayload body, IOrderContracts orders) =>
             {
                 var request = new UpdateOrderRequest
                 {
-                    UserId = body.UserId,
+                    UserId = UserId.From(body.UserId),
                     Items = body
                         .Items.Select(i => new OrderItem
                         {
-                            ProductId = i.ProductId,
+                            ProductId = ProductId.From(i.ProductId),
                             Quantity = i.Quantity,
                         })
                         .ToList(),
@@ -65,7 +66,7 @@ public class EditEndpoint : IViewEndpoint
 
         app.MapDelete(
             "/{id}",
-            async (int id, IOrderContracts orders) =>
+            async (OrderId id, IOrderContracts orders) =>
             {
                 await orders.DeleteOrderAsync(id);
                 return Results.Redirect("/orders");
