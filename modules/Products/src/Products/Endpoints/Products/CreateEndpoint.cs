@@ -8,7 +8,6 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Endpoints.Products;
 
-[RequirePermission(ProductsPermissions.Create)]
 public class CreateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>

@@ -7,7 +7,6 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Endpoints.Products;
 
-[RequirePermission(ProductsPermissions.View)]
 public class GetAllEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>

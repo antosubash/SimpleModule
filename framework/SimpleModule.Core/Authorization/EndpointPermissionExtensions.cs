@@ -12,7 +12,7 @@ public static class EndpointPermissionExtensions
             policy.RequireAuthenticatedUser();
             foreach (var permission in permissions)
             {
-                policy.RequireClaim("permission", permission);
+                policy.AddRequirements(new PermissionRequirement(permission));
             }
         });
     }

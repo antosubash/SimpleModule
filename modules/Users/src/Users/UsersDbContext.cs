@@ -18,24 +18,7 @@ public class UsersDbContext(
     {
         base.OnModelCreating(builder);
 
-        builder.Entity<UserPermission>(entity =>
-        {
-            entity.HasKey(e => new { e.UserId, e.Permission });
-            entity.HasOne(e => e.User)
-                .WithMany()
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        builder.Entity<RolePermission>(entity =>
-        {
-            entity.HasKey(e => new { e.RoleId, e.Permission });
-            entity.HasOne(e => e.Role)
-                .WithMany()
-                .HasForeignKey(e => e.RoleId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
+        builder.ApplyConfigurationsFromAssembly(typeof(UsersDbContext).Assembly);
         builder.ApplyModuleSchema("Users", dbOptions.Value);
     }
 }

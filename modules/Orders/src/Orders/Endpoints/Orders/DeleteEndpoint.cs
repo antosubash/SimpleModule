@@ -7,7 +7,6 @@ using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
-[RequirePermission(OrdersPermissions.Delete)]
 public class DeleteEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
