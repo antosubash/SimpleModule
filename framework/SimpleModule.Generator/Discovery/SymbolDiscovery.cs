@@ -161,10 +161,14 @@ internal static class SymbolDiscovery
                     m.HasConfigureServices,
                     m.HasConfigureEndpoints,
                     m.HasConfigureMenu,
+                    m.HasConfigurePermissions,
                     m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
-                    m.Endpoints.Select(e => new EndpointInfoRecord(e.FullyQualifiedName))
+                    m.Endpoints.Select(e => new EndpointInfoRecord(
+                            e.FullyQualifiedName,
+                            e.RequiredPermissions.ToImmutableArray(),
+                            e.AllowAnonymous))
                         .ToImmutableArray(),
                     m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page))
                         .ToImmutableArray()
@@ -264,6 +268,7 @@ internal static class SymbolDiscovery
                                     "ConfigureEndpoints"
                                 ),
                                 HasConfigureMenu = DeclaresMethod(typeSymbol, "ConfigureMenu"),
+                                HasConfigurePermissions = DeclaresMethod(typeSymbol, "ConfigurePermissions"),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
                             }
@@ -327,7 +332,38 @@ internal static class SymbolDiscovery
                     }
                     else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
                     {
-                        endpoints.Add(new EndpointInfo { FullyQualifiedName = fqn });
+                        var info = new EndpointInfo { FullyQualifiedName = fqn };
+
+                        foreach (var attr in typeSymbol.GetAttributes())
+                        {
+                            var attrName = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+                            if (attrName == "global::SimpleModule.Core.Authorization.RequirePermissionAttribute")
+                            {
+                                if (attr.ConstructorArguments.Length > 0)
+                                {
+                                    var arg = attr.ConstructorArguments[0];
+                                    if (arg.Kind == TypedConstantKind.Array)
+                                    {
+                                        foreach (var val in arg.Values)
+                                        {
+                                            if (val.Value is string s)
+                                                info.RequiredPermissions.Add(s);
+                                        }
+                                    }
+                                    else if (arg.Value is string single)
+                                    {
+                                        info.RequiredPermissions.Add(single);
+                                    }
+                                }
+                            }
+                            else if (attrName == "global::Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute")
+                            {
+                                info.AllowAnonymous = true;
+                            }
+                        }
+
+                        endpoints.Add(info);
                     }
                 }
             }
