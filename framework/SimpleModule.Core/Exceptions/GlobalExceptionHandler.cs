@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -22,11 +22,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 ErrorMessages.ValidationErrorTitle,
                 ve.Errors
             ),
-            NotFoundException => (
-                StatusCodes.Status404NotFound,
-                ErrorMessages.NotFoundTitle,
-                (Dictionary<string, string[]>?)null
-            ),
+            NotFoundException => (StatusCodes.Status404NotFound, ErrorMessages.NotFoundTitle, null),
             ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
             _ => (
                 StatusCodes.Status500InternalServerError,
