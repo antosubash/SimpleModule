@@ -123,8 +123,6 @@ builder.Services.Configure<AuthenticationOptions>(options =>
     options.DefaultAuthenticateScheme = AuthConstants.SmartAuthPolicy;
     options.DefaultChallengeScheme = AuthConstants.SmartAuthPolicy;
 });
-builder.Services.AddAuthorization();
-
 // Health checks
 builder
     .Services.AddHealthChecks()
