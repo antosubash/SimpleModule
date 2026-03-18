@@ -47,8 +47,7 @@ public static class ModuleDbContextOptionsBuilder
 
             // Suppress PendingModelChangesWarning caused by Vogen ConfigureConventions
             // value converters that don't change the actual schema
-            options.ConfigureWarnings(w =>
-                w.Ignore(RelationalEventId.PendingModelChangesWarning));
+            options.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
 
             configureOptions?.Invoke(options);
         });

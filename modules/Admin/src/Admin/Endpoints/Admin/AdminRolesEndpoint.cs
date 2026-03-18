@@ -21,7 +21,8 @@ public class AdminRolesEndpoint : IEndpoint
             .DisableAntiforgery();
 
         // POST / — Create role with permissions
-        group.MapPost(
+        group
+            .MapPost(
                 "/",
                 async (
                     [FromForm] string name,
@@ -52,18 +53,21 @@ public class AdminRolesEndpoint : IEndpoint
                     {
                         if (!string.IsNullOrWhiteSpace(permission))
                         {
-                            usersDb.RolePermissions.Add(new RolePermission
-                            {
-                                RoleId = role.Id,
-                                Permission = permission,
-                            });
+                            usersDb.RolePermissions.Add(
+                                new RolePermission { RoleId = role.Id, Permission = permission }
+                            );
                         }
                     }
 
                     await usersDb.SaveChangesAsync();
 
                     var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                    await audit.LogAsync(role.Id, adminUserId, "RoleCreated", $"Role '{trimmedName}' created");
+                    await audit.LogAsync(
+                        role.Id,
+                        adminUserId,
+                        "RoleCreated",
+                        $"Role '{trimmedName}' created"
+                    );
 
                     return Results.Redirect($"/admin/roles/{role.Id}/edit");
                 }
@@ -71,7 +75,8 @@ public class AdminRolesEndpoint : IEndpoint
             .DisableAntiforgery();
 
         // POST /{id} — Update role details
-        group.MapPost(
+        group
+            .MapPost(
                 "/{id}",
                 async (
                     string id,
@@ -91,7 +96,12 @@ public class AdminRolesEndpoint : IEndpoint
                     await roleManager.UpdateAsync(role);
 
                     var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                    await audit.LogAsync(role.Id, adminUserId, "RoleUpdated", $"Role '{role.Name}' updated");
+                    await audit.LogAsync(
+                        role.Id,
+                        adminUserId,
+                        "RoleUpdated",
+                        $"Role '{role.Name}' updated"
+                    );
 
                     return Results.Redirect($"/admin/roles/{id}/edit?tab=details");
                 }
@@ -99,7 +109,8 @@ public class AdminRolesEndpoint : IEndpoint
             .DisableAntiforgery();
 
         // POST /{id}/permissions — Set role permissions
-        group.MapPost(
+        group
+            .MapPost(
                 "/{id}/permissions",
                 async (
                     string id,
@@ -119,8 +130,8 @@ public class AdminRolesEndpoint : IEndpoint
                         .Select(p => p!)
                         .ToHashSet(StringComparer.Ordinal);
 
-                    var currentPermissions = await usersDb.RolePermissions
-                        .Where(rp => rp.RoleId == id)
+                    var currentPermissions = await usersDb
+                        .RolePermissions.Where(rp => rp.RoleId == id)
                         .ToListAsync();
 
                     var currentSet = currentPermissions
@@ -136,19 +147,27 @@ public class AdminRolesEndpoint : IEndpoint
                     foreach (var rp in toRemove)
                     {
                         usersDb.RolePermissions.Remove(rp);
-                        await audit.LogAsync(role.Id, adminUserId, "RolePermissionRemoved", $"Permission '{rp.Permission}' removed from role '{role.Name}'");
+                        await audit.LogAsync(
+                            role.Id,
+                            adminUserId,
+                            "RolePermissionRemoved",
+                            $"Permission '{rp.Permission}' removed from role '{role.Name}'"
+                        );
                     }
 
                     // Add new permissions
                     var toAdd = newPermissions.Where(p => !currentSet.Contains(p)).ToList();
                     foreach (var permission in toAdd)
                     {
-                        usersDb.RolePermissions.Add(new RolePermission
-                        {
-                            RoleId = id,
-                            Permission = permission,
-                        });
-                        await audit.LogAsync(role.Id, adminUserId, "RolePermissionAdded", $"Permission '{permission}' added to role '{role.Name}'");
+                        usersDb.RolePermissions.Add(
+                            new RolePermission { RoleId = id, Permission = permission }
+                        );
+                        await audit.LogAsync(
+                            role.Id,
+                            adminUserId,
+                            "RolePermissionAdded",
+                            $"Permission '{permission}' added to role '{role.Name}'"
+                        );
                     }
 
                     await usersDb.SaveChangesAsync();
@@ -160,38 +179,45 @@ public class AdminRolesEndpoint : IEndpoint
 
         // DELETE /{id} — Delete role
         group.MapDelete(
-                "/{id}",
-                async (
-                    string id,
-                    HttpContext context,
-                    RoleManager<ApplicationRole> roleManager,
-                    UserManager<ApplicationUser> userManager,
-                    UsersDbContext usersDb,
-                    AuditService audit
-                ) =>
-                {
-                    var role = await roleManager.FindByIdAsync(id);
-                    if (role is null)
-                        return Results.NotFound();
+            "/{id}",
+            async (
+                string id,
+                HttpContext context,
+                RoleManager<ApplicationRole> roleManager,
+                UserManager<ApplicationUser> userManager,
+                UsersDbContext usersDb,
+                AuditService audit
+            ) =>
+            {
+                var role = await roleManager.FindByIdAsync(id);
+                if (role is null)
+                    return Results.NotFound();
 
-                    var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
-                    if (usersInRole.Count > 0)
-                        return Results.BadRequest(new { error = "Cannot delete a role that has users assigned to it." });
+                var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
+                if (usersInRole.Count > 0)
+                    return Results.BadRequest(
+                        new { error = "Cannot delete a role that has users assigned to it." }
+                    );
 
-                    // Remove role permissions first
-                    var permissions = await usersDb.RolePermissions
-                        .Where(rp => rp.RoleId == id)
-                        .ToListAsync();
-                    usersDb.RolePermissions.RemoveRange(permissions);
-                    await usersDb.SaveChangesAsync();
+                // Remove role permissions first
+                var permissions = await usersDb
+                    .RolePermissions.Where(rp => rp.RoleId == id)
+                    .ToListAsync();
+                usersDb.RolePermissions.RemoveRange(permissions);
+                await usersDb.SaveChangesAsync();
 
-                    var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                    await audit.LogAsync(role.Id, adminUserId, "RoleDeleted", $"Role '{role.Name}' deleted");
+                var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                await audit.LogAsync(
+                    role.Id,
+                    adminUserId,
+                    "RoleDeleted",
+                    $"Role '{role.Name}' deleted"
+                );
 
-                    await roleManager.DeleteAsync(role);
+                await roleManager.DeleteAsync(role);
 
-                    return Results.Redirect("/admin/roles");
-                }
-            );
+                return Results.Redirect("/admin/roles");
+            }
+        );
     }
 }

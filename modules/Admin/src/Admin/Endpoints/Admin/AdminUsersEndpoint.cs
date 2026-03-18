@@ -51,7 +51,10 @@ public class AdminUsersEndpoint : IEndpoint
                 }
 
                 var form = await context.Request.ReadFormAsync();
-                var roles = form["roles"].Where(r => !string.IsNullOrEmpty(r)).Select(r => r!).ToList();
+                var roles = form["roles"]
+                    .Where(r => !string.IsNullOrEmpty(r))
+                    .Select(r => r!)
+                    .ToList();
                 if (roles.Count > 0)
                 {
                     await userManager.AddToRolesAsync(user, roles);
@@ -89,7 +92,12 @@ public class AdminUsersEndpoint : IEndpoint
                 user.EmailConfirmed = emailConfirmed is not null;
 
                 await userManager.UpdateAsync(user);
-                await audit.LogAsync(id, adminId, "UserUpdated", $"Updated user details for {email}");
+                await audit.LogAsync(
+                    id,
+                    adminId,
+                    "UserUpdated",
+                    $"Updated user details for {email}"
+                );
 
                 return Results.Redirect($"/admin/users/{id}/edit?tab=details");
             }
@@ -113,7 +121,10 @@ public class AdminUsersEndpoint : IEndpoint
                 }
 
                 var form = await context.Request.ReadFormAsync();
-                var newRoles = form["roles"].Where(r => !string.IsNullOrEmpty(r)).Select(r => r!).ToHashSet();
+                var newRoles = form["roles"]
+                    .Where(r => !string.IsNullOrEmpty(r))
+                    .Select(r => r!)
+                    .ToHashSet();
                 var currentRoles = (await userManager.GetRolesAsync(user)).ToHashSet();
 
                 var toRemove = currentRoles.Except(newRoles).ToList();
@@ -144,12 +155,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/permissions — Set direct permissions
         group.MapPost(
             "/{id}/permissions",
-            async (
-                string id,
-                HttpContext context,
-                UsersDbContext usersDb,
-                AuditService audit
-            ) =>
+            async (string id, HttpContext context, UsersDbContext usersDb, AuditService audit) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
@@ -159,13 +165,15 @@ public class AdminUsersEndpoint : IEndpoint
                     .Select(p => p!)
                     .ToHashSet();
 
-                var currentPermissions = await usersDb.UserPermissions
-                    .Where(p => p.UserId == id)
+                var currentPermissions = await usersDb
+                    .UserPermissions.Where(p => p.UserId == id)
                     .ToListAsync();
 
                 var currentSet = currentPermissions.Select(p => p.Permission).ToHashSet();
 
-                var toRemove = currentPermissions.Where(p => !newPermissions.Contains(p.Permission)).ToList();
+                var toRemove = currentPermissions
+                    .Where(p => !newPermissions.Contains(p.Permission))
+                    .ToList();
                 var toAdd = newPermissions.Except(currentSet).ToList();
 
                 if (toRemove.Count > 0)
@@ -173,14 +181,26 @@ public class AdminUsersEndpoint : IEndpoint
                     usersDb.UserPermissions.RemoveRange(toRemove);
                     foreach (var perm in toRemove)
                     {
-                        await audit.LogAsync(id, adminId, "PermissionRevoked", $"Revoked permission {perm.Permission}");
+                        await audit.LogAsync(
+                            id,
+                            adminId,
+                            "PermissionRevoked",
+                            $"Revoked permission {perm.Permission}"
+                        );
                     }
                 }
 
                 foreach (var perm in toAdd)
                 {
-                    usersDb.UserPermissions.Add(new UserPermission { UserId = id, Permission = perm });
-                    await audit.LogAsync(id, adminId, "PermissionGranted", $"Granted permission {perm}");
+                    usersDb.UserPermissions.Add(
+                        new UserPermission { UserId = id, Permission = perm }
+                    );
+                    await audit.LogAsync(
+                        id,
+                        adminId,
+                        "PermissionGranted",
+                        $"Granted permission {perm}"
+                    );
                 }
 
                 await usersDb.SaveChangesAsync();

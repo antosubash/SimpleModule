@@ -9,9 +9,11 @@ public sealed class PermissionRegistryBuilder
 {
     private readonly Dictionary<string, List<string>> _byModule = new();
 
-    public void AddPermissions<T>() where T : class
+    public void AddPermissions<T>()
+        where T : class
     {
-        var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+        var fields = typeof(T)
+            .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string));
 
         foreach (var field in fields)

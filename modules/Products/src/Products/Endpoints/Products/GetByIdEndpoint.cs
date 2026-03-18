@@ -10,7 +10,10 @@ namespace SimpleModule.Products.Endpoints.Products;
 public class GetByIdEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/{id}", (ProductId id, IProductContracts productContracts) =>
-            CrudEndpoints.GetById(() => productContracts.GetProductByIdAsync(id)))
+        app.MapGet(
+                "/{id}",
+                (ProductId id, IProductContracts productContracts) =>
+                    CrudEndpoints.GetById(() => productContracts.GetProductByIdAsync(id))
+            )
             .RequirePermission(ProductsPermissions.View);
 }

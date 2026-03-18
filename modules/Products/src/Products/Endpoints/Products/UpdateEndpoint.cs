@@ -11,15 +11,20 @@ namespace SimpleModule.Products.Endpoints.Products;
 public class UpdateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPut("/{id}", (ProductId id, UpdateProductRequest request, IProductContracts productContracts) =>
-        {
-            var validation = UpdateRequestValidator.Validate(request);
-            if (!validation.IsValid)
-            {
-                throw new ValidationException(validation.Errors);
-            }
+        app.MapPut(
+                "/{id}",
+                (ProductId id, UpdateProductRequest request, IProductContracts productContracts) =>
+                {
+                    var validation = UpdateRequestValidator.Validate(request);
+                    if (!validation.IsValid)
+                    {
+                        throw new ValidationException(validation.Errors);
+                    }
 
-            return CrudEndpoints.Update(() => productContracts.UpdateProductAsync(id, request));
-        })
-        .RequirePermission(ProductsPermissions.Update);
+                    return CrudEndpoints.Update(() =>
+                        productContracts.UpdateProductAsync(id, request)
+                    );
+                }
+            )
+            .RequirePermission(ProductsPermissions.Update);
 }

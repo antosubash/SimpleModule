@@ -10,7 +10,10 @@ namespace SimpleModule.Orders.Endpoints.Orders;
 public class DeleteEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapDelete("/{id}", (OrderId id, IOrderContracts orderContracts) =>
-            CrudEndpoints.Delete(() => orderContracts.DeleteOrderAsync(id)))
+        app.MapDelete(
+                "/{id}",
+                (OrderId id, IOrderContracts orderContracts) =>
+                    CrudEndpoints.Delete(() => orderContracts.DeleteOrderAsync(id))
+            )
             .RequirePermission(OrdersPermissions.Delete);
 }

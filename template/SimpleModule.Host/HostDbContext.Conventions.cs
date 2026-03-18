@@ -9,11 +9,14 @@ public partial class HostDbContext
 {
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        configurationBuilder.Properties<ProductId>()
+        configurationBuilder
+            .Properties<ProductId>()
             .HaveConversion<ProductId.EfCoreValueConverter, ProductId.EfCoreValueComparer>();
-        configurationBuilder.Properties<OrderId>()
+        configurationBuilder
+            .Properties<OrderId>()
             .HaveConversion<OrderId.EfCoreValueConverter, OrderId.EfCoreValueComparer>();
-        configurationBuilder.Properties<UserId>()
+        configurationBuilder
+            .Properties<UserId>()
             .HaveConversion<UserId.EfCoreValueConverter, UserId.EfCoreValueComparer>();
     }
 }

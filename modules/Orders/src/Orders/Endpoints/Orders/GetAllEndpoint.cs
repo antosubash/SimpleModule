@@ -10,7 +10,10 @@ namespace SimpleModule.Orders.Endpoints.Orders;
 public class GetAllEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/", (IOrderContracts orderContracts) =>
-            CrudEndpoints.GetAll(orderContracts.GetAllOrdersAsync))
+        app.MapGet(
+                "/",
+                (IOrderContracts orderContracts) =>
+                    CrudEndpoints.GetAll(orderContracts.GetAllOrdersAsync)
+            )
             .RequirePermission(OrdersPermissions.View);
 }

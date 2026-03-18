@@ -8,7 +8,8 @@ public class UserPermissionConfiguration : IEntityTypeConfiguration<UserPermissi
     public void Configure(EntityTypeBuilder<UserPermission> builder)
     {
         builder.HasKey(e => new { e.UserId, e.Permission });
-        builder.HasOne(e => e.User)
+        builder
+            .HasOne(e => e.User)
             .WithMany()
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);

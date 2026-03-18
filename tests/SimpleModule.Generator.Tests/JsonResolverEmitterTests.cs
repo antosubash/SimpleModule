@@ -88,8 +88,16 @@ public class JsonResolverEmitterTests
 
         var resolver = GetResolver(result);
 
-        resolver.Should().Contain("private static JsonTypeInfo Create_TestApp_AlphaDto(JsonSerializerOptions options)");
-        resolver.Should().Contain("private static JsonTypeInfo Create_TestApp_BetaDto(JsonSerializerOptions options)");
+        resolver
+            .Should()
+            .Contain(
+                "private static JsonTypeInfo Create_TestApp_AlphaDto(JsonSerializerOptions options)"
+            );
+        resolver
+            .Should()
+            .Contain(
+                "private static JsonTypeInfo Create_TestApp_BetaDto(JsonSerializerOptions options)"
+            );
     }
 
     [Fact]
@@ -151,7 +159,9 @@ public class JsonResolverEmitterTests
 
         var resolver = GetResolver(result);
 
-        resolver.Should().Contain("info.CreateObject = static () => new global::TestApp.SimpleDto();");
+        resolver
+            .Should()
+            .Contain("info.CreateObject = static () => new global::TestApp.SimpleDto();");
     }
 
     [Fact]

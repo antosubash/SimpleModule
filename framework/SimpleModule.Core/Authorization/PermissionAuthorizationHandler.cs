@@ -7,7 +7,8 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
 {
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
-        PermissionRequirement requirement)
+        PermissionRequirement requirement
+    )
     {
         // Admin role bypasses all permission checks
         if (context.User.IsInRole("Admin"))

@@ -12,13 +12,13 @@ public class BrowseEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/browse",
-            async (IProductContracts products) =>
-                Inertia.Render(
-                    "Products/Browse",
-                    new { products = await products.GetAllProductsAsync() }
-                )
-        )
+                "/browse",
+                async (IProductContracts products) =>
+                    Inertia.Render(
+                        "Products/Browse",
+                        new { products = await products.GetAllProductsAsync() }
+                    )
+            )
             .AllowAnonymous();
     }
 }

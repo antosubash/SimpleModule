@@ -21,26 +21,27 @@ public class RolesEndpoint : IViewEndpoint
                     UsersDbContext usersDb
                 ) =>
                 {
-                    var roles = await roleManager.Roles
-                        .OrderBy(r => r.Name)
-                        .ToListAsync();
+                    var roles = await roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
 
                     var roleList = new List<object>();
                     foreach (var role in roles)
                     {
                         var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
-                        var permissionCount = await usersDb.RolePermissions
-                            .CountAsync(rp => rp.RoleId == role.Id);
+                        var permissionCount = await usersDb.RolePermissions.CountAsync(rp =>
+                            rp.RoleId == role.Id
+                        );
 
-                        roleList.Add(new
-                        {
-                            id = role.Id,
-                            name = role.Name,
-                            description = role.Description,
-                            userCount = usersInRole.Count,
-                            permissionCount,
-                            createdAt = role.CreatedAt.ToString("O"),
-                        });
+                        roleList.Add(
+                            new
+                            {
+                                id = role.Id,
+                                name = role.Name,
+                                description = role.Description,
+                                userCount = usersInRole.Count,
+                                permissionCount,
+                                createdAt = role.CreatedAt.ToString("O"),
+                            }
+                        );
                     }
 
                     return Inertia.Render("Admin/Admin/Roles", new { roles = roleList });

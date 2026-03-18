@@ -12,10 +12,6 @@ public static class UpdateRequestValidator
                 "Name",
                 "Product name is required."
             )
-            .AddErrorIf(
-                request.Price <= 0,
-                "Price",
-                "Price must be greater than zero."
-            )
+            .AddErrorIf(request.Price <= 0, "Price", "Price must be greater than zero.")
             .Build();
 }

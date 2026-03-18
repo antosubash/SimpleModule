@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
 using SimpleModule.Blazor;
@@ -123,6 +123,7 @@ builder.Services.Configure<AuthenticationOptions>(options =>
     options.DefaultAuthenticateScheme = AuthConstants.SmartAuthPolicy;
     options.DefaultChallengeScheme = AuthConstants.SmartAuthPolicy;
 });
+
 // Health checks
 builder
     .Services.AddHealthChecks()
@@ -187,19 +188,21 @@ app.UseAntiforgery();
 
 // Health endpoints — liveness (no checks) and readiness (database checks)
 app.MapHealthChecks(
-    RouteConstants.HealthLive,
-    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-    {
-        Predicate = _ => false, // No checks — just confirms the process is running
-    }
-).AllowAnonymous();
+        RouteConstants.HealthLive,
+        new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = _ => false, // No checks — just confirms the process is running
+        }
+    )
+    .AllowAnonymous();
 app.MapHealthChecks(
-    RouteConstants.HealthReady,
-    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-    {
-        Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
-    }
-).AllowAnonymous();
+        RouteConstants.HealthReady,
+        new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
+        }
+    )
+    .AllowAnonymous();
 
 // Blazor SSR
 app.MapRazorComponents<App>().AddModuleAssemblies();

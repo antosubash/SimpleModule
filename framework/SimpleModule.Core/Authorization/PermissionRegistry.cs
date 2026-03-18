@@ -9,7 +9,8 @@ public sealed class PermissionRegistry
 
     internal PermissionRegistry(
         IReadOnlySet<string> allPermissions,
-        IReadOnlyDictionary<string, IReadOnlyList<string>> byModule)
+        IReadOnlyDictionary<string, IReadOnlyList<string>> byModule
+    )
     {
         AllPermissions = allPermissions;
         ByModule = byModule;

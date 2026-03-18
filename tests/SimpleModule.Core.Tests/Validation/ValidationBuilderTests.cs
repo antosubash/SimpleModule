@@ -17,9 +17,7 @@ public class ValidationBuilderTests
     [Fact]
     public void AddErrorIf_WhenConditionTrue_AddsError()
     {
-        var result = new ValidationBuilder()
-            .AddErrorIf(true, "Name", "Name is required.")
-            .Build();
+        var result = new ValidationBuilder().AddErrorIf(true, "Name", "Name is required.").Build();
 
         result.IsValid.Should().BeFalse();
         result.Errors.Should().ContainKey("Name");
@@ -29,9 +27,7 @@ public class ValidationBuilderTests
     [Fact]
     public void AddErrorIf_WhenConditionFalse_DoesNotAddError()
     {
-        var result = new ValidationBuilder()
-            .AddErrorIf(false, "Name", "Name is required.")
-            .Build();
+        var result = new ValidationBuilder().AddErrorIf(false, "Name", "Name is required.").Build();
 
         result.IsValid.Should().BeTrue();
     }
@@ -65,8 +61,7 @@ public class ValidationBuilderTests
     [Fact]
     public void Build_CalledTwice_ReturnsSameResult()
     {
-        var builder = new ValidationBuilder()
-            .AddErrorIf(true, "Name", "Name is required.");
+        var builder = new ValidationBuilder().AddErrorIf(true, "Name", "Name is required.");
 
         var result1 = builder.Build();
         var result2 = builder.Build();

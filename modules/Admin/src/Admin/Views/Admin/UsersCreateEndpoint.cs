@@ -16,9 +16,14 @@ public class UsersCreateEndpoint : IViewEndpoint
                 "/admin/users/create",
                 async (RoleManager<ApplicationRole> roleManager) =>
                 {
-                    var allRoles = await roleManager.Roles
-                        .OrderBy(r => r.Name)
-                        .Select(r => new { id = r.Id, name = r.Name, description = r.Description })
+                    var allRoles = await roleManager
+                        .Roles.OrderBy(r => r.Name)
+                        .Select(r => new
+                        {
+                            id = r.Id,
+                            name = r.Name,
+                            description = r.Description,
+                        })
                         .ToListAsync();
 
                     return Inertia.Render("Admin/Admin/UsersCreate", new { allRoles });

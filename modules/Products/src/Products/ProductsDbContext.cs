@@ -21,7 +21,8 @@ public class ProductsDbContext(
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        configurationBuilder.Properties<ProductId>()
+        configurationBuilder
+            .Properties<ProductId>()
             .HaveConversion<ProductId.EfCoreValueConverter, ProductId.EfCoreValueComparer>();
     }
 }

@@ -20,10 +20,9 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
 
     private HttpClient CreateAdminClient()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }
+        );
 
         var claims = new List<Claim>
         {
@@ -69,10 +68,9 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     [Fact]
     public async Task GetUsers_Unauthenticated_Returns401()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }
+        );
 
         var response = await client.GetAsync("/admin/users");
 
@@ -89,7 +87,9 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "UsersEditEndpoint queries AdminDbContext which requires matching DatabaseOptions in test setup")]
+    [Fact(
+        Skip = "UsersEditEndpoint queries AdminDbContext which requires matching DatabaseOptions in test setup"
+    )]
     public async Task GetUsersEdit_ExistingUser_Returns200()
     {
         var userId = await SeedTestUserAsync();
@@ -116,11 +116,13 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
         var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["displayName"] = "Updated Name",
-            ["email"] = $"updated-{userId[..8]}@example.com",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["displayName"] = "Updated Name",
+                ["email"] = $"updated-{userId[..8]}@example.com",
+            }
+        );
 
         var response = await client.PostAsync($"/admin/users/{userId}", content);
 
@@ -179,17 +181,18 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
         var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["newPassword"] = "NewTestPass456!",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string> { ["newPassword"] = "NewTestPass456!" }
+        );
 
         var response = await client.PostAsync($"/admin/users/{userId}/reset-password", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
     }
 
-    [Fact(Skip = "UsersActivityEndpoint queries AdminDbContext which requires matching DatabaseOptions in test setup")]
+    [Fact(
+        Skip = "UsersActivityEndpoint queries AdminDbContext which requires matching DatabaseOptions in test setup"
+    )]
     public async Task GetActivity_ValidUser_Returns200()
     {
         var userId = await SeedTestUserAsync();

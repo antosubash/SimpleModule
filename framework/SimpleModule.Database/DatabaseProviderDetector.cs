@@ -10,7 +10,11 @@ public static class DatabaseProviderDetector
     {
         if (
             !string.IsNullOrWhiteSpace(explicitProvider)
-            && DatabaseProviderExtensions.TryParse(explicitProvider, out var parsed, ignoreCase: true)
+            && DatabaseProviderExtensions.TryParse(
+                explicitProvider,
+                out var parsed,
+                ignoreCase: true
+            )
         )
         {
             return parsed;

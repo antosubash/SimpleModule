@@ -25,11 +25,14 @@ public class OrdersDbContext(
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        configurationBuilder.Properties<OrderId>()
+        configurationBuilder
+            .Properties<OrderId>()
             .HaveConversion<OrderId.EfCoreValueConverter, OrderId.EfCoreValueComparer>();
-        configurationBuilder.Properties<UserId>()
+        configurationBuilder
+            .Properties<UserId>()
             .HaveConversion<UserId.EfCoreValueConverter, UserId.EfCoreValueComparer>();
-        configurationBuilder.Properties<ProductId>()
+        configurationBuilder
+            .Properties<ProductId>()
             .HaveConversion<ProductId.EfCoreValueConverter, ProductId.EfCoreValueComparer>();
     }
 }

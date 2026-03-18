@@ -1,4 +1,3 @@
-
 namespace SimpleModule.Products.Contracts;
 
 public interface IProductContracts

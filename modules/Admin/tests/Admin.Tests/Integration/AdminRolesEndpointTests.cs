@@ -20,10 +20,9 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
 
     private HttpClient CreateAdminClient()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }
+        );
 
         var claims = new List<Claim>
         {
@@ -66,10 +65,9 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     [Fact]
     public async Task GetRoles_Unauthenticated_Returns401()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }
+        );
 
         var response = await client.GetAsync("/admin/roles");
 
@@ -91,11 +89,13 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     {
         var client = CreateAdminClient();
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["name"] = $"NewRole-{Guid.NewGuid().ToString()[..8]}",
-            ["description"] = "A new test role",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["name"] = $"NewRole-{Guid.NewGuid().ToString()[..8]}",
+                ["description"] = "A new test role",
+            }
+        );
 
         var response = await client.PostAsync("/admin/roles", content);
 
@@ -107,10 +107,9 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     {
         var client = CreateAdminClient();
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["name"] = "",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string> { ["name"] = "" }
+        );
 
         var response = await client.PostAsync("/admin/roles", content);
 
@@ -145,11 +144,13 @@ public class AdminRolesEndpointTests : IClassFixture<SimpleModuleWebApplicationF
         var roleId = await SeedTestRoleAsync();
         var client = CreateAdminClient();
 
-        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["name"] = $"UpdatedRole-{Guid.NewGuid().ToString()[..8]}",
-            ["description"] = "Updated description",
-        });
+        using var content = new FormUrlEncodedContent(
+            new Dictionary<string, string>
+            {
+                ["name"] = $"UpdatedRole-{Guid.NewGuid().ToString()[..8]}",
+                ["description"] = "Updated description",
+            }
+        );
 
         var response = await client.PostAsync($"/admin/roles/{roleId}", content);
 

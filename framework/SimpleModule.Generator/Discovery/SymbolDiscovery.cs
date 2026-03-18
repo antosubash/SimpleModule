@@ -168,7 +168,8 @@ internal static class SymbolDiscovery
                     m.Endpoints.Select(e => new EndpointInfoRecord(
                             e.FullyQualifiedName,
                             e.RequiredPermissions.ToImmutableArray(),
-                            e.AllowAnonymous))
+                            e.AllowAnonymous
+                        ))
                         .ToImmutableArray(),
                     m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page))
                         .ToImmutableArray()
@@ -268,7 +269,10 @@ internal static class SymbolDiscovery
                                     "ConfigureEndpoints"
                                 ),
                                 HasConfigureMenu = DeclaresMethod(typeSymbol, "ConfigureMenu"),
-                                HasConfigurePermissions = DeclaresMethod(typeSymbol, "ConfigurePermissions"),
+                                HasConfigurePermissions = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigurePermissions"
+                                ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
                             }
@@ -336,9 +340,14 @@ internal static class SymbolDiscovery
 
                         foreach (var attr in typeSymbol.GetAttributes())
                         {
-                            var attrName = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            var attrName = attr.AttributeClass?.ToDisplayString(
+                                SymbolDisplayFormat.FullyQualifiedFormat
+                            );
 
-                            if (attrName == "global::SimpleModule.Core.Authorization.RequirePermissionAttribute")
+                            if (
+                                attrName
+                                == "global::SimpleModule.Core.Authorization.RequirePermissionAttribute"
+                            )
                             {
                                 if (attr.ConstructorArguments.Length > 0)
                                 {
@@ -357,7 +366,10 @@ internal static class SymbolDiscovery
                                     }
                                 }
                             }
-                            else if (attrName == "global::Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute")
+                            else if (
+                                attrName
+                                == "global::Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute"
+                            )
                             {
                                 info.AllowAnonymous = true;
                             }
@@ -441,9 +453,8 @@ internal static class SymbolDiscovery
                                     {
                                         Name = prop.Name,
                                         TypeFqn = actualType,
-                                        UnderlyingTypeFqn = resolvedType != actualType
-                                            ? resolvedType
-                                            : null,
+                                        UnderlyingTypeFqn =
+                                            resolvedType != actualType ? resolvedType : null,
                                         HasSetter =
                                             prop.SetMethod is not null
                                             && prop.SetMethod.DeclaredAccessibility
@@ -700,9 +711,9 @@ internal static class SymbolDiscovery
                 && attrClass.TypeArguments.Length == 1
             )
             {
-                return attrClass.TypeArguments[0].ToDisplayString(
-                    SymbolDisplayFormat.FullyQualifiedFormat
-                );
+                return attrClass
+                    .TypeArguments[0]
+                    .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             }
         }
 

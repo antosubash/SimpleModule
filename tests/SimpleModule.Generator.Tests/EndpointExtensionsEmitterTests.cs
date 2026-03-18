@@ -36,7 +36,9 @@ public class EndpointExtensionsEmitterTests
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
 
-        endpointExt.Should().Contain("var group = app.MapGroup(\"/api/products\").WithTags(\"Products\");");
+        endpointExt
+            .Should()
+            .Contain("var group = app.MapGroup(\"/api/products\").WithTags(\"Products\");");
         endpointExt.Should().Contain("new global::TestApp.Endpoints.ListEndpoint().Map(group);");
     }
 
@@ -112,7 +114,9 @@ public class EndpointExtensionsEmitterTests
         // Should NOT auto-register endpoints because HasConfigureEndpoints is true
         endpointExt.Should().NotContain("new global::TestApp.Endpoints.AutoEndpoint()");
         // Should use the escape hatch instead
-        endpointExt.Should().Contain("ModuleExtensions.s_TestApp_CustomModule.ConfigureEndpoints(app);");
+        endpointExt
+            .Should()
+            .Contain("ModuleExtensions.s_TestApp_CustomModule.ConfigureEndpoints(app);");
     }
 
     [Fact]
@@ -138,7 +142,9 @@ public class EndpointExtensionsEmitterTests
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
 
-        endpointExt.Should().Contain("ModuleExtensions.s_TestApp_ManualModule.ConfigureEndpoints(app);");
+        endpointExt
+            .Should()
+            .Contain("ModuleExtensions.s_TestApp_ManualModule.ConfigureEndpoints(app);");
     }
 
     [Fact]
@@ -248,9 +254,11 @@ public class EndpointExtensionsEmitterTests
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
 
-        endpointExt.Should().Contain(
-            "var viewGroup = app.MapGroup(\"/products\").WithTags(\"Products\").ExcludeFromDescription();"
-        );
+        endpointExt
+            .Should()
+            .Contain(
+                "var viewGroup = app.MapGroup(\"/products\").WithTags(\"Products\").ExcludeFromDescription();"
+            );
         endpointExt.Should().Contain("new global::TestApp.Views.BrowseEndpoint().Map(viewGroup);");
     }
 
@@ -289,7 +297,10 @@ public class EndpointExtensionsEmitterTests
         endpointExt.Should().NotContain("viewGroup");
     }
 
-    private static string GetGeneratedSource(Microsoft.CodeAnalysis.GeneratorDriverRunResult result, string fileName)
+    private static string GetGeneratedSource(
+        Microsoft.CodeAnalysis.GeneratorDriverRunResult result,
+        string fileName
+    )
     {
         return result
             .GeneratedTrees.First(t => t.FilePath.EndsWith(fileName, StringComparison.Ordinal))
