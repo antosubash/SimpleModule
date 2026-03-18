@@ -28,11 +28,8 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 new RazorComponentExtensionsEmitter().Emit(spc, data);
                 new ViewPagesEmitter().Emit(spc, data);
 
-                if (data.DtoTypes.Length > 0)
-                {
-                    GenerateJsonResolver(spc, data.DtoTypes);
-                    GenerateTypeScriptDefinitions(spc, data.DtoTypes);
-                }
+                new JsonResolverEmitter().Emit(spc, data);
+                new TypeScriptDefinitionsEmitter().Emit(spc, data);
 
                 if (data.DbContexts.Length > 0)
                 {
