@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
+[RequirePermission(OrdersPermissions.Create)]
 public class CreateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
@@ -21,5 +23,6 @@ public class CreateEndpoint : IEndpoint
             return CrudEndpoints.Create(
                 () => orderContracts.CreateOrderAsync(request),
                 o => $"{OrdersConstants.RoutePrefix}/{o.Id}");
-        });
+        })
+        .RequirePermission(OrdersPermissions.Create);
 }

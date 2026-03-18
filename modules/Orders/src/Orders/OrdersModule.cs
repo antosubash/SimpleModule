@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Orders.Contracts;
@@ -18,6 +19,11 @@ public class OrdersModule : IModule
     {
         services.AddModuleDbContext<OrdersDbContext>(configuration, OrdersConstants.ModuleName);
         services.AddScoped<IOrderContracts, OrderService>();
+    }
+
+    public void ConfigurePermissions(PermissionRegistryBuilder builder)
+    {
+        builder.AddPermissions<OrdersPermissions>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

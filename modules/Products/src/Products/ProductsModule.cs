@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Products.Contracts;
@@ -18,6 +19,11 @@ public class ProductsModule : IModule
     {
         services.AddModuleDbContext<ProductsDbContext>(configuration, ProductsConstants.ModuleName);
         services.AddScoped<IProductContracts, ProductService>();
+    }
+
+    public void ConfigurePermissions(PermissionRegistryBuilder builder)
+    {
+        builder.AddPermissions<ProductsPermissions>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)
