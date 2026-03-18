@@ -82,7 +82,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                         .Random.Int(1, 10)
                         .ToString(System.Globalization.CultureInfo.InvariantCulture),
                     Total = Math.Round(total, 2),
-                    CreatedAt = orderFaker.Date.Recent(30).ToUniversalTime(),
+                    CreatedAt = orderFaker
+                        .Date.Between(
+                            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                            new DateTime(2026, 1, 31, 23, 59, 59, DateTimeKind.Utc)
+                        ),
                 }
             );
         }
