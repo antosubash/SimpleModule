@@ -46,4 +46,48 @@ public class ValidationBuilderTests
 
         result.Errors["Name"].Should().HaveCount(2);
     }
+
+    [Fact]
+    public void AddErrorIf_MultipleFields_AccumulatesErrorsSeparately()
+    {
+        var result = new ValidationBuilder()
+            .AddErrorIf(true, "Name", "Name is required.")
+            .AddErrorIf(true, "Price", "Price must be positive.")
+            .Build();
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().ContainKey("Name");
+        result.Errors.Should().ContainKey("Price");
+        result.Errors["Name"].Should().HaveCount(1);
+        result.Errors["Price"].Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Build_CalledTwice_ReturnsSameResult()
+    {
+        var builder = new ValidationBuilder()
+            .AddErrorIf(true, "Name", "Name is required.");
+
+        var result1 = builder.Build();
+        var result2 = builder.Build();
+
+        result1.IsValid.Should().Be(result2.IsValid);
+        result1.Errors.Should().BeEquivalentTo(result2.Errors);
+    }
+
+    [Fact]
+    public void AddErrorIf_MixedConditions_OnlyAddsForTrue()
+    {
+        var result = new ValidationBuilder()
+            .AddErrorIf(true, "Name", "Error one.")
+            .AddErrorIf(false, "Name", "Error two.")
+            .AddErrorIf(true, "Name", "Error three.")
+            .Build();
+
+        result.IsValid.Should().BeFalse();
+        result.Errors["Name"].Should().HaveCount(2);
+        result.Errors["Name"].Should().Contain("Error one.");
+        result.Errors["Name"].Should().Contain("Error three.");
+        result.Errors["Name"].Should().NotContain("Error two.");
+    }
 }
