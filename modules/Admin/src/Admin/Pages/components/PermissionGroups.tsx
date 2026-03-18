@@ -4,7 +4,11 @@ interface PermissionGroupsProps {
   namePrefix: string;
 }
 
-export function PermissionGroups({ permissionsByModule, selected, namePrefix }: PermissionGroupsProps) {
+export function PermissionGroups({
+  permissionsByModule,
+  selected,
+  namePrefix,
+}: PermissionGroupsProps) {
   const modules = Object.entries(permissionsByModule);
 
   if (modules.length === 0) {
