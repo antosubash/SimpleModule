@@ -1,5 +1,8 @@
-﻿namespace SimpleModule.Cli.Commands.Doctor.Checks;
+﻿using NetEscapades.EnumGenerators;
 
+namespace SimpleModule.Cli.Commands.Doctor.Checks;
+
+[EnumExtensions]
 public enum CheckStatus
 {
     Pass,

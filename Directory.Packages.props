@@ -13,6 +13,7 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.14.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.14.0" />
     <!-- Analyzers -->
+    <PackageVersion Include="NetEscapades.EnumGenerators" Version="1.0.0-beta11" />
     <PackageVersion Include="Roslynator.Analyzers" Version="4.12.11" />
     <!-- Source Generator -->
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" />

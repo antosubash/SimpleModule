@@ -10,7 +10,7 @@ public static class DatabaseProviderDetector
     {
         if (
             !string.IsNullOrWhiteSpace(explicitProvider)
-            && Enum.TryParse<DatabaseProvider>(explicitProvider, ignoreCase: true, out var parsed)
+            && DatabaseProviderExtensions.TryParse(explicitProvider, out var parsed, ignoreCase: true)
         )
         {
             return parsed;
