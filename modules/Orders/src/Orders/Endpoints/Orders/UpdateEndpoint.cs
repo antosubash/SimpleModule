@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
+[RequirePermission(OrdersPermissions.Update)]
 public class UpdateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
@@ -24,5 +26,6 @@ public class UpdateEndpoint : IEndpoint
             }
 
             return CrudEndpoints.Update(() => orderContracts.UpdateOrderAsync(id, request));
-        });
+        })
+        .RequirePermission(OrdersPermissions.Update);
 }
