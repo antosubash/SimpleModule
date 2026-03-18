@@ -192,14 +192,14 @@ app.MapHealthChecks(
     {
         Predicate = _ => false, // No checks — just confirms the process is running
     }
-);
+).AllowAnonymous();
 app.MapHealthChecks(
     RouteConstants.HealthReady,
     new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
     {
         Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
     }
-);
+).AllowAnonymous();
 
 // Blazor SSR
 app.MapRazorComponents<App>().AddModuleAssemblies();
