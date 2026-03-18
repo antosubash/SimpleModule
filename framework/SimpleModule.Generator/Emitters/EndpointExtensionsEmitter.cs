@@ -16,6 +16,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Builder;");
         sb.AppendLine("using Microsoft.AspNetCore.Routing;");
         sb.AppendLine("using Microsoft.AspNetCore.Http;");
+        sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
@@ -40,7 +41,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
             if (!string.IsNullOrEmpty(module.RoutePrefix))
             {
                 sb.AppendLine(
-                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\").WithTags(\"{module.ModuleName}\");"
+                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\").WithTags(\"{module.ModuleName}\").RequireAuthorization();"
                 );
                 foreach (var endpoint in module.Endpoints)
                 {
@@ -73,7 +74,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
             if (!string.IsNullOrEmpty(module.ViewPrefix))
             {
                 sb.AppendLine(
-                    $"            var viewGroup = app.MapGroup(\"{module.ViewPrefix}\").WithTags(\"{module.ModuleName}\").ExcludeFromDescription();"
+                    $"            var viewGroup = app.MapGroup(\"{module.ViewPrefix}\").WithTags(\"{module.ModuleName}\").ExcludeFromDescription().RequireAuthorization();"
                 );
                 foreach (var view in module.Views)
                 {

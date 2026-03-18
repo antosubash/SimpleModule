@@ -55,6 +55,7 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigureServices,
     bool HasConfigureEndpoints,
     bool HasConfigureMenu,
+    bool HasConfigurePermissions,
     bool HasRazorComponents,
     string RoutePrefix,
     string ViewPrefix,
@@ -69,6 +70,7 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigureServices == other.HasConfigureServices
             && HasConfigureEndpoints == other.HasConfigureEndpoints
             && HasConfigureMenu == other.HasConfigureMenu
+            && HasConfigurePermissions == other.HasConfigurePermissions
             && HasRazorComponents == other.HasRazorComponents
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
@@ -86,6 +88,7 @@ internal readonly record struct ModuleInfoRecord(
             hash = hash * 31 + HasConfigureServices.GetHashCode();
             hash = hash * 31 + HasConfigureEndpoints.GetHashCode();
             hash = hash * 31 + HasConfigureMenu.GetHashCode();
+            hash = hash * 31 + HasConfigurePermissions.GetHashCode();
             hash = hash * 31 + HasRazorComponents.GetHashCode();
             hash = hash * 31 + (RoutePrefix ?? "").GetHashCode();
             hash = hash * 31 + (ViewPrefix ?? "").GetHashCode();
@@ -98,7 +101,32 @@ internal readonly record struct ModuleInfoRecord(
     }
 }
 
-internal readonly record struct EndpointInfoRecord(string FullyQualifiedName);
+internal readonly record struct EndpointInfoRecord(
+    string FullyQualifiedName,
+    ImmutableArray<string> RequiredPermissions,
+    bool AllowAnonymous
+)
+{
+    public bool Equals(EndpointInfoRecord other)
+    {
+        return FullyQualifiedName == other.FullyQualifiedName
+            && AllowAnonymous == other.AllowAnonymous
+            && RequiredPermissions.SequenceEqual(other.RequiredPermissions);
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 31 + FullyQualifiedName.GetHashCode();
+            hash = hash * 31 + AllowAnonymous.GetHashCode();
+            foreach (var p in RequiredPermissions)
+                hash = hash * 31 + p.GetHashCode();
+            return hash;
+        }
+    }
+}
 
 internal readonly record struct ViewInfoRecord(string FullyQualifiedName, string Page);
 
@@ -194,6 +222,7 @@ internal sealed class ModuleInfo
     public bool HasConfigureServices { get; set; }
     public bool HasConfigureEndpoints { get; set; }
     public bool HasConfigureMenu { get; set; }
+    public bool HasConfigurePermissions { get; set; }
     public bool HasRazorComponents { get; set; }
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
@@ -204,6 +233,8 @@ internal sealed class ModuleInfo
 internal sealed class EndpointInfo
 {
     public string FullyQualifiedName { get; set; } = "";
+    public List<string> RequiredPermissions { get; set; } = new();
+    public bool AllowAnonymous { get; set; }
 }
 
 internal sealed class ViewInfo

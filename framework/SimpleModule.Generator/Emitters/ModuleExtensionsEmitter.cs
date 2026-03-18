@@ -19,6 +19,8 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
         sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
+        sb.AppendLine("using SimpleModule.Core.Authorization;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
@@ -45,6 +47,22 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine($"        {fieldName}.ConfigureServices(services, configuration);");
         }
+
+        sb.AppendLine();
+        sb.AppendLine("        var permissionBuilder = new PermissionRegistryBuilder();");
+
+        foreach (var module in modules.Where(m => m.HasConfigurePermissions))
+        {
+            var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
+            sb.AppendLine($"        {fieldName}.ConfigurePermissions(permissionBuilder);");
+        }
+
+        sb.AppendLine("        var permissionRegistry = permissionBuilder.Build();");
+        sb.AppendLine("        services.AddSingleton(permissionRegistry);");
+        sb.AppendLine();
+        sb.AppendLine("        services.AddAuthorizationBuilder()");
+        sb.AppendLine("            .SetDefaultPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());");
+        sb.AppendLine("        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();");
 
         if (hasDtoTypes)
         {
