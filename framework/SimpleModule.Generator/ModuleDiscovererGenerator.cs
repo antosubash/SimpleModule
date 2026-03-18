@@ -23,7 +23,7 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 new DiagnosticEmitter().Emit(spc, data);
 
                 new ModuleExtensionsEmitter().Emit(spc, data);
-                GenerateEndpointExtensions(spc, data.Modules);
+                new EndpointExtensionsEmitter().Emit(spc, data);
                 GenerateMenuExtensions(spc, data.Modules);
                 GenerateRazorComponentExtensions(spc, data.Modules);
                 GenerateViewPages(spc, data.Modules);
