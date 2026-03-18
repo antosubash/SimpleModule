@@ -61,8 +61,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("        services.AddSingleton(permissionRegistry);");
         sb.AppendLine();
         sb.AppendLine("        services.AddAuthorizationBuilder()");
-        sb.AppendLine("            .SetDefaultPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())");
-        sb.AppendLine("            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());");
+        sb.AppendLine("            .SetDefaultPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());");
         sb.AppendLine("        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();");
 
         if (hasDtoTypes)
