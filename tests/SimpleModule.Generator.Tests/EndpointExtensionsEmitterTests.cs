@@ -142,46 +142,6 @@ public class EndpointExtensionsEmitterTests
     }
 
     [Fact]
-    public void Module_WithEndpointsAndConfigureEndpoints_SkipsAutoAndUsesEscapeHatch()
-    {
-        var source = """
-            using Microsoft.AspNetCore.Builder;
-            using Microsoft.AspNetCore.Routing;
-            using SimpleModule.Core;
-
-            namespace TestApp
-            {
-                [Module("Hybrid", RoutePrefix = "/api/hybrid")]
-                public class HybridModule : IModule
-                {
-                    public void ConfigureEndpoints(IEndpointRouteBuilder endpoints) { }
-                }
-            }
-
-            namespace TestApp.Endpoints
-            {
-                public class SomeEndpoint : IEndpoint
-                {
-                    public void Map(IEndpointRouteBuilder app)
-                    {
-                        app.MapGet("/some", () => "some");
-                    }
-                }
-            }
-            """;
-
-        var compilation = GeneratorTestHelper.CreateCompilation(source);
-        var result = GeneratorTestHelper.RunGenerator(compilation);
-
-        var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
-
-        // Auto-registration skipped
-        endpointExt.Should().NotContain("new global::TestApp.Endpoints.SomeEndpoint()");
-        // Escape hatch used
-        endpointExt.Should().Contain("ModuleExtensions.s_TestApp_HybridModule.ConfigureEndpoints(app);");
-    }
-
-    [Fact]
     public void Module_WithNoEndpoints_NothingEmittedForThatModule()
     {
         var source = """

@@ -96,7 +96,7 @@ public class TypeScriptDefinitionsEmitterTests
     }
 
     [Fact]
-    public void Dto_WithNullableValueType_MapsToAny_DocumentsCurrentBehavior()
+    public void Dto_WithNullableShorthandValueType_MapsToAny()
     {
         // Note: Nullable<T> via shorthand (int?) produces FQNs with nested global:: prefixes
         // that the TypeMappingHelpers does not currently resolve. This test documents that behavior.
@@ -120,8 +120,10 @@ public class TypeScriptDefinitionsEmitterTests
 
         var tsSource = GetGeneratedSource(result, "DtoTypeScript_Contracts.g.cs");
 
-        // Current behavior: nullable value types map to any due to FQN format limitations
-        tsSource.Should().Contain("optionalCount:");
+        // Current behavior: nullable value types via shorthand (int?) map to `any`
+        // because Roslyn represents them with nested global:: prefixes that
+        // MapCSharpTypeToTypeScript doesn't resolve.
+        tsSource.Should().Contain("optionalCount: any;");
     }
 
     [Fact]
