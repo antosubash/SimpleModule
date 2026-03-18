@@ -32,6 +32,10 @@
         <Project Path="modules/Users/src/Users/Users.csproj" />
         <Project Path="modules/Users/tests/Users.Tests/Users.Tests.csproj" />
     </Folder>
+    <Folder Name="/modules/Admin/">
+        <Project Path="modules/Admin/src/Admin.Contracts/Admin.Contracts.csproj" />
+        <Project Path="modules/Admin/src/Admin/Admin.csproj" />
+    </Folder>
     <Folder Name="/template/">
         <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
     </Folder>
