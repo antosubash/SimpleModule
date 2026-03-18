@@ -31,10 +31,7 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 new JsonResolverEmitter().Emit(spc, data);
                 new TypeScriptDefinitionsEmitter().Emit(spc, data);
 
-                if (data.DbContexts.Length > 0)
-                {
-                    EmitHostDbContext(spc, data);
-                }
+                new HostDbContextEmitter().Emit(spc, data);
             }
         );
     }
