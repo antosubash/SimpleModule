@@ -31,5 +31,10 @@
       "mcp__plugin_playwright_playwright__browser_network_requests",
       "mcp__plugin_playwright_playwright__browser_console_messages"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "aspire",
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
 }
