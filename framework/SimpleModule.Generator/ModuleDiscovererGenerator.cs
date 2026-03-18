@@ -26,7 +26,7 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 new EndpointExtensionsEmitter().Emit(spc, data);
                 new MenuExtensionsEmitter().Emit(spc, data);
                 new RazorComponentExtensionsEmitter().Emit(spc, data);
-                GenerateViewPages(spc, data.Modules);
+                new ViewPagesEmitter().Emit(spc, data);
 
                 if (data.DtoTypes.Length > 0)
                 {
