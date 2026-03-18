@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -79,6 +80,36 @@ public class AuthorizationEndpoint : IEndpoint
             identity.AddClaim(Claims.Role, role);
         }
 
+        // Load permissions from user's roles
+        var dbContext = context.RequestServices.GetRequiredService<UsersDbContext>();
+
+        var roleIds = await dbContext.Roles
+            .Where(r => roles.Contains(r.Name!))
+            .Select(r => r.Id)
+            .ToListAsync();
+
+        var rolePermissions = await dbContext.RolePermissions
+            .Where(rp => roleIds.Contains(rp.RoleId))
+            .Select(rp => rp.Permission)
+            .ToListAsync();
+
+        // Load direct user permissions
+        var userId = await userManager.GetUserIdAsync(user);
+        var userPermissions = await dbContext.UserPermissions
+            .Where(up => up.UserId == userId)
+            .Select(up => up.Permission)
+            .ToListAsync();
+
+        // Merge and deduplicate, add as claims
+        var allPermissions = new HashSet<string>(rolePermissions);
+        foreach (var p in userPermissions)
+            allPermissions.Add(p);
+
+        foreach (var permission in allPermissions)
+        {
+            identity.AddClaim("permission", permission);
+        }
+
         identity.SetScopes(request.GetScopes());
 
         foreach (var claim in identity.Claims)
@@ -119,6 +150,10 @@ public class AuthorizationEndpoint : IEndpoint
             case Claims.Subject:
                 yield return Destinations.AccessToken;
                 yield return Destinations.IdentityToken;
+                yield break;
+
+            case "permission":
+                yield return Destinations.AccessToken;
                 yield break;
 
             default:
