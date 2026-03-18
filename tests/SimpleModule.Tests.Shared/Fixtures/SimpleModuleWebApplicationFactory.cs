@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Host;
 using SimpleModule.Orders;
 using SimpleModule.Products;
+using SimpleModule.Admin;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -34,6 +35,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<UsersDbContext>(services, useOpenIddict: true);
             ReplaceDbContext<OrdersDbContext>(services);
             ReplaceDbContext<ProductsDbContext>(services);
+            ReplaceDbContext<AdminDbContext>(services);
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services
