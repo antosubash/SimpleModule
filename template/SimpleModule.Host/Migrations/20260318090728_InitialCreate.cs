@@ -353,11 +353,11 @@ namespace SimpleModule.Host.Migrations
                 columns: new[] { "Id", "CreatedAt", "Total", "UserId" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2026, 3, 16, 10, 20, 47, 15, DateTimeKind.Utc).AddTicks(1761), 4205.85m, "2" },
-                    { 2, new DateTime(2026, 3, 9, 18, 57, 18, 178, DateTimeKind.Utc).AddTicks(1275), 2752.49m, "8" },
-                    { 3, new DateTime(2026, 2, 20, 1, 3, 59, 566, DateTimeKind.Utc).AddTicks(5889), 192.31m, "6" },
-                    { 4, new DateTime(2026, 2, 28, 12, 35, 49, 235, DateTimeKind.Utc).AddTicks(4033), 3146.31m, "2" },
-                    { 5, new DateTime(2026, 3, 14, 1, 15, 36, 679, DateTimeKind.Utc).AddTicks(1240), 4580.92m, "10" }
+                    { 1, new DateTime(2026, 1, 2, 14, 0, 48, 324, DateTimeKind.Utc).AddTicks(4205), 4205.85m, "2" },
+                    { 2, new DateTime(2026, 1, 9, 10, 43, 3, 902, DateTimeKind.Utc).AddTicks(7351), 2752.49m, "8" },
+                    { 3, new DateTime(2026, 1, 27, 18, 48, 8, 543, DateTimeKind.Utc).AddTicks(1493), 192.31m, "6" },
+                    { 4, new DateTime(2026, 1, 19, 0, 29, 15, 501, DateTimeKind.Utc).AddTicks(3898), 3146.31m, "2" },
+                    { 5, new DateTime(2026, 1, 5, 1, 0, 8, 927, DateTimeKind.Utc).AddTicks(1333), 4580.92m, "10" }
                 });
 
             migrationBuilder.InsertData(
