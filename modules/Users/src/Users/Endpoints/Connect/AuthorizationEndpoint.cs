@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -25,7 +26,8 @@ public class AuthorizationEndpoint : IEndpoint
                 [HttpMethods.Get, HttpMethods.Post],
                 (Delegate)HandleAsync
             )
-            .ExcludeFromDescription();
+            .ExcludeFromDescription()
+            .AllowAnonymous();
     }
 
     private static async Task<IResult> HandleAsync(HttpContext context)

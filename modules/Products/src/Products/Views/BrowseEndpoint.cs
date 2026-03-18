@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
@@ -17,6 +18,7 @@ public class BrowseEndpoint : IViewEndpoint
                     "Products/Browse",
                     new { products = await products.GetAllProductsAsync() }
                 )
-        );
+        )
+            .AllowAnonymous();
     }
 }

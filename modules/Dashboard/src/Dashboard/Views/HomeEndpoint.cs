@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -31,6 +32,7 @@ public class HomeEndpoint : IViewEndpoint
                     );
                 }
             )
-            .ExcludeFromDescription();
+            .ExcludeFromDescription()
+            .AllowAnonymous();
     }
 }
