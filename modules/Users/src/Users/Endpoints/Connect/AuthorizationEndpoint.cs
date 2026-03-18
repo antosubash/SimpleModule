@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
@@ -85,20 +85,20 @@ public class AuthorizationEndpoint : IEndpoint
         // Load permissions from user's roles
         var dbContext = context.RequestServices.GetRequiredService<UsersDbContext>();
 
-        var roleIds = await dbContext.Roles
-            .Where(r => roles.Contains(r.Name!))
+        var roleIds = await dbContext
+            .Roles.Where(r => roles.Contains(r.Name!))
             .Select(r => r.Id)
             .ToListAsync();
 
-        var rolePermissions = await dbContext.RolePermissions
-            .Where(rp => roleIds.Contains(rp.RoleId))
+        var rolePermissions = await dbContext
+            .RolePermissions.Where(rp => roleIds.Contains(rp.RoleId))
             .Select(rp => rp.Permission)
             .ToListAsync();
 
         // Load direct user permissions
         var userId = await userManager.GetUserIdAsync(user);
-        var userPermissions = await dbContext.UserPermissions
-            .Where(up => up.UserId == userId)
+        var userPermissions = await dbContext
+            .UserPermissions.Where(up => up.UserId == userId)
             .Select(up => up.Permission)
             .ToListAsync();
 

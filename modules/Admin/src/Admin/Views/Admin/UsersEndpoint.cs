@@ -16,11 +16,7 @@ public class UsersEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/admin/users",
-                async (
-                    UserManager<ApplicationUser> userManager,
-                    string? search,
-                    int page = 1
-                ) =>
+                async (UserManager<ApplicationUser> userManager, string? search, int page = 1) =>
                 {
                     var query = userManager.Users.AsQueryable();
 
@@ -48,28 +44,33 @@ public class UsersEndpoint : IViewEndpoint
                     foreach (var user in users)
                     {
                         var roles = await userManager.GetRolesAsync(user);
-                        userList.Add(new
-                        {
-                            id = user.Id,
-                            displayName = user.DisplayName,
-                            email = user.Email,
-                            emailConfirmed = user.EmailConfirmed,
-                            roles = roles.ToList(),
-                            isLockedOut = user.LockoutEnd.HasValue
-                                && user.LockoutEnd > DateTimeOffset.UtcNow,
-                            isDeactivated = user.DeactivatedAt.HasValue,
-                            createdAt = user.CreatedAt.ToString("O"),
-                        });
+                        userList.Add(
+                            new
+                            {
+                                id = user.Id,
+                                displayName = user.DisplayName,
+                                email = user.Email,
+                                emailConfirmed = user.EmailConfirmed,
+                                roles = roles.ToList(),
+                                isLockedOut = user.LockoutEnd.HasValue
+                                    && user.LockoutEnd > DateTimeOffset.UtcNow,
+                                isDeactivated = user.DeactivatedAt.HasValue,
+                                createdAt = user.CreatedAt.ToString("O"),
+                            }
+                        );
                     }
 
-                    return Inertia.Render("Admin/Admin/Users", new
-                    {
-                        users = userList,
-                        search = search ?? "",
-                        page,
-                        totalPages,
-                        totalCount,
-                    });
+                    return Inertia.Render(
+                        "Admin/Admin/Users",
+                        new
+                        {
+                            users = userList,
+                            search = search ?? "",
+                            page,
+                            totalPages,
+                            totalCount,
+                        }
+                    );
                 }
             )
             .RequireAuthorization(policy => policy.RequireRole("Admin"));

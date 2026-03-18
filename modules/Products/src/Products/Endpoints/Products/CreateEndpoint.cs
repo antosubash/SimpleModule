@@ -11,17 +11,21 @@ namespace SimpleModule.Products.Endpoints.Products;
 public class CreateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPost("/", (CreateProductRequest request, IProductContracts productContracts) =>
-        {
-            var validation = CreateRequestValidator.Validate(request);
-            if (!validation.IsValid)
-            {
-                throw new ValidationException(validation.Errors);
-            }
+        app.MapPost(
+                "/",
+                (CreateProductRequest request, IProductContracts productContracts) =>
+                {
+                    var validation = CreateRequestValidator.Validate(request);
+                    if (!validation.IsValid)
+                    {
+                        throw new ValidationException(validation.Errors);
+                    }
 
-            return CrudEndpoints.Create(
-                () => productContracts.CreateProductAsync(request),
-                p => $"{ProductsConstants.RoutePrefix}/{p.Id}");
-        })
-        .RequirePermission(ProductsPermissions.Create);
+                    return CrudEndpoints.Create(
+                        () => productContracts.CreateProductAsync(request),
+                        p => $"{ProductsConstants.RoutePrefix}/{p.Id}"
+                    );
+                }
+            )
+            .RequirePermission(ProductsPermissions.Create);
 }

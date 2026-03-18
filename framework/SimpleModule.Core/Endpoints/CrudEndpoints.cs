@@ -20,12 +20,14 @@ public static class CrudEndpoints
     )
     {
         var entity = await create();
-        return TypedResults.Created(new Uri(locationFactory(entity), UriKind.RelativeOrAbsolute), entity);
+        return TypedResults.Created(
+            new Uri(locationFactory(entity), UriKind.RelativeOrAbsolute),
+            entity
+        );
     }
 
     public static async Task<IResult> Update<T>(Func<Task<T>> update)
-        where T : class =>
-        TypedResults.Ok(await update());
+        where T : class => TypedResults.Ok(await update());
 
     public static async Task<IResult> Delete(Func<Task> delete)
     {

@@ -20,9 +20,7 @@ public class ViewPagesEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        result
-            .GeneratedTrees.Should()
-            .NotContain(t => t.FilePath.Contains("ViewPages_"));
+        result.GeneratedTrees.Should().NotContain(t => t.FilePath.Contains("ViewPages_"));
     }
 
     [Fact]
@@ -255,7 +253,10 @@ public class ViewPagesEmitterTests
         viewPages.Should().Contain("'Test/Detail': Detail");
     }
 
-    private static string GetGeneratedSource(Microsoft.CodeAnalysis.GeneratorDriverRunResult result, string fileName)
+    private static string GetGeneratedSource(
+        Microsoft.CodeAnalysis.GeneratorDriverRunResult result,
+        string fileName
+    )
     {
         return result
             .GeneratedTrees.First(t => t.FilePath.EndsWith(fileName, StringComparison.Ordinal))

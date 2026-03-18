@@ -4,7 +4,10 @@ namespace SimpleModule.Core.Authorization;
 
 public static class EndpointPermissionExtensions
 {
-    public static TBuilder RequirePermission<TBuilder>(this TBuilder builder, params string[] permissions)
+    public static TBuilder RequirePermission<TBuilder>(
+        this TBuilder builder,
+        params string[] permissions
+    )
         where TBuilder : IEndpointConventionBuilder
     {
         return builder.RequireAuthorization(policy =>

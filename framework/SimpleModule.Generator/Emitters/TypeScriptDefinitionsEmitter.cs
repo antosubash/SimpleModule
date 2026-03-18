@@ -60,7 +60,10 @@ internal sealed class TypeScriptDefinitionsEmitter : IEmitter
                 sb.AppendLine($"export interface {shortName} {{");
                 foreach (var prop in dto.Properties)
                 {
-                    var tsType = TypeMappingHelpers.MapCSharpTypeToTypeScript(prop.UnderlyingTypeFqn ?? prop.TypeFqn, knownDtoTypes);
+                    var tsType = TypeMappingHelpers.MapCSharpTypeToTypeScript(
+                        prop.UnderlyingTypeFqn ?? prop.TypeFqn,
+                        knownDtoTypes
+                    );
                     var camelName = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
                     sb.AppendLine($"  {camelName}: {tsType};");
                 }

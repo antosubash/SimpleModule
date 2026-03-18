@@ -261,9 +261,7 @@ public class TypeScriptDefinitionsEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        result
-            .GeneratedTrees.Should()
-            .NotContain(t => t.FilePath.Contains("DtoTypeScript_"));
+        result.GeneratedTrees.Should().NotContain(t => t.FilePath.Contains("DtoTypeScript_"));
     }
 
     [Fact]
@@ -323,7 +321,10 @@ public class TypeScriptDefinitionsEmitterTests
         tsSource.Should().Contain("export interface MyDto {");
     }
 
-    private static string GetGeneratedSource(Microsoft.CodeAnalysis.GeneratorDriverRunResult result, string fileName)
+    private static string GetGeneratedSource(
+        Microsoft.CodeAnalysis.GeneratorDriverRunResult result,
+        string fileName
+    )
     {
         return result
             .GeneratedTrees.First(t => t.FilePath.EndsWith(fileName, StringComparison.Ordinal))

@@ -14,11 +14,10 @@ public class RolesCreateEndpoint : IViewEndpoint
                 "/admin/roles/create",
                 (PermissionRegistry permissionRegistry) =>
                 {
-                    var permissionsByModule = permissionRegistry.ByModule
-                        .ToDictionary(
-                            kvp => kvp.Key,
-                            kvp => kvp.Value.ToList()
-                        );
+                    var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.ToList()
+                    );
 
                     return Inertia.Render("Admin/Admin/RolesCreate", new { permissionsByModule });
                 }

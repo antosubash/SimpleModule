@@ -8,10 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SimpleModule.Admin;
 using SimpleModule.Host;
 using SimpleModule.Orders;
 using SimpleModule.Products;
-using SimpleModule.Admin;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -48,7 +48,10 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    public HttpClient CreateAuthenticatedClient(string[] permissions, params Claim[] additionalClaims)
+    public HttpClient CreateAuthenticatedClient(
+        string[] permissions,
+        params Claim[] additionalClaims
+    )
     {
         var claims = new List<Claim>(additionalClaims);
         foreach (var permission in permissions)

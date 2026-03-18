@@ -45,7 +45,9 @@ public class RazorComponentExtensionsEmitterTests
 
         razorExt.Should().Contain("namespace SimpleModule.Core;");
         razorExt.Should().Contain("public static class RazorComponentExtensions");
-        razorExt.Should().Contain("public static RazorComponentsEndpointConventionBuilder AddModuleAssemblies(");
+        razorExt
+            .Should()
+            .Contain("public static RazorComponentsEndpointConventionBuilder AddModuleAssemblies(");
         razorExt.Should().Contain("this RazorComponentsEndpointConventionBuilder builder)");
     }
 
@@ -67,7 +69,9 @@ public class RazorComponentExtensionsEmitterTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t => t.FilePath.EndsWith("RazorComponentExtensions.g.cs", StringComparison.Ordinal));
+            .Contain(t =>
+                t.FilePath.EndsWith("RazorComponentExtensions.g.cs", StringComparison.Ordinal)
+            );
     }
 
     [Fact]
@@ -110,7 +114,10 @@ public class RazorComponentExtensionsEmitterTests
         razorExt.Should().Contain("using Microsoft.AspNetCore.Builder;");
     }
 
-    private static string GetGeneratedSource(Microsoft.CodeAnalysis.GeneratorDriverRunResult result, string fileName)
+    private static string GetGeneratedSource(
+        Microsoft.CodeAnalysis.GeneratorDriverRunResult result,
+        string fileName
+    )
     {
         return result
             .GeneratedTrees.First(t => t.FilePath.EndsWith(fileName, StringComparison.Ordinal))

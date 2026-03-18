@@ -25,8 +25,8 @@ public partial class PermissionSeedService(
         if (adminRole is null)
             return;
 
-        var existingPermissions = await dbContext.RolePermissions
-            .Where(rp => rp.RoleId == adminRole.Id)
+        var existingPermissions = await dbContext
+            .RolePermissions.Where(rp => rp.RoleId == adminRole.Id)
             .Select(rp => rp.Permission)
             .ToListAsync(cancellationToken);
 
@@ -37,11 +37,9 @@ public partial class PermissionSeedService(
         {
             if (!existingSet.Contains(permission))
             {
-                newPermissions.Add(new RolePermission
-                {
-                    RoleId = adminRole.Id,
-                    Permission = permission,
-                });
+                newPermissions.Add(
+                    new RolePermission { RoleId = adminRole.Id, Permission = permission }
+                );
             }
         }
 

@@ -12,33 +12,49 @@ namespace SimpleModule.Host.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.EnsureSchema(
-                name: "admin");
+            migrationBuilder.EnsureSchema(name: "admin");
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "DeactivatedAt",
                 schema: "users",
                 table: "AspNetUsers",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.CreateTable(
                 name: "AuditLogEntries",
                 schema: "admin",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table
+                        .Column<long>(type: "bigint", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     PerformedByUserId = table.Column<string>(type: "text", nullable: false),
-                    Action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Details = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
-                    Timestamp = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Action = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: false
+                    ),
+                    Details = table.Column<string>(
+                        type: "character varying(4000)",
+                        maxLength: 4000,
+                        nullable: true
+                    ),
+                    Timestamp = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AuditLogEntries", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "RolePermissions",
@@ -46,7 +62,7 @@ namespace SimpleModule.Host.Migrations
                 columns: table => new
                 {
                     RoleId = table.Column<string>(type: "text", nullable: false),
-                    Permission = table.Column<string>(type: "text", nullable: false)
+                    Permission = table.Column<string>(type: "text", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -57,8 +73,10 @@ namespace SimpleModule.Host.Migrations
                         principalSchema: "users",
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "UserPermissions",
@@ -66,7 +84,7 @@ namespace SimpleModule.Host.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    Permission = table.Column<string>(type: "text", nullable: false)
+                    Permission = table.Column<string>(type: "text", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -77,41 +95,40 @@ namespace SimpleModule.Host.Migrations
                         principalSchema: "users",
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLogEntries_Timestamp",
                 schema: "admin",
                 table: "AuditLogEntries",
-                column: "Timestamp");
+                column: "Timestamp"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLogEntries_UserId",
                 schema: "admin",
                 table: "AuditLogEntries",
-                column: "UserId");
+                column: "UserId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AuditLogEntries",
-                schema: "admin");
+            migrationBuilder.DropTable(name: "AuditLogEntries", schema: "admin");
 
-            migrationBuilder.DropTable(
-                name: "RolePermissions",
-                schema: "users");
+            migrationBuilder.DropTable(name: "RolePermissions", schema: "users");
 
-            migrationBuilder.DropTable(
-                name: "UserPermissions",
-                schema: "users");
+            migrationBuilder.DropTable(name: "UserPermissions", schema: "users");
 
             migrationBuilder.DropColumn(
                 name: "DeactivatedAt",
                 schema: "users",
-                table: "AspNetUsers");
+                table: "AspNetUsers"
+            );
         }
     }
 }
