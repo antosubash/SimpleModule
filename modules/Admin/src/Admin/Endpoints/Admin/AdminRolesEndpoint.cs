@@ -17,7 +17,8 @@ public class AdminRolesEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/roles")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .DisableAntiforgery();
 
         // POST / — Create role with permissions
         group.MapPost(
