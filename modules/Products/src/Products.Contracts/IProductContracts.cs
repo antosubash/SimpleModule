@@ -1,4 +1,3 @@
-using SimpleModule.Core.Ids;
 
 namespace SimpleModule.Products.Contracts;
 

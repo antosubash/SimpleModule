@@ -1,6 +1,6 @@
 using Vogen;
 
-namespace SimpleModule.Core.Ids;
+namespace SimpleModule.Orders.Contracts;
 
 [ValueObject<int>(conversions: Conversions.SystemTextJson | Conversions.EfCoreValueConverter)]
-public readonly partial struct ProductId;
+public readonly partial struct OrderId;

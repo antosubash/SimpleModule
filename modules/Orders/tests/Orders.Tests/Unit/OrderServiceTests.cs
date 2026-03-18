@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
-using SimpleModule.Core.Ids;
 using SimpleModule.Database;
 using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using SimpleModule.Core.Ids;
+using SimpleModule.Orders.Contracts;
+using SimpleModule.Products.Contracts;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Host;
 

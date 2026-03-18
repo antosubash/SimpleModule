@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Ids;
 using SimpleModule.Database;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.EntityConfigurations;
+using SimpleModule.Products.Contracts;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders;
 

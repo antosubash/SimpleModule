@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
-using SimpleModule.Core.Ids;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;

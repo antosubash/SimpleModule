@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Exceptions;
-using SimpleModule.Core.Ids;
 using SimpleModule.Database;
 using SimpleModule.Products;
 using SimpleModule.Products.Contracts;

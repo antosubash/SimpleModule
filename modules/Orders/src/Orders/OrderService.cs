@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
-using SimpleModule.Core.Ids;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.Contracts.Events;
 using SimpleModule.Products.Contracts;

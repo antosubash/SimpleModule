@@ -1,4 +1,3 @@
-using SimpleModule.Core.Ids;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;

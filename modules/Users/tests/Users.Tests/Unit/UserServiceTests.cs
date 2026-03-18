@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using SimpleModule.Core.Ids;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
