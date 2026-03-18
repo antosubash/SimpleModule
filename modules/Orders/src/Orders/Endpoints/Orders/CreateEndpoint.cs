@@ -8,7 +8,6 @@ using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
-[RequirePermission(OrdersPermissions.Create)]
 public class CreateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
