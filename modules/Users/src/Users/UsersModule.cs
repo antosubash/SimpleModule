@@ -113,6 +113,7 @@ public class UsersModule : IModule
 
         // Seed service
         services.AddHostedService<OpenIddictSeedService>();
+        services.AddHostedService<PermissionSeedService>();
 
         // Email sender (console-based for development)
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
