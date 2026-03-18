@@ -3,8 +3,21 @@ using Microsoft.CodeAnalysis;
 namespace SimpleModule.Generator;
 
 [Generator]
-public partial class ModuleDiscovererGenerator : IIncrementalGenerator
+public class ModuleDiscovererGenerator : IIncrementalGenerator
 {
+    private static readonly IEmitter[] Emitters =
+    [
+        new DiagnosticEmitter(),
+        new ModuleExtensionsEmitter(),
+        new EndpointExtensionsEmitter(),
+        new MenuExtensionsEmitter(),
+        new RazorComponentExtensionsEmitter(),
+        new ViewPagesEmitter(),
+        new JsonResolverEmitter(),
+        new TypeScriptDefinitionsEmitter(),
+        new HostDbContextEmitter(),
+    ];
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Extract an equatable data model from the compilation so the incremental
@@ -20,18 +33,10 @@ public partial class ModuleDiscovererGenerator : IIncrementalGenerator
                 if (data.Modules.Length == 0)
                     return;
 
-                new DiagnosticEmitter().Emit(spc, data);
-
-                new ModuleExtensionsEmitter().Emit(spc, data);
-                new EndpointExtensionsEmitter().Emit(spc, data);
-                new MenuExtensionsEmitter().Emit(spc, data);
-                new RazorComponentExtensionsEmitter().Emit(spc, data);
-                new ViewPagesEmitter().Emit(spc, data);
-
-                new JsonResolverEmitter().Emit(spc, data);
-                new TypeScriptDefinitionsEmitter().Emit(spc, data);
-
-                new HostDbContextEmitter().Emit(spc, data);
+                foreach (var emitter in Emitters)
+                {
+                    emitter.Emit(spc, data);
+                }
             }
         );
     }
