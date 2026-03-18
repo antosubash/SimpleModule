@@ -35,6 +35,7 @@
     <Folder Name="/modules/Admin/">
         <Project Path="modules/Admin/src/Admin.Contracts/Admin.Contracts.csproj" />
         <Project Path="modules/Admin/src/Admin/Admin.csproj" />
+        <Project Path="modules/Admin/tests/Admin.Tests/Admin.Tests.csproj" />
     </Folder>
     <Folder Name="/template/">
         <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />

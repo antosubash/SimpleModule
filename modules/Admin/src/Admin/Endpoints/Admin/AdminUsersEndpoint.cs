@@ -18,7 +18,8 @@ public class AdminUsersEndpoint : IEndpoint
     {
         var group = app.MapGroup("/admin/users")
             .WithTags("Admin")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .DisableAntiforgery();
 
         // POST /admin/users — Create user
         group.MapPost(
@@ -60,7 +61,7 @@ public class AdminUsersEndpoint : IEndpoint
 
                 return Results.Redirect($"/admin/users/{user.Id}/edit");
             }
-        ).DisableAntiforgery();
+        );
 
         // POST /admin/users/{id} — Update details
         group.MapPost(
@@ -69,7 +70,7 @@ public class AdminUsersEndpoint : IEndpoint
                 string id,
                 [FromForm] string displayName,
                 [FromForm] string email,
-                [FromForm] bool emailConfirmed,
+                [FromForm] string? emailConfirmed,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
                 AuditService audit
@@ -85,14 +86,14 @@ public class AdminUsersEndpoint : IEndpoint
                 user.DisplayName = displayName;
                 user.Email = email;
                 user.UserName = email;
-                user.EmailConfirmed = emailConfirmed;
+                user.EmailConfirmed = emailConfirmed is not null;
 
                 await userManager.UpdateAsync(user);
                 await audit.LogAsync(id, adminId, "UserUpdated", $"Updated user details for {email}");
 
                 return Results.Redirect($"/admin/users/{id}/edit?tab=details");
             }
-        ).DisableAntiforgery();
+        );
 
         // POST /admin/users/{id}/roles — Set roles
         group.MapPost(
@@ -138,7 +139,7 @@ public class AdminUsersEndpoint : IEndpoint
 
                 return Results.Redirect($"/admin/users/{id}/edit?tab=roles");
             }
-        ).DisableAntiforgery();
+        );
 
         // POST /admin/users/{id}/permissions — Set direct permissions
         group.MapPost(
@@ -186,7 +187,7 @@ public class AdminUsersEndpoint : IEndpoint
 
                 return Results.Redirect($"/admin/users/{id}/edit?tab=roles");
             }
-        ).DisableAntiforgery();
+        );
 
         // POST /admin/users/{id}/reset-password — Reset password
         group.MapPost(
@@ -212,7 +213,7 @@ public class AdminUsersEndpoint : IEndpoint
 
                 return Results.Redirect($"/admin/users/{id}/edit?tab=security");
             }
-        ).DisableAntiforgery();
+        );
 
         // POST /admin/users/{id}/lock — Lock account
         group.MapPost(
