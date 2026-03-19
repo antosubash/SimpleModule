@@ -11,24 +11,6 @@ namespace SimpleModule.Host.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "Products_Products",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .OldAnnotation("Sqlite:Autoincrement", true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "PageBuilder_Pages",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .OldAnnotation("Sqlite:Autoincrement", true);
-
             migrationBuilder.AddColumn<DateTime>(
                 name: "DeletedAt",
                 table: "PageBuilder_Pages",
@@ -55,15 +37,6 @@ namespace SimpleModule.Host.Migrations
                 type: "TEXT",
                 maxLength: 500,
                 nullable: true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "Orders_Orders",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .OldAnnotation("Sqlite:Autoincrement", true);
 
             migrationBuilder.CreateTable(
                 name: "PageBuilder_Tags",
@@ -140,32 +113,6 @@ namespace SimpleModule.Host.Migrations
                 name: "OgImage",
                 table: "PageBuilder_Pages");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "Products_Products",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("Sqlite:Autoincrement", true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "PageBuilder_Pages",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("Sqlite:Autoincrement", true);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "Orders_Orders",
-                type: "INTEGER",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "INTEGER")
-                .Annotation("Sqlite:Autoincrement", true);
         }
     }
 }

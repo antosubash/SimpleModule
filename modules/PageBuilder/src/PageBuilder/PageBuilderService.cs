@@ -12,27 +12,19 @@ public partial class PageBuilderService(
     ILogger<PageBuilderService> logger
 ) : IPageBuilderContracts
 {
-    public async Task<IEnumerable<PageSummary>> GetAllPagesAsync() =>
-        await db
+    public async Task<IEnumerable<PageSummary>> GetAllPagesAsync()
+    {
+        var pages = await db
             .Pages.OrderBy(p => p.Order)
             .ThenBy(p => p.Title)
-            .Select(p => new PageSummary
-            {
-                Id = p.Id,
-                Title = p.Title,
-                Slug = p.Slug,
-                IsPublished = p.IsPublished,
-                HasDraft = p.DraftContent != null,
-                Order = p.Order,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                Tags = p.Tags.Select(t => t.Name).ToList(),
-            })
             .ToListAsync();
+
+        return pages.Select(p => ToSummary(p));
+    }
 
     public async Task<Page?> GetPageByIdAsync(PageId id)
     {
-        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == id);
+        var page = await db.Pages.FirstOrDefaultAsync(p => p.Id == id);
         if (page is null)
         {
             LogPageNotFound(logger, id);
@@ -44,24 +36,16 @@ public partial class PageBuilderService(
     public async Task<Page?> GetPageBySlugAsync(string slug) =>
         await db.Pages.FirstOrDefaultAsync(p => p.Slug == slug);
 
-    public async Task<IEnumerable<PageSummary>> GetPublishedPagesAsync() =>
-        await db
+    public async Task<IEnumerable<PageSummary>> GetPublishedPagesAsync()
+    {
+        var pages = await db
             .Pages.Where(p => p.IsPublished)
             .OrderBy(p => p.Order)
             .ThenBy(p => p.Title)
-            .Select(p => new PageSummary
-            {
-                Id = p.Id,
-                Title = p.Title,
-                Slug = p.Slug,
-                IsPublished = p.IsPublished,
-                HasDraft = p.DraftContent != null,
-                Order = p.Order,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                Tags = p.Tags.Select(t => t.Name).ToList(),
-            })
             .ToListAsync();
+
+        return pages.Select(p => ToSummary(p));
+    }
 
     public async Task<Page> CreatePageAsync(CreatePageRequest request)
     {
@@ -181,25 +165,16 @@ public partial class PageBuilderService(
         return page;
     }
 
-    public async Task<IEnumerable<PageSummary>> GetTrashedPagesAsync() =>
-        await db
+    public async Task<IEnumerable<PageSummary>> GetTrashedPagesAsync()
+    {
+        var pages = await db
             .Pages.IgnoreQueryFilters()
             .Where(p => p.DeletedAt != null)
             .OrderByDescending(p => p.DeletedAt)
-            .Select(p => new PageSummary
-            {
-                Id = p.Id,
-                Title = p.Title,
-                Slug = p.Slug,
-                IsPublished = p.IsPublished,
-                HasDraft = p.DraftContent != null,
-                Order = p.Order,
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-                DeletedAt = p.DeletedAt,
-                Tags = p.Tags.Select(t => t.Name).ToList(),
-            })
             .ToListAsync();
+
+        return pages.Select(p => ToSummary(p));
+    }
 
     public async Task<Page> RestorePageAsync(PageId id)
     {
@@ -294,6 +269,21 @@ public partial class PageBuilderService(
             await db.SaveChangesAsync();
         }
     }
+
+    private static PageSummary ToSummary(Page p) =>
+        new()
+        {
+            Id = p.Id,
+            Title = p.Title,
+            Slug = p.Slug,
+            IsPublished = p.IsPublished,
+            HasDraft = !string.IsNullOrEmpty(p.DraftContent),
+            Order = p.Order,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            DeletedAt = p.DeletedAt,
+            Tags = p.Tags.Select(t => t.Name).ToList(),
+        };
 
     internal static string Slugify(string text)
     {
