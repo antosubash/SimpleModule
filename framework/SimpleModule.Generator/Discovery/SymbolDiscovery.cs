@@ -162,6 +162,7 @@ internal static class SymbolDiscovery
                     m.HasConfigureEndpoints,
                     m.HasConfigureMenu,
                     m.HasConfigurePermissions,
+                    m.HasConfigureSettings,
                     m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
@@ -272,6 +273,10 @@ internal static class SymbolDiscovery
                                 HasConfigurePermissions = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigurePermissions"
+                                ),
+                                HasConfigureSettings = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureSettings"
                                 ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,

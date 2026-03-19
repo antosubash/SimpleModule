@@ -11,6 +11,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new ModuleExtensionsEmitter(),
         new EndpointExtensionsEmitter(),
         new MenuExtensionsEmitter(),
+        new SettingsExtensionsEmitter(),
         new RazorComponentExtensionsEmitter(),
         new ViewPagesEmitter(),
         new JsonResolverEmitter(),

@@ -56,6 +56,7 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigureEndpoints,
     bool HasConfigureMenu,
     bool HasConfigurePermissions,
+    bool HasConfigureSettings,
     bool HasRazorComponents,
     string RoutePrefix,
     string ViewPrefix,
@@ -71,6 +72,7 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigureEndpoints == other.HasConfigureEndpoints
             && HasConfigureMenu == other.HasConfigureMenu
             && HasConfigurePermissions == other.HasConfigurePermissions
+            && HasConfigureSettings == other.HasConfigureSettings
             && HasRazorComponents == other.HasRazorComponents
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
@@ -89,6 +91,7 @@ internal readonly record struct ModuleInfoRecord(
             hash = hash * 31 + HasConfigureEndpoints.GetHashCode();
             hash = hash * 31 + HasConfigureMenu.GetHashCode();
             hash = hash * 31 + HasConfigurePermissions.GetHashCode();
+            hash = hash * 31 + HasConfigureSettings.GetHashCode();
             hash = hash * 31 + HasRazorComponents.GetHashCode();
             hash = hash * 31 + (RoutePrefix ?? "").GetHashCode();
             hash = hash * 31 + (ViewPrefix ?? "").GetHashCode();
@@ -223,6 +226,7 @@ internal sealed class ModuleInfo
     public bool HasConfigureEndpoints { get; set; }
     public bool HasConfigureMenu { get; set; }
     public bool HasConfigurePermissions { get; set; }
+    public bool HasConfigureSettings { get; set; }
     public bool HasRazorComponents { get; set; }
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
