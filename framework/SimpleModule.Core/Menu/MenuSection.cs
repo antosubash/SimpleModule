@@ -7,4 +7,5 @@ public enum MenuSection
 {
     Navbar,
     UserDropdown,
+    AdminSidebar,
 }
