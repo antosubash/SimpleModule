@@ -27,7 +27,21 @@ public class EditorEndpoint : IViewEndpoint
                         return Results.NotFound();
                     }
 
-                    return Inertia.Render("PageBuilder/Editor", new { page });
+                    // Editor works on draft content, falling back to published content
+                    var editorPage = new Page
+                    {
+                        Id = page.Id,
+                        Title = page.Title,
+                        Slug = page.Slug,
+                        Content = page.DraftContent ?? page.Content,
+                        DraftContent = page.DraftContent,
+                        IsPublished = page.IsPublished,
+                        Order = page.Order,
+                        CreatedAt = page.CreatedAt,
+                        UpdatedAt = page.UpdatedAt,
+                    };
+
+                    return Inertia.Render("PageBuilder/Editor", new { page = editorPage });
                 }
             )
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
