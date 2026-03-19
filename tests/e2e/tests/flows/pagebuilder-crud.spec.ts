@@ -78,7 +78,7 @@ test.describe('PageBuilder CRUD', () => {
     });
     expect(updateRes.ok()).toBeTruthy();
     const updated = await updateRes.json();
-    expect(updated.content).toBe(puckData);
+    expect(updated.draftContent).toBe(puckData);
   });
 
   test('unpublish page and verify removed from public list', async ({ page, request }) => {

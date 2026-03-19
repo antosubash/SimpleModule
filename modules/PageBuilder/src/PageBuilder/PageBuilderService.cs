@@ -15,7 +15,8 @@ public partial class PageBuilderService(
     public async Task<IEnumerable<PageSummary>> GetAllPagesAsync()
     {
         var pages = await db
-            .Pages.OrderBy(p => p.Order)
+            .Pages.Include(p => p.Tags)
+            .OrderBy(p => p.Order)
             .ThenBy(p => p.Title)
             .ToListAsync();
 
@@ -24,7 +25,7 @@ public partial class PageBuilderService(
 
     public async Task<Page?> GetPageByIdAsync(PageId id)
     {
-        var page = await db.Pages.FirstOrDefaultAsync(p => p.Id == id);
+        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == id);
         if (page is null)
         {
             LogPageNotFound(logger, id);
@@ -34,12 +35,13 @@ public partial class PageBuilderService(
     }
 
     public async Task<Page?> GetPageBySlugAsync(string slug) =>
-        await db.Pages.FirstOrDefaultAsync(p => p.Slug == slug);
+        await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Slug == slug);
 
     public async Task<IEnumerable<PageSummary>> GetPublishedPagesAsync()
     {
         var pages = await db
-            .Pages.Where(p => p.IsPublished)
+            .Pages.Include(p => p.Tags)
+            .Where(p => p.IsPublished)
             .OrderBy(p => p.Order)
             .ThenBy(p => p.Title)
             .ToListAsync();
@@ -169,6 +171,7 @@ public partial class PageBuilderService(
     {
         var pages = await db
             .Pages.IgnoreQueryFilters()
+            .Include(p => p.Tags)
             .Where(p => p.DeletedAt != null)
             .OrderByDescending(p => p.DeletedAt)
             .ToListAsync();

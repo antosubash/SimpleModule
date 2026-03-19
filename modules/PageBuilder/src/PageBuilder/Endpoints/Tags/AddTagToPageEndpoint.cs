@@ -15,7 +15,7 @@ public class AddTagToPageEndpoint : IEndpoint
                 async (PageId id, AddTagRequest request, IPageBuilderContracts pageBuilder) =>
                 {
                     if (string.IsNullOrWhiteSpace(request.Name))
-                        return Results.BadRequest("Tag name is required.");
+                        throw new ArgumentException("Tag name is required.", nameof(request));
 
                     await pageBuilder.AddTagToPageAsync(id, request.Name);
                     return TypedResults.NoContent();

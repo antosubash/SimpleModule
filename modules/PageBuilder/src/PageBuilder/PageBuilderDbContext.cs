@@ -20,11 +20,6 @@ public class PageBuilderDbContext(
         modelBuilder.ApplyConfiguration(new PageConfiguration());
         modelBuilder.ApplyConfiguration(new PageTemplateConfiguration());
         modelBuilder.ApplyConfiguration(new PageTagConfiguration());
-        modelBuilder.Entity<Page>().HasQueryFilter(p => p.DeletedAt == null);
-        modelBuilder.Entity<Page>()
-            .HasMany(p => p.Tags)
-            .WithOne()
-            .HasForeignKey("PageId");
         modelBuilder.ApplyModuleSchema("PageBuilder", dbOptions.Value);
     }
 

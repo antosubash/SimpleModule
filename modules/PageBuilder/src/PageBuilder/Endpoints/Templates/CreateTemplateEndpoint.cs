@@ -15,7 +15,7 @@ public class CreateTemplateEndpoint : IEndpoint
                 async (CreatePageTemplateRequest request, IPageBuilderContracts pageBuilder) =>
                 {
                     if (string.IsNullOrWhiteSpace(request.Name))
-                        return Results.BadRequest("Template name is required.");
+                        throw new ArgumentException("Template name is required.", nameof(request));
 
                     var template = await pageBuilder.CreateTemplateAsync(request);
                     return TypedResults.Created($"/api/pagebuilder/templates/{template.Id}", template);
