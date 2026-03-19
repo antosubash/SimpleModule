@@ -103,6 +103,9 @@ builder.Services.AddModuleDbContext<HostDbContext>(
 // Collect module menu items into a singleton registry
 builder.Services.CollectModuleMenuItems();
 
+// Collect module settings definitions into a singleton registry
+builder.Services.CollectModuleSettings();
+
 // Smart auth: Bearer header → OpenIddict validation; otherwise → Identity cookies
 builder
     .Services.AddAuthentication()
