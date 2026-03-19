@@ -8,6 +8,11 @@ import {
   Checkbox,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@simplemodule/ui';
 import { useState } from 'react';
 
@@ -206,15 +211,15 @@ export default function ClientsEdit({
               </div>
               <div>
                 <Label htmlFor="clientType">Client Type</Label>
-                <select
-                  id="clientType"
-                  name="clientType"
-                  defaultValue={client.clientType ?? 'public'}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="public">Public</option>
-                  <option value="confidential">Confidential</option>
-                </select>
+                <Select defaultValue={client.clientType ?? 'public'} name="clientType">
+                  <SelectTrigger id="clientType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="confidential">Confidential</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <Button type="submit">Save</Button>
             </form>

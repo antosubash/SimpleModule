@@ -1,11 +1,6 @@
 import { router } from '@inertiajs/react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@simplemodule/ui';
-
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-}
+import type { Product } from '../types';
 
 interface Props {
   product: Product;

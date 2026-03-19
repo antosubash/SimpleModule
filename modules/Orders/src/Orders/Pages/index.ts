@@ -1,9 +1,5 @@
-import Create from './Create';
-import Edit from './Edit';
-import List from './List';
-
 export const pages: Record<string, any> = {
-  'Orders/List': List,
-  'Orders/Create': Create,
-  'Orders/Edit': Edit,
+  'Orders/List': () => import('./List'),
+  'Orders/Create': () => import('./Create'),
+  'Orders/Edit': () => import('./Edit'),
 };

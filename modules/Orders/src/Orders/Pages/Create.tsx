@@ -1,5 +1,16 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@simplemodule/ui';
 import { useState } from 'react';
 import type { OrderItem } from '../types';
 
@@ -90,17 +101,21 @@ export default function Create({ products }: Props) {
               <div className="space-y-2">
                 {items.map((item, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    <select
-                      value={item.productId}
-                      onChange={(e) => updateItem(index, 'productId', Number(e.target.value))}
-                      className="flex-1 h-11 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text transition-all duration-200 outline-none focus:border-primary focus:ring-4 focus:ring-primary-ring"
+                    <Select
+                      value={String(item.productId)}
+                      onValueChange={(value) => updateItem(index, 'productId', Number(value))}
                     >
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} (${p.price.toFixed(2)})
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p.id} value={String(p.id)}>
+                            {p.name} (${p.price.toFixed(2)})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Input
                       type="number"
                       value={item.quantity}

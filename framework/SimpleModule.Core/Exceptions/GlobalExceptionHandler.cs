@@ -22,6 +22,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 ErrorMessages.ValidationErrorTitle,
                 ve.Errors
             ),
+            ArgumentException => (
+                StatusCodes.Status400BadRequest,
+                ErrorMessages.ValidationErrorTitle,
+                null
+            ),
             NotFoundException => (StatusCodes.Status404NotFound, ErrorMessages.NotFoundTitle, null),
             ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
             _ => (

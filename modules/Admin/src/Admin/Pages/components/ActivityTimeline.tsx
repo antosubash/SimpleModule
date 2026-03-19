@@ -1,3 +1,5 @@
+import { Button } from '@simplemodule/ui';
+
 interface ActivityEntry {
   id: number;
   action: string;
@@ -65,13 +67,9 @@ export function ActivityTimeline({ entries, total, onLoadMore }: ActivityTimelin
         ))}
       </div>
       {entries.length < total && onLoadMore && (
-        <button
-          type="button"
-          onClick={onLoadMore}
-          className="mt-4 text-sm text-primary hover:underline"
-        >
+        <Button variant="ghost" size="sm" className="mt-4" onClick={onLoadMore}>
           Load more ({total - entries.length} remaining)
-        </button>
+        </Button>
       )}
     </div>
   );

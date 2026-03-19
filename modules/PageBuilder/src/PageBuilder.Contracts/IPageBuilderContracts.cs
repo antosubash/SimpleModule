@@ -1,0 +1,25 @@
+namespace SimpleModule.PageBuilder.Contracts;
+
+public interface IPageBuilderContracts
+{
+    Task<IEnumerable<PageSummary>> GetAllPagesAsync();
+    Task<Page?> GetPageByIdAsync(PageId id);
+    Task<Page?> GetPageBySlugAsync(string slug);
+    Task<IEnumerable<PageSummary>> GetPublishedPagesAsync();
+    Task<Page> CreatePageAsync(CreatePageRequest request);
+    Task<Page> UpdatePageAsync(PageId id, UpdatePageRequest request);
+    Task<Page> UpdatePageContentAsync(PageId id, UpdatePageContentRequest request);
+    Task DeletePageAsync(PageId id);
+    Task<Page> PublishPageAsync(PageId id);
+    Task<Page> UnpublishPageAsync(PageId id);
+    Task<IEnumerable<PageSummary>> GetTrashedPagesAsync();
+    Task<Page> RestorePageAsync(PageId id);
+    Task PermanentDeletePageAsync(PageId id);
+    Task<IEnumerable<PageTemplate>> GetAllTemplatesAsync();
+    Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request);
+    Task DeleteTemplateAsync(PageTemplateId id);
+    Task<IEnumerable<PageTag>> GetAllTagsAsync();
+    Task<PageTag> GetOrCreateTagAsync(string name);
+    Task AddTagToPageAsync(PageId pageId, string tagName);
+    Task RemoveTagFromPageAsync(PageId pageId, PageTagId tagId);
+}

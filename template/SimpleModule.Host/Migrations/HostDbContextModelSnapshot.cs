@@ -492,6 +492,118 @@ namespace SimpleModule.Host.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SimpleModule.PageBuilder.Contracts.Page", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DraftContent")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MetaDescription")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MetaKeywords")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OgImage")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Order")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("PageBuilder_Pages", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.PageBuilder.Contracts.PageTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PageId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("PageId");
+
+                    b.ToTable("PageBuilder_Tags", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.PageBuilder.Contracts.PageTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("PageBuilder_Templates", (string)null);
+                });
+
             modelBuilder.Entity("SimpleModule.Permissions.Entities.RolePermission", b =>
                 {
                     b.Property<string>("RoleId")
@@ -791,6 +903,13 @@ namespace SimpleModule.Host.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SimpleModule.PageBuilder.Contracts.PageTag", b =>
+                {
+                    b.HasOne("SimpleModule.PageBuilder.Contracts.Page", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("PageId");
+                });
+
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
                 {
                     b.Navigation("Authorizations");
@@ -806,6 +925,11 @@ namespace SimpleModule.Host.Migrations
             modelBuilder.Entity("SimpleModule.Orders.Contracts.Order", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("SimpleModule.PageBuilder.Contracts.Page", b =>
+                {
+                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

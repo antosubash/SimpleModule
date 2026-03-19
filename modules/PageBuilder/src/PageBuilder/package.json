@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "@simplemodule/pagebuilder",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@measured/puck": "^0.18.0"
+  }
+}
