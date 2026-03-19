@@ -37,6 +37,9 @@
         <Project Path="modules/Permissions/src/Permissions/Permissions.csproj" />
         <Project Path="modules/Permissions/tests/Permissions.Tests/Permissions.Tests.csproj" />
     </Folder>
+    <Folder Name="/modules/OpenIddict/">
+        <Project Path="modules/OpenIddict/src/OpenIddict.Contracts/OpenIddict.Contracts.csproj" />
+    </Folder>
     <Folder Name="/modules/Admin/">
         <Project Path="modules/Admin/src/Admin.Contracts/Admin.Contracts.csproj" />
         <Project Path="modules/Admin/src/Admin/Admin.csproj" />
