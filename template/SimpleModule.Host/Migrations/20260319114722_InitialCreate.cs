@@ -31,6 +31,51 @@ namespace SimpleModule.Host.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OpenIddict_OpenIddictApplications",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    ApplicationType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    ClientId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    ClientSecret = table.Column<string>(type: "TEXT", nullable: true),
+                    ClientType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    ConsentType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    DisplayName = table.Column<string>(type: "TEXT", nullable: true),
+                    DisplayNames = table.Column<string>(type: "TEXT", nullable: true),
+                    JsonWebKeySet = table.Column<string>(type: "TEXT", nullable: true),
+                    Permissions = table.Column<string>(type: "TEXT", nullable: true),
+                    PostLogoutRedirectUris = table.Column<string>(type: "TEXT", nullable: true),
+                    Properties = table.Column<string>(type: "TEXT", nullable: true),
+                    RedirectUris = table.Column<string>(type: "TEXT", nullable: true),
+                    Requirements = table.Column<string>(type: "TEXT", nullable: true),
+                    Settings = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OpenIddict_OpenIddictApplications", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OpenIddict_OpenIddictScopes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Description = table.Column<string>(type: "TEXT", nullable: true),
+                    Descriptions = table.Column<string>(type: "TEXT", nullable: true),
+                    DisplayName = table.Column<string>(type: "TEXT", nullable: true),
+                    DisplayNames = table.Column<string>(type: "TEXT", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Properties = table.Column<string>(type: "TEXT", nullable: true),
+                    Resources = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OpenIddict_OpenIddictScopes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Orders_Orders",
                 columns: table => new
                 {
@@ -127,48 +172,27 @@ namespace SimpleModule.Host.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users_OpenIddictApplications",
+                name: "OpenIddict_OpenIddictAuthorizations",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
-                    ApplicationType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    ClientId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    ClientSecret = table.Column<string>(type: "TEXT", nullable: true),
-                    ClientType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    ApplicationId = table.Column<string>(type: "TEXT", nullable: true),
                     ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    ConsentType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    DisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    DisplayNames = table.Column<string>(type: "TEXT", nullable: true),
-                    JsonWebKeySet = table.Column<string>(type: "TEXT", nullable: true),
-                    Permissions = table.Column<string>(type: "TEXT", nullable: true),
-                    PostLogoutRedirectUris = table.Column<string>(type: "TEXT", nullable: true),
+                    CreationDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Properties = table.Column<string>(type: "TEXT", nullable: true),
-                    RedirectUris = table.Column<string>(type: "TEXT", nullable: true),
-                    Requirements = table.Column<string>(type: "TEXT", nullable: true),
-                    Settings = table.Column<string>(type: "TEXT", nullable: true)
+                    Scopes = table.Column<string>(type: "TEXT", nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Subject = table.Column<string>(type: "TEXT", maxLength: 400, nullable: true),
+                    Type = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users_OpenIddictApplications", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Users_OpenIddictScopes",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: true),
-                    Descriptions = table.Column<string>(type: "TEXT", nullable: true),
-                    DisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    DisplayNames = table.Column<string>(type: "TEXT", nullable: true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    Properties = table.Column<string>(type: "TEXT", nullable: true),
-                    Resources = table.Column<string>(type: "TEXT", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users_OpenIddictScopes", x => x.Id);
+                    table.PrimaryKey("PK_OpenIddict_OpenIddictAuthorizations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OpenIddict_OpenIddictAuthorizations_OpenIddict_OpenIddictApplications_ApplicationId",
+                        column: x => x.ApplicationId,
+                        principalTable: "OpenIddict_OpenIddictApplications",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -297,31 +321,7 @@ namespace SimpleModule.Host.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users_OpenIddictAuthorizations",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    ApplicationId = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    CreationDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Properties = table.Column<string>(type: "TEXT", nullable: true),
-                    Scopes = table.Column<string>(type: "TEXT", nullable: true),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Subject = table.Column<string>(type: "TEXT", maxLength: 400, nullable: true),
-                    Type = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users_OpenIddictAuthorizations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Users_OpenIddictAuthorizations_Users_OpenIddictApplications_ApplicationId",
-                        column: x => x.ApplicationId,
-                        principalTable: "Users_OpenIddictApplications",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Users_OpenIddictTokens",
+                name: "OpenIddict_OpenIddictTokens",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
@@ -340,16 +340,16 @@ namespace SimpleModule.Host.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users_OpenIddictTokens", x => x.Id);
+                    table.PrimaryKey("PK_OpenIddict_OpenIddictTokens", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_OpenIddictTokens_Users_OpenIddictApplications_ApplicationId",
+                        name: "FK_OpenIddict_OpenIddictTokens_OpenIddict_OpenIddictApplications_ApplicationId",
                         column: x => x.ApplicationId,
-                        principalTable: "Users_OpenIddictApplications",
+                        principalTable: "OpenIddict_OpenIddictApplications",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Users_OpenIddictTokens_Users_OpenIddictAuthorizations_AuthorizationId",
+                        name: "FK_OpenIddict_OpenIddictTokens_OpenIddict_OpenIddictAuthorizations_AuthorizationId",
                         column: x => x.AuthorizationId,
-                        principalTable: "Users_OpenIddictAuthorizations",
+                        principalTable: "OpenIddict_OpenIddictAuthorizations",
                         principalColumn: "Id");
                 });
 
@@ -409,6 +409,39 @@ namespace SimpleModule.Host.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OpenIddict_OpenIddictApplications_ClientId",
+                table: "OpenIddict_OpenIddictApplications",
+                column: "ClientId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OpenIddict_OpenIddictAuthorizations_ApplicationId_Status_Subject_Type",
+                table: "OpenIddict_OpenIddictAuthorizations",
+                columns: new[] { "ApplicationId", "Status", "Subject", "Type" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OpenIddict_OpenIddictScopes_Name",
+                table: "OpenIddict_OpenIddictScopes",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OpenIddict_OpenIddictTokens_ApplicationId_Status_Subject_Type",
+                table: "OpenIddict_OpenIddictTokens",
+                columns: new[] { "ApplicationId", "Status", "Subject", "Type" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OpenIddict_OpenIddictTokens_AuthorizationId",
+                table: "OpenIddict_OpenIddictTokens",
+                column: "AuthorizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OpenIddict_OpenIddictTokens_ReferenceId",
+                table: "OpenIddict_OpenIddictTokens",
+                column: "ReferenceId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_AspNetRoleClaims_RoleId",
                 table: "Users_AspNetRoleClaims",
                 column: "RoleId");
@@ -444,39 +477,6 @@ namespace SimpleModule.Host.Migrations
                 table: "Users_AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_OpenIddictApplications_ClientId",
-                table: "Users_OpenIddictApplications",
-                column: "ClientId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_OpenIddictAuthorizations_ApplicationId_Status_Subject_Type",
-                table: "Users_OpenIddictAuthorizations",
-                columns: new[] { "ApplicationId", "Status", "Subject", "Type" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_OpenIddictScopes_Name",
-                table: "Users_OpenIddictScopes",
-                column: "Name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_OpenIddictTokens_ApplicationId_Status_Subject_Type",
-                table: "Users_OpenIddictTokens",
-                columns: new[] { "ApplicationId", "Status", "Subject", "Type" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_OpenIddictTokens_AuthorizationId",
-                table: "Users_OpenIddictTokens",
-                column: "AuthorizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_OpenIddictTokens_ReferenceId",
-                table: "Users_OpenIddictTokens",
-                column: "ReferenceId",
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -484,6 +484,12 @@ namespace SimpleModule.Host.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Admin_AuditLogEntries");
+
+            migrationBuilder.DropTable(
+                name: "OpenIddict_OpenIddictScopes");
+
+            migrationBuilder.DropTable(
+                name: "OpenIddict_OpenIddictTokens");
 
             migrationBuilder.DropTable(
                 name: "Orders_OrderItems");
@@ -513,10 +519,7 @@ namespace SimpleModule.Host.Migrations
                 name: "Users_AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Users_OpenIddictScopes");
-
-            migrationBuilder.DropTable(
-                name: "Users_OpenIddictTokens");
+                name: "OpenIddict_OpenIddictAuthorizations");
 
             migrationBuilder.DropTable(
                 name: "Orders_Orders");
@@ -528,10 +531,7 @@ namespace SimpleModule.Host.Migrations
                 name: "Users_AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Users_OpenIddictAuthorizations");
-
-            migrationBuilder.DropTable(
-                name: "Users_OpenIddictApplications");
+                name: "OpenIddict_OpenIddictApplications");
         }
     }
 }

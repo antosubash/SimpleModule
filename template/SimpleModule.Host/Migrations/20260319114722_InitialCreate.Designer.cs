@@ -11,7 +11,7 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260319111648_InitialCreate")]
+    [Migration("20260319114722_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -184,7 +184,7 @@ namespace SimpleModule.Host.Migrations
                     b.HasIndex("ClientId")
                         .IsUnique();
 
-                    b.ToTable("Users_OpenIddictApplications", (string)null);
+                    b.ToTable("OpenIddict_OpenIddictApplications", (string)null);
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", b =>
@@ -226,7 +226,7 @@ namespace SimpleModule.Host.Migrations
 
                     b.HasIndex("ApplicationId", "Status", "Subject", "Type");
 
-                    b.ToTable("Users_OpenIddictAuthorizations", (string)null);
+                    b.ToTable("OpenIddict_OpenIddictAuthorizations", (string)null);
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreScope", b =>
@@ -267,7 +267,7 @@ namespace SimpleModule.Host.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Users_OpenIddictScopes", (string)null);
+                    b.ToTable("OpenIddict_OpenIddictScopes", (string)null);
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreToken", b =>
@@ -327,7 +327,7 @@ namespace SimpleModule.Host.Migrations
 
                     b.HasIndex("ApplicationId", "Status", "Subject", "Type");
 
-                    b.ToTable("Users_OpenIddictTokens", (string)null);
+                    b.ToTable("OpenIddict_OpenIddictTokens", (string)null);
                 });
 
             modelBuilder.Entity("SimpleModule.Admin.Entities.AuditLogEntry", b =>
