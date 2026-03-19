@@ -38,7 +38,7 @@ public class EndpointExtensionsEmitterTests
 
         endpointExt
             .Should()
-            .Contain("var group = app.MapGroup(\"/api/products\").WithTags(\"Products\");");
+            .Contain("var group = app.MapGroup(\"/api/products\").WithTags(\"Products\").RequireAuthorization();");
         endpointExt.Should().Contain("new global::TestApp.Endpoints.ListEndpoint().Map(group);");
     }
 
@@ -257,7 +257,7 @@ public class EndpointExtensionsEmitterTests
         endpointExt
             .Should()
             .Contain(
-                "var viewGroup = app.MapGroup(\"/products\").WithTags(\"Products\").ExcludeFromDescription();"
+                "var viewGroup = app.MapGroup(\"/products\").WithTags(\"Products\").ExcludeFromDescription().RequireAuthorization();"
             );
         endpointExt.Should().Contain("new global::TestApp.Views.BrowseEndpoint().Map(viewGroup);");
     }
