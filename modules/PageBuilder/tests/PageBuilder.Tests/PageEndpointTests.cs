@@ -75,7 +75,7 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var updated = await response.Content.ReadFromJsonAsync<Page>();
-        updated!.Content.Should().Be("""{"content":[],"root":{}}""");
+        updated!.DraftContent.Should().Be("""{"content":[],"root":{}}""");
     }
 
     [Fact]
