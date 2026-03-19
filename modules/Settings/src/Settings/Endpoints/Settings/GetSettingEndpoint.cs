@@ -16,7 +16,14 @@ public class GetSettingEndpoint : IEndpoint
                 {
                     var value = await settings.GetSettingAsync(key, scope);
                     return value is not null
-                        ? Results.Ok(new { key, value, scope })
+                        ? Results.Ok(
+                            new
+                            {
+                                key,
+                                value,
+                                scope,
+                            }
+                        )
                         : Results.NotFound();
                 }
             )

@@ -28,7 +28,7 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
   };
 
   const handleReset = async (key: string) => {
-    await fetch(`/api/settings/${key}?scope=2`, { method: 'DELETE' });
+    await fetch(`/api/settings/me/${key}`, { method: 'DELETE' });
     setSettings((prev) =>
       prev.map((s) =>
         s.definition.key === key
