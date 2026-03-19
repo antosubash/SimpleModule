@@ -2,6 +2,20 @@ import { router } from '@inertiajs/react';
 import { Puck, usePuck } from '@measured/puck';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+} from '@simplemodule/ui';
 import type { Page, PageTemplate } from '../types';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';
@@ -67,118 +81,40 @@ function HeaderActions({ page }: { page: Page | null }) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setShowSaveTemplate(true)}
-        style={{
-          background: 'none',
-          border: '1px solid #e5e5e5',
-          borderRadius: 4,
-          cursor: 'pointer',
-          padding: '4px 12px',
-          fontSize: 14,
-          color: '#555',
-        }}
-      >
+      <Button variant="outline" size="sm" onClick={() => setShowSaveTemplate(true)}>
         Save as Template
-      </button>
-      <button
-        type="button"
-        onClick={handleSaveDraft}
-        disabled={saving}
-        style={{
-          background: 'none',
-          border: '1px solid #e5e5e5',
-          borderRadius: 4,
-          cursor: 'pointer',
-          padding: '4px 12px',
-          fontSize: 14,
-          color: '#555',
-          fontWeight: 500,
-        }}
-      >
+      </Button>
+      <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={saving}>
         {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Draft'}
-      </button>
-      {showSaveTemplate &&
-        createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 10001,
-              background: 'rgba(0,0,0,0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            onClick={() => setShowSaveTemplate(false)}
-          >
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 8,
-                padding: 24,
-                minWidth: 360,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Save as Template</h3>
-              <input
-                type="text"
-                placeholder="Template name"
+      </Button>
+      <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save as Template</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="template-name">Template name</Label>
+              <Input
+                id="template-name"
+                placeholder="e.g. Landing Page"
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSaveAsTemplate();
                 }}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  border: '1px solid #ddd',
-                  borderRadius: 6,
-                  fontSize: 14,
-                  marginBottom: 16,
-                  boxSizing: 'border-box',
-                }}
                 autoFocus
               />
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowSaveTemplate(false)}
-                  style={{
-                    padding: '8px 16px',
-                    border: '1px solid #ddd',
-                    borderRadius: 6,
-                    background: 'white',
-                    cursor: 'pointer',
-                    fontSize: 14,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveAsTemplate}
-                  style={{
-                    padding: '8px 16px',
-                    border: 'none',
-                    borderRadius: 6,
-                    background: '#16a34a',
-                    color: 'white',
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    fontWeight: 500,
-                  }}
-                >
-                  Save
-                </button>
-              </div>
             </div>
-          </div>,
-          document.body,
-        )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAsTemplate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -246,65 +182,28 @@ export default function Editor({ page, templates }: Props) {
 
   if (showTemplatePicker) {
     const picker = (
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9999,
-          background: 'white',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <div style={{ maxWidth: 600, width: '100%', padding: 32 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Choose a template</h2>
-          <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>
+      <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center">
+        <div className="max-w-xl w-full px-8">
+          <h2 className="text-2xl font-bold tracking-tight mb-2">Choose a template</h2>
+          <p className="text-text-muted text-sm mb-6">
             Start from a template or create a blank page.
           </p>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-              gap: 12,
-              marginBottom: 24,
-            }}
-          >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 mb-6">
             <button
               type="button"
               onClick={handleStartBlank}
-              style={{
-                padding: 24,
-                border: '2px dashed #ddd',
-                borderRadius: 8,
-                cursor: 'pointer',
-                background: 'none',
-                textAlign: 'center',
-                color: '#666',
-                fontSize: 14,
-              }}
+              className="p-6 border-2 border-dashed border-border rounded-lg cursor-pointer bg-transparent text-center text-text-muted text-sm hover:border-primary/50 transition-colors"
             >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>+</div>
+              <div className="text-3xl mb-2">+</div>
               Blank Page
             </button>
             {templates?.map((t) => (
-              <button
+              <Card
                 key={t.id}
-                type="button"
+                className="cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => handleSelectTemplate(t)}
-                style={{
-                  padding: 24,
-                  border: '1px solid #e5e5e5',
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  background: '#fafafa',
-                  textAlign: 'center',
-                  fontSize: 14,
-                  fontWeight: 500,
-                }}
               >
-                <div style={{ fontSize: 20, marginBottom: 8 }}>
+                <CardContent className="p-6 text-center">
                   <svg
                     width="24"
                     height="24"
@@ -312,29 +211,20 @@ export default function Editor({ page, templates }: Props) {
                     stroke="currentColor"
                     strokeWidth="2"
                     viewBox="0 0 24 24"
-                    style={{ margin: '0 auto' }}
+                    className="mx-auto mb-2"
+                    aria-hidden="true"
                   >
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
                     <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
                   </svg>
-                </div>
-                {t.name}
-              </button>
+                  <span className="text-sm font-medium">{t.name}</span>
+                </CardContent>
+              </Card>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => router.visit('/admin/pages')}
-            style={{
-              color: '#666',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-          >
+          <Button variant="ghost" onClick={() => router.visit('/admin/pages')}>
             Cancel
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -342,7 +232,7 @@ export default function Editor({ page, templates }: Props) {
   }
 
   const editor = (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'white' }}>
+    <div className="fixed inset-0 z-[9999] bg-white">
       <Puck
         key={JSON.stringify(initialData)}
         config={puckConfig}
@@ -357,25 +247,11 @@ export default function Editor({ page, templates }: Props) {
           ),
         }}
       />
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => router.visit('/admin/pages')}
-        style={{
-          position: 'absolute',
-          top: 8,
-          left: 8,
-          zIndex: 10000,
-          background: 'white',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          color: '#333',
-          fontSize: 14,
-          padding: '4px 12px',
-        }}
+        className="absolute top-2 left-2 z-[10000] gap-1"
       >
         <svg
           width="16"
@@ -389,7 +265,7 @@ export default function Editor({ page, templates }: Props) {
           <path d="M15 19l-7-7 7-7" />
         </svg>
         Back
-      </button>
+      </Button>
     </div>
   );
 
