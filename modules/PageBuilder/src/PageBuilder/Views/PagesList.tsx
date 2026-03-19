@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { Card, CardContent } from '@simplemodule/ui';
 import type { PageSummary } from '../types';
 
 interface Props {
@@ -12,18 +13,17 @@ export default function PagesList({ pages }: Props) {
       {pages.length === 0 ? (
         <p className="text-text-muted">No published pages yet.</p>
       ) : (
-        <ul className="space-y-3">
+        <div className="space-y-3">
           {pages.map((page) => (
-            <li key={page.id}>
-              <Link
-                href={`/p/${page.slug}`}
-                className="block p-4 border border-border rounded-lg hover:bg-surface-elevated transition-colors"
-              >
-                <span className="font-medium">{page.title}</span>
-              </Link>
-            </li>
+            <Link key={page.id} href={`/p/${page.slug}`}>
+              <Card className="hover:bg-surface-elevated transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <span className="font-medium">{page.title}</span>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
