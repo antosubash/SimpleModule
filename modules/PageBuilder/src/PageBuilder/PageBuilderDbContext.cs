@@ -23,8 +23,8 @@ public class PageBuilderDbContext(
         modelBuilder.Entity<Page>().HasQueryFilter(p => p.DeletedAt == null);
         modelBuilder.Entity<Page>()
             .HasMany(p => p.Tags)
-            .WithMany()
-            .UsingEntity("PagePageTag");
+            .WithOne()
+            .HasForeignKey("PageId");
         modelBuilder.ApplyModuleSchema("PageBuilder", dbOptions.Value);
     }
 
