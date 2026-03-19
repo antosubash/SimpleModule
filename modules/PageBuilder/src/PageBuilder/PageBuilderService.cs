@@ -22,6 +22,7 @@ public partial class PageBuilderService(
                 Title = p.Title,
                 Slug = p.Slug,
                 IsPublished = p.IsPublished,
+                HasDraft = p.DraftContent != null,
                 Order = p.Order,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
@@ -53,6 +54,7 @@ public partial class PageBuilderService(
                 Title = p.Title,
                 Slug = p.Slug,
                 IsPublished = p.IsPublished,
+                HasDraft = p.DraftContent != null,
                 Order = p.Order,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
@@ -106,7 +108,7 @@ public partial class PageBuilderService(
         var page = await db.Pages.FindAsync(id)
             ?? throw new NotFoundException("Page", id);
 
-        page.Content = request.Content;
+        page.DraftContent = request.Content;
         page.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
@@ -130,6 +132,12 @@ public partial class PageBuilderService(
     {
         var page = await db.Pages.FindAsync(id)
             ?? throw new NotFoundException("Page", id);
+
+        if (!string.IsNullOrEmpty(page.DraftContent))
+        {
+            page.Content = page.DraftContent;
+            page.DraftContent = null;
+        }
 
         page.IsPublished = true;
         page.UpdatedAt = DateTime.UtcNow;

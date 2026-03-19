@@ -70,7 +70,7 @@ public sealed class PageBuilderServiceTests : IDisposable
             new UpdatePageContentRequest { Content = """{"content":[],"root":{}}""" }
         );
 
-        updated.Content.Should().Be("""{"content":[],"root":{}}""");
+        updated.DraftContent.Should().Be("""{"content":[],"root":{}}""");
         updated.UpdatedAt.Should().BeOnOrAfter(before);
     }
 
@@ -125,6 +125,36 @@ public sealed class PageBuilderServiceTests : IDisposable
         var unpublished = await _sut.UnpublishPageAsync(page.Id);
 
         unpublished.IsPublished.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CreatePage_DraftContentIsNull()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Draft Test" });
+        page.DraftContent.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateContent_SavesToDraftContent_NotContent()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Draft Save" });
+        var updated = await _sut.UpdatePageContentAsync(
+            page.Id,
+            new UpdatePageContentRequest { Content = """{"content":[{"type":"Text"}],"root":{}}""" }
+        );
+        updated.DraftContent.Should().Be("""{"content":[{"type":"Text"}],"root":{}}""");
+        updated.Content.Should().Be("{}");
+    }
+
+    [Fact]
+    public async Task PublishPage_CopiesDraftToContent_ClearsDraft()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Publish Draft" });
+        await _sut.UpdatePageContentAsync(page.Id, new UpdatePageContentRequest { Content = """{"content":[{"type":"Hero"}],"root":{}}""" });
+        var published = await _sut.PublishPageAsync(page.Id);
+        published.Content.Should().Be("""{"content":[{"type":"Hero"}],"root":{}}""");
+        published.DraftContent.Should().BeNull();
+        published.IsPublished.Should().BeTrue();
     }
 
     [Fact]
