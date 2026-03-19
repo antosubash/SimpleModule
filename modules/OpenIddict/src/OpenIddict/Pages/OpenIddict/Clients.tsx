@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { AdminLayout } from '@simplemodule/client/admin-layout';
 import {
   Badge,
   Button,
@@ -83,3 +84,5 @@ export default function Clients({ clients }: Props) {
     </div>
   );
 }
+
+Clients.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

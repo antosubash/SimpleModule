@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { AdminLayout } from '@simplemodule/client/admin-layout';
 import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
 
 interface Role {
@@ -102,3 +103,5 @@ export default function UsersCreate({ allRoles }: Props) {
     </div>
   );
 }
+
+UsersCreate.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { AdminLayout } from '@simplemodule/client/admin-layout';
 import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
 import { PermissionGroups } from '../components/PermissionGroups';
 
@@ -63,3 +64,5 @@ export default function RolesCreate({ permissionsByModule }: Props) {
     </div>
   );
 }
+
+RolesCreate.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

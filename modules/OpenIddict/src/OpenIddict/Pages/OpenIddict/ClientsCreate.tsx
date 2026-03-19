@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { AdminLayout } from '@simplemodule/client/admin-layout';
 import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
 import { useState } from 'react';
 
@@ -68,3 +69,5 @@ export default function ClientsCreate() {
     </div>
   );
 }
+
+ClientsCreate.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

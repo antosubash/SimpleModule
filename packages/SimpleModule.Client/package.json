@@ -7,10 +7,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./vite": "./src/vite-plugin-vendor.ts",
-    "./resolve-page": "./src/resolve-page.ts"
+    "./resolve-page": "./src/resolve-page.ts",
+    "./admin-layout": "./src/admin-layout.tsx"
   },
   "peerDependencies": {
     "@inertiajs/react": "^2.0.0",
+    "@simplemodule/ui": "*",
     "esbuild": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
