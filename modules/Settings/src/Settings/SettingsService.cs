@@ -121,6 +121,16 @@ public partial class SettingsService(
         if (filter?.Scope is not null)
             query = query.Where(s => s.Scope == filter.Scope.Value);
 
+        if (!string.IsNullOrEmpty(filter?.Group))
+        {
+            var keysInGroup = definitions
+                .GetDefinitions()
+                .Where(d => d.Group == filter.Group)
+                .Select(d => d.Key)
+                .ToList();
+            query = query.Where(s => keysInGroup.Contains(s.Key));
+        }
+
         var entities = await query.ToListAsync();
         return entities.Select(e => new Setting
         {
