@@ -22,5 +22,6 @@
     <ProjectReference Include="..\..\modules\PageBuilder\src\PageBuilder\PageBuilder.csproj" />
     <ProjectReference Include="..\..\modules\Permissions\src\Permissions\Permissions.csproj" />
     <ProjectReference Include="..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Settings\src\Settings\Settings.csproj" />
   </ItemGroup>
 </Project>

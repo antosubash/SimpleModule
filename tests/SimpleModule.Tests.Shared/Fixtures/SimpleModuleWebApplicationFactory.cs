@@ -15,6 +15,7 @@ using SimpleModule.Orders;
 using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
+using SimpleModule.Settings;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -41,6 +42,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<AdminDbContext>(services);
             ReplaceDbContext<PageBuilderDbContext>(services);
             ReplaceDbContext<PermissionsDbContext>(services);
+            ReplaceDbContext<SettingsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
