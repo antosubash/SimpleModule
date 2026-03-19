@@ -38,7 +38,9 @@ public class EndpointExtensionsEmitterTests
 
         endpointExt
             .Should()
-            .Contain("var group = app.MapGroup(\"/api/products\").WithTags(\"Products\").RequireAuthorization();");
+            .Contain(
+                "var group = app.MapGroup(\"/api/products\").WithTags(\"Products\").RequireAuthorization();"
+            );
         endpointExt.Should().Contain("new global::TestApp.Endpoints.ListEndpoint().Map(group);");
     }
 

@@ -176,9 +176,7 @@ public class AdminUsersEndpoint : IEndpoint
                     userId
                 );
 
-                foreach (
-                    var perm in currentPermissions.Where(p => !newPermissions.Contains(p))
-                )
+                foreach (var perm in currentPermissions.Where(p => !newPermissions.Contains(p)))
                 {
                     await audit.LogAsync(
                         id,
@@ -188,9 +186,7 @@ public class AdminUsersEndpoint : IEndpoint
                     );
                 }
 
-                foreach (
-                    var perm in newPermissions.Where(p => !currentPermissions.Contains(p))
-                )
+                foreach (var perm in newPermissions.Where(p => !currentPermissions.Contains(p)))
                 {
                     await audit.LogAsync(
                         id,

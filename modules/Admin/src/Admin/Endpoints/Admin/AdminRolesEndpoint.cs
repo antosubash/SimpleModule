@@ -131,15 +131,14 @@ public class AdminRolesEndpoint : IEndpoint
                         .ToHashSet(StringComparer.Ordinal);
 
                     var roleId = RoleId.From(id);
-                    var currentPermissions =
-                        await permissionContracts.GetPermissionsForRoleAsync(roleId);
+                    var currentPermissions = await permissionContracts.GetPermissionsForRoleAsync(
+                        roleId
+                    );
 
                     var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
                     // Audit removed permissions
-                    foreach (
-                        var perm in currentPermissions.Where(p => !newPermissions.Contains(p))
-                    )
+                    foreach (var perm in currentPermissions.Where(p => !newPermissions.Contains(p)))
                     {
                         await audit.LogAsync(
                             role.Id,
@@ -150,9 +149,7 @@ public class AdminRolesEndpoint : IEndpoint
                     }
 
                     // Audit added permissions
-                    foreach (
-                        var perm in newPermissions.Where(p => !currentPermissions.Contains(p))
-                    )
+                    foreach (var perm in newPermissions.Where(p => !currentPermissions.Contains(p)))
                     {
                         await audit.LogAsync(
                             role.Id,
@@ -162,10 +159,7 @@ public class AdminRolesEndpoint : IEndpoint
                         );
                     }
 
-                    await permissionContracts.SetPermissionsForRoleAsync(
-                        roleId,
-                        newPermissions
-                    );
+                    await permissionContracts.SetPermissionsForRoleAsync(roleId, newPermissions);
 
                     return Results.Redirect($"/admin/roles/{id}/edit?tab=permissions");
                 }

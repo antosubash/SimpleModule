@@ -44,9 +44,7 @@ public class ClientsActionEndpoint : IEndpoint
                 }
 
                 var form = await context.Request.ReadFormAsync();
-                foreach (
-                    var uri in form["redirectUris"].Where(u => !string.IsNullOrWhiteSpace(u))
-                )
+                foreach (var uri in form["redirectUris"].Where(u => !string.IsNullOrWhiteSpace(u)))
                 {
                     descriptor.RedirectUris.Add(new Uri(uri!));
                 }
@@ -58,9 +56,7 @@ public class ClientsActionEndpoint : IEndpoint
                     descriptor.PostLogoutRedirectUris.Add(new Uri(uri!));
                 }
 
-                foreach (
-                    var perm in form["permissions"].Where(p => !string.IsNullOrWhiteSpace(p))
-                )
+                foreach (var perm in form["permissions"].Where(p => !string.IsNullOrWhiteSpace(p)))
                 {
                     descriptor.Permissions.Add(perm!);
                 }
@@ -114,9 +110,7 @@ public class ClientsActionEndpoint : IEndpoint
                 descriptor.PostLogoutRedirectUris.Clear();
 
                 var form = await context.Request.ReadFormAsync();
-                foreach (
-                    var uri in form["redirectUris"].Where(u => !string.IsNullOrWhiteSpace(u))
-                )
+                foreach (var uri in form["redirectUris"].Where(u => !string.IsNullOrWhiteSpace(u)))
                 {
                     descriptor.RedirectUris.Add(new Uri(uri!));
                 }
@@ -149,9 +143,7 @@ public class ClientsActionEndpoint : IEndpoint
                 descriptor.Permissions.Clear();
 
                 var form = await context.Request.ReadFormAsync();
-                foreach (
-                    var perm in form["permissions"].Where(p => !string.IsNullOrWhiteSpace(p))
-                )
+                foreach (var perm in form["permissions"].Where(p => !string.IsNullOrWhiteSpace(p)))
                 {
                     descriptor.Permissions.Add(perm!);
                 }

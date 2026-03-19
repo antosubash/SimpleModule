@@ -28,10 +28,9 @@ public class RolesEndpoint : IViewEndpoint
                     foreach (var role in roles)
                     {
                         var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
-                        var rolePermissions =
-                            await permissionContracts.GetPermissionsForRoleAsync(
-                                RoleId.From(role.Id)
-                            );
+                        var rolePermissions = await permissionContracts.GetPermissionsForRoleAsync(
+                            RoleId.From(role.Id)
+                        );
                         var permissionCount = rolePermissions.Count;
 
                         roleList.Add(

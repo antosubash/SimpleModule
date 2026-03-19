@@ -9,8 +9,8 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 {
     public async Task<IReadOnlySet<string>> GetPermissionsForUserAsync(UserId userId)
     {
-        var perms = await db.UserPermissions
-            .Where(p => p.UserId == userId)
+        var perms = await db
+            .UserPermissions.Where(p => p.UserId == userId)
             .Select(p => p.Permission)
             .ToListAsync();
 
@@ -19,8 +19,8 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 
     public async Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(RoleId roleId)
     {
-        var perms = await db.RolePermissions
-            .Where(p => p.RoleId == roleId)
+        var perms = await db
+            .RolePermissions.Where(p => p.RoleId == roleId)
             .Select(p => p.Permission)
             .ToListAsync();
 
@@ -29,17 +29,18 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 
     public async Task<IReadOnlySet<string>> GetAllPermissionsForUserAsync(
         UserId userId,
-        IEnumerable<RoleId> roleIds)
+        IEnumerable<RoleId> roleIds
+    )
     {
         var roleIdList = roleIds.ToList();
 
-        var rolePerms = await db.RolePermissions
-            .Where(p => roleIdList.Contains(p.RoleId))
+        var rolePerms = await db
+            .RolePermissions.Where(p => roleIdList.Contains(p.RoleId))
             .Select(p => p.Permission)
             .ToListAsync();
 
-        var userPerms = await db.UserPermissions
-            .Where(p => p.UserId == userId)
+        var userPerms = await db
+            .UserPermissions.Where(p => p.UserId == userId)
             .Select(p => p.Permission)
             .ToListAsync();
 
@@ -54,9 +55,7 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 
     public async Task SetPermissionsForUserAsync(UserId userId, IEnumerable<string> permissions)
     {
-        var existing = await db.UserPermissions
-            .Where(p => p.UserId == userId)
-            .ToListAsync();
+        var existing = await db.UserPermissions.Where(p => p.UserId == userId).ToListAsync();
 
         db.UserPermissions.RemoveRange(existing);
 
@@ -70,9 +69,7 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 
     public async Task SetPermissionsForRoleAsync(RoleId roleId, IEnumerable<string> permissions)
     {
-        var existing = await db.RolePermissions
-            .Where(p => p.RoleId == roleId)
-            .ToListAsync();
+        var existing = await db.RolePermissions.Where(p => p.RoleId == roleId).ToListAsync();
 
         db.RolePermissions.RemoveRange(existing);
 
