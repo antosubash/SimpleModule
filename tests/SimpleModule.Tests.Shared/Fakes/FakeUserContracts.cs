@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;
@@ -10,10 +10,10 @@ public class FakeUserContracts : IUserContracts
     public Task<IEnumerable<UserDto>> GetAllUsersAsync() =>
         Task.FromResult<IEnumerable<UserDto>>(Users);
 
-    public Task<UserDto?> GetUserByIdAsync(string id) =>
+    public Task<UserDto?> GetUserByIdAsync(UserId id) =>
         Task.FromResult(Users.FirstOrDefault(u => u.Id == id));
 
-    public Task<UserDto?> GetCurrentUserAsync(string userId) =>
+    public Task<UserDto?> GetCurrentUserAsync(UserId userId) =>
         Task.FromResult(Users.FirstOrDefault(u => u.Id == userId));
 
     private int _nextId = 100;
@@ -22,7 +22,7 @@ public class FakeUserContracts : IUserContracts
     {
         var user = new UserDto
         {
-            Id = (_nextId++).ToString(CultureInfo.InvariantCulture),
+            Id = UserId.From((_nextId++).ToString(CultureInfo.InvariantCulture)),
             Email = request.Email,
             DisplayName = request.DisplayName,
             EmailConfirmed = false,
@@ -32,7 +32,7 @@ public class FakeUserContracts : IUserContracts
         return Task.FromResult(user);
     }
 
-    public Task<UserDto> UpdateUserAsync(string id, UpdateUserRequest request)
+    public Task<UserDto> UpdateUserAsync(UserId id, UpdateUserRequest request)
     {
         var user = Users.FirstOrDefault(u => u.Id == id);
         if (user is null)
@@ -45,7 +45,7 @@ public class FakeUserContracts : IUserContracts
         return Task.FromResult(user);
     }
 
-    public Task DeleteUserAsync(string id)
+    public Task DeleteUserAsync(UserId id)
     {
         var user = Users.FirstOrDefault(u => u.Id == id);
         if (user is null)

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Products.Contracts;
 
@@ -10,7 +10,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
     public async Task<IEnumerable<Product>> GetAllProductsAsync() =>
         await db.Products.ToListAsync();
 
-    public async Task<Product?> GetProductByIdAsync(int id)
+    public async Task<Product?> GetProductByIdAsync(ProductId id)
     {
         var product = await db.Products.FindAsync(id);
         if (product is null)
@@ -21,7 +21,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
         return product;
     }
 
-    public async Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<int> ids)
+    public async Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<ProductId> ids)
     {
         var idList = ids.ToList();
         return await db.Products.Where(p => idList.Contains(p.Id)).ToListAsync();
@@ -39,7 +39,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
         return product;
     }
 
-    public async Task<Product> UpdateProductAsync(int id, UpdateProductRequest request)
+    public async Task<Product> UpdateProductAsync(ProductId id, UpdateProductRequest request)
     {
         var product = await db.Products.FindAsync(id);
         if (product is null)
@@ -57,7 +57,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
         return product;
     }
 
-    public async Task DeleteProductAsync(int id)
+    public async Task DeleteProductAsync(ProductId id)
     {
         var product = await db.Products.FindAsync(id);
         if (product is null)
@@ -72,7 +72,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Product with ID {ProductId} not found")]
-    private static partial void LogProductNotFound(ILogger logger, int productId);
+    private static partial void LogProductNotFound(ILogger logger, ProductId productId);
 
     [LoggerMessage(
         Level = LogLevel.Information,
@@ -80,7 +80,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
     )]
     private static partial void LogProductCreated(
         ILogger logger,
-        int productId,
+        ProductId productId,
         string productName
     );
 
@@ -90,10 +90,10 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
     )]
     private static partial void LogProductUpdated(
         ILogger logger,
-        int productId,
+        ProductId productId,
         string productName
     );
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Product {ProductId} deleted")]
-    private static partial void LogProductDeleted(ILogger logger, int productId);
+    private static partial void LogProductDeleted(ILogger logger, ProductId productId);
 }

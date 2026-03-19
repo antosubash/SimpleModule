@@ -14,7 +14,7 @@ public class GetByIdEndpoint : IEndpoint
         app.MapGet(
                 UsersConstants.RoutePrefix + "/{id}",
                 async Task<Results<Ok<UserDto>, NotFound>> (
-                    string id,
+                    UserId id,
                     IUserContracts userContracts
                 ) =>
                 {

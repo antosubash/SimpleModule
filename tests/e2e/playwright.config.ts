@@ -44,5 +44,10 @@ export default defineConfig({
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 60_000,
+    env: {
+      ...process.env,
+      ASPNETCORE_URLS: 'https://localhost:5001',
+      Database__DefaultConnection: 'Data Source=e2e-test.db',
+    },
   },
 });

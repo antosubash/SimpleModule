@@ -1,10 +1,11 @@
-﻿using SimpleModule.Core;
+using SimpleModule.Core;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders.Contracts;
 
 [Dto]
 public class CreateOrderRequest
 {
-    public string UserId { get; set; } = string.Empty;
+    public UserId UserId { get; set; }
     public List<OrderItem> Items { get; set; } = new();
 }

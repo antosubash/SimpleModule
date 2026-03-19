@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
     <PackageReference Include="OpenIddict.AspNetCore" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
@@ -23,8 +24,12 @@
     />
     <ProjectReference Include="..\..\modules\Dashboard\src\Dashboard\Dashboard.csproj" />
     <ProjectReference Include="..\..\modules\Users\src\Users\Users.csproj" />
+    <ProjectReference Include="..\..\modules\OpenIddict\src\OpenIddict\OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\Permissions\Permissions.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\Products\Products.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\Orders\Orders.csproj" />
+    <ProjectReference Include="..\..\modules\Admin\src\Admin\Admin.csproj" />
+    <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <!-- Tailwind CSS -->
   <PropertyGroup>
@@ -67,12 +72,9 @@
     <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
   </Target>
   <!-- Extract TypeScript type definitions from source generator output -->
-  <Target
-    Name="ExtractDtoTypeScript"
-    AfterTargets="CoreCompile"
-  >
+  <Target Name="ExtractDtoTypeScript" AfterTargets="CoreCompile">
     <Exec
-      Command="node &quot;$(RepoRoot)tools\extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
+      Command="node &quot;$(RepoRoot)tools/extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
   </Target>

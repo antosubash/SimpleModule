@@ -29,7 +29,23 @@
       "mcp__plugin_playwright_playwright__browser_press_key",
       "mcp__plugin_playwright_playwright__browser_run_code",
       "mcp__plugin_playwright_playwright__browser_network_requests",
-      "mcp__plugin_playwright_playwright__browser_console_messages"
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__aspire__list_apphosts",
+      "mcp__aspire__select_apphost",
+      "mcp__aspire__list_resources",
+      "mcp__aspire__list_console_logs",
+      "mcp__aspire__execute_resource_command",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_resize"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "aspire",
+    "playwright"
+  ]
 }

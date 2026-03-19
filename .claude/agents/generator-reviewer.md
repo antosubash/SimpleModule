@@ -8,7 +8,5 @@ Review source generator code in SimpleModule.Generator for correctness and best 
 2. **Generator API**: Must use `IIncrementalGenerator`, not `ISourceGenerator` (enforced by `EnforceExtendedAnalyzerRules`)
 3. **Symbol comparison**: Always use `SymbolEqualityComparer.Default.Equals()`, never `==` on symbols
 4. **Fully qualified names**: Generated code must use `global::Namespace.Type` format from `SymbolDisplayFormat.FullyQualifiedFormat`
-5. **No reflection**: Generated code must use direct `new` instantiation, no DI resolution of `IModule`
-6. **Cross-assembly discovery**: Generator must scan `compilation.References` for module types, not just syntax in the current project
-7. **Nullable handling**: Use `#nullable enable` in generated code or handle nulls explicitly
-8. **AOT compliance**: Generated code must not use patterns that require runtime code generation
+5. **Cross-assembly discovery**: Generator must scan `compilation.References` for module types, not just syntax in the current project
+6. **Nullable handling**: Use `#nullable enable` in generated code or handle nulls explicitly

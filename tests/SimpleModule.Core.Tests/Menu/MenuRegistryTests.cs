@@ -134,4 +134,29 @@ public class MenuRegistryTests
         registry.GetItems(MenuSection.Navbar).Should().HaveCount(2);
         registry.GetItems(MenuSection.UserDropdown).Should().HaveCount(3);
     }
+
+    [Fact]
+    public void GetItems_AdminSidebar_ReturnsCorrectItems()
+    {
+        var items = new List<MenuItem>
+        {
+            new()
+            {
+                Label = "Users",
+                Url = "/admin/users",
+                Section = MenuSection.AdminSidebar,
+            },
+            new()
+            {
+                Label = "Nav",
+                Url = "/nav",
+                Section = MenuSection.Navbar,
+            },
+        };
+        var registry = new MenuRegistry(items);
+
+        var sidebarItems = registry.GetItems(MenuSection.AdminSidebar);
+
+        sidebarItems.Should().ContainSingle().Which.Label.Should().Be("Users");
+    }
 }

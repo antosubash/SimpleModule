@@ -4,16 +4,16 @@
    ============================================================ */
 
 @theme {
-  /* --- Primary Gradient Endpoints --- */
-  --color-primary: #0d9488;
-  --color-primary-hover: #0f766e;
-  --color-primary-light: #2dd4bf;
-  --color-primary-subtle: rgba(13, 148, 136, 0.08);
-  --color-primary-ring: rgba(13, 148, 136, 0.25);
+  /* --- Primary: Forest Green --- */
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
+  --color-primary-light: #4ade80;
+  --color-primary-subtle: rgba(22, 163, 74, 0.08);
+  --color-primary-ring: rgba(22, 163, 74, 0.25);
 
-  /* --- Accent: Emerald --- */
-  --color-accent: #059669;
-  --color-accent-hover: #047857;
+  /* --- Accent: Deep Evergreen --- */
+  --color-accent: #166534;
+  --color-accent-hover: #14532d;
 
   /* --- Semantic: Success --- */
   --color-success: #16a34a;
@@ -60,11 +60,11 @@
   /* --- Misc --- */
   --color-dark: #0f172a;
   --color-muted: #94a3b8;
-  --color-ring: rgba(13, 148, 136, 0.4);
+  --color-ring: rgba(22, 163, 74, 0.4);
 
   /* --- Shadows (themeable) --- */
-  --shadow-primary: 0 4px 14px rgba(13, 148, 136, 0.35);
-  --shadow-primary-hover: 0 6px 20px rgba(13, 148, 136, 0.5);
+  --shadow-primary: 0 4px 14px rgba(22, 163, 74, 0.35);
+  --shadow-primary-hover: 0 6px 20px rgba(22, 163, 74, 0.5);
   --shadow-danger: 0 4px 14px rgba(225, 29, 72, 0.25);
   --shadow-danger-hover: 0 6px 20px rgba(225, 29, 72, 0.4);
 }
@@ -73,8 +73,8 @@
    Dark Mode Overrides
    ============================================================ */
 .dark {
-  --color-primary-subtle: rgba(13, 148, 136, 0.15);
-  --color-primary-ring: rgba(13, 148, 136, 0.35);
+  --color-primary-subtle: rgba(22, 163, 74, 0.15);
+  --color-primary-ring: rgba(22, 163, 74, 0.35);
 
   --color-success-bg: rgba(74, 222, 128, 0.12);
   --color-success-text: #86efac;
@@ -171,7 +171,7 @@
   }
 
   ::selection {
-    background: rgba(13, 148, 136, 0.2);
+    background: rgba(22, 163, 74, 0.2);
   }
 }
 
@@ -211,10 +211,10 @@
   .btn-primary {
     @apply text-white;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
   }
   .btn-primary:hover {
-    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5);
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5);
     transform: translateY(-1px);
   }
 
@@ -466,6 +466,17 @@
     transform: translateY(0) scale(1);
     pointer-events: auto;
   }
+  /* Inside sidebar: open upward */
+  .app-sidebar .user-dropdown {
+    top: auto;
+    bottom: calc(100% + 6px);
+    left: 0;
+    right: auto;
+    transform: translateY(4px) scale(0.97);
+  }
+  .app-sidebar .user-dropdown.open {
+    transform: translateY(0) scale(1);
+  }
   .dark .user-dropdown {
     box-shadow:
       0 0 0 1px rgba(148, 163, 184, 0.06),
@@ -511,6 +522,46 @@
   /* --- Validation --- */
   .validation-message {
     @apply text-danger text-xs mt-1.5 font-medium;
+  }
+
+  /* --- App Layout (Sidebar) --- */
+  .app-layout {
+    display: flex;
+    min-height: 100vh;
+  }
+  .app-sidebar {
+    width: 16rem;
+    @apply bg-surface border-r border-border shrink-0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 40;
+    transition: width 0.2s ease;
+  }
+  .app-sidebar.app-sidebar-collapsed {
+    width: 4rem;
+  }
+  .app-sidebar.app-sidebar-collapsed .sidebar-label {
+    display: none;
+  }
+  .app-sidebar.app-sidebar-collapsed .sidebar-icon {
+    margin: 0 auto;
+  }
+  .app-content {
+    flex: 1;
+    margin-left: 16rem;
+    transition: margin-left 0.2s ease;
+  }
+  .app-sidebar-collapsed ~ .app-content {
+    margin-left: 4rem;
+  }
+  .app-sidebar-toggle {
+    @apply fixed bottom-4 z-50 w-7 h-7 rounded-full bg-surface border border-border flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised cursor-pointer transition-all duration-200;
+    left: 15rem;
+  }
+  .app-sidebar-collapsed ~ .app-sidebar-toggle {
+    left: 3rem;
   }
 } /* end @layer components */
 

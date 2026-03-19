@@ -7,52 +7,36 @@ namespace SimpleModule.Orders.Endpoints.Orders;
 
 public static class CreateRequestValidator
 {
-    private static readonly CompositeFormat _quantityMustBePositiveFormat = CompositeFormat.Parse(
+    private static readonly CompositeFormat QuantityMustBePositiveFormat = CompositeFormat.Parse(
         OrdersConstants.ValidationMessages.QuantityMustBePositiveFormat
     );
 
     public static ValidationResult Validate(CreateOrderRequest request)
     {
-        var errors = new Dictionary<string, string[]>();
+        var builder = new ValidationBuilder()
+            .AddErrorIf(
+                string.IsNullOrWhiteSpace(request.UserId.Value),
+                OrdersConstants.Fields.UserId,
+                OrdersConstants.ValidationMessages.UserIdRequired
+            )
+            .AddErrorIf(
+                request.Items is null || request.Items.Count == 0,
+                OrdersConstants.Fields.Items,
+                OrdersConstants.ValidationMessages.AtLeastOneItemRequired
+            );
 
-        if (string.IsNullOrWhiteSpace(request.UserId))
+        if (request.Items is { Count: > 0 })
         {
-            errors[OrdersConstants.Fields.UserId] =
-            [
-                OrdersConstants.ValidationMessages.UserIdRequired,
-            ];
-        }
-
-        if (request.Items is null || request.Items.Count == 0)
-        {
-            errors[OrdersConstants.Fields.Items] =
-            [
-                OrdersConstants.ValidationMessages.AtLeastOneItemRequired,
-            ];
-        }
-        else
-        {
-            var itemErrors = new List<string>();
             for (var i = 0; i < request.Items.Count; i++)
             {
-                if (request.Items[i].Quantity <= 0)
-                {
-                    itemErrors.Add(
-                        string.Format(
-                            CultureInfo.InvariantCulture,
-                            _quantityMustBePositiveFormat,
-                            i
-                        )
-                    );
-                }
-            }
-
-            if (itemErrors.Count > 0)
-            {
-                errors[OrdersConstants.Fields.Items] = [.. itemErrors];
+                builder.AddErrorIf(
+                    request.Items[i].Quantity <= 0,
+                    OrdersConstants.Fields.Items,
+                    string.Format(CultureInfo.InvariantCulture, QuantityMustBePositiveFormat, i)
+                );
             }
         }
 
-        return errors.Count > 0 ? ValidationResult.WithErrors(errors) : ValidationResult.Success;
+        return builder.Build();
     }
 }

@@ -1,4 +1,4 @@
-﻿using SimpleModule.Products.Contracts;
+using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;
 
@@ -9,10 +9,10 @@ public class FakeProductContracts : IProductContracts
     public Task<IEnumerable<Product>> GetAllProductsAsync() =>
         Task.FromResult<IEnumerable<Product>>(Products);
 
-    public Task<Product?> GetProductByIdAsync(int id) =>
+    public Task<Product?> GetProductByIdAsync(ProductId id) =>
         Task.FromResult(Products.FirstOrDefault(p => p.Id == id));
 
-    public Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<int> ids)
+    public Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<ProductId> ids)
     {
         var idSet = ids.ToHashSet();
         return Task.FromResult<IReadOnlyList<Product>>(
@@ -26,7 +26,7 @@ public class FakeProductContracts : IProductContracts
     {
         var product = new Product
         {
-            Id = _nextId++,
+            Id = ProductId.From(_nextId++),
             Name = request.Name,
             Price = request.Price,
         };
@@ -34,7 +34,7 @@ public class FakeProductContracts : IProductContracts
         return Task.FromResult(product);
     }
 
-    public Task<Product> UpdateProductAsync(int id, UpdateProductRequest request)
+    public Task<Product> UpdateProductAsync(ProductId id, UpdateProductRequest request)
     {
         var product = Products.FirstOrDefault(p => p.Id == id);
         if (product is null)
@@ -47,7 +47,7 @@ public class FakeProductContracts : IProductContracts
         return Task.FromResult(product);
     }
 
-    public Task DeleteProductAsync(int id)
+    public Task DeleteProductAsync(ProductId id)
     {
         var product = Products.FirstOrDefault(p => p.Id == id);
         if (product is null)

@@ -46,7 +46,7 @@ public sealed class ProductServiceTests : IDisposable
             .Should()
             .AllSatisfy(p =>
             {
-                p.Id.Should().BeGreaterThan(0);
+                p.Id.Value.Should().BeGreaterThan(0);
                 p.Name.Should().NotBeNullOrWhiteSpace();
                 p.Price.Should().BeGreaterThan(0);
             });
@@ -55,16 +55,16 @@ public sealed class ProductServiceTests : IDisposable
     [Fact]
     public async Task GetProductByIdAsync_WithExistingId_ReturnsProduct()
     {
-        var product = await _sut.GetProductByIdAsync(1);
+        var product = await _sut.GetProductByIdAsync(ProductId.From(1));
 
         product.Should().NotBeNull();
-        product!.Id.Should().Be(1);
+        product!.Id.Should().Be(ProductId.From(1));
     }
 
     [Fact]
     public async Task GetProductByIdAsync_WithNonExistentId_ReturnsNull()
     {
-        var product = await _sut.GetProductByIdAsync(99999);
+        var product = await _sut.GetProductByIdAsync(ProductId.From(99999));
 
         product.Should().BeNull();
     }
@@ -79,7 +79,7 @@ public sealed class ProductServiceTests : IDisposable
         product.Should().NotBeNull();
         product.Name.Should().Be("Test Widget");
         product.Price.Should().Be(19.99m);
-        product.Id.Should().BeGreaterThan(0);
+        product.Id.Value.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class ProductServiceTests : IDisposable
     {
         var request = new UpdateProductRequest { Name = "Test", Price = 10.00m };
 
-        var act = () => _sut.UpdateProductAsync(99999, request);
+        var act = () => _sut.UpdateProductAsync(ProductId.From(99999), request);
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*99999*not found*");
     }
@@ -120,7 +120,7 @@ public sealed class ProductServiceTests : IDisposable
     [Fact]
     public async Task DeleteProductAsync_WithNonExistentId_ThrowsNotFoundException()
     {
-        var act = () => _sut.DeleteProductAsync(99999);
+        var act = () => _sut.DeleteProductAsync(ProductId.From(99999));
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*99999*not found*");
     }

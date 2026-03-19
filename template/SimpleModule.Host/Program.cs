@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using OpenIddict.Validation.AspNetCore;
 using SimpleModule.Blazor;
@@ -10,10 +11,21 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
+using SimpleModule.Host;
 using SimpleModule.Host.Components;
-using SimpleModule.Users.Constants;
+using SimpleModule.OpenIddict.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Aspire service defaults (OpenTelemetry, resilience, service discovery)
+builder.AddServiceDefaults();
+
+// Bridge Aspire-managed connection string to Database options
+var aspireConnectionString = builder.Configuration.GetConnectionString("simplemoduledb");
+if (!string.IsNullOrEmpty(aspireConnectionString))
+{
+    builder.Configuration["Database:DefaultConnection"] = aspireConnectionString;
+}
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
@@ -75,8 +87,18 @@ builder.Services.AddSimpleModuleBlazor(options =>
 // Register event bus
 builder.Services.AddScoped<IEventBus, EventBus>();
 
+// Inertia shared data (per-request bag for props shared across all Inertia responses)
+builder.Services.AddScoped<InertiaSharedData>();
+
 // Register all modules
 builder.Services.AddModules(builder.Configuration);
+
+// Register unified HostDbContext for EF Core migrations
+builder.Services.AddModuleDbContext<HostDbContext>(
+    builder.Configuration,
+    "Host",
+    opts => opts.UseOpenIddict()
+);
 
 // Collect module menu items into a singleton registry
 builder.Services.CollectModuleMenuItems();
@@ -104,7 +126,6 @@ builder.Services.Configure<AuthenticationOptions>(options =>
     options.DefaultAuthenticateScheme = AuthConstants.SmartAuthPolicy;
     options.DefaultChallengeScheme = AuthConstants.SmartAuthPolicy;
 });
-builder.Services.AddAuthorization();
 
 // Health checks
 builder
@@ -116,8 +137,13 @@ builder
 
 var app = builder.Build();
 
-// Ensure databases are created with seed data
-app.EnsureModuleDatabases();
+// Apply database schema (production should use explicit migration tooling)
+if (!app.Environment.IsProduction())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<HostDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 app.UseExceptionHandler();
 
@@ -141,8 +167,8 @@ app.Use(
     {
         var path = context.Request.Path.Value;
         bool hasVersionParam = context.Request.Query.ContainsKey("v");
-        bool isVendorJs = path is not null
-            && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
+        bool isVendorJs =
+            path is not null && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
 
         if (hasVersionParam || isVendorJs)
         {
@@ -165,19 +191,21 @@ app.UseAntiforgery();
 
 // Health endpoints — liveness (no checks) and readiness (database checks)
 app.MapHealthChecks(
-    RouteConstants.HealthLive,
-    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-    {
-        Predicate = _ => false, // No checks — just confirms the process is running
-    }
-);
+        RouteConstants.HealthLive,
+        new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = _ => false, // No checks — just confirms the process is running
+        }
+    )
+    .AllowAnonymous();
 app.MapHealthChecks(
-    RouteConstants.HealthReady,
-    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-    {
-        Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
-    }
-);
+        RouteConstants.HealthReady,
+        new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
+        }
+    )
+    .AllowAnonymous();
 
 // Blazor SSR
 app.MapRazorComponents<App>().AddModuleAssemblies();
@@ -185,4 +213,7 @@ app.MapRazorComponents<App>().AddModuleAssemblies();
 // Automatically map all module endpoints
 app.MapModuleEndpoints();
 
-app.Run();
+// Aspire default health endpoints (/health, /alive)
+app.MapDefaultEndpoints();
+
+await app.RunAsync();

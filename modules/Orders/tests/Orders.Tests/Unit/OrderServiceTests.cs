@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -52,18 +52,20 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task CreateOrderAsync_WithValidUserAndProduct_CalculatesCorrectTotal()
     {
-        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        _users
+            .GetUserByIdAsync(UserId.From("1"))
+            .Returns(new UserDto { Id = UserId.From("1"), DisplayName = "Test" });
         var widget = new Product
         {
-            Id = 1,
+            Id = ProductId.From(1),
             Name = "Widget",
             Price = 25.00m,
         };
         _products
-            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<ProductId>>())
             .Returns(callInfo =>
             {
-                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                var ids = callInfo.Arg<IEnumerable<ProductId>>().ToHashSet();
                 return new List<Product> { widget }
                         .Where(p => ids.Contains(p.Id))
                         .ToList() as IReadOnlyList<Product>;
@@ -71,26 +73,26 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 3 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 3 }],
         };
 
         var order = await _sut.CreateOrderAsync(request);
 
         order.Total.Should().Be(75.00m);
-        order.UserId.Should().Be("1");
+        order.UserId.Should().Be(UserId.From("1"));
         order.Items.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task CreateOrderAsync_WithInvalidUser_ThrowsNotFoundException()
     {
-        _users.GetUserByIdAsync("999").Returns((UserDto?)null);
+        _users.GetUserByIdAsync(UserId.From("999")).Returns((UserDto?)null);
 
         var request = new CreateOrderRequest
         {
-            UserId = "999",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+            UserId = UserId.From("999"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
         };
 
         var act = () => _sut.CreateOrderAsync(request);
@@ -101,15 +103,17 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task CreateOrderAsync_WithInvalidProduct_ThrowsNotFoundException()
     {
-        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        _users
+            .GetUserByIdAsync(UserId.From("1"))
+            .Returns(new UserDto { Id = UserId.From("1"), DisplayName = "Test" });
         _products
-            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<ProductId>>())
             .Returns(new List<Product>() as IReadOnlyList<Product>);
 
         var request = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 999, Quantity = 1 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(999), Quantity = 1 }],
         };
 
         var act = () => _sut.CreateOrderAsync(request);
@@ -128,18 +132,20 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task GetOrderByIdAsync_ReturnsMatchingOrder()
     {
-        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        _users
+            .GetUserByIdAsync(UserId.From("1"))
+            .Returns(new UserDto { Id = UserId.From("1"), DisplayName = "Test" });
         var widget = new Product
         {
-            Id = 1,
+            Id = ProductId.From(1),
             Name = "Widget",
             Price = 10.00m,
         };
         _products
-            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<ProductId>>())
             .Returns(callInfo =>
             {
-                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                var ids = callInfo.Arg<IEnumerable<ProductId>>().ToHashSet();
                 return new List<Product> { widget }
                         .Where(p => ids.Contains(p.Id))
                         .ToList() as IReadOnlyList<Product>;
@@ -147,8 +153,8 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
         };
 
         var created = await _sut.CreateOrderAsync(request);
@@ -161,18 +167,20 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task UpdateOrderAsync_WithValidData_UpdatesOrder()
     {
-        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        _users
+            .GetUserByIdAsync(UserId.From("1"))
+            .Returns(new UserDto { Id = UserId.From("1"), DisplayName = "Test" });
         var widget = new Product
         {
-            Id = 1,
+            Id = ProductId.From(1),
             Name = "Widget",
             Price = 10.00m,
         };
         _products
-            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<ProductId>>())
             .Returns(callInfo =>
             {
-                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                var ids = callInfo.Arg<IEnumerable<ProductId>>().ToHashSet();
                 return new List<Product> { widget }
                         .Where(p => ids.Contains(p.Id))
                         .ToList() as IReadOnlyList<Product>;
@@ -180,15 +188,15 @@ public sealed class OrderServiceTests : IDisposable
 
         var createRequest = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
         };
         var created = await _sut.CreateOrderAsync(createRequest);
 
         var updateRequest = new UpdateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 5 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 5 }],
         };
         var updated = await _sut.UpdateOrderAsync(created.Id, updateRequest);
 
@@ -202,11 +210,11 @@ public sealed class OrderServiceTests : IDisposable
     {
         var request = new UpdateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
         };
 
-        var act = () => _sut.UpdateOrderAsync(99999, request);
+        var act = () => _sut.UpdateOrderAsync(OrderId.From(99999), request);
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Order*99999*not found*");
     }
@@ -214,18 +222,20 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task DeleteOrderAsync_WithExistingOrder_RemovesOrder()
     {
-        _users.GetUserByIdAsync("1").Returns(new UserDto { Id = "1", DisplayName = "Test" });
+        _users
+            .GetUserByIdAsync(UserId.From("1"))
+            .Returns(new UserDto { Id = UserId.From("1"), DisplayName = "Test" });
         var widget = new Product
         {
-            Id = 1,
+            Id = ProductId.From(1),
             Name = "Widget",
             Price = 10.00m,
         };
         _products
-            .GetProductsByIdsAsync(Arg.Any<IEnumerable<int>>())
+            .GetProductsByIdsAsync(Arg.Any<IEnumerable<ProductId>>())
             .Returns(callInfo =>
             {
-                var ids = callInfo.Arg<IEnumerable<int>>().ToHashSet();
+                var ids = callInfo.Arg<IEnumerable<ProductId>>().ToHashSet();
                 return new List<Product> { widget }
                         .Where(p => ids.Contains(p.Id))
                         .ToList() as IReadOnlyList<Product>;
@@ -233,8 +243,8 @@ public sealed class OrderServiceTests : IDisposable
 
         var createRequest = new CreateOrderRequest
         {
-            UserId = "1",
-            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
+            UserId = UserId.From("1"),
+            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
         };
         var created = await _sut.CreateOrderAsync(createRequest);
 
@@ -247,7 +257,7 @@ public sealed class OrderServiceTests : IDisposable
     [Fact]
     public async Task DeleteOrderAsync_WithNonExistentOrder_ThrowsNotFoundException()
     {
-        var act = () => _sut.DeleteOrderAsync(99999);
+        var act = () => _sut.DeleteOrderAsync(OrderId.From(99999));
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Order*99999*not found*");
     }

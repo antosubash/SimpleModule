@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
@@ -41,10 +41,10 @@ public sealed class UserServiceTests
         };
         _userManager.FindByIdAsync("1").Returns(appUser);
 
-        var user = await _sut.GetUserByIdAsync("1");
+        var user = await _sut.GetUserByIdAsync(UserId.From("1"));
 
         user.Should().NotBeNull();
-        user!.Id.Should().Be("1");
+        user!.Id.Should().Be(UserId.From("1"));
         user.DisplayName.Should().Be("Test User");
         user.Email.Should().Be("test@test.com");
     }
@@ -54,7 +54,7 @@ public sealed class UserServiceTests
     {
         _userManager.FindByIdAsync("999").Returns((ApplicationUser?)null);
 
-        var user = await _sut.GetUserByIdAsync("999");
+        var user = await _sut.GetUserByIdAsync(UserId.From("999"));
 
         user.Should().BeNull();
     }
@@ -70,22 +70,15 @@ public sealed class UserServiceTests
         };
         _userManager.FindByIdAsync("1").Returns(appUser);
 
-        var user = await _sut.GetCurrentUserAsync("1");
+        var user = await _sut.GetCurrentUserAsync(UserId.From("1"));
 
         user.Should().NotBeNull();
-        user!.Id.Should().Be("1");
+        user!.Id.Should().Be(UserId.From("1"));
     }
 
     [Fact]
     public async Task CreateUserAsync_WithValidData_ReturnsUserDto()
     {
-        var appUser = new ApplicationUser
-        {
-            Id = "new-id",
-            Email = "new@test.com",
-            UserName = "new@test.com",
-            DisplayName = "New User",
-        };
         _userManager
             .CreateAsync(Arg.Any<ApplicationUser>(), Arg.Any<string>())
             .Returns(callInfo =>
@@ -150,7 +143,7 @@ public sealed class UserServiceTests
 
         var request = new UpdateUserRequest { Email = "new@test.com", DisplayName = "New Name" };
 
-        var user = await _sut.UpdateUserAsync("1", request);
+        var user = await _sut.UpdateUserAsync(UserId.From("1"), request);
 
         user.Should().NotBeNull();
         user.Email.Should().Be("new@test.com");
@@ -164,7 +157,7 @@ public sealed class UserServiceTests
 
         var request = new UpdateUserRequest { Email = "test@test.com", DisplayName = "Test" };
 
-        var act = () => _sut.UpdateUserAsync("999", request);
+        var act = () => _sut.UpdateUserAsync(UserId.From("999"), request);
 
         await act.Should().ThrowAsync<SimpleModule.Core.Exceptions.NotFoundException>();
     }
@@ -181,7 +174,7 @@ public sealed class UserServiceTests
         _userManager.FindByIdAsync("1").Returns(appUser);
         _userManager.DeleteAsync(Arg.Any<ApplicationUser>()).Returns(IdentityResult.Success);
 
-        await _sut.DeleteUserAsync("1");
+        await _sut.DeleteUserAsync(UserId.From("1"));
 
         await _userManager.Received(1).DeleteAsync(appUser);
     }
@@ -191,7 +184,7 @@ public sealed class UserServiceTests
     {
         _userManager.FindByIdAsync("999").Returns((ApplicationUser?)null);
 
-        var act = () => _sut.DeleteUserAsync("999");
+        var act = () => _sut.DeleteUserAsync(UserId.From("999"));
 
         await act.Should().ThrowAsync<SimpleModule.Core.Exceptions.NotFoundException>();
     }

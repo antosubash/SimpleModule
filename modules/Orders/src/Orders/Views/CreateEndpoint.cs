@@ -5,6 +5,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders.Views;
 
@@ -27,11 +28,11 @@ public class CreateEndpoint : IViewEndpoint
             {
                 var request = new CreateOrderRequest
                 {
-                    UserId = body.UserId,
+                    UserId = UserId.From(body.UserId),
                     Items = body
                         .Items.Select(i => new OrderItem
                         {
-                            ProductId = i.ProductId,
+                            ProductId = ProductId.From(i.ProductId),
                             Quantity = i.Quantity,
                         })
                         .ToList(),

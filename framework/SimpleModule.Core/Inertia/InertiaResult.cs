@@ -28,10 +28,13 @@ internal sealed class InertiaResult : IResult
 
     public async Task ExecuteAsync(HttpContext httpContext)
     {
+        var sharedData = httpContext.RequestServices.GetService<InertiaSharedData>();
+        var mergedProps = MergeProps(_props, sharedData);
+
         var pageData = new
         {
             component = _component,
-            props = _props ?? new { },
+            props = mergedProps,
             url = httpContext.Request.Path + httpContext.Request.QueryString,
             version = InertiaMiddleware.Version,
         };
@@ -49,5 +52,34 @@ internal sealed class InertiaResult : IResult
 
         var renderer = httpContext.RequestServices.GetRequiredService<IInertiaPageRenderer>();
         await renderer.RenderPageAsync(httpContext, pageJson);
+    }
+
+    private static object MergeProps(object? props, InertiaSharedData? sharedData)
+    {
+        if (sharedData is null || sharedData.All.Count == 0)
+        {
+            return props ?? new { };
+        }
+
+        var result = new Dictionary<string, object?>();
+
+        // Add shared data first (lower priority)
+        foreach (var kvp in sharedData.All)
+        {
+            result[kvp.Key] = kvp.Value;
+        }
+
+        // Add endpoint props (higher priority — overwrites shared data)
+        // Use JSON round-trip to merge endpoint props into shared data
+        if (props is not null)
+        {
+            var json = JsonSerializer.SerializeToElement(props, _camelCaseOptions);
+            foreach (var property in json.EnumerateObject())
+            {
+                result[property.Name] = property.Value;
+            }
+        }
+
+        return result;
     }
 }

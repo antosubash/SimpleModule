@@ -14,7 +14,7 @@ public class UpdateEndpoint : IEndpoint
         app.MapPut(
                 UsersConstants.RoutePrefix + "/{id}",
                 async Task<Results<Ok<UserDto>, NotFound>> (
-                    string id,
+                    UserId id,
                     UpdateUserRequest request,
                     IUserContracts userContracts
                 ) =>

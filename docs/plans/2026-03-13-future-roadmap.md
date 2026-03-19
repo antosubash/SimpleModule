@@ -6,36 +6,28 @@ SimpleModule is a modular monolith framework for .NET with compile-time module d
 
 This document catalogs known problems, missing capabilities, and planned improvements, organized into prioritized phases and a full reference catalog.
 
+> **Last updated**: 2026-03-18 — Phase 1 complete, significant progress on Phases 2–4. See status column in Known Problems tables for current state.
+
 ---
 
-## Phase 1: Foundation (Fix What's Broken)
+## Phase 1: Foundation (Fix What's Broken) ✅ COMPLETE
 
-These are blocking issues or significant gaps that undermine the framework's value proposition.
+All Phase 1 items have been implemented.
 
-### 1.1 Request Validation
-**Problem**: Endpoints manually parse `ReadFormAsync()` with no validation. Invalid input silently produces bad data.
-**Plan**: Integrate a validation pipeline (FluentValidation or minimal API filters). Source generator could auto-wire validators discovered by convention.
-**Files**: All endpoint classes across modules, Core (new validation abstractions).
+### ~~1.1 Request Validation~~ ✅
+**Done**: `ValidationBuilder` fluent helper in Core (`framework/SimpleModule.Core/Validation/`). Products and Orders modules have validators. `GlobalExceptionHandler` maps `ValidationException` → HTTP 400 ProblemDetails with field-level errors.
 
-### 1.2 EF Core Migrations
-**Problem**: Uses `EnsureCreated()` — no schema versioning, no safe production upgrades. Database changes are untracked.
-**Plan**: Add per-module migration support. Each module's DbContext gets its own migration history. CLI (`sm`) should scaffold migrations.
-**Files**: SimpleModule.Database, module DbContexts, SimpleModule.Cli.
+### ~~1.2 EF Core Migrations~~ ✅
+**Done**: Initial EF Core migration created (`template/SimpleModule.Host/Migrations/`). `EnsureCreated()` used in dev; migrations available for production. Vogen value converters integrated.
 
-### 1.3 Consistent Endpoint Pattern
-**Problem**: Products uses both `IEndpoint` classes AND `ConfigureEndpoints()` escape hatch simultaneously. Confusing for framework users.
-**Plan**: Standardize on `IEndpoint` for all CRUD. Reserve `ConfigureEndpoints()` strictly for non-standard routes (WebSocket, file upload, etc.). Migrate Products module.
-**Files**: Products module endpoints, documentation.
+### ~~1.3 Consistent Endpoint Pattern~~ ✅
+**Done**: Products fully migrated to `IEndpoint` pattern. `ConfigureEndpoints()` escape hatch removed from Products. `CrudEndpoints` static helper in Core reduces boilerplate across all modules.
 
-### 1.4 Error Handling & Problem Details
-**Problem**: No structured error responses. Exceptions bubble as 500s with no useful payload.
-**Plan**: Add global exception middleware returning RFC 7807 Problem Details. Module-specific error types. Inertia error page support.
-**Files**: SimpleModule.Core (middleware), SimpleModule.Api (registration).
+### ~~1.4 Error Handling & Problem Details~~ ✅
+**Done**: `GlobalExceptionHandler` implements `IExceptionHandler` with RFC 7807 ProblemDetails for validation (400), not-found (404), conflict (409), and unhandled (500) exceptions.
 
-### 1.5 Use Generated TypeScript Types
-**Problem**: React pages define inline TypeScript interfaces that duplicate [Dto] definitions. Generated `contracts.d.ts` exists but is unused.
-**Plan**: Wire `extract-ts-types.mjs` into build pipeline. Replace inline interfaces with imports from generated types. Single source of truth.
-**Files**: All React page components, tools/extract-ts-types.mjs, module vite configs.
+### ~~1.5 Use Generated TypeScript Types~~ ✅
+**Done**: `[Dto]` types generate per-module `types.ts` files. React pages import from generated types. `tools/extract-ts-types.mjs` wired into build pipeline.
 
 ---
 
@@ -76,16 +68,17 @@ These add significant value and unblock real application development.
 **Plan**: `IFileStorage` abstraction in Core (local disk + S3 compatible). Upload endpoint pattern. Image processing pipeline.
 **Files**: SimpleModule.Core (IFileStorage), new endpoints, React upload components.
 
+### 2.7 Strongly-Typed IDs ✅
+**Done**: Vogen-based `ProductId`, `OrderId`, `UserId` value objects in module `.Contracts` projects. Compile-time type safety for entity IDs with auto-generated EF Core value converters, JSON converters, and route parameter binding.
+
 ---
 
 ## Phase 3: Polish (Production Readiness)
 
 These make the difference between a demo and a deployable system.
 
-### 3.1 Observability
-**Problem**: Structured logging exists (`[LoggerMessage]`) but no metrics, tracing, or health check depth.
-**Plan**: OpenTelemetry integration. Per-module health checks. Request duration metrics. Distributed tracing through event bus.
-**Files**: SimpleModule.Core (telemetry), SimpleModule.Api (configuration), module health checks.
+### ~~3.1 Observability~~ ✅
+**Done**: Aspire integration with OpenTelemetry (service defaults, tracing, metrics). `SimpleModule.AppHost` orchestrates services with `Aspire.Hosting.PostgreSQL`. `AddServiceDefaults()` and `MapDefaultEndpoints()` wired in Host.
 
 ### 3.2 Caching
 **Problem**: Every request hits the database. No caching layer.
@@ -143,75 +136,75 @@ These make the framework pleasant to build with.
 **Plan**: `SimpleModule.Testing` package with: test server builder, authenticated test client, database seeding helpers, Inertia response assertions.
 **Files**: New project: src/SimpleModule.Testing/.
 
-### 4.5 Source Generator Diagnostics
-**Problem**: When source generator fails or produces unexpected output, debugging is opaque.
-**Plan**: Add analyzer diagnostics: warnings for common mistakes (missing [Module], IEndpoint without public constructor, [Dto] with unsupported types). Emit diagnostic comments in generated code.
-**Files**: SimpleModule.Generator (diagnostic descriptors).
+### ~~4.5 Source Generator Diagnostics~~ ✅ (Partial)
+**Done**: Source generator refactored into focused `IEmitter` pattern (9 emitters: Diagnostic, Endpoint, JSON, Menu, Module, RazorComponent, TypeScript, ViewPages, HostDbContext). `DiagnosticEmitter` exists. Full analyzer diagnostics for common mistakes still pending.
 
 ---
 
 ## Known Problems (Full Catalog)
 
 ### Framework Core
-| # | Problem | Severity | Phase |
-|---|---------|----------|-------|
-| F1 | No request validation pipeline | High | 1 |
-| F2 | No EF Core migrations | High | 1 |
-| F3 | No structured error responses (Problem Details) | High | 1 |
-| F4 | Event handlers not auto-discovered by generator | Medium | 2 |
-| F5 | No pagination/filtering abstractions | Medium | 2 |
-| F6 | No caching layer | Medium | 3 |
-| F7 | No background job system | Medium | 3 |
-| F8 | No file storage abstraction | Medium | 2 |
-| F9 | No rate limiting | Medium | 3 |
-| F10 | No API versioning | Low | 3 |
-| F11 | Menu URLs are untyped strings | Low | 4 |
+| # | Problem | Severity | Phase | Status |
+|---|---------|----------|-------|--------|
+| F1 | No request validation pipeline | High | 1 | ✅ Done |
+| F2 | No EF Core migrations | High | 1 | ✅ Done |
+| F3 | No structured error responses (Problem Details) | High | 1 | ✅ Done |
+| F4 | Event handlers not auto-discovered by generator | Medium | 2 | Open |
+| F5 | No pagination/filtering abstractions | Medium | 2 | Open |
+| F6 | No caching layer | Medium | 3 | Open |
+| F7 | No background job system | Medium | 3 | Open |
+| F8 | No file storage abstraction | Medium | 2 | Open |
+| F9 | No rate limiting | Medium | 3 | Open |
+| F10 | No API versioning | Low | 3 | Open |
+| F11 | Menu URLs are untyped strings | Low | 4 | Open |
+| F12 | No strongly-typed entity IDs | High | 2 | ✅ Done (Vogen) |
 
 ### Frontend
-| # | Problem | Severity | Phase |
-|---|---------|----------|-------|
-| FE1 | Generated TS types unused (inline duplicates) | High | 1 |
-| FE2 | No client-side validation error display | High | 2 |
-| FE3 | No loading states during form submission | Medium | 2 |
-| FE4 | No toast/notification system | Medium | 2 |
-| FE5 | No shared React component library | Medium | 2 |
-| FE6 | QRCode module partially integrated | Low | 2 |
-| FE7 | Product Browse page has minimal styling vs others | Low | 2 |
-| FE8 | No Vite HMR integration for dev workflow | Medium | 4 |
+| # | Problem | Severity | Phase | Status |
+|---|---------|----------|-------|--------|
+| FE1 | Generated TS types unused (inline duplicates) | High | 1 | ✅ Done |
+| FE2 | No client-side validation error display | High | 2 | Open |
+| FE3 | No loading states during form submission | Medium | 2 | Open |
+| FE4 | No toast/notification system | Medium | 2 | Open |
+| FE5 | No shared React component library | Medium | 2 | Open |
+| FE6 | QRCode module partially integrated | Low | 2 | Open |
+| FE7 | Product Browse page has minimal styling vs others | Low | 2 | Open |
+| FE8 | No Vite HMR integration for dev workflow | Medium | 4 | Open |
 
 ### Architecture
-| # | Problem | Severity | Phase |
-|---|---------|----------|-------|
-| A1 | Mixed endpoint patterns (IEndpoint + ConfigureEndpoints) | High | 1 |
-| A2 | Manual form parsing in endpoints (ReadFormAsync) | High | 1 |
-| A3 | Seed data hard-coded in DbContext (not environment-aware) | Medium | 3 |
-| A4 | TypeScript extraction tool is fragile (depends on generator output format) | Medium | 4 |
-| A5 | No cross-module query pattern (only contracts interfaces) | Low | 3 |
+| # | Problem | Severity | Phase | Status |
+|---|---------|----------|-------|--------|
+| A1 | Mixed endpoint patterns (IEndpoint + ConfigureEndpoints) | High | 1 | ✅ Done |
+| A2 | Manual form parsing in endpoints (ReadFormAsync) | High | 1 | ✅ Done |
+| A3 | Seed data hard-coded in DbContext (not environment-aware) | Medium | 3 | Open |
+| A4 | TypeScript extraction tool is fragile (depends on generator output format) | Medium | 4 | Open |
+| A5 | No cross-module query pattern (only contracts interfaces) | Low | 3 | Open |
+| A6 | CRUD endpoint boilerplate | Medium | 2 | ✅ Done (CrudEndpoints helper) |
 
 ### Production / Operations
-| # | Problem | Severity | Phase |
-|---|---------|----------|-------|
-| P1 | No observability (metrics, tracing) | High | 3 |
-| P2 | No security headers (CSP, HSTS beyond default) | Medium | 3 |
-| P3 | No brute-force protection on auth endpoints | Medium | 3 |
-| P4 | No K8s/production deployment manifests | Medium | 3 |
-| P5 | No secrets management guidance | Low | 3 |
+| # | Problem | Severity | Phase | Status |
+|---|---------|----------|-------|--------|
+| P1 | No observability (metrics, tracing) | High | 3 | ✅ Done (Aspire + OpenTelemetry) |
+| P2 | No security headers (CSP, HSTS beyond default) | Medium | 3 | Open |
+| P3 | No brute-force protection on auth endpoints | Medium | 3 | Open |
+| P4 | No K8s/production deployment manifests | Medium | 3 | Open |
+| P5 | No secrets management guidance | Low | 3 | Open |
 
 ### Testing
-| # | Problem | Severity | Phase |
-|---|---------|----------|-------|
-| T1 | No shared test utilities / test harness | Medium | 4 |
-| T2 | No frontend tests (Playwright setup exists, no tests) | Medium | 4 |
-| T3 | Integration tests only for Products, not Orders/Users | Medium | 2 |
-| T4 | No load/performance testing | Low | 3 |
+| # | Problem | Severity | Phase | Status |
+|---|---------|----------|-------|--------|
+| T1 | No shared test utilities / test harness | Medium | 4 | Open |
+| T2 | No frontend tests (Playwright setup exists, no tests) | Medium | 4 | ✅ Done (5 E2E test files) |
+| T3 | Integration tests only for Products, not Orders/Users | Medium | 2 | Open |
+| T4 | No load/performance testing | Low | 3 | Open |
 
 ### Developer Experience
-| # | Problem | Severity | Phase |
-|---|---------|----------|-------|
-| DX1 | CLI feature templates have TODO placeholders | Medium | 4 |
-| DX2 | No user-facing documentation site | Medium | 4 |
-| DX3 | Source generator failures are hard to debug | Low | 4 |
-| DX4 | New module creation requires many manual steps | Medium | 4 |
+| # | Problem | Severity | Phase | Status |
+|---|---------|----------|-------|--------|
+| DX1 | CLI feature templates have TODO placeholders | Medium | 4 | Open |
+| DX2 | No user-facing documentation site | Medium | 4 | Open |
+| DX3 | Source generator failures are hard to debug | Low | 4 | ✅ Partial (IEmitter refactor + DiagnosticEmitter) |
+| DX4 | New module creation requires many manual steps | Medium | 4 | Open |
 
 ---
 
@@ -227,6 +220,22 @@ These make the framework pleasant to build with.
 | **Reports** | Exportable reports, scheduled generation | Products, Orders, background jobs | Low |
 
 ---
+
+## Recent Completions (since 2026-03-13)
+
+Work not originally in the roadmap that was completed:
+
+| Item | Description |
+|------|-------------|
+| **Source generator refactor** | Monolithic generator split into 9 focused `IEmitter` classes with full test coverage |
+| **NetEscapades.EnumGenerators** | AOT-safe enum extensions for `DatabaseProvider`, `MenuSection`, `CheckStatus` |
+| **Vogen strongly-typed IDs** | `ProductId`, `OrderId`, `UserId` value objects in module Contracts projects |
+| **ValidationBuilder** | Fluent validation helper in Core, wired into Products and Orders |
+| **CrudEndpoints helper** | Static helper reducing CRUD endpoint boilerplate across modules |
+| **GlobalExceptionHandler** | RFC 7807 ProblemDetails for all error types |
+| **EF Core migration** | Initial migration with Vogen value converters |
+| **Aspire + OpenTelemetry** | Service defaults, distributed tracing, PostgreSQL orchestration |
+| **Playwright E2E tests** | 5 test suites covering Products, Orders, Dashboard flows |
 
 ## Verification
 

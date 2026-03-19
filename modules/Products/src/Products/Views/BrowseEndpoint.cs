@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
@@ -11,12 +12,13 @@ public class BrowseEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/browse",
-            async (IProductContracts products) =>
-                Inertia.Render(
-                    "Products/Browse",
-                    new { products = await products.GetAllProductsAsync() }
-                )
-        );
+                "/browse",
+                async (IProductContracts products) =>
+                    Inertia.Render(
+                        "Products/Browse",
+                        new { products = await products.GetAllProductsAsync() }
+                    )
+            )
+            .AllowAnonymous();
     }
 }

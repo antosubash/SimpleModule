@@ -12,7 +12,7 @@ public class DeleteEndpoint : IEndpoint
     {
         app.MapDelete(
                 UsersConstants.RoutePrefix + "/{id}",
-                async (string id, IUserContracts userContracts) =>
+                async (UserId id, IUserContracts userContracts) =>
                 {
                     await userContracts.DeleteUserAsync(id);
                     return TypedResults.NoContent();

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Fully AOT-compatible — no reflection. Frontend uses React 19 + Inertia.js served via Blazor SSR.
+Modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via Blazor SSR.
 
 ## Build & Run
 
@@ -40,8 +40,8 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 ### .NET Backend
 
 - **SimpleModule.Core** — `IModule` interface, `[Module]` attribute, `IEndpoint` interface, `[Dto]` attribute, menu system (`IMenuRegistry`), event bus (`IEventBus`), Inertia integration.
-- **SimpleModule.Generator** — Roslyn `IIncrementalGenerator` (netstandard2.0). Scans referenced assemblies for `[Module]` classes, `IEndpoint` implementors, and `[Dto]` types. Generates: `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()`, AOT JSON serializers, TypeScript interface definitions, Razor component assembly discovery.
-- **SimpleModule.Host** — Host app (net10.0, PublishAot). Calls generated extension methods in `Program.cs`. Custom Inertia middleware bridges Blazor SSR → React.
+- **SimpleModule.Generator** — Roslyn `IIncrementalGenerator` (netstandard2.0). Scans referenced assemblies for `[Module]` classes, `IEndpoint` implementors, and `[Dto]` types. Generates: `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()`, JSON serializers, TypeScript interface definitions, Razor component assembly discovery.
+- **SimpleModule.Host** — Host app (net10.0). Calls generated extension methods in `Program.cs`. Custom Inertia middleware bridges Blazor SSR → React.
 
 ### Frontend (React + Inertia.js)
 
@@ -58,9 +58,8 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 
 ## Key Constraints
 
-- **No reflection** — source generator emits static `new ModuleName()` calls for AOT.
 - **Source generator must target netstandard2.0** with `IIncrementalGenerator` (not `ISourceGenerator`).
-- **Module class libraries must NOT have `PublishAot`** — only the Host project. Modules need `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
+- Modules need `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 - **Module Vite builds use library mode** — externalize React, React-DOM, @inertiajs/react. Inline dynamic imports.
 - **TreatWarningsAsErrors is enabled** globally via `Directory.Build.props` with `AnalysisLevel=latest-all` and `AnalysisMode=All`. Suppressed rules are listed in `.editorconfig`.
 

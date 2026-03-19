@@ -20,13 +20,13 @@ public class GetCurrentEndpoint : IEndpoint
                     IUserContracts userContracts
                 ) =>
                 {
-                    var userId = principal.GetUserId();
-                    if (string.IsNullOrEmpty(userId))
+                    var userIdStr = principal.GetUserId();
+                    if (string.IsNullOrEmpty(userIdStr))
                     {
                         return TypedResults.NotFound();
                     }
 
-                    var user = await userContracts.GetCurrentUserAsync(userId);
+                    var user = await userContracts.GetCurrentUserAsync(UserId.From(userIdStr));
                     return user is not null ? TypedResults.Ok(user) : TypedResults.NotFound();
                 }
             )

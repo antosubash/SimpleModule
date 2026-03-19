@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
@@ -20,7 +20,7 @@ public partial class OrderService(
     public async Task<IEnumerable<Order>> GetAllOrdersAsync() =>
         await db.Orders.Include(o => o.Items).ToListAsync();
 
-    public async Task<Order?> GetOrderByIdAsync(int id)
+    public async Task<Order?> GetOrderByIdAsync(OrderId id)
     {
         var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
         if (order is null)
@@ -71,7 +71,7 @@ public partial class OrderService(
         return order;
     }
 
-    public async Task<Order> UpdateOrderAsync(int id, UpdateOrderRequest request)
+    public async Task<Order> UpdateOrderAsync(OrderId id, UpdateOrderRequest request)
     {
         var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
         if (order is null)
@@ -110,7 +110,7 @@ public partial class OrderService(
         return order;
     }
 
-    public async Task DeleteOrderAsync(int id)
+    public async Task DeleteOrderAsync(OrderId id)
     {
         var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
         if (order is null)
@@ -125,7 +125,7 @@ public partial class OrderService(
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Order with ID {OrderId} not found")]
-    private static partial void LogOrderNotFound(ILogger logger, int orderId);
+    private static partial void LogOrderNotFound(ILogger logger, OrderId orderId);
 
     [LoggerMessage(
         Level = LogLevel.Information,
@@ -133,8 +133,8 @@ public partial class OrderService(
     )]
     private static partial void LogOrderCreated(
         ILogger logger,
-        int orderId,
-        string userId,
+        OrderId orderId,
+        UserId userId,
         decimal total
     );
 
@@ -144,11 +144,11 @@ public partial class OrderService(
     )]
     private static partial void LogOrderUpdated(
         ILogger logger,
-        int orderId,
-        string userId,
+        OrderId orderId,
+        UserId userId,
         decimal total
     );
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Order {OrderId} deleted")]
-    private static partial void LogOrderDeleted(ILogger logger, int orderId);
+    private static partial void LogOrderDeleted(ILogger logger, OrderId orderId);
 }

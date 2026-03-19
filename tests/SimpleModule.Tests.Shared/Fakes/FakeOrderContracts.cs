@@ -1,4 +1,4 @@
-﻿using SimpleModule.Orders.Contracts;
+using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Tests.Shared.Fakes;
 
@@ -11,14 +11,14 @@ public class FakeOrderContracts : IOrderContracts
     public Task<IEnumerable<Order>> GetAllOrdersAsync() =>
         Task.FromResult<IEnumerable<Order>>(Orders);
 
-    public Task<Order?> GetOrderByIdAsync(int id) =>
+    public Task<Order?> GetOrderByIdAsync(OrderId id) =>
         Task.FromResult(Orders.FirstOrDefault(o => o.Id == id));
 
     public Task<Order> CreateOrderAsync(CreateOrderRequest request)
     {
         var order = new Order
         {
-            Id = _nextId++,
+            Id = OrderId.From(_nextId++),
             UserId = request.UserId,
             Items = request.Items,
             Total = 0m,
@@ -28,7 +28,7 @@ public class FakeOrderContracts : IOrderContracts
         return Task.FromResult(order);
     }
 
-    public Task<Order> UpdateOrderAsync(int id, UpdateOrderRequest request)
+    public Task<Order> UpdateOrderAsync(OrderId id, UpdateOrderRequest request)
     {
         var order = Orders.FirstOrDefault(o => o.Id == id);
         if (order is null)
@@ -41,7 +41,7 @@ public class FakeOrderContracts : IOrderContracts
         return Task.FromResult(order);
     }
 
-    public Task DeleteOrderAsync(int id)
+    public Task DeleteOrderAsync(OrderId id)
     {
         var order = Orders.FirstOrDefault(o => o.Id == id);
         if (order is null)
