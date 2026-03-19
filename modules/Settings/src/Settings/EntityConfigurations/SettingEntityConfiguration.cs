@@ -16,6 +16,13 @@ public class SettingEntityConfiguration : IEntityTypeConfiguration<SettingEntity
         builder.Property(s => s.UserId).IsRequired(false).HasMaxLength(450);
         builder.Property(s => s.UpdatedAt).IsRequired();
 
-        builder.HasIndex(s => new { s.Key, s.Scope, s.UserId }).IsUnique();
+        builder
+            .HasIndex(s => new
+            {
+                s.Key,
+                s.Scope,
+                s.UserId,
+            })
+            .IsUnique();
     }
 }

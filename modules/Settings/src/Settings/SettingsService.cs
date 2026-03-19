@@ -27,11 +27,7 @@ public partial class SettingsService(
         return entity?.Value;
     }
 
-    public async Task<T?> GetSettingAsync<T>(
-        string key,
-        SettingScope scope,
-        string? userId = null
-    )
+    public async Task<T?> GetSettingAsync<T>(string key, SettingScope scope, string? userId = null)
     {
         var value = await GetSettingAsync(key, scope, userId);
         if (value is null)
@@ -142,10 +138,16 @@ public partial class SettingsService(
         });
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Setting {Key} updated in scope {Scope}")]
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Setting {Key} updated in scope {Scope}"
+    )]
     private partial void LogSettingUpdated(string key, SettingScope scope);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Setting {Key} deleted from scope {Scope}")]
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Setting {Key} deleted from scope {Scope}"
+    )]
     private partial void LogSettingDeleted(string key, SettingScope scope);
 
     [LoggerMessage(

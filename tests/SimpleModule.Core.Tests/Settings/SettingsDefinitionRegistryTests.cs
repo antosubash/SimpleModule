@@ -44,32 +44,33 @@ public class SettingsDefinitionRegistryTests
 
     private static SettingsDefinitionRegistry CreateRegistry() =>
         new(
-        [
-            new SettingDefinition
-            {
-                Key = "smtp.host",
-                DisplayName = "SMTP Host",
-                Group = "Email",
-                Scope = SettingScope.System,
-                Type = SettingType.Text,
-            },
-            new SettingDefinition
-            {
-                Key = "app.title",
-                DisplayName = "App Title",
-                Group = "General",
-                Scope = SettingScope.Application,
-                DefaultValue = "\"SimpleModule\"",
-                Type = SettingType.Text,
-            },
-            new SettingDefinition
-            {
-                Key = "user.theme",
-                DisplayName = "Theme",
-                Group = "Appearance",
-                Scope = SettingScope.User,
-                DefaultValue = "\"light\"",
-                Type = SettingType.Text,
-            },
-        ]);
+            [
+                new SettingDefinition
+                {
+                    Key = "smtp.host",
+                    DisplayName = "SMTP Host",
+                    Group = "Email",
+                    Scope = SettingScope.System,
+                    Type = SettingType.Text,
+                },
+                new SettingDefinition
+                {
+                    Key = "app.title",
+                    DisplayName = "App Title",
+                    Group = "General",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "\"SimpleModule\"",
+                    Type = SettingType.Text,
+                },
+                new SettingDefinition
+                {
+                    Key = "user.theme",
+                    DisplayName = "Theme",
+                    Group = "Appearance",
+                    Scope = SettingScope.User,
+                    DefaultValue = "\"light\"",
+                    Type = SettingType.Text,
+                },
+            ]
+        );
 }

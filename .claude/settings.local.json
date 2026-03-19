@@ -41,7 +41,9 @@
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_resize",
-      "mcp__playwright__browser_type"
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_network_requests"
     ]
   },
   "enableAllProjectMcpServers": true,

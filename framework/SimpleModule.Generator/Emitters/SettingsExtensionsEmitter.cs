@@ -39,9 +39,6 @@ internal sealed class SettingsExtensionsEmitter : IEmitter
         sb.AppendLine("    }");
         sb.AppendLine("}");
 
-        context.AddSource(
-            "SettingsExtensions.g.cs",
-            SourceText.From(sb.ToString(), Encoding.UTF8)
-        );
+        context.AddSource("SettingsExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 }
