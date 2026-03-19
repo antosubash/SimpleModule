@@ -31,7 +31,7 @@ public class DownloadPersonalDataEndpoint : IEndpoint
 
                     logger.LogInformation("User asked for their personal data.");
 
-                    // Manually enumerate personal data properties (AOT-compatible, no reflection)
+                    // Manually enumerate personal data properties
                     var personalData = new Dictionary<string, string>
                     {
                         [PersonalDataKeys.Id] = user.Id ?? PersonalDataKeys.NullPlaceholder,

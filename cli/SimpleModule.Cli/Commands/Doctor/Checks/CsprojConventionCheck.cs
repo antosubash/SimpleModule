@@ -31,19 +31,6 @@ public sealed class CsprojConventionCheck : IDoctorCheck
                         CheckStatus.Fail,
                         "missing FrameworkReference Microsoft.AspNetCore.App"
                     );
-
-                var hasPublishAot = root.Descendants("PublishAot").Any();
-                yield return !hasPublishAot
-                    ? new CheckResult(
-                        $"{module} PublishAot",
-                        CheckStatus.Pass,
-                        "no PublishAot (correct)"
-                    )
-                    : new CheckResult(
-                        $"{module} PublishAot",
-                        CheckStatus.Fail,
-                        "module should NOT have PublishAot"
-                    );
             }
             else
             {

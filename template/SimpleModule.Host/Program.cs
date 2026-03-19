@@ -187,7 +187,6 @@ app.MapStaticAssets();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseAdminSidebarSharedData();
 app.UseAntiforgery();
 
 // Health endpoints — liveness (no checks) and readiness (database checks)

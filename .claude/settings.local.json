@@ -34,7 +34,13 @@
       "mcp__aspire__select_apphost",
       "mcp__aspire__list_resources",
       "mcp__aspire__list_console_logs",
-      "mcp__aspire__execute_resource_command"
+      "mcp__aspire__execute_resource_command",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_resize"
     ]
   },
   "enableAllProjectMcpServers": true,

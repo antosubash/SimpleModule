@@ -1,0 +1,128 @@
+@using SimpleModule.Core.Menu
+@inherits LayoutComponentBase
+@inject IMenuRegistry MenuRegistry
+
+<div class="app-layout">
+    <aside class="app-sidebar" id="app-sidebar">
+        <div class="flex flex-col h-full">
+            <!-- Logo -->
+            <div class="px-4 py-4 border-b border-border">
+                <a href="/" class="flex items-center gap-2.5 no-underline font-bold text-text group" style="font-family:'Sora',sans-serif;">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105 shrink-0" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</span>
+                    <span class="text-base sidebar-label">SimpleModule</span>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                @foreach (var item in SidebarItems)
+                {
+                    <a href="@item.Url" class="@SidebarLinkClass(item.Url)">
+                        <span class="sidebar-icon">@((MarkupString)item.Icon)</span>
+                        <span class="sidebar-label">@item.Label</span>
+                    </a>
+                }
+
+                <!-- Admin section (role-gated) -->
+                @if (IsAdmin)
+                {
+                    <div class="pt-4 mt-4 border-t border-border">
+                        <button class="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted bg-transparent border-none cursor-pointer hover:text-text transition-colors" onclick="toggleAdminNav()" id="admin-nav-toggle">
+                            <span class="sidebar-label">Admin</span>
+                            <svg class="w-3 h-3 transition-transform duration-200 ml-auto sidebar-label" id="admin-nav-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div class="space-y-1 mt-1" id="admin-nav-items">
+                            @foreach (var item in AdminSidebarItems)
+                            {
+                                <a href="@item.Url" class="@SidebarLinkClass(item.Url)">
+                                    <span class="sidebar-icon">@((MarkupString)item.Icon)</span>
+                                    <span class="sidebar-label">@item.Label</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                }
+            </nav>
+
+            <!-- Footer: Dark Mode + User -->
+            <div class="px-3 py-3 border-t border-border space-y-2">
+                <div class="flex items-center gap-2 px-3">
+                    <DarkModeToggle />
+                    <span class="text-xs text-text-muted sidebar-label">Toggle theme</span>
+                </div>
+                <UserDropdown DisplayName="@DisplayName" UserEmail="@UserEmail" UserInitial="@UserInitial" />
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sidebar collapse toggle -->
+    <button class="app-sidebar-toggle" id="app-sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+    </button>
+
+    <main class="app-content">
+        <div class="max-w-5xl mx-auto mt-8 mb-16 px-4 sm:px-6">
+            @Body
+        </div>
+    </main>
+</div>
+
+<script suppress-error="BL9992" src="/js/shell.js?v=@CacheBuster"></script>
+<script suppress-error="BL9992">
+    // Sidebar collapse
+    (function() {
+        var sb = document.getElementById('app-sidebar');
+        var key = 'sidebar-collapsed';
+        if (localStorage.getItem(key) === 'true') {
+            sb.classList.add('app-sidebar-collapsed');
+        }
+        window.toggleSidebar = function() {
+            sb.classList.toggle('app-sidebar-collapsed');
+            localStorage.setItem(key, sb.classList.contains('app-sidebar-collapsed'));
+        };
+    })();
+
+    // Admin nav collapse
+    (function() {
+        var items = document.getElementById('admin-nav-items');
+        var chevron = document.getElementById('admin-nav-chevron');
+        var key = 'admin-nav-open';
+        var open = localStorage.getItem(key) !== 'false';
+        if (!open && items) { items.style.display = 'none'; }
+        if (!open && chevron) { chevron.style.transform = 'rotate(-90deg)'; }
+        window.toggleAdminNav = function() {
+            if (!items) return;
+            open = !open;
+            items.style.display = open ? '' : 'none';
+            if (chevron) chevron.style.transform = open ? '' : 'rotate(-90deg)';
+            localStorage.setItem(key, open);
+        };
+    })();
+</script>
+
+@code {
+    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private string DisplayName => HttpContext?.User?.Identity?.Name ?? "User";
+    private string UserEmail => HttpContext?.User?.Identity?.Name ?? "";
+    private string UserInitial => (HttpContext?.User?.Identity?.Name ?? "U").Substring(0, 1).ToUpper();
+
+    private bool IsAdmin => HttpContext?.User?.IsInRole("Admin") == true;
+
+    private IReadOnlyList<MenuItem> SidebarItems => MenuRegistry.GetItems(MenuSection.AppSidebar);
+    private IReadOnlyList<MenuItem> AdminSidebarItems => MenuRegistry.GetItems(MenuSection.AdminSidebar);
+
+    private string SidebarLinkClass(string url)
+    {
+        var currentPath = HttpContext?.Request.Path.ToString() ?? "";
+        var isActive = url == "/"
+            ? currentPath.Equals("/", StringComparison.OrdinalIgnoreCase)
+            : currentPath.StartsWith(url, StringComparison.OrdinalIgnoreCase);
+        return isActive
+            ? "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-primary bg-primary-subtle no-underline transition-all duration-150"
+            : "flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary no-underline hover:bg-surface-raised hover:text-text transition-all duration-150";
+    }
+}

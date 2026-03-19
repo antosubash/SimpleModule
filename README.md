@@ -1,6 +1,6 @@
 # SimpleModule
 
-A modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Fully AOT-compatible with no reflection. Frontend uses React 19 + Inertia.js served via Blazor SSR.
+A modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via Blazor SSR.
 
 ## Prerequisites
 

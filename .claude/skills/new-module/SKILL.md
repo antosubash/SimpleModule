@@ -65,7 +65,6 @@ public class <Name>Module : IModule
 6. Run `dotnet build` to verify the source generator picks up the new module
 
 ## Important
-- Do NOT add `PublishAot` or `EnableAotAnalyzer` to module class libraries
 - Always include `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
 - Use `[Module("<Name>")]` attribute on the module class
 - Use fully qualified ASP.NET Core usings (Builder, Http, Routing, DependencyInjection)
