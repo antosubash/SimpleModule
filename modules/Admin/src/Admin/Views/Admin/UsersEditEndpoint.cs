@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users;
+using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Admin.Views.Admin;
@@ -23,7 +25,7 @@ public class UsersEditEndpoint : IViewEndpoint
                     string id,
                     UserManager<ApplicationUser> userManager,
                     RoleManager<ApplicationRole> roleManager,
-                    UsersDbContext usersDb,
+                    IPermissionContracts permissionContracts,
                     AdminDbContext adminDb,
                     PermissionRegistry permissionRegistry,
                     string? tab
@@ -37,10 +39,9 @@ public class UsersEditEndpoint : IViewEndpoint
                     var allRoles = await roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
 
                     // User direct permissions
-                    var userPermissions = await usersDb
-                        .UserPermissions.Where(p => p.UserId == id)
-                        .Select(p => p.Permission)
-                        .ToListAsync();
+                    var userPermissions = (
+                        await permissionContracts.GetPermissionsForUserAsync(UserId.From(id))
+                    ).ToList();
 
                     // Permission registry grouped by module
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(

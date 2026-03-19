@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using SimpleModule.Admin.Services;
 using SimpleModule.Core;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users;
+using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Admin.Endpoints.Admin;
@@ -155,9 +156,15 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/permissions — Set direct permissions
         group.MapPost(
             "/{id}/permissions",
-            async (string id, HttpContext context, UsersDbContext usersDb, AuditService audit) =>
+            async (
+                string id,
+                HttpContext context,
+                IPermissionContracts permissionContracts,
+                AuditService audit
+            ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                var userId = UserId.From(id);
 
                 var form = await context.Request.ReadFormAsync();
                 var newPermissions = form["permissions"]
@@ -165,36 +172,26 @@ public class AdminUsersEndpoint : IEndpoint
                     .Select(p => p!)
                     .ToHashSet();
 
-                var currentPermissions = await usersDb
-                    .UserPermissions.Where(p => p.UserId == id)
-                    .ToListAsync();
+                var currentPermissions = await permissionContracts.GetPermissionsForUserAsync(
+                    userId
+                );
 
-                var currentSet = currentPermissions.Select(p => p.Permission).ToHashSet();
-
-                var toRemove = currentPermissions
-                    .Where(p => !newPermissions.Contains(p.Permission))
-                    .ToList();
-                var toAdd = newPermissions.Except(currentSet).ToList();
-
-                if (toRemove.Count > 0)
+                foreach (
+                    var perm in currentPermissions.Where(p => !newPermissions.Contains(p))
+                )
                 {
-                    usersDb.UserPermissions.RemoveRange(toRemove);
-                    foreach (var perm in toRemove)
-                    {
-                        await audit.LogAsync(
-                            id,
-                            adminId,
-                            "PermissionRevoked",
-                            $"Revoked permission {perm.Permission}"
-                        );
-                    }
+                    await audit.LogAsync(
+                        id,
+                        adminId,
+                        "PermissionRevoked",
+                        $"Revoked permission {perm}"
+                    );
                 }
 
-                foreach (var perm in toAdd)
+                foreach (
+                    var perm in newPermissions.Where(p => !currentPermissions.Contains(p))
+                )
                 {
-                    usersDb.UserPermissions.Add(
-                        new UserPermission { UserId = id, Permission = perm }
-                    );
                     await audit.LogAsync(
                         id,
                         adminId,
@@ -203,7 +200,7 @@ public class AdminUsersEndpoint : IEndpoint
                     );
                 }
 
-                await usersDb.SaveChangesAsync();
+                await permissionContracts.SetPermissionsForUserAsync(userId, newPermissions);
 
                 return Results.Redirect($"/admin/users/{id}/edit?tab=roles");
             }

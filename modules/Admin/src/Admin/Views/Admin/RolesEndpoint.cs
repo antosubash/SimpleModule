@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users;
 using SimpleModule.Users.Entities;
 
@@ -18,7 +19,7 @@ public class RolesEndpoint : IViewEndpoint
                 async (
                     RoleManager<ApplicationRole> roleManager,
                     UserManager<ApplicationUser> userManager,
-                    UsersDbContext usersDb
+                    IPermissionContracts permissionContracts
                 ) =>
                 {
                     var roles = await roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
@@ -27,9 +28,11 @@ public class RolesEndpoint : IViewEndpoint
                     foreach (var role in roles)
                     {
                         var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
-                        var permissionCount = await usersDb.RolePermissions.CountAsync(rp =>
-                            rp.RoleId == role.Id
-                        );
+                        var rolePermissions =
+                            await permissionContracts.GetPermissionsForRoleAsync(
+                                RoleId.From(role.Id)
+                            );
+                        var permissionCount = rolePermissions.Count;
 
                         roleList.Add(
                             new

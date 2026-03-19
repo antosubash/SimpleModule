@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users;
 using SimpleModule.Users.Entities;
 
@@ -21,7 +22,7 @@ public class RolesEditEndpoint : IViewEndpoint
                     string id,
                     RoleManager<ApplicationRole> roleManager,
                     UserManager<ApplicationUser> userManager,
-                    UsersDbContext usersDb,
+                    IPermissionContracts permissionContracts,
                     PermissionRegistry permissionRegistry,
                     string? tab
                 ) =>
@@ -40,10 +41,9 @@ public class RolesEditEndpoint : IViewEndpoint
                         })
                         .ToList();
 
-                    var rolePermissions = await usersDb
-                        .RolePermissions.Where(rp => rp.RoleId == id)
-                        .Select(rp => rp.Permission)
-                        .ToListAsync();
+                    var rolePermissions = (
+                        await permissionContracts.GetPermissionsForRoleAsync(RoleId.From(id))
+                    ).ToList();
 
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
                         kvp => kvp.Key,
