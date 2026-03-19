@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
-        'OpenIddict.pages': resolve(__dirname, 'Pages/index.ts'),
+        'OpenIddictModule.pages': resolve(__dirname, 'Pages/index.ts'),
       },
       formats: ['es'],
       fileName: (_format, entryName) => `${entryName}.js`,

@@ -11,7 +11,7 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260319114722_InitialCreate")]
+    [Migration("20260319120412_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

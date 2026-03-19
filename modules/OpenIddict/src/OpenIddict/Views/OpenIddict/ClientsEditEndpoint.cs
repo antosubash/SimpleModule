@@ -23,7 +23,7 @@ public class ClientsEditEndpoint : IViewEndpoint
                     await manager.PopulateAsync(descriptor, application);
 
                     return Inertia.Render(
-                        "OpenIddict/OpenIddict/ClientsEdit",
+                        "OpenIddictModule/OpenIddict/ClientsEdit",
                         new
                         {
                             client = new
