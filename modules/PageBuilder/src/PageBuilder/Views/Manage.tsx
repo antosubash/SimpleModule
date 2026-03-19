@@ -3,6 +3,11 @@ import { useState } from 'react';
 import {
   Badge,
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Input,
   Table,
   TableBody,
@@ -129,47 +134,44 @@ export default function Manage({ pages }: Props) {
                   {new Date(page.updatedAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2 flex-wrap">
-                    {page.isPublished && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`/p/${page.slug}`, '_blank')}
-                      >
-                        View
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                          <circle cx="12" cy="5" r="1" />
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="12" cy="19" r="1" />
+                        </svg>
+                        <span className="sr-only">Actions</span>
                       </Button>
-                    )}
-                    {page.hasDraft && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => router.get(`/admin/pages/${page.id}/edit`)}>
+                        Edit
+                      </DropdownMenuItem>
+                      {page.isPublished && (
+                        <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}`, '_blank')}>
+                          View Page
+                        </DropdownMenuItem>
+                      )}
+                      {page.hasDraft && (
+                        <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}>
+                          Preview Draft
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleTogglePublish(page.id, page.isPublished)}>
+                        {page.isPublished ? 'Unpublish' : 'Publish'}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-danger"
+                        onClick={() => handleDelete(page.id, page.title)}
                       >
-                        View Draft
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.get(`/admin/pages/${page.id}/edit`)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleTogglePublish(page.id, page.isPublished)}
-                    >
-                      {page.isPublished ? 'Unpublish' : 'Publish'}
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDelete(page.id, page.title)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
