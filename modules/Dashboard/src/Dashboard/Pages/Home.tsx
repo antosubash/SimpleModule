@@ -500,7 +500,7 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
         </div>
         <h1 className="text-4xl font-extrabold mb-3 tracking-tight">SimpleModule</h1>
         <p className="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
-          Modular monolith framework for .NET &mdash; AOT&#8209;compatible, zero&nbsp;reflection
+          Modular monolith framework for .NET with compile&#8209;time module&nbsp;discovery
         </p>
 
         <div className="flex gap-3 justify-center flex-wrap">

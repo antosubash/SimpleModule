@@ -1,5 +1,4 @@
 import { router } from '@inertiajs/react';
-import { AdminLayout } from '@simplemodule/client/admin-layout';
 import {
   Button,
   Card,
@@ -168,5 +167,3 @@ export default function RolesEdit({
     </div>
   );
 }
-
-RolesEdit.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

@@ -3,7 +3,9 @@
 <SimpleModule.Blazor.Components.InertiaShell
     PageJson="@PageJson"
     HttpContext="@HttpContext"
-    Layout="typeof(SimpleModule.Blazor.Components.Layout.MainLayout)">
+    Layout="@(HttpContext?.User?.Identity?.IsAuthenticated == true
+        ? typeof(SimpleModule.Blazor.Components.Layout.AppLayout)
+        : typeof(SimpleModule.Blazor.Components.Layout.PublicLayout))">
     <HeadContent>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

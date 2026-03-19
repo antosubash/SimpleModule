@@ -7,8 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./vite": "./src/vite-plugin-vendor.ts",
-    "./resolve-page": "./src/resolve-page.ts",
-    "./admin-layout": "./src/admin-layout.tsx"
+    "./resolve-page": "./src/resolve-page.ts"
   },
   "peerDependencies": {
     "@inertiajs/react": "^2.0.0",

@@ -70,7 +70,7 @@ internal sealed class InertiaResult : IResult
         }
 
         // Add endpoint props (higher priority — overwrites shared data)
-        // Use JSON round-trip to avoid reflection (AOT-safe)
+        // Use JSON round-trip to merge endpoint props into shared data
         if (props is not null)
         {
             var json = JsonSerializer.SerializeToElement(props, _camelCaseOptions);
