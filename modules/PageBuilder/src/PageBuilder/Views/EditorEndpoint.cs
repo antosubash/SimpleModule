@@ -13,7 +13,15 @@ public class EditorEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/admin/pages/new",
-                () => Inertia.Render("PageBuilder/Editor", new { page = (Page?)null })
+                async (IPageBuilderContracts pageBuilder) =>
+                    Inertia.Render(
+                        "PageBuilder/Editor",
+                        new
+                        {
+                            page = (Page?)null,
+                            templates = await pageBuilder.GetAllTemplatesAsync(),
+                        }
+                    )
             )
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
