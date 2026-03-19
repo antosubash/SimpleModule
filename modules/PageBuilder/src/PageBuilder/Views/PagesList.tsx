@@ -1,10 +1,5 @@
 import { Link } from '@inertiajs/react';
-
-interface PageSummary {
-  id: number;
-  title: string;
-  slug: string;
-}
+import type { PageSummary } from '../types';
 
 interface Props {
   pages: PageSummary[];

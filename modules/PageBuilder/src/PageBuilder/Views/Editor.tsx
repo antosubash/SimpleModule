@@ -2,15 +2,9 @@ import { router } from '@inertiajs/react';
 import { Puck } from '@measured/puck';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { Page } from '../types';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';
-
-interface Page {
-  id: number;
-  title: string;
-  slug: string;
-  content: string;
-}
 
 interface Props {
   page: Page | null;

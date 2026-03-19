@@ -1,14 +1,8 @@
 import { Render } from '@measured/puck/rsc';
 import { useEffect, useMemo } from 'react';
+import type { Page } from '../types';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';
-
-interface Page {
-  id: number;
-  title: string;
-  slug: string;
-  content: string;
-}
 
 interface Props {
   page: Page;

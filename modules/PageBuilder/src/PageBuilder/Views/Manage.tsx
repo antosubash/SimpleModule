@@ -9,17 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
-
-interface PageSummary {
-  id: number;
-  title: string;
-  slug: string;
-  isPublished: boolean;
-  hasDraft: boolean;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { PageSummary } from '../types';
 
 interface Props {
   pages: PageSummary[];
@@ -57,6 +47,7 @@ export default function Manage({ pages }: Props) {
               <TableHead>Title</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead>Updated</TableHead>
               <TableHead />
             </TableRow>
@@ -74,6 +65,13 @@ export default function Manage({ pages }: Props) {
                     {page.hasDraft && (
                       <Badge variant="warning">Draft</Badge>
                     )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1 flex-wrap">
+                    {page.tags.map((tag) => (
+                      <Badge key={tag} variant="outline">{tag}</Badge>
+                    ))}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-text-muted">
