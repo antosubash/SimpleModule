@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Orders.Contracts;
+using SimpleModule.PageBuilder.Contracts;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Users.Contracts;
@@ -16,6 +17,9 @@ public partial class HostDbContext
         configurationBuilder
             .Properties<OrderId>()
             .HaveConversion<OrderId.EfCoreValueConverter, OrderId.EfCoreValueComparer>();
+        configurationBuilder
+            .Properties<PageId>()
+            .HaveConversion<PageId.EfCoreValueConverter, PageId.EfCoreValueComparer>();
         configurationBuilder
             .Properties<UserId>()
             .HaveConversion<UserId.EfCoreValueConverter, UserId.EfCoreValueComparer>();

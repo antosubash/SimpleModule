@@ -1,0 +1,39 @@
+import type { ComponentConfig } from '@measured/puck';
+
+export type GridProps = {
+  columns: number;
+  gap: string;
+};
+
+export const Grid: ComponentConfig<GridProps> = {
+  fields: {
+    columns: {
+      type: 'select',
+      options: [
+        { label: '1 Column', value: 1 },
+        { label: '2 Columns', value: 2 },
+        { label: '3 Columns', value: 3 },
+        { label: '4 Columns', value: 4 },
+      ],
+    },
+    gap: { type: 'text' },
+  },
+  defaultProps: {
+    columns: 3,
+    gap: '24px',
+  },
+  resolveData: async (data) => data,
+  render: ({ columns, gap, puck: { renderDropZone: DropZone } }) => (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gap,
+      }}
+    >
+      {Array.from({ length: columns }).map((_, i) => (
+        <DropZone key={i} zone={`grid-col-${i}`} />
+      ))}
+    </div>
+  ),
+};

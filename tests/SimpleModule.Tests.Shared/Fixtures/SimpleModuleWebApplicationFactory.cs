@@ -13,6 +13,7 @@ using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.Orders;
 using SimpleModule.Permissions;
+using SimpleModule.PageBuilder;
 using SimpleModule.Products;
 using SimpleModule.Users;
 
@@ -38,6 +39,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<OrdersDbContext>(services);
             ReplaceDbContext<ProductsDbContext>(services);
             ReplaceDbContext<AdminDbContext>(services);
+            ReplaceDbContext<PageBuilderDbContext>(services);
             ReplaceDbContext<PermissionsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 

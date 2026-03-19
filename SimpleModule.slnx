@@ -47,6 +47,11 @@
         <Project Path="modules/Admin/src/Admin/Admin.csproj" />
         <Project Path="modules/Admin/tests/Admin.Tests/Admin.Tests.csproj" />
     </Folder>
+    <Folder Name="/modules/PageBuilder/">
+        <Project Path="modules/PageBuilder/src/PageBuilder.Contracts/PageBuilder.Contracts.csproj" />
+        <Project Path="modules/PageBuilder/src/PageBuilder/PageBuilder.csproj" />
+        <Project Path="modules/PageBuilder/tests/PageBuilder.Tests/PageBuilder.Tests.csproj" />
+    </Folder>
     <Folder Name="/template/">
         <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
     </Folder>

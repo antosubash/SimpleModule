@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\modules\Products\src\Products\Products.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\Orders\Orders.csproj" />
     <ProjectReference Include="..\..\modules\Admin\src\Admin\Admin.csproj" />
+    <ProjectReference Include="..\..\modules\PageBuilder\src\PageBuilder\PageBuilder.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <!-- Tailwind CSS -->
