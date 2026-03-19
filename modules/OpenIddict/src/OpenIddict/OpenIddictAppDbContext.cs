@@ -10,10 +10,14 @@ public class OpenIddictAppDbContext(
     IOptions<DatabaseOptions> dbOptions
 ) : DbContext(options)
 {
-    public DbSet<OpenIddictEntityFrameworkCoreApplication> Applications => Set<OpenIddictEntityFrameworkCoreApplication>();
-    public DbSet<OpenIddictEntityFrameworkCoreAuthorization> Authorizations => Set<OpenIddictEntityFrameworkCoreAuthorization>();
-    public DbSet<OpenIddictEntityFrameworkCoreScope> Scopes => Set<OpenIddictEntityFrameworkCoreScope>();
-    public DbSet<OpenIddictEntityFrameworkCoreToken> Tokens => Set<OpenIddictEntityFrameworkCoreToken>();
+    public DbSet<OpenIddictEntityFrameworkCoreApplication> Applications =>
+        Set<OpenIddictEntityFrameworkCoreApplication>();
+    public DbSet<OpenIddictEntityFrameworkCoreAuthorization> Authorizations =>
+        Set<OpenIddictEntityFrameworkCoreAuthorization>();
+    public DbSet<OpenIddictEntityFrameworkCoreScope> Scopes =>
+        Set<OpenIddictEntityFrameworkCoreScope>();
+    public DbSet<OpenIddictEntityFrameworkCoreToken> Tokens =>
+        Set<OpenIddictEntityFrameworkCoreToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

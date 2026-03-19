@@ -36,8 +36,7 @@ public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFac
     private async Task<string> SeedTestClientAsync(string? clientId = null)
     {
         using var scope = _factory.Services.CreateScope();
-        var manager =
-            scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
         var id = clientId ?? $"test-client-{Guid.NewGuid():N}";
         var descriptor = new OpenIddictApplicationDescriptor
@@ -171,8 +170,7 @@ public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFac
         await client.PostAsync("/openiddict/clients", content);
 
         using var scope = _factory.Services.CreateScope();
-        var manager =
-            scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
         var application = await manager.FindByClientIdAsync(newClientId);
         application.Should().NotBeNull();
@@ -200,10 +198,7 @@ public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFac
         var response = await client.PostAsync($"/openiddict/clients/{appId}", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        response
-            .Headers.Location?.ToString()
-            .Should()
-            .Contain($"/openiddict/clients/{appId}/edit");
+        response.Headers.Location?.ToString().Should().Contain($"/openiddict/clients/{appId}/edit");
     }
 
     [Fact]
@@ -215,27 +210,15 @@ public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFac
         using var content = new FormUrlEncodedContent(
             new[]
             {
-                new KeyValuePair<string, string>(
-                    "redirectUris",
-                    "https://example.com/callback"
-                ),
-                new KeyValuePair<string, string>(
-                    "postLogoutUris",
-                    "https://example.com/logout"
-                ),
+                new KeyValuePair<string, string>("redirectUris", "https://example.com/callback"),
+                new KeyValuePair<string, string>("postLogoutUris", "https://example.com/logout"),
             }
         );
 
-        var response = await client.PostAsync(
-            $"/openiddict/clients/{appId}/uris",
-            content
-        );
+        var response = await client.PostAsync($"/openiddict/clients/{appId}/uris", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        response
-            .Headers.Location?.ToString()
-            .Should()
-            .Contain($"/openiddict/clients/{appId}/edit");
+        response.Headers.Location?.ToString().Should().Contain($"/openiddict/clients/{appId}/edit");
     }
 
     [Fact]
@@ -251,23 +234,14 @@ public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFac
                     "permissions",
                     Permissions.Endpoints.Authorization
                 ),
-                new KeyValuePair<string, string>(
-                    "permissions",
-                    Permissions.Endpoints.Token
-                ),
+                new KeyValuePair<string, string>("permissions", Permissions.Endpoints.Token),
             }
         );
 
-        var response = await client.PostAsync(
-            $"/openiddict/clients/{appId}/permissions",
-            content
-        );
+        var response = await client.PostAsync($"/openiddict/clients/{appId}/permissions", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        response
-            .Headers.Location?.ToString()
-            .Should()
-            .Contain($"/openiddict/clients/{appId}/edit");
+        response.Headers.Location?.ToString().Should().Contain($"/openiddict/clients/{appId}/edit");
     }
 
     // ── Delete tests ─────────────────────────────────────────────────
@@ -304,8 +278,7 @@ public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFac
         await client.DeleteAsync($"/openiddict/clients/{appId}");
 
         using var scope = _factory.Services.CreateScope();
-        var manager =
-            scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
         var application = await manager.FindByClientIdAsync(clientId);
         application.Should().BeNull();

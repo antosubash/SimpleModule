@@ -24,8 +24,9 @@ public partial class PermissionSeedService(
         {
             using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<PermissionsDbContext>();
-            var roleManager =
-                scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<
+                RoleManager<ApplicationRole>
+            >();
 
             var adminRole = await roleManager.FindByNameAsync(AdminRole);
             if (adminRole is null)
