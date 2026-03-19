@@ -24,6 +24,8 @@
     />
     <ProjectReference Include="..\..\modules\Dashboard\src\Dashboard\Dashboard.csproj" />
     <ProjectReference Include="..\..\modules\Users\src\Users\Users.csproj" />
+    <ProjectReference Include="..\..\modules\OpenIddict\src\OpenIddict\OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\Permissions\Permissions.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\Products\Products.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\Orders\Orders.csproj" />
     <ProjectReference Include="..\..\modules\Admin\src\Admin\Admin.csproj" />

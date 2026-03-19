@@ -31,15 +31,6 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
-    private static readonly DiagnosticDescriptor DbContextWithNoDbSets = new(
-        id: "SM0004",
-        title: "DbContext has no DbSet properties",
-        messageFormat: "DbContext '{0}' in module '{1}' has no public DbSet<T> properties. No entities from this context will appear in the unified HostDbContext. Add DbSet<T> properties for each entity, or remove this DbContext if it's not needed.",
-        category: "SimpleModule.Generator",
-        defaultSeverity: DiagnosticSeverity.Warning,
-        isEnabledByDefault: true
-    );
-
     private static readonly DiagnosticDescriptor IdentityDbContextBadTypeArgs = new(
         id: "SM0005",
         title: "IdentityDbContext has unexpected type arguments",
@@ -84,21 +75,9 @@ internal sealed class DiagnosticEmitter : IEmitter
             }
         }
 
-        // SM0004: DbContext with no DbSets
-        foreach (var ctx in data.DbContexts)
-        {
-            if (ctx.DbSets.Length == 0 && !ctx.IsIdentityDbContext)
-            {
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        DbContextWithNoDbSets,
-                        Location.None,
-                        ctx.FullyQualifiedName.Replace("global::", ""),
-                        ctx.ModuleName
-                    )
-                );
-            }
-        }
+        // SM0004: DbContext with no DbSets — silently skipped.
+        // Some DbContexts (e.g., OpenIddict) manage tables internally without public DbSet<T>
+        // properties. These are excluded from the unified HostDbContext but are not an error.
 
         // SM0003: Multiple IdentityDbContexts
         DbContextInfoRecord? firstIdentity = null;
