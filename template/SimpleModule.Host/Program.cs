@@ -87,6 +87,9 @@ builder.Services.AddSimpleModuleBlazor(options =>
 // Register event bus
 builder.Services.AddScoped<IEventBus, EventBus>();
 
+// Inertia shared data (per-request bag for props shared across all Inertia responses)
+builder.Services.AddScoped<InertiaSharedData>();
+
 // Register all modules
 builder.Services.AddModules(builder.Configuration);
 
@@ -184,6 +187,7 @@ app.MapStaticAssets();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAdminSidebarSharedData();
 app.UseAntiforgery();
 
 // Health endpoints — liveness (no checks) and readiness (database checks)
