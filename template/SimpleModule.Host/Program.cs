@@ -13,7 +13,7 @@ using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Host;
 using SimpleModule.Host.Components;
-using SimpleModule.Users.Constants;
+using SimpleModule.OpenIddict.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 

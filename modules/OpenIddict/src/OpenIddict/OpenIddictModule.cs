@@ -14,6 +14,8 @@ public class OpenIddictModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         // DbContext with OpenIddict EF Core extension
+        // Note: OpenIddict manages its own tables internally (no public DbSet<T> properties).
+        // The unified HostDbContext also calls UseOpenIddict() for EF Core migrations.
         services.AddModuleDbContext<OpenIddictAppDbContext>(
             configuration,
             OpenIddictModuleConstants.ModuleName,
