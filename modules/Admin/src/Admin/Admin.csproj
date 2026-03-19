@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\Admin.Contracts\Admin.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Users\src\Users\Users.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
   </ItemGroup>
   <Target
     Name="JsBuild"

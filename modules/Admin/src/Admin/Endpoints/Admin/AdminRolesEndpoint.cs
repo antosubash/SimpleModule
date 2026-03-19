@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using SimpleModule.Admin.Services;
 using SimpleModule.Core;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users;
 using SimpleModule.Users.Entities;
 
@@ -29,7 +29,7 @@ public class AdminRolesEndpoint : IEndpoint
                     [FromForm] string? description,
                     HttpContext context,
                     RoleManager<ApplicationRole> roleManager,
-                    UsersDbContext usersDb,
+                    IPermissionContracts permissionContracts,
                     AuditService audit
                 ) =>
                 {
@@ -48,18 +48,18 @@ public class AdminRolesEndpoint : IEndpoint
                         return Results.Redirect("/admin/roles/create");
 
                     var form = await context.Request.ReadFormAsync();
-                    var permissions = form["permissions"].ToArray();
-                    foreach (var permission in permissions)
-                    {
-                        if (!string.IsNullOrWhiteSpace(permission))
-                        {
-                            usersDb.RolePermissions.Add(
-                                new RolePermission { RoleId = role.Id, Permission = permission }
-                            );
-                        }
-                    }
+                    var permissions = form["permissions"]
+                        .Where(p => !string.IsNullOrWhiteSpace(p))
+                        .Select(p => p!)
+                        .ToList();
 
-                    await usersDb.SaveChangesAsync();
+                    if (permissions.Count > 0)
+                    {
+                        await permissionContracts.SetPermissionsForRoleAsync(
+                            RoleId.From(role.Id),
+                            permissions
+                        );
+                    }
 
                     var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                     await audit.LogAsync(
@@ -116,7 +116,7 @@ public class AdminRolesEndpoint : IEndpoint
                     string id,
                     HttpContext context,
                     RoleManager<ApplicationRole> roleManager,
-                    UsersDbContext usersDb,
+                    IPermissionContracts permissionContracts,
                     AuditService audit
                 ) =>
                 {
@@ -130,47 +130,42 @@ public class AdminRolesEndpoint : IEndpoint
                         .Select(p => p!)
                         .ToHashSet(StringComparer.Ordinal);
 
-                    var currentPermissions = await usersDb
-                        .RolePermissions.Where(rp => rp.RoleId == id)
-                        .ToListAsync();
-
-                    var currentSet = currentPermissions
-                        .Select(rp => rp.Permission)
-                        .ToHashSet(StringComparer.Ordinal);
+                    var roleId = RoleId.From(id);
+                    var currentPermissions =
+                        await permissionContracts.GetPermissionsForRoleAsync(roleId);
 
                     var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
-                    // Remove permissions no longer in set
-                    var toRemove = currentPermissions
-                        .Where(rp => !newPermissions.Contains(rp.Permission))
-                        .ToList();
-                    foreach (var rp in toRemove)
+                    // Audit removed permissions
+                    foreach (
+                        var perm in currentPermissions.Where(p => !newPermissions.Contains(p))
+                    )
                     {
-                        usersDb.RolePermissions.Remove(rp);
                         await audit.LogAsync(
                             role.Id,
                             adminUserId,
                             "RolePermissionRemoved",
-                            $"Permission '{rp.Permission}' removed from role '{role.Name}'"
+                            $"Permission '{perm}' removed from role '{role.Name}'"
                         );
                     }
 
-                    // Add new permissions
-                    var toAdd = newPermissions.Where(p => !currentSet.Contains(p)).ToList();
-                    foreach (var permission in toAdd)
+                    // Audit added permissions
+                    foreach (
+                        var perm in newPermissions.Where(p => !currentPermissions.Contains(p))
+                    )
                     {
-                        usersDb.RolePermissions.Add(
-                            new RolePermission { RoleId = id, Permission = permission }
-                        );
                         await audit.LogAsync(
                             role.Id,
                             adminUserId,
                             "RolePermissionAdded",
-                            $"Permission '{permission}' added to role '{role.Name}'"
+                            $"Permission '{perm}' added to role '{role.Name}'"
                         );
                     }
 
-                    await usersDb.SaveChangesAsync();
+                    await permissionContracts.SetPermissionsForRoleAsync(
+                        roleId,
+                        newPermissions
+                    );
 
                     return Results.Redirect($"/admin/roles/{id}/edit?tab=permissions");
                 }
@@ -185,7 +180,7 @@ public class AdminRolesEndpoint : IEndpoint
                 HttpContext context,
                 RoleManager<ApplicationRole> roleManager,
                 UserManager<ApplicationUser> userManager,
-                UsersDbContext usersDb,
+                IPermissionContracts permissionContracts,
                 AuditService audit
             ) =>
             {
@@ -200,11 +195,7 @@ public class AdminRolesEndpoint : IEndpoint
                     );
 
                 // Remove role permissions first
-                var permissions = await usersDb
-                    .RolePermissions.Where(rp => rp.RoleId == id)
-                    .ToListAsync();
-                usersDb.RolePermissions.RemoveRange(permissions);
-                await usersDb.SaveChangesAsync();
+                await permissionContracts.SetPermissionsForRoleAsync(RoleId.From(id), []);
 
                 var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 await audit.LogAsync(
