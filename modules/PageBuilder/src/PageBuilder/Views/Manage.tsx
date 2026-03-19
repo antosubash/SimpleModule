@@ -1,7 +1,9 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import {
   Badge,
   Button,
+  Input,
   Table,
   TableBody,
   TableCell,
@@ -16,6 +18,8 @@ interface Props {
 }
 
 export default function Manage({ pages }: Props) {
+  const [tagInputs, setTagInputs] = useState<Record<number, string>>({});
+
   function handleDelete(id: number, title: string) {
     if (!confirm(`Delete page "${title}"?`)) return;
     fetch(`/api/pagebuilder/${id}`, { method: 'DELETE' }).then(() => router.reload());
@@ -24,6 +28,32 @@ export default function Manage({ pages }: Props) {
   function handleTogglePublish(id: number, isPublished: boolean) {
     const endpoint = isPublished ? 'unpublish' : 'publish';
     fetch(`/api/pagebuilder/${id}/${endpoint}`, { method: 'POST' }).then(() => router.reload());
+  }
+
+  function handleAddTag(pageId: number) {
+    const name = tagInputs[pageId]?.trim();
+    if (!name) return;
+    fetch(`/api/pagebuilder/${pageId}/tags`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    }).then(() => {
+      setTagInputs((prev) => ({ ...prev, [pageId]: '' }));
+      router.reload();
+    });
+  }
+
+  function handleRemoveTag(pageId: number, tagName: string) {
+    fetch('/api/pagebuilder/tags')
+      .then((r) => r.json())
+      .then((tags: { id: number; name: string }[]) => {
+        const tag = tags.find((t) => t.name === tagName);
+        if (tag) {
+          fetch(`/api/pagebuilder/${pageId}/tags/${tag.id}`, { method: 'DELETE' }).then(() =>
+            router.reload(),
+          );
+        }
+      });
   }
 
   return (
@@ -62,23 +92,62 @@ export default function Manage({ pages }: Props) {
                     <Badge variant={page.isPublished ? 'success' : 'secondary'}>
                       {page.isPublished ? 'Published' : 'Unpublished'}
                     </Badge>
-                    {page.hasDraft && (
-                      <Badge variant="warning">Draft</Badge>
-                    )}
+                    {page.hasDraft && <Badge variant="warning">Draft</Badge>}
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-1 flex-wrap">
+                  <div className="flex gap-1 flex-wrap items-center">
                     {page.tags.map((tag) => (
-                      <Badge key={tag} variant="outline">{tag}</Badge>
+                      <Badge
+                        key={tag}
+                        variant="outline"
+                        className="cursor-pointer hover:line-through"
+                        onClick={() => handleRemoveTag(page.id, tag)}
+                      >
+                        {tag} &times;
+                      </Badge>
                     ))}
+                    <form
+                      className="inline-flex gap-1"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        handleAddTag(page.id);
+                      }}
+                    >
+                      <Input
+                        placeholder="add tag"
+                        className="h-6 w-20 text-xs px-1.5"
+                        value={tagInputs[page.id] ?? ''}
+                        onChange={(e) =>
+                          setTagInputs((prev) => ({ ...prev, [page.id]: e.target.value }))
+                        }
+                      />
+                    </form>
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-text-muted">
                   {new Date(page.updatedAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 flex-wrap">
+                    {page.isPublished && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`/p/${page.slug}`, '_blank')}
+                      >
+                        View
+                      </Button>
+                    )}
+                    {page.hasDraft && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                      >
+                        View Draft
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -86,15 +155,6 @@ export default function Manage({ pages }: Props) {
                     >
                       Edit
                     </Button>
-                    {page.hasDraft && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
-                      >
-                        Preview Draft
-                      </Button>
-                    )}
                     <Button
                       variant="ghost"
                       size="sm"
