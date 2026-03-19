@@ -1,9 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
-using SimpleModule.Permissions.Contracts;
 using SimpleModule.Permissions.Entities;
-using SimpleModule.Users.Contracts;
+using SimpleModule.Permissions.EntityConfigurations;
 
 namespace SimpleModule.Permissions;
 
@@ -19,19 +18,8 @@ public class PermissionsDbContext(
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<UserPermission>(entity =>
-        {
-            entity.HasKey(e => new { e.UserId, e.Permission });
-            entity.Property(e => e.UserId).HasConversion<UserId.EfCoreValueConverter>();
-            entity.ToTable("UserPermissions");
-        });
-
-        modelBuilder.Entity<RolePermission>(entity =>
-        {
-            entity.HasKey(e => new { e.RoleId, e.Permission });
-            entity.Property(e => e.RoleId).HasConversion<RoleId.EfCoreValueConverter>();
-            entity.ToTable("RolePermissions");
-        });
+        modelBuilder.ApplyConfiguration(new UserPermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
 
         modelBuilder.ApplyModuleSchema("Permissions", dbOptions.Value);
     }

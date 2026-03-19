@@ -10,7 +10,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Admin;
 using SimpleModule.Host;
+using SimpleModule.OpenIddict;
 using SimpleModule.Orders;
+using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Users;
 
@@ -32,10 +34,17 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         builder.ConfigureServices(services =>
         {
             ReplaceDbContext<HostDbContext>(services, useOpenIddict: true);
-            ReplaceDbContext<UsersDbContext>(services, useOpenIddict: true);
+            ReplaceDbContext<UsersDbContext>(services);
             ReplaceDbContext<OrdersDbContext>(services);
             ReplaceDbContext<ProductsDbContext>(services);
             ReplaceDbContext<AdminDbContext>(services);
+            ReplaceDbContext<PermissionsDbContext>(services);
+            ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
+
+            // Remove hosted seed services — they need real DB tables that
+            // EnsureCreated on HostDbContext alone won't produce for module contexts.
+            RemoveHostedService<SimpleModule.OpenIddict.Services.OpenIddictSeedService>(services);
+            RemoveHostedService<SimpleModule.Permissions.Services.PermissionSeedService>(services);
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services
@@ -78,6 +87,19 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         return client;
+    }
+
+    private static void RemoveHostedService<TService>(IServiceCollection services)
+        where TService : class
+    {
+        var descriptor = services.SingleOrDefault(d =>
+            d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)
+            && d.ImplementationType == typeof(TService)
+        );
+        if (descriptor is not null)
+        {
+            services.Remove(descriptor);
+        }
     }
 
     private void ReplaceDbContext<TContext>(IServiceCollection services, bool useOpenIddict = false)
