@@ -169,8 +169,11 @@ app.Use(
         bool hasVersionParam = context.Request.Query.ContainsKey("v");
         bool isVendorJs =
             path is not null && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
+        bool isHashedChunk =
+            path is not null && path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
+            && path.EndsWith(".mjs", StringComparison.OrdinalIgnoreCase);
 
-        if (hasVersionParam || isVendorJs)
+        if (hasVersionParam || isVendorJs || isHashedChunk)
         {
             context.Response.OnStarting(() =>
             {
