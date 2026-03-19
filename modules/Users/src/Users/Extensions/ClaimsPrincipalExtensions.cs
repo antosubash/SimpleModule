@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using OpenIddict.Abstractions;
+using System.Security.Claims;
 
 namespace SimpleModule.Users.Extensions;
 
@@ -10,7 +9,7 @@ public static class ClaimsPrincipalExtensions
     /// </summary>
     public static string? GetUserId(this ClaimsPrincipal principal)
     {
-        return principal.GetClaim(OpenIddictConstants.Claims.Subject)
+        return principal.FindFirstValue("sub")
             ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 }

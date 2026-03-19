@@ -1,100 +1,31 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OpenIddict.Abstractions;
 using SimpleModule.Users.Constants;
 using SimpleModule.Users.Entities;
-using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace SimpleModule.Users.Services;
 
-public partial class OpenIddictSeedService(
+public partial class UserSeedService(
     IServiceProvider serviceProvider,
     IConfiguration configuration,
     IHostEnvironment hostEnvironment,
-    ILogger<OpenIddictSeedService> logger
+    ILogger<UserSeedService> logger
 ) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        if (!hostEnvironment.IsDevelopment())
+            return;
+
         using var scope = serviceProvider.CreateScope();
-
-        await SeedClientApplicationAsync(scope, cancellationToken);
-
-        // Only seed default roles and admin user in Development
-        if (hostEnvironment.IsDevelopment())
-        {
-            await SeedRolesAsync(scope);
-            await SeedAdminUserAsync(scope);
-        }
+        await SeedRolesAsync(scope);
+        await SeedAdminUserAsync(scope);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-
-    private async Task SeedClientApplicationAsync(
-        IServiceScope scope,
-        CancellationToken cancellationToken
-    )
-    {
-        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
-
-        if (
-            await manager.FindByClientIdAsync(ClientConstants.ClientId, cancellationToken)
-            is not null
-        )
-        {
-            return;
-        }
-
-        LogSeedingClient(logger);
-
-        var baseUrl = configuration[ConfigKeys.OpenIddictBaseUrl] ?? ClientConstants.DefaultBaseUrl;
-
-        var descriptor = new OpenIddictApplicationDescriptor
-        {
-            ClientId = ClientConstants.ClientId,
-            DisplayName = ClientConstants.ClientDisplayName,
-            ClientType = ClientTypes.Public,
-            RedirectUris =
-            {
-                new Uri($"{baseUrl}{ClientConstants.SwaggerCallbackPath}"),
-                new Uri($"{baseUrl}{ClientConstants.OAuthCallbackPath}"),
-            },
-            PostLogoutRedirectUris =
-            {
-                new Uri($"{baseUrl}{ClientConstants.PostLogoutRedirectPath}"),
-            },
-            Permissions =
-            {
-                Permissions.Endpoints.Authorization,
-                Permissions.Endpoints.Token,
-                Permissions.Endpoints.EndSession,
-                Permissions.GrantTypes.AuthorizationCode,
-                Permissions.GrantTypes.RefreshToken,
-                Permissions.ResponseTypes.Code,
-                Permissions.Scopes.Email,
-                Permissions.Scopes.Profile,
-                Permissions.Prefixes.Scope + AuthConstants.RolesScope,
-            },
-            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
-        };
-
-        // Allow additional redirect URIs from configuration
-        var additionalRedirects = configuration
-            .GetSection(ConfigKeys.OpenIddictAdditionalRedirectUris)
-            .Get<string[]>();
-        if (additionalRedirects is not null)
-        {
-            foreach (var uri in additionalRedirects)
-            {
-                descriptor.RedirectUris.Add(new Uri(uri));
-            }
-        }
-
-        await manager.CreateAsync(descriptor, cancellationToken);
-    }
 
     private async Task SeedRolesAsync(IServiceScope scope)
     {
@@ -160,12 +91,6 @@ public partial class OpenIddictSeedService(
             }
         }
     }
-
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Seeding OpenIddict client application..."
-    )]
-    private static partial void LogSeedingClient(ILogger logger);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Seeding roles...")]
     private static partial void LogSeedingRoles(ILogger logger);
