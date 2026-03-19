@@ -95,6 +95,9 @@ public partial class PageBuilderService(
         page.Slug = request.Slug;
         page.Order = request.Order;
         page.IsPublished = request.IsPublished;
+        page.MetaDescription = request.MetaDescription;
+        page.MetaKeywords = request.MetaKeywords;
+        page.OgImage = request.OgImage;
         page.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
