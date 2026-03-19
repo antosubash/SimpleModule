@@ -18,4 +18,8 @@ public interface IPageBuilderContracts
     Task<IEnumerable<PageTemplate>> GetAllTemplatesAsync();
     Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request);
     Task DeleteTemplateAsync(PageTemplateId id);
+    Task<IEnumerable<PageTag>> GetAllTagsAsync();
+    Task<PageTag> GetOrCreateTagAsync(string name);
+    Task AddTagToPageAsync(PageId pageId, string tagName);
+    Task RemoveTagFromPageAsync(PageId pageId, PageTagId tagId);
 }

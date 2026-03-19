@@ -24,6 +24,9 @@ public partial class HostDbContext
             .Properties<PageTemplateId>()
             .HaveConversion<PageTemplateId.EfCoreValueConverter, PageTemplateId.EfCoreValueComparer>();
         configurationBuilder
+            .Properties<PageTagId>()
+            .HaveConversion<PageTagId.EfCoreValueConverter, PageTagId.EfCoreValueComparer>();
+        configurationBuilder
             .Properties<UserId>()
             .HaveConversion<UserId.EfCoreValueConverter, UserId.EfCoreValueComparer>();
         configurationBuilder

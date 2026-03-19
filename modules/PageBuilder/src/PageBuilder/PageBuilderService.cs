@@ -26,12 +26,13 @@ public partial class PageBuilderService(
                 Order = p.Order,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
+                Tags = p.Tags.Select(t => t.Name).ToList(),
             })
             .ToListAsync();
 
     public async Task<Page?> GetPageByIdAsync(PageId id)
     {
-        var page = await db.Pages.FirstOrDefaultAsync(p => p.Id == id);
+        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == id);
         if (page is null)
         {
             LogPageNotFound(logger, id);
@@ -58,6 +59,7 @@ public partial class PageBuilderService(
                 Order = p.Order,
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
+                Tags = p.Tags.Select(t => t.Name).ToList(),
             })
             .ToListAsync();
 
@@ -195,6 +197,7 @@ public partial class PageBuilderService(
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt,
                 DeletedAt = p.DeletedAt,
+                Tags = p.Tags.Select(t => t.Name).ToList(),
             })
             .ToListAsync();
 
@@ -247,6 +250,49 @@ public partial class PageBuilderService(
 
         db.Templates.Remove(template);
         await db.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<PageTag>> GetAllTagsAsync() =>
+        await db.Tags.OrderBy(t => t.Name).ToListAsync();
+
+    public async Task<PageTag> GetOrCreateTagAsync(string name)
+    {
+        var slugName = Slugify(name);
+        var tag = await db.Tags.FirstOrDefaultAsync(t => t.Name == slugName);
+        if (tag is not null)
+            return tag;
+
+        tag = new PageTag { Name = slugName };
+        db.Tags.Add(tag);
+        await db.SaveChangesAsync();
+        return tag;
+    }
+
+    public async Task AddTagToPageAsync(PageId pageId, string tagName)
+    {
+        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
+            ?? throw new NotFoundException("Page", pageId);
+
+        var tag = await GetOrCreateTagAsync(tagName);
+
+        if (!page.Tags.Any(t => t.Id == tag.Id))
+        {
+            page.Tags.Add(tag);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    public async Task RemoveTagFromPageAsync(PageId pageId, PageTagId tagId)
+    {
+        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
+            ?? throw new NotFoundException("Page", pageId);
+
+        var tag = page.Tags.FirstOrDefault(t => t.Id == tagId);
+        if (tag is not null)
+        {
+            page.Tags.Remove(tag);
+            await db.SaveChangesAsync();
+        }
     }
 
     internal static string Slugify(string text)

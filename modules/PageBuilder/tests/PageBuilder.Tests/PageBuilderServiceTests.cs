@@ -259,4 +259,40 @@ public sealed class PageBuilderServiceTests : IDisposable
         var all = await _sut.GetAllTemplatesAsync();
         all.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task AddTagToPage_CreatesTagAndAssociates()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Tagged Page" });
+
+        await _sut.AddTagToPageAsync(page.Id, "blog");
+
+        var tags = await _sut.GetAllTagsAsync();
+        tags.Should().ContainSingle().Which.Name.Should().Be("blog");
+    }
+
+    [Fact]
+    public async Task AddTagToPage_DuplicateTag_DoesNotDuplicate()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Tagged Page" });
+
+        await _sut.AddTagToPageAsync(page.Id, "blog");
+        await _sut.AddTagToPageAsync(page.Id, "blog");
+
+        var tags = await _sut.GetAllTagsAsync();
+        tags.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task RemoveTagFromPage_RemovesAssociation()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Tagged Page" });
+        await _sut.AddTagToPageAsync(page.Id, "blog");
+
+        var tags = await _sut.GetAllTagsAsync();
+        await _sut.RemoveTagFromPageAsync(page.Id, tags.First().Id);
+
+        var updatedPage = await _sut.GetPageByIdAsync(page.Id);
+        updatedPage!.Tags.Should().BeEmpty();
+    }
 }

@@ -13,12 +13,18 @@ public class PageBuilderDbContext(
 {
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<PageTemplate> Templates => Set<PageTemplate>();
+    public DbSet<PageTag> Tags => Set<PageTag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new PageConfiguration());
         modelBuilder.ApplyConfiguration(new PageTemplateConfiguration());
+        modelBuilder.ApplyConfiguration(new PageTagConfiguration());
         modelBuilder.Entity<Page>().HasQueryFilter(p => p.DeletedAt == null);
+        modelBuilder.Entity<Page>()
+            .HasMany(p => p.Tags)
+            .WithMany()
+            .UsingEntity("PagePageTag");
         modelBuilder.ApplyModuleSchema("PageBuilder", dbOptions.Value);
     }
 
@@ -30,5 +36,8 @@ public class PageBuilderDbContext(
         configurationBuilder
             .Properties<PageTemplateId>()
             .HaveConversion<PageTemplateId.EfCoreValueConverter, PageTemplateId.EfCoreValueComparer>();
+        configurationBuilder
+            .Properties<PageTagId>()
+            .HaveConversion<PageTagId.EfCoreValueConverter, PageTagId.EfCoreValueComparer>();
     }
 }
