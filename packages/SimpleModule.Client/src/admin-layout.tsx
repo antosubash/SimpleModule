@@ -85,7 +85,7 @@ function SidebarNav() {
                   <SidebarMenuButton active={isActive}>
                     <span
                       className="flex-shrink-0 [&>svg]:w-5 [&>svg]:h-5"
-                      // icon values are trusted SVG constants from C# module source code, not user input
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted SVG from C# module source
                       dangerouslySetInnerHTML={{ __html: item.icon }}
                     />
                     {open && <span>{item.label}</span>}
