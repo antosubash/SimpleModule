@@ -3,7 +3,7 @@ import ClientsCreate from './OpenIddict/ClientsCreate';
 import ClientsEdit from './OpenIddict/ClientsEdit';
 
 export const pages: Record<string, any> = {
-  'OpenIddict/OpenIddict/Clients': Clients,
-  'OpenIddict/OpenIddict/ClientsCreate': ClientsCreate,
-  'OpenIddict/OpenIddict/ClientsEdit': ClientsEdit,
+  'OpenIddictModule/OpenIddict/Clients': Clients,
+  'OpenIddictModule/OpenIddict/ClientsCreate': ClientsCreate,
+  'OpenIddictModule/OpenIddict/ClientsEdit': ClientsEdit,
 };

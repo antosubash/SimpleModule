@@ -29,7 +29,7 @@ public class ClientsEndpoint : IViewEndpoint
                         );
                     }
 
-                    return Inertia.Render("OpenIddict/OpenIddict/Clients", new { clients });
+                    return Inertia.Render("OpenIddictModule/OpenIddict/Clients", new { clients });
                 }
             )
             .RequireAuthorization(policy => policy.RequireRole("Admin"));

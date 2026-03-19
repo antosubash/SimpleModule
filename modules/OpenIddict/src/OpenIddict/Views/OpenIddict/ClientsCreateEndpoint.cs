@@ -11,7 +11,7 @@ public class ClientsCreateEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/openiddict/clients/create",
-                () => Inertia.Render("OpenIddict/OpenIddict/ClientsCreate", new { })
+                () => Inertia.Render("OpenIddictModule/OpenIddict/ClientsCreate", new { })
             )
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
     }
