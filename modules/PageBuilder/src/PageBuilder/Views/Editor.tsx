@@ -124,6 +124,21 @@ export default function Editor({ page, templates }: Props) {
 
   useEffect(() => loadPuckCss(), []);
 
+  // Hide the Blazor shell (sidebar + toggle) so the editor has full screen
+  useEffect(() => {
+    const sidebar = document.getElementById('app-sidebar');
+    const toggle = document.querySelector('.app-sidebar-toggle') as HTMLElement;
+    const content = document.querySelector('.app-content') as HTMLElement;
+    if (sidebar) sidebar.style.display = 'none';
+    if (toggle) toggle.style.display = 'none';
+    if (content) content.style.marginLeft = '0';
+    return () => {
+      if (sidebar) sidebar.style.display = '';
+      if (toggle) toggle.style.display = '';
+      if (content) content.style.marginLeft = '';
+    };
+  }, []);
+
   const [initialData, setInitialData] = useState(() => {
     if (page?.content) {
       try {
