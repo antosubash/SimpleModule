@@ -11,7 +11,8 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@simplemodule/ui';
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface AdminMenuItem {
   label: string;
@@ -103,9 +104,9 @@ function SidebarNav() {
   );
 }
 
-export function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutContent({ children }: AdminLayoutProps) {
   return (
-    <div className="fixed inset-0 z-40 flex bg-surface">
+    <div className="fixed inset-0 z-[60] flex bg-surface">
       <SidebarProvider>
         <Sidebar>
           <SidebarNav />
@@ -117,4 +118,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </SidebarProvider>
     </div>
   );
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setPortalTarget(document.body);
+  }, []);
+
+  if (!portalTarget) return null;
+
+  return createPortal(<AdminLayoutContent>{children}</AdminLayoutContent>, portalTarget);
 }
