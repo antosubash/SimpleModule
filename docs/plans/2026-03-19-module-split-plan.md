@@ -4,9 +4,9 @@
 
 **Goal:** Extract OpenIddict and permissions into two new modules, slimming the Users module to identity-only concerns.
 
-**Architecture:** Create `modules/Permissions/` (owns permission entities + queries, no dependencies) and `modules/OpenIddict/` (owns OAuth2/OIDC, depends on Users.Contracts + Permissions.Contracts). Users module keeps only Identity entities, UserService, and ConsoleEmailSender. Admin module switches from `UsersDbContext` to `IPermissionContracts` for permission operations.
+**Architecture:** Create `modules/Permissions/` (owns permission entities + queries, depends on Users.Contracts for `UserId`) and `modules/OpenIddict/` (owns OAuth2/OIDC, depends on Users.Contracts + Permissions.Contracts). Users module keeps only Identity entities, UserService, and ConsoleEmailSender. Admin module switches from `UsersDbContext` to `IPermissionContracts` for permission operations.
 
-**Tech Stack:** .NET 10, EF Core, OpenIddict, xUnit.v3, FluentAssertions, SQLite in-memory for tests.
+**Tech Stack:** .NET 10, EF Core, OpenIddict, Vogen (typed IDs), xUnit.v3, FluentAssertions, Bogus, SQLite in-memory for tests.
 
 ---
 
@@ -16,6 +16,7 @@
 - Create: `modules/Permissions/src/Permissions.Contracts/Permissions.Contracts.csproj`
 - Create: `modules/Permissions/src/Permissions.Contracts/IPermissionContracts.cs`
 - Create: `modules/Permissions/src/Permissions.Contracts/PermissionsConstants.cs`
+- Create: `modules/Permissions/src/Permissions.Contracts/RoleId.cs`
 
 **Step 1: Create csproj**
 
@@ -24,28 +25,55 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <DefineConstants>$(DefineConstants);VOGEN_NO_VALIDATION</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Vogen" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
   </ItemGroup>
 </Project>
 ```
 
-**Step 2: Create IPermissionContracts**
+Note: References `Users.Contracts` for the `UserId` type. This is consistent with the project's convention that domain types like strongly-typed IDs belong in module Contracts.
+
+**Step 2: Create RoleId**
 
 ```csharp
+using Vogen;
+
+namespace SimpleModule.Permissions.Contracts;
+
+[ValueObject<string>(conversions: Conversions.SystemTextJson | Conversions.EfCoreValueConverter)]
+public readonly partial struct RoleId
+{
+    private static Validation Validate(string value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? Validation.Invalid("RoleId cannot be empty")
+            : Validation.Ok;
+}
+```
+
+**Step 3: Create IPermissionContracts**
+
+```csharp
+using SimpleModule.Users.Contracts;
+
 namespace SimpleModule.Permissions.Contracts;
 
 public interface IPermissionContracts
 {
-    Task<IReadOnlySet<string>> GetPermissionsForUserAsync(string userId);
-    Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(string roleId);
-    Task SetPermissionsForUserAsync(string userId, IEnumerable<string> permissions);
-    Task SetPermissionsForRoleAsync(string roleId, IEnumerable<string> permissions);
+    Task<IReadOnlySet<string>> GetPermissionsForUserAsync(UserId userId);
+    Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(RoleId roleId);
+    Task<IReadOnlySet<string>> GetAllPermissionsForUserAsync(UserId userId, IEnumerable<RoleId> roleIds);
+    Task SetPermissionsForUserAsync(UserId userId, IEnumerable<string> permissions);
+    Task SetPermissionsForRoleAsync(RoleId roleId, IEnumerable<string> permissions);
 }
 ```
 
-**Step 3: Create PermissionsConstants**
+`GetAllPermissionsForUserAsync` combines user permissions + permissions for all given roles. This is what the AuthorizationEndpoint needs — it has the user ID and role IDs, and wants all permissions in one call.
+
+**Step 4: Create PermissionsConstants**
 
 ```csharp
 namespace SimpleModule.Permissions.Contracts;
@@ -56,22 +84,22 @@ public static class PermissionsConstants
 }
 ```
 
-**Step 4: Add to solution**
+**Step 5: Add to solution**
 
 ```bash
 dotnet slnx add modules/Permissions/src/Permissions.Contracts/Permissions.Contracts.csproj --solution-folder /modules/Permissions/
 ```
 
-**Step 5: Build to verify**
+**Step 6: Build to verify**
 
 Run: `dotnet build modules/Permissions/src/Permissions.Contracts/Permissions.Contracts.csproj`
 Expected: Build succeeded
 
-**Step 6: Commit**
+**Step 7: Commit**
 
 ```bash
 git add modules/Permissions/src/Permissions.Contracts/ SimpleModule.slnx
-git commit -m "feat(permissions): add Permissions.Contracts project with IPermissionContracts"
+git commit -m "feat(permissions): add Permissions.Contracts with IPermissionContracts, RoleId"
 ```
 
 ---
@@ -107,31 +135,35 @@ git commit -m "feat(permissions): add Permissions.Contracts project with IPermis
 
 `Entities/UserPermission.cs`:
 ```csharp
+using SimpleModule.Users.Contracts;
+
 namespace SimpleModule.Permissions.Entities;
 
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
 public class UserPermission
 #pragma warning restore CA1711
 {
-    public string UserId { get; set; } = string.Empty;
+    public UserId UserId { get; set; }
     public string Permission { get; set; } = string.Empty;
 }
 ```
 
 `Entities/RolePermission.cs`:
 ```csharp
+using SimpleModule.Permissions.Contracts;
+
 namespace SimpleModule.Permissions.Entities;
 
 #pragma warning disable CA1711 // Identifiers should not have incorrect suffix
 public class RolePermission
 #pragma warning restore CA1711
 {
-    public string RoleId { get; set; } = string.Empty;
+    public RoleId RoleId { get; set; }
     public string Permission { get; set; } = string.Empty;
 }
 ```
 
-Note: Navigation properties to `ApplicationUser`/`ApplicationRole` are removed — these entities now use plain string IDs with no FK relationship to Identity tables.
+No navigation properties — these are pure string-backed value object mappings with no FK to Identity tables.
 
 **Step 3: Create PermissionsDbContext**
 
@@ -139,7 +171,9 @@ Note: Navigation properties to `ApplicationUser`/`ApplicationRole` are removed �
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Permissions.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Permissions;
 
@@ -158,12 +192,14 @@ public class PermissionsDbContext(
         builder.Entity<UserPermission>(entity =>
         {
             entity.HasKey(e => new { e.UserId, e.Permission });
+            entity.Property(e => e.UserId).HasConversion<UserId.EfCoreValueConverter>();
             entity.ToTable("UserPermissions");
         });
 
         builder.Entity<RolePermission>(entity =>
         {
             entity.HasKey(e => new { e.RoleId, e.Permission });
+            entity.Property(e => e.RoleId).HasConversion<RoleId.EfCoreValueConverter>();
             entity.ToTable("RolePermissions");
         });
 
@@ -178,32 +214,56 @@ public class PermissionsDbContext(
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Permissions.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Permissions;
 
 public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 {
-    public async Task<IReadOnlySet<string>> GetPermissionsForUserAsync(string userId)
+    public async Task<IReadOnlySet<string>> GetPermissionsForUserAsync(UserId userId)
     {
+        var perms = await db.UserPermissions
+            .Where(p => p.UserId == userId)
+            .Select(p => p.Permission)
+            .ToListAsync();
+
+        return new HashSet<string>(perms);
+    }
+
+    public async Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(RoleId roleId)
+    {
+        var perms = await db.RolePermissions
+            .Where(p => p.RoleId == roleId)
+            .Select(p => p.Permission)
+            .ToListAsync();
+
+        return new HashSet<string>(perms);
+    }
+
+    public async Task<IReadOnlySet<string>> GetAllPermissionsForUserAsync(
+        UserId userId,
+        IEnumerable<RoleId> roleIds)
+    {
+        var roleIdList = roleIds.ToList();
+
+        var rolePerms = await db.RolePermissions
+            .Where(p => roleIdList.Contains(p.RoleId))
+            .Select(p => p.Permission)
+            .ToListAsync();
+
         var userPerms = await db.UserPermissions
             .Where(p => p.UserId == userId)
             .Select(p => p.Permission)
             .ToListAsync();
 
-        return new HashSet<string>(userPerms);
+        var result = new HashSet<string>(rolePerms);
+        foreach (var p in userPerms)
+            result.Add(p);
+
+        return result;
     }
 
-    public async Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(string roleId)
-    {
-        var rolePerms = await db.RolePermissions
-            .Where(p => p.RoleId == roleId)
-            .Select(p => p.Permission)
-            .ToListAsync();
-
-        return new HashSet<string>(rolePerms);
-    }
-
-    public async Task SetPermissionsForUserAsync(string userId, IEnumerable<string> permissions)
+    public async Task SetPermissionsForUserAsync(UserId userId, IEnumerable<string> permissions)
     {
         var existing = await db.UserPermissions
             .Where(p => p.UserId == userId)
@@ -219,7 +279,7 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
         await db.SaveChangesAsync();
     }
 
-    public async Task SetPermissionsForRoleAsync(string roleId, IEnumerable<string> permissions)
+    public async Task SetPermissionsForRoleAsync(RoleId roleId, IEnumerable<string> permissions)
     {
         var existing = await db.RolePermissions
             .Where(p => p.RoleId == roleId)
@@ -239,8 +299,6 @@ public class PermissionService(PermissionsDbContext db) : IPermissionContracts
 
 **Step 5: Create PermissionSeedService**
 
-Move from `SimpleModule.Users.Services.PermissionSeedService` with adaptations:
-
 ```csharp
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -248,7 +306,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Permissions.Entities;
+using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Permissions.Services;
 
@@ -264,16 +324,13 @@ public partial class PermissionSeedService(
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PermissionsDbContext>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
-        // Look up Admin role ID from Identity's role store
-        var roleManager = scope.ServiceProvider.GetRequiredService<IRoleStore<IdentityRole>>();
-
-        // We need to find the Admin role. Since we don't depend on Users module,
-        // we query the RolePermissions table — if no Admin role permissions exist yet,
-        // we need the role ID from Identity. Use a dynamic lookup via IServiceProvider.
-        var adminRoleId = await FindAdminRoleIdAsync(scope);
-        if (adminRoleId is null)
+        var adminRole = await roleManager.FindByNameAsync(AdminRole);
+        if (adminRole is null)
             return;
+
+        var adminRoleId = RoleId.From(adminRole.Id);
 
         var existingPermissions = await dbContext
             .RolePermissions.Where(rp => rp.RoleId == adminRoleId)
@@ -303,27 +360,6 @@ public partial class PermissionSeedService(
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private static async Task<string?> FindAdminRoleIdAsync(IServiceScope scope)
-    {
-        // Use RoleManager<IdentityRole> if available, otherwise try the generic version.
-        // This avoids a hard dependency on Users module's ApplicationRole type.
-        try
-        {
-            var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
-            if (roleManager is not null)
-            {
-                var role = await roleManager.FindByNameAsync(AdminRole);
-                return role?.Id;
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            // RoleManager not registered with IdentityRole — try dynamic approach
-        }
-
-        return null;
-    }
-
     [LoggerMessage(
         Level = LogLevel.Information,
         Message = "Seeding {Count} permissions for Admin role..."
@@ -332,7 +368,14 @@ public partial class PermissionSeedService(
 }
 ```
 
-Note: The seed service has a challenge — it needs the Admin role ID but can't depend on `ApplicationRole`. We'll address this in Task 7 by having it resolve `RoleManager` dynamically through the DI container (ASP.NET Identity registers `RoleManager<ApplicationRole>` which is also resolvable as its base type). If this doesn't work cleanly, an alternative is to add a `GetRoleIdByNameAsync(string name)` method to `IUserContracts` and have Permissions depend on Users.Contracts.
+Note: The seed service references `ApplicationRole` and `RoleManager<ApplicationRole>` at runtime (registered by Users module). The Permissions.csproj does NOT reference Users.csproj — it references Users.Contracts (transitively via Permissions.Contracts). For the seed service to resolve `RoleManager<ApplicationRole>`, the Permissions implementation project needs a reference to Users.csproj. **Alternative**: Add `GetRoleIdByNameAsync(string name)` to `IUserContracts` and avoid the reference. This is the cleaner approach — update `IUserContracts` to include it.
+
+**Revised approach**: Add to `IUserContracts`:
+```csharp
+Task<string?> GetRoleIdByNameAsync(string roleName);
+```
+
+Then the seed service calls `IUserContracts.GetRoleIdByNameAsync("Admin")` and wraps in `RoleId.From(...)`. No direct dependency on Users implementation needed.
 
 **Step 6: Create PermissionsModule**
 
@@ -377,21 +420,392 @@ Expected: Build succeeded
 
 ```bash
 git add modules/Permissions/ SimpleModule.slnx
-git commit -m "feat(permissions): add Permissions module with DbContext, service, and seed"
+git commit -m "feat(permissions): add Permissions module with DbContext, PermissionService, seed"
 ```
 
 ---
 
-### Task 3: Create OpenIddict.Contracts Project
+### Task 3: Create Permissions Module Tests
+
+**Files:**
+- Create: `modules/Permissions/tests/Permissions.Tests/Permissions.Tests.csproj`
+- Create: `modules/Permissions/tests/Permissions.Tests/Unit/PermissionServiceTests.cs`
+- Create: `modules/Permissions/tests/Permissions.Tests/Unit/PermissionServiceRoleTests.cs`
+- Create: `modules/Permissions/tests/Permissions.Tests/Unit/PermissionServiceCombinedTests.cs`
+- Create: `modules/Permissions/tests/Permissions.Tests/Helpers/TestDbContextFactory.cs`
+
+**Step 1: Create test project**
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Permissions\Permissions.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+**Step 2: Create TestDbContextFactory helper**
+
+```csharp
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using SimpleModule.Database;
+
+namespace Permissions.Tests.Helpers;
+
+public sealed class TestDbContextFactory : IDisposable
+{
+    private readonly SqliteConnection _connection;
+
+    public TestDbContextFactory()
+    {
+        _connection = new SqliteConnection("Data Source=:memory:");
+        _connection.Open();
+    }
+
+    public PermissionsDbContext Create()
+    {
+        var options = new DbContextOptionsBuilder<PermissionsDbContext>()
+            .UseSqlite(_connection)
+            .Options;
+
+        var dbOptions = Options.Create(new DatabaseOptions());
+        var context = new PermissionsDbContext(options, dbOptions);
+        context.Database.EnsureCreated();
+        return context;
+    }
+
+    public void Dispose() => _connection.Dispose();
+}
+```
+
+**Step 3: Write user permission tests**
+
+`Unit/PermissionServiceTests.cs`:
+```csharp
+using FluentAssertions;
+using Permissions.Tests.Helpers;
+using SimpleModule.Permissions;
+using SimpleModule.Users.Contracts;
+
+namespace Permissions.Tests.Unit;
+
+public class PermissionServiceTests : IDisposable
+{
+    private readonly TestDbContextFactory _factory = new();
+
+    [Fact]
+    public async Task GetPermissionsForUser_NoPermissions_ReturnsEmpty()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+
+        var result = await sut.GetPermissionsForUserAsync(UserId.From("user-1"));
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SetPermissionsForUser_ThenGet_ReturnsSetPermissions()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ManageUsers", "Admin.ViewAuditLog"]);
+
+        var result = await sut.GetPermissionsForUserAsync(userId);
+        result.Should().HaveCount(2);
+        result.Should().Contain("Admin.ManageUsers");
+        result.Should().Contain("Admin.ViewAuditLog");
+    }
+
+    [Fact]
+    public async Task SetPermissionsForUser_ReplacesExisting()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ManageUsers", "Admin.ViewAuditLog"]);
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ManageRoles"]);
+
+        var result = await sut.GetPermissionsForUserAsync(userId);
+        result.Should().HaveCount(1);
+        result.Should().Contain("Admin.ManageRoles");
+    }
+
+    [Fact]
+    public async Task SetPermissionsForUser_EmptyList_ClearsAll()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ManageUsers"]);
+        await sut.SetPermissionsForUserAsync(userId, []);
+
+        var result = await sut.GetPermissionsForUserAsync(userId);
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetPermissionsForUser_IsolatedBetweenUsers()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var user1 = UserId.From("user-1");
+        var user2 = UserId.From("user-2");
+
+        await sut.SetPermissionsForUserAsync(user1, ["Admin.ManageUsers"]);
+        await sut.SetPermissionsForUserAsync(user2, ["Admin.ManageRoles"]);
+
+        var result1 = await sut.GetPermissionsForUserAsync(user1);
+        var result2 = await sut.GetPermissionsForUserAsync(user2);
+
+        result1.Should().ContainSingle().Which.Should().Be("Admin.ManageUsers");
+        result2.Should().ContainSingle().Which.Should().Be("Admin.ManageRoles");
+    }
+
+    public void Dispose() => _factory.Dispose();
+}
+```
+
+**Step 4: Write role permission tests**
+
+`Unit/PermissionServiceRoleTests.cs`:
+```csharp
+using FluentAssertions;
+using Permissions.Tests.Helpers;
+using SimpleModule.Permissions;
+using SimpleModule.Permissions.Contracts;
+
+namespace Permissions.Tests.Unit;
+
+public class PermissionServiceRoleTests : IDisposable
+{
+    private readonly TestDbContextFactory _factory = new();
+
+    [Fact]
+    public async Task GetPermissionsForRole_NoPermissions_ReturnsEmpty()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+
+        var result = await sut.GetPermissionsForRoleAsync(RoleId.From("role-1"));
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SetPermissionsForRole_ThenGet_ReturnsSetPermissions()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var roleId = RoleId.From("role-admin");
+
+        await sut.SetPermissionsForRoleAsync(roleId, ["Admin.ManageUsers", "Admin.ManageRoles", "Admin.ViewAuditLog"]);
+
+        var result = await sut.GetPermissionsForRoleAsync(roleId);
+        result.Should().HaveCount(3);
+        result.Should().Contain("Admin.ManageUsers");
+        result.Should().Contain("Admin.ManageRoles");
+        result.Should().Contain("Admin.ViewAuditLog");
+    }
+
+    [Fact]
+    public async Task SetPermissionsForRole_ReplacesExisting()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var roleId = RoleId.From("role-admin");
+
+        await sut.SetPermissionsForRoleAsync(roleId, ["Admin.ManageUsers", "Admin.ManageRoles"]);
+        await sut.SetPermissionsForRoleAsync(roleId, ["Admin.ViewAuditLog"]);
+
+        var result = await sut.GetPermissionsForRoleAsync(roleId);
+        result.Should().ContainSingle().Which.Should().Be("Admin.ViewAuditLog");
+    }
+
+    [Fact]
+    public async Task SetPermissionsForRole_EmptyList_ClearsAll()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var roleId = RoleId.From("role-admin");
+
+        await sut.SetPermissionsForRoleAsync(roleId, ["Admin.ManageUsers"]);
+        await sut.SetPermissionsForRoleAsync(roleId, []);
+
+        var result = await sut.GetPermissionsForRoleAsync(roleId);
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetPermissionsForRole_IsolatedBetweenRoles()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var role1 = RoleId.From("role-admin");
+        var role2 = RoleId.From("role-editor");
+
+        await sut.SetPermissionsForRoleAsync(role1, ["Admin.ManageUsers"]);
+        await sut.SetPermissionsForRoleAsync(role2, ["Admin.ViewAuditLog"]);
+
+        var result1 = await sut.GetPermissionsForRoleAsync(role1);
+        var result2 = await sut.GetPermissionsForRoleAsync(role2);
+
+        result1.Should().ContainSingle().Which.Should().Be("Admin.ManageUsers");
+        result2.Should().ContainSingle().Which.Should().Be("Admin.ViewAuditLog");
+    }
+
+    public void Dispose() => _factory.Dispose();
+}
+```
+
+**Step 5: Write combined permission tests**
+
+`Unit/PermissionServiceCombinedTests.cs`:
+```csharp
+using FluentAssertions;
+using Permissions.Tests.Helpers;
+using SimpleModule.Permissions;
+using SimpleModule.Permissions.Contracts;
+using SimpleModule.Users.Contracts;
+
+namespace Permissions.Tests.Unit;
+
+public class PermissionServiceCombinedTests : IDisposable
+{
+    private readonly TestDbContextFactory _factory = new();
+
+    [Fact]
+    public async Task GetAllPermissionsForUser_CombinesUserAndRolePermissions()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+        var roleId = RoleId.From("role-admin");
+
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ViewAuditLog"]);
+        await sut.SetPermissionsForRoleAsync(roleId, ["Admin.ManageUsers", "Admin.ManageRoles"]);
+
+        var result = await sut.GetAllPermissionsForUserAsync(userId, [roleId]);
+
+        result.Should().HaveCount(3);
+        result.Should().Contain("Admin.ViewAuditLog");
+        result.Should().Contain("Admin.ManageUsers");
+        result.Should().Contain("Admin.ManageRoles");
+    }
+
+    [Fact]
+    public async Task GetAllPermissionsForUser_DeduplicatesOverlapping()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+        var roleId = RoleId.From("role-admin");
+
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ManageUsers", "Admin.ViewAuditLog"]);
+        await sut.SetPermissionsForRoleAsync(roleId, ["Admin.ManageUsers", "Admin.ManageRoles"]);
+
+        var result = await sut.GetAllPermissionsForUserAsync(userId, [roleId]);
+
+        result.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task GetAllPermissionsForUser_MultipleRoles_CombinesAll()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+        var role1 = RoleId.From("role-admin");
+        var role2 = RoleId.From("role-editor");
+
+        await sut.SetPermissionsForRoleAsync(role1, ["Admin.ManageUsers"]);
+        await sut.SetPermissionsForRoleAsync(role2, ["Admin.ViewAuditLog"]);
+
+        var result = await sut.GetAllPermissionsForUserAsync(userId, [role1, role2]);
+
+        result.Should().HaveCount(2);
+        result.Should().Contain("Admin.ManageUsers");
+        result.Should().Contain("Admin.ViewAuditLog");
+    }
+
+    [Fact]
+    public async Task GetAllPermissionsForUser_NoRoles_ReturnsOnlyUserPermissions()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+        var userId = UserId.From("user-1");
+
+        await sut.SetPermissionsForUserAsync(userId, ["Admin.ViewAuditLog"]);
+
+        var result = await sut.GetAllPermissionsForUserAsync(userId, []);
+
+        result.Should().ContainSingle().Which.Should().Be("Admin.ViewAuditLog");
+    }
+
+    [Fact]
+    public async Task GetAllPermissionsForUser_NoPermissionsAnywhere_ReturnsEmpty()
+    {
+        await using var db = _factory.Create();
+        var sut = new PermissionService(db);
+
+        var result = await sut.GetAllPermissionsForUserAsync(
+            UserId.From("user-1"),
+            [RoleId.From("role-1")]);
+
+        result.Should().BeEmpty();
+    }
+
+    public void Dispose() => _factory.Dispose();
+}
+```
+
+**Step 6: Add to solution**
+
+```bash
+dotnet slnx add modules/Permissions/tests/Permissions.Tests/Permissions.Tests.csproj --solution-folder /modules/Permissions/
+```
+
+**Step 7: Run tests**
+
+Run: `dotnet test modules/Permissions/tests/Permissions.Tests/`
+Expected: All 15 tests pass
+
+**Step 8: Commit**
+
+```bash
+git add modules/Permissions/tests/ SimpleModule.slnx
+git commit -m "test(permissions): add unit tests for PermissionService"
+```
+
+---
+
+### Task 4: Create OpenIddict.Contracts Project
 
 **Files:**
 - Create: `modules/OpenIddict/src/OpenIddict.Contracts/OpenIddict.Contracts.csproj`
-- Create: `modules/OpenIddict/src/OpenIddict.Contracts/OpenIddictConstants.cs`
+- Create: `modules/OpenIddict/src/OpenIddict.Contracts/OpenIddictModuleConstants.cs`
 - Create: `modules/OpenIddict/src/OpenIddict.Contracts/AuthConstants.cs`
 - Create: `modules/OpenIddict/src/OpenIddict.Contracts/ConnectRouteConstants.cs`
 - Create: `modules/OpenIddict/src/OpenIddict.Contracts/ClientConstants.cs`
 - Create: `modules/OpenIddict/src/OpenIddict.Contracts/ConfigKeys.cs`
-- Create: `modules/OpenIddict/src/OpenIddict.Contracts/SeedConstants.cs`
 - Create: `modules/OpenIddict/src/OpenIddict.Contracts/AuthErrorMessages.cs`
 
 **Step 1: Create csproj**
@@ -408,18 +822,11 @@ git commit -m "feat(permissions): add Permissions module with DbContext, service
 </Project>
 ```
 
-**Step 2: Move constants from Users.Contracts to OpenIddict.Contracts**
+**Step 2: Create constants — move from Users.Contracts**
 
-Move all constant classes from `modules/Users/src/Users.Contracts/Constants/` to `modules/OpenIddict/src/OpenIddict.Contracts/`, changing the namespace from `SimpleModule.Users.Constants` to `SimpleModule.OpenIddict.Contracts`:
+Move all constant classes from `modules/Users/src/Users.Contracts/Constants/` to OpenIddict.Contracts, changing namespace to `SimpleModule.OpenIddict.Contracts`:
 
-- `AuthConstants.cs` → namespace `SimpleModule.OpenIddict.Contracts`
-- `ConnectRouteConstants.cs` → namespace `SimpleModule.OpenIddict.Contracts`
-- `ClientConstants.cs` → namespace `SimpleModule.OpenIddict.Contracts`
-- `ConfigKeys.cs` → namespace `SimpleModule.OpenIddict.Contracts` (split: keep `SeedAdminPassword` in Users, move OpenIddict keys)
-- `SeedConstants.cs` → namespace `SimpleModule.OpenIddict.Contracts` (split: keep user seed constants in Users, move client seed constants if any)
-- `AuthErrorMessages.cs` → namespace `SimpleModule.OpenIddict.Contracts`
-
-Create `OpenIddictConstants.cs` (the module name constant):
+`OpenIddictModuleConstants.cs`:
 ```csharp
 namespace SimpleModule.OpenIddict.Contracts;
 
@@ -429,7 +836,74 @@ public static class OpenIddictModuleConstants
 }
 ```
 
-Note: `SeedConstants` and `ConfigKeys` need splitting. `SeedConstants.AdminRole/AdminEmail/AdminDisplayName/DefaultAdminPassword` stay in Users (or move to a shared Users constant). `ConfigKeys.SeedAdminPassword` stays in Users. All `OpenIddict*` config keys move to OpenIddict.
+`AuthConstants.cs`:
+```csharp
+namespace SimpleModule.OpenIddict.Contracts;
+
+public static class AuthConstants
+{
+    public const string OAuth2Scheme = "oauth2";
+    public const string SmartAuthPolicy = "SmartAuth";
+    public const string OpenIdScope = "openid";
+    public const string ProfileScope = "profile";
+    public const string EmailScope = "email";
+    public const string RolesScope = "roles";
+}
+```
+
+`ConnectRouteConstants.cs`:
+```csharp
+namespace SimpleModule.OpenIddict.Contracts;
+
+public static class ConnectRouteConstants
+{
+    public const string ConnectAuthorize = "/connect/authorize";
+    public const string ConnectToken = "/connect/token";
+    public const string ConnectEndSession = "/connect/endsession";
+    public const string ConnectUserInfo = "/connect/userinfo";
+}
+```
+
+`ClientConstants.cs`:
+```csharp
+namespace SimpleModule.OpenIddict.Contracts;
+
+public static class ClientConstants
+{
+    public const string ClientId = "simplemodule-client";
+    public const string ClientDisplayName = "SimpleModule Client";
+    public const string SwaggerCallbackPath = "/swagger/oauth2-redirect.html";
+    public const string OAuthCallbackPath = "/oauth-callback";
+    public const string PostLogoutRedirectPath = "/";
+    public const string DefaultBaseUrl = "https://localhost:5001";
+}
+```
+
+`ConfigKeys.cs` (OpenIddict-specific keys only):
+```csharp
+namespace SimpleModule.OpenIddict.Contracts;
+
+public static class ConfigKeys
+{
+    public const string OpenIddictBaseUrl = "OpenIddict:BaseUrl";
+    public const string OpenIddictEncryptionCertPath = "OpenIddict:EncryptionCertificatePath";
+    public const string OpenIddictSigningCertPath = "OpenIddict:SigningCertificatePath";
+    public const string OpenIddictCertPassword = "OpenIddict:CertificatePassword";
+    public const string OpenIddictAdditionalRedirectUris = "OpenIddict:AdditionalRedirectUris";
+}
+```
+
+`AuthErrorMessages.cs`:
+```csharp
+namespace SimpleModule.OpenIddict.Contracts;
+
+public static class AuthErrorMessages
+{
+    public const string OpenIdConnectRequestMissing =
+        "The OpenID Connect request cannot be retrieved.";
+    public const string UserDetailsMissing = "The user details cannot be retrieved.";
+}
+```
 
 **Step 3: Add to solution**
 
@@ -446,12 +920,12 @@ Expected: Build succeeded
 
 ```bash
 git add modules/OpenIddict/ SimpleModule.slnx
-git commit -m "feat(openiddict): add OpenIddict.Contracts project with auth constants"
+git commit -m "feat(openiddict): add OpenIddict.Contracts with auth constants"
 ```
 
 ---
 
-### Task 4: Create OpenIddict Module Implementation
+### Task 5: Create OpenIddict Module Implementation
 
 **Files:**
 - Create: `modules/OpenIddict/src/OpenIddict/OpenIddict.csproj`
@@ -477,11 +951,13 @@ git commit -m "feat(openiddict): add OpenIddict.Contracts project with auth cons
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\OpenIddict.Contracts\OpenIddict.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Users\src\Users\Users.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
   </ItemGroup>
 </Project>
 ```
+
+Note: References `Users.csproj` (not just Contracts) because `AuthorizationEndpoint` needs `UserManager<ApplicationUser>` and `SignInManager<ApplicationUser>`. This is the same pattern Admin uses.
 
 **Step 2: Create OpenIddictAppDbContext**
 
@@ -507,11 +983,7 @@ public class OpenIddictAppDbContext(
 
 **Step 3: Create OpenIddictModule**
 
-Move OpenIddict configuration from `UsersModule.ConfigureServices`. The module registers:
-- `OpenIddictAppDbContext` with `UseOpenIddict()`
-- OpenIddict server options (authorization code flow, PKCE, endpoints, certs, scopes)
-- OpenIddict validation
-- `OpenIddictSeedService`
+Move the OpenIddict configuration from `UsersModule.ConfigureServices`:
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
@@ -576,9 +1048,7 @@ public class OpenIddictModule : IModule
                 }
                 else
                 {
-                    options
-                        .AddDevelopmentEncryptionCertificate()
-                        .AddDevelopmentSigningCertificate();
+                    options.AddDevelopmentEncryptionCertificate().AddDevelopmentSigningCertificate();
                 }
 
                 options.RegisterScopes(
@@ -607,51 +1077,69 @@ public class OpenIddictModule : IModule
 
 **Step 4: Move Connect endpoints**
 
-Move the 3 Connect endpoints from `modules/Users/src/Users/Endpoints/Connect/` to `modules/OpenIddict/src/OpenIddict/Endpoints/Connect/`, updating:
+Move 3 endpoints from `modules/Users/src/Users/Endpoints/Connect/` to `modules/OpenIddict/src/OpenIddict/Endpoints/Connect/`.
+
+Key changes to `AuthorizationEndpoint`:
 - Namespace: `SimpleModule.OpenIddict.Endpoints.Connect`
-- `AuthorizationEndpoint`: Replace direct `UsersDbContext` permission query with `IPermissionContracts.GetPermissionsForUserAsync()`. Also needs to resolve role IDs — add a helper or get roles from `UserManager` claims and use `IPermissionContracts.GetPermissionsForRoleAsync()` per role. Since the endpoint already has `UserManager<ApplicationUser>`, it can get roles, then for each role look up the role entity to get its ID. But we don't have access to `ApplicationRole` from here...
+- Replace direct `UsersDbContext` permission query with `IPermissionContracts`:
 
-The cleaner approach: The `AuthorizationEndpoint` currently queries permission tables directly. After the split, it should call `IPermissionContracts.GetPermissionsForUserAsync(userId)` which returns ALL permissions (user + role). But `IPermissionContracts` currently doesn't know about role membership — it only has role ID → permissions.
-
-**Revised approach for AuthorizationEndpoint**: We need `IPermissionContracts` to have a method that takes a user ID and a set of role IDs, returning combined permissions. Or simpler: add a method `GetAllPermissionsForUserAsync(string userId, IEnumerable<string> roleIds)` to `IPermissionContracts`.
-
-Actually, let's keep it simpler. The `AuthorizationEndpoint` already has `UserManager<ApplicationUser>` which gives it roles. It can:
-1. Get role names from `UserManager.GetRolesAsync(user)`
-2. It needs role IDs to query permissions. But role IDs aren't available without the `UsersDbContext`.
-
-**Best solution**: Add `GetRoleIdByNameAsync` to `IUserContracts`, OR have `IPermissionContracts` accept role names (not IDs). Let's change the permission tables to use role name instead of role ID — role names are unique in Identity and this avoids the cross-module lookup entirely.
-
-**REVISED DESIGN DECISION**: `RolePermission.RoleId` → `RolePermission.RoleName` (string). This is cleaner because:
-- Role names are unique (enforced by Identity)
-- No FK dependency on Identity tables
-- No need for cross-module ID lookups
-
-Update `IPermissionContracts` methods to use role name:
 ```csharp
-Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(string roleName);
-Task SetPermissionsForRoleAsync(string roleName, IEnumerable<string> permissions);
-```
-
-And the AuthorizationEndpoint becomes:
-```csharp
-var roles = await userManager.GetRolesAsync(user);
+// Instead of querying UsersDbContext directly:
 var permissionContracts = context.RequestServices.GetRequiredService<IPermissionContracts>();
+var userId = UserId.From(await userManager.GetUserIdAsync(user));
 
-var allPermissions = new HashSet<string>();
-// Get role-based permissions
-foreach (var role in roles)
+// Get role IDs for permission lookup
+var roles = await userManager.GetRolesAsync(user);
+// Need role IDs — get them from the Identity DB
+var userDb = context.RequestServices.GetRequiredService<UsersDbContext>();
+var roleIds = await userDb.Roles
+    .Where(r => roles.Contains(r.Name!))
+    .Select(r => RoleId.From(r.Id))
+    .ToListAsync();
+
+var allPermissions = await permissionContracts.GetAllPermissionsForUserAsync(userId, roleIds);
+
+foreach (var permission in allPermissions)
 {
-    var rolePerms = await permissionContracts.GetPermissionsForRoleAsync(role);
-    allPermissions.UnionWith(rolePerms);
+    identity.AddClaim("permission", permission);
 }
-// Get direct user permissions
-var userPerms = await permissionContracts.GetPermissionsForUserAsync(userId);
-allPermissions.UnionWith(userPerms);
 ```
+
+`LogoutEndpoint` and `UserinfoEndpoint` — just namespace change, no logic changes.
 
 **Step 5: Move OpenIddictSeedService**
 
-Move from Users module, update namespace, update references. Remove role/admin user seeding (those stay in Users).
+Move from `modules/Users/src/Users/Services/OpenIddictSeedService.cs`. Keep only the client application seeding part. Remove `SeedRolesAsync` and `SeedAdminUserAsync` (those stay in Users module as `UserSeedService`).
+
+```csharp
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Abstractions;
+using SimpleModule.OpenIddict.Contracts;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+
+namespace SimpleModule.OpenIddict.Services;
+
+public partial class OpenIddictSeedService(
+    IServiceProvider serviceProvider,
+    IConfiguration configuration,
+    ILogger<OpenIddictSeedService> logger
+) : IHostedService
+{
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        using var scope = serviceProvider.CreateScope();
+        await SeedClientApplicationAsync(scope, cancellationToken);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    // SeedClientApplicationAsync — same as current but using OpenIddict.Contracts constants
+    // (copy from existing, update namespace references)
+}
+```
 
 **Step 6: Add to solution**
 
@@ -659,40 +1147,43 @@ Move from Users module, update namespace, update references. Remove role/admin u
 dotnet slnx add modules/OpenIddict/src/OpenIddict/OpenIddict.csproj --solution-folder /modules/OpenIddict/
 ```
 
-**Step 7: Commit**
+**Step 7: Build to verify**
+
+Run: `dotnet build modules/OpenIddict/src/OpenIddict/OpenIddict.csproj`
+Expected: Build succeeded
+
+**Step 8: Commit**
 
 ```bash
 git add modules/OpenIddict/ SimpleModule.slnx
-git commit -m "feat(openiddict): add OpenIddict module with DbContext, endpoints, and seed service"
+git commit -m "feat(openiddict): add OpenIddict module with DbContext, endpoints, seed service"
 ```
 
 ---
 
-### Task 5: Slim Down Users Module
+### Task 6: Slim Down Users Module
 
 **Files:**
-- Modify: `modules/Users/src/Users/UsersModule.cs` — remove all OpenIddict config, remove PermissionSeedService
-- Modify: `modules/Users/src/Users/UsersDbContext.cs` — remove `UserPermissions`, `RolePermissions` DbSets, remove `UseOpenIddict()` call
-- Modify: `modules/Users/src/Users/Users.csproj` — remove OpenIddict package references
-- Delete: `modules/Users/src/Users/Endpoints/Connect/` (all 3 endpoints)
+- Modify: `modules/Users/src/Users/UsersModule.cs` — remove OpenIddict config, PermissionSeedService
+- Modify: `modules/Users/src/Users/UsersDbContext.cs` — remove permission DbSets
+- Modify: `modules/Users/src/Users/Users.csproj` — remove OpenIddict packages
+- Create: `modules/Users/src/Users/Services/UserSeedService.cs` — role + admin user seeding
+- Delete: `modules/Users/src/Users/Endpoints/Connect/AuthorizationEndpoint.cs`
+- Delete: `modules/Users/src/Users/Endpoints/Connect/LogoutEndpoint.cs`
+- Delete: `modules/Users/src/Users/Endpoints/Connect/UserinfoEndpoint.cs`
 - Delete: `modules/Users/src/Users/Entities/UserPermission.cs`
 - Delete: `modules/Users/src/Users/Entities/RolePermission.cs`
+- Delete: `modules/Users/src/Users/Entities/UserPermissionConfiguration.cs`
+- Delete: `modules/Users/src/Users/Entities/RolePermissionConfiguration.cs`
 - Delete: `modules/Users/src/Users/Services/OpenIddictSeedService.cs`
 - Delete: `modules/Users/src/Users/Services/PermissionSeedService.cs`
 - Delete: `modules/Users/src/Users.Contracts/Constants/AuthConstants.cs`
 - Delete: `modules/Users/src/Users.Contracts/Constants/ConnectRouteConstants.cs`
 - Delete: `modules/Users/src/Users.Contracts/Constants/ClientConstants.cs`
 - Delete: `modules/Users/src/Users.Contracts/Constants/AuthErrorMessages.cs`
-- Modify: `modules/Users/src/Users.Contracts/Constants/ConfigKeys.cs` — keep only `SeedAdminPassword`
-- Modify: `modules/Users/src/Users.Contracts/Constants/SeedConstants.cs` — keep user seed constants
+- Modify: `modules/Users/src/Users.Contracts/Constants/ConfigKeys.cs` — keep only SeedAdminPassword
 
 **Step 1: Update UsersModule.cs**
-
-Remove OpenIddict block (lines 22-112), PermissionSeedService registration (line 116), OpenIddictSeedService (line 115). Keep only:
-- `AddModuleDbContext<UsersDbContext>` (without `UseOpenIddict()`)
-- Identity configuration
-- `ConsoleEmailSender`
-- `IUserContracts` registration
 
 ```csharp
 using Microsoft.AspNetCore.Identity;
@@ -730,20 +1221,19 @@ public class UsersModule : IModule
             .AddEntityFrameworkStores<UsersDbContext>()
             .AddDefaultTokenProviders();
 
-        services.AddHostedService<OpenIddictUserSeedService>();
+        services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
         services.AddScoped<IUserContracts, UserService>();
     }
 
-    // ConfigureMenu stays unchanged
+    // ConfigureMenu — unchanged
 }
 ```
 
-Note: `OpenIddictSeedService` contained role/admin user seeding that must stay in Users. Rename to `UserSeedService` and keep only the role + admin user seeding parts.
+**Step 2: Create UserSeedService**
 
-**Step 2: Create UserSeedService (from old OpenIddictSeedService, user-seeding parts only)**
+Extract role + admin user seeding from `OpenIddictSeedService`:
 
-Create `modules/Users/src/Users/Services/UserSeedService.cs`:
 ```csharp
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -774,11 +1264,15 @@ public partial class UserSeedService(
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    // ... SeedRolesAsync and SeedAdminUserAsync unchanged from current OpenIddictSeedService
+    // SeedRolesAsync — same as current OpenIddictSeedService.SeedRolesAsync
+    // SeedAdminUserAsync — same as current OpenIddictSeedService.SeedAdminUserAsync
+    // LoggerMessage methods — same as current
 }
 ```
 
 **Step 3: Update UsersDbContext**
+
+Remove `UserPermissions` and `RolePermissions` DbSets:
 
 ```csharp
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -810,15 +1304,24 @@ Remove:
 <PackageReference Include="OpenIddict.EntityFrameworkCore" />
 ```
 
-**Step 5: Delete moved files**
+Also remove `<ProjectReference Include="..\..\..\..\framework\SimpleModule.Blazor\SimpleModule.Blazor.csproj" />` if no longer needed (check if any remaining code uses Blazor — it was needed for Razor views in Connect endpoints).
 
-Delete `Endpoints/Connect/` directory, `Entities/UserPermission.cs`, `Entities/RolePermission.cs`, `Services/OpenIddictSeedService.cs`, `Services/PermissionSeedService.cs`, and the moved constants files.
+Change SDK from `Microsoft.NET.Sdk.Razor` to `Microsoft.NET.Sdk` if no Razor files remain. Check if any `.cshtml`/`.razor` files exist in Users module — if the module has Razor views for Identity pages, keep the Razor SDK.
 
-**Step 6: Update Users.Contracts constants**
+**Step 5: Update ConfigKeys.cs**
 
-- Delete `AuthConstants.cs`, `ConnectRouteConstants.cs`, `ClientConstants.cs`, `AuthErrorMessages.cs`
-- Update `ConfigKeys.cs` to only keep `SeedAdminPassword`
-- `SeedConstants.cs` stays as-is (admin role/user seeding is still in Users)
+```csharp
+namespace SimpleModule.Users.Constants;
+
+public static class ConfigKeys
+{
+    public const string SeedAdminPassword = "Seed:AdminPassword";
+}
+```
+
+**Step 6: Delete moved files**
+
+Delete all files listed in the file manifest above.
 
 **Step 7: Build to verify**
 
@@ -829,144 +1332,102 @@ Expected: Build succeeded
 
 ```bash
 git add -A
-git commit -m "refactor(users): remove OpenIddict and permission concerns from Users module"
+git commit -m "refactor(users): remove OpenIddict and permission concerns, add UserSeedService"
 ```
 
 ---
 
-### Task 6: Update Admin Module
+### Task 7: Update Admin Module
 
 **Files:**
-- Modify: `modules/Admin/src/Admin/Admin.csproj` — replace `Users.csproj` reference with `Users.Contracts`, add `Permissions.Contracts`
-- Modify: `modules/Admin/src/Admin/Endpoints/Admin/AdminUsersEndpoint.cs` — replace `UsersDbContext` with `IPermissionContracts`
-- Modify: `modules/Admin/src/Admin/Endpoints/Admin/AdminRolesEndpoint.cs` — replace `UsersDbContext` with `IPermissionContracts`
+- Modify: `modules/Admin/src/Admin/Admin.csproj` — add Permissions.Contracts reference
+- Modify: `modules/Admin/src/Admin/Endpoints/Admin/AdminUsersEndpoint.cs` — use `IPermissionContracts`
+- Modify: `modules/Admin/src/Admin/Endpoints/Admin/AdminRolesEndpoint.cs` — use `IPermissionContracts`
 
 **Step 1: Update Admin.csproj**
 
-Replace:
+Add:
 ```xml
-<ProjectReference Include="..\..\..\..\modules\Users\src\Users\Users.csproj" />
-```
-With:
-```xml
-<ProjectReference Include="..\..\..\..\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
 <ProjectReference Include="..\..\..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
 ```
 
-Note: Admin still needs `UserManager<ApplicationUser>` and `RoleManager<ApplicationRole>` — these are registered via DI by the Users module. But `ApplicationUser` and `ApplicationRole` types are in the `Users` project, not `Users.Contracts`. The Admin module currently references `Users.csproj` directly for this reason. This is a known tight coupling.
+Keep existing `Users.csproj` reference (needed for `UserManager<ApplicationUser>`).
 
-**Decision**: Admin keeps its reference to `Users.csproj` (it needs `UserManager<ApplicationUser>`) but adds `Permissions.Contracts` for permission operations. The `UsersDbContext` usage is what gets replaced.
+**Step 2: Update AdminUsersEndpoint**
 
-Updated Admin.csproj:
-```xml
-<ProjectReference Include="..\..\..\..\modules\Users\src\Users\Users.csproj" />
-<ProjectReference Include="..\..\..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
-```
+In `POST /{id}/permissions`, replace `UsersDbContext usersDb` with `IPermissionContracts permissionContracts`:
 
-**Step 2: Update AdminUsersEndpoint.cs**
-
-Replace `UsersDbContext` injection in the permissions endpoint with `IPermissionContracts`:
-
-In `POST /{id}/permissions`:
 ```csharp
 async (string id, HttpContext context, IPermissionContracts permissionContracts, AuditService audit) =>
 {
     var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+    var userId = UserId.From(id);
+
     var form = await context.Request.ReadFormAsync();
     var newPermissions = form["permissions"]
         .Where(p => !string.IsNullOrEmpty(p))
         .Select(p => p!)
         .ToHashSet();
 
-    var currentPermissions = await permissionContracts.GetPermissionsForUserAsync(id);
+    var currentPermissions = await permissionContracts.GetPermissionsForUserAsync(userId);
 
-    // Audit removed permissions
     foreach (var perm in currentPermissions.Where(p => !newPermissions.Contains(p)))
     {
         await audit.LogAsync(id, adminId, "PermissionRevoked", $"Revoked permission {perm}");
     }
-    // Audit added permissions
     foreach (var perm in newPermissions.Where(p => !currentPermissions.Contains(p)))
     {
         await audit.LogAsync(id, adminId, "PermissionGranted", $"Granted permission {perm}");
     }
 
-    await permissionContracts.SetPermissionsForUserAsync(id, newPermissions);
+    await permissionContracts.SetPermissionsForUserAsync(userId, newPermissions);
 
     return Results.Redirect($"/admin/users/{id}/edit?tab=roles");
 }
 ```
 
-**Step 3: Update AdminRolesEndpoint.cs**
+**Step 3: Update AdminRolesEndpoint**
 
-Replace `UsersDbContext` usage with `IPermissionContracts`:
+Replace all `UsersDbContext usersDb` injections with `IPermissionContracts permissionContracts`. Use `RoleId.From(role.Id)` for typed ID access.
 
 In `POST /` (create role):
 ```csharp
-// Replace UsersDbContext with IPermissionContracts
-async (..., IPermissionContracts permissionContracts, ...) =>
-{
-    // ... create role ...
-    var form = await context.Request.ReadFormAsync();
-    var permissions = form["permissions"]
-        .Where(p => !string.IsNullOrWhiteSpace(p))
-        .Select(p => p!)
-        .ToList();
+// After role creation:
+var permissions = form["permissions"]
+    .Where(p => !string.IsNullOrWhiteSpace(p))
+    .Select(p => p!)
+    .ToList();
 
-    if (permissions.Count > 0)
-    {
-        await permissionContracts.SetPermissionsForRoleAsync(role.Name!, permissions);
-    }
-    // ...
+if (permissions.Count > 0)
+{
+    await permissionContracts.SetPermissionsForRoleAsync(RoleId.From(role.Id), permissions);
 }
 ```
 
 In `POST /{id}/permissions`:
 ```csharp
-async (string id, HttpContext context, RoleManager<ApplicationRole> roleManager, IPermissionContracts permissionContracts, AuditService audit) =>
-{
-    var role = await roleManager.FindByIdAsync(id);
-    if (role is null)
-        return Results.NotFound();
-
-    var form = await context.Request.ReadFormAsync();
-    var newPermissions = form["permissions"]
-        .Where(p => !string.IsNullOrWhiteSpace(p))
-        .Select(p => p!)
-        .ToHashSet(StringComparer.Ordinal);
-
-    var currentPermissions = await permissionContracts.GetPermissionsForRoleAsync(role.Name!);
-    var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-
-    foreach (var perm in currentPermissions.Where(p => !newPermissions.Contains(p)))
-    {
-        await audit.LogAsync(role.Id, adminUserId, "RolePermissionRemoved",
-            $"Permission '{perm}' removed from role '{role.Name}'");
-    }
-    foreach (var perm in newPermissions.Where(p => !currentPermissions.Contains(p)))
-    {
-        await audit.LogAsync(role.Id, adminUserId, "RolePermissionAdded",
-            $"Permission '{perm}' added to role '{role.Name}'");
-    }
-
-    await permissionContracts.SetPermissionsForRoleAsync(role.Name!, newPermissions);
-
-    return Results.Redirect($"/admin/roles/{id}/edit?tab=permissions");
-}
+var currentPermissions = await permissionContracts.GetPermissionsForRoleAsync(RoleId.From(id));
+// ... audit diffs ...
+await permissionContracts.SetPermissionsForRoleAsync(RoleId.From(id), newPermissions);
 ```
 
 In `DELETE /{id}`:
 ```csharp
-// Replace UsersDbContext permission cleanup with IPermissionContracts
-await permissionContracts.SetPermissionsForRoleAsync(role.Name!, []);
+await permissionContracts.SetPermissionsForRoleAsync(RoleId.From(id), []);
 ```
 
-**Step 4: Build to verify**
+Remove all `using SimpleModule.Users;` imports that referenced `UsersDbContext` and permission entities. Add `using SimpleModule.Permissions.Contracts;` and `using SimpleModule.Users.Contracts;`.
+
+**Step 4: Update Admin view endpoints if they reference UsersDbContext for permissions**
+
+Check `modules/Admin/src/Admin/Views/Admin/RolesEndpoint.cs` and `RolesEditEndpoint.cs` — these also query `UsersDbContext.RolePermissions`. Update them to use `IPermissionContracts`.
+
+**Step 5: Build to verify**
 
 Run: `dotnet build modules/Admin/src/Admin/Admin.csproj`
 Expected: Build succeeded
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
 git add modules/Admin/
@@ -975,11 +1436,11 @@ git commit -m "refactor(admin): use IPermissionContracts instead of direct Users
 
 ---
 
-### Task 7: Update Host Project
+### Task 8: Update Host Project
 
 **Files:**
-- Modify: `template/SimpleModule.Host/SimpleModule.Host.csproj` — add OpenIddict and Permissions project references
-- Modify: `template/SimpleModule.Host/Program.cs` — update using statements for moved constants, update HostDbContext registration
+- Modify: `template/SimpleModule.Host/SimpleModule.Host.csproj` — add new module references
+- Modify: `template/SimpleModule.Host/Program.cs` — update usings
 
 **Step 1: Update Host csproj**
 
@@ -991,9 +1452,16 @@ Add:
 
 **Step 2: Update Program.cs**
 
-Replace `using SimpleModule.Users.Constants;` with `using SimpleModule.OpenIddict.Contracts;` (for `AuthConstants`, `ConnectRouteConstants`, `ClientConstants`).
+Replace:
+```csharp
+using SimpleModule.Users.Constants;
+```
+With:
+```csharp
+using SimpleModule.OpenIddict.Contracts;
+```
 
-The `HostDbContext` currently uses `opts => opts.UseOpenIddict()` — this needs to stay since OpenIddict stores its entities via the OpenIddictAppDbContext now, but the HostDbContext might still need OpenIddict for migration purposes. Evaluate whether `HostDbContext` still needs `UseOpenIddict()`.
+The `HostDbContext` `opts => opts.UseOpenIddict()` — evaluate if still needed. If OpenIddict tables are now in `OpenIddictAppDbContext`, the HostDbContext may no longer need `UseOpenIddict()`. However, for EF migrations that need to see all tables, it might still be needed. Check if `HostDbContext` inherits from all module DbContexts or uses a unified migration. Update accordingly.
 
 **Step 3: Build to verify**
 
@@ -1004,95 +1472,124 @@ Expected: Build succeeded
 
 ```bash
 git add template/SimpleModule.Host/
-git commit -m "refactor(host): add OpenIddict and Permissions module references, update usings"
+git commit -m "refactor(host): add OpenIddict and Permissions module references"
 ```
 
 ---
 
-### Task 8: Update Test Infrastructure
+### Task 9: Update Test Infrastructure
 
 **Files:**
-- Modify: `tests/SimpleModule.Tests.Shared/Fixtures/SimpleModuleWebApplicationFactory.cs` — add `PermissionsDbContext` and `OpenIddictAppDbContext` replacements
-- Modify: `tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj` — add project references
+- Modify: `tests/SimpleModule.Tests.Shared/Fixtures/SimpleModuleWebApplicationFactory.cs`
+- Modify: `tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj`
+- Create: `tests/SimpleModule.Tests.Shared/Fakes/FakePermissionContracts.cs`
 
 **Step 1: Update test factory**
 
-Add:
+Add new DbContext replacements:
 ```csharp
 ReplaceDbContext<PermissionsDbContext>(services);
 ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 ```
 
-Update `UsersDbContext` line — remove `useOpenIddict: true` since OpenIddict is no longer on UsersDbContext:
+Update `UsersDbContext` — remove `useOpenIddict: true`:
 ```csharp
 ReplaceDbContext<UsersDbContext>(services);
 ```
 
-**Step 2: Update test csproj**
-
-Add references to the new module projects.
-
-**Step 3: Build all tests**
-
-Run: `dotnet build tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj`
-Expected: Build succeeded
-
-**Step 4: Commit**
-
-```bash
-git add tests/
-git commit -m "test: update test infrastructure for OpenIddict and Permissions modules"
+Add usings:
+```csharp
+using SimpleModule.OpenIddict;
+using SimpleModule.Permissions;
 ```
 
----
-
-### Task 9: Fix Permissions Seed Service — RoleManager Resolution
-
-**Context:** The `PermissionSeedService` needs to find the Admin role ID to seed permissions. Since Permissions module doesn't depend on Users, it can't reference `ApplicationRole`. However, at runtime, `RoleManager<ApplicationRole>` is registered in DI by the Users module.
-
-**Approach:** Have the Permissions module depend on `Users.Contracts` and add a `GetRoleByNameAsync(string roleName)` method that returns the role ID. OR, since we changed `RolePermission` to use role name (not ID), the seed service just needs the role name string "Admin" — no lookup needed.
-
-**With role name approach (decided in Task 4):**
+**Step 2: Create FakePermissionContracts**
 
 ```csharp
-// PermissionSeedService just uses the role name directly
-foreach (var permission in permissionRegistry.AllPermissions)
+using SimpleModule.Permissions.Contracts;
+using SimpleModule.Users.Contracts;
+
+namespace SimpleModule.Tests.Shared.Fakes;
+
+public class FakePermissionContracts : IPermissionContracts
 {
-    if (!existingSet.Contains(permission))
+    private readonly Dictionary<string, HashSet<string>> _userPermissions = new();
+    private readonly Dictionary<string, HashSet<string>> _rolePermissions = new();
+
+    public Task<IReadOnlySet<string>> GetPermissionsForUserAsync(UserId userId)
     {
-        newPermissions.Add(
-            new RolePermission { RoleName = "Admin", Permission = permission }
-        );
+        var key = userId.Value;
+        return Task.FromResult<IReadOnlySet<string>>(
+            _userPermissions.TryGetValue(key, out var perms)
+                ? perms
+                : new HashSet<string>());
+    }
+
+    public Task<IReadOnlySet<string>> GetPermissionsForRoleAsync(RoleId roleId)
+    {
+        var key = roleId.Value;
+        return Task.FromResult<IReadOnlySet<string>>(
+            _rolePermissions.TryGetValue(key, out var perms)
+                ? perms
+                : new HashSet<string>());
+    }
+
+    public async Task<IReadOnlySet<string>> GetAllPermissionsForUserAsync(
+        UserId userId,
+        IEnumerable<RoleId> roleIds)
+    {
+        var result = new HashSet<string>();
+
+        var userPerms = await GetPermissionsForUserAsync(userId);
+        result.UnionWith(userPerms);
+
+        foreach (var roleId in roleIds)
+        {
+            var rolePerms = await GetPermissionsForRoleAsync(roleId);
+            result.UnionWith(rolePerms);
+        }
+
+        return result;
+    }
+
+    public Task SetPermissionsForUserAsync(UserId userId, IEnumerable<string> permissions)
+    {
+        _userPermissions[userId.Value] = new HashSet<string>(permissions);
+        return Task.CompletedTask;
+    }
+
+    public Task SetPermissionsForRoleAsync(RoleId roleId, IEnumerable<string> permissions)
+    {
+        _rolePermissions[roleId.Value] = new HashSet<string>(permissions);
+        return Task.CompletedTask;
     }
 }
 ```
 
-This is already handled in Task 2. This task is for verification and integration testing.
+**Step 3: Update test csproj**
 
-**Step 1: Run all tests**
+Add references to `Permissions.Contracts`, `Permissions`, `OpenIddict`, and `OpenIddict.Contracts`.
 
-Run: `dotnet test`
-Expected: All tests pass
+**Step 4: Build tests**
 
-**Step 2: Run the application**
+Run: `dotnet build tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj`
+Expected: Build succeeded
 
-Run: `dotnet run --project template/SimpleModule.Host`
-Expected: App starts, OpenIddict seeds client, permissions seed runs, admin user created
-
-**Step 3: Commit any fixes**
+**Step 5: Commit**
 
 ```bash
-git add -A
-git commit -m "fix: resolve integration issues from module split"
+git add tests/SimpleModule.Tests.Shared/
+git commit -m "test: update test infrastructure for module split"
 ```
 
 ---
 
-### Task 10: Create Permissions Module Tests
+### Task 10: Create OpenIddict Module Tests
 
 **Files:**
-- Create: `modules/Permissions/tests/Permissions.Tests/Permissions.Tests.csproj`
-- Create: `modules/Permissions/tests/Permissions.Tests/PermissionServiceTests.cs`
+- Create: `modules/OpenIddict/tests/OpenIddict.Tests/OpenIddict.Tests.csproj`
+- Create: `modules/OpenIddict/tests/OpenIddict.Tests/Integration/ConnectEndpointTests.cs`
+- Create: `modules/OpenIddict/tests/OpenIddict.Tests/Integration/OpenIddictSeedServiceTests.cs`
 
 **Step 1: Create test project**
 
@@ -1105,47 +1602,340 @@ git commit -m "fix: resolve integration issues from module split"
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Permissions\Permissions.csproj" />
+    <ProjectReference Include="..\..\src\OpenIddict\OpenIddict.csproj" />
+    <ProjectReference Include="..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>
 ```
 
-**Step 2: Write tests for PermissionService**
+**Step 2: Write Connect endpoint integration tests**
 
-Test `GetPermissionsForUserAsync`, `GetPermissionsForRoleAsync`, `SetPermissionsForUserAsync`, `SetPermissionsForRoleAsync` using SQLite in-memory.
+```csharp
+using System.Net;
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using SimpleModule.Tests.Shared.Fixtures;
 
-**Step 3: Add to solution**
+namespace OpenIddict.Tests.Integration;
 
-```bash
-dotnet slnx add modules/Permissions/tests/Permissions.Tests/Permissions.Tests.csproj --solution-folder /modules/Permissions/
+public class ConnectEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+{
+    private readonly SimpleModuleWebApplicationFactory _factory;
+
+    public ConnectEndpointTests(SimpleModuleWebApplicationFactory factory) => _factory = factory;
+
+    [Fact]
+    public async Task Authorize_Unauthenticated_Redirects()
+    {
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var response = await client.GetAsync("/connect/authorize?response_type=code&client_id=simplemodule-client&scope=openid&redirect_uri=https://localhost:5001/oauth-callback");
+
+        // Should redirect to login
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+    }
+
+    [Fact]
+    public async Task Userinfo_Unauthenticated_Returns401()
+    {
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var response = await client.GetAsync("/connect/userinfo");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Userinfo_Authenticated_Returns200()
+    {
+        var client = _factory.CreateAuthenticatedClient();
+
+        var response = await client.GetAsync("/connect/userinfo");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task EndSession_Returns200OrRedirect()
+    {
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var response = await client.GetAsync("/connect/endsession");
+
+        // Should either redirect or succeed
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Redirect);
+    }
+}
 ```
 
-**Step 4: Run tests**
+**Step 3: Write seed service tests**
 
-Run: `dotnet test modules/Permissions/tests/Permissions.Tests/`
+```csharp
+using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Abstractions;
+using SimpleModule.Tests.Shared.Fixtures;
+
+namespace OpenIddict.Tests.Integration;
+
+public class OpenIddictSeedServiceTests : IClassFixture<SimpleModuleWebApplicationFactory>
+{
+    private readonly SimpleModuleWebApplicationFactory _factory;
+
+    public OpenIddictSeedServiceTests(SimpleModuleWebApplicationFactory factory) => _factory = factory;
+
+    [Fact]
+    public async Task SeedService_CreatesClientApplication()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+
+        var client = await manager.FindByClientIdAsync("simplemodule-client");
+
+        client.Should().NotBeNull();
+    }
+}
+```
+
+**Step 4: Add to solution and run**
+
+```bash
+dotnet slnx add modules/OpenIddict/tests/OpenIddict.Tests/OpenIddict.Tests.csproj --solution-folder /modules/OpenIddict/
+dotnet test modules/OpenIddict/tests/OpenIddict.Tests/
+```
 Expected: All tests pass
 
 **Step 5: Commit**
 
 ```bash
-git add modules/Permissions/tests/ SimpleModule.slnx
-git commit -m "test(permissions): add unit tests for PermissionService"
+git add modules/OpenIddict/tests/ SimpleModule.slnx
+git commit -m "test(openiddict): add integration tests for Connect endpoints and seed service"
 ```
 
 ---
 
-### Task 11: Final Verification
+### Task 11: Update Existing Admin Tests
+
+**Files:**
+- Modify: `modules/Admin/tests/Admin.Tests/Integration/AdminUsersEndpointTests.cs` — remove `UsersDbContext` references if any
+- Modify: `modules/Admin/tests/Admin.Tests/Integration/AdminRolesEndpointTests.cs` — update imports
+
+**Step 1: Update test imports**
+
+Replace any `using SimpleModule.Users;` (for `UsersDbContext`) with `using SimpleModule.Permissions.Contracts;` where applicable.
+
+**Step 2: Run existing admin tests**
+
+Run: `dotnet test modules/Admin/tests/Admin.Tests/`
+Expected: All tests pass
+
+**Step 3: Commit if changes needed**
+
+```bash
+git add modules/Admin/tests/
+git commit -m "test(admin): update test imports for module split"
+```
+
+---
+
+### Task 12: Add Integration Tests for Permissions in Admin Context
+
+**Files:**
+- Create: `modules/Admin/tests/Admin.Tests/Integration/AdminPermissionsTests.cs`
+
+**Step 1: Write tests for permission assignment via Admin endpoints**
+
+```csharp
+using System.Net;
+using System.Security.Claims;
+using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.Permissions.Contracts;
+using SimpleModule.Tests.Shared.Fixtures;
+using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Entities;
+
+namespace Admin.Tests.Integration;
+
+public class AdminPermissionsTests : IClassFixture<SimpleModuleWebApplicationFactory>
+{
+    private readonly SimpleModuleWebApplicationFactory _factory;
+
+    public AdminPermissionsTests(SimpleModuleWebApplicationFactory factory) => _factory = factory;
+
+    private HttpClient CreateAdminClient()
+    {
+        var client = _factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Role, "Admin"),
+            new(ClaimTypes.NameIdentifier, "admin-test-id"),
+        };
+        var claimsValue = string.Join(";", claims.Select(c => $"{c.Type}={c.Value}"));
+        client.DefaultRequestHeaders.Add("X-Test-Claims", claimsValue);
+        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        return client;
+    }
+
+    [Fact]
+    public async Task SetUserPermissions_ValidData_Redirects()
+    {
+        // Seed a test user
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = new ApplicationUser
+        {
+            UserName = $"perm-test-{Guid.NewGuid():N}@test.com",
+            Email = $"perm-test-{Guid.NewGuid():N}@test.com",
+            DisplayName = "Permission Test User",
+        };
+        await userManager.CreateAsync(user, "TestPass123!");
+
+        var client = CreateAdminClient();
+        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "permissions", "Admin.ManageUsers" },
+        });
+
+        var response = await client.PostAsync($"/admin/users/{user.Id}/permissions", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+    }
+
+    [Fact]
+    public async Task SetRolePermissions_ValidData_Redirects()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        var role = new ApplicationRole
+        {
+            Name = $"PermTestRole-{Guid.NewGuid().ToString()[..8]}",
+            Description = "Test role for permissions",
+        };
+        await roleManager.CreateAsync(role);
+
+        var client = CreateAdminClient();
+        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "permissions", "Admin.ManageUsers" },
+        });
+
+        var response = await client.PostAsync($"/admin/roles/{role.Id}/permissions", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+    }
+
+    [Fact]
+    public async Task SetUserPermissions_NonExistentUser_Redirects()
+    {
+        var client = CreateAdminClient();
+        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "permissions", "Admin.ManageUsers" },
+        });
+
+        // The endpoint doesn't currently check user existence — it just sets permissions
+        // This test verifies the endpoint works with a non-existent user ID
+        var response = await client.PostAsync("/admin/users/nonexistent-id/permissions", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+    }
+
+    [Fact]
+    public async Task CreateRoleWithPermissions_ValidData_CreatesRoleAndAssignsPermissions()
+    {
+        var client = CreateAdminClient();
+        var roleName = $"WithPerms-{Guid.NewGuid().ToString()[..8]}";
+
+        using var content = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("name", roleName),
+            new KeyValuePair<string, string>("description", "Test"),
+            new KeyValuePair<string, string>("permissions", "Admin.ManageUsers"),
+            new KeyValuePair<string, string>("permissions", "Admin.ViewAuditLog"),
+        });
+
+        var response = await client.PostAsync("/admin/roles", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        // Verify permissions were assigned via IPermissionContracts
+        using var scope = _factory.Services.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        var role = await roleManager.FindByNameAsync(roleName);
+        role.Should().NotBeNull();
+
+        var permContracts = scope.ServiceProvider.GetRequiredService<IPermissionContracts>();
+        var perms = await permContracts.GetPermissionsForRoleAsync(RoleId.From(role!.Id));
+        perms.Should().HaveCount(2);
+        perms.Should().Contain("Admin.ManageUsers");
+        perms.Should().Contain("Admin.ViewAuditLog");
+    }
+
+    [Fact]
+    public async Task DeleteRole_ClearsPermissions()
+    {
+        // Create role with permissions
+        using var scope = _factory.Services.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        var role = new ApplicationRole
+        {
+            Name = $"DelPermRole-{Guid.NewGuid().ToString()[..8]}",
+            Description = "To be deleted",
+        };
+        await roleManager.CreateAsync(role);
+
+        var permContracts = scope.ServiceProvider.GetRequiredService<IPermissionContracts>();
+        await permContracts.SetPermissionsForRoleAsync(
+            RoleId.From(role.Id),
+            ["Admin.ManageUsers", "Admin.ManageRoles"]);
+
+        var client = CreateAdminClient();
+        var response = await client.DeleteAsync($"/admin/roles/{role.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        // Verify permissions were cleared
+        using var scope2 = _factory.Services.CreateScope();
+        var permContracts2 = scope2.ServiceProvider.GetRequiredService<IPermissionContracts>();
+        var perms = await permContracts2.GetPermissionsForRoleAsync(RoleId.From(role.Id));
+        perms.Should().BeEmpty();
+    }
+}
+```
+
+**Step 2: Run all admin tests**
+
+Run: `dotnet test modules/Admin/tests/Admin.Tests/`
+Expected: All tests pass
+
+**Step 3: Commit**
+
+```bash
+git add modules/Admin/tests/
+git commit -m "test(admin): add integration tests for permission operations via IPermissionContracts"
+```
+
+---
+
+### Task 13: Final Verification
 
 **Step 1: Full build**
 
 Run: `dotnet build`
-Expected: Build succeeded with zero warnings (TreatWarningsAsErrors)
+Expected: Build succeeded with zero warnings
 
 **Step 2: Full test suite**
 
@@ -1163,8 +1953,9 @@ Run: `dotnet run --project template/SimpleModule.Host`
 Verify:
 - App starts on https://localhost:5001
 - Swagger UI loads with OAuth2 config
-- Can authenticate via OpenIddict flow
-- Permissions are included in tokens
+- OpenIddict client is seeded
+- Admin role permissions are seeded
+- Can authenticate and get permissions in token
 
 **Step 5: Final commit if needed**
 
