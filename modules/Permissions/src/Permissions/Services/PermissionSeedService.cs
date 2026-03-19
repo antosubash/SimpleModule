@@ -20,41 +20,51 @@ public partial class PermissionSeedService(
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using var scope = serviceProvider.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PermissionsDbContext>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-
-        var adminRole = await roleManager.FindByNameAsync(AdminRole);
-        if (adminRole is null)
+        try
         {
-            return;
-        }
+            using var scope = serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PermissionsDbContext>();
+            var roleManager =
+                scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
-        var adminRoleId = RoleId.From(adminRole.Id);
-
-        var existingPermissions = await dbContext
-            .RolePermissions.Where(rp => rp.RoleId == adminRoleId)
-            .Select(rp => rp.Permission)
-            .ToListAsync(cancellationToken);
-
-        var existingSet = new HashSet<string>(existingPermissions);
-        var newPermissions = new List<RolePermission>();
-
-        foreach (var permission in permissionRegistry.AllPermissions)
-        {
-            if (!existingSet.Contains(permission))
+            var adminRole = await roleManager.FindByNameAsync(AdminRole);
+            if (adminRole is null)
             {
-                newPermissions.Add(
-                    new RolePermission { RoleId = adminRoleId, Permission = permission }
-                );
+                return;
+            }
+
+            var adminRoleId = RoleId.From(adminRole.Id);
+
+            var existingPermissions = await dbContext
+                .RolePermissions.Where(rp => rp.RoleId == adminRoleId)
+                .Select(rp => rp.Permission)
+                .ToListAsync(cancellationToken);
+
+            var existingSet = new HashSet<string>(existingPermissions);
+            var newPermissions = new List<RolePermission>();
+
+            foreach (var permission in permissionRegistry.AllPermissions)
+            {
+                if (!existingSet.Contains(permission))
+                {
+                    newPermissions.Add(
+                        new RolePermission { RoleId = adminRoleId, Permission = permission }
+                    );
+                }
+            }
+
+            if (newPermissions.Count > 0)
+            {
+                LogSeedingPermissions(logger, newPermissions.Count);
+                dbContext.RolePermissions.AddRange(newPermissions);
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
-
-        if (newPermissions.Count > 0)
+#pragma warning disable CA1031 // Seed service must not crash the host on database errors
+        catch (Exception ex)
+#pragma warning restore CA1031
         {
-            LogSeedingPermissions(logger, newPermissions.Count);
-            dbContext.RolePermissions.AddRange(newPermissions);
-            await dbContext.SaveChangesAsync(cancellationToken);
+            LogSeedError(logger, ex.Message);
         }
     }
 
@@ -65,4 +75,10 @@ public partial class PermissionSeedService(
         Message = "Seeding {Count} permissions for Admin role..."
     )]
     private static partial void LogSeedingPermissions(ILogger logger, int count);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Permission seeding skipped due to error: {ErrorMessage}"
+    )]
+    private static partial void LogSeedError(ILogger logger, string errorMessage);
 }

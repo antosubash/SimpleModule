@@ -15,9 +15,18 @@ public partial class OpenIddictSeedService(
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        using var scope = serviceProvider.CreateScope();
+        try
+        {
+            using var scope = serviceProvider.CreateScope();
 
-        await SeedClientApplicationAsync(scope, cancellationToken);
+            await SeedClientApplicationAsync(scope, cancellationToken);
+        }
+#pragma warning disable CA1031 // Seed service must not crash the host on database errors
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogSeedError(logger, ex.Message);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -90,4 +99,10 @@ public partial class OpenIddictSeedService(
         Message = "Seeding OpenIddict client application..."
     )]
     private static partial void LogSeedingClient(ILogger logger);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "OpenIddict seeding skipped due to error: {ErrorMessage}"
+    )]
+    private static partial void LogSeedError(ILogger logger, string errorMessage);
 }

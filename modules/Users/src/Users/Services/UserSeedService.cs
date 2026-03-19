@@ -20,9 +20,18 @@ public partial class UserSeedService(
         if (!hostEnvironment.IsDevelopment())
             return;
 
-        using var scope = serviceProvider.CreateScope();
-        await SeedRolesAsync(scope);
-        await SeedAdminUserAsync(scope);
+        try
+        {
+            using var scope = serviceProvider.CreateScope();
+            await SeedRolesAsync(scope);
+            await SeedAdminUserAsync(scope);
+        }
+#pragma warning disable CA1031 // Seed service must not crash the host on database errors
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogSeedError(logger, ex.Message);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
