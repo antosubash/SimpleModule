@@ -7,10 +7,8 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder;
 
-public partial class PageBuilderService(
-    PageBuilderDbContext db,
-    ILogger<PageBuilderService> logger
-) : IPageBuilderContracts
+public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBuilderService> logger)
+    : IPageBuilderContracts
 {
     public async Task<IEnumerable<PageSummary>> GetAllPagesAsync()
     {
@@ -80,8 +78,7 @@ public partial class PageBuilderService(
 
     public async Task<Page> UpdatePageAsync(PageId id, UpdatePageRequest request)
     {
-        var page = await db.Pages.FindAsync(id)
-            ?? throw new NotFoundException("Page", id);
+        var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         page.Title = request.Title;
 
@@ -90,7 +87,10 @@ public partial class PageBuilderService(
         if (slugError is not null)
             throw new ArgumentException(slugError, nameof(request));
 
-        if (slugToSet != page.Slug && await db.Pages.AnyAsync(p => p.Slug == slugToSet && p.Id != id))
+        if (
+            slugToSet != page.Slug
+            && await db.Pages.AnyAsync(p => p.Slug == slugToSet && p.Id != id)
+        )
             throw new ArgumentException("Slug is already taken.", nameof(request));
 
         page.Slug = slugToSet;
@@ -109,8 +109,7 @@ public partial class PageBuilderService(
 
     public async Task<Page> UpdatePageContentAsync(PageId id, UpdatePageContentRequest request)
     {
-        var page = await db.Pages.FindAsync(id)
-            ?? throw new NotFoundException("Page", id);
+        var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         page.DraftContent = request.Content;
         page.UpdatedAt = DateTime.UtcNow;
@@ -123,8 +122,7 @@ public partial class PageBuilderService(
 
     public async Task DeletePageAsync(PageId id)
     {
-        var page = await db.Pages.FindAsync(id)
-            ?? throw new NotFoundException("Page", id);
+        var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         page.DeletedAt = DateTime.UtcNow;
         page.IsPublished = false;
@@ -135,8 +133,7 @@ public partial class PageBuilderService(
 
     public async Task<Page> PublishPageAsync(PageId id)
     {
-        var page = await db.Pages.FindAsync(id)
-            ?? throw new NotFoundException("Page", id);
+        var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         if (!string.IsNullOrEmpty(page.DraftContent))
         {
@@ -155,8 +152,7 @@ public partial class PageBuilderService(
 
     public async Task<Page> UnpublishPageAsync(PageId id)
     {
-        var page = await db.Pages.FindAsync(id)
-            ?? throw new NotFoundException("Page", id);
+        var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         page.IsPublished = false;
         page.UpdatedAt = DateTime.UtcNow;
@@ -181,7 +177,10 @@ public partial class PageBuilderService(
 
     public async Task<Page> RestorePageAsync(PageId id)
     {
-        var page = await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null)
+        var page =
+            await db
+                .Pages.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null)
             ?? throw new NotFoundException("Page", id);
 
         page.DeletedAt = null;
@@ -194,10 +193,11 @@ public partial class PageBuilderService(
 
     public async Task PermanentDeletePageAsync(PageId id)
     {
-        var page = await db.Pages.IgnoreQueryFilters()
+        var page =
+            await db
+                .Pages.IgnoreQueryFilters()
                 .Include(p => p.Tags)
-                .FirstOrDefaultAsync(p => p.Id == id)
-            ?? throw new NotFoundException("Page", id);
+                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new NotFoundException("Page", id);
 
         page.Tags.Clear();
         db.Pages.Remove(page);
@@ -226,8 +226,8 @@ public partial class PageBuilderService(
 
     public async Task DeleteTemplateAsync(PageTemplateId id)
     {
-        var template = await db.Templates.FindAsync(id)
-            ?? throw new NotFoundException("PageTemplate", id);
+        var template =
+            await db.Templates.FindAsync(id) ?? throw new NotFoundException("PageTemplate", id);
 
         db.Templates.Remove(template);
         await db.SaveChangesAsync();
@@ -251,7 +251,8 @@ public partial class PageBuilderService(
 
     public async Task AddTagToPageAsync(PageId pageId, string tagName)
     {
-        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
+        var page =
+            await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
             ?? throw new NotFoundException("Page", pageId);
 
         var tag = await GetOrCreateTagAsync(tagName);
@@ -265,7 +266,8 @@ public partial class PageBuilderService(
 
     public async Task RemoveTagFromPageAsync(PageId pageId, PageTagId tagId)
     {
-        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
+        var page =
+            await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
             ?? throw new NotFoundException("Page", pageId);
 
         var tag = page.Tags.FirstOrDefault(t => t.Id == tagId);
@@ -351,10 +353,7 @@ public partial class PageBuilderService(
     [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} deleted")]
     private static partial void LogPageDeleted(ILogger logger, PageId pageId);
 
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Page {PageId} published: {PageTitle}"
-    )]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} published: {PageTitle}")]
     private static partial void LogPagePublished(ILogger logger, PageId pageId, string pageTitle);
 
     [LoggerMessage(

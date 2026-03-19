@@ -22,9 +22,7 @@ public class PageConfiguration : IEntityTypeConfiguration<Page>
         builder.Property(p => p.Order).HasDefaultValue(0);
         builder.Property(p => p.DeletedAt).IsRequired(false);
 
-        builder.HasMany(p => p.Tags)
-            .WithOne()
-            .HasForeignKey("PageId");
+        builder.HasMany(p => p.Tags).WithOne().HasForeignKey("PageId");
 
         builder.HasQueryFilter(p => p.DeletedAt == null);
     }

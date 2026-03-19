@@ -160,7 +160,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
             [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "Soft Delete Test" });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "Soft Delete Test" }
+        );
         var created = await createRes.Content.ReadFromJsonAsync<Page>();
 
         // Soft delete
@@ -178,10 +181,17 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     public async Task RestorePage_ReturnsToNormalList()
     {
         var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Delete, PageBuilderPermissions.View]
+            [
+                PageBuilderPermissions.Create,
+                PageBuilderPermissions.Delete,
+                PageBuilderPermissions.View,
+            ]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "Restore Test" });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "Restore Test" }
+        );
         var created = await createRes.Content.ReadFromJsonAsync<Page>();
 
         await client.DeleteAsync($"/api/pagebuilder/{created!.Id}");
@@ -202,7 +212,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
             [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "Perm Delete Test" });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "Perm Delete Test" }
+        );
         var created = await createRes.Content.ReadFromJsonAsync<Page>();
 
         await client.DeleteAsync($"/api/pagebuilder/{created!.Id}");
@@ -222,11 +235,14 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     {
         var client = _factory.CreateAuthenticatedClient([PageBuilderPermissions.Create]);
 
-        var res = await client.PostAsJsonAsync("/api/pagebuilder/templates", new CreatePageTemplateRequest
-        {
-            Name = "Test Template",
-            Content = """{"content":[{"type":"Hero"}],"root":{}}""",
-        });
+        var res = await client.PostAsJsonAsync(
+            "/api/pagebuilder/templates",
+            new CreatePageTemplateRequest
+            {
+                Name = "Test Template",
+                Content = """{"content":[{"type":"Hero"}],"root":{}}""",
+            }
+        );
 
         res.StatusCode.Should().Be(HttpStatusCode.Created);
         var template = await res.Content.ReadFromJsonAsync<PageTemplate>();
@@ -250,11 +266,14 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
             [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder/templates", new CreatePageTemplateRequest
-        {
-            Name = $"Del Template {DateTime.UtcNow.Ticks}",
-            Content = "{}",
-        });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder/templates",
+            new CreatePageTemplateRequest
+            {
+                Name = $"Del Template {DateTime.UtcNow.Ticks}",
+                Content = "{}",
+            }
+        );
         var template = await createRes.Content.ReadFromJsonAsync<PageTemplate>();
 
         var deleteRes = await client.DeleteAsync($"/api/pagebuilder/templates/{template!.Id}");
@@ -280,10 +299,16 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
             [PageBuilderPermissions.Create, PageBuilderPermissions.Update]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "Tag Test" });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "Tag Test" }
+        );
         var page = await createRes.Content.ReadFromJsonAsync<Page>();
 
-        var tagRes = await client.PostAsJsonAsync($"/api/pagebuilder/{page!.Id}/tags", new AddTagRequest { Name = "test-tag" });
+        var tagRes = await client.PostAsJsonAsync(
+            $"/api/pagebuilder/{page!.Id}/tags",
+            new AddTagRequest { Name = "test-tag" }
+        );
         tagRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
@@ -293,15 +318,26 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     public async Task UpdateContent_SavesToDraft_PublishCopiesIt()
     {
         var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Update, PageBuilderPermissions.Publish, PageBuilderPermissions.View]
+            [
+                PageBuilderPermissions.Create,
+                PageBuilderPermissions.Update,
+                PageBuilderPermissions.Publish,
+                PageBuilderPermissions.View,
+            ]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "Draft Flow Test" });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "Draft Flow Test" }
+        );
         var created = await createRes.Content.ReadFromJsonAsync<Page>();
 
         // Save content to draft
         var draftContent = """{"content":[{"type":"Heading"}],"root":{}}""";
-        await client.PutAsJsonAsync($"/api/pagebuilder/{created!.Id}/content", new UpdatePageContentRequest { Content = draftContent });
+        await client.PutAsJsonAsync(
+            $"/api/pagebuilder/{created!.Id}/content",
+            new UpdatePageContentRequest { Content = draftContent }
+        );
 
         // Verify draft is set but content unchanged
         var getRes = await client.GetAsync($"/api/pagebuilder/{created.Id}");
@@ -311,7 +347,9 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
 
         // Publish — should copy draft to content
         await client.PostAsync($"/api/pagebuilder/{created.Id}/publish", null);
-        var published = await (await client.GetAsync($"/api/pagebuilder/{created.Id}")).Content.ReadFromJsonAsync<Page>();
+        var published = await (
+            await client.GetAsync($"/api/pagebuilder/{created.Id}")
+        ).Content.ReadFromJsonAsync<Page>();
         published!.Content.Should().Be(draftContent);
         published.DraftContent.Should().BeNull();
     }
@@ -323,7 +361,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     {
         var client = _factory.CreateAuthenticatedClient([PageBuilderPermissions.Create]);
 
-        var res = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "x", Slug = "ab" });
+        var res = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "x", Slug = "ab" }
+        );
 
         res.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -337,19 +378,25 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
             [PageBuilderPermissions.Create, PageBuilderPermissions.Update]
         );
 
-        var createRes = await client.PostAsJsonAsync("/api/pagebuilder", new CreatePageRequest { Title = "Meta Test" });
+        var createRes = await client.PostAsJsonAsync(
+            "/api/pagebuilder",
+            new CreatePageRequest { Title = "Meta Test" }
+        );
         var created = await createRes.Content.ReadFromJsonAsync<Page>();
 
-        var updateRes = await client.PutAsJsonAsync($"/api/pagebuilder/{created!.Id}", new UpdatePageRequest
-        {
-            Title = "Meta Test Updated",
-            Slug = created.Slug,
-            Order = 0,
-            IsPublished = false,
-            MetaDescription = "A test page description",
-            MetaKeywords = "test, page",
-            OgImage = "https://example.com/image.png",
-        });
+        var updateRes = await client.PutAsJsonAsync(
+            $"/api/pagebuilder/{created!.Id}",
+            new UpdatePageRequest
+            {
+                Title = "Meta Test Updated",
+                Slug = created.Slug,
+                Order = 0,
+                IsPublished = false,
+                MetaDescription = "A test page description",
+                MetaKeywords = "test, page",
+                OgImage = "https://example.com/image.png",
+            }
+        );
 
         updateRes.StatusCode.Should().Be(HttpStatusCode.OK);
         var updated = await updateRes.Content.ReadFromJsonAsync<Page>();

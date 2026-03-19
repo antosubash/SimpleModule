@@ -30,7 +30,10 @@ public class PageBuilderDbContext(
             .HaveConversion<PageId.EfCoreValueConverter, PageId.EfCoreValueComparer>();
         configurationBuilder
             .Properties<PageTemplateId>()
-            .HaveConversion<PageTemplateId.EfCoreValueConverter, PageTemplateId.EfCoreValueComparer>();
+            .HaveConversion<
+                PageTemplateId.EfCoreValueConverter,
+                PageTemplateId.EfCoreValueComparer
+            >();
         configurationBuilder
             .Properties<PageTagId>()
             .HaveConversion<PageTagId.EfCoreValueConverter, PageTagId.EfCoreValueComparer>();

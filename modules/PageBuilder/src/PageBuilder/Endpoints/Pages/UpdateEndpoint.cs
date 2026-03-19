@@ -34,9 +34,7 @@ public class UpdateEndpoint : IEndpoint
                         throw new ValidationException(validation.Errors);
                     }
 
-                    return CrudEndpoints.Update(() =>
-                        pageBuilder.UpdatePageAsync(id, request)
-                    );
+                    return CrudEndpoints.Update(() => pageBuilder.UpdatePageAsync(id, request));
                 }
             )
             .RequirePermission(PageBuilderPermissions.Update);

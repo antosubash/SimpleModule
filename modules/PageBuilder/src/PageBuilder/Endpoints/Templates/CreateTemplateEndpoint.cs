@@ -18,7 +18,10 @@ public class CreateTemplateEndpoint : IEndpoint
                         throw new ArgumentException("Template name is required.", nameof(request));
 
                     var template = await pageBuilder.CreateTemplateAsync(request);
-                    return TypedResults.Created($"/api/pagebuilder/templates/{template.Id}", template);
+                    return TypedResults.Created(
+                        $"/api/pagebuilder/templates/{template.Id}",
+                        template
+                    );
                 }
             )
             .RequirePermission(PageBuilderPermissions.Create);

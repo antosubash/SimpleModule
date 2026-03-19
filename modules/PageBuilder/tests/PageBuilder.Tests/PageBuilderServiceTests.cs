@@ -172,7 +172,10 @@ public sealed class PageBuilderServiceTests : IDisposable
     public async Task PublishPage_CopiesDraftToContent_ClearsDraft()
     {
         var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Publish Draft" });
-        await _sut.UpdatePageContentAsync(page.Id, new UpdatePageContentRequest { Content = """{"content":[{"type":"Hero"}],"root":{}}""" });
+        await _sut.UpdatePageContentAsync(
+            page.Id,
+            new UpdatePageContentRequest { Content = """{"content":[{"type":"Hero"}],"root":{}}""" }
+        );
         var published = await _sut.PublishPageAsync(page.Id);
         published.Content.Should().Be("""{"content":[{"type":"Hero"}],"root":{}}""");
         published.DraftContent.Should().BeNull();
@@ -212,15 +215,21 @@ public sealed class PageBuilderServiceTests : IDisposable
     public async Task UpdatePage_DuplicateSlug_ThrowsArgumentException()
     {
         await _sut.CreatePageAsync(new CreatePageRequest { Title = "Page One", Slug = "page-one" });
-        var page2 = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Page Two", Slug = "page-two" });
+        var page2 = await _sut.CreatePageAsync(
+            new CreatePageRequest { Title = "Page Two", Slug = "page-two" }
+        );
 
-        var act = () => _sut.UpdatePageAsync(page2.Id, new UpdatePageRequest
-        {
-            Title = "Page Two",
-            Slug = "page-one",
-            Order = 0,
-            IsPublished = false,
-        });
+        var act = () =>
+            _sut.UpdatePageAsync(
+                page2.Id,
+                new UpdatePageRequest
+                {
+                    Title = "Page Two",
+                    Slug = "page-one",
+                    Order = 0,
+                    IsPublished = false,
+                }
+            );
 
         await act.Should().ThrowAsync<ArgumentException>().WithMessage("*already taken*");
     }
@@ -228,11 +237,13 @@ public sealed class PageBuilderServiceTests : IDisposable
     [Fact]
     public async Task CreateTemplate_SavesNameAndContent()
     {
-        var template = await _sut.CreateTemplateAsync(new CreatePageTemplateRequest
-        {
-            Name = "Landing Page",
-            Content = """{"content":[{"type":"Hero"}],"root":{}}""",
-        });
+        var template = await _sut.CreateTemplateAsync(
+            new CreatePageTemplateRequest
+            {
+                Name = "Landing Page",
+                Content = """{"content":[{"type":"Hero"}],"root":{}}""",
+            }
+        );
 
         template.Name.Should().Be("Landing Page");
         template.Content.Should().Contain("Hero");
@@ -241,8 +252,12 @@ public sealed class PageBuilderServiceTests : IDisposable
     [Fact]
     public async Task GetAllTemplates_ReturnsOrderedByName()
     {
-        await _sut.CreateTemplateAsync(new CreatePageTemplateRequest { Name = "Zzz", Content = "{}" });
-        await _sut.CreateTemplateAsync(new CreatePageTemplateRequest { Name = "Aaa", Content = "{}" });
+        await _sut.CreateTemplateAsync(
+            new CreatePageTemplateRequest { Name = "Zzz", Content = "{}" }
+        );
+        await _sut.CreateTemplateAsync(
+            new CreatePageTemplateRequest { Name = "Aaa", Content = "{}" }
+        );
 
         var templates = await _sut.GetAllTemplatesAsync();
 
@@ -252,7 +267,9 @@ public sealed class PageBuilderServiceTests : IDisposable
     [Fact]
     public async Task DeleteTemplate_Removes()
     {
-        var template = await _sut.CreateTemplateAsync(new CreatePageTemplateRequest { Name = "To Delete", Content = "{}" });
+        var template = await _sut.CreateTemplateAsync(
+            new CreatePageTemplateRequest { Name = "To Delete", Content = "{}" }
+        );
 
         await _sut.DeleteTemplateAsync(template.Id);
 

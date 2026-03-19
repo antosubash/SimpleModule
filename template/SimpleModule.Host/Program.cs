@@ -170,7 +170,8 @@ app.Use(
         bool isVendorJs =
             path is not null && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
         bool isHashedChunk =
-            path is not null && path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
+            path is not null
+            && path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
             && path.EndsWith(".mjs", StringComparison.OrdinalIgnoreCase);
 
         if (hasVersionParam || isVendorJs || isHashedChunk)

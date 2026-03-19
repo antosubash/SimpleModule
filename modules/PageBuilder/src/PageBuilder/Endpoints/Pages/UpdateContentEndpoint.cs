@@ -13,9 +13,7 @@ public class UpdateContentEndpoint : IEndpoint
         app.MapPut(
                 "/{id}/content",
                 (PageId id, UpdatePageContentRequest request, IPageBuilderContracts pageBuilder) =>
-                    CrudEndpoints.Update(() =>
-                        pageBuilder.UpdatePageContentAsync(id, request)
-                    )
+                    CrudEndpoints.Update(() => pageBuilder.UpdatePageContentAsync(id, request))
             )
             .RequirePermission(PageBuilderPermissions.Update);
 }

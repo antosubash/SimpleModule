@@ -12,8 +12,8 @@ using SimpleModule.Admin;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.Orders;
-using SimpleModule.Permissions;
 using SimpleModule.PageBuilder;
+using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Users;
 
