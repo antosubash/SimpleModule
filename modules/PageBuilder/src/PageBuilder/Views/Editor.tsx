@@ -256,31 +256,31 @@ export default function Editor({ page, templates }: Props) {
         overrides={{
           headerActions: ({ children }) => (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.visit('/admin/pages')}
+                className="gap-1"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Pages
+              </Button>
               <HeaderActions page={page} />
               {children}
             </>
           ),
         }}
       />
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => router.visit('/admin/pages')}
-        className="absolute top-2 left-2 z-[10000] gap-1"
-      >
-        <svg
-          width="16"
-          height="16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path d="M15 19l-7-7 7-7" />
-        </svg>
-        Back
-      </Button>
     </div>
   );
 
