@@ -191,9 +191,12 @@ public partial class PageBuilderService(
 
     public async Task PermanentDeletePageAsync(PageId id)
     {
-        var page = await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id)
+        var page = await db.Pages.IgnoreQueryFilters()
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id)
             ?? throw new NotFoundException("Page", id);
 
+        page.Tags.Clear();
         db.Pages.Remove(page);
         await db.SaveChangesAsync();
 
