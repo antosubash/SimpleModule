@@ -16,6 +16,7 @@ public class PageBuilderDbContext(
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new PageConfiguration());
+        modelBuilder.Entity<Page>().HasQueryFilter(p => p.DeletedAt == null);
         modelBuilder.ApplyModuleSchema("PageBuilder", dbOptions.Value);
     }
 

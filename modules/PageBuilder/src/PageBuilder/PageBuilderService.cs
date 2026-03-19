@@ -31,7 +31,7 @@ public partial class PageBuilderService(
 
     public async Task<Page?> GetPageByIdAsync(PageId id)
     {
-        var page = await db.Pages.FindAsync(id);
+        var page = await db.Pages.FirstOrDefaultAsync(p => p.Id == id);
         if (page is null)
         {
             LogPageNotFound(logger, id);
@@ -125,7 +125,8 @@ public partial class PageBuilderService(
         var page = await db.Pages.FindAsync(id)
             ?? throw new NotFoundException("Page", id);
 
-        db.Pages.Remove(page);
+        page.DeletedAt = DateTime.UtcNow;
+        page.IsPublished = false;
         await db.SaveChangesAsync();
 
         LogPageDeleted(logger, id);
@@ -163,6 +164,49 @@ public partial class PageBuilderService(
 
         LogPageUnpublished(logger, page.Id, page.Title);
         return page;
+    }
+
+    public async Task<IEnumerable<PageSummary>> GetTrashedPagesAsync() =>
+        await db
+            .Pages.IgnoreQueryFilters()
+            .Where(p => p.DeletedAt != null)
+            .OrderByDescending(p => p.DeletedAt)
+            .Select(p => new PageSummary
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Slug = p.Slug,
+                IsPublished = p.IsPublished,
+                HasDraft = p.DraftContent != null,
+                Order = p.Order,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                DeletedAt = p.DeletedAt,
+            })
+            .ToListAsync();
+
+    public async Task<Page> RestorePageAsync(PageId id)
+    {
+        var page = await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null)
+            ?? throw new NotFoundException("Page", id);
+
+        page.DeletedAt = null;
+        page.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        LogPageRestored(logger, page.Id, page.Title);
+        return page;
+    }
+
+    public async Task PermanentDeletePageAsync(PageId id)
+    {
+        var page = await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id)
+            ?? throw new NotFoundException("Page", id);
+
+        db.Pages.Remove(page);
+        await db.SaveChangesAsync();
+
+        LogPagePermanentlyDeleted(logger, id);
     }
 
     internal static string Slugify(string text)
@@ -222,4 +266,10 @@ public partial class PageBuilderService(
         Message = "Page {PageId} unpublished: {PageTitle}"
     )]
     private static partial void LogPageUnpublished(ILogger logger, PageId pageId, string pageTitle);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} restored: {PageTitle}")]
+    private static partial void LogPageRestored(ILogger logger, PageId pageId, string pageTitle);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} permanently deleted")]
+    private static partial void LogPagePermanentlyDeleted(ILogger logger, PageId pageId);
 }

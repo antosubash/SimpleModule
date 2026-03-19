@@ -20,5 +20,6 @@ public class PageConfiguration : IEntityTypeConfiguration<Page>
         builder.Property(p => p.OgImage).IsRequired(false).HasMaxLength(500);
         builder.Property(p => p.IsPublished).HasDefaultValue(false);
         builder.Property(p => p.Order).HasDefaultValue(0);
+        builder.Property(p => p.DeletedAt).IsRequired(false);
     }
 }

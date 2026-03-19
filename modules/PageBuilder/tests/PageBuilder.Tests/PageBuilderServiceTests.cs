@@ -98,22 +98,44 @@ public sealed class PageBuilderServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DeletePage_Removes()
+    public async Task DeletePage_SoftDeletes_SetsDeletedAt()
     {
-        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "To Delete" });
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "To Soft Delete" });
 
         await _sut.DeletePageAsync(page.Id);
 
+        // Soft deleted — not in normal queries
         var found = await _sut.GetPageByIdAsync(page.Id);
         found.Should().BeNull();
+
+        // But in trash
+        var trashed = await _sut.GetTrashedPagesAsync();
+        trashed.Should().ContainSingle().Which.Title.Should().Be("To Soft Delete");
     }
 
     [Fact]
-    public async Task DeletePage_NonExistent_ThrowsNotFoundException()
+    public async Task RestorePage_ClearsDeletedAt()
     {
-        var act = () => _sut.DeletePageAsync(PageId.From(99999));
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "To Restore" });
+        await _sut.DeletePageAsync(page.Id);
 
-        await act.Should().ThrowAsync<NotFoundException>();
+        var restored = await _sut.RestorePageAsync(page.Id);
+
+        restored.DeletedAt.Should().BeNull();
+        var found = await _sut.GetPageByIdAsync(restored.Id);
+        found.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task PermanentDelete_RemovesCompletely()
+    {
+        var page = await _sut.CreatePageAsync(new CreatePageRequest { Title = "To Perm Delete" });
+        await _sut.DeletePageAsync(page.Id);
+
+        await _sut.PermanentDeletePageAsync(page.Id);
+
+        var trashed = await _sut.GetTrashedPagesAsync();
+        trashed.Should().BeEmpty();
     }
 
     [Fact]

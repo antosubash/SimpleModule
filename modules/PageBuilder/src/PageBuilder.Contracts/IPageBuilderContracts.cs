@@ -12,4 +12,7 @@ public interface IPageBuilderContracts
     Task DeletePageAsync(PageId id);
     Task<Page> PublishPageAsync(PageId id);
     Task<Page> UnpublishPageAsync(PageId id);
+    Task<IEnumerable<PageSummary>> GetTrashedPagesAsync();
+    Task<Page> RestorePageAsync(PageId id);
+    Task PermanentDeletePageAsync(PageId id);
 }
