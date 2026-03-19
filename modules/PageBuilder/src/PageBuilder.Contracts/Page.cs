@@ -9,6 +9,7 @@ public class Page
     public string Title { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public string? DraftContent { get; set; }
     public bool IsPublished { get; set; }
     public int Order { get; set; }
     public DateTime CreatedAt { get; set; }

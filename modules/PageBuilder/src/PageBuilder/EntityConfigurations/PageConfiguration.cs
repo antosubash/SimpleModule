@@ -14,6 +14,7 @@ public class PageConfiguration : IEntityTypeConfiguration<Page>
         builder.Property(p => p.Slug).IsRequired().HasMaxLength(200);
         builder.HasIndex(p => p.Slug).IsUnique();
         builder.Property(p => p.Content).IsRequired();
+        builder.Property(p => p.DraftContent).IsRequired(false);
         builder.Property(p => p.IsPublished).HasDefaultValue(false);
         builder.Property(p => p.Order).HasDefaultValue(0);
     }
