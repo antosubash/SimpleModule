@@ -196,14 +196,16 @@ export default function Editor({ page, templates }: Props) {
   );
 
   if (showTemplatePicker) {
-    const picker = (
-      <div className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center">
-        <div className="max-w-xl w-full px-8">
-          <h2 className="text-2xl font-bold tracking-tight mb-2">Choose a template</h2>
-          <p className="text-text-muted text-sm mb-6">
+    return (
+      <Dialog open onOpenChange={(open) => { if (!open) router.visit('/admin/pages'); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Page</DialogTitle>
+          </DialogHeader>
+          <p className="text-text-muted text-sm">
             Start from a template or create a blank page.
           </p>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 mb-6">
+          <div className="grid grid-cols-2 gap-3 py-4">
             <button
               type="button"
               onClick={handleStartBlank}
@@ -237,13 +239,14 @@ export default function Editor({ page, templates }: Props) {
               </Card>
             ))}
           </div>
-          <Button variant="ghost" onClick={() => router.visit('/admin/pages')}>
-            Cancel
-          </Button>
-        </div>
-      </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => router.visit('/admin/pages')}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
-    return createPortal(picker, document.body);
   }
 
   const editor = (
