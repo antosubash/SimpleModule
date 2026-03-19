@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.OpenIddict.Services;
@@ -93,5 +95,25 @@ public class OpenIddictModule : IModule
 
         // Seed service
         services.AddHostedService<OpenIddictSeedService>();
+    }
+
+    public void ConfigurePermissions(PermissionRegistryBuilder builder)
+    {
+        builder.AddPermissions<OpenIddictPermissions>();
+    }
+
+    public void ConfigureMenu(IMenuBuilder menus)
+    {
+        menus.Add(
+            new MenuItem
+            {
+                Label = "OAuth Clients",
+                Url = "/openiddict/clients",
+                Icon =
+                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>""",
+                Order = 22,
+                Section = MenuSection.Navbar,
+            }
+        );
     }
 }
