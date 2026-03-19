@@ -34,6 +34,7 @@
     </Folder>
     <Folder Name="/modules/Permissions/">
         <Project Path="modules/Permissions/src/Permissions.Contracts/Permissions.Contracts.csproj" />
+        <Project Path="modules/Permissions/src/Permissions/Permissions.csproj" />
     </Folder>
     <Folder Name="/modules/Admin/">
         <Project Path="modules/Admin/src/Admin.Contracts/Admin.Contracts.csproj" />
