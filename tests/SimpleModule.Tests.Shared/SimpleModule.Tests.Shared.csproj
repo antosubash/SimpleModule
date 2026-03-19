@@ -18,5 +18,8 @@
     <ProjectReference Include="..\..\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\Products.Contracts\Products.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\Orders.Contracts\Orders.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\OpenIddict\src\OpenIddict\OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\Permissions\Permissions.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
   </ItemGroup>
 </Project>
