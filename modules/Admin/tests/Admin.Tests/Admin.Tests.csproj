@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Admin\Admin.csproj" />
     <ProjectReference Include="..\..\src\Admin.Contracts\Admin.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
   </ItemGroup>
 </Project>
