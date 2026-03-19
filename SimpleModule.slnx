@@ -39,6 +39,7 @@
     </Folder>
     <Folder Name="/modules/OpenIddict/">
         <Project Path="modules/OpenIddict/src/OpenIddict.Contracts/OpenIddict.Contracts.csproj" />
+        <Project Path="modules/OpenIddict/src/OpenIddict/OpenIddict.csproj" />
     </Folder>
     <Folder Name="/modules/Admin/">
         <Project Path="modules/Admin/src/Admin.Contracts/Admin.Contracts.csproj" />

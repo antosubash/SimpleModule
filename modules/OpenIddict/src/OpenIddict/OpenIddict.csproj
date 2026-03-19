@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>SimpleModule.OpenIddict</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="OpenIddict.AspNetCore" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\OpenIddict.Contracts\OpenIddict.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Users\src\Users\Users.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
+  </ItemGroup>
+</Project>
