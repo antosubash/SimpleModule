@@ -15,6 +15,7 @@ interface PageSummary {
   title: string;
   slug: string;
   isPublished: boolean;
+  hasDraft: boolean;
   order: number;
   createdAt: string;
   updatedAt: string;
@@ -66,9 +67,14 @@ export default function Manage({ pages }: Props) {
                 <TableCell className="font-medium">{page.title}</TableCell>
                 <TableCell className="text-text-secondary">/p/{page.slug}</TableCell>
                 <TableCell>
-                  <Badge variant={page.isPublished ? 'success' : 'secondary'}>
-                    {page.isPublished ? 'Published' : 'Draft'}
-                  </Badge>
+                  <div className="flex gap-1.5">
+                    <Badge variant={page.isPublished ? 'success' : 'secondary'}>
+                      {page.isPublished ? 'Published' : 'Unpublished'}
+                    </Badge>
+                    {page.hasDraft && (
+                      <Badge variant="warning">Draft</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-text-muted">
                   {new Date(page.updatedAt).toLocaleDateString()}
@@ -82,6 +88,15 @@ export default function Manage({ pages }: Props) {
                     >
                       Edit
                     </Button>
+                    {page.hasDraft && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                      >
+                        Preview Draft
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
