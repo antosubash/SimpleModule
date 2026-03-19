@@ -15,9 +15,6 @@ export default defineConfig({
     emptyOutDir: false,
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react'],
-      output: {
-        inlineDynamicImports: true,
-      },
     },
   },
 });

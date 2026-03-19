@@ -18,7 +18,6 @@ export default defineConfig({
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react'],
       output: {
-        inlineDynamicImports: true,
         assetFileNames: 'pagebuilder[extname]',
       },
     },

@@ -130,8 +130,7 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        viewPages.Should().Contain("import Browse from '../Views/Browse'");
-        viewPages.Should().Contain("'Products/Browse': Browse");
+        viewPages.Should().Contain("'Products/Browse': () => import('../Views/Browse')");
     }
 
     [Fact]
@@ -182,10 +181,8 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        viewPages.Should().Contain("import Browse from '../Views/Browse'");
-        viewPages.Should().Contain("import Create from '../Views/Create'");
-        viewPages.Should().Contain("'Test/Browse': Browse");
-        viewPages.Should().Contain("'Test/Create': Create");
+        viewPages.Should().Contain("'Test/Browse': () => import('../Views/Browse')");
+        viewPages.Should().Contain("'Test/Create': () => import('../Views/Create')");
     }
 
     [Fact]
@@ -284,8 +281,7 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        viewPages.Should().Contain("import Detail from '../Views/Detail'");
-        viewPages.Should().Contain("'Test/Detail': Detail");
+        viewPages.Should().Contain("'Test/Detail': () => import('../Views/Detail')");
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-import { Render } from '@measured/puck';
+import { Render } from '@measured/puck/rsc';
 import { useEffect, useMemo } from 'react';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';

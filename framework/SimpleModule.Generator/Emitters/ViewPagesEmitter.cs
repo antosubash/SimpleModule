@@ -25,16 +25,7 @@ internal sealed class ViewPagesEmitter : IEmitter
             sb.AppendLine("#if SIMPLEMODULE_TS");
             sb.AppendLine("/*");
 
-            // Generate import statements — component name is the part after "/"
-            foreach (var view in module.Views)
-            {
-                var componentName = view.Page.Contains("/")
-                    ? view.Page.Substring(view.Page.LastIndexOf('/') + 1)
-                    : view.Page;
-                sb.AppendLine($"import {componentName} from '../Views/{componentName}';");
-            }
-
-            sb.AppendLine();
+            // Generate lazy import entries for code splitting
             sb.AppendLine("export const pages: Record<string, any> = {");
 
             for (var i = 0; i < module.Views.Length; i++)
@@ -44,7 +35,7 @@ internal sealed class ViewPagesEmitter : IEmitter
                     ? view.Page.Substring(view.Page.LastIndexOf('/') + 1)
                     : view.Page;
                 var comma = i < module.Views.Length - 1 ? "," : "";
-                sb.AppendLine($"  '{view.Page}': {componentName}{comma}");
+                sb.AppendLine($"  '{view.Page}': () => import('../Views/{componentName}'){comma}");
             }
 
             sb.AppendLine("};");

@@ -24,5 +24,11 @@ export async function resolvePage(name: string) {
     );
   }
 
+  // Support lazy page entries: () => import('./SomePage')
+  if (typeof page === 'function') {
+    const resolved = await page();
+    return resolved.default ? resolved : { default: resolved };
+  }
+
   return page.default ? page : { default: page };
 }

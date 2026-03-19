@@ -58,7 +58,7 @@ public class ViewPagesEmitterTests
     }
 
     [Fact]
-    public void ImportStatements_UseComponentName()
+    public void LazyImports_UseComponentPath()
     {
         var source = """
             using Microsoft.AspNetCore.Builder;
@@ -88,7 +88,7 @@ public class ViewPagesEmitterTests
 
         var viewPages = GetGeneratedSource(result, "ViewPages_Items.g.cs");
 
-        viewPages.Should().Contain("import Create from '../Views/Create';");
+        viewPages.Should().Contain("'Items/Create': () => import('../Views/Create')");
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class ViewPagesEmitterTests
         var viewPages = GetGeneratedSource(result, "ViewPages_Orders.g.cs");
 
         viewPages.Should().Contain("export const pages: Record<string, any> = {");
-        viewPages.Should().Contain("'Orders/Detail': Detail");
+        viewPages.Should().Contain("'Orders/Detail': () => import('../Views/Detail')");
     }
 
     [Fact]
@@ -173,12 +173,9 @@ public class ViewPagesEmitterTests
 
         var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
 
-        viewPages.Should().Contain("import Browse from '../Views/Browse';");
-        viewPages.Should().Contain("import Create from '../Views/Create';");
-        viewPages.Should().Contain("import Edit from '../Views/Edit';");
-        viewPages.Should().Contain("'Test/Browse': Browse");
-        viewPages.Should().Contain("'Test/Create': Create");
-        viewPages.Should().Contain("'Test/Edit': Edit");
+        viewPages.Should().Contain("'Test/Browse': () => import('../Views/Browse')");
+        viewPages.Should().Contain("'Test/Create': () => import('../Views/Create')");
+        viewPages.Should().Contain("'Test/Edit': () => import('../Views/Edit')");
     }
 
     [Fact]
@@ -249,8 +246,7 @@ public class ViewPagesEmitterTests
 
         var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
 
-        viewPages.Should().Contain("import Detail from '../Views/Detail';");
-        viewPages.Should().Contain("'Test/Detail': Detail");
+        viewPages.Should().Contain("'Test/Detail': () => import('../Views/Detail')");
     }
 
     private static string GetGeneratedSource(
