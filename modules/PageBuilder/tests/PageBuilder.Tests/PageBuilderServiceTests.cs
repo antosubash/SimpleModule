@@ -186,4 +186,42 @@ public sealed class PageBuilderServiceTests : IDisposable
         PageBuilderService.Slugify("My  Page  Title").Should().Be("my-page-title");
         PageBuilderService.Slugify("Café & Résumé").Should().Be("caf-rsum");
     }
+
+    [Fact]
+    public void ValidateSlug_ValidSlug_ReturnsNull()
+    {
+        PageBuilderService.ValidateSlug("hello-world").Should().BeNull();
+        PageBuilderService.ValidateSlug("abc").Should().BeNull();
+        PageBuilderService.ValidateSlug("my-page-123").Should().BeNull();
+    }
+
+    [Fact]
+    public void ValidateSlug_TooShort_ReturnsError()
+    {
+        PageBuilderService.ValidateSlug("ab").Should().NotBeNull();
+    }
+
+    [Fact]
+    public void ValidateSlug_InvalidChars_ReturnsError()
+    {
+        PageBuilderService.ValidateSlug("Hello World").Should().NotBeNull();
+        PageBuilderService.ValidateSlug("has_underscore").Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task UpdatePage_DuplicateSlug_ThrowsArgumentException()
+    {
+        await _sut.CreatePageAsync(new CreatePageRequest { Title = "Page One", Slug = "page-one" });
+        var page2 = await _sut.CreatePageAsync(new CreatePageRequest { Title = "Page Two", Slug = "page-two" });
+
+        var act = () => _sut.UpdatePageAsync(page2.Id, new UpdatePageRequest
+        {
+            Title = "Page Two",
+            Slug = "page-one",
+            Order = 0,
+            IsPublished = false,
+        });
+
+        await act.Should().ThrowAsync<ArgumentException>().WithMessage("*already taken*");
+    }
 }

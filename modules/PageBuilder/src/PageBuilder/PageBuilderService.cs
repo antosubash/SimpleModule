@@ -67,6 +67,10 @@ public partial class PageBuilderService(
             ? Slugify(request.Title)
             : Slugify(request.Slug);
 
+        var validationError = ValidateSlug(slug);
+        if (validationError is not null)
+            throw new ArgumentException(validationError, nameof(request));
+
         slug = await EnsureUniqueSlugAsync(slug);
 
         var now = DateTime.UtcNow;
@@ -92,7 +96,16 @@ public partial class PageBuilderService(
             ?? throw new NotFoundException("Page", id);
 
         page.Title = request.Title;
-        page.Slug = request.Slug;
+
+        var slugToSet = Slugify(request.Slug);
+        var slugError = ValidateSlug(slugToSet);
+        if (slugError is not null)
+            throw new ArgumentException(slugError, nameof(request));
+
+        if (slugToSet != page.Slug && await db.Pages.AnyAsync(p => p.Slug == slugToSet && p.Id != id))
+            throw new ArgumentException("Slug is already taken.", nameof(request));
+
+        page.Slug = slugToSet;
         page.Order = request.Order;
         page.IsPublished = request.IsPublished;
         page.MetaDescription = request.MetaDescription;
@@ -219,6 +232,20 @@ public partial class PageBuilderService(
         slug = slug.Trim('-');
         return slug;
     }
+
+    internal static string? ValidateSlug(string slug)
+    {
+        if (slug.Length < 3)
+            return "Slug must be at least 3 characters.";
+        if (slug.Length > 200)
+            return "Slug must be at most 200 characters.";
+        if (!SlugValidRegex().IsMatch(slug))
+            return "Slug must contain only lowercase letters, numbers, and hyphens.";
+        return null;
+    }
+
+    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*$")]
+    private static partial Regex SlugValidRegex();
 
     private async Task<string> EnsureUniqueSlugAsync(string slug)
     {
