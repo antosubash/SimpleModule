@@ -15,4 +15,7 @@ public interface IPageBuilderContracts
     Task<IEnumerable<PageSummary>> GetTrashedPagesAsync();
     Task<Page> RestorePageAsync(PageId id);
     Task PermanentDeletePageAsync(PageId id);
+    Task<IEnumerable<PageTemplate>> GetAllTemplatesAsync();
+    Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request);
+    Task DeleteTemplateAsync(PageTemplateId id);
 }

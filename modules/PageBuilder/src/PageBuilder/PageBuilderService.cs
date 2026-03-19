@@ -222,6 +222,33 @@ public partial class PageBuilderService(
         LogPagePermanentlyDeleted(logger, id);
     }
 
+    public async Task<IEnumerable<PageTemplate>> GetAllTemplatesAsync() =>
+        await db.Templates.OrderBy(t => t.Name).ToListAsync();
+
+    public async Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request)
+    {
+        var template = new PageTemplate
+        {
+            Name = request.Name,
+            Content = request.Content,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        db.Templates.Add(template);
+        await db.SaveChangesAsync();
+
+        return template;
+    }
+
+    public async Task DeleteTemplateAsync(PageTemplateId id)
+    {
+        var template = await db.Templates.FindAsync(id)
+            ?? throw new NotFoundException("PageTemplate", id);
+
+        db.Templates.Remove(template);
+        await db.SaveChangesAsync();
+    }
+
     internal static string Slugify(string text)
     {
 #pragma warning disable CA1308 // URL slugs are conventionally lowercase

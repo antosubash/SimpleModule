@@ -224,4 +224,39 @@ public sealed class PageBuilderServiceTests : IDisposable
 
         await act.Should().ThrowAsync<ArgumentException>().WithMessage("*already taken*");
     }
+
+    [Fact]
+    public async Task CreateTemplate_SavesNameAndContent()
+    {
+        var template = await _sut.CreateTemplateAsync(new CreatePageTemplateRequest
+        {
+            Name = "Landing Page",
+            Content = """{"content":[{"type":"Hero"}],"root":{}}""",
+        });
+
+        template.Name.Should().Be("Landing Page");
+        template.Content.Should().Contain("Hero");
+    }
+
+    [Fact]
+    public async Task GetAllTemplates_ReturnsOrderedByName()
+    {
+        await _sut.CreateTemplateAsync(new CreatePageTemplateRequest { Name = "Zzz", Content = "{}" });
+        await _sut.CreateTemplateAsync(new CreatePageTemplateRequest { Name = "Aaa", Content = "{}" });
+
+        var templates = await _sut.GetAllTemplatesAsync();
+
+        templates.First().Name.Should().Be("Aaa");
+    }
+
+    [Fact]
+    public async Task DeleteTemplate_Removes()
+    {
+        var template = await _sut.CreateTemplateAsync(new CreatePageTemplateRequest { Name = "To Delete", Content = "{}" });
+
+        await _sut.DeleteTemplateAsync(template.Id);
+
+        var all = await _sut.GetAllTemplatesAsync();
+        all.Should().BeEmpty();
+    }
 }

@@ -12,10 +12,12 @@ public class PageBuilderDbContext(
 ) : DbContext(options)
 {
     public DbSet<Page> Pages => Set<Page>();
+    public DbSet<PageTemplate> Templates => Set<PageTemplate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new PageConfiguration());
+        modelBuilder.ApplyConfiguration(new PageTemplateConfiguration());
         modelBuilder.Entity<Page>().HasQueryFilter(p => p.DeletedAt == null);
         modelBuilder.ApplyModuleSchema("PageBuilder", dbOptions.Value);
     }
@@ -25,5 +27,8 @@ public class PageBuilderDbContext(
         configurationBuilder
             .Properties<PageId>()
             .HaveConversion<PageId.EfCoreValueConverter, PageId.EfCoreValueComparer>();
+        configurationBuilder
+            .Properties<PageTemplateId>()
+            .HaveConversion<PageTemplateId.EfCoreValueConverter, PageTemplateId.EfCoreValueComparer>();
     }
 }
