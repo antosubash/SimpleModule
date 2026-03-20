@@ -30,9 +30,9 @@ export default function Clients({ clients }: Props) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Clients</h1>
-          <p className="text-text-muted text-sm mt-1">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Clients</h1>
+          <p className="text-sm text-muted-foreground">
             {clients.length} registered {clients.length === 1 ? 'client' : 'clients'}
           </p>
         </div>

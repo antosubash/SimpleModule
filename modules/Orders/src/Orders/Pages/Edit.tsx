@@ -1,5 +1,11 @@
 import { router } from '@inertiajs/react';
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
@@ -66,27 +72,18 @@ export default function Edit({ order, products }: Props) {
 
   return (
     <div className="max-w-2xl">
-      <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/orders"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
-        <h1 className="text-2xl font-extrabold tracking-tight">Edit Order #{order.id}</h1>
-      </div>
-      <p className="text-text-muted text-sm ml-7 mb-6">
-        Created: {new Date(order.createdAt).toLocaleString()} &middot; Current total: $
-        {order.total.toFixed(2)}
-      </p>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/orders">Orders</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Edit Order</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">Edit Order #{order.id}</h1>
 
       <Card className="mb-6">
         <CardContent className="p-6">

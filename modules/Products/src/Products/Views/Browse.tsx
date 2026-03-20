@@ -4,7 +4,10 @@ import type { Product } from '../types';
 export default function Browse({ products }: { products: Product[] }) {
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-extrabold tracking-tight mb-6">Products</h1>
+      <div className="space-y-1 mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Products</h1>
+        <p className="text-sm text-muted-foreground">Browse the product catalog.</p>
+      </div>
       <div className="space-y-3">
         {products.map((p) => (
           <Card key={p.id}>

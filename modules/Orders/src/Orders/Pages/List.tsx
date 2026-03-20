@@ -24,9 +24,9 @@ export default function List({ orders }: Props) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Orders</h1>
-          <p className="text-text-muted text-sm mt-1">{orders.length} total orders</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
+          <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
         </div>
         <Button onClick={() => router.get('/orders/create')}>Create Order</Button>
       </div>

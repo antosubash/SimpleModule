@@ -34,9 +34,9 @@ export default function Roles({ roles }: Props) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Roles</h1>
-          <p className="text-text-muted text-sm mt-1">Manage application roles</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Roles</h1>
+          <p className="text-sm text-muted-foreground">Manage application roles and permissions.</p>
         </div>
         <Button onClick={() => router.get('/admin/roles/create')}>Create Role</Button>
       </div>

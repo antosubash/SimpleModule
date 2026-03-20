@@ -1,6 +1,12 @@
 import { router } from '@inertiajs/react';
 import {
   Badge,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
@@ -82,30 +88,21 @@ export default function UsersEdit({
 
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/admin/users"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
-        <h1 className="text-2xl font-extrabold tracking-tight">Edit User</h1>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Edit User</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Edit User</h1>
         {user.isDeactivated && <Badge variant="secondary">Deactivated</Badge>}
       </div>
-      <p className="text-text-muted text-sm ml-7 mb-6">
-        Created: {new Date(user.createdAt).toLocaleString()}
-        {user.lastLoginAt && (
-          <span className="ml-4">Last login: {new Date(user.lastLoginAt).toLocaleString()}</span>
-        )}
-      </p>
 
       <TabNav tabs={tabs} activeTab={tab} baseUrl={`/admin/users/${user.id}/edit`} />
 

@@ -1,5 +1,17 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Label,
+} from '@simplemodule/ui';
 
 interface Role {
   id: string;
@@ -20,24 +32,18 @@ export default function UsersCreate({ allRoles }: Props) {
 
   return (
     <div className="max-w-xl">
-      <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/admin/users"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
-        <h1 className="text-2xl font-extrabold tracking-tight">Create User</h1>
-      </div>
-      <p className="text-text-muted text-sm ml-7 mb-6">Add a new user account</p>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Create User</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">Create User</h1>
 
       <Card>
         <CardContent className="p-6">

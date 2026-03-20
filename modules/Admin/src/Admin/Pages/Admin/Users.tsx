@@ -52,9 +52,9 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Users</h1>
-          <p className="text-text-muted text-sm mt-1">{totalCount} total users</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+          <p className="text-sm text-muted-foreground">{totalCount} total users</p>
         </div>
         <Button onClick={() => router.get('/admin/users/create')}>Create User</Button>
       </div>
