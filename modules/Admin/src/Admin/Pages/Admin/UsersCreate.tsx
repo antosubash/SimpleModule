@@ -10,6 +10,8 @@ import {
   Card,
   CardContent,
   Checkbox,
+  Field,
+  FieldGroup,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -48,50 +50,52 @@ export default function UsersCreate({ allRoles }: Props) {
 
       <Card>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input id="displayName" name="displayName" required />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" required />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
-            </div>
-            <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input id="confirmPassword" name="confirmPassword" type="password" required />
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox id="emailConfirmed" name="emailConfirmed" value="true" />
-              <Label htmlFor="emailConfirmed" className="mb-0">
-                Email confirmed
-              </Label>
-            </div>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="displayName">Display Name</Label>
+                <Input id="displayName" name="displayName" required />
+              </Field>
+              <Field>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" required />
+              </Field>
+              <Field>
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" name="password" type="password" required />
+              </Field>
+              <Field>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input id="confirmPassword" name="confirmPassword" type="password" required />
+              </Field>
+              <Field orientation="horizontal">
+                <Checkbox id="emailConfirmed" name="emailConfirmed" value="true" />
+                <Label htmlFor="emailConfirmed" className="mb-0">
+                  Email confirmed
+                </Label>
+              </Field>
 
-            {allRoles.length > 0 && (
-              <div>
-                <Label>Roles</Label>
-                <div className="space-y-2 mt-1">
-                  {allRoles.map((role) => (
-                    <div key={role.id} className="flex items-center gap-2">
-                      <Checkbox id={`role-${role.id}`} name="roles" value={role.name ?? ''} />
-                      <Label htmlFor={`role-${role.id}`} className="mb-0">
-                        {role.name}
-                        {role.description && (
-                          <span className="text-text-muted ml-1">&mdash; {role.description}</span>
-                        )}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              {allRoles.length > 0 && (
+                <Field>
+                  <Label>Roles</Label>
+                  <div className="space-y-2">
+                    {allRoles.map((role) => (
+                      <div key={role.id} className="flex items-center gap-2">
+                        <Checkbox id={`role-${role.id}`} name="roles" value={role.name ?? ''} />
+                        <Label htmlFor={`role-${role.id}`} className="mb-0">
+                          {role.name}
+                          {role.description && (
+                            <span className="text-text-muted ml-1">&mdash; {role.description}</span>
+                          )}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </Field>
+              )}
 
-            <Button type="submit">Create User</Button>
+              <Button type="submit">Create User</Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

@@ -9,6 +9,8 @@ import {
   Button,
   Card,
   CardContent,
+  Field,
+  FieldGroup,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -37,24 +39,26 @@ export default function Create() {
 
       <Card>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" required placeholder="Product name" />
-            </div>
-            <div>
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                required
-                min={0.01}
-                step={0.01}
-                placeholder="0.00"
-              />
-            </div>
-            <Button type="submit">Create</Button>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" required placeholder="Product name" />
+              </Field>
+              <Field>
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  required
+                  min={0.01}
+                  step={0.01}
+                  placeholder="0.00"
+                />
+              </Field>
+              <Button type="submit">Create</Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

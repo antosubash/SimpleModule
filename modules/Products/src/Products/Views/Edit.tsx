@@ -17,6 +17,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Field,
+  FieldGroup,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -58,24 +60,26 @@ export default function Edit({ product }: Props) {
 
       <Card className="mb-6">
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" defaultValue={product.name} required />
-            </div>
-            <div>
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                defaultValue={product.price}
-                required
-                min={0.01}
-                step={0.01}
-              />
-            </div>
-            <Button type="submit">Save</Button>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" defaultValue={product.name} required />
+              </Field>
+              <Field>
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  defaultValue={product.price}
+                  required
+                  min={0.01}
+                  step={0.01}
+                />
+              </Field>
+              <Button type="submit">Save</Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

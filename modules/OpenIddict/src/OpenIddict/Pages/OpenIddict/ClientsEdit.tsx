@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Field,
+  FieldGroup,
   Input,
   Label,
   Select,
@@ -127,9 +129,9 @@ function UriList({ label, name, values }: { label: string; name: string; values:
   }
 
   return (
-    <div>
+    <Field>
       <Label>{label}</Label>
-      <div className="space-y-2 mt-2">
+      <div className="space-y-2">
         {uris.map((uri, index) => (
           <div key={index} className="flex gap-2">
             <Input
@@ -147,7 +149,7 @@ function UriList({ label, name, values }: { label: string; name: string; values:
       <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={addUri}>
         + Add URI
       </Button>
-    </div>
+    </Field>
   );
 }
 
@@ -197,29 +199,30 @@ export default function ClientsEdit({
                 e.preventDefault();
                 router.post(`/openiddict/clients/${client.id}`, new FormData(e.currentTarget));
               }}
-              className="space-y-4"
             >
-              <div>
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input
-                  id="displayName"
-                  name="displayName"
-                  defaultValue={client.displayName ?? ''}
-                />
-              </div>
-              <div>
-                <Label htmlFor="clientType">Client Type</Label>
-                <Select defaultValue={client.clientType ?? 'public'} name="clientType">
-                  <SelectTrigger id="clientType">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="confidential">Confidential</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit">Save</Button>
+              <FieldGroup>
+                <Field>
+                  <Label htmlFor="displayName">Display Name</Label>
+                  <Input
+                    id="displayName"
+                    name="displayName"
+                    defaultValue={client.displayName ?? ''}
+                  />
+                </Field>
+                <Field>
+                  <Label htmlFor="clientType">Client Type</Label>
+                  <Select defaultValue={client.clientType ?? 'public'} name="clientType">
+                    <SelectTrigger id="clientType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="confidential">Confidential</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Button type="submit">Save</Button>
+              </FieldGroup>
             </form>
           </CardContent>
         </Card>
@@ -236,15 +239,16 @@ export default function ClientsEdit({
                 e.preventDefault();
                 router.post(`/openiddict/clients/${client.id}/uris`, new FormData(e.currentTarget));
               }}
-              className="space-y-6"
             >
-              <UriList label="Redirect URIs" name="redirectUris" values={redirectUris} />
-              <UriList
-                label="Post-Logout Redirect URIs"
-                name="postLogoutUris"
-                values={postLogoutUris}
-              />
-              <Button type="submit">Save URIs</Button>
+              <FieldGroup className="space-y-6">
+                <UriList label="Redirect URIs" name="redirectUris" values={redirectUris} />
+                <UriList
+                  label="Post-Logout Redirect URIs"
+                  name="postLogoutUris"
+                  values={postLogoutUris}
+                />
+                <Button type="submit">Save URIs</Button>
+              </FieldGroup>
             </form>
           </CardContent>
         </Card>

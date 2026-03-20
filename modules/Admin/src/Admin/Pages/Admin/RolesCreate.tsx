@@ -9,6 +9,8 @@ import {
   Button,
   Card,
   CardContent,
+  Field,
+  FieldGroup,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -41,26 +43,28 @@ export default function RolesCreate({ permissionsByModule }: Props) {
 
       <Card>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" name="name" required />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input id="description" name="description" />
-            </div>
-            <div>
-              <Label>Permissions</Label>
-              <div className="mt-2">
-                <PermissionGroups
-                  permissionsByModule={permissionsByModule}
-                  selected={[]}
-                  namePrefix="permissions"
-                />
-              </div>
-            </div>
-            <Button type="submit">Create Role</Button>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup className="space-y-6">
+              <Field>
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" required />
+              </Field>
+              <Field>
+                <Label htmlFor="description">Description</Label>
+                <Input id="description" name="description" />
+              </Field>
+              <Field>
+                <Label>Permissions</Label>
+                <div className="mt-2">
+                  <PermissionGroups
+                    permissionsByModule={permissionsByModule}
+                    selected={[]}
+                    namePrefix="permissions"
+                  />
+                </div>
+              </Field>
+              <Button type="submit">Create Role</Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

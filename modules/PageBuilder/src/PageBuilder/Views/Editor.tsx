@@ -4,13 +4,12 @@ import {
   Button,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Field,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -93,7 +92,7 @@ function HeaderActions({ page }: { page: Page | null }) {
             <DialogTitle>Save as Template</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            <Field>
               <Label htmlFor="template-name">Template name</Label>
               <Input
                 id="template-name"
@@ -105,7 +104,7 @@ function HeaderActions({ page }: { page: Page | null }) {
                 }}
                 autoFocus
               />
-            </div>
+            </Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
