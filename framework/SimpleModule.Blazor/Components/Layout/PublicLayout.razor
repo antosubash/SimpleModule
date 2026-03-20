@@ -1,5 +1,6 @@
 @using SimpleModule.Core.Menu
 @inherits LayoutComponentBase
+@inject IPublicMenuProvider? PublicMenuProvider
 
 <nav class="sticky top-0 z-50 border-b border-border bg-surface-overlay" style="backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
     <div class="max-w-5xl mx-auto flex items-center px-6 py-3">
@@ -8,11 +9,73 @@
                 <span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</span>
                 <span class="text-base">SimpleModule</span>
             </a>
-            <ModuleNav IsAuthenticated="false">
-                <AnonymousSuffix>
-                    <a href="/swagger" class="text-sm text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
-                </AnonymousSuffix>
-            </ModuleNav>
+            @if (_dynamicMenu is { Count: > 0 })
+            {
+                <div class="hidden sm:flex items-center gap-1">
+                    @foreach (var item in _dynamicMenu)
+                    {
+                        @if (item.Children.Count == 0)
+                        {
+                            <a href="@item.Url"
+                               class="text-sm text-text-muted no-underline hover:text-primary transition-colors @item.CssClass"
+                               target="@(item.OpenInNewTab ? "_blank" : null)">
+                                @item.Label
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="relative group">
+                                <a href="@item.Url"
+                                   class="text-sm text-text-muted no-underline hover:text-primary transition-colors cursor-pointer @item.CssClass"
+                                   target="@(item.OpenInNewTab ? "_blank" : null)">
+                                    @item.Label
+                                </a>
+                                <div class="absolute hidden group-hover:block top-full left-0 mt-1 py-1 bg-surface-overlay border border-border rounded-lg shadow-lg min-w-[160px] z-50">
+                                    @foreach (var child in item.Children)
+                                    {
+                                        @if (child.Children.Count == 0)
+                                        {
+                                            <a href="@child.Url"
+                                               class="block px-4 py-2 text-sm text-text-muted hover:text-primary hover:bg-surface-hover"
+                                               target="@(child.OpenInNewTab ? "_blank" : null)">
+                                                @child.Label
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <div class="relative group/sub">
+                                                <a href="@child.Url"
+                                                   class="block px-4 py-2 text-sm text-text-muted hover:text-primary hover:bg-surface-hover"
+                                                   target="@(child.OpenInNewTab ? "_blank" : null)">
+                                                    @child.Label
+                                                </a>
+                                                <div class="absolute hidden group-hover/sub:block top-0 left-full ml-0.5 py-1 bg-surface-overlay border border-border rounded-lg shadow-lg min-w-[160px] z-50">
+                                                    @foreach (var grandchild in child.Children)
+                                                    {
+                                                        <a href="@grandchild.Url"
+                                                           class="block px-4 py-2 text-sm text-text-muted hover:text-primary hover:bg-surface-hover"
+                                                           target="@(grandchild.OpenInNewTab ? "_blank" : null)">
+                                                            @grandchild.Label
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+            else
+            {
+                <ModuleNav IsAuthenticated="false">
+                    <AnonymousSuffix>
+                        <a href="/swagger" class="text-sm text-text-muted no-underline hover:text-primary transition-colors">API Docs</a>
+                    </AnonymousSuffix>
+                </ModuleNav>
+            }
         </div>
         <div class="ml-auto flex items-center gap-3">
             <DarkModeToggle />
@@ -25,3 +88,15 @@
 <main class="max-w-5xl mx-auto mt-8 mb-16 px-4 sm:px-6">
     @Body
 </main>
+
+@code {
+    private IReadOnlyList<PublicMenuItem>? _dynamicMenu;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PublicMenuProvider is not null)
+        {
+            _dynamicMenu = await PublicMenuProvider.GetMenuTreeAsync();
+        }
+    }
+}
