@@ -1,4 +1,23 @@
-import { Button, Card, CardContent, CardHeader, CardTitle, Separator } from '@simplemodule/ui';
+import {
+  Badge,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  PageHeader,
+  ScrollArea,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@simplemodule/ui';
 import { useCallback, useState } from 'react';
 import MenuItemEditor from '../components/MenuItemEditor';
 import MenuTree from '../components/MenuTree';
@@ -47,6 +66,14 @@ function getDepth(items: MenuItemDto[], id: number, depth = 0): number {
   return -1;
 }
 
+function countItems(items: MenuItemDto[]): number {
+  let count = 0;
+  for (const item of items) {
+    count += 1 + countItems(item.children);
+  }
+  return count;
+}
+
 export default function MenuManager({ menus: initial, availablePages }: MenuManagerProps) {
   const [menus, setMenus] = useState(initial);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -54,6 +81,7 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
 
   const selectedItem = selectedId !== null ? findItem(menus, selectedId) : null;
   const selectedDepth = selectedId !== null ? getDepth(menus, selectedId) : -1;
+  const totalItems = countItems(menus);
 
   const refreshMenus = useCallback(async () => {
     const res = await fetch('/api/settings/menus');
@@ -125,71 +153,155 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Menu Manager</h1>
-        <div className="flex gap-2">
-          <Button variant="primary" size="sm" onClick={() => handleAddItem(null)} disabled={saving}>
-            Add Item
-          </Button>
-          {selectedItem && selectedDepth < 2 && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => handleAddItem(selectedId)}
-              disabled={saving}
-            >
-              Add Child
-            </Button>
-          )}
+    <TooltipProvider>
+      <div className="mx-auto max-w-5xl space-y-6">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin/settings">Settings</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Menu Manager</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <PageHeader
+          title="Menu Manager"
+          description="Configure the public navigation menu. Add, reorder, and organize menu items."
+        />
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_3fr]">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">Menu Tree</CardTitle>
+                {totalItems > 0 && <Badge>{totalItems} items</Badge>}
+              </div>
+              <div className="flex gap-1.5">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleAddItem(null)}
+                      disabled={saving}
+                    >
+                      <svg
+                        className="mr-1.5 h-3.5 w-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 5v14m-7-7h14" />
+                      </svg>
+                      Add
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Add a new top-level menu item</TooltipContent>
+                </Tooltip>
+                {selectedItem && selectedDepth < 2 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleAddItem(selectedId)}
+                        disabled={saving}
+                      >
+                        <svg
+                          className="mr-1.5 h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M12 5v14m-7-7h14" />
+                        </svg>
+                        Child
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Add a child item under &ldquo;{selectedItem.label}&rdquo;
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {menus.length === 0 ? (
+                <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+                  <svg
+                    className="mb-3 h-10 w-10 text-text-secondary opacity-40"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
+                  <p className="text-sm font-medium text-text-secondary">No menu items yet</p>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    Click &ldquo;Add&rdquo; to create your first menu item.
+                  </p>
+                </div>
+              ) : (
+                <ScrollArea className="max-h-[500px]">
+                  <div className="px-3 pb-3">
+                    <MenuTree
+                      items={menus}
+                      selectedId={selectedId}
+                      onSelect={setSelectedId}
+                      onToggleVisibility={handleToggleVisibility}
+                    />
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {selectedItem ? `Edit: ${selectedItem.label}` : 'Item Editor'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedItem ? (
+                <MenuItemEditor
+                  key={selectedItem.id}
+                  item={selectedItem}
+                  availablePages={availablePages}
+                  onSave={handleSave}
+                  onDelete={handleDelete}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <svg
+                    className="mb-3 h-10 w-10 text-text-secondary opacity-40"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                  </svg>
+                  <p className="text-sm font-medium text-text-secondary">No item selected</p>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    Select a menu item from the tree to edit its properties.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_1.5fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Menu Tree</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {menus.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No menu items yet. Click "Add Item" to get started.
-              </p>
-            ) : (
-              <MenuTree
-                items={menus}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                onToggleVisibility={handleToggleVisibility}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              {selectedItem ? `Edit: ${selectedItem.label}` : 'Item Editor'}
-            </CardTitle>
-          </CardHeader>
-          <Separator />
-          <CardContent className="pt-4">
-            {selectedItem ? (
-              <MenuItemEditor
-                key={selectedItem.id}
-                item={selectedItem}
-                availablePages={availablePages}
-                onSave={handleSave}
-                onDelete={handleDelete}
-              />
-            ) : (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                Select a menu item to edit its properties.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }
