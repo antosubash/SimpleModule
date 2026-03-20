@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Tabs, TabsList, TabsTrigger } from '@simplemodule/ui';
 
 interface Tab {
   id: string;
@@ -13,23 +14,18 @@ interface TabNavProps {
 
 export function TabNav({ tabs, activeTab, baseUrl }: TabNavProps) {
   return (
-    <div className="border-b border-border mb-6">
-      <nav className="flex gap-0 -mb-px">
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => router.get(baseUrl, { tab: value }, { preserveState: true })}
+      className="mb-6"
+    >
+      <TabsList>
         {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => router.get(baseUrl, { tab: tab.id }, { preserveState: true })}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-muted hover:text-text hover:border-border'
-            }`}
-          >
+          <TabsTrigger key={tab.id} value={tab.id}>
             {tab.label}
-          </button>
+          </TabsTrigger>
         ))}
-      </nav>
-    </div>
+      </TabsList>
+    </Tabs>
   );
 }

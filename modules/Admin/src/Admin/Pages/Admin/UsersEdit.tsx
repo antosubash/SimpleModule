@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Checkbox,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -132,12 +133,11 @@ export default function UsersEdit({
                   <Input id="email" name="email" type="email" defaultValue={user.email} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="emailConfirmed"
+                  <Checkbox
                     id="emailConfirmed"
+                    name="emailConfirmed"
+                    value="true"
                     defaultChecked={user.emailConfirmed}
-                    className="h-5 w-5 rounded-md border border-border bg-surface accent-primary"
                   />
                   <Label htmlFor="emailConfirmed" className="mb-0">
                     Email confirmed
@@ -200,13 +200,11 @@ export default function UsersEdit({
                 <div className="space-y-2 mb-4">
                   {allRoles.map((role) => (
                     <div key={role.id} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
+                        id={`role-${role.id}`}
                         name="roles"
                         value={role.name ?? ''}
-                        id={`role-${role.id}`}
                         defaultChecked={userRoles.includes(role.name ?? '')}
-                        className="h-5 w-5 rounded-md border border-border bg-surface accent-primary"
                       />
                       <Label htmlFor={`role-${role.id}`} className="mb-0">
                         {role.name}
