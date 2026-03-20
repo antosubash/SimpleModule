@@ -5,6 +5,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
   Select,
@@ -32,6 +38,7 @@ export default function Edit({ order, products }: Props) {
   const [items, setItems] = useState<OrderItem[]>(
     order.items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
   );
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   function addItem() {
     setItems([...items, { productId: products[0]?.id ?? 0, quantity: 1 }]);
@@ -60,8 +67,8 @@ export default function Edit({ order, products }: Props) {
   }
 
   function handleDelete() {
-    if (!confirm(`Delete order #${order.id}?`)) return;
     router.delete(`/orders/${order.id}`);
+    setShowDeleteDialog(false);
   }
 
   return (
@@ -170,11 +177,30 @@ export default function Edit({ order, products }: Props) {
           <p className="text-sm text-text-muted mb-3">
             Permanently delete this order. This action cannot be undone.
           </p>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>
             Delete Order
           </Button>
         </CardContent>
       </Card>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete order #{order.id}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

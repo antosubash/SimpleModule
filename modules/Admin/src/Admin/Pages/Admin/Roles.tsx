@@ -2,6 +2,12 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Table,
   TableBody,
   TableCell,
@@ -9,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 
 interface Role {
   id: string;
@@ -24,10 +31,20 @@ interface Props {
 }
 
 export default function Roles({ roles }: Props) {
-  function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete role "${name}"?`)) return;
-    router.delete(`/admin/roles/${id}`, {
-      onError: () => alert('Cannot delete role with assigned users.'),
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    router.delete(`/admin/roles/${deleteTarget.id}`, {
+      onError: () => {
+        setDeleteTarget(null);
+        setDeleteError('Cannot delete role with assigned users.');
+      },
+      onSuccess: () => setDeleteTarget(null),
     });
   }
 
@@ -40,6 +57,28 @@ export default function Roles({ roles }: Props) {
         </div>
         <Button onClick={() => router.get('/admin/roles/create')}>Create Role</Button>
       </div>
+
+      {deleteError && (
+        <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
+          <span>{deleteError}</span>
+          <button
+            type="button"
+            className="text-danger hover:text-danger/80"
+            onClick={() => setDeleteError(null)}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       <Table>
         <TableHeader>
@@ -78,7 +117,7 @@ export default function Roles({ roles }: Props) {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleDelete(role.id, role.name)}
+                    onClick={() => setDeleteTarget({ id: role.id, name: role.name })}
                   >
                     Delete
                   </Button>
@@ -88,6 +127,26 @@ export default function Roles({ roles }: Props) {
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Role</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This will remove
+              the role from all users.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

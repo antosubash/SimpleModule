@@ -1,5 +1,20 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@simplemodule/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+} from '@simplemodule/ui';
+import { useState } from 'react';
 import type { Product } from '../types';
 
 interface Props {
@@ -7,6 +22,8 @@ interface Props {
 }
 
 export default function Edit({ product }: Props) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -14,8 +31,8 @@ export default function Edit({ product }: Props) {
   }
 
   function handleDelete() {
-    if (!confirm(`Delete product "${product.name}"?`)) return;
     router.delete(`/products/${product.id}`);
+    setShowDeleteDialog(false);
   }
 
   return (
@@ -74,11 +91,31 @@ export default function Edit({ product }: Props) {
           <p className="text-sm text-text-muted mb-3">
             Permanently delete this product. This action cannot be undone.
           </p>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>
             Delete Product
           </Button>
         </CardContent>
       </Card>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{product.name}&rdquo;? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
