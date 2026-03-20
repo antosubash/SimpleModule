@@ -11,6 +11,7 @@ public class SettingsDbContext(
 ) : DbContext(options)
 {
     public DbSet<SettingEntity> Settings => Set<SettingEntity>();
+    public DbSet<PublicMenuItemEntity> PublicMenuItems => Set<PublicMenuItemEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
