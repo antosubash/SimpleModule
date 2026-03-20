@@ -27,6 +27,7 @@ export default function ClientsCreate() {
         <a
           href="/openiddict/clients"
           className="text-text-muted hover:text-text transition-colors no-underline"
+          aria-label="Back to clients"
         >
           <svg
             className="w-4 h-4"
@@ -47,11 +48,11 @@ export default function ClientsCreate() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Label htmlFor="clientId">Client ID</Label>
-              <Input id="clientId" name="clientId" required />
+              <Input id="clientId" name="clientId" required placeholder="my-app-client" />
             </div>
             <div>
               <Label htmlFor="displayName">Display Name</Label>
-              <Input id="displayName" name="displayName" />
+              <Input id="displayName" name="displayName" placeholder="My Application" />
             </div>
             <div>
               <Label htmlFor="clientType">Client Type</Label>
@@ -68,7 +69,12 @@ export default function ClientsCreate() {
             {clientType === 'confidential' && (
               <div>
                 <Label htmlFor="clientSecret">Client Secret</Label>
-                <Input id="clientSecret" name="clientSecret" type="password" />
+                <Input
+                  id="clientSecret"
+                  name="clientSecret"
+                  type="password"
+                  placeholder="Enter a strong secret"
+                />
               </div>
             )}
             <Button type="submit">Create Client</Button>

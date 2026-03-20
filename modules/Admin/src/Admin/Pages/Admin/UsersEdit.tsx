@@ -86,6 +86,7 @@ export default function UsersEdit({
         <a
           href="/admin/users"
           className="text-text-muted hover:text-text transition-colors no-underline"
+          aria-label="Back to users"
         >
           <svg
             className="w-4 h-4"
@@ -363,7 +364,7 @@ export default function UsersEdit({
               <CardTitle>Login Info</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-text-muted">Failed login attempts:</span>
                   <span className="ml-2 font-medium">{user.accessFailedCount}</span>

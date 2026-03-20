@@ -62,6 +62,7 @@ export default function Create({ products }: Props) {
         <a
           href="/orders"
           className="text-text-muted hover:text-text transition-colors no-underline"
+          aria-label="Back to orders"
         >
           <svg
             className="w-4 h-4"
@@ -124,6 +125,7 @@ export default function Create({ products }: Props) {
                       }
                       min="1"
                       className="w-20"
+                      aria-label={`Quantity for item ${index + 1}`}
                     />
                     {items.length > 1 && (
                       <Button
@@ -131,6 +133,7 @@ export default function Create({ products }: Props) {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeItem(index)}
+                        aria-label={`Remove item ${index + 1}`}
                       >
                         &times;
                       </Button>

@@ -1,5 +1,4 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import {
   Badge,
   Button,
@@ -16,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 import type { PageSummary } from '../types';
 
 interface Props {
@@ -72,9 +72,28 @@ export default function Manage({ pages }: Props) {
       </div>
 
       {pages.length === 0 ? (
-        <p className="text-text-muted text-sm">
-          No pages yet. Create your first page to get started.
-        </p>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <svg
+            className="mb-4 h-12 w-12 text-muted-foreground/50"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+            />
+          </svg>
+          <h3 className="text-sm font-medium text-foreground">No pages yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Get started by creating your first content page.
+          </p>
+          <Button size="sm" className="mt-4" onClick={() => router.get('/admin/pages/new')}>
+            New Page
+          </Button>
+        </div>
       ) : (
         <Table>
           <TableHeader>
@@ -126,6 +145,7 @@ export default function Manage({ pages }: Props) {
                         onChange={(e) =>
                           setTagInputs((prev) => ({ ...prev, [page.id]: e.target.value }))
                         }
+                        aria-label={`Add tag to ${page.title}`}
                       />
                     </form>
                   </div>
@@ -136,8 +156,16 @@ export default function Manage({ pages }: Props) {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                      <Button variant="ghost" size="sm" aria-label={`Actions for ${page.title}`}>
+                        <svg
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
                           <circle cx="12" cy="5" r="1" />
                           <circle cx="12" cy="12" r="1" />
                           <circle cx="12" cy="19" r="1" />
@@ -155,12 +183,16 @@ export default function Manage({ pages }: Props) {
                         </DropdownMenuItem>
                       )}
                       {page.hasDraft && (
-                        <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}>
+                        <DropdownMenuItem
+                          onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                        >
                           Preview Draft
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleTogglePublish(page.id, page.isPublished)}>
+                      <DropdownMenuItem
+                        onClick={() => handleTogglePublish(page.id, page.isPublished)}
+                      >
                         {page.isPublished ? 'Unpublish' : 'Publish'}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
