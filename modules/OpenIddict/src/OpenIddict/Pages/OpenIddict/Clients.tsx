@@ -2,6 +2,12 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Table,
   TableBody,
   TableCell,
@@ -9,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 
 interface Client {
   id: string;
@@ -22,9 +29,15 @@ interface Props {
 }
 
 export default function Clients({ clients }: Props) {
-  function handleDelete(id: string, clientId: string) {
-    if (!confirm(`Delete client "${clientId}"?`)) return;
-    router.delete(`/openiddict/clients/${id}`);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    clientId: string;
+  } | null>(null);
+
+  function handleDelete() {
+    if (!deleteTarget) return;
+    router.delete(`/openiddict/clients/${deleteTarget.id}`);
+    setDeleteTarget(null);
   }
 
   return (
@@ -70,7 +83,7 @@ export default function Clients({ clients }: Props) {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => handleDelete(client.id, client.clientId)}
+                    onClick={() => setDeleteTarget({ id: client.id, clientId: client.clientId })}
                   >
                     Delete
                   </Button>
@@ -80,6 +93,26 @@ export default function Clients({ clients }: Props) {
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Client</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{deleteTarget?.clientId}&rdquo;? This OAuth
+              client will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2,6 +2,12 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Table,
   TableBody,
   TableCell,
@@ -9,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 import type { Order } from '../types';
 
 interface Props {
@@ -16,9 +23,12 @@ interface Props {
 }
 
 export default function List({ orders }: Props) {
-  function handleDelete(id: number) {
-    if (!confirm(`Delete order #${id}?`)) return;
-    router.delete(`/orders/${id}`);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  function handleDelete() {
+    if (deleteId === null) return;
+    router.delete(`/orders/${deleteId}`);
+    setDeleteId(null);
   }
 
   return (
@@ -65,7 +75,7 @@ export default function List({ orders }: Props) {
                   >
                     Edit
                   </Button>
-                  <Button variant="danger" size="sm" onClick={() => handleDelete(order.id)}>
+                  <Button variant="danger" size="sm" onClick={() => setDeleteId(order.id)}>
                     Delete
                   </Button>
                 </div>
@@ -81,6 +91,25 @@ export default function List({ orders }: Props) {
           )}
         </TableBody>
       </Table>
+
+      <Dialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete order #{deleteId}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDeleteId(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

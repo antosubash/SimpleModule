@@ -7,6 +7,12 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -60,6 +66,8 @@ const tabs = [
   { id: 'activity', label: 'Activity' },
 ];
 
+type ConfirmAction = 'deactivate' | 'reverify' | 'disable2fa' | null;
+
 export default function UsersEdit({
   user,
   userRoles,
@@ -72,6 +80,8 @@ export default function UsersEdit({
 }: Props) {
   const [activityEntries, setActivityEntries] = useState(activityLog);
   const [activityPage, setActivityPage] = useState(1);
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   async function loadMoreActivity() {
     const nextPage = activityPage + 1;
@@ -80,6 +90,44 @@ export default function UsersEdit({
     setActivityEntries((prev) => [...prev, ...data.entries]);
     setActivityPage(nextPage);
   }
+
+  function handleConfirmAction() {
+    switch (confirmAction) {
+      case 'deactivate':
+        router.post(`/admin/users/${user.id}/deactivate`);
+        break;
+      case 'reverify':
+        router.post(`/admin/users/${user.id}/force-reverify`);
+        break;
+      case 'disable2fa':
+        router.post(`/admin/users/${user.id}/disable-2fa`);
+        break;
+    }
+    setConfirmAction(null);
+  }
+
+  const confirmDialogConfig: Record<
+    Exclude<ConfirmAction, null>,
+    { title: string; description: string; action: string }
+  > = {
+    deactivate: {
+      title: 'Deactivate Account',
+      description: 'This user will no longer be able to sign in. Are you sure?',
+      action: 'Deactivate',
+    },
+    reverify: {
+      title: 'Force Re-verification',
+      description: 'This will require the user to re-verify their email address. Are you sure?',
+      action: 'Force Re-verification',
+    },
+    disable2fa: {
+      title: 'Disable Two-Factor Authentication',
+      description: 'This will disable 2FA and reset the authenticator for this user. Are you sure?',
+      action: 'Disable 2FA',
+    },
+  };
+
+  const dialogConfig = confirmAction ? confirmDialogConfig[confirmAction] : null;
 
   return (
     <div className="max-w-3xl">
@@ -168,13 +216,7 @@ export default function UsersEdit({
                   <p className="text-sm text-text-muted mb-3">
                     Deactivating will lock the account and prevent login.
                   </p>
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      if (confirm('Deactivate this user? They will not be able to log in.'))
-                        router.post(`/admin/users/${user.id}/deactivate`);
-                    }}
-                  >
+                  <Button variant="danger" onClick={() => setConfirmAction('deactivate')}>
                     Deactivate Account
                   </Button>
                 </div>
@@ -263,13 +305,19 @@ export default function UsersEdit({
                   e.preventDefault();
                   const formData = new FormData(e.currentTarget);
                   if (formData.get('newPassword') !== formData.get('confirmPassword')) {
-                    alert('Passwords do not match.');
+                    setPasswordError('Passwords do not match.');
                     return;
                   }
+                  setPasswordError(null);
                   router.post(`/admin/users/${user.id}/reset-password`, formData);
                 }}
                 className="space-y-4"
               >
+                {passwordError && (
+                  <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                    {passwordError}
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="newPassword">New Password</Label>
                   <Input id="newPassword" name="newPassword" type="password" required />
@@ -321,13 +369,7 @@ export default function UsersEdit({
                 Status: {user.emailConfirmed ? 'Verified' : 'Not verified'}
               </p>
               {user.emailConfirmed && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (confirm('Force this user to re-verify their email?'))
-                      router.post(`/admin/users/${user.id}/force-reverify`);
-                  }}
-                >
+                <Button variant="outline" onClick={() => setConfirmAction('reverify')}>
                   Force Re-verification
                 </Button>
               )}
@@ -343,13 +385,7 @@ export default function UsersEdit({
                 Status: {user.twoFactorEnabled ? 'Enabled' : 'Not enabled'}
               </p>
               {user.twoFactorEnabled && (
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    if (confirm('Disable 2FA and reset the authenticator for this user?'))
-                      router.post(`/admin/users/${user.id}/disable-2fa`);
-                  }}
-                >
+                <Button variant="danger" onClick={() => setConfirmAction('disable2fa')}>
                   Disable 2FA
                 </Button>
               )}
@@ -392,6 +428,26 @@ export default function UsersEdit({
           </CardContent>
         </Card>
       )}
+
+      <Dialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => !open && setConfirmAction(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogConfig?.title}</DialogTitle>
+            <DialogDescription>{dialogConfig?.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setConfirmAction(null)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleConfirmAction}>
+              {dialogConfig?.action}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
