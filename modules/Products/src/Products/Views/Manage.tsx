@@ -36,9 +36,9 @@ export default function Manage({ products }: Props) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Manage Products</h1>
-          <p className="text-text-muted text-sm mt-1">{products.length} total products</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Manage Products</h1>
+          <p className="text-sm text-muted-foreground">{products.length} total products</p>
         </div>
         <Button onClick={() => router.get('/products/create')}>Create Product</Button>
       </div>

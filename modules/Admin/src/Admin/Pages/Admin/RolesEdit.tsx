@@ -1,5 +1,11 @@
 import { router } from '@inertiajs/react';
 import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
@@ -53,26 +59,18 @@ export default function RolesEdit({
 }: Props) {
   return (
     <div className="max-w-3xl">
-      <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/admin/roles"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
-        <h1 className="text-2xl font-extrabold tracking-tight">Edit Role</h1>
-      </div>
-      <p className="text-text-muted text-sm ml-7 mb-6">
-        Created: {new Date(role.createdAt).toLocaleString()}
-      </p>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/roles">Roles</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Edit Role</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">Edit Role</h1>
 
       <TabNav tabs={tabs} activeTab={tab} baseUrl={`/admin/roles/${role.id}/edit`} />
 

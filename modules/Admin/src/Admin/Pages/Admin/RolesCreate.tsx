@@ -1,5 +1,17 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Label,
+} from '@simplemodule/ui';
 import { PermissionGroups } from '../components/PermissionGroups';
 
 interface Props {
@@ -14,26 +26,18 @@ export default function RolesCreate({ permissionsByModule }: Props) {
 
   return (
     <div className="max-w-xl">
-      <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/admin/roles"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
-        <h1 className="text-2xl font-extrabold tracking-tight">Create Role</h1>
-      </div>
-      <p className="text-text-muted text-sm ml-7 mb-6">
-        Add a new application role with permissions
-      </p>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/roles">Roles</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Create Role</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">Create Role</h1>
 
       <Card>
         <CardContent className="p-6">

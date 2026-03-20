@@ -1,5 +1,17 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Button,
+  Card,
+  CardContent,
+  Input,
+  Label,
+} from '@simplemodule/ui';
 
 export default function Create() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -10,27 +22,18 @@ export default function Create() {
 
   return (
     <div className="max-w-xl">
-      <div className="flex items-center gap-3 mb-1">
-        <a
-          href="/products/manage"
-          aria-label="Back to manage products"
-          className="text-text-muted hover:text-text transition-colors no-underline"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="sr-only">Back to manage products</span>
-        </a>
-        <h1 className="text-2xl font-extrabold tracking-tight">Create Product</h1>
-      </div>
-      <p className="text-text-muted text-sm ml-7 mb-6">Add a new product</p>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/products/manage">Products</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Create Product</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <h1 className="text-2xl font-bold tracking-tight mb-6">Create Product</h1>
 
       <Card>
         <CardContent className="p-6">
