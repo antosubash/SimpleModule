@@ -9,6 +9,7 @@ using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Host;
@@ -194,6 +195,27 @@ app.MapStaticAssets();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Home page rewrite: if a public menu item is designated as home page,
+// rewrite GET / to that page's URL (internal rewrite, URL stays /)
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/" && HttpMethods.IsGet(context.Request.Method))
+    {
+        var menuProvider = context.RequestServices.GetService<IPublicMenuProvider>();
+        if (menuProvider is not null)
+        {
+            var homeUrl = await menuProvider.GetHomePageUrlAsync();
+            if (homeUrl is not null && homeUrl != "/")
+            {
+                context.Request.Path = homeUrl;
+            }
+        }
+    }
+
+    await next();
+});
+
 app.UseAntiforgery();
 
 // Health endpoints — liveness (no checks) and readiness (database checks)
