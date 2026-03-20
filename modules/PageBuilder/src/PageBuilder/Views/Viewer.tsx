@@ -1,9 +1,9 @@
 import { Render } from '@measured/puck/rsc';
-import { useEffect, useMemo } from 'react';
 import { Alert, AlertDescription } from '@simplemodule/ui';
-import type { Page } from '../types';
+import { useEffect, useMemo } from 'react';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';
+import type { Page } from '../types';
 
 interface Props {
   page: Page;

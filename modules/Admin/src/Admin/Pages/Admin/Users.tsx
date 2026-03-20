@@ -124,6 +124,12 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
         </TableBody>
       </Table>
 
+      {users.length === 0 && search && (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          No users found matching &ldquo;{search}&rdquo;.
+        </p>
+      )}
+
       {totalPages > 1 && (
         <div className="flex justify-center gap-2 mt-6">
           <Button

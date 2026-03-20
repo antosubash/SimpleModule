@@ -490,6 +490,7 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
       <div className="text-center max-w-lg mx-auto">
+        {/* Inline style required: Tailwind gradient utilities cannot reference CSS custom properties */}
         <div
           className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold shadow-lg"
           style={{
