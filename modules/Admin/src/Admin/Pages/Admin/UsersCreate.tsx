@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, Input, Label } from '@simplemodule/ui';
+import { Button, Card, CardContent, Checkbox, Input, Label } from '@simplemodule/ui';
 
 interface Role {
   id: string;
@@ -59,12 +59,7 @@ export default function UsersCreate({ allRoles }: Props) {
               <Input id="confirmPassword" name="confirmPassword" type="password" required />
             </div>
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="emailConfirmed"
-                id="emailConfirmed"
-                className="h-5 w-5 rounded-md border border-border bg-surface accent-primary"
-              />
+              <Checkbox id="emailConfirmed" name="emailConfirmed" value="true" />
               <Label htmlFor="emailConfirmed" className="mb-0">
                 Email confirmed
               </Label>
@@ -76,13 +71,7 @@ export default function UsersCreate({ allRoles }: Props) {
                 <div className="space-y-2 mt-1">
                   {allRoles.map((role) => (
                     <div key={role.id} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        name="roles"
-                        value={role.name ?? ''}
-                        id={`role-${role.id}`}
-                        className="h-5 w-5 rounded-md border border-border bg-surface accent-primary"
-                      />
+                      <Checkbox id={`role-${role.id}`} name="roles" value={role.name ?? ''} />
                       <Label htmlFor={`role-${role.id}`} className="mb-0">
                         {role.name}
                         {role.description && (
