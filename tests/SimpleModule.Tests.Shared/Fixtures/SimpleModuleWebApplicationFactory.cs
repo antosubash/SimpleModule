@@ -16,6 +16,7 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
+using SimpleModule.Database;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -35,6 +36,14 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
+            // Configure DatabaseOptions so module DbContexts can detect SQLite
+            // and apply table prefixes in OnModelCreating
+            services.Configure<DatabaseOptions>(opts =>
+            {
+                opts.DefaultConnection = "Data Source=:memory:";
+                opts.Provider = "Sqlite";
+            });
+
             ReplaceDbContext<HostDbContext>(services, useOpenIddict: true);
             ReplaceDbContext<UsersDbContext>(services);
             ReplaceDbContext<OrdersDbContext>(services);
@@ -58,7 +67,17 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
                     options.DefaultChallengeScheme = TestAuthScheme;
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthScheme, _ => { });
+
         });
+    }
+
+    private bool _dbInitialized;
+
+    private void EnsureDatabasesInitialized()
+    {
+        if (_dbInitialized) return;
+        _dbInitialized = true;
+        EnsureModuleDatabasesCreated();
     }
 
     public HttpClient CreateAuthenticatedClient(
@@ -76,6 +95,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 
     public HttpClient CreateAuthenticatedClient(params Claim[] claims)
     {
+        EnsureDatabasesInitialized();
         var client = CreateClient();
         var claimsList = new List<Claim>(claims);
 
@@ -91,6 +111,21 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         return client;
+    }
+
+    private void EnsureModuleDatabasesCreated()
+    {
+        using var scope = Services.CreateScope();
+        var sp = scope.ServiceProvider;
+        sp.GetRequiredService<HostDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<AdminDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<UsersDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<OrdersDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<ProductsDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<PageBuilderDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<PermissionsDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<SettingsDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<OpenIddictAppDbContext>().Database.EnsureCreated();
     }
 
     private static void RemoveHostedService<TService>(IServiceCollection services)

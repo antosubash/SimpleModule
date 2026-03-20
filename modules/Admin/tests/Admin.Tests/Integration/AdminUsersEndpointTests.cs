@@ -88,7 +88,7 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     }
 
     [Fact(
-        Skip = "UsersEditEndpoint queries AdminDbContext which requires matching DatabaseOptions in test setup"
+        Skip = "UsersEditEndpoint depends on PermissionRegistry and AdminDbContext which require full module initialization in test setup"
     )]
     public async Task GetUsersEdit_ExistingUser_Returns200()
     {
@@ -191,7 +191,7 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     }
 
     [Fact(
-        Skip = "UsersActivityEndpoint queries AdminDbContext which requires matching DatabaseOptions in test setup"
+        Skip = "UsersActivityEndpoint depends on AdminDbContext which requires full module initialization in test setup"
     )]
     public async Task GetActivity_ValidUser_Returns200()
     {
