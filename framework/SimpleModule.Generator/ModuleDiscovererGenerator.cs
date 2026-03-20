@@ -13,6 +13,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new MenuExtensionsEmitter(),
         new RazorComponentExtensionsEmitter(),
         new ViewPagesEmitter(),
+        new PageRegistryEmitter(),
         new JsonResolverEmitter(),
         new TypeScriptDefinitionsEmitter(),
         new HostDbContextEmitter(),
