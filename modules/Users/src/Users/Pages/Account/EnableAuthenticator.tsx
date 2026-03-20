@@ -69,7 +69,7 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
             Scan the QR Code or enter this key into your two factor authenticator app. Spaces and
             casing do not matter.
           </p>
-          <code className="block bg-surface-secondary px-3 py-2 rounded-lg text-sm mb-4 select-all">
+          <code className="block bg-surface-raised px-3 py-2 rounded-lg text-sm mb-4 select-all">
             {sharedKey}
           </code>
           {qrCodeUrl && (

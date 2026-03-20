@@ -17,7 +17,9 @@ internal sealed class PageRegistryEmitter : IEmitter
         sb.AppendLine();
         sb.AppendLine("public static class PageRegistry");
         sb.AppendLine("{");
-        sb.AppendLine("    public static IReadOnlyList<AvailablePage> Pages { get; } = new AvailablePage[]");
+        sb.AppendLine(
+            "    public static IReadOnlyList<AvailablePage> Pages { get; } = new AvailablePage[]"
+        );
         sb.AppendLine("    {");
 
         foreach (var module in data.Modules)
@@ -43,9 +45,6 @@ internal sealed class PageRegistryEmitter : IEmitter
         sb.AppendLine("    };");
         sb.AppendLine("}");
 
-        context.AddSource(
-            "PageRegistry.g.cs",
-            SourceText.From(sb.ToString(), Encoding.UTF8)
-        );
+        context.AddSource("PageRegistry.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 }

@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageHeader,
   Table,
   TableBody,
   TableCell,
@@ -38,23 +39,34 @@ export default function Manage({ products }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Manage Products</h1>
-          <p className="text-sm text-muted-foreground">{products.length} total products</p>
-        </div>
-        <Button onClick={() => router.get('/products/create')}>Create Product</Button>
-      </div>
+      <PageHeader
+        className="mb-0"
+        title="Manage Products"
+        description={`${products.length} total products`}
+        actions={<Button onClick={() => router.get('/products/create')}>Create Product</Button>}
+      />
 
       {products.length === 0 ? (
         <Card>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <svg className="mb-4 h-12 w-12 text-muted-foreground/50" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              <svg
+                className="mb-4 h-12 w-12 text-text-muted/50"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+                />
               </svg>
               <h3 className="text-sm font-medium">No products yet</h3>
-              <p className="mt-1 text-sm text-muted-foreground">Get started by creating your first product.</p>
+              <p className="mt-1 text-sm text-text-muted">
+                Get started by creating your first product.
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -14,11 +14,14 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
 
     public async Task<IReadOnlyList<PublicMenuItem>> GetMenuTreeAsync()
     {
-        if (cache.TryGetValue(MenuTreeCacheKey, out IReadOnlyList<PublicMenuItem>? cached) && cached is not null)
+        if (
+            cache.TryGetValue(MenuTreeCacheKey, out IReadOnlyList<PublicMenuItem>? cached)
+            && cached is not null
+        )
             return cached;
 
-        var entities = await db.PublicMenuItems
-            .Where(e => e.IsVisible)
+        var entities = await db
+            .PublicMenuItems.Where(e => e.IsVisible)
             .OrderBy(e => e.SortOrder)
             .ToListAsync();
 
@@ -37,8 +40,8 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
         if (cache.TryGetValue(HomePageCacheKey, out string? cached))
             return cached;
 
-        var entity = await db.PublicMenuItems
-            .Where(e => e.IsVisible && e.IsHomePage)
+        var entity = await db
+            .PublicMenuItems.Where(e => e.IsVisible && e.IsHomePage)
             .FirstOrDefaultAsync();
 
         var url = entity is not null ? (entity.Url ?? entity.PageRoute) : null;
@@ -48,9 +51,7 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
 
     public async Task<List<PublicMenuItemDto>> GetAllAsync()
     {
-        var entities = await db.PublicMenuItems
-            .OrderBy(e => e.SortOrder)
-            .ToListAsync();
+        var entities = await db.PublicMenuItems.OrderBy(e => e.SortOrder).ToListAsync();
 
         return BuildDtoTree(entities, parentId: null);
     }
@@ -61,12 +62,15 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
         {
             var depth = await GetDepthAsync(request.ParentId.Value);
             if (depth >= 3)
-                throw new InvalidOperationException("Cannot create menu item: maximum nesting depth of 3 has been reached.");
+                throw new InvalidOperationException(
+                    "Cannot create menu item: maximum nesting depth of 3 has been reached."
+                );
         }
 
-        var maxSortOrder = await db.PublicMenuItems
-            .Where(e => e.ParentId == request.ParentId)
-            .MaxAsync(e => (int?)e.SortOrder) ?? -1;
+        var maxSortOrder =
+            await db
+                .PublicMenuItems.Where(e => e.ParentId == request.ParentId)
+                .MaxAsync(e => (int?)e.SortOrder) ?? -1;
 
         if (request.IsHomePage)
             await ClearAllHomePageFlags();
@@ -170,9 +174,7 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
 
     private async Task ClearAllHomePageFlags()
     {
-        var homePages = await db.PublicMenuItems
-            .Where(e => e.IsHomePage)
-            .ToListAsync();
+        var homePages = await db.PublicMenuItems.Where(e => e.IsHomePage).ToListAsync();
 
         foreach (var hp in homePages)
         {
@@ -188,8 +190,8 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
 
         while (currentId is not null)
         {
-            var parent = await db.PublicMenuItems
-                .Where(e => e.Id == currentId)
+            var parent = await db
+                .PublicMenuItems.Where(e => e.Id == currentId)
                 .Select(e => e.ParentId)
                 .FirstOrDefaultAsync();
 
@@ -201,7 +203,10 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
         return depth;
     }
 
-    private static List<PublicMenuItem> BuildPublicTree(List<PublicMenuItemEntity> entities, int? parentId)
+    private static List<PublicMenuItem> BuildPublicTree(
+        List<PublicMenuItemEntity> entities,
+        int? parentId
+    )
     {
         return entities
             .Where(e => e.ParentId == parentId)
@@ -218,7 +223,10 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
             .ToList();
     }
 
-    private static List<PublicMenuItemDto> BuildDtoTree(List<PublicMenuItemEntity> entities, int? parentId)
+    private static List<PublicMenuItemDto> BuildDtoTree(
+        List<PublicMenuItemEntity> entities,
+        int? parentId
+    )
     {
         return entities
             .Where(e => e.ParentId == parentId)

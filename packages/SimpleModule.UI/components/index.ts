@@ -26,6 +26,7 @@ export {
   CommandShortcut,
 } from './command';
 export { Container, containerVariants } from './container';
+export { DataGrid } from './data-grid';
 export {
   Dialog,
   DialogClose,

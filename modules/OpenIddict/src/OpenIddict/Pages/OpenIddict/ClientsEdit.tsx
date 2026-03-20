@@ -21,6 +21,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tabs,
+  TabsList,
+  TabsTrigger,
 } from '@simplemodule/ui';
 import { useState } from 'react';
 
@@ -39,12 +42,7 @@ interface Props {
   tab: string;
 }
 
-interface Tab {
-  id: string;
-  label: string;
-}
-
-const tabs: Tab[] = [
+const tabs = [
   { id: 'details', label: 'Details' },
   { id: 'uris', label: 'URIs' },
   { id: 'permissions', label: 'Permissions' },
@@ -87,29 +85,6 @@ const permissionGroups = [
     ],
   },
 ];
-
-function TabNav({ activeTab, baseUrl }: { activeTab: string; baseUrl: string }) {
-  return (
-    <div className="border-b border-border">
-      <nav className="flex gap-0 -mb-px">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => router.get(baseUrl, { tab: tab.id }, { preserveState: true })}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-text-muted hover:text-text hover:border-border'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
-    </div>
-  );
-}
 
 function UriList({ label, name, values }: { label: string; name: string; values: string[] }) {
   const [uris, setUris] = useState(values.length > 0 ? values : ['']);
@@ -189,7 +164,25 @@ export default function ClientsEdit({
       </Breadcrumb>
       <h1 className="text-2xl font-bold tracking-tight">Edit Client</h1>
 
-      <TabNav activeTab={tab} baseUrl={`/openiddict/clients/${client.id}/edit`} />
+      <Tabs
+        value={tab}
+        onValueChange={(value) =>
+          router.get(
+            `/openiddict/clients/${client.id}/edit`,
+            { tab: value },
+            { preserveState: true },
+          )
+        }
+        className="mb-6"
+      >
+        <TabsList>
+          {tabs.map((t) => (
+            <TabsTrigger key={t.id} value={t.id}>
+              {t.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {tab === 'details' && (
         <Card>
@@ -221,7 +214,7 @@ export default function ClientsEdit({
                     </SelectContent>
                   </Select>
                 </Field>
-                <Button type="submit">Save</Button>
+                <Button type="submit">Save Changes</Button>
               </FieldGroup>
             </form>
           </CardContent>

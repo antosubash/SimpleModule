@@ -78,7 +78,7 @@ export default function Edit({ product }: Props) {
                   step={0.01}
                 />
               </Field>
-              <Button type="submit">Save</Button>
+              <Button type="submit">Save Changes</Button>
             </FieldGroup>
           </form>
         </CardContent>
@@ -89,7 +89,7 @@ export default function Edit({ product }: Props) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">
+          <p className="text-sm text-text-muted mb-3">
             Permanently delete this product. This action cannot be undone.
           </p>
           <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>

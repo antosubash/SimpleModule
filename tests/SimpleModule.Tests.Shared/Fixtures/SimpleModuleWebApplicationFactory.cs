@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Admin;
+using SimpleModule.Database;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.Orders;
@@ -16,7 +17,6 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
-using SimpleModule.Database;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -67,7 +67,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
                     options.DefaultChallengeScheme = TestAuthScheme;
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthScheme, _ => { });
-
         });
     }
 
@@ -75,7 +74,8 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 
     private void EnsureDatabasesInitialized()
     {
-        if (_dbInitialized) return;
+        if (_dbInitialized)
+            return;
         _dbInitialized = true;
         EnsureModuleDatabasesCreated();
     }

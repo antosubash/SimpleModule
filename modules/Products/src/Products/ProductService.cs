@@ -8,7 +8,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
     : IProductContracts
 {
     public async Task<IEnumerable<Product>> GetAllProductsAsync() =>
-        await db.Products.ToListAsync();
+        await db.Products.AsNoTracking().ToListAsync();
 
     public async Task<Product?> GetProductByIdAsync(ProductId id)
     {
@@ -24,7 +24,7 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
     public async Task<IReadOnlyList<Product>> GetProductsByIdsAsync(IEnumerable<ProductId> ids)
     {
         var idList = ids.ToList();
-        return await db.Products.Where(p => idList.Contains(p.Id)).ToListAsync();
+        return await db.Products.AsNoTracking().Where(p => idList.Contains(p.Id)).ToListAsync();
     }
 
     public async Task<Product> CreateProductAsync(CreateProductRequest request)

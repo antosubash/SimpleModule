@@ -1,3 +1,15 @@
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Card,
+  CardContent,
+  PageHeader,
+} from '@simplemodule/ui';
+
 interface ManageLayoutProps {
   activePage: string;
   children: React.ReactNode;
@@ -58,6 +70,7 @@ function NavLink({
         stroke="currentColor"
         strokeWidth="2"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path d={icon} />
       </svg>
@@ -68,53 +81,50 @@ function NavLink({
 
 export default function ManageLayout({ activePage, children }: ManageLayoutProps) {
   return (
-    <>
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-1">
-          <a href="/" className="text-text-muted hover:text-text transition-colors no-underline">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-            >
-              <path d="M15 19l-7-7 7-7" />
-            </svg>
-          </a>
-          <h1
-            className="text-2xl font-extrabold tracking-tight"
-            style={{ fontFamily: "'Sora',sans-serif" }}
-          >
-            <span className="gradient-text">Account Settings</span>
-          </h1>
-        </div>
-        <p className="text-text-muted text-sm ml-7">
-          Manage your profile, security, and preferences
-        </p>
-      </div>
+    <div className="space-y-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Account Settings</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <PageHeader
+        className="mb-0"
+        title="Account Settings"
+        description="Manage your profile, security, and preferences"
+      />
 
       <div className="flex flex-col sm:flex-row gap-6">
         <aside className="sm:w-56 shrink-0">
-          <div className="glass-card p-3 sm:sticky sm:top-20">
-            <nav className="space-y-1">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.page}
-                  href={item.href}
-                  active={activePage === item.page}
-                  icon={item.icon}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-          </div>
+          <Card className="sm:sticky sm:top-20">
+            <CardContent className="p-3">
+              <nav className="space-y-1">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.page}
+                    href={item.href}
+                    active={activePage === item.page}
+                    icon={item.icon}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+            </CardContent>
+          </Card>
         </aside>
         <div className="flex-1 min-w-0">
-          <div className="glass-card p-6 sm:p-8">{children}</div>
+          <Card>
+            <CardContent className="p-6 sm:p-8">{children}</CardContent>
+          </Card>
         </div>
       </div>
-    </>
+    </div>
   );
 }

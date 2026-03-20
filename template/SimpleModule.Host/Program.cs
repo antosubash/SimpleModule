@@ -201,23 +201,25 @@ app.UseAuthorization();
 
 // Home page rewrite: if a public menu item is designated as home page,
 // rewrite GET / to that page's URL (internal rewrite, URL stays /)
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path == "/" && HttpMethods.IsGet(context.Request.Method))
+app.Use(
+    async (context, next) =>
     {
-        var menuProvider = context.RequestServices.GetService<IPublicMenuProvider>();
-        if (menuProvider is not null)
+        if (context.Request.Path == "/" && HttpMethods.IsGet(context.Request.Method))
         {
-            var homeUrl = await menuProvider.GetHomePageUrlAsync();
-            if (homeUrl is not null && homeUrl != "/")
+            var menuProvider = context.RequestServices.GetService<IPublicMenuProvider>();
+            if (menuProvider is not null)
             {
-                context.Request.Path = homeUrl;
+                var homeUrl = await menuProvider.GetHomePageUrlAsync();
+                if (homeUrl is not null && homeUrl != "/")
+                {
+                    context.Request.Path = homeUrl;
+                }
             }
         }
-    }
 
-    await next();
-});
+        await next();
+    }
+);
 
 app.UseAntiforgery();
 

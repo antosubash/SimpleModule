@@ -8,6 +8,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  PageHeader,
   Spinner,
   Table,
   TableBody,
@@ -37,10 +38,10 @@ export default function Home({ isAuthenticated, displayName, isDevelopment }: Ho
 function DashboardView({ displayName }: { displayName: string }) {
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold tracking-tight">Welcome back, {displayName}</h1>
-        <p className="text-text-muted text-sm mt-1">Here&apos;s your development dashboard</p>
-      </div>
+      <PageHeader
+        title={`Welcome back, ${displayName}`}
+        description="Here's your development dashboard"
+      />
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

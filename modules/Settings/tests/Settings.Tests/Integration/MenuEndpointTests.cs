@@ -35,11 +35,7 @@ public class MenuEndpointTests(SimpleModuleWebApplicationFactory factory)
     public async Task UpdateMenuItem_NotFound_Returns404()
     {
         var client = factory.CreateAuthenticatedClient();
-        var request = new UpdateMenuItemRequest
-        {
-            Label = "Updated",
-            IsVisible = true,
-        };
+        var request = new UpdateMenuItemRequest { Label = "Updated", IsVisible = true };
         var response = await client.PutAsJsonAsync("/api/settings/menus/99999", request);
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }

@@ -29,7 +29,7 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
         {recoveryCodes.map((code) => (
           <code
             key={code}
-            className="block bg-surface-secondary px-3 py-2 rounded-lg text-sm text-center select-all"
+            className="block bg-surface-raised px-3 py-2 rounded-lg text-sm text-center select-all"
           >
             {code}
           </code>

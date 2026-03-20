@@ -151,7 +151,7 @@ export default function MenuItemEditor({
                         {mod}
                       </Label>
                       {pages.map((p) => (
-                        <SelectItem key={p.pageRoute} value={p.viewPrefix}>
+                        <SelectItem key={p.pageRoute} value={p.pageRoute}>
                           {p.pageRoute}
                         </SelectItem>
                       ))}

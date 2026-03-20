@@ -10,20 +10,33 @@ namespace SimpleModule.PageBuilder;
 public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBuilderService> logger)
     : IPageBuilderContracts
 {
-    public async Task<IEnumerable<PageSummary>> GetAllPagesAsync()
-    {
-        var pages = await db
-            .Pages.Include(p => p.Tags)
+    public async Task<IEnumerable<PageSummary>> GetAllPagesAsync() =>
+        await db
+            .Pages.AsNoTracking()
+            .Include(p => p.Tags)
             .OrderBy(p => p.Order)
             .ThenBy(p => p.Title)
+            .Select(p => new PageSummary
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Slug = p.Slug,
+                IsPublished = p.IsPublished,
+                HasDraft = !string.IsNullOrEmpty(p.DraftContent),
+                Order = p.Order,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                DeletedAt = p.DeletedAt,
+                Tags = p.Tags.Select(t => t.Name).ToList(),
+            })
             .ToListAsync();
-
-        return pages.Select(p => ToSummary(p));
-    }
 
     public async Task<Page?> GetPageByIdAsync(PageId id)
     {
-        var page = await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == id);
+        var page = await db
+            .Pages.AsNoTracking()
+            .Include(p => p.Tags)
+            .FirstOrDefaultAsync(p => p.Id == id);
         if (page is null)
         {
             LogPageNotFound(logger, id);
@@ -33,19 +46,29 @@ public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBui
     }
 
     public async Task<Page?> GetPageBySlugAsync(string slug) =>
-        await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Slug == slug);
+        await db.Pages.AsNoTracking().Include(p => p.Tags).FirstOrDefaultAsync(p => p.Slug == slug);
 
-    public async Task<IEnumerable<PageSummary>> GetPublishedPagesAsync()
-    {
-        var pages = await db
-            .Pages.Include(p => p.Tags)
+    public async Task<IEnumerable<PageSummary>> GetPublishedPagesAsync() =>
+        await db
+            .Pages.AsNoTracking()
+            .Include(p => p.Tags)
             .Where(p => p.IsPublished)
             .OrderBy(p => p.Order)
             .ThenBy(p => p.Title)
+            .Select(p => new PageSummary
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Slug = p.Slug,
+                IsPublished = p.IsPublished,
+                HasDraft = !string.IsNullOrEmpty(p.DraftContent),
+                Order = p.Order,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                DeletedAt = p.DeletedAt,
+                Tags = p.Tags.Select(t => t.Name).ToList(),
+            })
             .ToListAsync();
-
-        return pages.Select(p => ToSummary(p));
-    }
 
     public async Task<Page> CreatePageAsync(CreatePageRequest request)
     {
@@ -163,17 +186,27 @@ public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBui
         return page;
     }
 
-    public async Task<IEnumerable<PageSummary>> GetTrashedPagesAsync()
-    {
-        var pages = await db
+    public async Task<IEnumerable<PageSummary>> GetTrashedPagesAsync() =>
+        await db
             .Pages.IgnoreQueryFilters()
+            .AsNoTracking()
             .Include(p => p.Tags)
             .Where(p => p.DeletedAt != null)
             .OrderByDescending(p => p.DeletedAt)
+            .Select(p => new PageSummary
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Slug = p.Slug,
+                IsPublished = p.IsPublished,
+                HasDraft = !string.IsNullOrEmpty(p.DraftContent),
+                Order = p.Order,
+                CreatedAt = p.CreatedAt,
+                UpdatedAt = p.UpdatedAt,
+                DeletedAt = p.DeletedAt,
+                Tags = p.Tags.Select(t => t.Name).ToList(),
+            })
             .ToListAsync();
-
-        return pages.Select(p => ToSummary(p));
-    }
 
     public async Task<Page> RestorePageAsync(PageId id)
     {
@@ -207,7 +240,7 @@ public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBui
     }
 
     public async Task<IEnumerable<PageTemplate>> GetAllTemplatesAsync() =>
-        await db.Templates.OrderBy(t => t.Name).ToListAsync();
+        await db.Templates.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
 
     public async Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request)
     {
@@ -234,7 +267,7 @@ public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBui
     }
 
     public async Task<IEnumerable<PageTag>> GetAllTagsAsync() =>
-        await db.Tags.OrderBy(t => t.Name).ToListAsync();
+        await db.Tags.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
 
     public async Task<PageTag> GetOrCreateTagAsync(string name)
     {

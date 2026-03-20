@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Input,
+  PageHeader,
   Table,
   TableBody,
   TableCell,
@@ -51,13 +52,12 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-          <p className="text-sm text-muted-foreground">{totalCount} total users</p>
-        </div>
-        <Button onClick={() => router.get('/admin/users/create')}>Create User</Button>
-      </div>
+      <PageHeader
+        className="mb-0"
+        title="Users"
+        description={`${totalCount} total users`}
+        actions={<Button onClick={() => router.get('/admin/users/create')}>Create User</Button>}
+      />
 
       <form onSubmit={handleSearch} className="flex gap-2">
         <Input
@@ -125,14 +125,14 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
       </Table>
 
       {users.length === 0 && search && (
-        <p className="py-8 text-center text-sm text-muted-foreground">
+        <p className="py-8 text-center text-sm text-text-muted">
           No users found matching &ldquo;{search}&rdquo;.
         </p>
       )}
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-text-muted">
             Showing page {page} of {totalPages} ({totalCount} users)
           </span>
           <div className="flex items-center gap-1">

@@ -19,11 +19,13 @@ public partial class SettingsService(
         string? userId = null
     )
     {
-        var entity = await db.Settings.FirstOrDefaultAsync(s =>
-            s.Key == key
-            && s.Scope == scope
-            && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
-        );
+        var entity = await db
+            .Settings.AsNoTracking()
+            .FirstOrDefaultAsync(s =>
+                s.Key == key
+                && s.Scope == scope
+                && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
+            );
         return entity?.Value;
     }
 
@@ -127,15 +129,17 @@ public partial class SettingsService(
             query = query.Where(s => keysInGroup.Contains(s.Key));
         }
 
-        var entities = await query.ToListAsync();
-        return entities.Select(e => new Setting
-        {
-            Key = e.Key,
-            Value = e.Value,
-            Scope = e.Scope,
-            UserId = e.UserId,
-            UpdatedAt = e.UpdatedAt,
-        });
+        return await query
+            .AsNoTracking()
+            .Select(e => new Setting
+            {
+                Key = e.Key,
+                Value = e.Value,
+                Scope = e.Scope,
+                UserId = e.UserId,
+                UpdatedAt = e.UpdatedAt,
+            })
+            .ToListAsync();
     }
 
     [LoggerMessage(

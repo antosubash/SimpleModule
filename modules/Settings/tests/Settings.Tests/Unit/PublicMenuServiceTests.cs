@@ -40,21 +40,25 @@ public sealed class PublicMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenuTreeAsync_BuildsNestedTree()
     {
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 1,
-            Label = "Parent",
-            IsVisible = true,
-            SortOrder = 0,
-        });
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 2,
-            ParentId = 1,
-            Label = "Child",
-            IsVisible = true,
-            SortOrder = 0,
-        });
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 1,
+                Label = "Parent",
+                IsVisible = true,
+                SortOrder = 0,
+            }
+        );
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 2,
+                ParentId = 1,
+                Label = "Child",
+                IsVisible = true,
+                SortOrder = 0,
+            }
+        );
         await _db.SaveChangesAsync();
 
         var result = await _service.GetMenuTreeAsync();
@@ -68,20 +72,24 @@ public sealed class PublicMenuServiceTests : IDisposable
     [Fact]
     public async Task GetMenuTreeAsync_ExcludesInvisibleItems()
     {
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 1,
-            Label = "Visible",
-            IsVisible = true,
-            SortOrder = 0,
-        });
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 2,
-            Label = "Hidden",
-            IsVisible = false,
-            SortOrder = 1,
-        });
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 1,
+                Label = "Visible",
+                IsVisible = true,
+                SortOrder = 0,
+            }
+        );
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 2,
+                Label = "Hidden",
+                IsVisible = false,
+                SortOrder = 1,
+            }
+        );
         await _db.SaveChangesAsync();
 
         var result = await _service.GetMenuTreeAsync();
@@ -93,15 +101,17 @@ public sealed class PublicMenuServiceTests : IDisposable
     [Fact]
     public async Task GetHomePageUrlAsync_ReturnsNull_WhenNoHomePage()
     {
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 1,
-            Label = "Page",
-            Url = "/some-page",
-            IsVisible = true,
-            IsHomePage = false,
-            SortOrder = 0,
-        });
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 1,
+                Label = "Page",
+                Url = "/some-page",
+                IsVisible = true,
+                IsHomePage = false,
+                SortOrder = 0,
+            }
+        );
         await _db.SaveChangesAsync();
 
         var result = await _service.GetHomePageUrlAsync();
@@ -112,15 +122,17 @@ public sealed class PublicMenuServiceTests : IDisposable
     [Fact]
     public async Task GetHomePageUrlAsync_ReturnsUrl_WhenHomePageSet()
     {
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 1,
-            Label = "Home",
-            Url = "/home",
-            IsVisible = true,
-            IsHomePage = true,
-            SortOrder = 0,
-        });
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 1,
+                Label = "Home",
+                Url = "/home",
+                IsVisible = true,
+                IsHomePage = true,
+                SortOrder = 0,
+            }
+        );
         await _db.SaveChangesAsync();
 
         var result = await _service.GetHomePageUrlAsync();
@@ -131,62 +143,67 @@ public sealed class PublicMenuServiceTests : IDisposable
     [Fact]
     public async Task CreateAsync_RejectsDepthGreaterThan3()
     {
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 1,
-            Label = "Level 1",
-            IsVisible = true,
-            SortOrder = 0,
-        });
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 2,
-            ParentId = 1,
-            Label = "Level 2",
-            IsVisible = true,
-            SortOrder = 0,
-        });
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 3,
-            ParentId = 2,
-            Label = "Level 3",
-            IsVisible = true,
-            SortOrder = 0,
-        });
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 1,
+                Label = "Level 1",
+                IsVisible = true,
+                SortOrder = 0,
+            }
+        );
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 2,
+                ParentId = 1,
+                Label = "Level 2",
+                IsVisible = true,
+                SortOrder = 0,
+            }
+        );
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 3,
+                ParentId = 2,
+                Label = "Level 3",
+                IsVisible = true,
+                SortOrder = 0,
+            }
+        );
         await _db.SaveChangesAsync();
 
-        var request = new CreateMenuItemRequest
-        {
-            ParentId = 3,
-            Label = "Level 4",
-        };
+        var request = new CreateMenuItemRequest { ParentId = 3, Label = "Level 4" };
 
         var act = () => _service.CreateAsync(request);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("*maximum*depth*");
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*maximum*depth*");
     }
 
     [Fact]
     public async Task SetHomePageAsync_ClearsPreviousHomePage()
     {
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 1,
-            Label = "Old Home",
-            IsVisible = true,
-            IsHomePage = true,
-            SortOrder = 0,
-        });
-        _db.PublicMenuItems.Add(new PublicMenuItemEntity
-        {
-            Id = 2,
-            Label = "New Home",
-            IsVisible = true,
-            IsHomePage = false,
-            SortOrder = 1,
-        });
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 1,
+                Label = "Old Home",
+                IsVisible = true,
+                IsHomePage = true,
+                SortOrder = 0,
+            }
+        );
+        _db.PublicMenuItems.Add(
+            new PublicMenuItemEntity
+            {
+                Id = 2,
+                Label = "New Home",
+                IsVisible = true,
+                IsHomePage = false,
+                SortOrder = 1,
+            }
+        );
         await _db.SaveChangesAsync();
 
         await _service.SetHomePageAsync(2);

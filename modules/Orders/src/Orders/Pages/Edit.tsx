@@ -177,7 +177,7 @@ export default function Edit({ order, products }: Props) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">
+          <p className="text-sm text-text-muted mb-3">
             Permanently delete this order. This action cannot be undone.
           </p>
           <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>

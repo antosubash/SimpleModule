@@ -18,11 +18,14 @@ public partial class OrderService(
 ) : IOrderContracts
 {
     public async Task<IEnumerable<Order>> GetAllOrdersAsync() =>
-        await db.Orders.Include(o => o.Items).ToListAsync();
+        await db.Orders.AsNoTracking().Include(o => o.Items).ToListAsync();
 
     public async Task<Order?> GetOrderByIdAsync(OrderId id)
     {
-        var order = await db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
+        var order = await db
+            .Orders.AsNoTracking()
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
         if (order is null)
         {
             LogOrderNotFound(logger, id);

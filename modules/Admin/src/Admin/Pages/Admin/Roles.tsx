@@ -9,6 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageHeader,
   Table,
   TableBody,
   TableCell,
@@ -51,13 +52,12 @@ export default function Roles({ roles }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Roles</h1>
-          <p className="text-sm text-muted-foreground">Manage application roles and permissions.</p>
-        </div>
-        <Button onClick={() => router.get('/admin/roles/create')}>Create Role</Button>
-      </div>
+      <PageHeader
+        className="mb-0"
+        title="Roles"
+        description="Manage application roles and permissions."
+        actions={<Button onClick={() => router.get('/admin/roles/create')}>Create Role</Button>}
+      />
 
       {deleteError && (
         <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
@@ -98,7 +98,9 @@ export default function Roles({ roles }: Props) {
               {pageData.map((role) => (
                 <TableRow key={role.id}>
                   <TableCell className="font-medium">{role.name}</TableCell>
-                  <TableCell className="text-text-secondary">{role.description || '\u2014'}</TableCell>
+                  <TableCell className="text-text-secondary">
+                    {role.description || '\u2014'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="info">{role.userCount}</Badge>
                   </TableCell>

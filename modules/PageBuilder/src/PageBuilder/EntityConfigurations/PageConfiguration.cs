@@ -24,6 +24,9 @@ public class PageConfiguration : IEntityTypeConfiguration<Page>
 
         builder.HasMany(p => p.Tags).WithOne().HasForeignKey("PageId");
 
+        builder.HasIndex(p => p.IsPublished);
+        builder.HasIndex(p => p.DeletedAt);
+
         builder.HasQueryFilter(p => p.DeletedAt == null);
     }
 }
