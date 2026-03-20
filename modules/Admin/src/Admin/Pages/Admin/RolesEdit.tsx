@@ -5,6 +5,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Field,
+  FieldGroup,
   Input,
   Label,
   Table,
@@ -84,17 +86,22 @@ export default function RolesEdit({
                 e.preventDefault();
                 router.post(`/admin/roles/${role.id}`, new FormData(e.currentTarget));
               }}
-              className="space-y-4"
             >
-              <div>
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" defaultValue={role.name} required />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input id="description" name="description" defaultValue={role.description ?? ''} />
-              </div>
-              <Button type="submit">Save</Button>
+              <FieldGroup>
+                <Field>
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" name="name" defaultValue={role.name} required />
+                </Field>
+                <Field>
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    defaultValue={role.description ?? ''}
+                  />
+                </Field>
+                <Button type="submit">Save</Button>
+              </FieldGroup>
             </form>
           </CardContent>
         </Card>

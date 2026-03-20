@@ -48,6 +48,7 @@ export {
   DropdownMenuSub,
   DropdownMenuTrigger,
 } from './dropdown-menu';
+export { Field, FieldDescription, FieldError, FieldGroup } from './field';
 export { Grid, gridVariants } from './grid';
 export { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 export { Input, inputVariants } from './input';

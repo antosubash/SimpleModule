@@ -1,5 +1,4 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import {
   Badge,
   Button,
@@ -16,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 import type { PageSummary } from '../types';
 
 interface Props {
@@ -137,7 +137,15 @@ export default function Manage({ pages }: Props) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <svg
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
                           <circle cx="12" cy="5" r="1" />
                           <circle cx="12" cy="12" r="1" />
                           <circle cx="12" cy="19" r="1" />
@@ -155,12 +163,16 @@ export default function Manage({ pages }: Props) {
                         </DropdownMenuItem>
                       )}
                       {page.hasDraft && (
-                        <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}>
+                        <DropdownMenuItem
+                          onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                        >
                           Preview Draft
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleTogglePublish(page.id, page.isPublished)}>
+                      <DropdownMenuItem
+                        onClick={() => handleTogglePublish(page.id, page.isPublished)}
+                      >
                         {page.isPublished ? 'Unpublish' : 'Publish'}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />

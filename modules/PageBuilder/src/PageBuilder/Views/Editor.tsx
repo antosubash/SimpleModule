@@ -1,24 +1,23 @@
 import { router } from '@inertiajs/react';
 import { Puck, usePuck } from '@measured/puck';
-import { useCallback, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Button,
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Field,
   Input,
   Label,
 } from '@simplemodule/ui';
-import type { Page, PageTemplate } from '../types';
+import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';
+import type { Page, PageTemplate } from '../types';
 
 interface Props {
   page: Page | null;
@@ -93,7 +92,7 @@ function HeaderActions({ page }: { page: Page | null }) {
             <DialogTitle>Save as Template</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
+            <Field>
               <Label htmlFor="template-name">Template name</Label>
               <Input
                 id="template-name"
@@ -105,7 +104,7 @@ function HeaderActions({ page }: { page: Page | null }) {
                 }}
                 autoFocus
               />
-            </div>
+            </Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
@@ -197,14 +196,17 @@ export default function Editor({ page, templates }: Props) {
 
   if (showTemplatePicker) {
     return (
-      <Dialog open onOpenChange={(open) => { if (!open) router.visit('/admin/pages'); }}>
+      <Dialog
+        open
+        onOpenChange={(open) => {
+          if (!open) router.visit('/admin/pages');
+        }}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Create New Page</DialogTitle>
           </DialogHeader>
-          <p className="text-text-muted text-sm">
-            Start from a template or create a blank page.
-          </p>
+          <p className="text-text-muted text-sm">Start from a template or create a blank page.</p>
           <div className="grid grid-cols-2 gap-3 py-4">
             <button
               type="button"

@@ -6,6 +6,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Field,
+  FieldGroup,
   Input,
   Label,
 } from '@simplemodule/ui';
@@ -121,29 +123,30 @@ export default function UsersEdit({
                   e.preventDefault();
                   router.post(`/admin/users/${user.id}`, new FormData(e.currentTarget));
                 }}
-                className="space-y-4"
               >
-                <div>
-                  <Label htmlFor="displayName">Display Name</Label>
-                  <Input id="displayName" name="displayName" defaultValue={user.displayName} />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" defaultValue={user.email} />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="emailConfirmed"
-                    id="emailConfirmed"
-                    defaultChecked={user.emailConfirmed}
-                    className="h-5 w-5 rounded-md border border-border bg-surface accent-primary"
-                  />
-                  <Label htmlFor="emailConfirmed" className="mb-0">
-                    Email confirmed
-                  </Label>
-                </div>
-                <Button type="submit">Save Details</Button>
+                <FieldGroup>
+                  <Field>
+                    <Label htmlFor="displayName">Display Name</Label>
+                    <Input id="displayName" name="displayName" defaultValue={user.displayName} />
+                  </Field>
+                  <Field>
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" defaultValue={user.email} />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <Label htmlFor="emailConfirmed" className="mb-0">
+                      Email confirmed
+                    </Label>
+                    <input
+                      type="checkbox"
+                      name="emailConfirmed"
+                      id="emailConfirmed"
+                      defaultChecked={user.emailConfirmed}
+                      className="h-5 w-5 rounded-md border border-border bg-surface accent-primary"
+                    />
+                  </Field>
+                  <Button type="submit">Save Details</Button>
+                </FieldGroup>
               </form>
             </CardContent>
           </Card>
@@ -270,17 +273,18 @@ export default function UsersEdit({
                   }
                   router.post(`/admin/users/${user.id}/reset-password`, formData);
                 }}
-                className="space-y-4"
               >
-                <div>
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input id="newPassword" name="newPassword" type="password" required />
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input id="confirmPassword" name="confirmPassword" type="password" required />
-                </div>
-                <Button type="submit">Reset Password</Button>
+                <FieldGroup>
+                  <Field>
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <Input id="newPassword" name="newPassword" type="password" required />
+                  </Field>
+                  <Field>
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input id="confirmPassword" name="confirmPassword" type="password" required />
+                  </Field>
+                  <Button type="submit">Reset Password</Button>
+                </FieldGroup>
               </form>
             </CardContent>
           </Card>

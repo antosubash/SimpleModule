@@ -5,6 +5,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Field,
+  FieldGroup,
   Input,
   Label,
   Select,
@@ -90,74 +92,76 @@ export default function Edit({ order, products }: Props) {
 
       <Card className="mb-6">
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="userId">User ID</Label>
-              <Input
-                id="userId"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                required
-              />
-            </div>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="userId">User ID</Label>
+                <Input
+                  id="userId"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  required
+                />
+              </Field>
 
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <Label>Items</Label>
-                <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-                  + Add Item
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {items.map((item, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <Select
-                      value={String(item.productId)}
-                      onValueChange={(value) => updateItem(index, 'productId', Number(value))}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {products.map((p) => (
-                          <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} (${p.price.toFixed(2)})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        updateItem(index, 'quantity', Math.max(1, Number(e.target.value)))
-                      }
-                      min="1"
-                      className="w-20"
-                    />
-                    {items.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(index)}
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Items</Label>
+                  <Button type="button" variant="secondary" size="sm" onClick={addItem}>
+                    + Add Item
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {items.map((item, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <Select
+                        value={String(item.productId)}
+                        onValueChange={(value) => updateItem(index, 'productId', Number(value))}
                       >
-                        &times;
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((p) => (
+                            <SelectItem key={p.id} value={String(p.id)}>
+                              {p.name} (${p.price.toFixed(2)})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItem(index, 'quantity', Math.max(1, Number(e.target.value)))
+                        }
+                        min="1"
+                        className="w-20"
+                      />
+                      {items.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeItem(index)}
+                        >
+                          &times;
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="pt-2 border-t border-border">
-              <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Estimated Total</span>
-                <span>${getTotal().toFixed(2)}</span>
+              <div className="pt-2 border-t border-border">
+                <div className="flex justify-between items-center text-lg font-semibold">
+                  <span>Estimated Total</span>
+                  <span>${getTotal().toFixed(2)}</span>
+                </div>
               </div>
-            </div>
 
-            <Button type="submit">Save Changes</Button>
+              <Button type="submit">Save Changes</Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>

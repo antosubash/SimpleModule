@@ -3,6 +3,9 @@ import {
   Button,
   Card,
   CardContent,
+  Field,
+  FieldDescription,
+  FieldGroup,
   Input,
   Label,
   Select,
@@ -44,34 +47,39 @@ export default function ClientsCreate() {
 
       <Card>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="clientId">Client ID</Label>
-              <Input id="clientId" name="clientId" required />
-            </div>
-            <div>
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input id="displayName" name="displayName" />
-            </div>
-            <div>
-              <Label htmlFor="clientType">Client Type</Label>
-              <Select value={clientType} onValueChange={setClientType} name="clientType">
-                <SelectTrigger id="clientType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="confidential">Confidential</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {clientType === 'confidential' && (
-              <div>
-                <Label htmlFor="clientSecret">Client Secret</Label>
-                <Input id="clientSecret" name="clientSecret" type="password" />
-              </div>
-            )}
-            <Button type="submit">Create Client</Button>
+          <form onSubmit={handleSubmit}>
+            <FieldGroup className="space-y-6">
+              <Field>
+                <Label htmlFor="clientId">Client ID</Label>
+                <Input id="clientId" name="clientId" required />
+              </Field>
+              <Field>
+                <Label htmlFor="displayName">Display Name</Label>
+                <Input id="displayName" name="displayName" />
+              </Field>
+              <Field>
+                <Label htmlFor="clientType">Client Type</Label>
+                <Select value={clientType} onValueChange={setClientType} name="clientType">
+                  <SelectTrigger id="clientType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="confidential">Confidential</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              {clientType === 'confidential' && (
+                <Field>
+                  <Label htmlFor="clientSecret">Client Secret</Label>
+                  <Input id="clientSecret" name="clientSecret" type="password" />
+                  <FieldDescription>
+                    Required for confidential clients. Store this securely.
+                  </FieldDescription>
+                </Field>
+              )}
+              <Button type="submit">Create Client</Button>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>
