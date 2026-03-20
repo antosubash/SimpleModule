@@ -90,7 +90,7 @@ const permissionGroups = [
 
 function TabNav({ activeTab, baseUrl }: { activeTab: string; baseUrl: string }) {
   return (
-    <div className="border-b border-border mb-6">
+    <div className="border-b border-border">
       <nav className="flex gap-0 -mb-px">
         {tabs.map((tab) => (
           <button
@@ -175,8 +175,8 @@ export default function ClientsEdit({
   }
 
   return (
-    <div className="max-w-3xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/openiddict/clients">Clients</BreadcrumbLink>
@@ -187,7 +187,7 @@ export default function ClientsEdit({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Edit Client</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Edit Client</h1>
 
       <TabNav activeTab={tab} baseUrl={`/openiddict/clients/${client.id}/edit`} />
 

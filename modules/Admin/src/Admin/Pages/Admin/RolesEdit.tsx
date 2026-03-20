@@ -60,8 +60,8 @@ export default function RolesEdit({
   tab,
 }: Props) {
   return (
-    <div className="max-w-3xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/admin/roles">Roles</BreadcrumbLink>
@@ -72,7 +72,7 @@ export default function RolesEdit({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Edit Role</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Edit Role</h1>
 
       <TabNav tabs={tabs} activeTab={tab} baseUrl={`/admin/roles/${role.id}/edit`} />
 

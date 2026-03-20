@@ -8,8 +8,8 @@ interface Props {
 
 export default function PagesList({ pages }: Props) {
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <h1 className="text-2xl font-extrabold tracking-tight mb-6">Pages</h1>
+    <div className="mx-auto max-w-4xl space-y-6">
+      <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
       {pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <svg

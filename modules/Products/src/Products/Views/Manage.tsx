@@ -1,6 +1,8 @@
 import { router } from '@inertiajs/react';
 import {
   Button,
+  Card,
+  CardContent,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -34,8 +36,8 @@ export default function Manage({ products }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Manage Products</h1>
           <p className="text-sm text-muted-foreground">{products.length} total products</p>
@@ -43,50 +45,57 @@ export default function Manage({ products }: Props) {
         <Button onClick={() => router.get('/products/create')}>Create Product</Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.id}>
-              <TableCell className="text-text-muted">#{product.id}</TableCell>
-              <TableCell className="font-medium text-text">{product.name}</TableCell>
-              <TableCell>${product.price.toFixed(2)}</TableCell>
-              <TableCell>
-                <div className="flex gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.get(`/products/${product.id}/edit`)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-          {products.length === 0 && (
+      {products.length === 0 ? (
+        <Card>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <svg className="mb-4 h-12 w-12 text-muted-foreground/50" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+              <h3 className="text-sm font-medium">No products yet</h3>
+              <p className="mt-1 text-sm text-muted-foreground">Get started by creating your first product.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-text-muted">
-                No products yet. Create your first product!
-              </TableCell>
+              <TableHead>ID</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead />
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className="text-text-muted">#{product.id}</TableCell>
+                <TableCell className="font-medium text-text">{product.name}</TableCell>
+                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => router.get(`/products/${product.id}/edit`)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>

@@ -27,8 +27,8 @@ export default function RolesCreate({ permissionsByModule }: Props) {
   }
 
   return (
-    <div className="max-w-xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/admin/roles">Roles</BreadcrumbLink>
@@ -39,7 +39,7 @@ export default function RolesCreate({ permissionsByModule }: Props) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Create Role</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Create Role</h1>
 
       <Card>
         <CardContent className="p-6">

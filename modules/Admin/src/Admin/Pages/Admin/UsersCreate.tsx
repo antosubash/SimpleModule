@@ -34,8 +34,8 @@ export default function UsersCreate({ allRoles }: Props) {
   }
 
   return (
-    <div className="max-w-xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
@@ -46,7 +46,7 @@ export default function UsersCreate({ allRoles }: Props) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Create User</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Create User</h1>
 
       <Card>
         <CardContent className="p-6">

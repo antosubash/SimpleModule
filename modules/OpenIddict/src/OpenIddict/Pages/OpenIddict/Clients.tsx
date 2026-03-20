@@ -41,8 +41,8 @@ export default function Clients({ clients }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Clients</h1>
           <p className="text-sm text-muted-foreground">

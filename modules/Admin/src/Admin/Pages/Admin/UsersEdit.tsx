@@ -138,8 +138,8 @@ export default function UsersEdit({
   const dialogConfig = confirmAction ? confirmDialogConfig[confirmAction] : null;
 
   return (
-    <div className="max-w-3xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/admin/users">Users</BreadcrumbLink>
@@ -150,7 +150,7 @@ export default function UsersEdit({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Edit User</h1>
         {user.isDeactivated && <Badge variant="secondary">Deactivated</Badge>}
       </div>
@@ -159,7 +159,7 @@ export default function UsersEdit({
 
       {tab === 'details' && (
         <>
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle>Details</CardTitle>
             </CardHeader>
@@ -228,7 +228,7 @@ export default function UsersEdit({
 
       {tab === 'roles' && (
         <>
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle>Roles</CardTitle>
             </CardHeader>
@@ -295,7 +295,7 @@ export default function UsersEdit({
 
       {tab === 'security' && (
         <>
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle>Reset Password</CardTitle>
             </CardHeader>
@@ -332,7 +332,7 @@ export default function UsersEdit({
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle>Account Lock</CardTitle>
             </CardHeader>
@@ -361,7 +361,7 @@ export default function UsersEdit({
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle>Email Verification</CardTitle>
             </CardHeader>
@@ -377,7 +377,7 @@ export default function UsersEdit({
             </CardContent>
           </Card>
 
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
               <CardTitle>Two-Factor Authentication</CardTitle>
             </CardHeader>

@@ -31,8 +31,8 @@ export default function ClientsCreate() {
   }
 
   return (
-    <div className="max-w-xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/openiddict/clients">Clients</BreadcrumbLink>
@@ -43,7 +43,7 @@ export default function ClientsCreate() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Create Client</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Create Client</h1>
 
       <Card>
         <CardContent className="p-6">

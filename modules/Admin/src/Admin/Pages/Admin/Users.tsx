@@ -50,8 +50,8 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Users</h1>
           <p className="text-sm text-muted-foreground">{totalCount} total users</p>
@@ -59,7 +59,7 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
         <Button onClick={() => router.get('/admin/users/create')}>Create User</Button>
       </div>
 
-      <form onSubmit={handleSearch} className="mb-6 flex gap-2">
+      <form onSubmit={handleSearch} className="flex gap-2">
         <Input
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
@@ -131,7 +131,7 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
       )}
 
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="flex justify-center gap-2">
           <Button
             variant="secondary"
             size="sm"

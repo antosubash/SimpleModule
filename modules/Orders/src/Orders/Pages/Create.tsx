@@ -65,8 +65,8 @@ export default function Create({ products }: Props) {
   }
 
   return (
-    <div className="max-w-2xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/orders">Orders</BreadcrumbLink>
@@ -77,7 +77,7 @@ export default function Create({ products }: Props) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Create Order</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Create Order</h1>
 
       <Card>
         <CardContent className="p-6">

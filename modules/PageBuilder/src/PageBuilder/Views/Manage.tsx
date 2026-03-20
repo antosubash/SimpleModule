@@ -75,11 +75,11 @@ export default function Manage({ pages }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Pages</h1>
-          <p className="text-text-muted text-sm mt-1">Manage content pages</p>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex justify-between items-center">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
+          <p className="text-sm text-muted-foreground">Manage content pages</p>
         </div>
         <Button onClick={() => router.get('/admin/pages/new')}>New Page</Button>
       </div>

@@ -80,8 +80,8 @@ export default function Edit({ order, products }: Props) {
   }
 
   return (
-    <div className="max-w-2xl">
-      <Breadcrumb className="mb-4">
+    <div className="mx-auto max-w-2xl space-y-6">
+      <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink href="/orders">Orders</BreadcrumbLink>
@@ -92,9 +92,9 @@ export default function Edit({ order, products }: Props) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Edit Order #{order.id}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Edit Order #{order.id}</h1>
 
-      <Card className="mb-6">
+      <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
@@ -177,7 +177,7 @@ export default function Edit({ order, products }: Props) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-text-muted mb-3">
+          <p className="text-sm text-muted-foreground mb-3">
             Permanently delete this order. This action cannot be undone.
           </p>
           <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>

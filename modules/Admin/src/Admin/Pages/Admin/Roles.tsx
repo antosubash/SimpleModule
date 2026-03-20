@@ -49,8 +49,8 @@ export default function Roles({ roles }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Roles</h1>
           <p className="text-sm text-muted-foreground">Manage application roles and permissions.</p>
@@ -59,7 +59,7 @@ export default function Roles({ roles }: Props) {
       </div>
 
       {deleteError && (
-        <div className="mb-4 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
+        <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
           <span>{deleteError}</span>
           <button
             type="button"
