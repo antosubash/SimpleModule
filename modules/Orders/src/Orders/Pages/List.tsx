@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  DataGrid,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -56,49 +57,53 @@ export default function List({ orders }: Props) {
           </CardContent>
         </Card>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell className="font-medium">#{order.id}</TableCell>
-                <TableCell className="text-text-secondary">{order.userId}</TableCell>
-                <TableCell>
-                  <Badge variant="info">
-                    {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">
-                  {new Date(order.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.get(`/orders/${order.id}/edit`)}
-                    >
-                      Edit
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={() => setDeleteId(order.id)}>
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataGrid data={orders}>
+          {(pageData) => (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Items</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell className="font-medium">#{order.id}</TableCell>
+                    <TableCell className="text-text-secondary">{order.userId}</TableCell>
+                    <TableCell>
+                      <Badge variant="info">
+                        {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">${order.total.toFixed(2)}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/orders/${order.id}/edit`)}
+                        >
+                          Edit
+                        </Button>
+                        <Button variant="danger" size="sm" onClick={() => setDeleteId(order.id)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DataGrid>
       )}
 
       <Dialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>

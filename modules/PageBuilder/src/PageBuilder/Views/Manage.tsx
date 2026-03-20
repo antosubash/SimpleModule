@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  DataGrid,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -108,120 +109,124 @@ export default function Manage({ pages }: Props) {
           </Button>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pages.map((page) => (
-              <TableRow key={page.id}>
-                <TableCell className="font-medium">{page.title}</TableCell>
-                <TableCell className="text-text-secondary">/p/{page.slug}</TableCell>
-                <TableCell>
-                  <div className="flex gap-1.5">
-                    <Badge variant={page.isPublished ? 'success' : 'secondary'}>
-                      {page.isPublished ? 'Published' : 'Unpublished'}
-                    </Badge>
-                    {page.hasDraft && <Badge variant="warning">Draft</Badge>}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1 flex-wrap items-center">
-                    {page.tags.map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant="outline"
-                        className="cursor-pointer hover:line-through"
-                        onClick={() => handleRemoveTag(page.id, tag)}
-                      >
-                        {tag} &times;
-                      </Badge>
-                    ))}
-                    <form
-                      className="inline-flex gap-1"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        handleAddTag(page.id);
-                      }}
-                    >
-                      <Input
-                        placeholder="add tag"
-                        className="h-6 w-20 text-xs px-1.5"
-                        value={tagInputs[page.id] ?? ''}
-                        onChange={(e) =>
-                          setTagInputs((prev) => ({ ...prev, [page.id]: e.target.value }))
-                        }
-                        aria-label={`Add tag to ${page.title}`}
-                      />
-                    </form>
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-text-muted">
-                  {new Date(page.updatedAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" aria-label={`Actions for ${page.title}`}>
-                        <svg
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
+        <DataGrid data={pages}>
+          {(pageData) => (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Slug</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Tags</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((page) => (
+                  <TableRow key={page.id}>
+                    <TableCell className="font-medium">{page.title}</TableCell>
+                    <TableCell className="text-text-secondary">/p/{page.slug}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1.5">
+                        <Badge variant={page.isPublished ? 'success' : 'secondary'}>
+                          {page.isPublished ? 'Published' : 'Unpublished'}
+                        </Badge>
+                        {page.hasDraft && <Badge variant="warning">Draft</Badge>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 flex-wrap items-center">
+                        {page.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="cursor-pointer hover:line-through"
+                            onClick={() => handleRemoveTag(page.id, tag)}
+                          >
+                            {tag} &times;
+                          </Badge>
+                        ))}
+                        <form
+                          className="inline-flex gap-1"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            handleAddTag(page.id);
+                          }}
                         >
-                          <circle cx="12" cy="5" r="1" />
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="12" cy="19" r="1" />
-                        </svg>
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.get(`/admin/pages/${page.id}/edit`)}>
-                        Edit
-                      </DropdownMenuItem>
-                      {page.isPublished && (
-                        <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}`, '_blank')}>
-                          View Page
-                        </DropdownMenuItem>
-                      )}
-                      {page.hasDraft && (
-                        <DropdownMenuItem
-                          onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
-                        >
-                          Preview Draft
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => handleTogglePublish(page.id, page.isPublished)}
-                      >
-                        {page.isPublished ? 'Unpublish' : 'Publish'}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-danger"
-                        onClick={() => setDeleteTarget({ id: page.id, title: page.title })}
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                          <Input
+                            placeholder="add tag"
+                            className="h-6 w-20 text-xs px-1.5"
+                            value={tagInputs[page.id] ?? ''}
+                            onChange={(e) =>
+                              setTagInputs((prev) => ({ ...prev, [page.id]: e.target.value }))
+                            }
+                            aria-label={`Add tag to ${page.title}`}
+                          />
+                        </form>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-text-muted">
+                      {new Date(page.updatedAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" aria-label={`Actions for ${page.title}`}>
+                            <svg
+                              width="16"
+                              height="16"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                            >
+                              <circle cx="12" cy="5" r="1" />
+                              <circle cx="12" cy="12" r="1" />
+                              <circle cx="12" cy="19" r="1" />
+                            </svg>
+                            <span className="sr-only">Actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => router.get(`/admin/pages/${page.id}/edit`)}>
+                            Edit
+                          </DropdownMenuItem>
+                          {page.isPublished && (
+                            <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}`, '_blank')}>
+                              View Page
+                            </DropdownMenuItem>
+                          )}
+                          {page.hasDraft && (
+                            <DropdownMenuItem
+                              onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                            >
+                              Preview Draft
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleTogglePublish(page.id, page.isPublished)}
+                          >
+                            {page.isPublished ? 'Unpublish' : 'Publish'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-danger"
+                            onClick={() => setDeleteTarget({ id: page.id, title: page.title })}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DataGrid>
       )}
 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>

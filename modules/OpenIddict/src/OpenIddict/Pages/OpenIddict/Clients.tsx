@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  DataGrid,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -80,47 +81,51 @@ export default function Clients({ clients }: Props) {
           </Button>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Client ID</TableHead>
-              <TableHead>Display Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {clients.map((client) => (
-              <TableRow key={client.id}>
-                <TableCell className="font-mono text-sm">{client.clientId}</TableCell>
-                <TableCell>{client.displayName || '\u2014'}</TableCell>
-                <TableCell>
-                  <Badge variant={client.clientType === 'confidential' ? 'default' : 'secondary'}>
-                    {client.clientType || 'public'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.get(`/openiddict/clients/${client.id}/edit`)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setDeleteTarget({ id: client.id, clientId: client.clientId })}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <DataGrid data={clients}>
+          {(pageData) => (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Client ID</TableHead>
+                  <TableHead>Display Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((client) => (
+                  <TableRow key={client.id}>
+                    <TableCell className="font-mono text-sm">{client.clientId}</TableCell>
+                    <TableCell>{client.displayName || '\u2014'}</TableCell>
+                    <TableCell>
+                      <Badge variant={client.clientType === 'confidential' ? 'default' : 'secondary'}>
+                        {client.clientType || 'public'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/openiddict/clients/${client.id}/edit`)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setDeleteTarget({ id: client.id, clientId: client.clientId })}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </DataGrid>
       )}
 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
