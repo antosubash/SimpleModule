@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
 namespace SimpleModule.Generator;
@@ -55,6 +57,159 @@ internal sealed class DiagnosticEmitter : IEmitter
         messageFormat: "Entity '{0}' has multiple IEntityTypeConfiguration implementations: '{1}' and '{2}'. EF Core only supports one configuration per entity type. Remove the duplicate.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor CircularModuleDependency = new(
+        id: "SM0010",
+        title: "Circular module dependency detected",
+        messageFormat: "Circular module dependency detected. Cycle: {0}. {1}To break this cycle, identify which direction is the primary dependency and reverse the other using IEventBus. For example, if {2} is the primary consumer of {3}: (1) Keep {2} \u2192 {3}.Contracts. (2) Remove {3} \u2192 {2}.Contracts. (3) In {3}, publish events via IEventBus instead of calling {2} directly. (4) In {2}, implement IEventHandler<T> to handle those events. Learn more: https://docs.simplemodule.dev/module-dependencies.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor IllegalImplementationReference = new(
+        id: "SM0011",
+        title: "Module directly references another module's implementation",
+        messageFormat: "Module '{0}' directly references module '{1}' implementation assembly '{2}'. Modules must only depend on each other through Contracts packages. This creates tight coupling \u2014 internal changes in {1} can break {0} at compile time or runtime. To fix: (1) Remove the reference to '{2}'. (2) Add a reference to '{1}.Contracts' instead. (3) Replace any usage of internal {1} types with their contract interfaces. Learn more: https://docs.simplemodule.dev/module-contracts.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ContractInterfaceTooLargeWarning = new(
+        id: "SM0012",
+        title: "Contract interface has too many methods",
+        messageFormat: "Contract interface '{0}' has {1} methods, which exceeds the recommended maximum of 15. Large contract interfaces force consuming modules to depend on methods they don't use. Consider splitting into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Thresholds are configurable in .editorconfig: simplemodule.max_contract_methods_warn = 15, simplemodule.max_contract_methods_error = 20. Learn more: https://docs.simplemodule.dev/contract-design.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ContractInterfaceTooLargeError = new(
+        id: "SM0013",
+        title: "Contract interface must be split",
+        messageFormat: "Contract interface '{0}' has {1} methods and must be split before the project will compile. Interfaces with more than 20 methods are not allowed. Split into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Thresholds are configurable in .editorconfig: simplemodule.max_contract_methods_warn = 15, simplemodule.max_contract_methods_error = 20. Learn more: https://docs.simplemodule.dev/contract-design.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor MissingContractInterfaces = new(
+        id: "SM0014",
+        title: "Referenced contracts assembly has no public interfaces",
+        messageFormat: "Module '{0}' references '{1}' but no contract interfaces were found in that assembly. Likely causes: (1) Incompatible package version \u2014 check with 'dotnet list package --include-transitive'. (2) The Contracts project is empty or not yet built. (3) The package is corrupted \u2014 try 'dotnet nuget locals all --clear' then 'dotnet restore'. Verify that the version of {1} you're using exports the interfaces your code depends on. Learn more: https://docs.simplemodule.dev/package-compatibility.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor NoContractImplementation = new(
+        id: "SM0025",
+        title: "No implementation found for contract interface",
+        messageFormat: "No implementation of '{0}' found in module '{1}'. Add a public class implementing this interface.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor MultipleContractImplementations = new(
+        id: "SM0026",
+        title: "Multiple implementations of contract interface",
+        messageFormat: "Multiple implementations of '{0}' found in module '{1}': {2}. Only one implementation per contract interface is allowed.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor PermissionFieldNotConstString = new(
+        id: "SM0027",
+        title: "Permission field is not a const string",
+        messageFormat: "Permission class '{0}' must contain only public const string fields. Found field '{1}' that is not a const string.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor ContractImplementationNotPublic = new(
+        id: "SM0028",
+        title: "Contract implementation is not public",
+        messageFormat: "Implementation '{0}' of '{1}' must be public. The DI container cannot access internal types across assemblies.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor ContractImplementationIsAbstract = new(
+        id: "SM0029",
+        title: "Contract implementation is abstract",
+        messageFormat: "'{0}' implements '{1}' but is abstract. Provide a concrete implementation.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor PermissionValueBadPattern = new(
+        id: "SM0031",
+        title: "Permission value does not follow naming pattern",
+        messageFormat: "Permission value '{0}' in '{1}' should follow the 'Module.Action' pattern, for example 'Products.View'",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor PermissionClassNotSealed = new(
+        id: "SM0032",
+        title: "Permission class is not sealed",
+        messageFormat: "'{0}' implements IModulePermissions but is not sealed. Permission classes must be sealed.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor DuplicatePermissionValue = new(
+        id: "SM0033",
+        title: "Duplicate permission value",
+        messageFormat: "Permission value '{0}' is defined in both '{1}' and '{2}'. Each permission value must be unique.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor PermissionValueWrongPrefix = new(
+        id: "SM0034",
+        title: "Permission value prefix does not match module name",
+        messageFormat: "Permission '{0}' is defined in module '{1}'. Permission values should be prefixed with the owning module name.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor DtoTypeNoProperties = new(
+        id: "SM0035",
+        title: "DTO type in contracts has no public properties",
+        messageFormat: "'{0}' in '{1}' has no public properties. If this is not a DTO, mark it with [NoDtoGeneration].",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor InfrastructureTypeInContracts = new(
+        id: "SM0038",
+        title: "Infrastructure type in Contracts assembly",
+        messageFormat: "'{0}' appears to be an infrastructure type in a Contracts assembly. Infrastructure types should not be in Contracts assemblies. Mark it with [NoDtoGeneration] or move it.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor InterceptorDependsOnDbContext = new(
+        id: "SM0039",
+        title: "SaveChanges interceptor has transitive DbContext dependency",
+        messageFormat: "ISaveChangesInterceptor '{0}' in module '{1}' has a constructor parameter '{2}' whose implementation depends on a DbContext. This creates a circular dependency when ModuleDbContextOptionsBuilder resolves interceptors from DI during DbContext options construction. To fix: make the parameter optional and resolve it lazily, or remove the dependency.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true
     );
 
@@ -167,5 +322,406 @@ internal sealed class DiagnosticEmitter : IEmitter
                 entityConfigOwners[config.EntityFqn] = config.ConfigFqn.Replace("global::", "");
             }
         }
+
+        // SM0010: Circular module dependency
+        var moduleNames = new List<string>();
+        foreach (var m in data.Modules)
+            moduleNames.Add(m.ModuleName);
+
+        var depEdges = new List<(string From, string To)>();
+        foreach (var d in data.Dependencies)
+            depEdges.Add((d.ModuleName, d.DependsOnModuleName));
+
+        var sortResult = TopologicalSort.Sort(
+            moduleNames.ToImmutableArray(),
+            depEdges.ToImmutableArray()
+        );
+
+        if (!sortResult.IsSuccess && sortResult.Cycle.Length > 0)
+        {
+            // Build cycle string: "A → B → C → A"
+            var cycleNodes = new List<string>();
+            foreach (var c in sortResult.Cycle)
+                cycleNodes.Add(c);
+            cycleNodes.Add(sortResult.Cycle[0]); // close the loop
+            var cycleStr = string.Join(" \u2192 ", cycleNodes);
+
+            // Build "how it happened" string
+            var howParts = new List<string>();
+            foreach (var dep in data.Dependencies)
+            {
+                if (
+                    sortResult.Cycle.Contains(dep.ModuleName)
+                    && sortResult.Cycle.Contains(dep.DependsOnModuleName)
+                )
+                {
+                    howParts.Add(
+                        dep.ModuleName + " references " + dep.ContractsAssemblyName + ". "
+                    );
+                }
+            }
+            var howStr = string.Join("", howParts);
+
+            var first = sortResult.Cycle[0];
+            var second = sortResult.Cycle.Length > 1 ? sortResult.Cycle[1] : first;
+
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    CircularModuleDependency,
+                    Location.None,
+                    cycleStr,
+                    howStr,
+                    first,
+                    second
+                )
+            );
+        }
+
+        // SM0011: Illegal implementation references
+        foreach (var illegal in data.IllegalReferences)
+        {
+            context.ReportDiagnostic(
+                Diagnostic.Create(
+                    IllegalImplementationReference,
+                    Location.None,
+                    illegal.ReferencingModuleName,
+                    illegal.ReferencedModuleName,
+                    illegal.ReferencedAssemblyName
+                )
+            );
+        }
+
+        // SM0012/SM0013: Contract interface size
+        foreach (var iface in data.ContractInterfaces)
+        {
+            if (iface.MethodCount > 20)
+            {
+                var shortName = ExtractShortName(iface.InterfaceName);
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ContractInterfaceTooLargeError,
+                        Location.None,
+                        iface.InterfaceName.Replace("global::", ""),
+                        iface.MethodCount,
+                        shortName
+                    )
+                );
+            }
+            else if (iface.MethodCount >= 15)
+            {
+                var shortName = ExtractShortName(iface.InterfaceName);
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ContractInterfaceTooLargeWarning,
+                        Location.None,
+                        iface.InterfaceName.Replace("global::", ""),
+                        iface.MethodCount,
+                        shortName
+                    )
+                );
+            }
+        }
+
+        // SM0014: Missing contract interfaces in referenced contracts assemblies
+        var contractsWithInterfaces = new System.Collections.Generic.HashSet<string>();
+        foreach (var iface in data.ContractInterfaces)
+            contractsWithInterfaces.Add(iface.ContractsAssemblyName);
+
+        // Deduplicate: only report once per (module, contracts assembly) pair
+        var reported = new System.Collections.Generic.HashSet<string>();
+        foreach (var dep in data.Dependencies)
+        {
+            var key = dep.ModuleName + "|" + dep.ContractsAssemblyName;
+            if (!contractsWithInterfaces.Contains(dep.ContractsAssemblyName) && reported.Add(key))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MissingContractInterfaces,
+                        Location.None,
+                        dep.ModuleName,
+                        dep.ContractsAssemblyName
+                    )
+                );
+            }
+        }
+
+        // SM0025/SM0026/SM0028/SM0029: Contract implementation diagnostics
+        // Build a map from contracts assembly name to module name
+        var contractsAsmToModule = new System.Collections.Generic.Dictionary<string, string>();
+        foreach (var dep in data.Dependencies)
+        {
+            if (!contractsAsmToModule.ContainsKey(dep.ContractsAssemblyName))
+                contractsAsmToModule[dep.ContractsAssemblyName] = dep.DependsOnModuleName;
+        }
+        // Also map from module implementations
+        foreach (var impl in data.ContractImplementations)
+        {
+            // The implementation's module is the one that should have the impl
+        }
+
+        // Group all implementations by interface FQN
+        var implsByInterface = new System.Collections.Generic.Dictionary<
+            string,
+            System.Collections.Generic.List<ContractImplementationRecord>
+        >();
+        foreach (var impl in data.ContractImplementations)
+        {
+            if (!implsByInterface.TryGetValue(impl.InterfaceFqn, out var list))
+            {
+                list = new System.Collections.Generic.List<ContractImplementationRecord>();
+                implsByInterface[impl.InterfaceFqn] = list;
+            }
+            list.Add(impl);
+        }
+
+        // SM0028: Non-public implementations
+        // SM0029: Abstract implementations
+        foreach (var impl in data.ContractImplementations)
+        {
+            if (!impl.IsPublic)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ContractImplementationNotPublic,
+                        Location.None,
+                        impl.ImplementationFqn.Replace("global::", ""),
+                        impl.InterfaceFqn.Replace("global::", "")
+                    )
+                );
+            }
+
+            if (impl.IsAbstract)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ContractImplementationIsAbstract,
+                        Location.None,
+                        impl.ImplementationFqn.Replace("global::", ""),
+                        impl.InterfaceFqn.Replace("global::", "")
+                    )
+                );
+            }
+        }
+
+        // SM0025: No implementation for a contract interface
+        foreach (var iface in data.ContractInterfaces)
+        {
+            if (!implsByInterface.ContainsKey(iface.InterfaceName))
+            {
+                // Derive module name from contracts assembly name
+                var moduleName = iface.ContractsAssemblyName;
+                if (moduleName.EndsWith(".Contracts", System.StringComparison.Ordinal))
+                    moduleName = moduleName.Substring(0, moduleName.Length - ".Contracts".Length);
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        NoContractImplementation,
+                        Location.None,
+                        iface.InterfaceName.Replace("global::", ""),
+                        moduleName
+                    )
+                );
+            }
+        }
+
+        // SM0026: Multiple valid implementations for the same interface
+        foreach (var kvp in implsByInterface)
+        {
+            var validImpls = new System.Collections.Generic.List<ContractImplementationRecord>();
+            foreach (var impl in kvp.Value)
+            {
+                if (impl.IsPublic && !impl.IsAbstract)
+                    validImpls.Add(impl);
+            }
+
+            if (validImpls.Count > 1)
+            {
+                var names = new System.Collections.Generic.List<string>();
+                foreach (var impl in validImpls)
+                    names.Add(impl.ImplementationFqn.Replace("global::", ""));
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MultipleContractImplementations,
+                        Location.None,
+                        kvp.Key.Replace("global::", ""),
+                        validImpls[0].ModuleName,
+                        string.Join(", ", names)
+                    )
+                );
+            }
+        }
+
+        // SM0027/SM0031/SM0032/SM0033/SM0034: Permission diagnostics
+        // Track permission values for duplicate detection (value -> class FQN)
+        var permissionValueOwners = new System.Collections.Generic.Dictionary<string, string>();
+
+        foreach (var perm in data.PermissionClasses)
+        {
+            // SM0032: Not sealed
+            if (!perm.IsSealed)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        PermissionClassNotSealed,
+                        Location.None,
+                        perm.FullyQualifiedName.Replace("global::", "")
+                    )
+                );
+            }
+
+            foreach (var field in perm.Fields)
+            {
+                // SM0027: Field is not const string
+                if (!field.IsConstString)
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            PermissionFieldNotConstString,
+                            Location.None,
+                            perm.FullyQualifiedName.Replace("global::", ""),
+                            field.FieldName
+                        )
+                    );
+                    continue;
+                }
+
+                // SM0031: Value doesn't match {Module}.{Action} pattern (exactly one dot)
+                var dotCount = 0;
+                foreach (var ch in field.Value)
+                {
+                    if (ch == '.')
+                        dotCount++;
+                }
+                if (dotCount != 1)
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            PermissionValueBadPattern,
+                            Location.None,
+                            field.Value,
+                            perm.FullyQualifiedName.Replace("global::", "")
+                        )
+                    );
+                }
+
+                // SM0034: Value prefix doesn't match module name
+                if (dotCount >= 1)
+                {
+                    var prefix = field.Value.Substring(0, field.Value.IndexOf('.'));
+                    if (!string.Equals(prefix, perm.ModuleName, System.StringComparison.Ordinal))
+                    {
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                PermissionValueWrongPrefix,
+                                Location.None,
+                                field.Value,
+                                perm.ModuleName
+                            )
+                        );
+                    }
+                }
+
+                // SM0033: Duplicate permission value
+                if (permissionValueOwners.TryGetValue(field.Value, out var existingOwner))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DuplicatePermissionValue,
+                            Location.None,
+                            field.Value,
+                            existingOwner,
+                            perm.FullyQualifiedName.Replace("global::", "")
+                        )
+                    );
+                }
+                else
+                {
+                    permissionValueOwners[field.Value] = perm.FullyQualifiedName.Replace(
+                        "global::",
+                        ""
+                    );
+                }
+            }
+        }
+
+        // SM0035: DTO type in contracts with no public properties
+        // Exclude permission classes — they only have const string fields, not properties
+        var permissionClassFqns = new System.Collections.Generic.HashSet<string>();
+        foreach (var perm in data.PermissionClasses)
+            permissionClassFqns.Add(perm.FullyQualifiedName);
+
+        foreach (var dto in data.DtoTypes)
+        {
+            if (
+                dto.FullyQualifiedName.Contains(".Contracts.")
+                && dto.Properties.Length == 0
+                && !permissionClassFqns.Contains(dto.FullyQualifiedName)
+            )
+            {
+                // Extract assembly/namespace context from FQN
+                var fqn = dto.FullyQualifiedName.Replace("global::", "");
+                var contractsIdx = fqn.IndexOf(".Contracts.", System.StringComparison.Ordinal);
+                var contractsAsm =
+                    contractsIdx >= 0 ? fqn.Substring(0, contractsIdx + ".Contracts".Length) : fqn;
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(DtoTypeNoProperties, Location.None, fqn, contractsAsm)
+                );
+            }
+        }
+
+        // SM0038: Infrastructure type (DbContext subclass) in Contracts assembly
+        foreach (var dto in data.DtoTypes)
+        {
+            if (
+                dto.FullyQualifiedName.Contains(".Contracts.")
+                && dto.FullyQualifiedName.Contains("DbContext")
+            )
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        InfrastructureTypeInContracts,
+                        Location.None,
+                        dto.FullyQualifiedName.Replace("global::", "")
+                    )
+                );
+            }
+        }
+
+        // SM0039: Interceptor depends on contract whose implementation takes a DbContext
+        foreach (var interceptor in data.Interceptors)
+        {
+            foreach (var paramFqn in interceptor.ConstructorParamTypeFqns)
+            {
+                foreach (var impl in data.ContractImplementations)
+                {
+                    if (impl.InterfaceFqn == paramFqn && impl.DependsOnDbContext)
+                    {
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                InterceptorDependsOnDbContext,
+                                Location.None,
+                                interceptor.FullyQualifiedName.Replace("global::", ""),
+                                interceptor.ModuleName,
+                                paramFqn.Replace("global::", "")
+                            )
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private static string ExtractShortName(string interfaceName)
+    {
+        var name = interfaceName.Replace("global::", "");
+        if (name.Contains("."))
+            name = name.Substring(name.LastIndexOf('.') + 1);
+        if (name.StartsWith("I", System.StringComparison.Ordinal) && name.Length > 1)
+            name = name.Substring(1);
+        if (name.EndsWith("Contracts", System.StringComparison.Ordinal))
+            name = name.Substring(0, name.Length - "Contracts".Length);
+        return name;
     }
 }

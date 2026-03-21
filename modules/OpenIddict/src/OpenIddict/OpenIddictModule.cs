@@ -97,11 +97,6 @@ public class OpenIddictModule : IModule
         services.AddHostedService<OpenIddictSeedService>();
     }
 
-    public void ConfigurePermissions(PermissionRegistryBuilder builder)
-    {
-        builder.AddPermissions<OpenIddictPermissions>();
-    }
-
     public void ConfigureMenu(IMenuBuilder menus)
     {
         menus.Add(

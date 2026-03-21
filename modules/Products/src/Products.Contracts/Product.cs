@@ -1,8 +1,5 @@
-﻿using SimpleModule.Core;
-
 namespace SimpleModule.Products.Contracts;
 
-[Dto]
 public class Product
 {
     public ProductId Id { get; set; }

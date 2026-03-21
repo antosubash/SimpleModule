@@ -57,6 +57,11 @@
         <Project Path="modules/Settings/src/Settings/Settings.csproj" />
         <Project Path="modules/Settings/tests/Settings.Tests/Settings.Tests.csproj" />
     </Folder>
+    <Folder Name="/modules/AuditLogs/">
+        <Project Path="modules/AuditLogs/src/AuditLogs.Contracts/AuditLogs.Contracts.csproj" />
+        <Project Path="modules/AuditLogs/src/AuditLogs/AuditLogs.csproj" />
+        <Project Path="modules/AuditLogs/tests/AuditLogs.Tests/AuditLogs.Tests.csproj" />
+    </Folder>
     <Folder Name="/template/">
         <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
     </Folder>

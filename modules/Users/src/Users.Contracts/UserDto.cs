@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.Users.Contracts;
 
-[Dto]
 public class UserDto
 {
     public UserId Id { get; set; }

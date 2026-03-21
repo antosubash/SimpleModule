@@ -199,6 +199,9 @@ app.MapStaticAssets();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Audit logging middleware — captures all HTTP requests
+app.UseMiddleware<SimpleModule.AuditLogs.Middleware.AuditMiddleware>();
+
 // Home page rewrite: if a public menu item is designated as home page,
 // rewrite GET / to that page's URL (internal rewrite, URL stays /)
 app.Use(

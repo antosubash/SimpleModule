@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.PageBuilder.Contracts;
 
-[Dto]
 public class UpdatePageRequest
 {
     public string Title { get; set; } = string.Empty;

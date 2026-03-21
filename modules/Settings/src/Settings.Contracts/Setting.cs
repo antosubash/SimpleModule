@@ -1,9 +1,7 @@
-using SimpleModule.Core;
 using SimpleModule.Core.Settings;
 
 namespace SimpleModule.Settings.Contracts;
 
-[Dto]
 public class Setting
 {
     public string Key { get; set; } = string.Empty;

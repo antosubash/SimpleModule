@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.Settings.Contracts;
 
-[Dto]
 public class UpdateMenuItemRequest
 {
     public string Label { get; set; } = "";

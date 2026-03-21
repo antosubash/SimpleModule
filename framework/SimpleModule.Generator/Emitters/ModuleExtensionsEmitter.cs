@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -9,7 +10,36 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
 {
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
-        var modules = data.Modules;
+        // Topological sort for dependency ordering
+        var moduleNames = data.Modules.Select(m => m.ModuleName).ToImmutableArray();
+        var depEdges = data
+            .Dependencies.Select(d => (d.ModuleName, d.DependsOnModuleName))
+            .ToImmutableArray();
+        var sortResult = TopologicalSort.Sort(moduleNames, depEdges);
+
+        // Reorder modules using sort result (avoids calling Sort twice)
+        ImmutableArray<ModuleInfoRecord> sortedModules;
+        if (sortResult.IsSuccess)
+        {
+            var moduleByName = new System.Collections.Generic.Dictionary<
+                string,
+                ModuleInfoRecord
+            >();
+            foreach (var m in data.Modules)
+                moduleByName[m.ModuleName] = m;
+
+            var sorted = new System.Collections.Generic.List<ModuleInfoRecord>();
+            foreach (var name in sortResult.Sorted)
+            {
+                if (moduleByName.TryGetValue(name, out var m))
+                    sorted.Add(m);
+            }
+            sortedModules = sorted.ToImmutableArray();
+        }
+        else
+        {
+            sortedModules = data.Modules;
+        }
         var hasDtoTypes = data.DtoTypes.Length > 0;
 
         var sb = new StringBuilder();
@@ -28,7 +58,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("{");
 
         // Generate shared module instances
-        foreach (var module in modules)
+        foreach (var module in sortedModules)
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine(
@@ -42,19 +72,88 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         );
         sb.AppendLine("    {");
 
-        foreach (var module in modules.Where(m => m.HasConfigureServices))
+        var currentPhase = -1;
+        foreach (var module in sortedModules.Where(m => m.HasConfigureServices))
         {
+            if (
+                sortResult.IsSuccess
+                && sortResult.Phases.TryGetValue(module.ModuleName, out var phase)
+            )
+            {
+                if (phase != currentPhase)
+                {
+                    currentPhase = phase;
+                    sb.AppendLine();
+                    if (
+                        sortResult.DependenciesOf.TryGetValue(module.ModuleName, out var deps)
+                        && deps.Length > 0
+                    )
+                    {
+                        sb.AppendLine(
+                            $"        // Phase {phase + 1}: Depends on {string.Join(", ", deps)}"
+                        );
+                    }
+                    else
+                    {
+                        sb.AppendLine($"        // Phase {phase + 1}: No dependencies");
+                    }
+                }
+            }
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine($"        {fieldName}.ConfigureServices(services, configuration);");
         }
 
         sb.AppendLine();
+        sb.AppendLine("        // Auto-discovered contract implementations");
+
+        // Group by interface FQN and only emit if exactly one valid implementation
+        var implsByInterface = new System.Collections.Generic.Dictionary<
+            string,
+            System.Collections.Generic.List<ContractImplementationRecord>
+        >();
+        foreach (var impl in data.ContractImplementations)
+        {
+            if (!impl.IsPublic || impl.IsAbstract)
+                continue;
+
+            if (!implsByInterface.TryGetValue(impl.InterfaceFqn, out var list))
+            {
+                list = new System.Collections.Generic.List<ContractImplementationRecord>();
+                implsByInterface[impl.InterfaceFqn] = list;
+            }
+            list.Add(impl);
+        }
+
+        foreach (var kvp in implsByInterface)
+        {
+            if (kvp.Value.Count == 1)
+            {
+                var impl = kvp.Value[0];
+                sb.AppendLine(
+                    $"        services.AddScoped<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
+                );
+            }
+        }
+
+        sb.AppendLine();
         sb.AppendLine("        var permissionBuilder = new PermissionRegistryBuilder();");
 
-        foreach (var module in modules.Where(m => m.HasConfigurePermissions))
+        foreach (var module in sortedModules.Where(m => m.HasConfigurePermissions))
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine($"        {fieldName}.ConfigurePermissions(permissionBuilder);");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("        // Auto-discovered permission classes (IModulePermissions)");
+        foreach (var perm in data.PermissionClasses)
+        {
+            if (perm.IsSealed)
+            {
+                sb.AppendLine(
+                    $"        permissionBuilder.AddPermissions<{perm.FullyQualifiedName}>();"
+                );
+            }
         }
 
         sb.AppendLine("        var permissionRegistry = permissionBuilder.Build();");

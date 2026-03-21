@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.Admin.Contracts;
 
-[Dto]
 public class AuditLogEntryDto
 {
     public long Id { get; set; }

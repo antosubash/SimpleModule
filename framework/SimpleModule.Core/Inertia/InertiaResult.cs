@@ -44,7 +44,11 @@ internal sealed class InertiaResult : IResult
             httpContext.Response.Headers["X-Inertia"] = "true";
             httpContext.Response.Headers["Vary"] = "X-Inertia";
             httpContext.Response.ContentType = "application/json";
-            await httpContext.Response.WriteAsJsonAsync(pageData);
+            // Use the same serializer as the SSR path so Vogen value objects
+            // are consistently unwrapped (WriteAsJsonAsync uses a different
+            // JsonSerializerOptions from DI which may not handle them).
+            var json = JsonSerializer.Serialize(pageData, _camelCaseOptions);
+            await httpContext.Response.WriteAsync(json);
             return;
         }
 

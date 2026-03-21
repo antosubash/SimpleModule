@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Admin.Services;
 using SimpleModule.Core;
-using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 
@@ -16,11 +15,6 @@ public class AdminModule : IModule
     {
         services.AddModuleDbContext<AdminDbContext>(configuration, AdminConstants.ModuleName);
         services.AddScoped<AuditService>();
-    }
-
-    public void ConfigurePermissions(PermissionRegistryBuilder builder)
-    {
-        builder.AddPermissions<AdminPermissions>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

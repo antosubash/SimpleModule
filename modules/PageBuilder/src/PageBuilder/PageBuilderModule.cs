@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
-using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
-using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder;
 
@@ -17,12 +15,6 @@ public class PageBuilderModule : IModule
             configuration,
             PageBuilderConstants.ModuleName
         );
-        services.AddScoped<IPageBuilderContracts, PageBuilderService>();
-    }
-
-    public void ConfigurePermissions(PermissionRegistryBuilder builder)
-    {
-        builder.AddPermissions<PageBuilderPermissions>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

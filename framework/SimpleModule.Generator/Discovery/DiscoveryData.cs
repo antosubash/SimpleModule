@@ -13,14 +13,26 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<ModuleInfoRecord> Modules,
     ImmutableArray<DtoTypeInfoRecord> DtoTypes,
     ImmutableArray<DbContextInfoRecord> DbContexts,
-    ImmutableArray<EntityConfigInfoRecord> EntityConfigs
+    ImmutableArray<EntityConfigInfoRecord> EntityConfigs,
+    ImmutableArray<ModuleDependencyRecord> Dependencies,
+    ImmutableArray<IllegalModuleReferenceRecord> IllegalReferences,
+    ImmutableArray<ContractInterfaceInfoRecord> ContractInterfaces,
+    ImmutableArray<ContractImplementationRecord> ContractImplementations,
+    ImmutableArray<PermissionClassRecord> PermissionClasses,
+    ImmutableArray<InterceptorInfoRecord> Interceptors
 )
 {
     public static readonly DiscoveryData Empty = new(
         ImmutableArray<ModuleInfoRecord>.Empty,
         ImmutableArray<DtoTypeInfoRecord>.Empty,
         ImmutableArray<DbContextInfoRecord>.Empty,
-        ImmutableArray<EntityConfigInfoRecord>.Empty
+        ImmutableArray<EntityConfigInfoRecord>.Empty,
+        ImmutableArray<ModuleDependencyRecord>.Empty,
+        ImmutableArray<IllegalModuleReferenceRecord>.Empty,
+        ImmutableArray<ContractInterfaceInfoRecord>.Empty,
+        ImmutableArray<ContractImplementationRecord>.Empty,
+        ImmutableArray<PermissionClassRecord>.Empty,
+        ImmutableArray<InterceptorInfoRecord>.Empty
     );
 
     public bool Equals(DiscoveryData other)
@@ -28,7 +40,13 @@ internal readonly record struct DiscoveryData(
         return Modules.SequenceEqual(other.Modules)
             && DtoTypes.SequenceEqual(other.DtoTypes)
             && DbContexts.SequenceEqual(other.DbContexts)
-            && EntityConfigs.SequenceEqual(other.EntityConfigs);
+            && EntityConfigs.SequenceEqual(other.EntityConfigs)
+            && Dependencies.SequenceEqual(other.Dependencies)
+            && IllegalReferences.SequenceEqual(other.IllegalReferences)
+            && ContractInterfaces.SequenceEqual(other.ContractInterfaces)
+            && ContractImplementations.SequenceEqual(other.ContractImplementations)
+            && PermissionClasses.SequenceEqual(other.PermissionClasses)
+            && Interceptors.SequenceEqual(other.Interceptors);
     }
 
     public override int GetHashCode()
@@ -44,6 +62,18 @@ internal readonly record struct DiscoveryData(
                 hash = hash * 31 + c.GetHashCode();
             foreach (var e in EntityConfigs)
                 hash = hash * 31 + e.GetHashCode();
+            foreach (var dep in Dependencies)
+                hash = hash * 31 + dep.GetHashCode();
+            foreach (var ill in IllegalReferences)
+                hash = hash * 31 + ill.GetHashCode();
+            foreach (var ci in ContractInterfaces)
+                hash = hash * 31 + ci.GetHashCode();
+            foreach (var cImpl in ContractImplementations)
+                hash = hash * 31 + cImpl.GetHashCode();
+            foreach (var pc in PermissionClasses)
+                hash = hash * 31 + pc.GetHashCode();
+            foreach (var ic in Interceptors)
+                hash = hash * 31 + ic.GetHashCode();
             return hash;
         }
     }
@@ -214,6 +244,93 @@ internal readonly record struct EntityConfigInfoRecord(
     string ModuleName
 );
 
+internal readonly record struct ModuleDependencyRecord(
+    string ModuleName,
+    string DependsOnModuleName,
+    string ContractsAssemblyName
+);
+
+internal readonly record struct IllegalModuleReferenceRecord(
+    string ReferencingModuleName,
+    string ReferencingAssemblyName,
+    string ReferencedModuleName,
+    string ReferencedAssemblyName
+);
+
+internal readonly record struct ContractInterfaceInfoRecord(
+    string ContractsAssemblyName,
+    string InterfaceName,
+    int MethodCount
+);
+
+internal readonly record struct ContractImplementationRecord(
+    string InterfaceFqn,
+    string ImplementationFqn,
+    string ModuleName,
+    bool IsPublic,
+    bool IsAbstract,
+    bool DependsOnDbContext
+);
+
+internal readonly record struct PermissionClassRecord(
+    string FullyQualifiedName,
+    string ModuleName,
+    bool IsSealed,
+    ImmutableArray<PermissionFieldRecord> Fields
+)
+{
+    public bool Equals(PermissionClassRecord other) =>
+        FullyQualifiedName == other.FullyQualifiedName
+        && ModuleName == other.ModuleName
+        && IsSealed == other.IsSealed
+        && Fields.SequenceEqual(other.Fields);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 31 + FullyQualifiedName.GetHashCode();
+            hash = hash * 31 + (ModuleName ?? "").GetHashCode();
+            hash = hash * 31 + IsSealed.GetHashCode();
+            foreach (var f in Fields)
+                hash = hash * 31 + f.GetHashCode();
+            return hash;
+        }
+    }
+}
+
+internal readonly record struct PermissionFieldRecord(
+    string FieldName,
+    string Value,
+    bool IsConstString
+);
+
+internal readonly record struct InterceptorInfoRecord(
+    string FullyQualifiedName,
+    string ModuleName,
+    ImmutableArray<string> ConstructorParamTypeFqns
+)
+{
+    public bool Equals(InterceptorInfoRecord other) =>
+        FullyQualifiedName == other.FullyQualifiedName
+        && ModuleName == other.ModuleName
+        && ConstructorParamTypeFqns.SequenceEqual(other.ConstructorParamTypeFqns);
+
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            var hash = 17;
+            hash = hash * 31 + FullyQualifiedName.GetHashCode();
+            hash = hash * 31 + (ModuleName ?? "").GetHashCode();
+            foreach (var p in ConstructorParamTypeFqns)
+                hash = hash * 31 + p.GetHashCode();
+            return hash;
+        }
+    }
+}
+
 #endregion
 
 #region Mutable working types (used during symbol traversal only)
@@ -290,6 +407,38 @@ internal sealed class EntityConfigInfo
     public string ConfigFqn { get; set; } = "";
     public string EntityFqn { get; set; } = "";
     public string ModuleName { get; set; } = "";
+}
+
+internal sealed class ContractImplementationInfo
+{
+    public string InterfaceFqn { get; set; } = "";
+    public string ImplementationFqn { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public bool IsPublic { get; set; }
+    public bool IsAbstract { get; set; }
+    public bool DependsOnDbContext { get; set; }
+}
+
+internal sealed class PermissionClassInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public bool IsSealed { get; set; }
+    public List<PermissionFieldInfo> Fields { get; set; } = new();
+}
+
+internal sealed class PermissionFieldInfo
+{
+    public string FieldName { get; set; } = "";
+    public string Value { get; set; } = "";
+    public bool IsConstString { get; set; }
+}
+
+internal sealed class InterceptorInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public List<string> ConstructorParamTypeFqns { get; set; } = new();
 }
 
 #endregion

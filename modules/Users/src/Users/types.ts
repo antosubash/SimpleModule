@@ -18,3 +18,7 @@ export interface UserDto {
   twoFactorEnabled: boolean;
 }
 
+export interface UserId {
+  value: string;
+}
+

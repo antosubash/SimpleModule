@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.Users.Contracts;
 
-[Dto]
 public class CreateUserRequest
 {
     public string Email { get; set; } = string.Empty;

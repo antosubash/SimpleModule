@@ -8,3 +8,20 @@ SM0003 | SimpleModule.Generator | Error | Multiple IdentityDbContext types found
 SM0005 | SimpleModule.Generator | Error | IdentityDbContext has unexpected type arguments
 SM0006 | SimpleModule.Generator | Warning | Entity configuration targets entity not in any DbSet
 SM0007 | SimpleModule.Generator | Error | Duplicate entity configuration
+SM0010 | SimpleModule.Generator | Error | Circular module dependency detected
+SM0011 | SimpleModule.Generator | Error | Module directly references another module's implementation
+SM0012 | SimpleModule.Generator | Warning | Contract interface has too many methods
+SM0013 | SimpleModule.Generator | Error | Contract interface must be split
+SM0014 | SimpleModule.Generator | Error | Referenced contracts assembly has no public interfaces
+SM0025 | SimpleModule.Generator | Error | No implementation found for contract interface
+SM0026 | SimpleModule.Generator | Error | Multiple implementations of contract interface
+SM0027 | SimpleModule.Generator | Error | Permission field is not a const string
+SM0028 | SimpleModule.Generator | Error | Contract implementation is not public
+SM0029 | SimpleModule.Generator | Error | Contract implementation is abstract
+SM0031 | SimpleModule.Generator | Warning | Permission value does not follow naming pattern
+SM0032 | SimpleModule.Generator | Error | Permission class is not sealed
+SM0033 | SimpleModule.Generator | Error | Duplicate permission value
+SM0034 | SimpleModule.Generator | Warning | Permission value prefix does not match module name
+SM0035 | SimpleModule.Generator | Warning | DTO type in contracts has no public properties
+SM0038 | SimpleModule.Generator | Warning | Infrastructure type in Contracts assembly
+SM0039 | SimpleModule.Generator | Warning | SaveChanges interceptor has transitive DbContext dependency

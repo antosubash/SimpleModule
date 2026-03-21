@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.Settings.Contracts;
 
-[Dto]
 public class PublicMenuItemDto
 {
     public int Id { get; set; }

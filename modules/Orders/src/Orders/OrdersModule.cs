@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
-using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
-using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders;
 
@@ -18,12 +16,6 @@ public class OrdersModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<OrdersDbContext>(configuration, OrdersConstants.ModuleName);
-        services.AddScoped<IOrderContracts, OrderService>();
-    }
-
-    public void ConfigurePermissions(PermissionRegistryBuilder builder)
-    {
-        builder.AddPermissions<OrdersPermissions>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

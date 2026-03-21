@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.PageBuilder.Contracts;
 using SimpleModule.Permissions.Contracts;
@@ -35,5 +36,8 @@ public partial class HostDbContext
         configurationBuilder
             .Properties<RoleId>()
             .HaveConversion<RoleId.EfCoreValueConverter, RoleId.EfCoreValueComparer>();
+        configurationBuilder
+            .Properties<AuditEntryId>()
+            .HaveConversion<AuditEntryId.EfCoreValueConverter, AuditEntryId.EfCoreValueComparer>();
     }
 }

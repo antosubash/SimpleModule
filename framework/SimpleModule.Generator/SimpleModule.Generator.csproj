@@ -12,4 +12,7 @@
     <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
     <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="SimpleModule.Generator.Tests" />
+  </ItemGroup>
 </Project>

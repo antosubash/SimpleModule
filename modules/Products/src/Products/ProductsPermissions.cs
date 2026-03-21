@@ -1,6 +1,8 @@
+using SimpleModule.Core.Authorization;
+
 namespace SimpleModule.Products;
 
-public sealed class ProductsPermissions
+public sealed class ProductsPermissions : IModulePermissions
 {
     public const string View = "Products.View";
     public const string Create = "Products.Create";

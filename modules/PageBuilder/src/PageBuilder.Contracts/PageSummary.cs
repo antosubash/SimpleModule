@@ -1,8 +1,5 @@
-using SimpleModule.Core;
-
 namespace SimpleModule.PageBuilder.Contracts;
 
-[Dto]
 public class PageSummary
 {
     public PageId Id { get; set; }

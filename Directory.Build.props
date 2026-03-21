@@ -4,6 +4,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- SM0012: contract interface size warning — keep as warning, don't promote to error -->
+    <!-- SM0039: interceptor DbContext dependency — keep as warning, runtime fix handles it -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039</WarningsNotAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->

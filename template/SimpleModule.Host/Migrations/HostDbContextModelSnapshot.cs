@@ -362,6 +362,95 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("Admin_AuditLogEntries", (string)null);
                 });
 
+            modelBuilder.Entity("SimpleModule.AuditLogs.Contracts.AuditEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Action")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EntityId")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HttpMethod")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Module")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Path")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QueryString")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestBody")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("StatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("Timestamp")
+                        .IsDescending();
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.HasIndex("Module", "Timestamp")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("UserId", "Timestamp")
+                        .IsDescending(false, true);
+
+                    b.ToTable("AuditLogs_AuditEntries", (string)null);
+                });
+
             modelBuilder.Entity("SimpleModule.Orders.Contracts.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -547,6 +636,10 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("IsPublished");
 
                     b.HasIndex("Slug")
                         .IsUnique();

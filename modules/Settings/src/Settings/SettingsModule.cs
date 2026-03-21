@@ -4,7 +4,6 @@ using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
-using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Services;
 
 namespace SimpleModule.Settings;
@@ -20,7 +19,6 @@ public class SettingsModule : IModule
     {
         services.AddMemoryCache();
         services.AddModuleDbContext<SettingsDbContext>(configuration, SettingsConstants.ModuleName);
-        services.AddScoped<ISettingsContracts, SettingsService>();
         services.AddScoped<PublicMenuService>();
         services.AddScoped<IPublicMenuProvider>(sp => sp.GetRequiredService<PublicMenuService>());
     }

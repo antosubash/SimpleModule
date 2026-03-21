@@ -3,6 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <InvariantGlobalization>false</InvariantGlobalization>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <!-- TODO: Remove after migrating Admin/OpenIddict/Permissions to use Users.Contracts -->
+    <NoWarn>$(NoWarn);SM0011</NoWarn>
+    <!-- TODO: Remove after adding [NoDtoGeneration] to non-DTO types in Contracts assemblies -->
+    <NoWarn>$(NoWarn);SM0035;SM0038</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.Tests.Shared" />
@@ -31,6 +35,7 @@
     <ProjectReference Include="..\..\modules\Admin\src\Admin\Admin.csproj" />
     <ProjectReference Include="..\..\modules\PageBuilder\src\PageBuilder\PageBuilder.csproj" />
     <ProjectReference Include="..\..\modules\Settings\src\Settings\Settings.csproj" />
+    <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs\AuditLogs.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <!-- Tailwind CSS -->

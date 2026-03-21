@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
-using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Entities;
 using SimpleModule.Users.Services;
 
@@ -35,7 +34,6 @@ public class UsersModule : IModule
 
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
-        services.AddScoped<IUserContracts, UserService>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

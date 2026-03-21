@@ -135,7 +135,7 @@ interface UserInfo {
   displayName?: string;
   name?: string;
   email?: string;
-  id?: string;
+  id?: string | { value: string };
   roles?: string | string[];
 }
 
@@ -205,7 +205,15 @@ function UserInfoPanel() {
           <>
             <InfoRow label="Name" value={userInfo.displayName || userInfo.name || '-'} />
             <InfoRow label="Email" value={userInfo.email || '-'} />
-            <InfoRow label="ID" value={userInfo.id || '-'} monospace />
+            <InfoRow
+              label="ID"
+              value={
+                typeof userInfo.id === 'object' && userInfo.id
+                  ? userInfo.id.value
+                  : userInfo.id || '-'
+              }
+              monospace
+            />
             {userInfo.roles && (
               <InfoRow
                 label="Roles"

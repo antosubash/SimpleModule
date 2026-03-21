@@ -17,7 +17,6 @@ public class PermissionsModule : IModule
             PermissionsConstants.ModuleName
         );
 
-        services.AddScoped<IPermissionContracts, PermissionService>();
         services.AddHostedService<PermissionSeedService>();
     }
 }

@@ -320,6 +320,130 @@ public class ModuleExtensionsGenerationTests
         endpointExt.Should().Contain("namespace SimpleModule.Core;");
     }
 
+    [Fact]
+    public void AddModules_ContainsPhaseComments()
+    {
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace TestApp.ModuleA
+            {
+                [Module("ModuleA")]
+                public class ModuleAModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+
+            namespace TestApp.ModuleB
+            {
+                [Module("ModuleB")]
+                public class ModuleBModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var moduleExtensions = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        // Should contain phase comments in generated code
+        moduleExtensions.Should().Contain("// Phase");
+        // Both modules should still be present
+        moduleExtensions.Should().Contain("ModuleA");
+        moduleExtensions.Should().Contain("ModuleB");
+    }
+
+    [Fact]
+    public void AddModules_PhaseComment_ShowsNoDependencies_ForIndependentModules()
+    {
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace TestApp.Alpha
+            {
+                [Module("Alpha")]
+                public class AlphaModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var output = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        output.Should().Contain("// Phase 1: No dependencies");
+    }
+
+    [Fact]
+    public void AddModules_MultipleModules_AllAppearInGeneratedCode()
+    {
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace TestApp.Products
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+
+            namespace TestApp.Orders
+            {
+                [Module("Orders")]
+                public class OrdersModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+
+            namespace TestApp.Settings
+            {
+                [Module("Settings")]
+                public class SettingsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var output = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        output.Should().Contain("Products");
+        output.Should().Contain("Orders");
+        output.Should().Contain("Settings");
+        output.Should().Contain("ConfigureServices");
+    }
+
     private static string GetGeneratedSource(
         Microsoft.CodeAnalysis.GeneratorDriverRunResult result,
         string fileName

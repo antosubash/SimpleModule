@@ -10,6 +10,10 @@ export interface Product {
   price: number;
 }
 
+export interface ProductId {
+  value: number;
+}
+
 export interface UpdateProductRequest {
   name: string;
   price: number;

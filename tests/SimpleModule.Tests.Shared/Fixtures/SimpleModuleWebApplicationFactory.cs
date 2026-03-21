@@ -5,13 +5,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Admin;
+using SimpleModule.AuditLogs;
 using SimpleModule.Database;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
+using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Orders;
 using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
@@ -52,12 +55,16 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<PageBuilderDbContext>(services);
             ReplaceDbContext<PermissionsDbContext>(services);
             ReplaceDbContext<SettingsDbContext>(services);
+            ReplaceDbContext<AuditLogsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
             // EnsureCreated on HostDbContext alone won't produce for module contexts.
             RemoveHostedService<SimpleModule.OpenIddict.Services.OpenIddictSeedService>(services);
             RemoveHostedService<SimpleModule.Permissions.Services.PermissionSeedService>(services);
+            RemoveHostedService<SimpleModule.Users.Services.UserSeedService>(services);
+            RemoveHostedService<SimpleModule.AuditLogs.Pipeline.AuditWriterService>(services);
+            RemoveHostedService<SimpleModule.AuditLogs.Retention.AuditRetentionService>(services);
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services
@@ -67,6 +74,21 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
                     options.DefaultChallengeScheme = TestAuthScheme;
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthScheme, _ => { });
+
+            services.PostConfigure<PolicySchemeOptions>(
+                AuthConstants.SmartAuthPolicy,
+                options =>
+                {
+                    var fallbackSelector = options.ForwardDefaultSelector;
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        if (context.Request.Headers.ContainsKey("X-Test-Claims"))
+                            return TestAuthScheme;
+
+                        return fallbackSelector?.Invoke(context);
+                    };
+                }
+            );
         });
     }
 
@@ -108,7 +130,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         // Encode claims as a header the test handler will read
         var claimsValue = string.Join(";", claimsList.Select(c => $"{c.Type}={c.Value}"));
         client.DefaultRequestHeaders.Add("X-Test-Claims", claimsValue);
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         return client;
     }
@@ -125,6 +146,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         sp.GetRequiredService<PageBuilderDbContext>().Database.EnsureCreated();
         sp.GetRequiredService<PermissionsDbContext>().Database.EnsureCreated();
         sp.GetRequiredService<SettingsDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<AuditLogsDbContext>().Database.EnsureCreated();
         sp.GetRequiredService<OpenIddictAppDbContext>().Database.EnsureCreated();
     }
 
@@ -144,21 +166,32 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
     private void ReplaceDbContext<TContext>(IServiceCollection services, bool useOpenIddict = false)
         where TContext : DbContext
     {
-        var descriptor = services.SingleOrDefault(d =>
-            d.ServiceType == typeof(DbContextOptions<TContext>)
-        );
-        if (descriptor is not null)
+        // Remove ALL descriptors related to this DbContext's options
+        var toRemove = services
+            .Where(d =>
+                d.ServiceType == typeof(DbContextOptions<TContext>)
+                || (
+                    d.ServiceType == typeof(DbContextOptions) && d.ImplementationFactory is not null
+                )
+            )
+            .ToList();
+        foreach (var descriptor in toRemove)
         {
             services.Remove(descriptor);
         }
 
-        services.AddDbContext<TContext>(options =>
+        // Register fresh options that use the shared in-memory SQLite connection
+        // WITHOUT resolving interceptors from DI (avoids circular dependency)
+        services.AddScoped(sp =>
         {
-            options.UseSqlite(_connection);
+            var builder = new DbContextOptionsBuilder<TContext>();
+            builder.UseSqlite(_connection);
+            builder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             if (useOpenIddict)
             {
-                options.UseOpenIddict();
+                builder.UseOpenIddict();
             }
+            return (DbContextOptions<TContext>)builder.Options;
         });
     }
 
@@ -181,8 +214,8 @@ public class TestAuthHandler(
 {
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        // Only authenticate if a Bearer token is present
-        if (!Request.Headers.ContainsKey("Authorization"))
+        // Authenticate only test requests that include explicit test claims.
+        if (!Request.Headers.ContainsKey("X-Test-Claims"))
         {
             return Task.FromResult(AuthenticateResult.NoResult());
         }

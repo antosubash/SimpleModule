@@ -153,6 +153,239 @@ internal static class SymbolDiscovery
             }
         }
 
+        // --- Dependency inference ---
+
+        // Step 1: Build module assembly map (assembly name → module name)
+        var moduleAssemblyMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var module in modules)
+        {
+            var metadataName = module.FullyQualifiedName.Replace("global::", "");
+            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+            if (typeSymbol is null)
+                continue;
+
+            var assemblyName = typeSymbol.ContainingAssembly.Name;
+            if (!moduleAssemblyMap.ContainsKey(assemblyName))
+                moduleAssemblyMap[assemblyName] = module.ModuleName;
+        }
+
+        // Step 2: Build contracts-to-module map
+        var contractsAssemblyMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var contractsAssemblySymbols = new Dictionary<string, IAssemblySymbol>(
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        foreach (var reference in compilation.References)
+        {
+            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
+                continue;
+
+            var asmName = asm.Name;
+            if (!asmName.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var baseName = asmName.Substring(0, asmName.Length - ".Contracts".Length);
+
+            // Try exact match on assembly name
+            if (moduleAssemblyMap.TryGetValue(baseName, out var moduleName))
+            {
+                contractsAssemblyMap[asmName] = moduleName;
+                contractsAssemblySymbols[asmName] = asm;
+                continue;
+            }
+
+            // Try matching last segment of baseName to module names (case-insensitive)
+            var lastDot = baseName.LastIndexOf('.');
+            var lastSegment = lastDot >= 0 ? baseName.Substring(lastDot + 1) : baseName;
+
+            foreach (var kvp in moduleAssemblyMap)
+            {
+                if (string.Equals(lastSegment, kvp.Value, StringComparison.OrdinalIgnoreCase))
+                {
+                    contractsAssemblyMap[asmName] = kvp.Value;
+                    contractsAssemblySymbols[asmName] = asm;
+                    break;
+                }
+            }
+        }
+
+        // Convention-based DTO discovery: all public types in *.Contracts assemblies
+        var noDtoAttrSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.NoDtoGenerationAttribute"
+        );
+        var eventInterfaceSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.Events.IEvent"
+        );
+        var existingDtoFqns = new HashSet<string>();
+        foreach (var d in dtoTypes)
+            existingDtoFqns.Add(d.FullyQualifiedName);
+
+        foreach (var kvp in contractsAssemblySymbols)
+        {
+            FindConventionDtoTypes(
+                kvp.Value.GlobalNamespace,
+                noDtoAttrSymbol,
+                eventInterfaceSymbol,
+                existingDtoFqns,
+                dtoTypes
+            );
+        }
+
+        // Step 3: Scan contract interfaces
+        var contractInterfaces = new List<ContractInterfaceInfoRecord>();
+        foreach (var kvp in contractsAssemblySymbols)
+        {
+            ScanContractInterfaces(kvp.Value.GlobalNamespace, kvp.Key, contractInterfaces);
+        }
+
+        // Step 3b: Find implementations of contract interfaces in module assemblies
+        var contractImplementations = new List<ContractImplementationInfo>();
+        foreach (var module in modules)
+        {
+            var metadataName = module.FullyQualifiedName.Replace("global::", "");
+            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+            if (typeSymbol is null)
+                continue;
+
+            var moduleAssembly = typeSymbol.ContainingAssembly;
+
+            // Find which contracts assembly this module owns
+            var expectedContractsAsm = moduleAssembly.Name + ".Contracts";
+            if (!contractsAssemblySymbols.ContainsKey(expectedContractsAsm))
+                continue;
+
+            // Get the interface FQNs from this module's contracts
+            var moduleContractInterfaceFqns = new HashSet<string>();
+            foreach (var ci in contractInterfaces)
+            {
+                if (ci.ContractsAssemblyName == expectedContractsAsm)
+                    moduleContractInterfaceFqns.Add(ci.InterfaceName);
+            }
+            if (moduleContractInterfaceFqns.Count == 0)
+                continue;
+
+            // Scan module assembly for implementations
+            FindContractImplementations(
+                moduleAssembly.GlobalNamespace,
+                moduleContractInterfaceFqns,
+                module.ModuleName,
+                compilation,
+                contractImplementations
+            );
+        }
+
+        // Step 3c: Find IModulePermissions implementors in module assemblies
+        var permissionClasses = new List<PermissionClassInfo>();
+        var modulePermissionsSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.Authorization.IModulePermissions"
+        );
+        if (modulePermissionsSymbol is not null)
+        {
+            foreach (var module in modules)
+            {
+                var metadataName = module.FullyQualifiedName.Replace("global::", "");
+                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+                if (typeSymbol is null)
+                    continue;
+
+                var moduleAssembly = typeSymbol.ContainingAssembly;
+                FindPermissionClasses(
+                    moduleAssembly.GlobalNamespace,
+                    modulePermissionsSymbol,
+                    module.ModuleName,
+                    permissionClasses
+                );
+            }
+        }
+
+        // Step 3d: Find ISaveChangesInterceptor implementors in module assemblies
+        var interceptors = new List<InterceptorInfo>();
+        var saveChangesInterceptorSymbol = compilation.GetTypeByMetadataName(
+            "Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor"
+        );
+        if (saveChangesInterceptorSymbol is not null)
+        {
+            var interceptorScannedAssemblies = new HashSet<IAssemblySymbol>(
+                SymbolEqualityComparer.Default
+            );
+            foreach (var module in modules)
+            {
+                var metadataName = module.FullyQualifiedName.Replace("global::", "");
+                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+                if (typeSymbol is null)
+                    continue;
+
+                var moduleAssembly = typeSymbol.ContainingAssembly;
+                if (!interceptorScannedAssemblies.Add(moduleAssembly))
+                    continue;
+
+                FindInterceptorTypes(
+                    moduleAssembly.GlobalNamespace,
+                    saveChangesInterceptorSymbol,
+                    module.ModuleName,
+                    interceptors
+                );
+            }
+        }
+
+        // Step 4: Detect dependencies and illegal references
+        var dependencies = new List<ModuleDependencyRecord>();
+        var illegalReferences = new List<IllegalModuleReferenceRecord>();
+
+        foreach (var module in modules)
+        {
+            var metadataName = module.FullyQualifiedName.Replace("global::", "");
+            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+            if (typeSymbol is null)
+                continue;
+
+            var moduleAssembly = typeSymbol.ContainingAssembly;
+            var thisModuleName = module.ModuleName;
+
+            foreach (var asmModule in moduleAssembly.Modules)
+            {
+                foreach (var referencedAsm in asmModule.ReferencedAssemblySymbols)
+                {
+                    var refName = referencedAsm.Name;
+
+                    // Check for illegal direct module-to-module reference
+                    if (
+                        moduleAssemblyMap.TryGetValue(refName, out var referencedModuleName)
+                        && !string.Equals(
+                            referencedModuleName,
+                            thisModuleName,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    {
+                        illegalReferences.Add(
+                            new IllegalModuleReferenceRecord(
+                                thisModuleName,
+                                moduleAssembly.Name,
+                                referencedModuleName,
+                                refName
+                            )
+                        );
+                    }
+
+                    // Check for dependency via contracts
+                    if (
+                        contractsAssemblyMap.TryGetValue(refName, out var depModuleName)
+                        && !string.Equals(
+                            depModuleName,
+                            thisModuleName,
+                            StringComparison.OrdinalIgnoreCase
+                        )
+                    )
+                    {
+                        dependencies.Add(
+                            new ModuleDependencyRecord(thisModuleName, depModuleName, refName)
+                        );
+                    }
+                }
+            }
+        }
+
         return new DiscoveryData(
             modules
                 .Select(m => new ModuleInfoRecord(
@@ -203,6 +436,39 @@ internal static class SymbolDiscovery
                 .ToImmutableArray(),
             entityConfigs
                 .Select(e => new EntityConfigInfoRecord(e.ConfigFqn, e.EntityFqn, e.ModuleName))
+                .ToImmutableArray(),
+            dependencies.ToImmutableArray(),
+            illegalReferences.ToImmutableArray(),
+            contractInterfaces.ToImmutableArray(),
+            contractImplementations
+                .Select(c => new ContractImplementationRecord(
+                    c.InterfaceFqn,
+                    c.ImplementationFqn,
+                    c.ModuleName,
+                    c.IsPublic,
+                    c.IsAbstract,
+                    c.DependsOnDbContext
+                ))
+                .ToImmutableArray(),
+            permissionClasses
+                .Select(p => new PermissionClassRecord(
+                    p.FullyQualifiedName,
+                    p.ModuleName,
+                    p.IsSealed,
+                    p.Fields.Select(f => new PermissionFieldRecord(
+                            f.FieldName,
+                            f.Value,
+                            f.IsConstString
+                        ))
+                        .ToImmutableArray()
+                ))
+                .ToImmutableArray(),
+            interceptors
+                .Select(i => new InterceptorInfoRecord(
+                    i.FullyQualifiedName,
+                    i.ModuleName,
+                    i.ConstructorParamTypeFqns.ToImmutableArray()
+                ))
                 .ToImmutableArray()
         );
     }
@@ -517,6 +783,41 @@ internal static class SymbolDiscovery
         return false;
     }
 
+    private static bool HasDbContextConstructorParam(INamedTypeSymbol typeSymbol)
+    {
+        foreach (var ctor in typeSymbol.Constructors)
+        {
+            if (ctor.DeclaredAccessibility != Accessibility.Public || ctor.IsStatic)
+                continue;
+
+            foreach (var param in ctor.Parameters)
+            {
+                var paramType = param.Type;
+                // Walk the base type chain to check for DbContext ancestry
+                var current = paramType.BaseType;
+                while (current != null)
+                {
+                    var baseFqn = current.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    if (
+                        baseFqn
+                        == "global::Microsoft.EntityFrameworkCore.DbContext"
+                        || baseFqn.StartsWith(
+                            "global::Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext",
+                            StringComparison.Ordinal
+                        )
+                    )
+                    {
+                        return true;
+                    }
+
+                    current = current.BaseType;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static string FindClosestModuleName(string typeFqn, List<ModuleInfo> modules)
     {
         // Match by longest shared namespace prefix between the type and each module class.
@@ -692,6 +993,323 @@ internal static class SymbolDiscovery
                         break;
                     }
                 }
+            }
+        }
+    }
+
+    private static void ScanContractInterfaces(
+        INamespaceSymbol namespaceSymbol,
+        string assemblyName,
+        List<ContractInterfaceInfoRecord> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                ScanContractInterfaces(childNs, assemblyName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Interface
+                && typeSymbol.DeclaredAccessibility == Accessibility.Public
+            )
+            {
+                var methodCount = 0;
+                foreach (var m in typeSymbol.GetMembers())
+                {
+                    if (m is IMethodSymbol ms && ms.MethodKind == MethodKind.Ordinary)
+                        methodCount++;
+                }
+
+                results.Add(
+                    new ContractInterfaceInfoRecord(
+                        assemblyName,
+                        typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        methodCount
+                    )
+                );
+            }
+        }
+    }
+
+    private static void FindContractImplementations(
+        INamespaceSymbol namespaceSymbol,
+        HashSet<string> contractInterfaceFqns,
+        string moduleName,
+        Compilation compilation,
+        List<ContractImplementationInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindContractImplementations(
+                    childNs,
+                    contractInterfaceFqns,
+                    moduleName,
+                    compilation,
+                    results
+                );
+            }
+            else if (member is INamedTypeSymbol typeSymbol && typeSymbol.TypeKind == TypeKind.Class)
+            {
+                foreach (var iface in typeSymbol.AllInterfaces)
+                {
+                    var ifaceFqn = iface.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    if (contractInterfaceFqns.Contains(ifaceFqn))
+                    {
+                        results.Add(
+                            new ContractImplementationInfo
+                            {
+                                InterfaceFqn = ifaceFqn,
+                                ImplementationFqn = typeSymbol.ToDisplayString(
+                                    SymbolDisplayFormat.FullyQualifiedFormat
+                                ),
+                                ModuleName = moduleName,
+                                IsPublic = typeSymbol.DeclaredAccessibility == Accessibility.Public,
+                                IsAbstract = typeSymbol.IsAbstract,
+                                DependsOnDbContext = HasDbContextConstructorParam(typeSymbol),
+                            }
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private static void FindPermissionClasses(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol modulePermissionsSymbol,
+        string moduleName,
+        List<PermissionClassInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindPermissionClasses(childNs, modulePermissionsSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Class
+                && ImplementsInterface(typeSymbol, modulePermissionsSymbol)
+            )
+            {
+                var info = new PermissionClassInfo
+                {
+                    FullyQualifiedName = typeSymbol.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    ),
+                    ModuleName = moduleName,
+                    IsSealed = typeSymbol.IsSealed,
+                };
+
+                // Collect public const string fields
+                foreach (var m in typeSymbol.GetMembers())
+                {
+                    if (
+                        m is IFieldSymbol field
+                        && field.DeclaredAccessibility == Accessibility.Public
+                    )
+                    {
+                        info.Fields.Add(
+                            new PermissionFieldInfo
+                            {
+                                FieldName = field.Name,
+                                Value =
+                                    field.HasConstantValue && field.ConstantValue is string s
+                                        ? s
+                                        : "",
+                                IsConstString =
+                                    field.IsConst
+                                    && field.Type.SpecialType == SpecialType.System_String,
+                            }
+                        );
+                    }
+                }
+
+                results.Add(info);
+            }
+        }
+    }
+
+    private static void FindInterceptorTypes(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol saveChangesInterceptorSymbol,
+        string moduleName,
+        List<InterceptorInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindInterceptorTypes(childNs, saveChangesInterceptorSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Class
+                && !typeSymbol.IsAbstract
+                && !typeSymbol.IsStatic
+                && ImplementsInterface(typeSymbol, saveChangesInterceptorSymbol)
+            )
+            {
+                var info = new InterceptorInfo
+                {
+                    FullyQualifiedName = typeSymbol.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    ),
+                    ModuleName = moduleName,
+                };
+
+                // Extract constructor parameter type FQNs
+                foreach (var ctor in typeSymbol.Constructors)
+                {
+                    if (ctor.DeclaredAccessibility != Accessibility.Public)
+                        continue;
+
+                    foreach (var param in ctor.Parameters)
+                    {
+                        info.ConstructorParamTypeFqns.Add(
+                            param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                        );
+                    }
+
+                    // Only process the first public constructor
+                    break;
+                }
+
+                results.Add(info);
+            }
+        }
+    }
+
+    private static void FindConventionDtoTypes(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol? noDtoAttrSymbol,
+        INamedTypeSymbol? eventInterfaceSymbol,
+        HashSet<string> existingFqns,
+        List<DtoTypeInfo> dtoTypes
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindConventionDtoTypes(
+                    childNs,
+                    noDtoAttrSymbol,
+                    eventInterfaceSymbol,
+                    existingFqns,
+                    dtoTypes
+                );
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.DeclaredAccessibility == Accessibility.Public
+                && !typeSymbol.IsStatic
+                && typeSymbol.TypeKind != TypeKind.Interface
+                && typeSymbol.TypeKind != TypeKind.Enum
+                && typeSymbol.TypeKind != TypeKind.Delegate
+            )
+            {
+                var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+                // Skip if already found via [Dto]
+                if (existingFqns.Contains(fqn))
+                    continue;
+
+                // Skip if [NoDtoGeneration]
+                if (noDtoAttrSymbol is not null)
+                {
+                    var hasNoDtoAttr = false;
+                    foreach (var attr in typeSymbol.GetAttributes())
+                    {
+                        if (
+                            SymbolEqualityComparer.Default.Equals(
+                                attr.AttributeClass,
+                                noDtoAttrSymbol
+                            )
+                        )
+                        {
+                            hasNoDtoAttr = true;
+                            break;
+                        }
+                    }
+                    if (hasNoDtoAttr)
+                        continue;
+                }
+
+                // Skip types that implement IEvent (events are not DTOs)
+                if (eventInterfaceSymbol is not null)
+                {
+                    var isEvent = false;
+                    foreach (var iface in typeSymbol.AllInterfaces)
+                    {
+                        if (SymbolEqualityComparer.Default.Equals(iface, eventInterfaceSymbol))
+                        {
+                            isEvent = true;
+                            break;
+                        }
+                    }
+                    if (isEvent)
+                        continue;
+                }
+
+                // Skip generic type definitions (open generics like PagedResult<T>)
+                if (typeSymbol.IsGenericType)
+                    continue;
+
+                // Skip Vogen-generated infrastructure types
+                if (
+                    typeSymbol.Name == "VogenTypesFactory"
+                    || fqn.StartsWith("global::Vogen", StringComparison.Ordinal)
+                )
+                    continue;
+
+                var safeName = fqn.Replace("global::", "").Replace(".", "_");
+                var properties = new List<DtoPropertyInfo>();
+                foreach (var m in typeSymbol.GetMembers())
+                {
+                    if (
+                        m is IPropertySymbol prop
+                        && prop.DeclaredAccessibility == Accessibility.Public
+                        && !prop.IsStatic
+                        && !prop.IsIndexer
+                        && prop.GetMethod is not null
+                    )
+                    {
+                        var resolvedType = ResolveUnderlyingType(prop.Type);
+                        var actualType = prop.Type.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        );
+                        properties.Add(
+                            new DtoPropertyInfo
+                            {
+                                Name = prop.Name,
+                                TypeFqn = actualType,
+                                UnderlyingTypeFqn =
+                                    resolvedType != actualType ? resolvedType : null,
+                                HasSetter =
+                                    prop.SetMethod is not null
+                                    && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                            }
+                        );
+                    }
+                }
+
+                existingFqns.Add(fqn);
+                dtoTypes.Add(
+                    new DtoTypeInfo
+                    {
+                        FullyQualifiedName = fqn,
+                        SafeName = safeName,
+                        Properties = properties,
+                    }
+                );
             }
         }
     }
