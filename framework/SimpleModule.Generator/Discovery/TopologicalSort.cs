@@ -200,10 +200,11 @@ internal static class TopologicalSort
     }
 
     /// <summary>
-    /// Convenience: sorts DiscoveryData.Modules using DiscoveryData.Dependencies.
-    /// Returns modules in dependency order. Falls back to original order on cycle.
+    /// Sorts DiscoveryData.Modules using DiscoveryData.Dependencies.
+    /// Returns both sorted modules and the raw SortResult for phase/dependency info.
+    /// Falls back to original order on cycle.
     /// </summary>
-    internal static ImmutableArray<ModuleInfoRecord> SortModules(DiscoveryData data)
+    internal static (ImmutableArray<ModuleInfoRecord> Modules, SortResult Result) SortModulesWithResult(DiscoveryData data)
     {
         var moduleNames = data.Modules.Select(m => m.ModuleName).ToImmutableArray();
         var depEdges = data
@@ -213,7 +214,7 @@ internal static class TopologicalSort
         var sortResult = Sort(moduleNames, depEdges);
 
         if (!sortResult.IsSuccess)
-            return data.Modules;
+            return (data.Modules, sortResult);
 
         var moduleByName = new Dictionary<string, ModuleInfoRecord>();
         foreach (var m in data.Modules)
@@ -226,6 +227,12 @@ internal static class TopologicalSort
                 sorted.Add(m);
         }
 
-        return sorted.ToImmutableArray();
+        return (sorted.ToImmutableArray(), sortResult);
     }
+
+    /// <summary>
+    /// Convenience overload: returns only sorted modules.
+    /// </summary>
+    internal static ImmutableArray<ModuleInfoRecord> SortModules(DiscoveryData data) =>
+        SortModulesWithResult(data).Modules;
 }

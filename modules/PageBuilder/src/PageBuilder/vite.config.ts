@@ -16,7 +16,14 @@ export default defineConfig({
     outDir: 'wwwroot',
     emptyOutDir: false,
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@inertiajs/react'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        '@inertiajs/react',
+        '@measured/puck',
+        '@measured/puck/rsc',
+      ],
       output: {
         assetFileNames: 'pagebuilder[extname]',
       },

@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -10,36 +10,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
 {
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
-        // Topological sort for dependency ordering
-        var moduleNames = data.Modules.Select(m => m.ModuleName).ToImmutableArray();
-        var depEdges = data
-            .Dependencies.Select(d => (d.ModuleName, d.DependsOnModuleName))
-            .ToImmutableArray();
-        var sortResult = TopologicalSort.Sort(moduleNames, depEdges);
-
-        // Reorder modules using sort result (avoids calling Sort twice)
-        ImmutableArray<ModuleInfoRecord> sortedModules;
-        if (sortResult.IsSuccess)
-        {
-            var moduleByName = new System.Collections.Generic.Dictionary<
-                string,
-                ModuleInfoRecord
-            >();
-            foreach (var m in data.Modules)
-                moduleByName[m.ModuleName] = m;
-
-            var sorted = new System.Collections.Generic.List<ModuleInfoRecord>();
-            foreach (var name in sortResult.Sorted)
-            {
-                if (moduleByName.TryGetValue(name, out var m))
-                    sorted.Add(m);
-            }
-            sortedModules = sorted.ToImmutableArray();
-        }
-        else
-        {
-            sortedModules = data.Modules;
-        }
+        var (sortedModules, sortResult) = TopologicalSort.SortModulesWithResult(data);
         var hasDtoTypes = data.DtoTypes.Length > 0;
 
         var sb = new StringBuilder();
@@ -107,10 +78,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("        // Auto-discovered contract implementations");
 
         // Group by interface FQN and only emit if exactly one valid implementation
-        var implsByInterface = new System.Collections.Generic.Dictionary<
-            string,
-            System.Collections.Generic.List<ContractImplementationRecord>
-        >();
+        var implsByInterface = new Dictionary<string, List<ContractImplementationRecord>>();
         foreach (var impl in data.ContractImplementations)
         {
             if (!impl.IsPublic || impl.IsAbstract)
@@ -118,7 +86,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
 
             if (!implsByInterface.TryGetValue(impl.InterfaceFqn, out var list))
             {
-                list = new System.Collections.Generic.List<ContractImplementationRecord>();
+                list = new List<ContractImplementationRecord>();
                 implsByInterface[impl.InterfaceFqn] = list;
             }
             list.Add(impl);

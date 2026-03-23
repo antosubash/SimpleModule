@@ -224,7 +224,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         EmptyModuleName,
                         Location.None,
-                        module.FullyQualifiedName.Replace("global::", "")
+                        Strip(module.FullyQualifiedName)
                     )
                 );
             }
@@ -251,9 +251,9 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         MultipleIdentityDbContexts,
                         Location.None,
-                        firstIdentity.Value.FullyQualifiedName.Replace("global::", ""),
+                        Strip(firstIdentity.Value.FullyQualifiedName),
                         firstIdentity.Value.ModuleName,
-                        ctx.FullyQualifiedName.Replace("global::", ""),
+                        Strip(ctx.FullyQualifiedName),
                         ctx.ModuleName
                     )
                 );
@@ -269,7 +269,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         IdentityDbContextBadTypeArgs,
                         Location.None,
-                        ctx.FullyQualifiedName.Replace("global::", ""),
+                        Strip(ctx.FullyQualifiedName),
                         ctx.ModuleName,
                         0
                     )
@@ -278,7 +278,7 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0006: Entity config for entity not in any DbSet
-        var allEntityFqns = new System.Collections.Generic.HashSet<string>();
+        var allEntityFqns = new HashSet<string>();
         foreach (var ctx in data.DbContexts)
         {
             foreach (var dbSet in ctx.DbSets)
@@ -293,8 +293,8 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         EntityConfigForMissingEntity,
                         Location.None,
-                        config.EntityFqn.Replace("global::", ""),
-                        config.ConfigFqn.Replace("global::", ""),
+                        Strip(config.EntityFqn),
+                        Strip(config.ConfigFqn),
                         config.ModuleName
                     )
                 );
@@ -302,7 +302,7 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0007: Duplicate EntityTypeConfiguration for same entity
-        var entityConfigOwners = new System.Collections.Generic.Dictionary<string, string>();
+        var entityConfigOwners = new Dictionary<string, string>();
         foreach (var config in data.EntityConfigs)
         {
             if (entityConfigOwners.TryGetValue(config.EntityFqn, out var existing))
@@ -311,31 +311,20 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         DuplicateEntityConfiguration,
                         Location.None,
-                        config.EntityFqn.Replace("global::", ""),
+                        Strip(config.EntityFqn),
                         existing,
-                        config.ConfigFqn.Replace("global::", "")
+                        Strip(config.ConfigFqn)
                     )
                 );
             }
             else
             {
-                entityConfigOwners[config.EntityFqn] = config.ConfigFqn.Replace("global::", "");
+                entityConfigOwners[config.EntityFqn] = Strip(config.ConfigFqn);
             }
         }
 
         // SM0010: Circular module dependency
-        var moduleNames = new List<string>();
-        foreach (var m in data.Modules)
-            moduleNames.Add(m.ModuleName);
-
-        var depEdges = new List<(string From, string To)>();
-        foreach (var d in data.Dependencies)
-            depEdges.Add((d.ModuleName, d.DependsOnModuleName));
-
-        var sortResult = TopologicalSort.Sort(
-            moduleNames.ToImmutableArray(),
-            depEdges.ToImmutableArray()
-        );
+        var (_, sortResult) = TopologicalSort.SortModulesWithResult(data);
 
         if (!sortResult.IsSuccess && sortResult.Cycle.Length > 0)
         {
@@ -347,12 +336,16 @@ internal sealed class DiagnosticEmitter : IEmitter
             var cycleStr = string.Join(" \u2192 ", cycleNodes);
 
             // Build "how it happened" string
+            var cycleSet = new HashSet<string>();
+            foreach (var c in sortResult.Cycle)
+                cycleSet.Add(c);
+
             var howParts = new List<string>();
             foreach (var dep in data.Dependencies)
             {
                 if (
-                    sortResult.Cycle.Contains(dep.ModuleName)
-                    && sortResult.Cycle.Contains(dep.DependsOnModuleName)
+                    cycleSet.Contains(dep.ModuleName)
+                    && cycleSet.Contains(dep.DependsOnModuleName)
                 )
                 {
                     howParts.Add(
@@ -401,7 +394,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         ContractInterfaceTooLargeError,
                         Location.None,
-                        iface.InterfaceName.Replace("global::", ""),
+                        Strip(iface.InterfaceName),
                         iface.MethodCount,
                         shortName
                     )
@@ -414,7 +407,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         ContractInterfaceTooLargeWarning,
                         Location.None,
-                        iface.InterfaceName.Replace("global::", ""),
+                        Strip(iface.InterfaceName),
                         iface.MethodCount,
                         shortName
                     )
@@ -423,12 +416,12 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0014: Missing contract interfaces in referenced contracts assemblies
-        var contractsWithInterfaces = new System.Collections.Generic.HashSet<string>();
+        var contractsWithInterfaces = new HashSet<string>();
         foreach (var iface in data.ContractInterfaces)
             contractsWithInterfaces.Add(iface.ContractsAssemblyName);
 
         // Deduplicate: only report once per (module, contracts assembly) pair
-        var reported = new System.Collections.Generic.HashSet<string>();
+        var reported = new HashSet<string>();
         foreach (var dep in data.Dependencies)
         {
             var key = dep.ModuleName + "|" + dep.ContractsAssemblyName;
@@ -446,29 +439,13 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0025/SM0026/SM0028/SM0029: Contract implementation diagnostics
-        // Build a map from contracts assembly name to module name
-        var contractsAsmToModule = new System.Collections.Generic.Dictionary<string, string>();
-        foreach (var dep in data.Dependencies)
-        {
-            if (!contractsAsmToModule.ContainsKey(dep.ContractsAssemblyName))
-                contractsAsmToModule[dep.ContractsAssemblyName] = dep.DependsOnModuleName;
-        }
-        // Also map from module implementations
-        foreach (var impl in data.ContractImplementations)
-        {
-            // The implementation's module is the one that should have the impl
-        }
-
         // Group all implementations by interface FQN
-        var implsByInterface = new System.Collections.Generic.Dictionary<
-            string,
-            System.Collections.Generic.List<ContractImplementationRecord>
-        >();
+        var implsByInterface = new Dictionary<string, List<ContractImplementationRecord>>();
         foreach (var impl in data.ContractImplementations)
         {
             if (!implsByInterface.TryGetValue(impl.InterfaceFqn, out var list))
             {
-                list = new System.Collections.Generic.List<ContractImplementationRecord>();
+                list = new List<ContractImplementationRecord>();
                 implsByInterface[impl.InterfaceFqn] = list;
             }
             list.Add(impl);
@@ -484,8 +461,8 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         ContractImplementationNotPublic,
                         Location.None,
-                        impl.ImplementationFqn.Replace("global::", ""),
-                        impl.InterfaceFqn.Replace("global::", "")
+                        Strip(impl.ImplementationFqn),
+                        Strip(impl.InterfaceFqn)
                     )
                 );
             }
@@ -496,8 +473,8 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         ContractImplementationIsAbstract,
                         Location.None,
-                        impl.ImplementationFqn.Replace("global::", ""),
-                        impl.InterfaceFqn.Replace("global::", "")
+                        Strip(impl.ImplementationFqn),
+                        Strip(impl.InterfaceFqn)
                     )
                 );
             }
@@ -517,7 +494,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         NoContractImplementation,
                         Location.None,
-                        iface.InterfaceName.Replace("global::", ""),
+                        Strip(iface.InterfaceName),
                         moduleName
                     )
                 );
@@ -527,7 +504,7 @@ internal sealed class DiagnosticEmitter : IEmitter
         // SM0026: Multiple valid implementations for the same interface
         foreach (var kvp in implsByInterface)
         {
-            var validImpls = new System.Collections.Generic.List<ContractImplementationRecord>();
+            var validImpls = new List<ContractImplementationRecord>();
             foreach (var impl in kvp.Value)
             {
                 if (impl.IsPublic && !impl.IsAbstract)
@@ -536,15 +513,15 @@ internal sealed class DiagnosticEmitter : IEmitter
 
             if (validImpls.Count > 1)
             {
-                var names = new System.Collections.Generic.List<string>();
+                var names = new List<string>();
                 foreach (var impl in validImpls)
-                    names.Add(impl.ImplementationFqn.Replace("global::", ""));
+                    names.Add(Strip(impl.ImplementationFqn));
 
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         MultipleContractImplementations,
                         Location.None,
-                        kvp.Key.Replace("global::", ""),
+                        Strip(kvp.Key),
                         validImpls[0].ModuleName,
                         string.Join(", ", names)
                     )
@@ -554,19 +531,17 @@ internal sealed class DiagnosticEmitter : IEmitter
 
         // SM0027/SM0031/SM0032/SM0033/SM0034: Permission diagnostics
         // Track permission values for duplicate detection (value -> class FQN)
-        var permissionValueOwners = new System.Collections.Generic.Dictionary<string, string>();
+        var permissionValueOwners = new Dictionary<string, string>();
 
         foreach (var perm in data.PermissionClasses)
         {
+            var permCleanName = Strip(perm.FullyQualifiedName);
+
             // SM0032: Not sealed
             if (!perm.IsSealed)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        PermissionClassNotSealed,
-                        Location.None,
-                        perm.FullyQualifiedName.Replace("global::", "")
-                    )
+                    Diagnostic.Create(PermissionClassNotSealed, Location.None, permCleanName)
                 );
             }
 
@@ -579,7 +554,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                         Diagnostic.Create(
                             PermissionFieldNotConstString,
                             Location.None,
-                            perm.FullyQualifiedName.Replace("global::", ""),
+                            permCleanName,
                             field.FieldName
                         )
                     );
@@ -600,7 +575,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                             PermissionValueBadPattern,
                             Location.None,
                             field.Value,
-                            perm.FullyQualifiedName.Replace("global::", "")
+                            permCleanName
                         )
                     );
                 }
@@ -631,23 +606,20 @@ internal sealed class DiagnosticEmitter : IEmitter
                             Location.None,
                             field.Value,
                             existingOwner,
-                            perm.FullyQualifiedName.Replace("global::", "")
+                            permCleanName
                         )
                     );
                 }
                 else
                 {
-                    permissionValueOwners[field.Value] = perm.FullyQualifiedName.Replace(
-                        "global::",
-                        ""
-                    );
+                    permissionValueOwners[field.Value] = permCleanName;
                 }
             }
         }
 
         // SM0035: DTO type in contracts with no public properties
         // Exclude permission classes — they only have const string fields, not properties
-        var permissionClassFqns = new System.Collections.Generic.HashSet<string>();
+        var permissionClassFqns = new HashSet<string>();
         foreach (var perm in data.PermissionClasses)
             permissionClassFqns.Add(perm.FullyQualifiedName);
 
@@ -660,7 +632,7 @@ internal sealed class DiagnosticEmitter : IEmitter
             )
             {
                 // Extract assembly/namespace context from FQN
-                var fqn = dto.FullyQualifiedName.Replace("global::", "");
+                var fqn = Strip(dto.FullyQualifiedName);
                 var contractsIdx = fqn.IndexOf(".Contracts.", System.StringComparison.Ordinal);
                 var contractsAsm =
                     contractsIdx >= 0 ? fqn.Substring(0, contractsIdx + ".Contracts".Length) : fqn;
@@ -683,7 +655,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     Diagnostic.Create(
                         InfrastructureTypeInContracts,
                         Location.None,
-                        dto.FullyQualifiedName.Replace("global::", "")
+                        Strip(dto.FullyQualifiedName)
                     )
                 );
             }
@@ -702,9 +674,9 @@ internal sealed class DiagnosticEmitter : IEmitter
                             Diagnostic.Create(
                                 InterceptorDependsOnDbContext,
                                 Location.None,
-                                interceptor.FullyQualifiedName.Replace("global::", ""),
+                                Strip(interceptor.FullyQualifiedName),
                                 interceptor.ModuleName,
-                                paramFqn.Replace("global::", "")
+                                Strip(paramFqn)
                             )
                         );
                     }
@@ -713,9 +685,11 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
     }
 
+    private static string Strip(string fqn) => TypeMappingHelpers.StripGlobalPrefix(fqn);
+
     private static string ExtractShortName(string interfaceName)
     {
-        var name = interfaceName.Replace("global::", "");
+        var name = Strip(interfaceName);
         if (name.Contains("."))
             name = name.Substring(name.LastIndexOf('.') + 1);
         if (name.StartsWith("I", System.StringComparison.Ordinal) && name.Length > 1)
