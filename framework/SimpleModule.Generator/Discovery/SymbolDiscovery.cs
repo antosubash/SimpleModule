@@ -46,15 +46,23 @@ internal static class SymbolDiscovery
         if (modules.Count == 0)
             return DiscoveryData.Empty;
 
+        // Resolve each module's type symbol once — avoids repeated GetTypeByMetadataName calls.
+        var moduleSymbols = new Dictionary<string, INamedTypeSymbol>();
+        foreach (var module in modules)
+        {
+            var metadataName = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
+            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
+            if (typeSymbol is not null)
+                moduleSymbols[module.FullyQualifiedName] = typeSymbol;
+        }
+
         // Discover IEndpoint implementors per module assembly.
         // Classification is by interface type: IViewEndpoint -> view, IEndpoint -> API.
         if (endpointInterfaceSymbol is not null)
         {
             foreach (var module in modules)
             {
-                var metadataName = module.FullyQualifiedName.Replace("global::", "");
-                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-                if (typeSymbol is null)
+                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                     continue;
 
                 var assembly = typeSymbol.ContainingAssembly;
@@ -76,9 +84,7 @@ internal static class SymbolDiscovery
         var scannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
         foreach (var module in modules)
         {
-            var metadataName = module.FullyQualifiedName.Replace("global::", "");
-            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-            if (typeSymbol is null)
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                 continue;
 
             var assembly = typeSymbol.ContainingAssembly;
@@ -94,14 +100,14 @@ internal static class SymbolDiscovery
             // Match each DbContext to the module whose namespace is closest
             foreach (var ctx in rawDbContexts)
             {
-                var ctxNs = ctx.FullyQualifiedName.Replace("global::", "");
+                var ctxNs = TypeMappingHelpers.StripGlobalPrefix(ctx.FullyQualifiedName);
                 ctx.ModuleName = FindClosestModuleName(ctxNs, modules);
                 dbContexts.Add(ctx);
             }
 
             foreach (var cfg in rawEntityConfigs)
             {
-                var cfgNs = cfg.ConfigFqn.Replace("global::", "");
+                var cfgNs = TypeMappingHelpers.StripGlobalPrefix(cfg.ConfigFqn);
                 cfg.ModuleName = FindClosestModuleName(cfgNs, modules);
                 entityConfigs.Add(cfg);
             }
@@ -143,10 +149,8 @@ internal static class SymbolDiscovery
 
             foreach (var module in modules)
             {
-                var metadataName = module.FullyQualifiedName.Replace("global::", "");
-                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
                 if (
-                    typeSymbol is not null
+                    moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol)
                     && assembliesWithComponents.Contains(typeSymbol.ContainingAssembly)
                 )
                     module.HasRazorComponents = true;
@@ -159,9 +163,7 @@ internal static class SymbolDiscovery
         var moduleAssemblyMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var module in modules)
         {
-            var metadataName = module.FullyQualifiedName.Replace("global::", "");
-            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-            if (typeSymbol is null)
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                 continue;
 
             var assemblyName = typeSymbol.ContainingAssembly.Name;
@@ -242,9 +244,7 @@ internal static class SymbolDiscovery
         var contractImplementations = new List<ContractImplementationInfo>();
         foreach (var module in modules)
         {
-            var metadataName = module.FullyQualifiedName.Replace("global::", "");
-            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-            if (typeSymbol is null)
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                 continue;
 
             var moduleAssembly = typeSymbol.ContainingAssembly;
@@ -283,9 +283,7 @@ internal static class SymbolDiscovery
         {
             foreach (var module in modules)
             {
-                var metadataName = module.FullyQualifiedName.Replace("global::", "");
-                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-                if (typeSymbol is null)
+                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                     continue;
 
                 var moduleAssembly = typeSymbol.ContainingAssembly;
@@ -310,9 +308,7 @@ internal static class SymbolDiscovery
             );
             foreach (var module in modules)
             {
-                var metadataName = module.FullyQualifiedName.Replace("global::", "");
-                var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-                if (typeSymbol is null)
+                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                     continue;
 
                 var moduleAssembly = typeSymbol.ContainingAssembly;
@@ -334,9 +330,7 @@ internal static class SymbolDiscovery
 
         foreach (var module in modules)
         {
-            var metadataName = module.FullyQualifiedName.Replace("global::", "");
-            var typeSymbol = compilation.GetTypeByMetadataName(metadataName);
-            if (typeSymbol is null)
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                 continue;
 
             var moduleAssembly = typeSymbol.ContainingAssembly;
@@ -702,45 +696,14 @@ internal static class SymbolDiscovery
                         var fqn = typeSymbol.ToDisplayString(
                             SymbolDisplayFormat.FullyQualifiedFormat
                         );
-                        var safeName = fqn.Replace("global::", "").Replace(".", "_");
-
-                        var properties = new List<DtoPropertyInfo>();
-                        foreach (var m in typeSymbol.GetMembers())
-                        {
-                            if (
-                                m is IPropertySymbol prop
-                                && prop.DeclaredAccessibility == Accessibility.Public
-                                && !prop.IsStatic
-                                && !prop.IsIndexer
-                                && prop.GetMethod is not null
-                            )
-                            {
-                                var resolvedType = ResolveUnderlyingType(prop.Type);
-                                var actualType = prop.Type.ToDisplayString(
-                                    SymbolDisplayFormat.FullyQualifiedFormat
-                                );
-                                properties.Add(
-                                    new DtoPropertyInfo
-                                    {
-                                        Name = prop.Name,
-                                        TypeFqn = actualType,
-                                        UnderlyingTypeFqn =
-                                            resolvedType != actualType ? resolvedType : null,
-                                        HasSetter =
-                                            prop.SetMethod is not null
-                                            && prop.SetMethod.DeclaredAccessibility
-                                                == Accessibility.Public,
-                                    }
-                                );
-                            }
-                        }
+                        var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
                         dtoTypes.Add(
                             new DtoTypeInfo
                             {
                                 FullyQualifiedName = fqn,
                                 SafeName = safeName,
-                                Properties = properties,
+                                Properties = ExtractDtoProperties(typeSymbol),
                             }
                         );
                         break;
@@ -825,7 +788,7 @@ internal static class SymbolDiscovery
         var bestLength = -1;
         foreach (var module in modules)
         {
-            var moduleFqn = module.FullyQualifiedName.Replace("global::", "");
+            var moduleFqn = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
             var moduleNs = moduleFqn.Contains(".")
                 ? moduleFqn.Substring(0, moduleFqn.LastIndexOf('.'))
                 : "";
@@ -1270,36 +1233,7 @@ internal static class SymbolDiscovery
                 )
                     continue;
 
-                var safeName = fqn.Replace("global::", "").Replace(".", "_");
-                var properties = new List<DtoPropertyInfo>();
-                foreach (var m in typeSymbol.GetMembers())
-                {
-                    if (
-                        m is IPropertySymbol prop
-                        && prop.DeclaredAccessibility == Accessibility.Public
-                        && !prop.IsStatic
-                        && !prop.IsIndexer
-                        && prop.GetMethod is not null
-                    )
-                    {
-                        var resolvedType = ResolveUnderlyingType(prop.Type);
-                        var actualType = prop.Type.ToDisplayString(
-                            SymbolDisplayFormat.FullyQualifiedFormat
-                        );
-                        properties.Add(
-                            new DtoPropertyInfo
-                            {
-                                Name = prop.Name,
-                                TypeFqn = actualType,
-                                UnderlyingTypeFqn =
-                                    resolvedType != actualType ? resolvedType : null,
-                                HasSetter =
-                                    prop.SetMethod is not null
-                                    && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
-                            }
-                        );
-                    }
-                }
+                var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
                 existingFqns.Add(fqn);
                 dtoTypes.Add(
@@ -1307,11 +1241,46 @@ internal static class SymbolDiscovery
                     {
                         FullyQualifiedName = fqn,
                         SafeName = safeName,
-                        Properties = properties,
+                        Properties = ExtractDtoProperties(typeSymbol),
                     }
                 );
             }
         }
+    }
+
+    private static List<DtoPropertyInfo> ExtractDtoProperties(INamedTypeSymbol typeSymbol)
+    {
+        var properties = new List<DtoPropertyInfo>();
+        foreach (var m in typeSymbol.GetMembers())
+        {
+            if (
+                m is IPropertySymbol prop
+                && prop.DeclaredAccessibility == Accessibility.Public
+                && !prop.IsStatic
+                && !prop.IsIndexer
+                && prop.GetMethod is not null
+            )
+            {
+                var resolvedType = ResolveUnderlyingType(prop.Type);
+                var actualType = prop.Type.ToDisplayString(
+                    SymbolDisplayFormat.FullyQualifiedFormat
+                );
+                properties.Add(
+                    new DtoPropertyInfo
+                    {
+                        Name = prop.Name,
+                        TypeFqn = actualType,
+                        UnderlyingTypeFqn =
+                            resolvedType != actualType ? resolvedType : null,
+                        HasSetter =
+                            prop.SetMethod is not null
+                            && prop.SetMethod.DeclaredAccessibility
+                                == Accessibility.Public,
+                    }
+                );
+            }
+        }
+        return properties;
     }
 
     /// <summary>

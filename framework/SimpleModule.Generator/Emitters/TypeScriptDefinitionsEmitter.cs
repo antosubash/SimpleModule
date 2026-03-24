@@ -21,7 +21,7 @@ internal sealed class TypeScriptDefinitionsEmitter : IEmitter
             var shortName = typeName.Contains(".")
                 ? typeName.Substring(typeName.LastIndexOf('.') + 1)
                 : typeName;
-            shortName = shortName.Replace("global::", "");
+            shortName = TypeMappingHelpers.StripGlobalPrefix(shortName);
             knownDtoTypes[dto.FullyQualifiedName] = shortName;
         }
 
