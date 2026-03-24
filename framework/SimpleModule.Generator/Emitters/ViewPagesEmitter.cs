@@ -15,7 +15,7 @@ internal sealed class ViewPagesEmitter : IEmitter
                 continue;
 
             // Extract module name from FQN (e.g., "global::SimpleModule.Products.ProductsModule" -> "Products")
-            var fqn = module.FullyQualifiedName.Replace("global::", "");
+            var fqn = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
             var moduleName = fqn.Contains(".") ? fqn.Substring(fqn.LastIndexOf('.') + 1) : fqn;
             if (moduleName.EndsWith("Module", StringComparison.Ordinal))
                 moduleName = moduleName.Substring(0, moduleName.Length - "Module".Length);

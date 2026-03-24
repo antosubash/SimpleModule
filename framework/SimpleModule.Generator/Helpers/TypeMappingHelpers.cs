@@ -4,9 +4,12 @@ namespace SimpleModule.Generator;
 
 internal static class TypeMappingHelpers
 {
+    internal static string StripGlobalPrefix(string fqn) =>
+        fqn.Replace("global::", "");
+
     internal static string GetModuleFieldName(string fullyQualifiedName)
     {
-        var name = fullyQualifiedName.Replace("global::", "").Replace(".", "_");
+        var name = StripGlobalPrefix(fullyQualifiedName).Replace(".", "_");
         return $"s_{name}";
     }
 
@@ -15,7 +18,7 @@ internal static class TypeMappingHelpers
         System.Collections.Generic.Dictionary<string, string>? knownDtoTypes = null
     )
     {
-        var type = typeFqn.Replace("global::", "");
+        var type = StripGlobalPrefix(typeFqn);
 
         // Nullable<T> -> T | null
         if (
@@ -81,7 +84,7 @@ internal static class TypeMappingHelpers
     internal static string GetModuleNameFromFqn(string fqn)
     {
         // "global::SimpleModule.Products.Contracts.Product" -> "Products"
-        var name = fqn.Replace("global::", "");
+        var name = StripGlobalPrefix(fqn);
         var parts = name.Split('.');
         // Convention: SimpleModule.{ModuleName}.Contracts.{TypeName}
         // Return the second segment (module name)

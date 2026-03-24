@@ -84,9 +84,9 @@ internal sealed class HostDbContextEmitter : IEmitter
                             Location.None,
                             entry.PropertyName,
                             existing.ModuleName,
-                            existing.EntityFqn.Replace("global::", ""),
+                            TypeMappingHelpers.StripGlobalPrefix(existing.EntityFqn),
                             entry.ModuleName,
-                            entry.EntityFqn.Replace("global::", "")
+                            TypeMappingHelpers.StripGlobalPrefix(entry.EntityFqn)
                         )
                     );
                     hasDuplicates = true;
