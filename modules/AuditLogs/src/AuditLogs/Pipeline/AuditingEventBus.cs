@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
@@ -12,7 +13,8 @@ public sealed partial class AuditingEventBus(
     IEventBus inner,
     IAuditContext auditContext,
     AuditChannel channel,
-    ISettingsContracts? settings = null
+    ISettingsContracts? settings = null,
+    ILogger<AuditingEventBus>? logger = null
 ) : IEventBus
 {
     [GeneratedRegex(
@@ -23,6 +25,10 @@ public sealed partial class AuditingEventBus(
     public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
         where T : IEvent
     {
+        // Publish to inner event bus FIRST, before attempting audit
+        await inner.PublishAsync(@event, cancellationToken);
+
+        // Only audit on successful publish
         var enabled =
             settings is null
             || await settings.GetSettingAsync<bool>("auditlogs.capture.domain", SettingScope.System)
@@ -30,11 +36,26 @@ public sealed partial class AuditingEventBus(
 
         if (enabled)
         {
-            var entry = ExtractAuditEntry(@event);
-            channel.Enqueue(entry);
+            try
+            {
+                var entry = ExtractAuditEntry(@event);
+                channel.Enqueue(entry);
+            }
+            catch (OperationCanceledException)
+            {
+                // Don't log cancellation, just propagate
+                throw;
+            }
+#pragma warning disable CA1031
+            catch (Exception ex)
+            {
+                // Audit failures must never break primary operations
+                // We catch all exceptions because any failure during audit (channel, extraction, etc.)
+                // should be logged but not propagated to the caller
+                logger?.LogError(ex, "Failed to enqueue audit entry; audit will not be recorded");
+            }
+#pragma warning restore CA1031
         }
-
-        await inner.PublishAsync(@event, cancellationToken);
     }
 
     private AuditEntry ExtractAuditEntry<T>(T @event)

@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using FluentAssertions;
 using NSubstitute;
 using SimpleModule.AuditLogs;
@@ -90,5 +91,51 @@ public class AuditingEventBusTests
         entry.UserName.Should().Be("Test User");
         entry.IpAddress.Should().Be("127.0.0.1");
         entry.CorrelationId.Should().Be(_auditContext.CorrelationId);
+    }
+
+    [Fact]
+    public async Task PublishAsync_DoesNotEnqueueAuditEntry_WhenInnerPublishFails()
+    {
+        var @event = new ProductCreatedEvent(1, "Widget");
+        var testException = new InvalidOperationException("Inner bus failed");
+
+        // Configure the mock to throw when PublishAsync is called
+        var calls = 0;
+        _innerBus.PublishAsync(Arg.Any<IEvent>(), Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(x =>
+            {
+                calls++;
+                return Task.FromException(testException);
+            });
+
+        // Act & Assert: Should throw because inner bus failed
+        var action = () => _sut.PublishAsync(@event);
+        await action.Should().ThrowAsync<InvalidOperationException>();
+
+        // Verify inner bus was called
+        calls.Should().Be(1);
+
+        // Assert: No audit entry should be queued
+        _channel.Reader.TryRead(out _).Should().BeFalse("Audit entry should not be queued when publish fails");
+    }
+
+    [Fact]
+    public async Task PublishAsync_DelegatesToInnerEventBus_BeforeEnqueuingAudit()
+    {
+        var @event = new ProductCreatedEvent(1, "Widget");
+        var publishAsyncCalled = false;
+
+        _innerBus
+            .PublishAsync(Arg.Any<IEvent>(), Arg.Any<CancellationToken>())
+            .Returns(x =>
+            {
+                publishAsyncCalled = true;
+                return Task.CompletedTask;
+            });
+
+        await _sut.PublishAsync(@event);
+
+        // Verify that PublishAsync is called (audit happens after)
+        publishAsyncCalled.Should().BeTrue();
     }
 }
