@@ -42,7 +42,27 @@
 </html>
 
 @code {
-    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+    /// <summary>
+    /// Cache buster identifier to prevent cache desync in rolling deployments.
+    /// Checks DEPLOYMENT_VERSION environment variable first, falls back to assembly version.
+    /// This ensures all instances have the same cache buster value for cache coherence.
+    /// </summary>
+    private static readonly string CacheBuster = GetCacheBuster();
+
+    private static string GetCacheBuster()
+    {
+        var deploymentVersion = Environment.GetEnvironmentVariable("DEPLOYMENT_VERSION");
+        if (!string.IsNullOrEmpty(deploymentVersion))
+        {
+            return deploymentVersion;
+        }
+
+        var assemblyVersion = typeof(InertiaShell).Assembly
+            .GetName()
+            .Version
+            ?.ToString(3) ?? "1.0.0";
+        return assemblyVersion;
+    }
 
     [Parameter] public string PageJson { get; set; } = "";
     [Parameter] public Microsoft.AspNetCore.Http.HttpContext? HttpContext { get; set; }
