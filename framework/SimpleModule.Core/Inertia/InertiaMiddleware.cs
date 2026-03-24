@@ -5,6 +5,10 @@ namespace SimpleModule.Core.Inertia;
 
 public static class InertiaMiddleware
 {
+    private const string DeploymentVersionEnvVar = "DEPLOYMENT_VERSION";
+    private const int SemanticVersionFields = 3;
+    private const string DefaultVersion = "1.0.0";
+
     /// <summary>
     /// Inertia protocol version. Must match CacheBuster for 409 stale-version detection.
     /// Checks DEPLOYMENT_VERSION environment variable first, falls back to assembly version.
@@ -49,16 +53,18 @@ public static class InertiaMiddleware
 
     private static string GetVersion()
     {
-        var deploymentVersion = Environment.GetEnvironmentVariable("DEPLOYMENT_VERSION");
+        var deploymentVersion = Environment.GetEnvironmentVariable(DeploymentVersionEnvVar);
         if (!string.IsNullOrEmpty(deploymentVersion))
         {
             return deploymentVersion;
         }
 
+        // Fallback to assembly version (major.minor.patch)
+        // If assembly has no version, default to "1.0.0"
         var assemblyVersion = typeof(InertiaMiddleware).Assembly
             .GetName()
             .Version
-            ?.ToString(3) ?? "1";
+            ?.ToString(SemanticVersionFields) ?? DefaultVersion;
         return assemblyVersion;
     }
 

@@ -71,11 +71,10 @@ function findCSharpEndpoints(content) {
 
 /**
  * Extract all page keys from a TypeScript Pages/index.ts file
- * Pattern: '([^']+)'\s*:\s*(?:\(\)|import)
+ * Handles: 'key': () => import(...), 'key': import(...), "key": import(...), etc.
  * Ignores commented lines
  */
 function findTypeScriptPages(content) {
-  const pattern = /'([^']+)'\s*:\s*(?:\(\)|import)/g;
   const matches = new Set();
   const lines = content.split('\n');
 
@@ -84,6 +83,8 @@ function findTypeScriptPages(content) {
     const trimmed = line.trim();
     if (trimmed.startsWith('//')) continue;
 
+    // Match single or double quoted keys with various import syntaxes
+    const pattern = /['"`]([^'"`]+)['"`]\s*:\s*(?:\(\s*\)|(?:async\s*)?\(\s*\)\s*=>|import)/g;
     let match;
     while ((match = pattern.exec(line)) !== null) {
       matches.add(match[1]);
@@ -116,10 +117,14 @@ function validateModule(modulePath) {
   // Find all TS pages
   const pagesIndexPath = path.join(srcPath, 'Pages', 'index.ts');
   let tsPages = new Set();
+  let hasPages = false;
 
-  if (fs.existsSync(pagesIndexPath)) {
+  try {
     const content = fs.readFileSync(pagesIndexPath, 'utf-8');
     tsPages = findTypeScriptPages(content);
+    hasPages = true;
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err; // Re-throw non-file-not-found errors
   }
 
   // Compare
@@ -130,7 +135,7 @@ function validateModule(modulePath) {
 
   return {
     moduleName,
-    hasPages: fs.existsSync(pagesIndexPath),
+    hasPages,
     missing,
     extra,
     isValid: missing.length === 0 && extra.length === 0,
