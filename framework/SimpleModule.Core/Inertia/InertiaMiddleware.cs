@@ -5,7 +5,12 @@ namespace SimpleModule.Core.Inertia;
 
 public static class InertiaMiddleware
 {
-    public static string Version { get; set; } = "1";
+    /// <summary>
+    /// Inertia protocol version. Must match CacheBuster for 409 stale-version detection.
+    /// Checks DEPLOYMENT_VERSION environment variable first, falls back to assembly version.
+    /// This ensures rolling deployments consistently invalidate stale client caches.
+    /// </summary>
+    public static readonly string Version = GetVersion();
 
     public static IApplicationBuilder UseInertia(this IApplicationBuilder app)
     {
@@ -40,6 +45,21 @@ public static class InertiaMiddleware
                 }
             }
         );
+    }
+
+    private static string GetVersion()
+    {
+        var deploymentVersion = Environment.GetEnvironmentVariable("DEPLOYMENT_VERSION");
+        if (!string.IsNullOrEmpty(deploymentVersion))
+        {
+            return deploymentVersion;
+        }
+
+        var assemblyVersion = typeof(InertiaMiddleware).Assembly
+            .GetName()
+            .Version
+            ?.ToString(3) ?? "1";
+        return assemblyVersion;
     }
 
     private static string GetEncodedUrl(this HttpRequest request)
