@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "scripts": {
     "build": "vite build",
-    "watch": "vite build --watch"
+    "watch": "vite build --watch",
+    "validate-pages": "node ClientApp/validate-pages.mjs"
   },
   "dependencies": {
     "@inertiajs/react": "^2.0.0",
