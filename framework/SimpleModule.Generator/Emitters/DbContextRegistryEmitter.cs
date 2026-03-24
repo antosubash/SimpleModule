@@ -34,9 +34,6 @@ internal sealed class DbContextRegistryEmitter : IEmitter
         sb.AppendLine("    };");
         sb.AppendLine("}");
 
-        context.AddSource(
-            "DbContextRegistry.g.cs",
-            SourceText.From(sb.ToString(), Encoding.UTF8)
-        );
+        context.AddSource("DbContextRegistry.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 }

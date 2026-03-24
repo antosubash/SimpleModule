@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.Core.Settings;
@@ -9,10 +10,15 @@ using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.AuditLogs.Interceptors;
 
+/// <summary>
+/// Interceptor that captures entity changes for audit logging.
+/// Resolves settings at interception time to avoid circular dependency
+/// with DbContext.
+/// </summary>
 public sealed class AuditSaveChangesInterceptor(
     IAuditContext auditContext,
     AuditChannel channel,
-    ISettingsContracts? settings = null
+    IServiceProvider? serviceProvider = null
 ) : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -24,6 +30,15 @@ public sealed class AuditSaveChangesInterceptor(
         if (eventData.Context is null)
             return base.SavingChangesAsync(eventData, result, cancellationToken);
 
+        // Resolve settings at interception time to avoid circular dependency:
+        // SaveChangesInterceptor -> ISettingsContracts -> SettingsService -> DbContext
+        // The serviceProvider is injected into the interceptor constructor via DI
+        // and used here rather than resolving ISettingsContracts at constructor time
+        ISettingsContracts? settings = null;
+        if (serviceProvider is not null)
+        {
+            settings = serviceProvider.GetService<ISettingsContracts>();
+        }
         if (settings is not null)
         {
             var raw = settings
@@ -81,39 +96,7 @@ public sealed class AuditSaveChangesInterceptor(
             entityId = string.Join(",", keyValues);
         }
 
-        string? changes = null;
-        if (entry.State == EntityState.Modified)
-        {
-            var changedProps = entry
-                .Properties.Where(p => p.IsModified)
-                .Select(p => new
-                {
-                    field = p.Metadata.Name,
-                    old = p.OriginalValue?.ToString(),
-                    @new = p.CurrentValue?.ToString(),
-                })
-                .ToList();
-            if (changedProps.Count > 0)
-                changes = JsonSerializer.Serialize(changedProps);
-        }
-        else if (entry.State == EntityState.Added)
-        {
-            var props = entry
-                .Properties.Where(p => p.CurrentValue is not null)
-                .Select(p => new { field = p.Metadata.Name, value = p.CurrentValue?.ToString() })
-                .ToList();
-            if (props.Count > 0)
-                changes = JsonSerializer.Serialize(props);
-        }
-        else if (entry.State == EntityState.Deleted)
-        {
-            var props = entry
-                .Properties.Where(p => p.OriginalValue is not null)
-                .Select(p => new { field = p.Metadata.Name, value = p.OriginalValue?.ToString() })
-                .ToList();
-            if (props.Count > 0)
-                changes = JsonSerializer.Serialize(props);
-        }
+        var changes = ExtractPropertyChanges(entry);
 
         return new AuditEntry
         {
@@ -129,5 +112,35 @@ public sealed class AuditSaveChangesInterceptor(
             Action = action,
             Changes = changes,
         };
+    }
+
+    private static string? ExtractPropertyChanges(EntityEntry entry)
+    {
+        var changeSet = entry.State switch
+        {
+            EntityState.Modified => entry
+                .Properties.Where(p => p.IsModified)
+                .Select(p => new
+                {
+                    field = p.Metadata.Name,
+                    old = p.OriginalValue?.ToString(),
+                    @new = p.CurrentValue?.ToString(),
+                })
+                .Cast<object>()
+                .ToList(),
+            EntityState.Added => entry
+                .Properties.Where(p => p.CurrentValue is not null)
+                .Select(p => new { field = p.Metadata.Name, value = p.CurrentValue?.ToString() })
+                .Cast<object>()
+                .ToList(),
+            EntityState.Deleted => entry
+                .Properties.Where(p => p.OriginalValue is not null)
+                .Select(p => new { field = p.Metadata.Name, value = p.OriginalValue?.ToString() })
+                .Cast<object>()
+                .ToList(),
+            _ => [],
+        };
+
+        return changeSet.Count > 0 ? JsonSerializer.Serialize(changeSet) : null;
     }
 }

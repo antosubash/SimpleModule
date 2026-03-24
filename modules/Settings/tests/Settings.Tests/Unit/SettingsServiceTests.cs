@@ -118,15 +118,14 @@ public sealed class SettingsServiceTests : IDisposable
         // when no DB row exists. Callers MUST NOT use `== false` to check if a
         // feature is explicitly disabled — they must use the string overload and
         // compare against "false" to distinguish "not set" from "disabled".
-        var result = await _service.GetSettingAsync<bool>(
-            "nonexistent.key",
-            SettingScope.System
-        );
+        var result = await _service.GetSettingAsync<bool>("nonexistent.key", SettingScope.System);
 
-        result.Should().BeFalse(
-            "GetSettingAsync<bool> returns default(bool) = false for missing settings; "
-            + "callers must use the string overload to distinguish 'not set' from 'disabled'"
-        );
+        result
+            .Should()
+            .BeFalse(
+                "GetSettingAsync<bool> returns default(bool) = false for missing settings; "
+                    + "callers must use the string overload to distinguish 'not set' from 'disabled'"
+            );
     }
 
     public void Dispose()

@@ -1,17 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
-using OpenIddict.Validation.AspNetCore;
+﻿using Microsoft.AspNetCore.Identity;
+using SimpleModule.AuditLogs.Middleware;
 using SimpleModule.Blazor;
 using SimpleModule.Core;
 using SimpleModule.Core.Constants;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
-using SimpleModule.Core.Menu;
-using SimpleModule.Database;
-using SimpleModule.Database.Health;
 using SimpleModule.Host;
 using SimpleModule.Host.Components;
 using SimpleModule.OpenIddict.Contracts;
@@ -28,133 +21,51 @@ if (!string.IsNullOrEmpty(aspireConnectionString))
     builder.Configuration["Database:DefaultConnection"] = aspireConnectionString;
 }
 
-// Add services to the container.
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
+// Validate database configuration early
+try
 {
-    options.AddSecurityDefinition(
-        AuthConstants.OAuth2Scheme,
-        new OpenApiSecurityScheme
-        {
-            Type = SecuritySchemeType.OAuth2,
-            Flows = new OpenApiOAuthFlows
-            {
-                AuthorizationCode = new OpenApiOAuthFlow
-                {
-                    AuthorizationUrl = new Uri(
-                        ConnectRouteConstants.ConnectAuthorize,
-                        UriKind.Relative
-                    ),
-                    TokenUrl = new Uri(ConnectRouteConstants.ConnectToken, UriKind.Relative),
-                    Scopes = new Dictionary<string, string>
-                    {
-                        { AuthConstants.OpenIdScope, "OpenID" },
-                        { AuthConstants.ProfileScope, "Profile" },
-                        { AuthConstants.EmailScope, "Email" },
-                    },
-                },
-            },
-        }
-    );
-    options.AddSecurityRequirement(doc =>
+    var dbOptions =
+        builder.Configuration.GetSection("Database").Get<SimpleModule.Database.DatabaseOptions>()
+        ?? new SimpleModule.Database.DatabaseOptions();
+    var connString = dbOptions.DefaultConnection;
+
+    if (string.IsNullOrEmpty(connString))
     {
-        var scheme =
-            doc.Components?.SecuritySchemes?.ContainsKey(AuthConstants.OAuth2Scheme) == true
-                ? new OpenApiSecuritySchemeReference(AuthConstants.OAuth2Scheme, doc)
-                : null;
-        if (scheme is null)
-            return new OpenApiSecurityRequirement();
-        return new OpenApiSecurityRequirement
-        {
-            {
-                scheme,
-                [AuthConstants.OpenIdScope, AuthConstants.ProfileScope, AuthConstants.EmailScope]
-            },
-        };
-    });
-});
+        throw new InvalidOperationException(
+            "Database configuration is missing. "
+                + "Ensure 'Database:DefaultConnection' is configured in appsettings.json."
+        );
+    }
+
+    // Validate the provider configuration
+    _ = SimpleModule.Database.DatabaseProviderDetector.Detect(connString, dbOptions.Provider);
+}
+catch (InvalidOperationException ex)
+{
+    // CA1849: WriteLine is OK during startup before async context
+#pragma warning disable CA1849
+    Console.Error.WriteLine($"FATAL: Database configuration error - {ex.Message}");
+#pragma warning restore CA1849
+    throw;
+}
+
+// Register services
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-
-// Blazor SSR
-builder.Services.AddRazorComponents();
-
-// Inertia page renderer (renders Inertia HTML shell via Blazor SSR)
-builder.Services.AddSimpleModuleBlazor(options =>
-{
-    options.ShellComponent = typeof(InertiaShell);
-});
-
-// Register event bus
-builder.Services.AddScoped<IEventBus, EventBus>();
-
-// Inertia shared data (per-request bag for props shared across all Inertia responses)
-builder.Services.AddScoped<InertiaSharedData>();
-
-// Register all modules
-builder.Services.AddModules(builder.Configuration);
-
-// Register unified HostDbContext for EF Core migrations
-builder.Services.AddModuleDbContext<HostDbContext>(
-    builder.Configuration,
-    "Host",
-    opts => opts.UseOpenIddict()
-);
-
-// Collect module menu items into a singleton registry
-builder.Services.CollectModuleMenuItems();
-
-// Collect module settings definitions into a singleton registry
-builder.Services.CollectModuleSettings();
-
-// Register page registry for available pages endpoint
-builder.Services.AddSingleton<IReadOnlyList<AvailablePage>>(PageRegistry.Pages);
-
-// Smart auth: Bearer header → OpenIddict validation; otherwise → Identity cookies
-builder
-    .Services.AddAuthentication()
-    .AddPolicyScheme(
-        AuthConstants.SmartAuthPolicy,
-        null!,
-        options =>
-        {
-            options.ForwardDefaultSelector = context =>
-            {
-                var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-                if (authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true)
-                    return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-                return IdentityConstants.ApplicationScheme;
-            };
-        }
-    );
-builder.Services.Configure<AuthenticationOptions>(options =>
-{
-    options.DefaultScheme = AuthConstants.SmartAuthPolicy;
-    options.DefaultAuthenticateScheme = AuthConstants.SmartAuthPolicy;
-    options.DefaultChallengeScheme = AuthConstants.SmartAuthPolicy;
-});
-
-// Health checks
-builder
-    .Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>(
-        HealthCheckConstants.DatabaseCheckName,
-        tags: [HealthCheckConstants.ReadyTag]
-    );
+builder.Services.AddSwaggerWithOpenIddict();
+builder.Services.AddInertiaServices(builder.Configuration);
+builder.Services.AddModuleSystem(builder.Configuration);
+builder.Services.AddSmartAuthentication();
+builder.Services.AddModuleHealthChecks();
 
 var app = builder.Build();
 
-// Apply database schema (production should use explicit migration tooling)
-if (!app.Environment.IsProduction())
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<HostDbContext>();
-    await db.Database.MigrateAsync();
-}
+// Initialize database
+await app.InitializeDatabaseAsync();
 
+// Configure middleware pipeline
 app.UseExceptionHandler();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -166,91 +77,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseInertia();
-
-app.Use(
-    async (context, next) =>
-    {
-        var path = context.Request.Path.Value;
-        bool hasVersionParam = context.Request.Query.ContainsKey("v");
-        bool isVendorJs =
-            path is not null && path.StartsWith("/js/vendor/", StringComparison.OrdinalIgnoreCase);
-        bool isHashedChunk =
-            path is not null
-            && path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
-            && path.EndsWith(".mjs", StringComparison.OrdinalIgnoreCase);
-
-        if (hasVersionParam || isVendorJs || isHashedChunk)
-        {
-            context.Response.OnStarting(() =>
-            {
-                context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
-                return Task.CompletedTask;
-            });
-        }
-
-        await next();
-    }
-);
-
+app.UseStaticFileCaching();
 app.MapStaticAssets();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Audit logging middleware — captures all HTTP requests
-app.UseMiddleware<SimpleModule.AuditLogs.Middleware.AuditMiddleware>();
-
-// Home page rewrite: if a public menu item is designated as home page,
-// rewrite GET / to that page's URL (internal rewrite, URL stays /)
-app.Use(
-    async (context, next) =>
-    {
-        if (context.Request.Path == "/" && HttpMethods.IsGet(context.Request.Method))
-        {
-            var menuProvider = context.RequestServices.GetService<IPublicMenuProvider>();
-            if (menuProvider is not null)
-            {
-                var homeUrl = await menuProvider.GetHomePageUrlAsync();
-                if (homeUrl is not null && homeUrl != "/")
-                {
-                    context.Request.Path = homeUrl;
-                }
-            }
-        }
-
-        await next();
-    }
-);
-
+app.UseMiddleware<AuditMiddleware>();
+app.UseHomePageRewrite();
 app.UseAntiforgery();
-
-// Health endpoints — liveness (no checks) and readiness (database checks)
-app.MapHealthChecks(
-        RouteConstants.HealthLive,
-        new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-        {
-            Predicate = _ => false, // No checks — just confirms the process is running
-        }
-    )
-    .AllowAnonymous();
-app.MapHealthChecks(
-        RouteConstants.HealthReady,
-        new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-        {
-            Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
-        }
-    )
-    .AllowAnonymous();
-
-// Blazor SSR
-app.MapRazorComponents<App>().AddModuleAssemblies();
-
-// Automatically map all module endpoints
+app.MapModuleHealthChecks();
+app.MapModuleComponents();
 app.MapModuleEndpoints();
-
-// Aspire default health endpoints (/health, /alive)
 app.MapDefaultEndpoints();
 
 await app.RunAsync();

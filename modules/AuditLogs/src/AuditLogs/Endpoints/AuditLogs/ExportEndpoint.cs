@@ -16,16 +16,10 @@ public class ExportEndpoint : IEndpoint
                 {
                     var stream = await auditLogs.ExportAsync(request);
                     var format = request.EffectiveFormat;
-                    var contentType = format.Equals(
-                        "json",
-                        StringComparison.OrdinalIgnoreCase
-                    )
+                    var contentType = format.Equals("json", StringComparison.OrdinalIgnoreCase)
                         ? "application/json"
                         : "text/csv";
-                    var extension = format.Equals(
-                        "json",
-                        StringComparison.OrdinalIgnoreCase
-                    )
+                    var extension = format.Equals("json", StringComparison.OrdinalIgnoreCase)
                         ? "json"
                         : "csv";
                     return TypedResults.File(

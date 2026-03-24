@@ -37,9 +37,7 @@ public sealed partial class AuditLogService(AuditLogsDbContext db, ILogger<Audit
             "Module" => sortDesc
                 ? query.OrderByDescending(e => e.Module)
                 : query.OrderBy(e => e.Module),
-            "Path" => sortDesc
-                ? query.OrderByDescending(e => e.Path)
-                : query.OrderBy(e => e.Path),
+            "Path" => sortDesc ? query.OrderByDescending(e => e.Path) : query.OrderBy(e => e.Path),
             "StatusCode" => sortDesc
                 ? query.OrderByDescending(e => e.StatusCode)
                 : query.OrderBy(e => e.StatusCode),
@@ -48,9 +46,7 @@ public sealed partial class AuditLogService(AuditLogsDbContext db, ILogger<Audit
                 : query.OrderBy(e => e.DurationMs),
             // SQLite does not support DateTimeOffset in ORDER BY, so sort by Id
             // (auto-increment, correlates with insertion order) as a fallback.
-            _ => sortDesc
-                ? query.OrderByDescending(e => e.Id)
-                : query.OrderBy(e => e.Id),
+            _ => sortDesc ? query.OrderByDescending(e => e.Id) : query.OrderBy(e => e.Id),
         };
 
         var items = await query

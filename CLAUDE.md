@@ -74,6 +74,52 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 - **Contracts pattern** — each module has a `.Contracts` project with a public interface (e.g., `IProductContracts`) and `[Dto]` types. Other modules depend on contracts, never implementations.
 - **Event bus** — `IEventBus.PublishAsync<T>()` broadcasts to all `IEventHandler<T>` implementations. Handler failures are isolated (collected in `AggregateException`).
 
+### Event Handler Patterns & Exception Isolation
+
+The EventBus implements **partial success semantics**: all handlers execute sequentially in registration order, even if some fail. Exceptions are collected and rethrown as `AggregateException` after all handlers complete.
+
+**Handler Execution Guarantees:**
+- All registered `IEventHandler<T>` implementations execute for each event
+- Handlers run in registration order
+- If handler A throws, handler B still runs
+- Side effects from successful handlers are preserved
+- All exceptions are collected and thrown together as `AggregateException`
+
+**Handler Implementation Best Practices:**
+- **Stateless**: Avoid storing mutable state; handlers may be called concurrently in future versions
+- **Independent**: Don't rely on side effects from other handlers; they may execute in any order or be skipped
+- **No throwing for expected failures**: Use result types or early returns instead; thrown exceptions interrupt and must be handled by the caller
+- **Idempotent when possible**: The same event may be reprocessed in retry scenarios; design handlers to handle duplicate calls gracefully
+- **Avoid long-running work**: For expensive operations, use background jobs or a reliable message queue instead of synchronous handlers
+
+**Exception Handling Pattern:**
+```csharp
+public sealed class AuditLogEventHandler : IEventHandler<OrderCreatedEvent>
+{
+    public async Task HandleAsync(OrderCreatedEvent @event, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Log the event
+            await _logger.LogEventAsync(@event, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Don't throw: audit logging must never disrupt the primary operation
+            _logger.LogError(ex, "Failed to log event");
+            // Optionally: queue for retry, alert, etc.
+        }
+    }
+}
+```
+
+**Testing Partial Failure:**
+Use `EventBusPartialFailureTests` as a reference. Key scenarios:
+- Verify successful handlers complete their work even if others fail
+- Verify exceptions are collected and rethrown as `AggregateException`
+- Verify handler execution order is preserved even when some fail
+- Verify cancellation tokens propagate to all handlers
+
 ## Test Infrastructure
 
 - **`SimpleModule.Tests.Shared`** provides `SimpleModuleWebApplicationFactory` — in-memory SQLite, test auth scheme with `CreateAuthenticatedClient(params Claim[] claims)`, claims passed via `X-Test-Claims` header.
@@ -100,6 +146,47 @@ sm doctor [--fix]           # validate project structure, auto-fix issues
 - Multi-provider: SQLite (table prefixes), PostgreSQL/SQL Server (schemas per module).
 - Each module registers `ModuleDbContextInfo` for schema isolation.
 - Uses `EnsureCreated()` — for production migrations, use EF Core migrations per module.
+
+### EF Core Interceptor DI Patterns
+
+**Problem:** SaveChangesInterceptors registered in DI can cause circular dependencies when they depend on services that themselves depend on DbContext. For example: `SaveChangesInterceptor → ISettings → SettingsService → SettingsDbContext` creates a deadlock during construction.
+
+**Solution:** Resolve runtime dependencies at interception time, not in the constructor.
+
+**Pattern:**
+```csharp
+// CORRECT: Constructor has minimal dependencies (only required for interceptor itself)
+public sealed class MyInterceptor(
+    IServiceProvider? serviceProvider = null  // Injected via DI, nullable for optionality
+) : SaveChangesInterceptor
+{
+    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+        DbContextEventData eventData,
+        InterceptionResult<int> result,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // Resolve optional services at interception time
+        var settings = serviceProvider?.GetService<ISettingsContracts>();
+        if (settings is not null)
+        {
+            // Use the service
+        }
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+}
+
+// WRONG: Constructor tries to resolve ISettingsContracts
+public sealed class BadInterceptor(
+    ISettingsContracts settings  // WRONG: Causes circular dependency!
+) : SaveChangesInterceptor { }
+```
+
+**Key Guidelines:**
+- Never inject services that transitively depend on DbContext into interceptor constructors
+- Inject `IServiceProvider?` as an optional dependency if runtime service resolution is needed
+- Resolve services only within `SavingChangesAsync`, `SavedChangesAsync`, or `SaveChangesFailed` methods
+- The framework resolves all registered `ISaveChangesInterceptor` instances lazily during DbContext options construction
 
 ## Adding a New Module
 

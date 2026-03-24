@@ -799,8 +799,7 @@ internal static class SymbolDiscovery
                 {
                     var baseFqn = current.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                     if (
-                        baseFqn
-                        == "global::Microsoft.EntityFrameworkCore.DbContext"
+                        baseFqn == "global::Microsoft.EntityFrameworkCore.DbContext"
                         || baseFqn.StartsWith(
                             "global::Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext",
                             StringComparison.Ordinal
