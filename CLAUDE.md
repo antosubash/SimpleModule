@@ -120,6 +120,35 @@ Use `EventBusPartialFailureTests` as a reference. Key scenarios:
 - Verify handler execution order is preserved even when some fail
 - Verify cancellation tokens propagate to all handlers
 
+## Pages Registry Pattern (Pages/index.ts)
+
+When you add a new `IViewEndpoint`, you **must** register it in your module's `Pages/index.ts` immediately. This is a manual, critical step.
+
+**Why:** The C# source generator discovers your new endpoint and validates it's properly decorated, but React needs a corresponding entry in the page registry. If you forget:
+- The endpoint compiles and runs fine on the server
+- Navigating to that page in React silently 404s client-side (no error in console, no error response shown to user)
+- The developer won't know for hours or until QA finds it
+
+**Pattern:**
+
+```typescript
+// modules/Products/src/Products/Pages/index.ts
+export const pages: Record<string, any> = {
+  'Products/Browse': () => import('../Views/Browse'),
+  'Products/Manage': () => import('../Views/Manage'),
+  'Products/Create': () => import('../Views/Create'),
+};
+```
+
+**The Rule:** For every `IViewEndpoint` with `Inertia.Render("Products/Something", ...)`, add a matching entry in `pages`. The component name in Inertia.Render (e.g., `"Products/Manage"`) is your key.
+
+**Validation:** After adding endpoints, run:
+```bash
+npm run validate-pages
+```
+
+This script checks that all C# endpoints have corresponding TypeScript entries. If mismatches are found, it logs them and exits with error code 1 (useful for CI).
+
 ## Test Infrastructure
 
 - **`SimpleModule.Tests.Shared`** provides `SimpleModuleWebApplicationFactory` — in-memory SQLite, test auth scheme with `CreateAuthenticatedClient(params Claim[] claims)`, claims passed via `X-Test-Claims` header.
