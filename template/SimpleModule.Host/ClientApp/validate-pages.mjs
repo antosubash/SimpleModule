@@ -72,14 +72,22 @@ function findCSharpEndpoints(content) {
 /**
  * Extract all page keys from a TypeScript Pages/index.ts file
  * Pattern: '([^']+)'\s*:\s*(?:\(\)|import)
+ * Ignores commented lines
  */
 function findTypeScriptPages(content) {
   const pattern = /'([^']+)'\s*:\s*(?:\(\)|import)/g;
   const matches = new Set();
-  let match;
+  const lines = content.split('\n');
 
-  while ((match = pattern.exec(content)) !== null) {
-    matches.add(match[1]);
+  for (const line of lines) {
+    // Skip lines that are fully commented out
+    const trimmed = line.trim();
+    if (trimmed.startsWith('//')) continue;
+
+    let match;
+    while ((match = pattern.exec(line)) !== null) {
+      matches.add(match[1]);
+    }
   }
 
   return matches;
