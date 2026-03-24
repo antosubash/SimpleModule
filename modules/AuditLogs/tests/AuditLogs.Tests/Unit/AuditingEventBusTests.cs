@@ -1,10 +1,13 @@
 using System.Threading.Channels;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using SimpleModule.AuditLogs;
 using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.Core.Events;
+using SimpleModule.Core.Settings;
+using SimpleModule.Settings.Contracts;
 
 namespace AuditLogs.Tests.Unit;
 
@@ -137,5 +140,21 @@ public class AuditingEventBusTests
 
         // Verify that PublishAsync is called (audit happens after)
         publishAsyncCalled.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PublishAsync_DoesNotThrow_WhenAuditEnqueueFails()
+    {
+        var @event = new ProductCreatedEvent(1, "Widget");
+        var busLogger = Substitute.For<ILogger<AuditingEventBus>>();
+
+        // Create a null logger for channel (will not throw, just silently log)
+        var closedChannel = new AuditChannel(null);
+
+        var sut = new AuditingEventBus(_innerBus, _auditContext, closedChannel, null, busLogger);
+
+        // This should not throw despite potential audit issues
+        var action = () => sut.PublishAsync(@event);
+        await action.Should().NotThrowAsync();
     }
 }
