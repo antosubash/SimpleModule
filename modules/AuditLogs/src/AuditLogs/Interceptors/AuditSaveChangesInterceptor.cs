@@ -21,14 +21,14 @@ public sealed class AuditSaveChangesInterceptor(
     IServiceProvider? serviceProvider = null
 ) : SaveChangesInterceptor
 {
-    public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
+    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default
     )
     {
         if (eventData.Context is null)
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+            return await base.SavingChangesAsync(eventData, result, cancellationToken);
 
         // Resolve settings at interception time to avoid circular dependency:
         // SaveChangesInterceptor -> ISettingsContracts -> SettingsService -> DbContext
@@ -41,19 +41,16 @@ public sealed class AuditSaveChangesInterceptor(
         }
         if (settings is not null)
         {
-            var raw = settings
-                .GetSettingAsync("auditlogs.capture.changes", SettingScope.System)
-                .GetAwaiter()
-                .GetResult();
+            var raw = await settings.GetSettingAsync("auditlogs.capture.changes", SettingScope.System);
             if (string.Equals(raw, "false", StringComparison.OrdinalIgnoreCase))
-                return base.SavingChangesAsync(eventData, result, cancellationToken);
+                return await base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
         var contextType = eventData.Context.GetType();
 
         // Don't audit our own DbContext to avoid infinite loops
         if (contextType == typeof(AuditLogsDbContext))
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+            return await base.SavingChangesAsync(eventData, result, cancellationToken);
 
         var moduleName = contextType.Name.Replace("DbContext", "", StringComparison.Ordinal);
 
@@ -69,7 +66,7 @@ public sealed class AuditSaveChangesInterceptor(
             }
         }
 
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     private AuditEntry? CreateAuditEntry(EntityEntry entry, string moduleName)
