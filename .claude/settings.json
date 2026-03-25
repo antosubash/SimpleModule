@@ -1,4 +1,4 @@
-{
+﻿{
   "permissions": {
     "allow": [
       "Bash",
@@ -10,6 +10,19 @@
       "Task",
       "WebFetch",
       "WebSearch"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/simplify simplify the changes you just made and explain them to me in simple terms"
+          }
+        ]
+      }
     ]
   },
   "enabledPlugins": {

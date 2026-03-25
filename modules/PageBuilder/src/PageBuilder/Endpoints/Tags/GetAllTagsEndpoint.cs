@@ -12,8 +12,8 @@ public class GetAllTagsEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/tags",
-                async (IPageBuilderContracts pageBuilder) =>
-                    TypedResults.Ok(await pageBuilder.GetAllTagsAsync())
+                async (IPageBuilderTagContracts tags) =>
+                    TypedResults.Ok(await tags.GetAllTagsAsync())
             )
             .RequirePermission(PageBuilderPermissions.View);
 }

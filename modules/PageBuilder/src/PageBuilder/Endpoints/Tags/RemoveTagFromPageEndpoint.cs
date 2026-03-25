@@ -12,9 +12,9 @@ public class RemoveTagFromPageEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
                 "/{id}/tags/{tagId}",
-                async (PageId id, PageTagId tagId, IPageBuilderContracts pageBuilder) =>
+                async (PageId id, PageTagId tagId, IPageBuilderTagContracts tags) =>
                 {
-                    await pageBuilder.RemoveTagFromPageAsync(id, tagId);
+                    await tags.RemoveTagFromPageAsync(id, tagId);
                     return TypedResults.NoContent();
                 }
             )

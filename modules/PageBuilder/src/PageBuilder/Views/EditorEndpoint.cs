@@ -13,13 +13,13 @@ public class EditorEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/admin/pages/new",
-                async (IPageBuilderContracts pageBuilder) =>
+                async (IPageBuilderTemplateContracts templates) =>
                     Inertia.Render(
                         "PageBuilder/Editor",
                         new
                         {
                             page = (Page?)null,
-                            templates = await pageBuilder.GetAllTemplatesAsync(),
+                            templates = await templates.GetAllTemplatesAsync(),
                         }
                     )
             )

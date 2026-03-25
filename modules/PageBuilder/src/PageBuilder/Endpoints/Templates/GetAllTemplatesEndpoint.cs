@@ -12,8 +12,8 @@ public class GetAllTemplatesEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/templates",
-                async (IPageBuilderContracts pageBuilder) =>
-                    TypedResults.Ok(await pageBuilder.GetAllTemplatesAsync())
+                async (IPageBuilderTemplateContracts templates) =>
+                    TypedResults.Ok(await templates.GetAllTemplatesAsync())
             )
             .RequirePermission(PageBuilderPermissions.View);
 }

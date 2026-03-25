@@ -12,12 +12,12 @@ public class AddTagToPageEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/{id}/tags",
-                async (PageId id, AddTagRequest request, IPageBuilderContracts pageBuilder) =>
+                async (PageId id, AddTagRequest request, IPageBuilderTagContracts tags) =>
                 {
                     if (string.IsNullOrWhiteSpace(request.Name))
                         throw new ArgumentException("Tag name is required.", nameof(request));
 
-                    await pageBuilder.AddTagToPageAsync(id, request.Name);
+                    await tags.AddTagToPageAsync(id, request.Name);
                     return TypedResults.NoContent();
                 }
             )

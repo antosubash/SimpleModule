@@ -8,7 +8,9 @@ using SimpleModule.PageBuilder.Contracts;
 namespace SimpleModule.PageBuilder;
 
 public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBuilderService> logger)
-    : IPageBuilderContracts
+    : IPageBuilderContracts,
+        IPageBuilderTemplateContracts,
+        IPageBuilderTagContracts
 {
     public async Task<IEnumerable<PageSummary>> GetAllPagesAsync() =>
         await db
@@ -310,21 +312,6 @@ public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBui
             await db.SaveChangesAsync();
         }
     }
-
-    private static PageSummary ToSummary(Page p) =>
-        new()
-        {
-            Id = p.Id,
-            Title = p.Title,
-            Slug = p.Slug,
-            IsPublished = p.IsPublished,
-            HasDraft = !string.IsNullOrEmpty(p.DraftContent),
-            Order = p.Order,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt,
-            DeletedAt = p.DeletedAt,
-            Tags = p.Tags.Select(t => t.Name).ToList(),
-        };
 
     internal static string Slugify(string text)
     {

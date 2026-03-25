@@ -12,9 +12,9 @@ public class DeleteTemplateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
                 "/templates/{id}",
-                async (PageTemplateId id, IPageBuilderContracts pageBuilder) =>
+                async (PageTemplateId id, IPageBuilderTemplateContracts templates) =>
                 {
-                    await pageBuilder.DeleteTemplateAsync(id);
+                    await templates.DeleteTemplateAsync(id);
                     return TypedResults.NoContent();
                 }
             )
