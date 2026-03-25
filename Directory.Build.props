@@ -8,6 +8,13 @@
     <!-- SM0039: interceptor DbContext dependency — keep as warning, runtime fix handles it -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039</WarningsNotAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <RunAnalyzers>true</RunAnalyzers>
+    <!-- Reference assemblies: downstream projects skip recompile when only method bodies change -->
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <!-- Static graph restore: faster NuGet evaluation in multi-project solutions -->
+    <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
+    <!-- Hardlinks instead of file copies where possible -->
+    <CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>true</CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>
   </PropertyGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
