@@ -79,6 +79,7 @@ Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing.
 The EventBus implements **partial success semantics**: all handlers execute sequentially in registration order, even if some fail. Exceptions are collected and rethrown as `AggregateException` after all handlers complete.
 
 **Handler Execution Guarantees:**
+
 - All registered `IEventHandler<T>` implementations execute for each event
 - Handlers run in registration order
 - If handler A throws, handler B still runs
@@ -86,6 +87,7 @@ The EventBus implements **partial success semantics**: all handlers execute sequ
 - All exceptions are collected and thrown together as `AggregateException`
 
 **Handler Implementation Best Practices:**
+
 - **Stateless**: Avoid storing mutable state; handlers may be called concurrently in future versions
 - **Independent**: Don't rely on side effects from other handlers; they may execute in any order or be skipped
 - **No throwing for expected failures**: Use result types or early returns instead; thrown exceptions interrupt and must be handled by the caller
@@ -93,6 +95,7 @@ The EventBus implements **partial success semantics**: all handlers execute sequ
 - **Avoid long-running work**: For expensive operations, use background jobs or a reliable message queue instead of synchronous handlers
 
 **Exception Handling Pattern:**
+
 ```csharp
 public sealed class AuditLogEventHandler : IEventHandler<OrderCreatedEvent>
 {
@@ -115,6 +118,7 @@ public sealed class AuditLogEventHandler : IEventHandler<OrderCreatedEvent>
 
 **Testing Partial Failure:**
 Use `EventBusPartialFailureTests` as a reference. Key scenarios:
+
 - Verify successful handlers complete their work even if others fail
 - Verify exceptions are collected and rethrown as `AggregateException`
 - Verify handler execution order is preserved even when some fail
@@ -125,6 +129,7 @@ Use `EventBusPartialFailureTests` as a reference. Key scenarios:
 When you add a new `IViewEndpoint`, you **must** register it in your module's `Pages/index.ts` immediately. This is a manual, critical step.
 
 **Why:** The C# source generator discovers your new endpoint and validates it's properly decorated, but React needs a corresponding entry in the page registry. If you forget:
+
 - The endpoint compiles and runs fine on the server
 - Navigating to that page in React silently 404s client-side (no error in console, no error response shown to user)
 - The developer won't know for hours or until QA finds it
@@ -134,15 +139,16 @@ When you add a new `IViewEndpoint`, you **must** register it in your module's `P
 ```typescript
 // modules/Products/src/Products/Pages/index.ts
 export const pages: Record<string, any> = {
-  'Products/Browse': () => import('../Views/Browse'),
-  'Products/Manage': () => import('../Views/Manage'),
-  'Products/Create': () => import('../Views/Create'),
+    "Products/Browse": () => import("../Views/Browse"),
+    "Products/Manage": () => import("../Views/Manage"),
+    "Products/Create": () => import("../Views/Create"),
 };
 ```
 
 **The Rule:** For every `IViewEndpoint` with `Inertia.Render("Products/Something", ...)`, add a matching entry in `pages`. The component name in Inertia.Render (e.g., `"Products/Manage"`) is your key.
 
 **Validation:** After adding endpoints, run:
+
 ```bash
 npm run validate-pages
 ```
@@ -183,6 +189,7 @@ sm doctor [--fix]           # validate project structure, auto-fix issues
 **Solution:** Resolve runtime dependencies at interception time, not in the constructor.
 
 **Pattern:**
+
 ```csharp
 // CORRECT: Constructor has minimal dependencies (only required for interceptor itself)
 public sealed class MyInterceptor(
@@ -212,6 +219,7 @@ public sealed class BadInterceptor(
 ```
 
 **Key Guidelines:**
+
 - Never inject services that transitively depend on DbContext into interceptor constructors
 - Inject `IServiceProvider?` as an optional dependency if runtime service resolution is needed
 - Resolve services only within `SavingChangesAsync`, `SavedChangesAsync`, or `SaveChangesFailed` methods
@@ -361,3 +369,4 @@ Biome is configured at repo root (`biome.json`). Covers `modules/**`, `packages/
 
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code
 - **No Laziness**: Find root causes. No temporary fixes. Senior developer standards
+- Don't claude to the commit messages

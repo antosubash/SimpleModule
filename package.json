@@ -12,7 +12,6 @@
   ],
   "scripts": {
     "dev": "node tools/dev-orchestrator.mjs",
-    "dev:build": "npm run build:dev -w modules/*/src/* && npm run build:dev -w template/SimpleModule.Host/ClientApp",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check . && npm run validate-pages",
@@ -20,7 +19,8 @@
     "validate-pages": "node template/SimpleModule.Host/ClientApp/validate-pages.mjs",
     "generate:types": "dotnet build template/SimpleModule.Host && node tools/extract-ts-types.mjs template/SimpleModule.Host/obj/Debug/net10.0/generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator modules",
     "ui:add": "node tools/add-component.mjs",
-    "build": "cross-env VITE_MODE=prod npm run build -w modules/*/src/* && npm run build -w template/SimpleModule.Host/ClientApp",
+    "build": "cross-env VITE_MODE=prod node tools/build-orchestrator.mjs",
+    "build:dev": "cross-env VITE_MODE=dev node tools/build-orchestrator.mjs",
     "test:e2e": "npm run test -w tests/e2e",
     "test:e2e:ui": "npm run test:ui -w tests/e2e"
   },
