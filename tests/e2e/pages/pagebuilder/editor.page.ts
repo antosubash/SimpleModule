@@ -30,6 +30,10 @@ export class PageBuilderEditorPage {
     return this.page.getByRole('button', { name: /back to pages/i });
   }
 
+  get saveDraftButton() {
+    return this.page.getByRole('button', { name: /save draft/i });
+  }
+
   get publishButton() {
     return this.page.getByRole('button', { name: /publish/i });
   }
@@ -40,5 +44,22 @@ export class PageBuilderEditorPage {
 
   get componentList() {
     return this.page.locator('[class*="ComponentList"]');
+  }
+
+  /** Save draft and wait for the API call to complete */
+  async saveDraft() {
+    const [response] = await Promise.all([
+      this.page.waitForResponse(
+        (resp) => resp.url().includes('/api/pagebuilder') && resp.request().method() === 'PUT',
+      ),
+      this.saveDraftButton.click(),
+    ]);
+    return response;
+  }
+
+  /** Click Puck's publish button and wait for navigation back to manage */
+  async publish() {
+    await this.publishButton.click();
+    await this.page.waitForURL('**/admin/pages', { timeout: 10000 });
   }
 }

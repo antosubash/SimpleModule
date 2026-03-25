@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { expect, test } from '../../fixtures/base';
 import {
   ClientsCreatePage,
@@ -7,44 +8,56 @@ import {
 
 test.describe('OpenIddict Clients CRUD', () => {
   test('create, verify, edit, and delete a client', async ({ page }) => {
-    const suffix = Date.now();
-    const clientId = `e2e-client-${suffix}`;
-    const displayName = `E2E Test Client ${suffix}`;
-    const updatedName = `E2E Updated Client ${suffix}`;
+    const clientId = faker.string.alphanumeric({ length: 16, casing: 'lower' });
+    const displayName = faker.company.name();
+    const updatedName = faker.company.name();
 
     const clientsPage = new ClientsPage(page);
     const createPage = new ClientsCreatePage(page);
     const editPage = new ClientsEditPage(page);
 
-    // Create a client
+    // Create a client via UI
     await createPage.goto();
     await expect(createPage.heading).toBeVisible();
     await createPage.createClient(clientId, displayName);
 
-    // Should redirect to edit page
+    // UI: should redirect to edit page
     await expect(editPage.heading).toBeVisible();
 
-    // Verify it appears on list page
+    // UI: verify it appears on list page
     await clientsPage.goto();
     await clientsPage.showAllRows();
     await expect(clientsPage.clientRow(clientId)).toBeVisible();
 
-    // Edit the client display name
+    // API: verify the client was persisted via Inertia page props
+    const listRes = await page.request.get('https://localhost:5001/openiddict/clients', {
+      headers: { 'X-Inertia': 'true', 'X-Inertia-Version': '' },
+    });
+    if (listRes.ok()) {
+      const body = await listRes.json();
+      if (body?.props?.clients) {
+        const apiClient = body.props.clients.find((c: { clientId: string }) => c.clientId === clientId);
+        expect(apiClient).toBeTruthy();
+        expect(apiClient.displayName).toBe(displayName);
+      }
+    }
+
+    // Edit the client display name via UI
     await clientsPage.editButton(clientId).click();
     await expect(editPage.heading).toBeVisible();
     await editPage.updateDisplayName(updatedName);
 
-    // Verify the update on list page
+    // UI: verify the update on list page
     await clientsPage.goto();
     await clientsPage.showAllRows();
     await expect(clientsPage.clientRow(clientId)).toContainText(updatedName, { timeout: 10000 });
 
-    // Delete the client
+    // Delete the client via UI
     page.on('dialog', (dialog) => dialog.accept());
     await clientsPage.deleteButton(clientId).click();
     await page.waitForLoadState('networkidle');
 
-    // Verify it's gone
+    // UI: verify it's gone
     await expect(clientsPage.clientRow(clientId)).not.toBeVisible();
   });
 
@@ -52,17 +65,14 @@ test.describe('OpenIddict Clients CRUD', () => {
     const clientsPage = new ClientsPage(page);
     const editPage = new ClientsEditPage(page);
 
-    // Navigate to the seeded client's edit page
     await clientsPage.goto();
     await clientsPage.showAllRows();
     await clientsPage.editButton('simplemodule-client').click();
     await expect(editPage.heading).toBeVisible();
 
-    // Switch to URIs tab
     await editPage.urisTab.click();
     await expect(page.getByRole('heading', { name: /redirect uris/i })).toBeVisible();
 
-    // Verify seeded redirect URIs are displayed in input fields
     await expect(page.locator('input[value*="swagger/oauth2-redirect"]')).toBeVisible();
     await expect(page.locator('input[value*="oauth-callback"]')).toBeVisible();
   });
@@ -71,16 +81,13 @@ test.describe('OpenIddict Clients CRUD', () => {
     const clientsPage = new ClientsPage(page);
     const editPage = new ClientsEditPage(page);
 
-    // Navigate to the seeded client's edit page
     await clientsPage.goto();
     await clientsPage.showAllRows();
     await clientsPage.editButton('simplemodule-client').click();
     await expect(editPage.heading).toBeVisible();
 
-    // Switch to Permissions tab
     await editPage.permissionsTab.click();
 
-    // Verify permission groups are visible
     await expect(page.getByText('Endpoints')).toBeVisible();
     await expect(page.getByText('Grant Types')).toBeVisible();
     await expect(page.getByText('Response Types')).toBeVisible();

@@ -1,14 +1,18 @@
+import { faker } from '@faker-js/faker';
 import { expect, test } from '../../fixtures/base';
 
 test.describe('Menu Manager - API', () => {
   test('full CRUD lifecycle via API', async ({ request }) => {
+    const label = faker.commerce.department();
+    const updatedLabel = faker.commerce.department();
+
     // Create
     const createResponse = await request.post('/api/settings/menus', {
-      data: { label: 'API Test', url: '/api-test', icon: '', isVisible: true },
+      data: { label, url: `/${faker.helpers.slugify(label).toLowerCase()}`, icon: '', isVisible: true },
     });
     expect(createResponse.status()).toBe(201);
     const created = await createResponse.json();
-    expect(created.label).toBe('API Test');
+    expect(created.label).toBe(label);
     expect(created.id).toBeGreaterThan(0);
 
     // Read
@@ -17,13 +21,13 @@ test.describe('Menu Manager - API', () => {
     const items = await getResponse.json();
     expect(Array.isArray(items)).toBeTruthy();
     const flatStr = JSON.stringify(items);
-    expect(flatStr).toContain('API Test');
+    expect(flatStr).toContain(label);
 
     // Update
     const updateResponse = await request.put(`/api/settings/menus/${created.id}`, {
       data: {
-        label: 'API Test Updated',
-        url: '/api-test-updated',
+        label: updatedLabel,
+        url: `/${faker.helpers.slugify(updatedLabel).toLowerCase()}`,
         icon: '',
         cssClass: '',
         openInNewTab: false,
@@ -41,19 +45,23 @@ test.describe('Menu Manager - API', () => {
     const getAfterDelete = await request.get('/api/settings/menus');
     const afterDelete = await getAfterDelete.json();
     const afterStr = JSON.stringify(afterDelete);
-    expect(afterStr).not.toContain('API Test Updated');
+    expect(afterStr).not.toContain(updatedLabel);
   });
 
   test('create nested items via API', async ({ request }) => {
+    const parentLabel = faker.commerce.department();
+    const childLabel = faker.commerce.productAdjective();
+    const grandchildLabel = faker.animal.dog();
+
     // Create parent
     const parentResp = await request.post('/api/settings/menus', {
-      data: { label: 'Parent', url: '/parent', icon: '', isVisible: true },
+      data: { label: parentLabel, url: `/${faker.helpers.slugify(parentLabel).toLowerCase()}`, icon: '', isVisible: true },
     });
     const parent = await parentResp.json();
 
     // Create child
     const childResp = await request.post('/api/settings/menus', {
-      data: { label: 'Child', url: '/child', parentId: parent.id, icon: '', isVisible: true },
+      data: { label: childLabel, url: `/${faker.helpers.slugify(childLabel).toLowerCase()}`, parentId: parent.id, icon: '', isVisible: true },
     });
     expect(childResp.status()).toBe(201);
     const child = await childResp.json();
@@ -62,8 +70,8 @@ test.describe('Menu Manager - API', () => {
     // Create grandchild
     const grandchildResp = await request.post('/api/settings/menus', {
       data: {
-        label: 'Grandchild',
-        url: '/grandchild',
+        label: grandchildLabel,
+        url: `/${faker.helpers.slugify(grandchildLabel).toLowerCase()}`,
         parentId: child.id,
         icon: '',
         isVisible: true,
@@ -75,7 +83,7 @@ test.describe('Menu Manager - API', () => {
     const grandchild = await grandchildResp.json();
     const tooDeepResp = await request.post('/api/settings/menus', {
       data: {
-        label: 'TooDeep',
+        label: faker.word.noun(),
         url: '/toodeep',
         parentId: grandchild.id,
         icon: '',
@@ -84,16 +92,18 @@ test.describe('Menu Manager - API', () => {
     });
     expect(tooDeepResp.status()).toBeGreaterThanOrEqual(400);
 
-    // Cleanup — delete parent (children should cascade)
+    // Cleanup
     await request.delete(`/api/settings/menus/${grandchild.id}`);
     await request.delete(`/api/settings/menus/${child.id}`);
     await request.delete(`/api/settings/menus/${parent.id}`);
   });
 
   test('set and clear home page via API', async ({ request }) => {
+    const label = faker.location.city();
+
     // Create item
     const createResp = await request.post('/api/settings/menus', {
-      data: { label: 'Home Test', url: '/home-api-test', icon: '', isVisible: true },
+      data: { label, url: `/${faker.helpers.slugify(label).toLowerCase()}`, icon: '', isVisible: true },
     });
     const item = await createResp.json();
 
@@ -116,14 +126,17 @@ test.describe('Menu Manager - API', () => {
   });
 
   test('reorder items via API', async ({ request }) => {
+    const label1 = faker.color.human();
+    const label2 = faker.color.human();
+
     // Create two items
     const resp1 = await request.post('/api/settings/menus', {
-      data: { label: 'First', url: '/first', icon: '', isVisible: true },
+      data: { label: label1, url: `/${faker.helpers.slugify(label1).toLowerCase()}`, icon: '', isVisible: true },
     });
     const item1 = await resp1.json();
 
     const resp2 = await request.post('/api/settings/menus', {
-      data: { label: 'Second', url: '/second', icon: '', isVisible: true },
+      data: { label: label2, url: `/${faker.helpers.slugify(label2).toLowerCase()}`, icon: '', isVisible: true },
     });
     const item2 = await resp2.json();
 
@@ -150,7 +163,6 @@ test.describe('Menu Manager - API', () => {
     expect(Array.isArray(pages)).toBeTruthy();
     expect(pages.length).toBeGreaterThan(0);
 
-    // Each page should have pageRoute, viewPrefix, module
     const first = pages[0];
     expect(first).toHaveProperty('pageRoute');
     expect(first).toHaveProperty('viewPrefix');

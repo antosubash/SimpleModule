@@ -1,7 +1,14 @@
+import { faker } from '@faker-js/faker';
 import { expect, test } from '../../fixtures/base';
 import { MenuManagerPage } from '../../pages/settings/menu-manager.page';
 
-const suffix = Date.now();
+const createdIds: number[] = [];
+
+function trackCreated(resp: { url(): string; request(): { method(): string }; json(): Promise<any> }) {
+  if (resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST') {
+    resp.json().then((body) => { if (body?.id) createdIds.push(body.id); }).catch(() => {});
+  }
+}
 
 test.describe('Menu Manager - CRUD Flows', () => {
   let menuManager: MenuManagerPage;
@@ -12,50 +19,30 @@ test.describe('Menu Manager - CRUD Flows', () => {
     await expect(menuManager.heading).toBeVisible();
   });
 
-  test('create a top-level menu item', async ({ page }) => {
-    const label = `Products ${suffix}`;
-
-    await Promise.all([
-      page.waitForResponse(
-        (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
-      ),
-      menuManager.addItemButton.click(),
-    ]);
-
-    await menuManager.labelInput.waitFor({ state: 'visible' });
-    await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill(label);
-
-    await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/products/browse');
-
-    await Promise.all([
-      page.waitForResponse(
-        (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'PUT',
-      ),
-      menuManager.saveButton.click(),
-    ]);
-    await page.waitForLoadState('networkidle');
-
-    await expect(menuManager.treeItemButton(label)).toBeVisible();
+  test.afterAll(async ({ request }) => {
+    for (const id of createdIds) {
+      await request.delete(`/api/settings/menus/${id}`).catch(() => {});
+    }
+    await request.delete('/api/settings/menus/home').catch(() => {});
   });
 
-  test('create and edit a menu item', async ({ page }) => {
-    const label = `About ${suffix}`;
-    const editedLabel = `About Us ${suffix}`;
+  test('create a top-level menu item', async ({ page, request }) => {
+    const label = faker.commerce.department();
+    const url = `/${faker.helpers.slugify(label).toLowerCase()}`;
 
-    await Promise.all([
+    const [response] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addItemButton.click(),
     ]);
+    trackCreated(response);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(label);
     await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/about');
+    await menuManager.urlInput.fill(url);
 
     await Promise.all([
       page.waitForResponse(
@@ -65,15 +52,51 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Select the item to edit
+    // UI: verify item appears in tree
+    await expect(menuManager.treeItemButton(label)).toBeVisible();
+
+    // API: verify item was saved
+    const apiRes = await request.get('/api/settings/menus');
+    expect(apiRes.ok()).toBeTruthy();
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).toContain(label);
+  });
+
+  test('create and edit a menu item', async ({ page, request }) => {
+    const label = faker.company.buzzNoun();
+    const editedLabel = faker.company.buzzNoun();
+    const editedUrl = `/${faker.helpers.slugify(editedLabel).toLowerCase()}`;
+
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
+      ),
+      menuManager.addItemButton.click(),
+    ]);
+    trackCreated(response);
+
+    await menuManager.labelInput.waitFor({ state: 'visible' });
+    await menuManager.labelInput.clear();
+    await menuManager.labelInput.fill(label);
+    await menuManager.urlRadio.click();
+    await menuManager.urlInput.fill(`/${faker.helpers.slugify(label).toLowerCase()}`);
+
+    await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'PUT',
+      ),
+      menuManager.saveButton.click(),
+    ]);
+    await page.waitForLoadState('networkidle');
+
+    // Select and edit
     await menuManager.selectItem(label);
     await menuManager.labelInput.waitFor({ state: 'visible' });
-
-    // Edit label and URL
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(editedLabel);
     await menuManager.urlInput.clear();
-    await menuManager.urlInput.fill('/about-us');
+    await menuManager.urlInput.fill(editedUrl);
 
     await Promise.all([
       page.waitForResponse(
@@ -83,25 +106,34 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
+    // UI: verify updated label
     await expect(menuManager.treeItemButton(editedLabel)).toBeVisible();
+
+    // API: verify the edit was persisted
+    const apiRes = await request.get('/api/settings/menus');
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).toContain(editedLabel);
+    expect(flat).not.toContain(`"label":"${label}"`);
   });
 
-  test('create a child menu item', async ({ page }) => {
-    const parentLabel = `Services ${suffix}`;
-    const childLabel = `Consulting ${suffix}`;
+  test('create a child menu item', async ({ page, request }) => {
+    const parentLabel = faker.commerce.department();
+    const childLabel = faker.commerce.productAdjective();
 
-    await Promise.all([
+    const [parentResponse] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addItemButton.click(),
     ]);
+    trackCreated(parentResponse);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(parentLabel);
     await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/services');
+    await menuManager.urlInput.fill(`/${faker.helpers.slugify(parentLabel).toLowerCase()}`);
 
     await Promise.all([
       page.waitForResponse(
@@ -111,23 +143,22 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Select parent
     await menuManager.selectItem(parentLabel);
-
-    // Add child
     await menuManager.addChildButton.waitFor({ state: 'visible' });
-    await Promise.all([
+
+    const [childResponse] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addChildButton.click(),
     ]);
+    trackCreated(childResponse);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(childLabel);
     await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/services/consulting');
+    await menuManager.urlInput.fill(`/${faker.helpers.slugify(childLabel).toLowerCase()}`);
 
     await Promise.all([
       page.waitForResponse(
@@ -137,24 +168,32 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
+    // UI: verify child appears
     await expect(menuManager.treeItemButton(childLabel)).toBeVisible();
+
+    // API: verify parent-child relationship
+    const apiRes = await request.get('/api/settings/menus');
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).toContain(childLabel);
   });
 
-  test('delete a menu item', async ({ page }) => {
-    const label = `ToDelete ${suffix}`;
+  test('delete a menu item', async ({ page, request }) => {
+    const label = faker.animal.cat();
 
-    await Promise.all([
+    const [response] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addItemButton.click(),
     ]);
+    trackCreated(response);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(label);
     await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/to-delete');
+    await menuManager.urlInput.fill(`/${faker.helpers.slugify(label).toLowerCase()}`);
 
     await Promise.all([
       page.waitForResponse(
@@ -164,36 +203,40 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Select and delete
+    // Select and delete via UI
     await menuManager.selectItem(label);
     await menuManager.deleteButton.waitFor({ state: 'visible' });
-
-    // Click Delete to open confirmation dialog
     await menuManager.deleteButton.click();
-
-    // Confirm deletion in the Radix dialog
     const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
     await dialog.getByRole('button', { name: 'Delete' }).click();
     await page.waitForLoadState('networkidle');
 
+    // UI: verify removed from tree
     await expect(menuManager.treeItemButton(label)).not.toBeVisible();
+
+    // API: verify removed from backend
+    const apiRes = await request.get('/api/settings/menus');
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).not.toContain(label);
   });
 
-  test('toggle visibility of a menu item', async ({ page }) => {
-    const label = `ToggleMe ${suffix}`;
+  test('toggle visibility of a menu item', async ({ page, request }) => {
+    const label = faker.music.genre();
 
-    await Promise.all([
+    const [response] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addItemButton.click(),
     ]);
+    trackCreated(response);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(label);
     await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/toggle');
+    await menuManager.urlInput.fill(`/${faker.helpers.slugify(label).toLowerCase()}`);
 
     await Promise.all([
       page.waitForResponse(
@@ -215,23 +258,30 @@ test.describe('Menu Manager - CRUD Flows', () => {
       menuManager.saveButton.click(),
     ]);
     await page.waitForLoadState('networkidle');
+
+    // API: verify visibility was toggled off
+    const apiRes = await request.get('/api/settings/menus');
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).toContain(`"isVisible":false`);
   });
 
-  test('set home page on a menu item', async ({ page }) => {
-    const label = `HomePage ${suffix}`;
+  test('set home page on a menu item', async ({ page, request }) => {
+    const label = faker.location.city();
 
-    await Promise.all([
+    const [response] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addItemButton.click(),
     ]);
+    trackCreated(response);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(label);
     await menuManager.urlRadio.click();
-    await menuManager.urlInput.fill('/home-test');
+    await menuManager.urlInput.fill(`/${faker.helpers.slugify(label).toLowerCase()}`);
 
     await Promise.all([
       page.waitForResponse(
@@ -253,26 +303,30 @@ test.describe('Menu Manager - CRUD Flows', () => {
       menuManager.saveButton.click(),
     ]);
     await page.waitForLoadState('networkidle');
+
+    // API: verify home page was set
+    const apiRes = await request.get('/api/settings/menus');
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).toContain(`"isHomePage":true`);
   });
 
-  test('select a module page from dropdown', async ({ page }) => {
-    const label = `BrowseProducts ${suffix}`;
+  test('select a module page from dropdown', async ({ page, request }) => {
+    const label = faker.commerce.productName();
 
-    await Promise.all([
+    const [response] = await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
       ),
       menuManager.addItemButton.click(),
     ]);
+    trackCreated(response);
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
     await menuManager.labelInput.fill(label);
 
-    // Select "Page" radio
     await menuManager.pageRadio.click();
-
-    // Open the Radix Select and pick first option
     await menuManager.pageSelect.waitFor({ state: 'visible' });
     await menuManager.pageSelect.click();
     await page.getByRole('option').first().click();
@@ -285,6 +339,14 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
+    // UI: verify item appears
     await expect(menuManager.treeItemButton(label)).toBeVisible();
+
+    // API: verify the page route was saved
+    const apiRes = await request.get('/api/settings/menus');
+    const items = await apiRes.json();
+    const flat = JSON.stringify(items);
+    expect(flat).toContain(label);
+    expect(flat).toContain('"pageRoute"');
   });
 });

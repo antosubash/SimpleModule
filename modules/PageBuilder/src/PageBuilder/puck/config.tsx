@@ -11,6 +11,16 @@ import { Stats } from './components/Stats';
 import { Text } from './components/Text';
 
 export const puckConfig: Config = {
+  root: {
+    defaultProps: {
+      title: '',
+    },
+    render: ({ children }) => (
+      <div data-testid="puck-root" style={{ minHeight: '100vh' }}>
+        {children}
+      </div>
+    ),
+  },
   components: {
     Hero,
     Heading,

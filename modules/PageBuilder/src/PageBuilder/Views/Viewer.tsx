@@ -14,9 +14,13 @@ export default function Viewer({ page, isDraft }: Props) {
   useEffect(() => loadPuckCss(), []);
   const data = useMemo(() => {
     try {
-      return JSON.parse(page.content);
+      const parsed = JSON.parse(page.content);
+      return {
+        content: parsed.content ?? [],
+        root: parsed.root ?? { props: {} },
+      };
     } catch {
-      return { content: [], root: {} };
+      return { content: [], root: { props: {} } };
     }
   }, [page.content]);
 
