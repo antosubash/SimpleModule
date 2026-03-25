@@ -16,7 +16,7 @@ public sealed partial class ViteDevWatchService(
     IHostEnvironment environment
 ) : BackgroundService
 {
-    private static readonly string[] WatchedExtensions =
+    private static readonly string[] FrontendExtensions =
     [
         "*.ts",
         "*.tsx",
@@ -33,6 +33,8 @@ public sealed partial class ViteDevWatchService(
     );
     private readonly List<FileSystemWatcher> _watchers = [];
     private CancellationToken _stoppingToken;
+    private string _repoRoot = null!;
+    private string _npmBinPath = null!;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -44,35 +46,54 @@ public sealed partial class ViteDevWatchService(
         }
 
         _stoppingToken = stoppingToken;
+        _repoRoot = repoRoot;
+        _npmBinPath = Path.Combine(repoRoot, "node_modules", ".bin");
         LogServiceStarting(logger, repoRoot);
 
-        // Discover all module directories with vite.config.ts
         var modulesRoot = Path.Combine(repoRoot, "modules");
         var moduleDirectories = DiscoverModuleDirectories(modulesRoot);
 
         foreach (var moduleDir in moduleDirectories)
         {
             var moduleName = Path.GetFileName(moduleDir);
-            SetupModuleWatcher(moduleDir, moduleName, repoRoot);
+            SetupWatcher(
+                $"module:{moduleName}",
+                moduleDir,
+                FrontendExtensions,
+                ShouldIgnoreModulePath,
+                () => RunBuild(moduleName, "npx vite build", moduleDir)
+            );
+            LogWatchingModule(logger, moduleName, moduleDir);
         }
 
-        // Watch ClientApp
         var clientAppDir = Path.Combine(environment.ContentRootPath, "ClientApp");
         if (Directory.Exists(clientAppDir))
         {
-            SetupClientAppWatcher(clientAppDir, repoRoot);
+            SetupWatcher(
+                "clientapp",
+                clientAppDir,
+                FrontendExtensions,
+                ShouldIgnoreClientAppPath,
+                () => RunBuild("ClientApp", "npx vite build", clientAppDir)
+            );
+            LogWatchingClientApp(logger, clientAppDir);
         }
 
-        // Watch Styles/ for Tailwind CSS changes
         var stylesDir = Path.Combine(environment.ContentRootPath, "Styles");
         if (Directory.Exists(stylesDir))
         {
-            SetupTailwindWatcher(stylesDir, repoRoot);
+            SetupWatcher(
+                "tailwind",
+                stylesDir,
+                ["*.css"],
+                ShouldIgnoreTailwindPath,
+                () => RunTailwindBuild()
+            );
+            LogWatchingStyles(logger, stylesDir);
         }
 
         LogWatchingStarted(logger, moduleDirectories.Count);
 
-        // Keep the service alive until cancellation
         try
         {
             await Task.Delay(Timeout.Infinite, stoppingToken).ConfigureAwait(false);
@@ -103,139 +124,15 @@ public sealed partial class ViteDevWatchService(
         base.Dispose();
     }
 
-    private static string? FindRepoRoot(string startPath)
+    private void SetupWatcher(
+        string buildKey,
+        string watchDir,
+        string[] filters,
+        Func<string, bool> shouldIgnore,
+        Func<Task> buildAction
+    )
     {
-        var current = startPath;
-        while (current is not null)
-        {
-            if (Directory.Exists(Path.Combine(current, ".git")))
-            {
-                return current;
-            }
-
-            current = Path.GetDirectoryName(current);
-        }
-
-        return null;
-    }
-
-    private static List<string> DiscoverModuleDirectories(string modulesRoot)
-    {
-        var directories = new List<string>();
-
-        if (!Directory.Exists(modulesRoot))
-        {
-            return directories;
-        }
-
-        // Look for modules/*/src/*/vite.config.ts
-        foreach (var moduleGroupDir in Directory.GetDirectories(modulesRoot))
-        {
-            var srcDir = Path.Combine(moduleGroupDir, "src");
-            if (!Directory.Exists(srcDir))
-            {
-                continue;
-            }
-
-            foreach (var moduleDir in Directory.GetDirectories(srcDir))
-            {
-                if (File.Exists(Path.Combine(moduleDir, "vite.config.ts")))
-                {
-                    directories.Add(moduleDir);
-                }
-            }
-        }
-
-        return directories;
-    }
-
-    private void SetupModuleWatcher(string moduleDir, string moduleName, string repoRoot)
-    {
-        var buildKey = $"module:{moduleName}";
-        var watcher = CreateWatcher(moduleDir, WatchedExtensions);
-
-        void OnChanged(object sender, FileSystemEventArgs e)
-        {
-            if (ShouldIgnoreModulePath(e.FullPath))
-            {
-                return;
-            }
-
-            LogModuleFileChanged(logger, moduleName, e.Name);
-            DebouncedBuild(
-                buildKey,
-                () => RunViteBuild(moduleName, moduleDir, repoRoot, _stoppingToken)
-            );
-        }
-
-        watcher.Changed += OnChanged;
-        watcher.Created += OnChanged;
-        watcher.Renamed += (sender, e) => OnChanged(sender, e);
-
-        watcher.EnableRaisingEvents = true;
-        _watchers.Add(watcher);
-
-        LogWatchingModule(logger, moduleName, moduleDir);
-    }
-
-    private void SetupClientAppWatcher(string clientAppDir, string repoRoot)
-    {
-        const string buildKey = "clientapp";
-        var watcher = CreateWatcher(clientAppDir, WatchedExtensions);
-
-        void OnChanged(object sender, FileSystemEventArgs e)
-        {
-            if (ShouldIgnoreClientAppPath(e.FullPath))
-            {
-                return;
-            }
-
-            LogClientAppFileChanged(logger, e.Name);
-            DebouncedBuild(
-                buildKey,
-                () => RunClientAppBuild(clientAppDir, repoRoot, _stoppingToken)
-            );
-        }
-
-        watcher.Changed += OnChanged;
-        watcher.Created += OnChanged;
-        watcher.Renamed += (sender, e) => OnChanged(sender, e);
-
-        watcher.EnableRaisingEvents = true;
-        _watchers.Add(watcher);
-
-        LogWatchingClientApp(logger, clientAppDir);
-    }
-
-    private void SetupTailwindWatcher(string stylesDir, string repoRoot)
-    {
-        const string buildKey = "tailwind";
-        var watcher = CreateWatcher(stylesDir, ["*.css"]);
-
-        void OnChanged(object sender, FileSystemEventArgs e)
-        {
-            if (ShouldIgnoreTailwindPath(e.FullPath))
-            {
-                return;
-            }
-
-            LogStylesFileChanged(logger, e.Name);
-            DebouncedBuild(buildKey, () => RunTailwindBuild(repoRoot, _stoppingToken));
-        }
-
-        watcher.Changed += OnChanged;
-        watcher.Created += OnChanged;
-        watcher.Renamed += (sender, e) => OnChanged(sender, e);
-
-        watcher.EnableRaisingEvents = true;
-        _watchers.Add(watcher);
-
-        LogWatchingStyles(logger, stylesDir);
-    }
-
-    private static FileSystemWatcher CreateWatcher(string path, string[] filters)
-    {
-        var watcher = new FileSystemWatcher(path)
+        var watcher = new FileSystemWatcher(watchDir)
         {
             IncludeSubdirectories = true,
             NotifyFilter =
@@ -247,37 +144,67 @@ public sealed partial class ViteDevWatchService(
             watcher.Filters.Add(filter);
         }
 
-        return watcher;
+        void OnChanged(object sender, FileSystemEventArgs e)
+        {
+            if (shouldIgnore(e.FullPath))
+            {
+                return;
+            }
+
+            LogFileChanged(logger, buildKey, e.Name);
+            DebouncedBuild(buildKey, buildAction);
+        }
+
+        watcher.Changed += OnChanged;
+        watcher.Created += OnChanged;
+        watcher.Renamed += (sender, e) => OnChanged(sender, e);
+
+        watcher.EnableRaisingEvents = true;
+        _watchers.Add(watcher);
     }
 
-    private static bool ShouldIgnoreModulePath(string fullPath)
+    private async Task RunBuild(string name, string command, string workingDir)
     {
-        return ContainsSegment(fullPath, "wwwroot") || ContainsSegment(fullPath, "node_modules");
+        LogRebuilding(logger, name);
+        var stopwatch = Stopwatch.StartNew();
+
+        var success = await RunProcessAsync(
+                GetShellFileName(),
+                GetShellArguments(command),
+                workingDir,
+                _stoppingToken
+            )
+            .ConfigureAwait(false);
+
+        stopwatch.Stop();
+
+        if (success)
+        {
+            LogRebuiltSuccessfully(logger, name, stopwatch.ElapsedMilliseconds);
+        }
+        else
+        {
+            LogBuildFailed(logger, name);
+        }
     }
 
-    private static bool ShouldIgnoreClientAppPath(string fullPath)
+    private async Task RunTailwindBuild()
     {
-        return ContainsSegment(fullPath, "node_modules");
-    }
+        var tailwindCli = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? Path.Combine(_repoRoot, "tools", "tailwindcss.exe")
+            : Path.Combine(_repoRoot, "tools", "tailwindcss");
 
-    private static bool ShouldIgnoreTailwindPath(string fullPath)
-    {
-        return ContainsSegment(fullPath, "_scan");
-    }
+        var hostDir = environment.ContentRootPath;
+        var inputPath = Path.Combine(hostDir, "Styles", "app.css");
+        var outputPath = Path.Combine(hostDir, "wwwroot", "css", "app.css");
 
-    private static bool ContainsSegment(string fullPath, string segment)
-    {
-        var separator1 = $"{Path.DirectorySeparatorChar}{segment}{Path.DirectorySeparatorChar}";
-        var separator2 =
-            $"{Path.AltDirectorySeparatorChar}{segment}{Path.AltDirectorySeparatorChar}";
+        var command = $"\"{tailwindCli}\" -i \"{inputPath}\" -o \"{outputPath}\"";
 
-        return fullPath.Contains(separator1, StringComparison.OrdinalIgnoreCase)
-            || fullPath.Contains(separator2, StringComparison.OrdinalIgnoreCase);
+        await RunBuild("Tailwind", command, hostDir).ConfigureAwait(false);
     }
 
     private void DebouncedBuild(string buildKey, Func<Task> buildAction)
     {
-        // Cancel any previous debounce timer for this build key
         if (_debounceTimers.TryRemove(buildKey, out var previousCts))
         {
             previousCts.Cancel();
@@ -292,19 +219,16 @@ public sealed partial class ViteDevWatchService(
             {
                 try
                 {
-                    // Wait for debounce period — cancelled if a newer change arrives
                     await Task.Delay(TimeSpan.FromMilliseconds(300), cts.Token)
                         .ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
-                    // Either a newer change superseded this one, or the service is shutting down
                     return;
                 }
 
                 _debounceTimers.TryRemove(buildKey, out _);
 
-                // Skip if a build is already running for this key
                 if (!_buildInProgress.TryAdd(buildKey, true))
                 {
                     return;
@@ -323,108 +247,10 @@ public sealed partial class ViteDevWatchService(
         );
     }
 
-    private async Task RunViteBuild(
-        string moduleName,
-        string moduleDir,
-        string repoRoot,
-        CancellationToken stoppingToken
-    )
-    {
-        LogRebuildingModule(logger, moduleName);
-        var stopwatch = Stopwatch.StartNew();
-
-        var success = await RunProcessAsync(
-                GetShellFileName(),
-                GetShellArguments("npx vite build"),
-                moduleDir,
-                repoRoot,
-                stoppingToken
-            )
-            .ConfigureAwait(false);
-
-        stopwatch.Stop();
-
-        if (success)
-        {
-            LogModuleRebuiltSuccessfully(logger, moduleName, stopwatch.ElapsedMilliseconds);
-        }
-        else
-        {
-            LogModuleBuildFailed(logger, moduleName);
-        }
-    }
-
-    private async Task RunClientAppBuild(
-        string clientAppDir,
-        string repoRoot,
-        CancellationToken stoppingToken
-    )
-    {
-        LogRebuildingClientApp(logger);
-        var stopwatch = Stopwatch.StartNew();
-
-        var success = await RunProcessAsync(
-                GetShellFileName(),
-                GetShellArguments("npx vite build"),
-                clientAppDir,
-                repoRoot,
-                stoppingToken
-            )
-            .ConfigureAwait(false);
-
-        stopwatch.Stop();
-
-        if (success)
-        {
-            LogClientAppRebuiltSuccessfully(logger, stopwatch.ElapsedMilliseconds);
-        }
-        else
-        {
-            LogClientAppBuildFailed(logger);
-        }
-    }
-
-    private async Task RunTailwindBuild(string repoRoot, CancellationToken stoppingToken)
-    {
-        LogRebuildingTailwind(logger);
-        var stopwatch = Stopwatch.StartNew();
-
-        var tailwindCli = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? Path.Combine(repoRoot, "tools", "tailwindcss.exe")
-            : Path.Combine(repoRoot, "tools", "tailwindcss");
-
-        var hostDir = environment.ContentRootPath;
-        var inputPath = Path.Combine(hostDir, "Styles", "app.css");
-        var outputPath = Path.Combine(hostDir, "wwwroot", "css", "app.css");
-
-        var command = $"\"{tailwindCli}\" -i \"{inputPath}\" -o \"{outputPath}\"";
-
-        var success = await RunProcessAsync(
-                GetShellFileName(),
-                GetShellArguments(command),
-                hostDir,
-                repoRoot,
-                stoppingToken
-            )
-            .ConfigureAwait(false);
-
-        stopwatch.Stop();
-
-        if (success)
-        {
-            LogTailwindRebuiltSuccessfully(logger, stopwatch.ElapsedMilliseconds);
-        }
-        else
-        {
-            LogTailwindBuildFailed(logger);
-        }
-    }
-
     private async Task<bool> RunProcessAsync(
         string fileName,
         string arguments,
         string workingDirectory,
-        string repoRoot,
         CancellationToken stoppingToken
     )
     {
@@ -442,20 +268,16 @@ public sealed partial class ViteDevWatchService(
                 CreateNoWindow = true,
             };
 
-            // Set VITE_MODE=dev for dev builds
             process.StartInfo.Environment["VITE_MODE"] = "dev";
 
-            // Ensure PATH includes node_modules/.bin from repo root
-            var npmBinPath = Path.Combine(repoRoot, "node_modules", ".bin");
             var existingPath = process.StartInfo.Environment.TryGetValue("PATH", out var path)
                 ? path
                 : "";
             process.StartInfo.Environment["PATH"] =
-                $"{npmBinPath}{Path.PathSeparator}{existingPath}";
+                $"{_npmBinPath}{Path.PathSeparator}{existingPath}";
 
             process.Start();
 
-            // Read output streams asynchronously to avoid deadlocks
             var stdoutTask = process.StandardOutput.ReadToEndAsync(stoppingToken);
             var stderrTask = process.StandardError.ReadToEndAsync(stoppingToken);
 
@@ -503,6 +325,79 @@ public sealed partial class ViteDevWatchService(
         }
     }
 
+    private static string? FindRepoRoot(string startPath)
+    {
+        var current = startPath;
+        while (current is not null)
+        {
+            if (Directory.Exists(Path.Combine(current, ".git")))
+            {
+                return current;
+            }
+
+            current = Path.GetDirectoryName(current);
+        }
+
+        return null;
+    }
+
+    private static List<string> DiscoverModuleDirectories(string modulesRoot)
+    {
+        var directories = new List<string>();
+
+        if (!Directory.Exists(modulesRoot))
+        {
+            return directories;
+        }
+
+        foreach (var moduleGroupDir in Directory.GetDirectories(modulesRoot))
+        {
+            var srcDir = Path.Combine(moduleGroupDir, "src");
+            if (!Directory.Exists(srcDir))
+            {
+                continue;
+            }
+
+            foreach (var moduleDir in Directory.GetDirectories(srcDir))
+            {
+                if (File.Exists(Path.Combine(moduleDir, "vite.config.ts")))
+                {
+                    directories.Add(moduleDir);
+                }
+            }
+        }
+
+        return directories;
+    }
+
+    private static bool ShouldIgnoreModulePath(string fullPath)
+    {
+        return ContainsSegment(fullPath, "wwwroot") || ContainsSegment(fullPath, "node_modules");
+    }
+
+    private static bool ShouldIgnoreClientAppPath(string fullPath)
+    {
+        return ContainsSegment(fullPath, "node_modules");
+    }
+
+    private static bool ShouldIgnoreTailwindPath(string fullPath)
+    {
+        return ContainsSegment(fullPath, "_scan");
+    }
+
+    private static bool ContainsSegment(string fullPath, string segment)
+    {
+        // Check both separator styles for cross-platform path matching
+        return fullPath.Contains(
+                $"{Path.DirectorySeparatorChar}{segment}{Path.DirectorySeparatorChar}",
+                StringComparison.OrdinalIgnoreCase
+            )
+            || fullPath.Contains(
+                $"{Path.AltDirectorySeparatorChar}{segment}{Path.AltDirectorySeparatorChar}",
+                StringComparison.OrdinalIgnoreCase
+            );
+    }
+
     private static string GetShellFileName()
     {
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd" : "sh";
@@ -535,13 +430,10 @@ public sealed partial class ViteDevWatchService(
     )]
     private static partial void LogWatchingStarted(ILogger logger, int moduleCount);
 
-    [LoggerMessage(
-        Level = LogLevel.Debug,
-        Message = "Module {ModuleName} file changed: {FilePath}"
-    )]
-    private static partial void LogModuleFileChanged(
+    [LoggerMessage(Level = LogLevel.Debug, Message = "{BuildKey} file changed: {FilePath}")]
+    private static partial void LogFileChanged(
         ILogger logger,
-        string moduleName,
+        string buildKey,
         string? filePath
     );
 
@@ -555,57 +447,27 @@ public sealed partial class ViteDevWatchService(
         string moduleDir
     );
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "ClientApp file changed: {FilePath}")]
-    private static partial void LogClientAppFileChanged(ILogger logger, string? filePath);
-
     [LoggerMessage(Level = LogLevel.Debug, Message = "Watching ClientApp at {ClientAppDir}")]
     private static partial void LogWatchingClientApp(ILogger logger, string clientAppDir);
-
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Styles file changed: {FilePath}")]
-    private static partial void LogStylesFileChanged(ILogger logger, string? filePath);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Watching Styles at {StylesDir}")]
     private static partial void LogWatchingStyles(ILogger logger, string stylesDir);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding module: {ModuleName}")]
-    private static partial void LogRebuildingModule(ILogger logger, string moduleName);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding {Name}...")]
+    private static partial void LogRebuilding(ILogger logger, string name);
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "Module {ModuleName} rebuilt successfully in {ElapsedMs}ms"
+        Message = "{Name} rebuilt successfully in {ElapsedMs}ms"
     )]
-    private static partial void LogModuleRebuiltSuccessfully(
+    private static partial void LogRebuiltSuccessfully(
         ILogger logger,
-        string moduleName,
+        string name,
         long elapsedMs
     );
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Module {ModuleName} build failed")]
-    private static partial void LogModuleBuildFailed(ILogger logger, string moduleName);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding ClientApp")]
-    private static partial void LogRebuildingClientApp(ILogger logger);
-
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "ClientApp rebuilt successfully in {ElapsedMs}ms"
-    )]
-    private static partial void LogClientAppRebuiltSuccessfully(ILogger logger, long elapsedMs);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "ClientApp build failed")]
-    private static partial void LogClientAppBuildFailed(ILogger logger);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding Tailwind CSS")]
-    private static partial void LogRebuildingTailwind(ILogger logger);
-
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Tailwind CSS rebuilt successfully in {ElapsedMs}ms"
-    )]
-    private static partial void LogTailwindRebuiltSuccessfully(ILogger logger, long elapsedMs);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Tailwind CSS build failed")]
-    private static partial void LogTailwindBuildFailed(ILogger logger);
+    [LoggerMessage(Level = LogLevel.Error, Message = "{Name} build failed")]
+    private static partial void LogBuildFailed(ILogger logger, string name);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Build stderr: {Stderr}")]
     private static partial void LogBuildStderr(ILogger logger, string stderr);
