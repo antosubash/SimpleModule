@@ -3,6 +3,8 @@ import { defaultVendors, vendorBuildPlugin, vendorPaths } from '@simplemodule/cl
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+const isDev = process.env.VITE_MODE !== 'prod';
+
 export default defineConfig({
   plugins: [
     vendorBuildPlugin({
@@ -11,6 +13,8 @@ export default defineConfig({
     react(),
   ],
   build: {
+    sourcemap: isDev,
+    minify: isDev ? false : 'esbuild',
     outDir: path.resolve(__dirname, '../wwwroot/js'),
     emptyOutDir: false,
     rollupOptions: {
