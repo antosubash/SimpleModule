@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace SimpleModule.Host.Services;
+namespace SimpleModule.DevTools;
 
 /// <summary>
 /// Background service that watches module and ClientApp source files for changes,
@@ -11,13 +13,24 @@ namespace SimpleModule.Host.Services;
 /// </summary>
 public sealed partial class ViteDevWatchService(
     ILogger<ViteDevWatchService> logger,
-    IWebHostEnvironment environment
+    IHostEnvironment environment
 ) : BackgroundService
 {
-    private static readonly string[] WatchedExtensions = ["*.ts", "*.tsx", "*.css", "*.jsx", "*.js"];
+    private static readonly string[] WatchedExtensions =
+    [
+        "*.ts",
+        "*.tsx",
+        "*.css",
+        "*.jsx",
+        "*.js",
+    ];
 
-    private readonly ConcurrentDictionary<string, CancellationTokenSource> _debounceTimers = new(StringComparer.OrdinalIgnoreCase);
-    private readonly ConcurrentDictionary<string, bool> _buildInProgress = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _debounceTimers = new(
+        StringComparer.OrdinalIgnoreCase
+    );
+    private readonly ConcurrentDictionary<string, bool> _buildInProgress = new(
+        StringComparer.OrdinalIgnoreCase
+    );
     private readonly List<FileSystemWatcher> _watchers = [];
     private CancellationToken _stoppingToken;
 
@@ -149,7 +162,10 @@ public sealed partial class ViteDevWatchService(
             }
 
             LogModuleFileChanged(logger, moduleName, e.Name);
-            DebouncedBuild(buildKey, () => RunViteBuild(moduleName, moduleDir, repoRoot, _stoppingToken));
+            DebouncedBuild(
+                buildKey,
+                () => RunViteBuild(moduleName, moduleDir, repoRoot, _stoppingToken)
+            );
         }
 
         watcher.Changed += OnChanged;
@@ -175,7 +191,10 @@ public sealed partial class ViteDevWatchService(
             }
 
             LogClientAppFileChanged(logger, e.Name);
-            DebouncedBuild(buildKey, () => RunClientAppBuild(clientAppDir, repoRoot, _stoppingToken));
+            DebouncedBuild(
+                buildKey,
+                () => RunClientAppBuild(clientAppDir, repoRoot, _stoppingToken)
+            );
         }
 
         watcher.Changed += OnChanged;
@@ -219,7 +238,8 @@ public sealed partial class ViteDevWatchService(
         var watcher = new FileSystemWatcher(path)
         {
             IncludeSubdirectories = true,
-            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime,
+            NotifyFilter =
+                NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime,
         };
 
         foreach (var filter in filters)
@@ -248,10 +268,11 @@ public sealed partial class ViteDevWatchService(
     private static bool ContainsSegment(string fullPath, string segment)
     {
         var separator1 = $"{Path.DirectorySeparatorChar}{segment}{Path.DirectorySeparatorChar}";
-        var separator2 = $"{Path.AltDirectorySeparatorChar}{segment}{Path.AltDirectorySeparatorChar}";
+        var separator2 =
+            $"{Path.AltDirectorySeparatorChar}{segment}{Path.AltDirectorySeparatorChar}";
 
         return fullPath.Contains(separator1, StringComparison.OrdinalIgnoreCase)
-               || fullPath.Contains(separator2, StringComparison.OrdinalIgnoreCase);
+            || fullPath.Contains(separator2, StringComparison.OrdinalIgnoreCase);
     }
 
     private void DebouncedBuild(string buildKey, Func<Task> buildAction)
@@ -266,53 +287,60 @@ public sealed partial class ViteDevWatchService(
         var cts = CancellationTokenSource.CreateLinkedTokenSource(_stoppingToken);
         _debounceTimers[buildKey] = cts;
 
-        _ = Task.Run(async () =>
-        {
-            try
+        _ = Task.Run(
+            async () =>
             {
-                // Wait for debounce period — cancelled if a newer change arrives
-                await Task.Delay(TimeSpan.FromMilliseconds(300), cts.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // Either a newer change superseded this one, or the service is shutting down
-                return;
-            }
+                try
+                {
+                    // Wait for debounce period — cancelled if a newer change arrives
+                    await Task.Delay(TimeSpan.FromMilliseconds(300), cts.Token)
+                        .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Either a newer change superseded this one, or the service is shutting down
+                    return;
+                }
 
-            _debounceTimers.TryRemove(buildKey, out _);
+                _debounceTimers.TryRemove(buildKey, out _);
 
-            // Skip if a build is already running for this key
-            if (!_buildInProgress.TryAdd(buildKey, true))
-            {
-                return;
-            }
+                // Skip if a build is already running for this key
+                if (!_buildInProgress.TryAdd(buildKey, true))
+                {
+                    return;
+                }
 
-            try
-            {
-                await buildAction().ConfigureAwait(false);
-            }
-            finally
-            {
-                _buildInProgress.TryRemove(buildKey, out _);
-            }
-        }, _stoppingToken);
+                try
+                {
+                    await buildAction().ConfigureAwait(false);
+                }
+                finally
+                {
+                    _buildInProgress.TryRemove(buildKey, out _);
+                }
+            },
+            _stoppingToken
+        );
     }
 
     private async Task RunViteBuild(
         string moduleName,
         string moduleDir,
         string repoRoot,
-        CancellationToken stoppingToken)
+        CancellationToken stoppingToken
+    )
     {
         LogRebuildingModule(logger, moduleName);
         var stopwatch = Stopwatch.StartNew();
 
         var success = await RunProcessAsync(
-            GetShellFileName(),
-            GetShellArguments("npx vite build"),
-            moduleDir,
-            repoRoot,
-            stoppingToken).ConfigureAwait(false);
+                GetShellFileName(),
+                GetShellArguments("npx vite build"),
+                moduleDir,
+                repoRoot,
+                stoppingToken
+            )
+            .ConfigureAwait(false);
 
         stopwatch.Stop();
 
@@ -329,17 +357,20 @@ public sealed partial class ViteDevWatchService(
     private async Task RunClientAppBuild(
         string clientAppDir,
         string repoRoot,
-        CancellationToken stoppingToken)
+        CancellationToken stoppingToken
+    )
     {
         LogRebuildingClientApp(logger);
         var stopwatch = Stopwatch.StartNew();
 
         var success = await RunProcessAsync(
-            GetShellFileName(),
-            GetShellArguments("npx vite build"),
-            clientAppDir,
-            repoRoot,
-            stoppingToken).ConfigureAwait(false);
+                GetShellFileName(),
+                GetShellArguments("npx vite build"),
+                clientAppDir,
+                repoRoot,
+                stoppingToken
+            )
+            .ConfigureAwait(false);
 
         stopwatch.Stop();
 
@@ -369,11 +400,13 @@ public sealed partial class ViteDevWatchService(
         var command = $"\"{tailwindCli}\" -i \"{inputPath}\" -o \"{outputPath}\"";
 
         var success = await RunProcessAsync(
-            GetShellFileName(),
-            GetShellArguments(command),
-            hostDir,
-            repoRoot,
-            stoppingToken).ConfigureAwait(false);
+                GetShellFileName(),
+                GetShellArguments(command),
+                hostDir,
+                repoRoot,
+                stoppingToken
+            )
+            .ConfigureAwait(false);
 
         stopwatch.Stop();
 
@@ -392,7 +425,8 @@ public sealed partial class ViteDevWatchService(
         string arguments,
         string workingDirectory,
         string repoRoot,
-        CancellationToken stoppingToken)
+        CancellationToken stoppingToken
+    )
     {
         try
         {
@@ -413,8 +447,11 @@ public sealed partial class ViteDevWatchService(
 
             // Ensure PATH includes node_modules/.bin from repo root
             var npmBinPath = Path.Combine(repoRoot, "node_modules", ".bin");
-            var existingPath = process.StartInfo.Environment.TryGetValue("PATH", out var path) ? path : "";
-            process.StartInfo.Environment["PATH"] = $"{npmBinPath}{Path.PathSeparator}{existingPath}";
+            var existingPath = process.StartInfo.Environment.TryGetValue("PATH", out var path)
+                ? path
+                : "";
+            process.StartInfo.Environment["PATH"] =
+                $"{npmBinPath}{Path.PathSeparator}{existingPath}";
 
             process.Start();
 
@@ -473,25 +510,50 @@ public sealed partial class ViteDevWatchService(
 
     private static string GetShellArguments(string command)
     {
-        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"/c {command}" : $"-c \"{command}\"";
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? $"/c {command}"
+            : $"-c \"{command}\"";
     }
 
     #region LoggerMessage definitions
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Could not find repository root (.git directory). ViteDevWatchService will not start.")]
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Could not find repository root (.git directory). ViteDevWatchService will not start."
+    )]
     private static partial void LogRepoRootNotFound(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "ViteDevWatchService starting. Repo root: {RepoRoot}")]
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "ViteDevWatchService starting. Repo root: {RepoRoot}"
+    )]
     private static partial void LogServiceStarting(ILogger logger, string repoRoot);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "ViteDevWatchService watching {ModuleCount} module(s), ClientApp, and Styles")]
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "ViteDevWatchService watching {ModuleCount} module(s), ClientApp, and Styles"
+    )]
     private static partial void LogWatchingStarted(ILogger logger, int moduleCount);
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Module {ModuleName} file changed: {FilePath}")]
-    private static partial void LogModuleFileChanged(ILogger logger, string moduleName, string? filePath);
+    [LoggerMessage(
+        Level = LogLevel.Debug,
+        Message = "Module {ModuleName} file changed: {FilePath}"
+    )]
+    private static partial void LogModuleFileChanged(
+        ILogger logger,
+        string moduleName,
+        string? filePath
+    );
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "Watching module: {ModuleName} at {ModuleDir}")]
-    private static partial void LogWatchingModule(ILogger logger, string moduleName, string moduleDir);
+    [LoggerMessage(
+        Level = LogLevel.Debug,
+        Message = "Watching module: {ModuleName} at {ModuleDir}"
+    )]
+    private static partial void LogWatchingModule(
+        ILogger logger,
+        string moduleName,
+        string moduleDir
+    );
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "ClientApp file changed: {FilePath}")]
     private static partial void LogClientAppFileChanged(ILogger logger, string? filePath);
@@ -508,8 +570,15 @@ public sealed partial class ViteDevWatchService(
     [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding module: {ModuleName}")]
     private static partial void LogRebuildingModule(ILogger logger, string moduleName);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Module {ModuleName} rebuilt successfully in {ElapsedMs}ms")]
-    private static partial void LogModuleRebuiltSuccessfully(ILogger logger, string moduleName, long elapsedMs);
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Module {ModuleName} rebuilt successfully in {ElapsedMs}ms"
+    )]
+    private static partial void LogModuleRebuiltSuccessfully(
+        ILogger logger,
+        string moduleName,
+        long elapsedMs
+    );
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Module {ModuleName} build failed")]
     private static partial void LogModuleBuildFailed(ILogger logger, string moduleName);
@@ -517,7 +586,10 @@ public sealed partial class ViteDevWatchService(
     [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding ClientApp")]
     private static partial void LogRebuildingClientApp(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "ClientApp rebuilt successfully in {ElapsedMs}ms")]
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "ClientApp rebuilt successfully in {ElapsedMs}ms"
+    )]
     private static partial void LogClientAppRebuiltSuccessfully(ILogger logger, long elapsedMs);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "ClientApp build failed")]
@@ -526,7 +598,10 @@ public sealed partial class ViteDevWatchService(
     [LoggerMessage(Level = LogLevel.Information, Message = "Rebuilding Tailwind CSS")]
     private static partial void LogRebuildingTailwind(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Tailwind CSS rebuilt successfully in {ElapsedMs}ms")]
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Tailwind CSS rebuilt successfully in {ElapsedMs}ms"
+    )]
     private static partial void LogTailwindRebuiltSuccessfully(ILogger logger, long elapsedMs);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Tailwind CSS build failed")]
@@ -544,8 +619,16 @@ public sealed partial class ViteDevWatchService(
     [LoggerMessage(Level = LogLevel.Debug, Message = "Build cancelled")]
     private static partial void LogBuildCancelled(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to run build process: {FileName} {Arguments}")]
-    private static partial void LogBuildProcessFailed(ILogger logger, Exception ex, string fileName, string arguments);
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Failed to run build process: {FileName} {Arguments}"
+    )]
+    private static partial void LogBuildProcessFailed(
+        ILogger logger,
+        Exception ex,
+        string fileName,
+        string arguments
+    );
 
     #endregion
 }

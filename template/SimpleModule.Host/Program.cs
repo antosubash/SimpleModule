@@ -5,6 +5,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
+using SimpleModule.DevTools;
 using SimpleModule.Host;
 using SimpleModule.Host.Components;
 using SimpleModule.OpenIddict.Contracts;
@@ -60,7 +61,7 @@ builder.Services.AddModuleHealthChecks();
 
 if (builder.Environment.IsDevelopment())
 {
-    builder.Services.AddHostedService<SimpleModule.Host.Services.ViteDevWatchService>();
+    builder.Services.AddDevTools();
 }
 
 var app = builder.Build();

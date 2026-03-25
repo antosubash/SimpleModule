@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\framework\SimpleModule.Blazor\SimpleModule.Blazor.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.DevTools\SimpleModule.DevTools.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference
