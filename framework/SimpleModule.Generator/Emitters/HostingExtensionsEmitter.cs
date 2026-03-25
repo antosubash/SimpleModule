@@ -49,7 +49,11 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("        this WebApplicationBuilder builder,");
         sb.AppendLine("        System.Action<SimpleModuleOptions>? configure = null)");
         sb.AppendLine("    {");
-        sb.AppendLine("        builder.AddSimpleModuleInfrastructure(configure);");
+        sb.AppendLine("        builder.AddSimpleModuleInfrastructure(o =>");
+        sb.AppendLine("        {");
+        sb.AppendLine("            o.ShellComponent ??= typeof(InertiaShell);");
+        sb.AppendLine("            configure?.Invoke(o);");
+        sb.AppendLine("        });");
         sb.AppendLine();
         sb.AppendLine("        // Source-generated module registration");
         sb.AppendLine("        builder.Services.AddModules(builder.Configuration);");
