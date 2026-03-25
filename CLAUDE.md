@@ -17,11 +17,38 @@ dotnet run --project template/SimpleModule.Host     # runs on https://localhost:
 
 ```bash
 npm install                          # install all workspace dependencies
+npm run dev                          # start development (dotnet + all module watches, unminified JS)
+npm run dev:build                    # build all modules in dev mode (unminified, with source maps)
+npm run build                        # production build (minified, optimized)
 npm run check                        # biome lint + format check
 npm run check:fix                    # auto-fix lint + formatting
 npm run lint                         # lint only
 npm run format                       # format only (with write)
 ```
+
+### Development Workflow
+
+Run `npm run dev` to start the complete development environment:
+
+```bash
+npm run dev
+# Starts:
+# - dotnet run (ASP.NET backend on https://localhost:5001)
+# - npm watch for all modules (unminified, with source maps)
+# - npm watch for ClientApp (unminified, with source maps)
+```
+
+The orchestrator will coordinate all processes:
+- **Edit a module file** → Vite rebuilds (fast, unminified, readable code)
+- **Edit ClientApp** → Vite rebuilds (fast, unminified)
+- **Browser refresh** → See changes immediately
+- **Browser dev tools** → See original TypeScript thanks to source maps
+- **Ctrl+C** → Gracefully stops all processes
+
+### Build Modes
+
+- **Development (`npm run build:dev`)** — unminified, source maps enabled, for local iteration
+- **Production (`npm run build`)** — minified, optimized, for distribution and NuGet packages
 
 Workspaces: `modules/*/src/*`, `packages/*`, and `template/SimpleModule.Host/ClientApp`.
 
