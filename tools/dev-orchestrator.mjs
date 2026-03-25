@@ -9,13 +9,13 @@ const rootDir = path.resolve(__dirname, '..');
 // Get all module workspace paths
 const modules = [
   'modules/Admin/src/Admin',
+  'modules/AuditLogs/src/AuditLogs',
   'modules/Dashboard/src/Dashboard',
-  'modules/Orders/src/Orders',
+  'modules/OpenIddict/src/OpenIddict',
+  'modules/Permissions/src/Permissions',
   'modules/Products/src/Products',
   'modules/Settings/src/Settings',
   'modules/Users/src/Users',
-  'modules/AuditLogs/src/AuditLogs',
-  'modules/OpenIddict/src/OpenIddict',
   'modules/PageBuilder/src/PageBuilder',
 ];
 
