@@ -12,11 +12,11 @@ public class GetSettingEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/{key}",
-                async (string key, SettingScope scope, ISettingsContracts settings) =>
+                async Task<IResult> (string key, SettingScope scope, ISettingsContracts settings) =>
                 {
                     var value = await settings.GetSettingAsync(key, scope);
                     return value is not null
-                        ? Results.Ok(
+                        ? TypedResults.Ok(
                             new
                             {
                                 key,
@@ -24,7 +24,7 @@ public class GetSettingEndpoint : IEndpoint
                                 scope,
                             }
                         )
-                        : Results.NotFound();
+                        : TypedResults.NotFound();
                 }
             )
             .RequireAuthorization();

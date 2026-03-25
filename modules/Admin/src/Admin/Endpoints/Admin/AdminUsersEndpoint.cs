@@ -48,29 +48,29 @@ public class AdminUsersEndpoint : IEndpoint
                 var result = await userManager.CreateAsync(user, password);
                 if (!result.Succeeded)
                 {
-                    return Results.Redirect("/admin/users?error=create-failed");
+                    return TypedResults.Redirect("/admin/users?error=create-failed");
                 }
 
                 var form = await context.Request.ReadFormAsync();
-                var roles = form["roles"]
+                var filteredRoles = form["roles"]
                     .Where(r => !string.IsNullOrEmpty(r))
                     .Select(r => r!)
                     .ToList();
-                if (roles.Count > 0)
+                if (filteredRoles.Count > 0)
                 {
-                    await userManager.AddToRolesAsync(user, roles);
+                    await userManager.AddToRolesAsync(user, filteredRoles);
                 }
 
                 await audit.LogAsync(user.Id, adminId, "UserCreated", $"Created user {email}");
 
-                return Results.Redirect($"/admin/users/{user.Id}/edit");
+                return TypedResults.Redirect($"/admin/users/{user.Id}/edit");
             }
         );
 
         // POST /admin/users/{id} — Update details
         group.MapPost(
             "/{id}",
-            async (
+            async Task<IResult> (
                 string id,
                 [FromForm] string displayName,
                 [FromForm] string email,
@@ -84,7 +84,7 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 user.DisplayName = displayName;
@@ -100,14 +100,14 @@ public class AdminUsersEndpoint : IEndpoint
                     $"Updated user details for {email}"
                 );
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=details");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=details");
             }
         );
 
         // POST /admin/users/{id}/roles — Set roles
         group.MapPost(
             "/{id}/roles",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -118,7 +118,7 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 var form = await context.Request.ReadFormAsync();
@@ -149,14 +149,14 @@ public class AdminUsersEndpoint : IEndpoint
                     }
                 }
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=roles");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=roles");
             }
         );
 
         // POST /admin/users/{id}/permissions — Set direct permissions
         group.MapPost(
             "/{id}/permissions",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 IPermissionContracts permissionContracts,
@@ -198,14 +198,14 @@ public class AdminUsersEndpoint : IEndpoint
 
                 await permissionContracts.SetPermissionsForUserAsync(userId, newPermissions);
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=roles");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=roles");
             }
         );
 
         // POST /admin/users/{id}/reset-password — Reset password
         group.MapPost(
             "/{id}/reset-password",
-            async (
+            async Task<IResult> (
                 string id,
                 [FromForm] string newPassword,
                 HttpContext context,
@@ -217,21 +217,21 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 var token = await userManager.GeneratePasswordResetTokenAsync(user);
                 await userManager.ResetPasswordAsync(user, token, newPassword);
                 await audit.LogAsync(id, adminId, "PasswordReset");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=security");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
             }
         );
 
         // POST /admin/users/{id}/lock — Lock account
         group.MapPost(
             "/{id}/lock",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -242,21 +242,21 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 await userManager.SetLockoutEnabledAsync(user, true);
                 await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
                 await audit.LogAsync(id, adminId, "AccountLocked");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=security");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
             }
         );
 
         // POST /admin/users/{id}/unlock — Unlock account
         group.MapPost(
             "/{id}/unlock",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -267,21 +267,21 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 await userManager.SetLockoutEndDateAsync(user, null);
                 await userManager.ResetAccessFailedCountAsync(user);
                 await audit.LogAsync(id, adminId, "AccountUnlocked");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=security");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
             }
         );
 
         // POST /admin/users/{id}/force-reverify — Force email re-verification
         group.MapPost(
             "/{id}/force-reverify",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -292,21 +292,21 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 user.EmailConfirmed = false;
                 await userManager.UpdateAsync(user);
                 await audit.LogAsync(id, adminId, "EmailReverified");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=security");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
             }
         );
 
         // POST /admin/users/{id}/disable-2fa — Disable two-factor authentication
         group.MapPost(
             "/{id}/disable-2fa",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -317,21 +317,21 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 await userManager.SetTwoFactorEnabledAsync(user, false);
                 await userManager.ResetAuthenticatorKeyAsync(user);
                 await audit.LogAsync(id, adminId, "TwoFactorDisabled");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=security");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
             }
         );
 
         // POST /admin/users/{id}/deactivate — Soft-delete (deactivate) user
         group.MapPost(
             "/{id}/deactivate",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -342,7 +342,7 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 user.DeactivatedAt = DateTimeOffset.UtcNow;
@@ -351,14 +351,14 @@ public class AdminUsersEndpoint : IEndpoint
                 await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
                 await audit.LogAsync(id, adminId, "UserDeactivated");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=details");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=details");
             }
         );
 
         // POST /admin/users/{id}/reactivate — Reactivate user
         group.MapPost(
             "/{id}/reactivate",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 UserManager<ApplicationUser> userManager,
@@ -369,7 +369,7 @@ public class AdminUsersEndpoint : IEndpoint
                 var user = await userManager.FindByIdAsync(id);
                 if (user is null)
                 {
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
                 }
 
                 user.DeactivatedAt = null;
@@ -378,7 +378,7 @@ public class AdminUsersEndpoint : IEndpoint
                 await userManager.ResetAccessFailedCountAsync(user);
                 await audit.LogAsync(id, adminId, "UserReactivated");
 
-                return Results.Redirect($"/admin/users/{id}/edit?tab=details");
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=details");
             }
         );
     }

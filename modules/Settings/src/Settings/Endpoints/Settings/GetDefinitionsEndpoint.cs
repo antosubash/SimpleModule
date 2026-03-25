@@ -12,7 +12,7 @@ public class GetDefinitionsEndpoint : IEndpoint
         app.MapGet(
                 "/definitions",
                 (ISettingsDefinitionRegistry registry, SettingScope? scope) =>
-                    Results.Ok(registry.GetDefinitions(scope))
+                    TypedResults.Ok(registry.GetDefinitions(scope))
             )
             .RequireAuthorization();
 }

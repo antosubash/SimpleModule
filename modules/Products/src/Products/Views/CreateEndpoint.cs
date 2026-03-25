@@ -24,7 +24,7 @@ public class CreateEndpoint : IViewEndpoint
                 {
                     var request = new CreateProductRequest { Name = name, Price = price };
                     await products.CreateProductAsync(request);
-                    return Results.Redirect("/products/manage");
+                    return TypedResults.Redirect("/products/manage");
                 }
             )
             .DisableAntiforgery();

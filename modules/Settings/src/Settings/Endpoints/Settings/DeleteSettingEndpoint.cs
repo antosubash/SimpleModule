@@ -15,7 +15,7 @@ public class DeleteSettingEndpoint : IEndpoint
                 async (string key, SettingScope scope, ISettingsContracts settings) =>
                 {
                     await settings.DeleteSettingAsync(key, scope);
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

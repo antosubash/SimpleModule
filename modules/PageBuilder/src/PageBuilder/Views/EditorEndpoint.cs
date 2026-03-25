@@ -32,7 +32,7 @@ public class EditorEndpoint : IViewEndpoint
                     var page = await pageBuilder.GetPageByIdAsync(id);
                     if (page is null)
                     {
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
                     }
 
                     // Editor works on draft content, falling back to published content

@@ -35,7 +35,7 @@ public class AdminRolesEndpoint : IEndpoint
                 {
                     var trimmedName = name.Trim();
                     if (string.IsNullOrEmpty(trimmedName))
-                        return Results.Redirect("/admin/roles/create");
+                        return TypedResults.Redirect("/admin/roles/create");
 
                     var role = new ApplicationRole
                     {
@@ -45,19 +45,19 @@ public class AdminRolesEndpoint : IEndpoint
 
                     var result = await roleManager.CreateAsync(role);
                     if (!result.Succeeded)
-                        return Results.Redirect("/admin/roles/create");
+                        return TypedResults.Redirect("/admin/roles/create");
 
                     var form = await context.Request.ReadFormAsync();
-                    var permissions = form["permissions"]
+                    var filteredPermissions = form["permissions"]
                         .Where(p => !string.IsNullOrWhiteSpace(p))
                         .Select(p => p!)
                         .ToList();
 
-                    if (permissions.Count > 0)
+                    if (filteredPermissions.Count > 0)
                     {
                         await permissionContracts.SetPermissionsForRoleAsync(
                             RoleId.From(role.Id),
-                            permissions
+                            filteredPermissions
                         );
                     }
 
@@ -69,7 +69,7 @@ public class AdminRolesEndpoint : IEndpoint
                         $"Role '{trimmedName}' created"
                     );
 
-                    return Results.Redirect($"/admin/roles/{role.Id}/edit");
+                    return TypedResults.Redirect($"/admin/roles/{role.Id}/edit");
                 }
             )
             .DisableAntiforgery();
@@ -78,7 +78,7 @@ public class AdminRolesEndpoint : IEndpoint
         group
             .MapPost(
                 "/{id}",
-                async (
+                async Task<IResult> (
                     string id,
                     [FromForm] string name,
                     [FromForm] string? description,
@@ -89,7 +89,7 @@ public class AdminRolesEndpoint : IEndpoint
                 {
                     var role = await roleManager.FindByIdAsync(id);
                     if (role is null)
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
 
                     role.Name = name.Trim();
                     role.Description = description?.Trim() is { Length: > 0 } d ? d : null;
@@ -103,7 +103,7 @@ public class AdminRolesEndpoint : IEndpoint
                         $"Role '{role.Name}' updated"
                     );
 
-                    return Results.Redirect($"/admin/roles/{id}/edit?tab=details");
+                    return TypedResults.Redirect($"/admin/roles/{id}/edit?tab=details");
                 }
             )
             .DisableAntiforgery();
@@ -112,7 +112,7 @@ public class AdminRolesEndpoint : IEndpoint
         group
             .MapPost(
                 "/{id}/permissions",
-                async (
+                async Task<IResult> (
                     string id,
                     HttpContext context,
                     RoleManager<ApplicationRole> roleManager,
@@ -122,7 +122,7 @@ public class AdminRolesEndpoint : IEndpoint
                 {
                     var role = await roleManager.FindByIdAsync(id);
                     if (role is null)
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
 
                     var form = await context.Request.ReadFormAsync();
                     var newPermissions = form["permissions"]
@@ -161,7 +161,7 @@ public class AdminRolesEndpoint : IEndpoint
 
                     await permissionContracts.SetPermissionsForRoleAsync(roleId, newPermissions);
 
-                    return Results.Redirect($"/admin/roles/{id}/edit?tab=permissions");
+                    return TypedResults.Redirect($"/admin/roles/{id}/edit?tab=permissions");
                 }
             )
             .DisableAntiforgery();
@@ -169,7 +169,7 @@ public class AdminRolesEndpoint : IEndpoint
         // DELETE /{id} — Delete role
         group.MapDelete(
             "/{id}",
-            async (
+            async Task<IResult> (
                 string id,
                 HttpContext context,
                 RoleManager<ApplicationRole> roleManager,
@@ -180,11 +180,11 @@ public class AdminRolesEndpoint : IEndpoint
             {
                 var role = await roleManager.FindByIdAsync(id);
                 if (role is null)
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
 
                 var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
                 if (usersInRole.Count > 0)
-                    return Results.BadRequest(
+                    return TypedResults.BadRequest(
                         new { error = "Cannot delete a role that has users assigned to it." }
                     );
 
@@ -201,7 +201,7 @@ public class AdminRolesEndpoint : IEndpoint
 
                 await roleManager.DeleteAsync(role);
 
-                return Results.Redirect("/admin/roles");
+                return TypedResults.Redirect("/admin/roles");
             }
         );
     }

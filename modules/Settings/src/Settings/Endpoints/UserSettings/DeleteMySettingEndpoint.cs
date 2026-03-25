@@ -20,7 +20,7 @@ public class DeleteMySettingEndpoint : IEndpoint
                         return Results.Unauthorized();
 
                     await settings.DeleteSettingAsync(key, SettingScope.User, userId);
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -14,11 +15,11 @@ public class ResetAuthenticatorEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/Identity/Account/Manage/ResetAuthenticator",
-                async (HttpContext context, UserManager<ApplicationUser> userManager) =>
+                async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
-                    var user = await userManager.GetUserAsync(context.User);
+                    var user = await userManager.GetUserAsync(principal);
                     if (user is null)
-                        return Results.Redirect("/Identity/Account/Login");
+                        return TypedResults.Redirect("/Identity/Account/Login");
 
                     return Inertia.Render("Users/Account/ResetAuthenticator", new { });
                 }

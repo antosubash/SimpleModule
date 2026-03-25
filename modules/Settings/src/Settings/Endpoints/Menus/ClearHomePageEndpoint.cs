@@ -14,7 +14,7 @@ public class ClearHomePageEndpoint : IEndpoint
                 async (PublicMenuService service) =>
                 {
                     await service.ClearHomePageAsync();
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

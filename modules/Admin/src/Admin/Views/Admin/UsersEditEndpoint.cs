@@ -33,7 +33,7 @@ public class UsersEditEndpoint : IViewEndpoint
                 {
                     var user = await userManager.FindByIdAsync(id);
                     if (user is null)
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
 
                     var userRoles = await userManager.GetRolesAsync(user);
                     var allRoles = await roleManager.Roles.OrderBy(r => r.Name).ToListAsync();

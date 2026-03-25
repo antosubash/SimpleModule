@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Builder;
@@ -21,11 +22,11 @@ public class EnableAuthenticatorEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/Identity/Account/Manage/EnableAuthenticator",
-                async (HttpContext context, UserManager<ApplicationUser> userManager) =>
+                async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
-                    var user = await userManager.GetUserAsync(context.User);
+                    var user = await userManager.GetUserAsync(principal);
                     if (user is null)
-                        return Results.Redirect("/Identity/Account/Login");
+                        return TypedResults.Redirect("/Identity/Account/Login");
 
                     var (sharedKey, authenticatorUri) = await LoadSharedKeyAndQrCodeUriAsync(
                         userManager,

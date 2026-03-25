@@ -30,11 +30,11 @@ public class AccountSecurityEndpoint : IEndpoint
             {
                 var user = await userManager.GetUserAsync(principal);
                 if (user is null)
-                    return Results.Redirect("/Identity/Account/Login");
+                    return TypedResults.Redirect("/Identity/Account/Login");
 
                 await signInManager.ForgetTwoFactorClientAsync();
 
-                return Results.Redirect(
+                return TypedResults.Redirect(
                     "/Identity/Account/Manage/TwoFactorAuthentication?status=browser-forgotten"
                 );
             }
@@ -53,7 +53,7 @@ public class AccountSecurityEndpoint : IEndpoint
                 {
                     var user = await userManager.GetUserAsync(principal);
                     if (user is null)
-                        return Results.Redirect("/Identity/Account/Login");
+                        return TypedResults.Redirect("/Identity/Account/Login");
 
                     var verificationCode = code.Replace(" ", string.Empty, StringComparison.Ordinal)
                         .Replace("-", string.Empty, StringComparison.Ordinal);
@@ -66,7 +66,7 @@ public class AccountSecurityEndpoint : IEndpoint
 
                     if (!is2faTokenValid)
                     {
-                        return Results.Redirect(
+                        return TypedResults.Redirect(
                             "/Identity/Account/Manage/EnableAuthenticator?error=invalid-code"
                         );
                     }
@@ -89,7 +89,7 @@ public class AccountSecurityEndpoint : IEndpoint
                         );
                     }
 
-                    return Results.Redirect(
+                    return TypedResults.Redirect(
                         "/Identity/Account/Manage/TwoFactorAuthentication?status=authenticator-verified"
                     );
                 }
@@ -107,12 +107,12 @@ public class AccountSecurityEndpoint : IEndpoint
             {
                 var user = await userManager.GetUserAsync(principal);
                 if (user is null)
-                    return Results.Redirect("/Identity/Account/Login");
+                    return TypedResults.Redirect("/Identity/Account/Login");
 
                 await userManager.SetTwoFactorEnabledAsync(user, false);
                 logger.LogInformation("User has disabled 2FA.");
 
-                return Results.Redirect(
+                return TypedResults.Redirect(
                     "/Identity/Account/Manage/TwoFactorAuthentication?status=2fa-disabled"
                 );
             }
@@ -130,7 +130,7 @@ public class AccountSecurityEndpoint : IEndpoint
             {
                 var user = await userManager.GetUserAsync(principal);
                 if (user is null)
-                    return Results.Redirect("/Identity/Account/Login");
+                    return TypedResults.Redirect("/Identity/Account/Login");
 
                 await userManager.SetTwoFactorEnabledAsync(user, false);
                 await userManager.ResetAuthenticatorKeyAsync(user);
@@ -138,7 +138,7 @@ public class AccountSecurityEndpoint : IEndpoint
 
                 await signInManager.RefreshSignInAsync(user);
 
-                return Results.Redirect(
+                return TypedResults.Redirect(
                     "/Identity/Account/Manage/EnableAuthenticator?status=authenticator-reset"
                 );
             }
@@ -155,10 +155,10 @@ public class AccountSecurityEndpoint : IEndpoint
             {
                 var user = await userManager.GetUserAsync(principal);
                 if (user is null)
-                    return Results.Redirect("/Identity/Account/Login");
+                    return TypedResults.Redirect("/Identity/Account/Login");
 
                 if (!await userManager.GetTwoFactorEnabledAsync(user))
-                    return Results.Redirect("/Identity/Account/Manage/TwoFactorAuthentication");
+                    return TypedResults.Redirect("/Identity/Account/Manage/TwoFactorAuthentication");
 
                 var recoveryCodes = await userManager.GenerateNewTwoFactorRecoveryCodesAsync(
                     user,

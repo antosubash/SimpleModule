@@ -17,7 +17,7 @@ public class DetailEndpoint : IViewEndpoint
                 {
                     var entry = await auditLogs.GetByIdAsync(AuditEntryId.From(id));
                     if (entry is null)
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
 
                     var correlated = await auditLogs.GetByCorrelationIdAsync(entry.CorrelationId);
                     return Inertia.Render("AuditLogs/Detail", new { entry, correlated });

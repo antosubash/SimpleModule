@@ -18,7 +18,7 @@ public class EditEndpoint : IViewEndpoint
             {
                 var product = await products.GetProductByIdAsync(id);
                 if (product is null)
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
 
                 return Inertia.Render("Products/Edit", new { product });
             }
@@ -35,7 +35,7 @@ public class EditEndpoint : IViewEndpoint
                 {
                     var request = new UpdateProductRequest { Name = name, Price = price };
                     await products.UpdateProductAsync(id, request);
-                    return Results.Redirect($"/products/{id}/edit");
+                    return TypedResults.Redirect($"/products/{id}/edit");
                 }
             )
             .DisableAntiforgery();
@@ -45,7 +45,7 @@ public class EditEndpoint : IViewEndpoint
             async (ProductId id, IProductContracts products) =>
             {
                 await products.DeleteProductAsync(id);
-                return Results.Redirect("/products/manage");
+                return TypedResults.Redirect("/products/manage");
             }
         );
     }

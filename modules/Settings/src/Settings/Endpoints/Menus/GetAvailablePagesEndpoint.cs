@@ -11,7 +11,7 @@ public class GetAvailablePagesEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/menus/available-pages",
-                (IReadOnlyList<AvailablePage> pages) => Results.Ok(pages)
+                (IReadOnlyList<AvailablePage> pages) => TypedResults.Ok(pages)
             )
             .RequireAuthorization();
 }

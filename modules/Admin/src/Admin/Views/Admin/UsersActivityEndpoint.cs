@@ -45,7 +45,7 @@ public class UsersActivityEndpoint : IEndpoint
 
                     var total = await adminDb.AuditLogEntries.CountAsync(e => e.UserId == id);
 
-                    return Results.Ok(
+                    return TypedResults.Ok(
                         new
                         {
                             entries = entries.Select(e => new

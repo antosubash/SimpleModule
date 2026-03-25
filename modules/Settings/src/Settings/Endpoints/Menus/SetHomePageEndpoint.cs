@@ -14,7 +14,7 @@ public class SetHomePageEndpoint : IEndpoint
                 async (int id, PublicMenuService service) =>
                 {
                     await service.SetHomePageAsync(id);
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

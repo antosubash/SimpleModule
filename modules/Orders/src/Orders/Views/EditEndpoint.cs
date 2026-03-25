@@ -19,7 +19,7 @@ public class EditEndpoint : IViewEndpoint
             {
                 var order = await orders.GetOrderByIdAsync(id);
                 if (order is null)
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
 
                 return Inertia.Render(
                     "Orders/Edit",
@@ -60,7 +60,7 @@ public class EditEndpoint : IViewEndpoint
                 };
 
                 await orders.UpdateOrderAsync(id, request);
-                return Results.Redirect($"/orders/{id}/edit");
+                return TypedResults.Redirect($"/orders/{id}/edit");
             }
         );
 
@@ -69,7 +69,7 @@ public class EditEndpoint : IViewEndpoint
             async (OrderId id, IOrderContracts orders) =>
             {
                 await orders.DeleteOrderAsync(id);
-                return Results.Redirect("/orders");
+                return TypedResults.Redirect("/orders");
             }
         );
     }

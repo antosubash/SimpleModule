@@ -15,7 +15,7 @@ public class ReorderMenuItemsEndpoint : IEndpoint
                 async (ReorderMenuItemsRequest request, PublicMenuService service) =>
                 {
                     await service.ReorderAsync(request);
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

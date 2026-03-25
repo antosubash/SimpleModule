@@ -18,7 +18,7 @@ public class ViewerDraftEndpoint : IViewEndpoint
                     var page = await pageBuilder.GetPageBySlugAsync(slug);
                     if (page is null)
                     {
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
                     }
 
                     var viewerPage = new Page

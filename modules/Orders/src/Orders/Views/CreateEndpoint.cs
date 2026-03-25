@@ -39,7 +39,7 @@ public class CreateEndpoint : IViewEndpoint
                 };
 
                 await orders.CreateOrderAsync(request);
-                return Results.Redirect("/orders");
+                return TypedResults.Redirect("/orders");
             }
         );
     }

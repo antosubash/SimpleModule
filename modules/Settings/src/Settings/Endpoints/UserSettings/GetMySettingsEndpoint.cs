@@ -44,7 +44,7 @@ public class GetMySettingsEndpoint : IEndpoint
                         );
                     }
 
-                    return Results.Ok(results);
+                    return TypedResults.Ok(results);
                 }
             )
             .RequireAuthorization();

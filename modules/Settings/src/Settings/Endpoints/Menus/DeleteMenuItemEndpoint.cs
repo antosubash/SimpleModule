@@ -11,10 +11,10 @@ public class DeleteMenuItemEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
                 "/menus/{id}",
-                async (int id, PublicMenuService service) =>
+                async Task<IResult> (int id, PublicMenuService service) =>
                 {
                     var deleted = await service.DeleteAsync(id);
-                    return deleted ? Results.NoContent() : Results.NotFound();
+                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )
             .RequireAuthorization();

@@ -29,7 +29,7 @@ public class UpdateMySettingEndpoint : IEndpoint
                         SettingScope.User,
                         userId
                     );
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

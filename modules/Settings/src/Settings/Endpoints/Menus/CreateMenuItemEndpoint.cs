@@ -29,7 +29,7 @@ public class CreateMenuItemEndpoint : IEndpoint
                         IsHomePage = entity.IsHomePage,
                         SortOrder = entity.SortOrder,
                     };
-                    return Results.Created($"/api/settings/menus/{entity.Id}", dto);
+                    return TypedResults.Created($"/api/settings/menus/{entity.Id}", dto);
                 }
             )
             .RequireAuthorization();

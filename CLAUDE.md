@@ -276,24 +276,53 @@ Use `sm new module <name>` (CLI) or manually:
 
 ## Minimal API Parameter Binding
 
-Reference: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-10.0
+Reference: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/parameter-binding?view=aspnetcore-10.0
 
-### Binding Rules
+### Binding Source Priority
 
-- **Simple types** (`int`, `string`, etc.): Route → Query → Header (implicit)
-- **Complex types** (classes/records): Body (JSON) for POST/PUT/DELETE, Query for GET (implicit)
-- **DI services**: Auto-injected when registered in the container
-- **Special types**: `HttpContext`, `HttpRequest`, `HttpResponse`, `CancellationToken`, `ClaimsPrincipal` are auto-bound
+| HTTP method | Binding order (implicit) |
+|-------------|--------------------------|
+| GET, HEAD, OPTIONS, DELETE | Route → Query → Header → DI services |
+| POST, PUT, PATCH | Route → Query → Header → Body (JSON) → DI services |
+
+**Key rule:** GET/HEAD/OPTIONS/DELETE never implicitly bind from body. Use `[FromBody]` explicitly if needed.
+
+### Implicit Binding (no attribute needed)
+
+- **Simple types** (`int`, `string`, etc.): Route → Query (implicit)
+- **Complex types** (classes/records): Body (JSON) for POST/PUT/DELETE (implicit)
+- **DI services**: Auto-injected when registered in the container. `[FromServices]` is noise.
+- **Special types**: `HttpContext`, `HttpRequest`, `HttpResponse`, `CancellationToken`, `ClaimsPrincipal`, `Stream`, `PipeReader` are auto-bound
+- **Arrays from query strings**: `int[]`, `string[]`, `StringValues` bind from repeated keys: `?q=1&q=2` → `int[] q`
+
+### Optional Parameters
+
+Parameters are **required by default**. Missing required params → 400 Bad Request. Make optional via:
+- Nullable type: `int? pageNumber` (null if missing)
+- Default value: `int pageNumber = 1` (uses default if missing)
+- `string[]` from query: missing key → empty array (not null)
 
 ### When to Use Attributes
 
-- `[FromForm]` — **required** for form data binding (never implicit)
+- `[FromForm]` — **required** for scalar form data (never implicit). Supports scalars, enums, complex types, `IFormFile`.
+- `[FromForm]` on complex types — binds class properties from form fields: `([FromForm] Todo todo) => ...`
 - `[FromBody]` — explicit body binding (usually implicit for complex types in POST/PUT)
-- `[FromQuery]` — when a parameter name conflicts with a route parameter
-- `[FromRoute]` — when disambiguation is needed
-- `[FromHeader(Name = "X-Header")]` — for HTTP headers
-- `[FromServices]` — rarely needed (DI services are auto-detected)
-- `[AsParameters]` — bind a complex type from multiple sources (route + query + header)
+- `[FromQuery]` — when a parameter name conflicts with a route parameter, or to rename: `[FromQuery(Name = "p")]`
+- `[FromRoute]` — when disambiguation needed
+- `[FromHeader(Name = "X-Header")]` — for HTTP headers. Supports `int[]`/`string[]` from repeated headers.
+- `[AsParameters]` — bind a struct/class from multiple sources (route + query + header + DI)
+
+### Form Binding Limitations (IMPORTANT)
+
+`[FromForm]` supports:
+- ✅ Scalar types, enums, complex types, `IFormFile`/`IFormFileCollection`
+- ❌ **`List<string>`, `string[]` from repeated form keys** — does NOT work in Minimal APIs
+
+For multi-value form fields (e.g., `permissions=A&permissions=B`), use `ReadFormAsync()`:
+```csharp
+var form = await context.Request.ReadFormAsync();
+var permissions = form["permissions"].Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!).ToList();
+```
 
 ### Correct Patterns
 
@@ -304,23 +333,33 @@ app.MapPost("/", async (CreateProductRequest request, IProductContracts products
 // API: route param + body + DI
 app.MapPut("/{id}", async (int id, UpdateProductRequest request, IProductContracts products) => ...);
 
-// View: form data requires [FromForm]
+// View: scalar form data requires [FromForm]
 app.MapPost("/", async ([FromForm] string name, [FromForm] decimal price, IProductContracts products) => ...);
+
+// View: complex type from form
+app.MapPost("/todo", async ([FromForm] Todo todo) => TypedResults.Ok(todo));
+
+// Query: arrays bind from repeated keys
+app.MapGet("/tags", (int[] q) => $"tag1: {q[0]}, tag2: {q[1]}");
 ```
 
 ### Anti-patterns (Avoid)
 
 ```csharp
-// BAD: manual form reading via HttpContext
+// BAD: manual form reading for SCALAR values (use [FromForm] instead)
 app.MapPost("/", async (HttpContext context, IService svc) => {
-    var form = await context.Request.ReadFormAsync(); // Don't do this
-    var name = form["name"].ToString();
+    var form = await context.Request.ReadFormAsync();
+    var name = form["name"].ToString(); // Use [FromForm] string name
 });
 
-// BAD: manual JSON deserialization
+// BAD: manual JSON deserialization (let model binding handle it)
 app.MapPost("/", async (HttpContext context, IService svc) => {
-    var body = await JsonSerializer.DeserializeAsync<MyType>(context.Request.Body); // Don't do this
+    var body = await JsonSerializer.DeserializeAsync<MyType>(context.Request.Body);
 });
+
+// OK: ReadFormAsync for multi-value form fields (no [FromForm] equivalent)
+var form = await context.Request.ReadFormAsync();
+var permissions = form["permissions"].ToList(); // This is the correct approach
 ```
 
 ## Linting & Formatting

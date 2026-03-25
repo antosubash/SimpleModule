@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Hosting;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
@@ -13,13 +14,11 @@ public class HomeEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/",
-                (HttpContext context) =>
+                (HttpContext context, IHostEnvironment env) =>
                 {
                     var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
                     var displayName = context.User?.Identity?.Name ?? "User";
-                    var isDevelopment =
-                        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-                        == "Development";
+                    var isDevelopment = env.IsDevelopment();
 
                     return Inertia.Render(
                         "Dashboard/Home",

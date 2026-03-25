@@ -16,7 +16,7 @@ public class GetSettingsEndpoint : IEndpoint
                 {
                     var filter = scope is not null ? new SettingsFilter { Scope = scope } : null;
                     var results = await settings.GetSettingsAsync(filter);
-                    return Results.Ok(results);
+                    return TypedResults.Ok(results);
                 }
             )
             .RequireAuthorization();

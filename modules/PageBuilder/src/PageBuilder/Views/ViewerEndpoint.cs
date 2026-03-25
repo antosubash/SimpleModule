@@ -19,7 +19,7 @@ public class ViewerEndpoint : IViewEndpoint
                     var page = await pageBuilder.GetPageBySlugAsync(slug);
                     if (page is null || !page.IsPublished)
                     {
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
                     }
 
                     return Inertia.Render("PageBuilder/Viewer", new { page });

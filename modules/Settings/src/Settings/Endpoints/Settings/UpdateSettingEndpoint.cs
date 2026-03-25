@@ -18,7 +18,7 @@ public class UpdateSettingEndpoint : IEndpoint
                         request.Value ?? string.Empty,
                         request.Scope
                     );
-                    return Results.NoContent();
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization();

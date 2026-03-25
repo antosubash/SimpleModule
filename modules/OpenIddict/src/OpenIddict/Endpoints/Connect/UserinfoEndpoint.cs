@@ -55,6 +55,6 @@ public class UserinfoEndpoint : IEndpoint
             claims[Claims.Name] = user.DisplayName;
         }
 
-        return Results.Ok(claims);
+        return TypedResults.Ok(claims);
     }
 }

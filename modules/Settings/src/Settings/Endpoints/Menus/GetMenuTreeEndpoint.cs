@@ -14,7 +14,7 @@ public class GetMenuTreeEndpoint : IEndpoint
                 async (PublicMenuService service) =>
                 {
                     var items = await service.GetAllAsync();
-                    return Results.Ok(items);
+                    return TypedResults.Ok(items);
                 }
             )
             .RequireAuthorization();

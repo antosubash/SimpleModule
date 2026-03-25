@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -15,14 +16,14 @@ public class TwoFactorAuthenticationEndpoint : IViewEndpoint
         app.MapGet(
                 "/Identity/Account/Manage/TwoFactorAuthentication",
                 async (
-                    HttpContext context,
+                    ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,
                     SignInManager<ApplicationUser> signInManager
                 ) =>
                 {
-                    var user = await userManager.GetUserAsync(context.User);
+                    var user = await userManager.GetUserAsync(principal);
                     if (user is null)
-                        return Results.Redirect("/Identity/Account/Login");
+                        return TypedResults.Redirect("/Identity/Account/Login");
 
                     return Inertia.Render(
                         "Users/Account/TwoFactorAuthentication",

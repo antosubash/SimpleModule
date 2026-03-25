@@ -29,7 +29,7 @@ public class RolesEditEndpoint : IViewEndpoint
                 {
                     var role = await roleManager.FindByIdAsync(id);
                     if (role is null)
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
 
                     var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
                     var users = usersInRole
