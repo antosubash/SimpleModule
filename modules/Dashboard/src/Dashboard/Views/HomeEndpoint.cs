@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,10 +15,10 @@ public class HomeEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/",
-                (HttpContext context, IHostEnvironment env) =>
+                (ClaimsPrincipal principal, IHostEnvironment env) =>
                 {
-                    var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
-                    var displayName = context.User?.Identity?.Name ?? "User";
+                    var isAuthenticated = principal.Identity?.IsAuthenticated == true;
+                    var displayName = principal.Identity?.Name ?? "User";
                     var isDevelopment = env.IsDevelopment();
 
                     return Inertia.Render(

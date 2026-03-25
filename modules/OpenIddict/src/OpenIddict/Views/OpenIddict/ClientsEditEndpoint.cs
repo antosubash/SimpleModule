@@ -17,7 +17,7 @@ public class ClientsEditEndpoint : IViewEndpoint
                 {
                     var application = await manager.FindByIdAsync(id);
                     if (application is null)
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
 
                     var descriptor = new OpenIddictApplicationDescriptor();
                     await manager.PopulateAsync(descriptor, application);
