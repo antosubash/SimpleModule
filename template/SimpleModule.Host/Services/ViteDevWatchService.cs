@@ -16,9 +16,10 @@ public sealed partial class ViteDevWatchService(
 {
     private static readonly string[] WatchedExtensions = ["*.ts", "*.tsx", "*.css", "*.jsx", "*.js"];
 
-    private readonly ConcurrentDictionary<string, DateTime> _lastChangeTime = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _debounceTimers = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, bool> _buildInProgress = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<FileSystemWatcher> _watchers = [];
+    private CancellationToken _stoppingToken;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -29,6 +30,7 @@ public sealed partial class ViteDevWatchService(
             return;
         }
 
+        _stoppingToken = stoppingToken;
         LogServiceStarting(logger, repoRoot);
 
         // Discover all module directories with vite.config.ts
@@ -38,21 +40,21 @@ public sealed partial class ViteDevWatchService(
         foreach (var moduleDir in moduleDirectories)
         {
             var moduleName = Path.GetFileName(moduleDir);
-            SetupModuleWatcher(moduleDir, moduleName, repoRoot, stoppingToken);
+            SetupModuleWatcher(moduleDir, moduleName, repoRoot);
         }
 
         // Watch ClientApp
         var clientAppDir = Path.Combine(environment.ContentRootPath, "ClientApp");
         if (Directory.Exists(clientAppDir))
         {
-            SetupClientAppWatcher(clientAppDir, repoRoot, stoppingToken);
+            SetupClientAppWatcher(clientAppDir, repoRoot);
         }
 
         // Watch Styles/ for Tailwind CSS changes
         var stylesDir = Path.Combine(environment.ContentRootPath, "Styles");
         if (Directory.Exists(stylesDir))
         {
-            SetupTailwindWatcher(stylesDir, repoRoot, stoppingToken);
+            SetupTailwindWatcher(stylesDir, repoRoot);
         }
 
         LogWatchingStarted(logger, moduleDirectories.Count);
@@ -76,6 +78,15 @@ public sealed partial class ViteDevWatchService(
         }
 
         _watchers.Clear();
+
+        foreach (var cts in _debounceTimers.Values)
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
+
+        _debounceTimers.Clear();
+
         base.Dispose();
     }
 
@@ -125,81 +136,62 @@ public sealed partial class ViteDevWatchService(
         return directories;
     }
 
-    private void SetupModuleWatcher(
-        string moduleDir,
-        string moduleName,
-        string repoRoot,
-        CancellationToken stoppingToken)
+    private void SetupModuleWatcher(string moduleDir, string moduleName, string repoRoot)
     {
         var buildKey = $"module:{moduleName}";
+        var watcher = CreateWatcher(moduleDir, WatchedExtensions);
 
-        foreach (var extension in WatchedExtensions)
+        void OnChanged(object sender, FileSystemEventArgs e)
         {
-            var watcher = CreateWatcher(moduleDir, extension);
-
-            void OnChanged(object sender, FileSystemEventArgs e)
+            if (ShouldIgnoreModulePath(e.FullPath))
             {
-                if (ShouldIgnoreModulePath(e.FullPath))
-                {
-                    return;
-                }
-
-                LogModuleFileChanged(logger, moduleName, e.Name);
-                DebouncedBuild(buildKey, () => RunViteBuild(moduleName, moduleDir, repoRoot, stoppingToken));
+                return;
             }
 
-            watcher.Changed += OnChanged;
-            watcher.Created += OnChanged;
-            watcher.Renamed += (sender, e) => OnChanged(sender, e);
-
-            watcher.EnableRaisingEvents = true;
-            _watchers.Add(watcher);
+            LogModuleFileChanged(logger, moduleName, e.Name);
+            DebouncedBuild(buildKey, () => RunViteBuild(moduleName, moduleDir, repoRoot, _stoppingToken));
         }
+
+        watcher.Changed += OnChanged;
+        watcher.Created += OnChanged;
+        watcher.Renamed += (sender, e) => OnChanged(sender, e);
+
+        watcher.EnableRaisingEvents = true;
+        _watchers.Add(watcher);
 
         LogWatchingModule(logger, moduleName, moduleDir);
     }
 
-    private void SetupClientAppWatcher(
-        string clientAppDir,
-        string repoRoot,
-        CancellationToken stoppingToken)
+    private void SetupClientAppWatcher(string clientAppDir, string repoRoot)
     {
         const string buildKey = "clientapp";
+        var watcher = CreateWatcher(clientAppDir, WatchedExtensions);
 
-        foreach (var extension in WatchedExtensions)
+        void OnChanged(object sender, FileSystemEventArgs e)
         {
-            var watcher = CreateWatcher(clientAppDir, extension);
-
-            void OnChanged(object sender, FileSystemEventArgs e)
+            if (ShouldIgnoreClientAppPath(e.FullPath))
             {
-                if (ShouldIgnoreClientAppPath(e.FullPath))
-                {
-                    return;
-                }
-
-                LogClientAppFileChanged(logger, e.Name);
-                DebouncedBuild(buildKey, () => RunClientAppBuild(clientAppDir, repoRoot, stoppingToken));
+                return;
             }
 
-            watcher.Changed += OnChanged;
-            watcher.Created += OnChanged;
-            watcher.Renamed += (sender, e) => OnChanged(sender, e);
-
-            watcher.EnableRaisingEvents = true;
-            _watchers.Add(watcher);
+            LogClientAppFileChanged(logger, e.Name);
+            DebouncedBuild(buildKey, () => RunClientAppBuild(clientAppDir, repoRoot, _stoppingToken));
         }
+
+        watcher.Changed += OnChanged;
+        watcher.Created += OnChanged;
+        watcher.Renamed += (sender, e) => OnChanged(sender, e);
+
+        watcher.EnableRaisingEvents = true;
+        _watchers.Add(watcher);
 
         LogWatchingClientApp(logger, clientAppDir);
     }
 
-    private void SetupTailwindWatcher(
-        string stylesDir,
-        string repoRoot,
-        CancellationToken stoppingToken)
+    private void SetupTailwindWatcher(string stylesDir, string repoRoot)
     {
         const string buildKey = "tailwind";
-
-        var watcher = CreateWatcher(stylesDir, "*.css");
+        var watcher = CreateWatcher(stylesDir, ["*.css"]);
 
         void OnChanged(object sender, FileSystemEventArgs e)
         {
@@ -209,7 +201,7 @@ public sealed partial class ViteDevWatchService(
             }
 
             LogStylesFileChanged(logger, e.Name);
-            DebouncedBuild(buildKey, () => RunTailwindBuild(repoRoot, stoppingToken));
+            DebouncedBuild(buildKey, () => RunTailwindBuild(repoRoot, _stoppingToken));
         }
 
         watcher.Changed += OnChanged;
@@ -222,13 +214,20 @@ public sealed partial class ViteDevWatchService(
         LogWatchingStyles(logger, stylesDir);
     }
 
-    private static FileSystemWatcher CreateWatcher(string path, string filter)
+    private static FileSystemWatcher CreateWatcher(string path, string[] filters)
     {
-        return new FileSystemWatcher(path, filter)
+        var watcher = new FileSystemWatcher(path)
         {
             IncludeSubdirectories = true,
             NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime,
         };
+
+        foreach (var filter in filters)
+        {
+            watcher.Filters.Add(filter);
+        }
+
+        return watcher;
     }
 
     private static bool ShouldIgnoreModulePath(string fullPath)
@@ -257,20 +256,30 @@ public sealed partial class ViteDevWatchService(
 
     private void DebouncedBuild(string buildKey, Func<Task> buildAction)
     {
-        _lastChangeTime[buildKey] = DateTime.UtcNow;
+        // Cancel any previous debounce timer for this build key
+        if (_debounceTimers.TryRemove(buildKey, out var previousCts))
+        {
+            previousCts.Cancel();
+            previousCts.Dispose();
+        }
+
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_stoppingToken);
+        _debounceTimers[buildKey] = cts;
 
         _ = Task.Run(async () =>
         {
-            // Wait for debounce period
-            await Task.Delay(TimeSpan.FromMilliseconds(300)).ConfigureAwait(false);
-
-            // Check if another change came in during the debounce window
-            if (_lastChangeTime.TryGetValue(buildKey, out var lastChange)
-                && (DateTime.UtcNow - lastChange).TotalMilliseconds < 280)
+            try
             {
-                // Another change came in, skip this build — the newer one will handle it
+                // Wait for debounce period — cancelled if a newer change arrives
+                await Task.Delay(TimeSpan.FromMilliseconds(300), cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                // Either a newer change superseded this one, or the service is shutting down
                 return;
             }
+
+            _debounceTimers.TryRemove(buildKey, out _);
 
             // Skip if a build is already running for this key
             if (!_buildInProgress.TryAdd(buildKey, true))
@@ -286,7 +295,7 @@ public sealed partial class ViteDevWatchService(
             {
                 _buildInProgress.TryRemove(buildKey, out _);
             }
-        });
+        }, _stoppingToken);
     }
 
     private async Task RunViteBuild(
