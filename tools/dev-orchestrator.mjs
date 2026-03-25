@@ -2,49 +2,16 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import fs from 'fs';
+import { createLogger, discoverModulesWithVite } from './orchestrator-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
-function discoverModules() {
-  const modulesDir = path.resolve(rootDir, 'modules');
-  const modules = [];
-
-  if (!fs.existsSync(modulesDir)) return modules;
-
-  // Scan modules directory
-  const moduleGroups = fs.readdirSync(modulesDir);
-
-  for (const group of moduleGroups) {
-    const srcDir = path.resolve(modulesDir, group, 'src');
-    if (!fs.existsSync(srcDir)) continue;
-
-    const moduleDirs = fs.readdirSync(srcDir);
-    for (const moduleName of moduleDirs) {
-      const modulePath = path.join(srcDir, moduleName);
-      const packagePath = path.join(modulePath, 'package.json');
-      const vitePath = path.join(modulePath, 'vite.config.ts');
-
-      // Include if has package.json AND vite.config.ts
-      if (fs.existsSync(packagePath) && fs.existsSync(vitePath)) {
-        const relPath = path.relative(rootDir, modulePath);
-        modules.push(relPath.split(path.sep).join('/'));
-      }
-    }
-  }
-
-  return modules.sort();
-}
-
 // Auto-discover all module workspace paths
-const modules = discoverModules();
+const modules = discoverModulesWithVite(rootDir);
 
 const childProcesses = [];
-
-function log(prefix, message) {
-  console.log(`\x1b[36m[${prefix}]\x1b[0m ${message}`);
-}
+const log = createLogger();
 
 function startDotnetRun() {
   log('setup', 'Starting dotnet run...');
@@ -118,7 +85,7 @@ function shutdown() {
     try {
       proc.kill('SIGTERM');
     } catch (err) {
-      // Process already exited
+      log('shutdown', `Warning: Failed to terminate process: ${err.message}`);
     }
   });
   setTimeout(() => process.exit(0), 500);
