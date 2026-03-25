@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +11,7 @@ namespace SimpleModule.AuditLogs.Middleware;
 
 public sealed class AuditMiddleware(RequestDelegate next)
 {
-    private static readonly string[] ExcludedMethodsForBody = ["GET", "HEAD", "OPTIONS"];
+    private static readonly string[] ExcludedMethodsForBody = ["HEAD", "OPTIONS"];
 
     private sealed record AuditRequestSettings(
         bool CaptureHttp,
