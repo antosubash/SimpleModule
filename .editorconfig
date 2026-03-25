@@ -162,6 +162,17 @@ generated_code = true
 [*.g.cs]
 generated_code = true
 
+# ---- Endpoint relaxations ----
+[**/Endpoints/**/*.cs]
+
+# CA1812 — internal payload classes instantiated by ASP.NET model binding
+dotnet_diagnostic.CA1812.severity = none
+
+[**/Views/*Endpoint.cs]
+
+# CA1812 — internal payload classes instantiated by ASP.NET model binding
+dotnet_diagnostic.CA1812.severity = none
+
 # ---- Test project relaxations ----
 [{tests,modules/*/tests}/**/*.cs]
 

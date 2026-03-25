@@ -44,14 +44,12 @@ public class CreateEndpoint : IViewEndpoint
         );
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812")]
     internal sealed class CreateOrderPayload
     {
         public string UserId { get; set; } = string.Empty;
         public List<OrderItemPayload> Items { get; set; } = new();
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1812")]
     internal sealed class OrderItemPayload
     {
         public int ProductId { get; set; }
