@@ -27,7 +27,7 @@ public class ModuleExtensionsGenerationTests
         var moduleExt = GetGeneratedSource(result, "ModuleExtensions.g.cs");
         moduleExt
             .Should()
-            .Contain("s_TestApp_ServiceOnlyModule.ConfigureServices(services, configuration)");
+            .Contain("((global::SimpleModule.Core.IModule)s_TestApp_ServiceOnlyModule).ConfigureServices(services, configuration)");
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
         endpointExt.Should().NotContain("ServiceOnlyModule");
@@ -108,7 +108,7 @@ public class ModuleExtensionsGenerationTests
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
         endpointExt
             .Should()
-            .Contain("ModuleExtensions.s_TestApp_TestModule.ConfigureEndpoints(app)");
+            .Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(app)");
     }
 
     [Fact]
@@ -192,12 +192,12 @@ public class ModuleExtensionsGenerationTests
         moduleExt.Should().Contain("s_TestApp_AlphaModule = new()");
         moduleExt.Should().Contain("s_TestApp_BetaModule = new()");
         // Only Alpha has ConfigureServices
-        moduleExt.Should().Contain("s_TestApp_AlphaModule.ConfigureServices");
-        moduleExt.Should().NotContain("s_TestApp_BetaModule.ConfigureServices");
+        moduleExt.Should().Contain("((global::SimpleModule.Core.IModule)s_TestApp_AlphaModule).ConfigureServices");
+        moduleExt.Should().NotContain("s_TestApp_BetaModule).ConfigureServices");
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
         // Only Beta has ConfigureEndpoints
-        endpointExt.Should().Contain("s_TestApp_BetaModule.ConfigureEndpoints");
+        endpointExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_BetaModule).ConfigureEndpoints");
         endpointExt.Should().NotContain("AlphaModule");
     }
 

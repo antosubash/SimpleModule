@@ -29,7 +29,7 @@ internal sealed class MenuExtensionsEmitter : IEmitter
         foreach (var module in modules.Where(m => m.HasConfigureMenu))
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
-            sb.AppendLine($"        ModuleExtensions.{fieldName}.ConfigureMenu(menus);");
+            sb.AppendLine($"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureMenu(menus);");
         }
 
         sb.AppendLine(

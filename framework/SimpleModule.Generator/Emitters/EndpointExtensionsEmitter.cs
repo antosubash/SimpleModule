@@ -97,7 +97,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine();
-            sb.AppendLine($"        ModuleExtensions.{fieldName}.ConfigureEndpoints(app);");
+            sb.AppendLine($"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureEndpoints(app);");
         }
 
         sb.AppendLine();

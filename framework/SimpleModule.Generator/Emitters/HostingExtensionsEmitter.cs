@@ -85,7 +85,7 @@ internal sealed class HostingExtensionsEmitter : IEmitter
             foreach (var module in modulesWithMiddleware)
             {
                 var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
-                sb.AppendLine($"        ModuleExtensions.{fieldName}.ConfigureMiddleware(app);");
+                sb.AppendLine($"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureMiddleware(app);");
             }
         }
 

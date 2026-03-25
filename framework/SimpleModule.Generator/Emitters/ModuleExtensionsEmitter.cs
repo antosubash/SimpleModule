@@ -71,7 +71,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
                 }
             }
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
-            sb.AppendLine($"        {fieldName}.ConfigureServices(services, configuration);");
+            sb.AppendLine($"        ((global::SimpleModule.Core.IModule){fieldName}).ConfigureServices(services, configuration);");
         }
 
         sb.AppendLine();
@@ -109,7 +109,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         foreach (var module in sortedModules.Where(m => m.HasConfigurePermissions))
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
-            sb.AppendLine($"        {fieldName}.ConfigurePermissions(permissionBuilder);");
+            sb.AppendLine($"        ((global::SimpleModule.Core.IModule){fieldName}).ConfigurePermissions(permissionBuilder);");
         }
 
         sb.AppendLine();

@@ -55,7 +55,7 @@ public class MenuExtensionsGenerationTests
             .GetText()
             .ToString();
 
-        menuExt.Should().Contain("s_TestApp_TestModule.ConfigureMenu(menus)");
+        menuExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureMenu(menus)");
         menuExt.Should().Contain("CollectModuleMenuItems");
         menuExt.Should().Contain("new MenuBuilder()");
         menuExt.Should().Contain("new MenuRegistry(menus.ToList())");
@@ -126,7 +126,7 @@ public class MenuExtensionsGenerationTests
             .GetText()
             .ToString();
 
-        menuExt.Should().Contain("s_TestApp_WithMenuModule.ConfigureMenu(menus)");
+        menuExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_WithMenuModule).ConfigureMenu(menus)");
         menuExt.Should().NotContain("NoMenuModule.ConfigureMenu");
     }
 
@@ -225,8 +225,8 @@ public class MenuExtensionsGenerationTests
             .GetText()
             .ToString();
 
-        menuExt.Should().Contain("s_TestApp_FirstModule.ConfigureMenu(menus)");
-        menuExt.Should().Contain("s_TestApp_SecondModule.ConfigureMenu(menus)");
+        menuExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_FirstModule).ConfigureMenu(menus)");
+        menuExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_SecondModule).ConfigureMenu(menus)");
     }
 
     [Fact]

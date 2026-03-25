@@ -701,9 +701,19 @@ internal static class SymbolDiscovery
     {
         foreach (var member in typeSymbol.GetMembers(methodName))
         {
-            if (member is IMethodSymbol method
-                && method.DeclaringSyntaxReferences.Length > 0)
-                return true;
+            if (member is IMethodSymbol method)
+            {
+                // Source types: method has syntax in source code
+                if (method.DeclaringSyntaxReferences.Length > 0)
+                    return true;
+
+                // Metadata types: method exists in compiled IL (not synthesized)
+                // IsImplicitlyDeclared filters out compiler-synthesized stubs for
+                // default interface method dispatch
+                if (!method.IsImplicitlyDeclared
+                    && method.Locations.Any(static l => l.IsInMetadata))
+                    return true;
+            }
         }
         return false;
     }

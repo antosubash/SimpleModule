@@ -41,7 +41,7 @@ public class ModuleDiscovererGeneratorTests
             .ToString();
         moduleExt.Should().Contain("s_TestApp_TestModule");
         moduleExt.Should().Contain("global::TestApp.TestModule");
-        moduleExt.Should().Contain(".ConfigureServices(services, configuration)");
+        moduleExt.Should().Contain("((global::SimpleModule.Core.IModule)s_TestApp_TestModule).ConfigureServices(services, configuration)");
 
         var endpointExt = result
             .GeneratedTrees.First(t =>
@@ -49,7 +49,7 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        endpointExt.Should().Contain("s_TestApp_TestModule.ConfigureEndpoints(app)");
+        endpointExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(app)");
     }
 
     [Fact]
@@ -85,7 +85,60 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        endpointExt.Should().Contain("s_TestApp_EndpointOnlyModule.ConfigureEndpoints(app)");
+        endpointExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_EndpointOnlyModule).ConfigureEndpoints(app)");
+    }
+
+    [Fact]
+    public void Module_WithPartialOverrides_EmitsCallsThroughInterface()
+    {
+        // A module that only overrides ConfigureServices but NOT ConfigureMenu or ConfigurePermissions.
+        // The generator must NOT emit direct calls to methods the class doesn't override
+        // (they're default interface methods). All calls go through ((IModule)...) casts
+        // so both overridden and default methods work correctly.
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.Configuration;
+
+            namespace TestApp;
+
+            [Module("Partial")]
+            public class PartialModule : IModule
+            {
+                public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+                {
+                    // Only this method is overridden
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var moduleExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        // ConfigureServices should be emitted through the interface
+        moduleExt
+            .Should()
+            .Contain(
+                "((global::SimpleModule.Core.IModule)s_TestApp_PartialModule).ConfigureServices(services, configuration)"
+            );
+
+        // All method calls must go through the IModule interface cast, never directly on the concrete type.
+        // This ensures default interface implementations are callable even when the class doesn't override them.
+        moduleExt.Should().NotContainAny(
+            "s_TestApp_PartialModule.ConfigureServices(",
+            "s_TestApp_PartialModule.ConfigureMenu(",
+            "s_TestApp_PartialModule.ConfigurePermissions(",
+            "s_TestApp_PartialModule.ConfigureEndpoints(",
+            "s_TestApp_PartialModule.ConfigureMiddleware(",
+            "s_TestApp_PartialModule.ConfigureSettings("
+        );
     }
 
     [Fact]

@@ -29,7 +29,7 @@ internal sealed class SettingsExtensionsEmitter : IEmitter
         foreach (var module in modules.Where(m => m.HasConfigureSettings))
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
-            sb.AppendLine($"        ModuleExtensions.{fieldName}.ConfigureSettings(settings);");
+            sb.AppendLine($"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureSettings(settings);");
         }
 
         sb.AppendLine(
