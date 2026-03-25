@@ -5,7 +5,21 @@
     <TailwindCli Condition="'$(OS)' != 'Windows_NT'">$(RepoRoot)tools/tailwindcss</TailwindCli>
     <TailwindInput>$(MSBuildProjectDirectory)/Styles/app.css</TailwindInput>
     <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
+    <ViteBuildStamp>$(IntermediateOutputPath)vitebuild.stamp</ViteBuildStamp>
+    <ExtractDtoStamp>$(IntermediateOutputPath)extractdto.stamp</ExtractDtoStamp>
   </PropertyGroup>
+
+  <!-- Incremental Tailwind: track CSS source files -->
+  <ItemGroup Condition="Exists('$(TailwindInput)')">
+    <TailwindSourceFiles Include="$(MSBuildProjectDirectory)/Styles/**/*.css" Exclude="$(MSBuildProjectDirectory)/Styles/_scan/**" />
+  </ItemGroup>
+
+  <!-- Incremental Vite: track ClientApp source files -->
+  <ItemGroup Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(RepoRoot)node_modules'))">
+    <ViteSourceFiles Include="$(MSBuildProjectDirectory)/ClientApp/**/*.ts;$(MSBuildProjectDirectory)/ClientApp/**/*.tsx" />
+    <ViteSourceFiles Include="$(MSBuildProjectDirectory)/ClientApp/package.json" />
+  </ItemGroup>
+
   <!-- Collect module .pages.js assets for Tailwind CSS scanning -->
   <Target
     Name="CollectModuleAssets"
@@ -25,27 +39,46 @@
       SkipUnchangedFiles="true"
     />
   </Target>
-  <!-- Tailwind CSS build -->
-  <Target Name="TailwindBuild" BeforeTargets="Build" Condition="Exists('$(TailwindInput)')">
+
+  <!-- Tailwind CSS build (incremental: real output file as Outputs) -->
+  <Target
+    Name="TailwindBuild"
+    BeforeTargets="Build"
+    Condition="Exists('$(TailwindInput)')"
+    Inputs="@(TailwindSourceFiles)"
+    Outputs="$(TailwindOutput)"
+  >
     <Error
       Condition="!Exists('$(TailwindCli)')"
       Text="Tailwind CSS CLI not found at '$(TailwindCli)'. Run tools/download-tailwind.sh (or .ps1 on Windows) to install it."
     />
     <Exec Command="&quot;$(TailwindCli)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
   </Target>
-  <!-- Vite: Build React host app (also builds vendor bundles via plugin) -->
+
+  <!-- Vite: Build React host app (incremental via stamp file) -->
   <Target
     Name="ViteBuild"
     BeforeTargets="Build"
     Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(RepoRoot)node_modules'))"
+    Inputs="@(ViteSourceFiles)"
+    Outputs="$(ViteBuildStamp)"
   >
     <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Touch Files="$(ViteBuildStamp)" AlwaysCreate="true" />
   </Target>
-  <!-- Extract TypeScript type definitions from source generator output -->
-  <Target Name="ExtractDtoTypeScript" AfterTargets="CoreCompile">
+
+  <!-- Extract TypeScript type definitions from source generator output (incremental via stamp file) -->
+  <Target
+    Name="ExtractDtoTypeScript"
+    AfterTargets="CoreCompile"
+    Inputs="$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/**/*"
+    Outputs="$(ExtractDtoStamp)"
+  >
     <Exec
       Command="node &quot;$(RepoRoot)tools/extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
+    <Touch Files="$(ExtractDtoStamp)" AlwaysCreate="true" />
   </Target>
 </Project>

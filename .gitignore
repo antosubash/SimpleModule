@@ -426,3 +426,5 @@ template/SimpleModule.Host/wwwroot/*
 
 # Tailwind CSS module scan directory
 template/SimpleModule.Host/Styles/_scan/
+
+*.stamp

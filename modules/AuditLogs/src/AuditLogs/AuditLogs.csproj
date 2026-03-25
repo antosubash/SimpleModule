@@ -14,11 +14,4 @@
       <DependentUpon>%(Filename)Endpoint.cs</DependentUpon>
     </None>
   </ItemGroup>
-  <Target
-    Name="JsBuild"
-    BeforeTargets="Build"
-    Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules'))"
-  >
-    <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)" />
-  </Target>
 </Project>

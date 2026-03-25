@@ -1,0 +1,27 @@
+<Project>
+  <!--
+    Incremental JS/Vite build for modules.
+    Skips npx vite build when no source files have changed since the last build.
+    Modules can override JsBuildCommand for custom build steps (e.g. Users double-build).
+  -->
+  <PropertyGroup>
+    <JsBuildCommand Condition="'$(JsBuildCommand)' == ''">npx vite build</JsBuildCommand>
+    <JsBuildStamp>$(IntermediateOutputPath)jsbuild.stamp</JsBuildStamp>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules'))">
+    <JsSourceFiles Include="Pages/**/*.ts;Pages/**/*.tsx;Views/**/*.ts;Views/**/*.tsx;Components/**/*.ts;Components/**/*.tsx" />
+    <JsSourceFiles Include="vite.config.ts" Condition="Exists('vite.config.ts')" />
+    <JsSourceFiles Include="package.json" />
+  </ItemGroup>
+  <Target
+    Name="JsBuild"
+    BeforeTargets="Build"
+    Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules')) And '@(JsSourceFiles)' != ''"
+    Inputs="@(JsSourceFiles)"
+    Outputs="$(JsBuildStamp)"
+  >
+    <Exec Command="$(JsBuildCommand)" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Touch Files="$(JsBuildStamp)" AlwaysCreate="true" />
+  </Target>
+</Project>

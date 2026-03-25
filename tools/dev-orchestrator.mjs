@@ -15,7 +15,7 @@ const log = createLogger();
 
 function startDotnetRun() {
   log('setup', 'Starting dotnet run...');
-  const proc = spawn('dotnet', ['run', '--project', 'template/SimpleModule.Host'], {
+  const proc = spawn('dotnet', ['run', '--no-restore', '--project', 'template/SimpleModule.Host'], {
     cwd: rootDir,
     stdio: 'inherit',
     shell: true,
