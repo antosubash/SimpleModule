@@ -46,7 +46,7 @@ function startDotnetRun() {
 }
 
 function startModuleWatch(modulePath) {
-  const moduleName = modulePath.split('/')[1];
+  const moduleName = path.basename(path.dirname(modulePath));
   log('setup', `Starting watch for ${moduleName}...`);
 
   const proc = spawn('npm', ['run', 'watch'], {
@@ -95,12 +95,12 @@ function shutdown() {
   log('shutdown', 'Stopping all processes...');
   childProcesses.forEach((proc) => {
     try {
-      process.kill(-proc.pid);
+      proc.kill('SIGTERM');
     } catch (err) {
       // Process already exited
     }
   });
-  process.exit(0);
+  setTimeout(() => process.exit(0), 500);
 }
 
 // Allow syntax check
