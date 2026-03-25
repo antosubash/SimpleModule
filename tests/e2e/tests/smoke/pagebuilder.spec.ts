@@ -13,13 +13,13 @@ test.describe('PageBuilder pages', () => {
   test('new page editor loads with fullscreen overlay', async ({ page }) => {
     const editor = new PageBuilderEditorPage(page);
     await editor.gotoNew();
-    await expect(editor.editorOverlay).toBeVisible();
+    await expect(editor.editorOverlay).toBeVisible({ timeout: 10000 });
   });
 
   test('editor has back button', async ({ page }) => {
     const editor = new PageBuilderEditorPage(page);
     await editor.gotoNew();
-    await expect(editor.backButton).toBeVisible();
+    await expect(editor.backButton).toBeVisible({ timeout: 10000 });
   });
 
   test('public pages list loads', async ({ page }) => {

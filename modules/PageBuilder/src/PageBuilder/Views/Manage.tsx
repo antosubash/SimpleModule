@@ -129,7 +129,7 @@ export default function Manage({ pages }: Props) {
                     <TableCell className="text-text-secondary">/p/{page.slug}</TableCell>
                     <TableCell>
                       <div className="flex gap-1.5">
-                        <Badge variant={page.isPublished ? 'success' : 'secondary'}>
+                        <Badge variant={page.isPublished ? 'success' : 'secondary'} data-testid="status-badge">
                           {page.isPublished ? 'Published' : 'Unpublished'}
                         </Badge>
                         {page.hasDraft && <Badge variant="warning">Draft</Badge>}

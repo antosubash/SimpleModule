@@ -7,6 +7,12 @@ export class ProductsManagePage {
     await this.page.goto('/products/manage');
   }
 
+  async showAllRows() {
+    // Change the DataGrid page size to 50 to show all items
+    await this.page.getByTestId('datagrid-page-size').click();
+    await this.page.getByRole('option', { name: '50' }).click();
+  }
+
   get heading() {
     return this.page.getByRole('heading', { name: /manage|products/i });
   }

@@ -49,7 +49,7 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
     <div className="mx-auto max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">My Settings</h1>
       {Object.entries(groups).map(([group, items]) => (
-        <Card key={group}>
+        <Card key={group} data-testid="setting-card">
           <CardHeader>
             <CardTitle>{group}</CardTitle>
           </CardHeader>

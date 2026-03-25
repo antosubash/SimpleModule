@@ -1232,6 +1232,11 @@ internal static class SymbolDiscovery
                 )
                     continue;
 
+                // Skip Vogen value objects — they have their own JsonConverter
+                // and must not be treated as regular DTOs in the JSON resolver
+                if (IsVogenValueObject(typeSymbol))
+                    continue;
+
                 var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
                 existingFqns.Add(fqn);
@@ -1278,6 +1283,25 @@ internal static class SymbolDiscovery
             }
         }
         return properties;
+    }
+
+    private static bool IsVogenValueObject(INamedTypeSymbol typeSymbol)
+    {
+        foreach (var attr in typeSymbol.GetAttributes())
+        {
+            var attrClass = attr.AttributeClass;
+            if (
+                attrClass is not null
+                && attrClass.IsGenericType
+                && attrClass.Name == "ValueObjectAttribute"
+                && attrClass.ContainingNamespace.ToDisplayString() == "Vogen"
+            )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

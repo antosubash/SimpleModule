@@ -11,6 +11,7 @@ test.describe('OpenIddict Clients', () => {
   test('seeded client is visible', async ({ page }) => {
     const clientsPage = new ClientsPage(page);
     await clientsPage.goto();
+    await clientsPage.showAllRows();
     await expect(clientsPage.clientRow('simplemodule-client')).toBeVisible();
   });
 

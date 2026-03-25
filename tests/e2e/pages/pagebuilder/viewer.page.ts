@@ -8,6 +8,6 @@ export class PageBuilderViewerPage {
   }
 
   get content() {
-    return this.page.locator('.max-w-4xl');
+    return this.page.getByTestId('page-content');
   }
 }

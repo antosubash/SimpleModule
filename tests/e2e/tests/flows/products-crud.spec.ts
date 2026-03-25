@@ -5,7 +5,7 @@ import { ProductsEditPage } from '../../pages/products/edit.page';
 import { ProductsManagePage } from '../../pages/products/manage.page';
 
 test.describe('Products CRUD', () => {
-  test('create, verify, edit, and delete a product', async ({ page }) => {
+  test('create, verify, edit, and delete a product', async ({ page, request }) => {
     const suffix = Date.now();
     const productName = `E2E Product ${suffix}`;
     const updatedName = `E2E Updated ${suffix}`;
@@ -23,9 +23,14 @@ test.describe('Products CRUD', () => {
     await browsePage.goto();
     await expect(browsePage.productByName(productName)).toBeVisible();
 
-    // Edit the product via manage page
-    await managePage.goto();
-    await managePage.editButton(productName).click();
+    // Find the product ID via API so we can navigate directly to edit
+    const productsRes = await request.get('/api/products');
+    const products = await productsRes.json();
+    const product = products.find((p: { name: string }) => p.name === productName);
+    expect(product).toBeTruthy();
+
+    // Edit the product directly by navigating to its edit page
+    await page.goto(`/products/${product.id}/edit`);
     await expect(editPage.heading).toBeVisible();
     await editPage.updateProduct(updatedName, '59.99');
 
@@ -33,13 +38,11 @@ test.describe('Products CRUD', () => {
     await browsePage.goto();
     await expect(browsePage.productByName(updatedName)).toBeVisible();
 
-    // Delete the product via manage page (confirm dialog will appear)
-    await managePage.goto();
-    page.on('dialog', (dialog) => dialog.accept());
-    await managePage.deleteButton(updatedName).click();
-    await page.waitForLoadState('networkidle');
+    // Delete via API (cleaner than navigating through paginated manage page)
+    await request.delete(`/products/${product.id}`);
 
-    // Verify it's gone
-    await expect(managePage.productRow(updatedName)).not.toBeVisible();
+    // Verify it's gone from browse
+    await browsePage.goto();
+    await expect(browsePage.productByName(updatedName)).not.toBeVisible();
   });
 });

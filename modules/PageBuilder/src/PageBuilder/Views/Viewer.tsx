@@ -21,7 +21,7 @@ export default function Viewer({ page, isDraft }: Props) {
   }, [page.content]);
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
+    <div className="max-w-4xl mx-auto py-8" data-testid="page-content">
       {isDraft && (
         <Alert variant="warning" className="mb-6">
           <AlertDescription>Draft Preview — this version is not published</AlertDescription>

@@ -12,11 +12,11 @@ export class MenuManagerPage {
   }
 
   get addItemButton() {
-    return this.page.getByRole('button', { name: /add item/i });
+    return this.page.getByRole('button', { name: /^add$/i });
   }
 
   get addChildButton() {
-    return this.page.getByRole('button', { name: /add child/i });
+    return this.page.getByRole('button', { name: /^child$/i });
   }
 
   get saveButton() {
@@ -24,47 +24,54 @@ export class MenuManagerPage {
   }
 
   get deleteButton() {
-    return this.page.getByRole('button', { name: /delete/i });
+    return this.page.getByRole('button', { name: 'Delete', exact: true });
+  }
+
+  get settingsTab() {
+    return this.page.getByRole('tab', { name: /settings/i });
   }
 
   get labelInput() {
-    return this.page.locator('input#label');
+    return this.page.getByLabel('Label');
   }
 
   get urlInput() {
-    return this.page.locator('input#url');
+    return this.page.locator('#url');
   }
 
   get pageSelect() {
-    return this.page.locator('select#pageRoute');
+    return this.page.getByRole('combobox');
   }
 
   get pageRadio() {
-    return this.page.locator('input[type="radio"][value="page"]');
+    return this.page.getByRole('radio', { name: /page/i });
   }
 
   get urlRadio() {
-    return this.page.locator('input[type="radio"][value="url"]');
+    return this.page.getByRole('radio', { name: /url/i });
   }
 
   get openInNewTabSwitch() {
-    return this.page.locator('#openInNewTab');
+    return this.page.getByLabel('Open in New Tab');
   }
 
   get visibleSwitch() {
-    return this.page.locator('#isVisible');
+    return this.page.getByLabel('Visible');
   }
 
   get homePageSwitch() {
-    return this.page.locator('#isHomePage');
+    return this.page.getByLabel('Home Page');
   }
 
   get emptyState() {
     return this.page.getByText(/no menu items yet/i);
   }
 
+  /** Scoped to tree area — use exact label to avoid duplicates */
   treeItemButton(label: string) {
-    return this.page.getByRole('button', { name: new RegExp(label, 'i') });
+    return this.page
+      .getByRole('button', { name: new RegExp(`^${label}\\b`, 'i') })
+      .first();
   }
 
   async selectItem(label: string) {

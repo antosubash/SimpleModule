@@ -7,6 +7,11 @@ export class ClientsPage {
     await this.page.goto('/openiddict/clients');
   }
 
+  async showAllRows() {
+    await this.page.getByTestId('datagrid-page-size').click();
+    await this.page.getByRole('option', { name: '50' }).click();
+  }
+
   get heading() {
     return this.page.getByRole('heading', { name: /clients/i });
   }
@@ -42,7 +47,9 @@ export class ClientsCreatePage {
   async createClient(clientId: string, displayName: string, type: 'public' | 'confidential' = 'public') {
     await this.page.getByLabel('Client ID').fill(clientId);
     await this.page.getByLabel('Display Name').fill(displayName);
-    await this.page.getByLabel('Client Type').selectOption(type);
+    // Radix Select combobox — click to open, then click the option
+    await this.page.getByLabel('Client Type').click();
+    await this.page.getByRole('option', { name: new RegExp(type, 'i') }).click();
     await this.page.getByRole('button', { name: 'Create Client' }).click();
   }
 }
@@ -55,15 +62,15 @@ export class ClientsEditPage {
   }
 
   get detailsTab() {
-    return this.page.getByRole('button', { name: 'Details' });
+    return this.page.getByRole('tab', { name: 'Details' });
   }
 
   get urisTab() {
-    return this.page.getByRole('button', { name: 'URIs' });
+    return this.page.getByRole('tab', { name: 'URIs' });
   }
 
   get permissionsTab() {
-    return this.page.getByRole('button', { name: 'Permissions' });
+    return this.page.getByRole('tab', { name: 'Permissions' });
   }
 
   get displayNameInput() {

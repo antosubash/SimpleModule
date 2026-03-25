@@ -30,10 +30,6 @@ export interface Page {
   deletedAt: any;
 }
 
-export interface PageId {
-  value: number;
-}
-
 export interface PageSummary {
   id: number;
   title: string;
@@ -52,19 +48,11 @@ export interface PageTag {
   name: string;
 }
 
-export interface PageTagId {
-  value: number;
-}
-
 export interface PageTemplate {
   id: number;
   name: string;
   content: string;
   createdAt: string;
-}
-
-export interface PageTemplateId {
-  value: number;
 }
 
 export interface UpdatePageContentRequest {

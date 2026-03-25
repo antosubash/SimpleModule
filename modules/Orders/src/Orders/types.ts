@@ -12,10 +12,6 @@ export interface Order {
   createdAt: string;
 }
 
-export interface OrderId {
-  value: number;
-}
-
 export interface OrderItem {
   productId: number;
   quantity: number;

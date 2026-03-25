@@ -11,7 +11,7 @@ interface SettingGroupProps {
 
 export default function SettingGroup({ group, definitions, values, onSave }: SettingGroupProps) {
   return (
-    <Card>
+    <Card data-testid="setting-card">
       <CardHeader>
         <CardTitle>{group}</CardTitle>
       </CardHeader>

@@ -24,8 +24,9 @@ test.describe('OpenIddict Clients CRUD', () => {
     // Should redirect to edit page
     await expect(editPage.heading).toBeVisible();
 
-    // Verify it appears on list page (search by clientId which is always in the row)
+    // Verify it appears on list page
     await clientsPage.goto();
+    await clientsPage.showAllRows();
     await expect(clientsPage.clientRow(clientId)).toBeVisible();
 
     // Edit the client display name
@@ -33,10 +34,9 @@ test.describe('OpenIddict Clients CRUD', () => {
     await expect(editPage.heading).toBeVisible();
     await editPage.updateDisplayName(updatedName);
 
-    // Verify the update on list page (the clientId row should now contain the updated name)
+    // Verify the update on list page
     await clientsPage.goto();
-    await expect(clientsPage.clientRow(clientId)).toBeVisible();
-    // The display name column should show the updated name
+    await clientsPage.showAllRows();
     await expect(clientsPage.clientRow(clientId)).toContainText(updatedName, { timeout: 10000 });
 
     // Delete the client
@@ -54,6 +54,7 @@ test.describe('OpenIddict Clients CRUD', () => {
 
     // Navigate to the seeded client's edit page
     await clientsPage.goto();
+    await clientsPage.showAllRows();
     await clientsPage.editButton('simplemodule-client').click();
     await expect(editPage.heading).toBeVisible();
 
@@ -72,6 +73,7 @@ test.describe('OpenIddict Clients CRUD', () => {
 
     // Navigate to the seeded client's edit page
     await clientsPage.goto();
+    await clientsPage.showAllRows();
     await clientsPage.editButton('simplemodule-client').click();
     await expect(editPage.heading).toBeVisible();
 

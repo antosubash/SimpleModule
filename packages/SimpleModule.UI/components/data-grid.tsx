@@ -75,7 +75,7 @@ function DataGrid<T>({
               Showing {startIndex + 1}–{endIndex} of {data.length}
             </span>
             <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-              <SelectTrigger className="h-8 w-[70px]">
+              <SelectTrigger className="h-8 w-[70px]" data-testid="datagrid-page-size">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -96,6 +96,7 @@ function DataGrid<T>({
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
+                data-testid="datagrid-prev"
               >
                 <svg
                   className="h-4 w-4"
@@ -135,6 +136,7 @@ function DataGrid<T>({
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
+                data-testid="datagrid-next"
               >
                 <svg
                   className="h-4 w-4"

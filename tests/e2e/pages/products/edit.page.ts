@@ -8,11 +8,11 @@ export class ProductsEditPage {
   }
 
   get nameInput() {
-    return this.page.locator('#name');
+    return this.page.getByLabel('Name');
   }
 
   get priceInput() {
-    return this.page.locator('#price');
+    return this.page.getByLabel('Price');
   }
 
   get submitButton() {

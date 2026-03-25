@@ -1,3 +1,5 @@
+import '@measured/puck/dist/index.css';
+
 const CSS_ID = 'puck-editor-css';
 
 export function loadPuckCss(): void {

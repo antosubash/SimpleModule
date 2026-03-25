@@ -20,6 +20,6 @@ export class AdminSettingsPage {
   }
 
   get settingCards() {
-    return this.page.locator('[data-slot="card"]');
+    return this.page.getByTestId('setting-card');
   }
 }

@@ -7,7 +7,7 @@ export default function Browse({ products }: { products: Product[] }) {
       <PageHeader className="mb-0" title="Products" description="Browse the product catalog." />
       <div className="space-y-3">
         {products.map((p) => (
-          <Card key={p.id}>
+          <Card key={p.id} data-testid="product-card">
             <CardContent className="flex justify-between items-center">
               <span className="font-medium">{p.name}</span>
               <span className="text-text-muted">${p.price.toFixed(2)}</span>

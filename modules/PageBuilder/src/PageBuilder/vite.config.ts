@@ -6,6 +6,9 @@ const isDev = process.env.VITE_MODE !== 'prod';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
+  },
   build: {
     lib: {
       entry: {
@@ -24,8 +27,6 @@ export default defineConfig({
         'react-dom',
         'react/jsx-runtime',
         '@inertiajs/react',
-        '@measured/puck',
-        '@measured/puck/rsc',
       ],
       output: {
         assetFileNames: 'pagebuilder[extname]',

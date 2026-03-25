@@ -22,10 +22,6 @@ export interface AuditEntry {
   metadata: string;
 }
 
-export interface AuditEntryId {
-  value: number;
-}
-
 export interface AuditExportRequest {
   format: string;
   effectiveFormat: string;

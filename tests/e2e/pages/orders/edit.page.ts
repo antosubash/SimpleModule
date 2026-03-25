@@ -8,11 +8,11 @@ export class OrdersEditPage {
   }
 
   get userIdInput() {
-    return this.page.locator('#userId');
+    return this.page.getByLabel('User ID');
   }
 
   get productSelect() {
-    return this.page.locator('select').first();
+    return this.page.getByRole('combobox').first();
   }
 
   get quantityInput() {

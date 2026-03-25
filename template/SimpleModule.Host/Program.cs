@@ -86,6 +86,15 @@ app.UseHttpsRedirection();
 app.UseInertia();
 app.UseStaticFileCaching();
 app.MapStaticAssets();
+// Fallback for dynamically generated .mjs chunks (Vite watch rebuilds)
+// MapStaticAssets only knows about files present at build time;
+// Vite generates new hash-named chunks at runtime that need correct MIME types
+if (app.Environment.IsDevelopment())
+{
+    var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+    provider.Mappings[".mjs"] = "application/javascript";
+    app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<AuditMiddleware>();

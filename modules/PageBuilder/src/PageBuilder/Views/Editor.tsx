@@ -252,7 +252,7 @@ export default function Editor({ page, templates }: Props) {
   }
 
   const editor = (
-    <div className="fixed inset-0 z-[9999] bg-white">
+    <div className="fixed inset-0 z-[9999] bg-white" data-testid="puck-editor">
       <Puck
         key={JSON.stringify(initialData)}
         config={puckConfig}

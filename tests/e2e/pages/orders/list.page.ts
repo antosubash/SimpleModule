@@ -20,7 +20,7 @@ export class OrdersListPage {
   }
 
   orderRowByUser(userId: string) {
-    return this.page.locator('tr', { hasText: userId });
+    return this.page.getByRole('row', { name: new RegExp(userId, 'i') });
   }
 
   editButton(userId: string) {

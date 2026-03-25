@@ -12,11 +12,11 @@ export class OrdersCreatePage {
   }
 
   get userIdInput() {
-    return this.page.locator('#userId');
+    return this.page.getByLabel('User ID');
   }
 
   get productSelect() {
-    return this.page.locator('select').first();
+    return this.page.getByRole('combobox').first();
   }
 
   get quantityInput() {
@@ -32,7 +32,7 @@ export class OrdersCreatePage {
   }
 
   get estimatedTotal() {
-    return this.page.getByText(/estimated total/i).locator('..');
+    return this.page.getByTestId('estimated-total');
   }
 
   async createOrder(userId: string, productIndex?: number, quantity?: string) {

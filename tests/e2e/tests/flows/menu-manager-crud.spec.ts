@@ -1,6 +1,8 @@
 import { expect, test } from '../../fixtures/base';
 import { MenuManagerPage } from '../../pages/settings/menu-manager.page';
 
+const suffix = Date.now();
+
 test.describe('Menu Manager - CRUD Flows', () => {
   let menuManager: MenuManagerPage;
 
@@ -11,7 +13,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
   });
 
   test('create a top-level menu item', async ({ page }) => {
-    // "Add Item" creates a "New Item" via POST and selects it
+    const label = `Products ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -19,12 +22,11 @@ test.describe('Menu Manager - CRUD Flows', () => {
       menuManager.addItemButton.click(),
     ]);
 
-    // Editor should appear with the new item selected
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('Products');
+    await menuManager.labelInput.fill(label);
 
-    await menuManager.urlRadio.check();
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/products/browse');
 
     await Promise.all([
@@ -35,12 +37,13 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Verify item appears in tree with updated label
-    await expect(menuManager.treeItemButton('Products')).toBeVisible();
+    await expect(menuManager.treeItemButton(label)).toBeVisible();
   });
 
   test('create and edit a menu item', async ({ page }) => {
-    // Create
+    const label = `About ${suffix}`;
+    const editedLabel = `About Us ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -50,8 +53,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('About');
-    await menuManager.urlRadio.check();
+    await menuManager.labelInput.fill(label);
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/about');
 
     await Promise.all([
@@ -63,12 +66,12 @@ test.describe('Menu Manager - CRUD Flows', () => {
     await page.waitForLoadState('networkidle');
 
     // Select the item to edit
-    await menuManager.selectItem('About');
+    await menuManager.selectItem(label);
     await menuManager.labelInput.waitFor({ state: 'visible' });
 
     // Edit label and URL
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('About Us');
+    await menuManager.labelInput.fill(editedLabel);
     await menuManager.urlInput.clear();
     await menuManager.urlInput.fill('/about-us');
 
@@ -80,12 +83,13 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Verify updated label
-    await expect(menuManager.treeItemButton('About Us')).toBeVisible();
+    await expect(menuManager.treeItemButton(editedLabel)).toBeVisible();
   });
 
   test('create a child menu item', async ({ page }) => {
-    // Create parent
+    const parentLabel = `Services ${suffix}`;
+    const childLabel = `Consulting ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -95,8 +99,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('Services');
-    await menuManager.urlRadio.check();
+    await menuManager.labelInput.fill(parentLabel);
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/services');
 
     await Promise.all([
@@ -108,9 +112,9 @@ test.describe('Menu Manager - CRUD Flows', () => {
     await page.waitForLoadState('networkidle');
 
     // Select parent
-    await menuManager.selectItem('Services');
+    await menuManager.selectItem(parentLabel);
 
-    // Add child — "Add Child" button should be visible when a top-level item is selected
+    // Add child
     await menuManager.addChildButton.waitFor({ state: 'visible' });
     await Promise.all([
       page.waitForResponse(
@@ -121,8 +125,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('Consulting');
-    await menuManager.urlRadio.check();
+    await menuManager.labelInput.fill(childLabel);
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/services/consulting');
 
     await Promise.all([
@@ -133,12 +137,12 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Verify child appears
-    await expect(menuManager.treeItemButton('Consulting')).toBeVisible();
+    await expect(menuManager.treeItemButton(childLabel)).toBeVisible();
   });
 
   test('delete a menu item', async ({ page }) => {
-    // Create item to delete
+    const label = `ToDelete ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -148,8 +152,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('ToDelete');
-    await menuManager.urlRadio.check();
+    await menuManager.labelInput.fill(label);
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/to-delete');
 
     await Promise.all([
@@ -161,26 +165,23 @@ test.describe('Menu Manager - CRUD Flows', () => {
     await page.waitForLoadState('networkidle');
 
     // Select and delete
-    await menuManager.selectItem('ToDelete');
+    await menuManager.selectItem(label);
     await menuManager.deleteButton.waitFor({ state: 'visible' });
 
-    // Accept the confirmation dialog
-    page.on('dialog', (dialog) => dialog.accept());
+    // Click Delete to open confirmation dialog
+    await menuManager.deleteButton.click();
 
-    await Promise.all([
-      page.waitForResponse(
-        (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'DELETE',
-      ),
-      menuManager.deleteButton.click(),
-    ]);
+    // Confirm deletion in the Radix dialog
+    const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
+    await dialog.getByRole('button', { name: 'Delete' }).click();
     await page.waitForLoadState('networkidle');
 
-    // Verify item removed
-    await expect(menuManager.treeItemButton('ToDelete')).not.toBeVisible();
+    await expect(menuManager.treeItemButton(label)).not.toBeVisible();
   });
 
   test('toggle visibility of a menu item', async ({ page }) => {
-    // Create item
+    const label = `ToggleMe ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -190,8 +191,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('ToggleMe');
-    await menuManager.urlRadio.check();
+    await menuManager.labelInput.fill(label);
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/toggle');
 
     await Promise.all([
@@ -202,8 +203,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Select and toggle visibility off via the editor switch
-    await menuManager.selectItem('ToggleMe');
+    await menuManager.selectItem(label);
+    await menuManager.settingsTab.click();
     await menuManager.visibleSwitch.waitFor({ state: 'visible' });
     await menuManager.visibleSwitch.click();
 
@@ -217,7 +218,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
   });
 
   test('set home page on a menu item', async ({ page }) => {
-    // Create item
+    const label = `HomePage ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -227,8 +229,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('HomePage');
-    await menuManager.urlRadio.check();
+    await menuManager.labelInput.fill(label);
+    await menuManager.urlRadio.click();
     await menuManager.urlInput.fill('/home-test');
 
     await Promise.all([
@@ -239,8 +241,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    // Select and set as home page
-    await menuManager.selectItem('HomePage');
+    await menuManager.selectItem(label);
+    await menuManager.settingsTab.click();
     await menuManager.homePageSwitch.waitFor({ state: 'visible' });
     await menuManager.homePageSwitch.click();
 
@@ -254,6 +256,8 @@ test.describe('Menu Manager - CRUD Flows', () => {
   });
 
   test('select a module page from dropdown', async ({ page }) => {
+    const label = `BrowseProducts ${suffix}`;
+
     await Promise.all([
       page.waitForResponse(
         (resp) => resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST',
@@ -263,18 +267,15 @@ test.describe('Menu Manager - CRUD Flows', () => {
 
     await menuManager.labelInput.waitFor({ state: 'visible' });
     await menuManager.labelInput.clear();
-    await menuManager.labelInput.fill('Browse Products');
+    await menuManager.labelInput.fill(label);
 
     // Select "Page" radio
-    await menuManager.pageRadio.check();
+    await menuManager.pageRadio.click();
 
-    // The page select should be visible and have options
+    // Open the Radix Select and pick first option
     await menuManager.pageSelect.waitFor({ state: 'visible' });
-    const options = await menuManager.pageSelect.locator('option').count();
-    expect(options).toBeGreaterThan(1); // At least one page + placeholder
-
-    // Select the first non-empty option
-    await menuManager.pageSelect.selectOption({ index: 1 });
+    await menuManager.pageSelect.click();
+    await page.getByRole('option').first().click();
 
     await Promise.all([
       page.waitForResponse(
@@ -284,6 +285,6 @@ test.describe('Menu Manager - CRUD Flows', () => {
     ]);
     await page.waitForLoadState('networkidle');
 
-    await expect(menuManager.treeItemButton('Browse Products')).toBeVisible();
+    await expect(menuManager.treeItemButton(label)).toBeVisible();
   });
 });

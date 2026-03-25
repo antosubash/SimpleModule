@@ -145,7 +145,7 @@ export default function Create({ products }: Props) {
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-border">
+              <div className="pt-2 border-t border-border" data-testid="estimated-total">
                 <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Estimated Total</span>
                   <span>${getTotal().toFixed(2)}</span>

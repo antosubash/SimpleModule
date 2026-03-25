@@ -1,8 +1,11 @@
+import path from 'node:path';
 import { expect, test } from '../../fixtures/base';
 import { OrdersCreatePage } from '../../pages/orders/create.page';
 import { OrdersEditPage } from '../../pages/orders/edit.page';
 import { OrdersListPage } from '../../pages/orders/list.page';
 import { ProductsCreatePage } from '../../pages/products/create.page';
+
+const authFile = path.resolve(__dirname, '../../auth/.auth/user.json');
 
 test.describe('Orders CRUD', () => {
   // Run serially — tests share state via the orders list
@@ -13,7 +16,7 @@ test.describe('Orders CRUD', () => {
   test.beforeAll(async ({ browser }) => {
     // Get the admin user's actual ID via API
     const context = await browser.newContext({
-      storageState: 'auth/.auth/user.json',
+      storageState: authFile,
     });
     const page = await context.newPage();
     const response = await page.request.get('https://localhost:5001/api/users');

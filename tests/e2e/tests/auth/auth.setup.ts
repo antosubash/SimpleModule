@@ -1,6 +1,7 @@
+import path from 'node:path';
 import { expect, test as setup } from '@playwright/test';
 
-const authFile = 'auth/.auth/user.json';
+const authFile = path.resolve(__dirname, '../../auth/.auth/user.json');
 
 setup('authenticate as admin', async ({ page }) => {
   // Navigate to the app — unauthenticated users see the landing page with login button

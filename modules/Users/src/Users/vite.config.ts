@@ -6,6 +6,9 @@ const isDev = process.env.VITE_MODE !== 'prod';
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
+  },
   build: {
     lib: {
       entry: {
