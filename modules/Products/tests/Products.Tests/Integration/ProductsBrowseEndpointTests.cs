@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using SimpleModule.Core.Inertia;
 using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Products.Tests.Integration;
@@ -27,7 +28,7 @@ public class ProductsBrowseEndpointTests : IClassFixture<SimpleModuleWebApplicat
     public async Task Browse_WithInertia_ReturnsProductsData()
     {
         _client.DefaultRequestHeaders.Add("X-Inertia", "true");
-        _client.DefaultRequestHeaders.Add("X-Inertia-Version", "1");
+        _client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
         var response = await _client.GetAsync("/products/browse");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -44,7 +45,7 @@ public class ProductsBrowseEndpointTests : IClassFixture<SimpleModuleWebApplicat
     public async Task Browse_ProductsHaveExpectedFields()
     {
         _client.DefaultRequestHeaders.Add("X-Inertia", "true");
-        _client.DefaultRequestHeaders.Add("X-Inertia-Version", "1");
+        _client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
         var response = await _client.GetAsync("/products/browse");
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();

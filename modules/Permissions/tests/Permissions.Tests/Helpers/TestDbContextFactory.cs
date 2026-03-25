@@ -22,7 +22,7 @@ public sealed class TestDbContextFactory : IDisposable
             .UseSqlite(_connection)
             .Options;
 
-        var dbOptions = Options.Create(new DatabaseOptions());
+        var dbOptions = Options.Create(new DatabaseOptions { DefaultConnection = "Data Source=:memory:" });
         var context = new PermissionsDbContext(options, dbOptions);
         context.Database.EnsureCreated();
         return context;

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using SimpleModule.Core.Inertia;
 using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Core.Tests.Inertia;
@@ -34,7 +35,7 @@ public class InertiaResultTests : IClassFixture<SimpleModuleWebApplicationFactor
     {
         using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
-        client.DefaultRequestHeaders.Add("X-Inertia-Version", "1");
+        client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
         var response = await client.GetAsync("/products/browse");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -52,7 +53,7 @@ public class InertiaResultTests : IClassFixture<SimpleModuleWebApplicationFactor
     {
         using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
-        client.DefaultRequestHeaders.Add("X-Inertia-Version", "1");
+        client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
         var response = await client.GetAsync("/products/browse");
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -64,7 +65,7 @@ public class InertiaResultTests : IClassFixture<SimpleModuleWebApplicationFactor
     {
         using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
-        client.DefaultRequestHeaders.Add("X-Inertia-Version", "1");
+        client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
         var response = await client.GetAsync("/products/browse");
         response.Headers.Contains("X-Inertia").Should().BeTrue();
