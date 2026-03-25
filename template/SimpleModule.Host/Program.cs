@@ -58,6 +58,11 @@ builder.Services.AddModuleSystem(builder.Configuration);
 builder.Services.AddSmartAuthentication();
 builder.Services.AddModuleHealthChecks();
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<SimpleModule.Host.Services.ViteDevWatchService>();
+}
+
 var app = builder.Build();
 
 // Initialize database
