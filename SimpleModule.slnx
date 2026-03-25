@@ -10,6 +10,7 @@
         <Project Path="framework/SimpleModule.Database/SimpleModule.Database.csproj" />
         <Project Path="framework/SimpleModule.Blazor/SimpleModule.Blazor.csproj" />
         <Project Path="framework/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
+        <Project Path="framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
     </Folder>
     <Folder Name="/cli/">
         <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />

@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.AuditLogs.Interceptors;
+using SimpleModule.AuditLogs.Middleware;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.AuditLogs.Retention;
 using SimpleModule.Core;
@@ -42,6 +44,11 @@ public class AuditLogsModule : IModule
             var settingsContracts = sp.GetService<ISettingsContracts>();
             return new AuditingEventBus(innerBus, auditCtx, auditChan, settingsContracts);
         });
+    }
+
+    public void ConfigureMiddleware(IApplicationBuilder app)
+    {
+        app.UseMiddleware<AuditMiddleware>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)
@@ -166,7 +173,7 @@ public class AuditLogsModule : IModule
                     Description = "Comma-separated path prefixes to skip (e.g., /health,/metrics)",
                     Group = "Audit Logs",
                     Scope = SettingScope.System,
-                    DefaultValue = "\"/health,/metrics,/_content,/js/,/css/\"",
+                    DefaultValue = "/health,/metrics,/_content,/js/,/css/",
                     Type = SettingType.Text,
                 }
             );

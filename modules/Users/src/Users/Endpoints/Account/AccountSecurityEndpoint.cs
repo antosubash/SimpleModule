@@ -158,7 +158,9 @@ public class AccountSecurityEndpoint : IEndpoint
                     return TypedResults.Redirect("/Identity/Account/Login");
 
                 if (!await userManager.GetTwoFactorEnabledAsync(user))
-                    return TypedResults.Redirect("/Identity/Account/Manage/TwoFactorAuthentication");
+                    return TypedResults.Redirect(
+                        "/Identity/Account/Manage/TwoFactorAuthentication"
+                    );
 
                 var recoveryCodes = await userManager.GenerateNewTwoFactorRecoveryCodesAsync(
                     user,

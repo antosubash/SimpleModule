@@ -51,7 +51,9 @@ public class ClientsActionEndpoint : IEndpoint
                     descriptor.RedirectUris.Add(new Uri(uri!));
                 }
 
-                foreach (var uri in form["postLogoutUris"].Where(u => !string.IsNullOrWhiteSpace(u)))
+                foreach (
+                    var uri in form["postLogoutUris"].Where(u => !string.IsNullOrWhiteSpace(u))
+                )
                 {
                     descriptor.PostLogoutRedirectUris.Add(new Uri(uri!));
                 }
@@ -120,7 +122,9 @@ public class ClientsActionEndpoint : IEndpoint
                     descriptor.RedirectUris.Add(new Uri(uri!));
                 }
 
-                foreach (var uri in form["postLogoutUris"].Where(u => !string.IsNullOrWhiteSpace(u)))
+                foreach (
+                    var uri in form["postLogoutUris"].Where(u => !string.IsNullOrWhiteSpace(u))
+                )
                 {
                     descriptor.PostLogoutRedirectUris.Add(new Uri(uri!));
                 }

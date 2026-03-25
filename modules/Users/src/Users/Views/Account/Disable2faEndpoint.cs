@@ -22,7 +22,9 @@ public class Disable2faEndpoint : IViewEndpoint
                         return TypedResults.Redirect("/Identity/Account/Login");
 
                     if (!await userManager.GetTwoFactorEnabledAsync(user))
-                        return TypedResults.Redirect("/Identity/Account/Manage/TwoFactorAuthentication");
+                        return TypedResults.Redirect(
+                            "/Identity/Account/Manage/TwoFactorAuthentication"
+                        );
 
                     return Inertia.Render("Users/Account/Disable2fa", new { });
                 }

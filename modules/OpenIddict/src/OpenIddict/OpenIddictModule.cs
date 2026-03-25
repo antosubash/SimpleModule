@@ -1,12 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Hosting;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.OpenIddict.Contracts;
+using SimpleModule.OpenIddict.Hosting;
 using SimpleModule.OpenIddict.Services;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace SimpleModule.OpenIddict;
 
@@ -95,6 +100,12 @@ public class OpenIddictModule : IModule
 
         // Seed service
         services.AddHostedService<OpenIddictSeedService>();
+
+        // Host-level contributions
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, OpenIddictSwaggerGenSetup>();
+        services.AddTransient<IConfigureOptions<SwaggerUIOptions>, OpenIddictSwaggerUISetup>();
+        services.AddSingleton<IHostDbContextContributor, OpenIddictDbContextContributor>();
+        OpenIddictAuthSetup.AddSmartAuthentication(services);
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

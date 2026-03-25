@@ -3,11 +3,19 @@ using System.Collections.Immutable;
 
 namespace SimpleModule.Generator;
 
-#region Equatable data model for incremental caching
+internal static class HashHelper
+{
+    internal static int Combine(int hash, int value) => unchecked(hash * 31 + value);
 
-// These record types implement value equality so the incremental generator
-// pipeline can detect when the extracted data hasn't changed and skip
-// re-generating source files.
+    internal static int HashArray<T>(int hash, ImmutableArray<T> items)
+    {
+        foreach (var item in items)
+            hash = Combine(hash, item!.GetHashCode());
+        return hash;
+    }
+}
+
+#region Equatable data model for incremental caching
 
 internal readonly record struct DiscoveryData(
     ImmutableArray<ModuleInfoRecord> Modules,
@@ -19,7 +27,8 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<ContractInterfaceInfoRecord> ContractInterfaces,
     ImmutableArray<ContractImplementationRecord> ContractImplementations,
     ImmutableArray<PermissionClassRecord> PermissionClasses,
-    ImmutableArray<InterceptorInfoRecord> Interceptors
+    ImmutableArray<InterceptorInfoRecord> Interceptors,
+    ImmutableArray<VogenValueObjectRecord> VogenValueObjects
 )
 {
     public static readonly DiscoveryData Empty = new(
@@ -32,7 +41,8 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<ContractInterfaceInfoRecord>.Empty,
         ImmutableArray<ContractImplementationRecord>.Empty,
         ImmutableArray<PermissionClassRecord>.Empty,
-        ImmutableArray<InterceptorInfoRecord>.Empty
+        ImmutableArray<InterceptorInfoRecord>.Empty,
+        ImmutableArray<VogenValueObjectRecord>.Empty
     );
 
     public bool Equals(DiscoveryData other)
@@ -46,36 +56,25 @@ internal readonly record struct DiscoveryData(
             && ContractInterfaces.SequenceEqual(other.ContractInterfaces)
             && ContractImplementations.SequenceEqual(other.ContractImplementations)
             && PermissionClasses.SequenceEqual(other.PermissionClasses)
-            && Interceptors.SequenceEqual(other.Interceptors);
+            && Interceptors.SequenceEqual(other.Interceptors)
+            && VogenValueObjects.SequenceEqual(other.VogenValueObjects);
     }
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            foreach (var m in Modules)
-                hash = hash * 31 + m.GetHashCode();
-            foreach (var d in DtoTypes)
-                hash = hash * 31 + d.GetHashCode();
-            foreach (var c in DbContexts)
-                hash = hash * 31 + c.GetHashCode();
-            foreach (var e in EntityConfigs)
-                hash = hash * 31 + e.GetHashCode();
-            foreach (var dep in Dependencies)
-                hash = hash * 31 + dep.GetHashCode();
-            foreach (var ill in IllegalReferences)
-                hash = hash * 31 + ill.GetHashCode();
-            foreach (var ci in ContractInterfaces)
-                hash = hash * 31 + ci.GetHashCode();
-            foreach (var cImpl in ContractImplementations)
-                hash = hash * 31 + cImpl.GetHashCode();
-            foreach (var pc in PermissionClasses)
-                hash = hash * 31 + pc.GetHashCode();
-            foreach (var ic in Interceptors)
-                hash = hash * 31 + ic.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.HashArray(hash, Modules);
+        hash = HashHelper.HashArray(hash, DtoTypes);
+        hash = HashHelper.HashArray(hash, DbContexts);
+        hash = HashHelper.HashArray(hash, EntityConfigs);
+        hash = HashHelper.HashArray(hash, Dependencies);
+        hash = HashHelper.HashArray(hash, IllegalReferences);
+        hash = HashHelper.HashArray(hash, ContractInterfaces);
+        hash = HashHelper.HashArray(hash, ContractImplementations);
+        hash = HashHelper.HashArray(hash, PermissionClasses);
+        hash = HashHelper.HashArray(hash, Interceptors);
+        hash = HashHelper.HashArray(hash, VogenValueObjects);
+        return hash;
     }
 }
 
@@ -86,6 +85,7 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigureEndpoints,
     bool HasConfigureMenu,
     bool HasConfigurePermissions,
+    bool HasConfigureMiddleware,
     bool HasConfigureSettings,
     bool HasRazorComponents,
     string RoutePrefix,
@@ -101,6 +101,7 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigureServices == other.HasConfigureServices
             && HasConfigureEndpoints == other.HasConfigureEndpoints
             && HasConfigureMenu == other.HasConfigureMenu
+            && HasConfigureMiddleware == other.HasConfigureMiddleware
             && HasConfigurePermissions == other.HasConfigurePermissions
             && HasConfigureSettings == other.HasConfigureSettings
             && HasRazorComponents == other.HasRazorComponents
@@ -112,25 +113,21 @@ internal readonly record struct ModuleInfoRecord(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + FullyQualifiedName.GetHashCode();
-            hash = hash * 31 + (ModuleName ?? "").GetHashCode();
-            hash = hash * 31 + HasConfigureServices.GetHashCode();
-            hash = hash * 31 + HasConfigureEndpoints.GetHashCode();
-            hash = hash * 31 + HasConfigureMenu.GetHashCode();
-            hash = hash * 31 + HasConfigurePermissions.GetHashCode();
-            hash = hash * 31 + HasConfigureSettings.GetHashCode();
-            hash = hash * 31 + HasRazorComponents.GetHashCode();
-            hash = hash * 31 + (RoutePrefix ?? "").GetHashCode();
-            hash = hash * 31 + (ViewPrefix ?? "").GetHashCode();
-            foreach (var e in Endpoints)
-                hash = hash * 31 + e.GetHashCode();
-            foreach (var v in Views)
-                hash = hash * 31 + v.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureServices.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureEndpoints.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureMenu.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureMiddleware.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigurePermissions.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureSettings.GetHashCode());
+        hash = HashHelper.Combine(hash, HasRazorComponents.GetHashCode());
+        hash = HashHelper.Combine(hash, (RoutePrefix ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (ViewPrefix ?? "").GetHashCode());
+        hash = HashHelper.HashArray(hash, Endpoints);
+        hash = HashHelper.HashArray(hash, Views);
+        return hash;
     }
 }
 
@@ -149,15 +146,11 @@ internal readonly record struct EndpointInfoRecord(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + FullyQualifiedName.GetHashCode();
-            hash = hash * 31 + AllowAnonymous.GetHashCode();
-            foreach (var p in RequiredPermissions)
-                hash = hash * 31 + p.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, AllowAnonymous.GetHashCode());
+        hash = HashHelper.HashArray(hash, RequiredPermissions);
+        return hash;
     }
 }
 
@@ -178,15 +171,11 @@ internal readonly record struct DtoTypeInfoRecord(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + FullyQualifiedName.GetHashCode();
-            hash = hash * 31 + SafeName.GetHashCode();
-            foreach (var p in Properties)
-                hash = hash * 31 + p.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, SafeName.GetHashCode());
+        hash = HashHelper.HashArray(hash, Properties);
+        return hash;
     }
 }
 
@@ -220,19 +209,15 @@ internal readonly record struct DbContextInfoRecord(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + FullyQualifiedName.GetHashCode();
-            hash = hash * 31 + (ModuleName ?? "").GetHashCode();
-            hash = hash * 31 + IsIdentityDbContext.GetHashCode();
-            hash = hash * 31 + (IdentityUserTypeFqn ?? "").GetHashCode();
-            hash = hash * 31 + (IdentityRoleTypeFqn ?? "").GetHashCode();
-            hash = hash * 31 + (IdentityKeyTypeFqn ?? "").GetHashCode();
-            foreach (var d in DbSets)
-                hash = hash * 31 + d.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, IsIdentityDbContext.GetHashCode());
+        hash = HashHelper.Combine(hash, (IdentityUserTypeFqn ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (IdentityRoleTypeFqn ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (IdentityKeyTypeFqn ?? "").GetHashCode());
+        hash = HashHelper.HashArray(hash, DbSets);
+        return hash;
     }
 }
 
@@ -287,16 +272,12 @@ internal readonly record struct PermissionClassRecord(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + FullyQualifiedName.GetHashCode();
-            hash = hash * 31 + (ModuleName ?? "").GetHashCode();
-            hash = hash * 31 + IsSealed.GetHashCode();
-            foreach (var f in Fields)
-                hash = hash * 31 + f.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, IsSealed.GetHashCode());
+        hash = HashHelper.HashArray(hash, Fields);
+        return hash;
     }
 }
 
@@ -319,17 +300,19 @@ internal readonly record struct InterceptorInfoRecord(
 
     public override int GetHashCode()
     {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 31 + FullyQualifiedName.GetHashCode();
-            hash = hash * 31 + (ModuleName ?? "").GetHashCode();
-            foreach (var p in ConstructorParamTypeFqns)
-                hash = hash * 31 + p.GetHashCode();
-            return hash;
-        }
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
+        hash = HashHelper.HashArray(hash, ConstructorParamTypeFqns);
+        return hash;
     }
 }
+
+internal readonly record struct VogenValueObjectRecord(
+    string TypeFqn,
+    string ConverterFqn,
+    string ComparerFqn
+);
 
 #endregion
 
@@ -343,6 +326,7 @@ internal sealed class ModuleInfo
     public bool HasConfigureEndpoints { get; set; }
     public bool HasConfigureMenu { get; set; }
     public bool HasConfigurePermissions { get; set; }
+    public bool HasConfigureMiddleware { get; set; }
     public bool HasConfigureSettings { get; set; }
     public bool HasRazorComponents { get; set; }
     public string RoutePrefix { get; set; } = "";

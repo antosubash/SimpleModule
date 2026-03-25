@@ -22,7 +22,9 @@ public class GenerateRecoveryCodesEndpoint : IViewEndpoint
                         return TypedResults.Redirect("/Identity/Account/Login");
 
                     if (!await userManager.GetTwoFactorEnabledAsync(user))
-                        return TypedResults.Redirect("/Identity/Account/Manage/TwoFactorAuthentication");
+                        return TypedResults.Redirect(
+                            "/Identity/Account/Manage/TwoFactorAuthentication"
+                        );
 
                     return Inertia.Render("Users/Account/GenerateRecoveryCodes", new { });
                 }

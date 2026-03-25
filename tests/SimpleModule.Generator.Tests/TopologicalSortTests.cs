@@ -202,6 +202,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -210,6 +211,7 @@ public class TopologicalSortTests
                 new ModuleInfoRecord(
                     "global::A.AModule",
                     "ModuleA",
+                    false,
                     false,
                     false,
                     false,
@@ -230,7 +232,8 @@ public class TopologicalSortTests
             ImmutableArray<ContractInterfaceInfoRecord>.Empty,
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
-            ImmutableArray<InterceptorInfoRecord>.Empty
+            ImmutableArray<InterceptorInfoRecord>.Empty,
+            ImmutableArray<VogenValueObjectRecord>.Empty
         );
 
         var result = TopologicalSort.SortModules(data);
@@ -255,6 +258,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -263,6 +267,7 @@ public class TopologicalSortTests
                 new ModuleInfoRecord(
                     "global::B.BModule",
                     "ModuleB",
+                    false,
                     false,
                     false,
                     false,
@@ -286,7 +291,8 @@ public class TopologicalSortTests
             ImmutableArray<ContractInterfaceInfoRecord>.Empty,
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
-            ImmutableArray<InterceptorInfoRecord>.Empty
+            ImmutableArray<InterceptorInfoRecord>.Empty,
+            ImmutableArray<VogenValueObjectRecord>.Empty
         );
 
         var result = TopologicalSort.SortModules(data);
@@ -311,6 +317,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -319,6 +326,7 @@ public class TopologicalSortTests
                 new ModuleInfoRecord(
                     "global::A.AModule",
                     "ModuleA",
+                    false,
                     false,
                     false,
                     false,
@@ -339,6 +347,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -353,7 +362,8 @@ public class TopologicalSortTests
             ImmutableArray<ContractInterfaceInfoRecord>.Empty,
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
-            ImmutableArray<InterceptorInfoRecord>.Empty
+            ImmutableArray<InterceptorInfoRecord>.Empty,
+            ImmutableArray<VogenValueObjectRecord>.Empty
         );
 
         var result = TopologicalSort.SortModules(data);

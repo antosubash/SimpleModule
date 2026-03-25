@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Hosting;
 
 namespace SimpleModule.Database;
 
@@ -54,14 +55,23 @@ public static class ModuleDbContextOptionsBuilder
 
                 configureOptions?.Invoke(options);
 
+                // Auto-resolve host DbContext contributors (e.g., OpenIddict's UseOpenIddict())
+                if (moduleName == DatabaseConstants.HostModuleName)
+                {
+                    var contributors = sp.GetServices<IHostDbContextContributor>();
+                    foreach (var contributor in contributors)
+                    {
+                        contributor.Configure(options);
+                    }
+                }
+
                 // Resolve SaveChanges interceptors lazily at first use rather than during
                 // DbContext options construction. This avoids circular dependency issues
                 // when an interceptor's constructor depends on a service that depends on
                 // a DbContext (e.g., SaveChangesInterceptor -> IServiceA -> ServiceA
                 // -> SomeDbContext). Interceptors should resolve runtime dependencies at
                 // interception time via eventData.Context.GetInfrastructure().GetService<T>().
-                var interceptors = sp.GetServices<ISaveChangesInterceptor>().ToArray();
-                options.AddInterceptors(interceptors);
+                options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
             }
         );
 

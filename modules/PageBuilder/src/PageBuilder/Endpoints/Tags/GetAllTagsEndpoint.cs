@@ -13,8 +13,7 @@ public class GetAllTagsEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/tags",
-                (IPageBuilderTagContracts tags) =>
-                    CrudEndpoints.GetAll(tags.GetAllTagsAsync)
+                (IPageBuilderTagContracts tags) => CrudEndpoints.GetAll(tags.GetAllTagsAsync)
             )
             .RequirePermission(PageBuilderPermissions.View);
 }

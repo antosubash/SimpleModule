@@ -303,26 +303,43 @@ internal static class SymbolDiscovery
         );
         if (saveChangesInterceptorSymbol is not null)
         {
-            var interceptorScannedAssemblies = new HashSet<IAssemblySymbol>(
-                SymbolEqualityComparer.Default
-            );
-            foreach (var module in modules)
+            ScanModuleAssemblies(modules, moduleSymbols, (assembly, module) =>
             {
-                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                    continue;
-
-                var moduleAssembly = typeSymbol.ContainingAssembly;
-                if (!interceptorScannedAssemblies.Add(moduleAssembly))
-                    continue;
-
                 FindInterceptorTypes(
-                    moduleAssembly.GlobalNamespace,
+                    assembly.GlobalNamespace,
                     saveChangesInterceptorSymbol,
                     module.ModuleName,
                     interceptors
                 );
+            });
+        }
+
+        // Step 3e: Discover Vogen value objects with EF Core value converters.
+        // Scan Contracts assemblies and module assemblies only.
+        var vogenValueObjects = new List<VogenValueObjectRecord>();
+        var voScannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+
+        foreach (var kvp in contractsAssemblySymbols)
+        {
+            if (voScannedAssemblies.Add(kvp.Value))
+            {
+                FindVogenValueObjectsWithEfConverters(
+                    kvp.Value.GlobalNamespace,
+                    vogenValueObjects
+                );
             }
         }
+
+        ScanModuleAssemblies(modules, moduleSymbols, (assembly, _) =>
+        {
+            if (voScannedAssemblies.Add(assembly))
+            {
+                FindVogenValueObjectsWithEfConverters(
+                    assembly.GlobalNamespace,
+                    vogenValueObjects
+                );
+            }
+        });
 
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
@@ -388,6 +405,7 @@ internal static class SymbolDiscovery
                     m.HasConfigureServices,
                     m.HasConfigureEndpoints,
                     m.HasConfigureMenu,
+                    m.HasConfigureMiddleware,
                     m.HasConfigurePermissions,
                     m.HasConfigureSettings,
                     m.HasRazorComponents,
@@ -463,7 +481,8 @@ internal static class SymbolDiscovery
                     i.ModuleName,
                     i.ConstructorParamTypeFqns.ToImmutableArray()
                 ))
-                .ToImmutableArray()
+                .ToImmutableArray(),
+            vogenValueObjects.ToImmutableArray()
         );
     }
 
@@ -530,6 +549,7 @@ internal static class SymbolDiscovery
                                     "ConfigureEndpoints"
                                 ),
                                 HasConfigureMenu = DeclaresMethod(typeSymbol, "ConfigureMenu"),
+                                HasConfigureMiddleware = DeclaresMethod(typeSymbol, "ConfigureMiddleware"),
                                 HasConfigurePermissions = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigurePermissions"
@@ -660,11 +680,29 @@ internal static class SymbolDiscovery
         return false;
     }
 
+    private static void ScanModuleAssemblies(
+        List<ModuleInfo> modules,
+        Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        Action<IAssemblySymbol, ModuleInfo> action
+    )
+    {
+        var scanned = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+        foreach (var module in modules)
+        {
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
+                continue;
+
+            if (scanned.Add(typeSymbol.ContainingAssembly))
+                action(typeSymbol.ContainingAssembly, module);
+        }
+    }
+
     private static bool DeclaresMethod(INamedTypeSymbol typeSymbol, string methodName)
     {
         foreach (var member in typeSymbol.GetMembers(methodName))
         {
-            if (member is IMethodSymbol)
+            if (member is IMethodSymbol method
+                && method.DeclaringSyntaxReferences.Length > 0)
                 return true;
         }
         return false;
@@ -1283,6 +1321,37 @@ internal static class SymbolDiscovery
             }
         }
         return properties;
+    }
+
+    private static void FindVogenValueObjectsWithEfConverters(
+        INamespaceSymbol ns,
+        List<VogenValueObjectRecord> results
+    )
+    {
+        foreach (var type in ns.GetTypeMembers())
+        {
+            if (!IsVogenValueObject(type))
+                continue;
+
+            var converterMembers = type.GetTypeMembers("EfCoreValueConverter");
+            var comparerMembers = type.GetTypeMembers("EfCoreValueComparer");
+
+            if (converterMembers.Length == 0 || comparerMembers.Length == 0)
+                continue;
+
+            var typeFqn = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var converterFqn = converterMembers[0]
+                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var comparerFqn = comparerMembers[0]
+                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+            results.Add(new VogenValueObjectRecord(typeFqn, converterFqn, comparerFqn));
+        }
+
+        foreach (var childNs in ns.GetNamespaceMembers())
+        {
+            FindVogenValueObjectsWithEfConverters(childNs, results);
+        }
     }
 
     private static bool IsVogenValueObject(INamedTypeSymbol typeSymbol)

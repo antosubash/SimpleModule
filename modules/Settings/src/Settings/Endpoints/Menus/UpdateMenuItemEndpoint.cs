@@ -12,7 +12,11 @@ public class UpdateMenuItemEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 "/menus/{id}",
-                async Task<IResult> (int id, UpdateMenuItemRequest request, PublicMenuService service) =>
+                async Task<IResult> (
+                    int id,
+                    UpdateMenuItemRequest request,
+                    PublicMenuService service
+                ) =>
                 {
                     var entity = await service.UpdateAsync(id, request);
                     return entity is not null ? TypedResults.NoContent() : TypedResults.NotFound();

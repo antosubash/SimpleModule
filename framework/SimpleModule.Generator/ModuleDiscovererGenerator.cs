@@ -17,7 +17,9 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new PageRegistryEmitter(),
         new JsonResolverEmitter(),
         new TypeScriptDefinitionsEmitter(),
+        new HostingExtensionsEmitter(),
         new HostDbContextEmitter(),
+        new ValueConverterConventionsEmitter(),
         new DbContextRegistryEmitter(),
     ];
 

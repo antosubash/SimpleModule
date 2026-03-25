@@ -12,7 +12,10 @@ public class CreateTemplateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/templates",
-                async (CreatePageTemplateRequest request, IPageBuilderTemplateContracts templates) =>
+                async (
+                    CreatePageTemplateRequest request,
+                    IPageBuilderTemplateContracts templates
+                ) =>
                 {
                     if (string.IsNullOrWhiteSpace(request.Name))
                         throw new ArgumentException("Template name is required.", nameof(request));

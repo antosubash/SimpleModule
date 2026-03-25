@@ -6,7 +6,9 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="OpenIddict.AspNetCore" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="OpenIddict.EntityFrameworkCore" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\SimpleModule.Blazor\SimpleModule.Blazor.csproj" />
+    <ProjectReference Include="..\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\SimpleModule.DevTools\SimpleModule.DevTools.csproj" />
+  </ItemGroup>
+</Project>
