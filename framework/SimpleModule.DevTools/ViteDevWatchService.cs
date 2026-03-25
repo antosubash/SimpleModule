@@ -325,7 +325,7 @@ public sealed partial class ViteDevWatchService(
         }
     }
 
-    private static string? FindRepoRoot(string startPath)
+    internal static string? FindRepoRoot(string startPath)
     {
         var current = startPath;
         while (current is not null)
@@ -341,7 +341,7 @@ public sealed partial class ViteDevWatchService(
         return null;
     }
 
-    private static List<string> DiscoverModuleDirectories(string modulesRoot)
+    internal static List<string> DiscoverModuleDirectories(string modulesRoot)
     {
         var directories = new List<string>();
 
@@ -370,22 +370,22 @@ public sealed partial class ViteDevWatchService(
         return directories;
     }
 
-    private static bool ShouldIgnoreModulePath(string fullPath)
+    internal static bool ShouldIgnoreModulePath(string fullPath)
     {
         return ContainsSegment(fullPath, "wwwroot") || ContainsSegment(fullPath, "node_modules");
     }
 
-    private static bool ShouldIgnoreClientAppPath(string fullPath)
+    internal static bool ShouldIgnoreClientAppPath(string fullPath)
     {
         return ContainsSegment(fullPath, "node_modules");
     }
 
-    private static bool ShouldIgnoreTailwindPath(string fullPath)
+    internal static bool ShouldIgnoreTailwindPath(string fullPath)
     {
         return ContainsSegment(fullPath, "_scan");
     }
 
-    private static bool ContainsSegment(string fullPath, string segment)
+    internal static bool ContainsSegment(string fullPath, string segment)
     {
         // Check both separator styles for cross-platform path matching
         return fullPath.Contains(
@@ -431,11 +431,7 @@ public sealed partial class ViteDevWatchService(
     private static partial void LogWatchingStarted(ILogger logger, int moduleCount);
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "{BuildKey} file changed: {FilePath}")]
-    private static partial void LogFileChanged(
-        ILogger logger,
-        string buildKey,
-        string? filePath
-    );
+    private static partial void LogFileChanged(ILogger logger, string buildKey, string? filePath);
 
     [LoggerMessage(
         Level = LogLevel.Debug,
@@ -460,11 +456,7 @@ public sealed partial class ViteDevWatchService(
         Level = LogLevel.Information,
         Message = "{Name} rebuilt successfully in {ElapsedMs}ms"
     )]
-    private static partial void LogRebuiltSuccessfully(
-        ILogger logger,
-        string name,
-        long elapsedMs
-    );
+    private static partial void LogRebuiltSuccessfully(ILogger logger, string name, long elapsedMs);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "{Name} build failed")]
     private static partial void LogBuildFailed(ILogger logger, string name);

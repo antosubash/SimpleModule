@@ -71,6 +71,7 @@
         <Project Path="tests/SimpleModule.Core.Tests/SimpleModule.Core.Tests.csproj" />
         <Project Path="tests/SimpleModule.Database.Tests/SimpleModule.Database.Tests.csproj" />
         <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
+        <Project Path="tests/SimpleModule.DevTools.Tests/SimpleModule.DevTools.Tests.csproj" />
         <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
     </Folder>
     <Project Path="SimpleModule.AppHost/SimpleModule.AppHost.csproj" />
