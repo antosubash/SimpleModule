@@ -204,7 +204,10 @@ internal static class TopologicalSort
     /// Returns both sorted modules and the raw SortResult for phase/dependency info.
     /// Falls back to original order on cycle.
     /// </summary>
-    internal static (ImmutableArray<ModuleInfoRecord> Modules, SortResult Result) SortModulesWithResult(DiscoveryData data)
+    internal static (
+        ImmutableArray<ModuleInfoRecord> Modules,
+        SortResult Result
+    ) SortModulesWithResult(DiscoveryData data)
     {
         var moduleNames = data.Modules.Select(m => m.ModuleName).ToImmutableArray();
         var depEdges = data

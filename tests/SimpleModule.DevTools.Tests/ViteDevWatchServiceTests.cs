@@ -8,7 +8,10 @@ namespace SimpleModule.DevTools.Tests;
 
 public sealed class FindRepoRootTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"devtools-test-{Guid.NewGuid():N}");
+    private readonly string _tempDir = Path.Combine(
+        Path.GetTempPath(),
+        $"devtools-test-{Guid.NewGuid():N}"
+    );
 
     public FindRepoRootTests()
     {
@@ -61,7 +64,10 @@ public sealed class FindRepoRootTests : IDisposable
 
 public sealed class DiscoverModuleDirectoriesTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"devtools-test-{Guid.NewGuid():N}");
+    private readonly string _tempDir = Path.Combine(
+        Path.GetTempPath(),
+        $"devtools-test-{Guid.NewGuid():N}"
+    );
 
     public DiscoverModuleDirectoriesTests()
     {
@@ -177,10 +183,10 @@ public sealed class ContainsSegmentTests
     [Fact]
     public void ContainsSegment_Is_Case_Insensitive()
     {
-        ViteDevWatchService.ContainsSegment(
-            "C:\\project\\WWWROOT\\file.js",
-            "wwwroot"
-        ).Should().BeTrue();
+        ViteDevWatchService
+            .ContainsSegment("C:\\project\\WWWROOT\\file.js", "wwwroot")
+            .Should()
+            .BeTrue();
     }
 }
 
@@ -215,7 +221,10 @@ public sealed class ShouldIgnorePathTests
 
 public sealed class ServiceLifecycleTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"devtools-test-{Guid.NewGuid():N}");
+    private readonly string _tempDir = Path.Combine(
+        Path.GetTempPath(),
+        $"devtools-test-{Guid.NewGuid():N}"
+    );
 
     public ServiceLifecycleTests()
     {
@@ -234,10 +243,7 @@ public sealed class ServiceLifecycleTests : IDisposable
     public async Task ExecuteAsync_Returns_When_No_Git_Root_Found()
     {
         var env = new FakeHostEnvironment(_tempDir);
-        using var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        using var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         await service.StartAsync(cts.Token);
@@ -260,10 +266,7 @@ public sealed class ServiceLifecycleTests : IDisposable
         Directory.CreateDirectory(hostDir);
 
         var env = new FakeHostEnvironment(hostDir);
-        using var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        using var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         await service.StartAsync(cts.Token);
@@ -289,10 +292,7 @@ public sealed class ServiceLifecycleTests : IDisposable
         Directory.CreateDirectory(hostDir);
 
         var env = new FakeHostEnvironment(hostDir);
-        using var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        using var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource();
         await service.StartAsync(cts.Token);
@@ -310,10 +310,7 @@ public sealed class ServiceLifecycleTests : IDisposable
     public async Task Dispose_Is_Idempotent()
     {
         var env = new FakeHostEnvironment(_tempDir);
-        var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
         await service.StartAsync(cts.Token);
@@ -327,7 +324,10 @@ public sealed class ServiceLifecycleTests : IDisposable
 
 public sealed class FileWatcherIntegrationTests : IDisposable
 {
-    private readonly string _tempDir = Path.Combine(Path.GetTempPath(), $"devtools-test-{Guid.NewGuid():N}");
+    private readonly string _tempDir = Path.Combine(
+        Path.GetTempPath(),
+        $"devtools-test-{Guid.NewGuid():N}"
+    );
 
     public FileWatcherIntegrationTests()
     {
@@ -352,10 +352,7 @@ public sealed class FileWatcherIntegrationTests : IDisposable
         Directory.CreateDirectory(clientAppDir);
 
         var env = new FakeHostEnvironment(hostDir);
-        using var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        using var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         await service.StartAsync(cts.Token);
@@ -378,10 +375,7 @@ public sealed class FileWatcherIntegrationTests : IDisposable
         Directory.CreateDirectory(stylesDir);
 
         var env = new FakeHostEnvironment(hostDir);
-        using var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        using var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         await service.StartAsync(cts.Token);
@@ -404,10 +398,7 @@ public sealed class FileWatcherIntegrationTests : IDisposable
         // Intentionally do NOT create ClientApp/
 
         var env = new FakeHostEnvironment(hostDir);
-        using var service = new ViteDevWatchService(
-            NullLogger<ViteDevWatchService>.Instance,
-            env
-        );
+        using var service = new ViteDevWatchService(NullLogger<ViteDevWatchService>.Instance, env);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
         await service.StartAsync(cts.Token);

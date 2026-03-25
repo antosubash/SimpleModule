@@ -22,9 +22,7 @@ public class AuditMiddlewareTests
         context.RequestServices = CreateServiceProvider(settings, channel);
 
         // Configure settings to return default values
-        settings
-            .GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>())
-            .Returns("true");
+        settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
         var middleware = new AuditMiddleware(next);
 
@@ -33,11 +31,21 @@ public class AuditMiddlewareTests
 
         // Assert
         // Verify that GetSettingAsync was called exactly once for each setting key
-        await settings.Received(1).GetSettingAsync("auditlogs.capture.http", Arg.Any<SettingScope>());
-        await settings.Received(1).GetSettingAsync("auditlogs.capture.requestbodies", Arg.Any<SettingScope>());
-        await settings.Received(1).GetSettingAsync("auditlogs.capture.querystrings", Arg.Any<SettingScope>());
-        await settings.Received(1).GetSettingAsync("auditlogs.capture.useragent", Arg.Any<SettingScope>());
-        await settings.Received(1).GetSettingAsync("auditlogs.excluded.paths", Arg.Any<SettingScope>());
+        await settings
+            .Received(1)
+            .GetSettingAsync("auditlogs.capture.http", Arg.Any<SettingScope>());
+        await settings
+            .Received(1)
+            .GetSettingAsync("auditlogs.capture.requestbodies", Arg.Any<SettingScope>());
+        await settings
+            .Received(1)
+            .GetSettingAsync("auditlogs.capture.querystrings", Arg.Any<SettingScope>());
+        await settings
+            .Received(1)
+            .GetSettingAsync("auditlogs.capture.useragent", Arg.Any<SettingScope>());
+        await settings
+            .Received(1)
+            .GetSettingAsync("auditlogs.excluded.paths", Arg.Any<SettingScope>());
 
         // Verify all settings were fetched via Task.WhenAll (batch call)
         // Total calls should be exactly 5
@@ -59,9 +67,7 @@ public class AuditMiddlewareTests
         settings
             .GetSettingAsync("auditlogs.capture.http", Arg.Any<SettingScope>())
             .Returns("false");
-        settings
-            .GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>())
-            .Returns("true");
+        settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
         var middleware = new AuditMiddleware(next);
 
@@ -87,9 +93,7 @@ public class AuditMiddlewareTests
         context.Request.Path = "/health";
         context.RequestServices = CreateServiceProvider(settings, channel);
 
-        settings
-            .GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>())
-            .Returns("true");
+        settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
         var middleware = new AuditMiddleware(next);
 
@@ -152,9 +156,7 @@ public class AuditMiddlewareTests
         context.Request.Method = "GET";
         context.RequestServices = CreateServiceProvider(settings, channel);
 
-        settings
-            .GetSettingAsync("auditlogs.capture.http", Arg.Any<SettingScope>())
-            .Returns("true");
+        settings.GetSettingAsync("auditlogs.capture.http", Arg.Any<SettingScope>()).Returns("true");
         settings
             .GetSettingAsync("auditlogs.capture.requestbodies", Arg.Any<SettingScope>())
             .Returns("true");
@@ -191,9 +193,7 @@ public class AuditMiddlewareTests
         context.Request.Method = "GET";
         context.RequestServices = CreateServiceProvider(settings, channel);
 
-        settings
-            .GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>())
-            .Returns("true");
+        settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
         var middleware = new AuditMiddleware(next);
 
@@ -238,9 +238,7 @@ public class AuditMiddlewareTests
         context.Request.Method = "GET";
         context.RequestServices = CreateServiceProvider(settings, channel);
 
-        settings
-            .GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>())
-            .Returns((string?)null); // Simulate no setting found
+        settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns((string?)null); // Simulate no setting found
 
         var middleware = new AuditMiddleware(next);
 
@@ -272,27 +270,22 @@ public class AuditMiddlewareTests
         await next.Received(1).Invoke(context);
     }
 
-    private static IServiceProvider CreateServiceProvider(ISettingsContracts settings, AuditChannel channel)
+    private static IServiceProvider CreateServiceProvider(
+        ISettingsContracts settings,
+        AuditChannel channel
+    )
     {
         var serviceProvider = Substitute.For<IServiceProvider>();
-        serviceProvider
-            .GetService(typeof(AuditChannel))
-            .Returns(channel);
-        serviceProvider
-            .GetService(typeof(ISettingsContracts))
-            .Returns(settings);
+        serviceProvider.GetService(typeof(AuditChannel)).Returns(channel);
+        serviceProvider.GetService(typeof(ISettingsContracts)).Returns(settings);
         return serviceProvider;
     }
 
     private static IServiceProvider CreateServiceProviderWithoutSettings(AuditChannel channel)
     {
         var serviceProvider = Substitute.For<IServiceProvider>();
-        serviceProvider
-            .GetService(typeof(AuditChannel))
-            .Returns(channel);
-        serviceProvider
-            .GetService(typeof(ISettingsContracts))
-            .Returns(null);
+        serviceProvider.GetService(typeof(AuditChannel)).Returns(channel);
+        serviceProvider.GetService(typeof(ISettingsContracts)).Returns(null);
         return serviceProvider;
     }
 }

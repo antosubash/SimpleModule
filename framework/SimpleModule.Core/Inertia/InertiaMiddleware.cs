@@ -61,10 +61,9 @@ public static class InertiaMiddleware
 
         // Fallback to assembly version (major.minor.patch)
         // If assembly has no version, default to "1.0.0"
-        var assemblyVersion = typeof(InertiaMiddleware).Assembly
-            .GetName()
-            .Version
-            ?.ToString(SemanticVersionFields) ?? DefaultVersion;
+        var assemblyVersion =
+            typeof(InertiaMiddleware).Assembly.GetName().Version?.ToString(SemanticVersionFields)
+            ?? DefaultVersion;
         return assemblyVersion;
     }
 

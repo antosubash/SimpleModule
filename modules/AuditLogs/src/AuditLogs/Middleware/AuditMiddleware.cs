@@ -115,9 +115,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
         channel.Enqueue(entry);
     }
 
-    private static async Task<AuditRequestSettings> LoadSettingsAsync(
-        ISettingsContracts? settings
-    )
+    private static async Task<AuditRequestSettings> LoadSettingsAsync(ISettingsContracts? settings)
     {
         if (settings is null)
         {
@@ -150,10 +148,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
     )
     {
         var results = await Task.WhenAll(
-            settings.GetSettingAsync(
-                "auditlogs.capture.http",
-                Core.Settings.SettingScope.System
-            ),
+            settings.GetSettingAsync("auditlogs.capture.http", Core.Settings.SettingScope.System),
             settings.GetSettingAsync(
                 "auditlogs.capture.requestbodies",
                 Core.Settings.SettingScope.System
@@ -166,35 +161,16 @@ public sealed class AuditMiddleware(RequestDelegate next)
                 "auditlogs.capture.useragent",
                 Core.Settings.SettingScope.System
             ),
-            settings.GetSettingAsync(
-                "auditlogs.excluded.paths",
-                Core.Settings.SettingScope.System
-            )
+            settings.GetSettingAsync("auditlogs.excluded.paths", Core.Settings.SettingScope.System)
         );
 
-        var captureHttp = !string.Equals(
-            results[0],
-            "false",
-            StringComparison.OrdinalIgnoreCase
-        );
+        var captureHttp = !string.Equals(results[0], "false", StringComparison.OrdinalIgnoreCase);
 
-        var captureBody = !string.Equals(
-            results[1],
-            "false",
-            StringComparison.OrdinalIgnoreCase
-        );
+        var captureBody = !string.Equals(results[1], "false", StringComparison.OrdinalIgnoreCase);
 
-        var captureQs = !string.Equals(
-            results[2],
-            "false",
-            StringComparison.OrdinalIgnoreCase
-        );
+        var captureQs = !string.Equals(results[2], "false", StringComparison.OrdinalIgnoreCase);
 
-        var captureUa = string.Equals(
-            results[3],
-            "true",
-            StringComparison.OrdinalIgnoreCase
-        );
+        var captureUa = string.Equals(results[3], "true", StringComparison.OrdinalIgnoreCase);
 
         return (captureHttp, captureBody, captureQs, captureUa, results[4]);
     }
@@ -219,14 +195,7 @@ public sealed class AuditMiddleware(RequestDelegate next)
     }
 
     private static List<string> GetDefaultExcludedPaths() =>
-    [
-        "/health",
-        "/metrics",
-        "/_content",
-        "/js/",
-        "/css/",
-        "/favicon",
-    ];
+        ["/health", "/metrics", "/_content", "/js/", "/css/", "/favicon"];
 
     private static bool IsExcludedPath(string path, IEnumerable<string> configuredPaths)
     {

@@ -104,7 +104,8 @@ public class AuditingEventBusTests
 
         // Configure the mock to throw when PublishAsync is called
         var calls = 0;
-        _innerBus.PublishAsync(Arg.Any<IEvent>(), Arg.Any<CancellationToken>())
+        _innerBus
+            .PublishAsync(Arg.Any<IEvent>(), Arg.Any<CancellationToken>())
             .ReturnsForAnyArgs(x =>
             {
                 calls++;
@@ -119,7 +120,10 @@ public class AuditingEventBusTests
         calls.Should().Be(1);
 
         // Assert: No audit entry should be queued
-        _channel.Reader.TryRead(out _).Should().BeFalse("Audit entry should not be queued when publish fails");
+        _channel
+            .Reader.TryRead(out _)
+            .Should()
+            .BeFalse("Audit entry should not be queued when publish fails");
     }
 
     [Fact]

@@ -4,8 +4,7 @@ namespace SimpleModule.Generator;
 
 internal static class TypeMappingHelpers
 {
-    internal static string StripGlobalPrefix(string fqn) =>
-        fqn.Replace("global::", "");
+    internal static string StripGlobalPrefix(string fqn) => fqn.Replace("global::", "");
 
     internal static string GetModuleFieldName(string fullyQualifiedName)
     {

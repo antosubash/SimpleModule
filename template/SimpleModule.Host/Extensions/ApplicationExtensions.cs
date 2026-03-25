@@ -49,8 +49,12 @@ public static class ApplicationExtensions
                 }
 
                 bool hasVersionParam = context.Request.Query.ContainsKey("v");
-                bool isVendorJs = path.StartsWith(VendorJsPathPrefix, StringComparison.OrdinalIgnoreCase);
-                bool isHashedChunk = path.StartsWith(ModuleContentPathPrefix, StringComparison.OrdinalIgnoreCase)
+                bool isVendorJs = path.StartsWith(
+                    VendorJsPathPrefix,
+                    StringComparison.OrdinalIgnoreCase
+                );
+                bool isHashedChunk =
+                    path.StartsWith(ModuleContentPathPrefix, StringComparison.OrdinalIgnoreCase)
                     && path.EndsWith(ModuleScriptExtension, StringComparison.OrdinalIgnoreCase);
 
                 if (hasVersionParam || isVendorJs || isHashedChunk)

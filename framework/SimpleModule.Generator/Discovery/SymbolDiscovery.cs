@@ -1269,12 +1269,10 @@ internal static class SymbolDiscovery
                     {
                         Name = prop.Name,
                         TypeFqn = actualType,
-                        UnderlyingTypeFqn =
-                            resolvedType != actualType ? resolvedType : null,
+                        UnderlyingTypeFqn = resolvedType != actualType ? resolvedType : null,
                         HasSetter =
                             prop.SetMethod is not null
-                            && prop.SetMethod.DeclaredAccessibility
-                                == Accessibility.Public,
+                            && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
                     }
                 );
             }

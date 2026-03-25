@@ -343,10 +343,7 @@ internal sealed class DiagnosticEmitter : IEmitter
             var howParts = new List<string>();
             foreach (var dep in data.Dependencies)
             {
-                if (
-                    cycleSet.Contains(dep.ModuleName)
-                    && cycleSet.Contains(dep.DependsOnModuleName)
-                )
+                if (cycleSet.Contains(dep.ModuleName) && cycleSet.Contains(dep.DependsOnModuleName))
                 {
                     howParts.Add(
                         dep.ModuleName + " references " + dep.ContractsAssemblyName + ". "

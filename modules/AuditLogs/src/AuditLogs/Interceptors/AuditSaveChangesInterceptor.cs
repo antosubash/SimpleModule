@@ -41,7 +41,10 @@ public sealed class AuditSaveChangesInterceptor(
         }
         if (settings is not null)
         {
-            var raw = await settings.GetSettingAsync("auditlogs.capture.changes", SettingScope.System);
+            var raw = await settings.GetSettingAsync(
+                "auditlogs.capture.changes",
+                SettingScope.System
+            );
             if (string.Equals(raw, "false", StringComparison.OrdinalIgnoreCase))
                 return await base.SavingChangesAsync(eventData, result, cancellationToken);
         }
