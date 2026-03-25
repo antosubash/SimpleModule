@@ -118,7 +118,9 @@ public class EndpointExtensionsEmitterTests
         // Should use the escape hatch instead
         endpointExt
             .Should()
-            .Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_CustomModule).ConfigureEndpoints(app);");
+            .Contain(
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_CustomModule).ConfigureEndpoints(app);"
+            );
     }
 
     [Fact]
@@ -146,7 +148,9 @@ public class EndpointExtensionsEmitterTests
 
         endpointExt
             .Should()
-            .Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_ManualModule).ConfigureEndpoints(app);");
+            .Contain(
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_ManualModule).ConfigureEndpoints(app);"
+            );
     }
 
     [Fact]

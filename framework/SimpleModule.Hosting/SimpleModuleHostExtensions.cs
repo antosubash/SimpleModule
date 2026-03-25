@@ -174,7 +174,8 @@ public static class SimpleModuleHostExtensions
     private static void ValidateDatabaseConfiguration(ConfigurationManager configuration)
     {
         var dbOptions =
-            configuration.GetSection(DatabaseConstants.SectionName).Get<DatabaseOptions>() ?? new DatabaseOptions();
+            configuration.GetSection(DatabaseConstants.SectionName).Get<DatabaseOptions>()
+            ?? new DatabaseOptions();
         var connString = dbOptions.DefaultConnection;
 
         if (string.IsNullOrEmpty(connString))

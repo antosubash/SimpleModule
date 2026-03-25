@@ -41,7 +41,11 @@ public class ModuleDiscovererGeneratorTests
             .ToString();
         moduleExt.Should().Contain("s_TestApp_TestModule");
         moduleExt.Should().Contain("global::TestApp.TestModule");
-        moduleExt.Should().Contain("((global::SimpleModule.Core.IModule)s_TestApp_TestModule).ConfigureServices(services, configuration)");
+        moduleExt
+            .Should()
+            .Contain(
+                "((global::SimpleModule.Core.IModule)s_TestApp_TestModule).ConfigureServices(services, configuration)"
+            );
 
         var endpointExt = result
             .GeneratedTrees.First(t =>
@@ -49,7 +53,11 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        endpointExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(app)");
+        endpointExt
+            .Should()
+            .Contain(
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(app)"
+            );
     }
 
     [Fact]
@@ -85,7 +93,11 @@ public class ModuleDiscovererGeneratorTests
             )
             .GetText()
             .ToString();
-        endpointExt.Should().Contain("((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_EndpointOnlyModule).ConfigureEndpoints(app)");
+        endpointExt
+            .Should()
+            .Contain(
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_EndpointOnlyModule).ConfigureEndpoints(app)"
+            );
     }
 
     [Fact]
@@ -131,14 +143,16 @@ public class ModuleDiscovererGeneratorTests
 
         // All method calls must go through the IModule interface cast, never directly on the concrete type.
         // This ensures default interface implementations are callable even when the class doesn't override them.
-        moduleExt.Should().NotContainAny(
-            "s_TestApp_PartialModule.ConfigureServices(",
-            "s_TestApp_PartialModule.ConfigureMenu(",
-            "s_TestApp_PartialModule.ConfigurePermissions(",
-            "s_TestApp_PartialModule.ConfigureEndpoints(",
-            "s_TestApp_PartialModule.ConfigureMiddleware(",
-            "s_TestApp_PartialModule.ConfigureSettings("
-        );
+        moduleExt
+            .Should()
+            .NotContainAny(
+                "s_TestApp_PartialModule.ConfigureServices(",
+                "s_TestApp_PartialModule.ConfigureMenu(",
+                "s_TestApp_PartialModule.ConfigurePermissions(",
+                "s_TestApp_PartialModule.ConfigureEndpoints(",
+                "s_TestApp_PartialModule.ConfigureMiddleware(",
+                "s_TestApp_PartialModule.ConfigureSettings("
+            );
     }
 
     [Fact]

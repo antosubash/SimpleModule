@@ -303,15 +303,19 @@ internal static class SymbolDiscovery
         );
         if (saveChangesInterceptorSymbol is not null)
         {
-            ScanModuleAssemblies(modules, moduleSymbols, (assembly, module) =>
-            {
-                FindInterceptorTypes(
-                    assembly.GlobalNamespace,
-                    saveChangesInterceptorSymbol,
-                    module.ModuleName,
-                    interceptors
-                );
-            });
+            ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                {
+                    FindInterceptorTypes(
+                        assembly.GlobalNamespace,
+                        saveChangesInterceptorSymbol,
+                        module.ModuleName,
+                        interceptors
+                    );
+                }
+            );
         }
 
         // Step 3e: Discover Vogen value objects with EF Core value converters.
@@ -323,23 +327,24 @@ internal static class SymbolDiscovery
         {
             if (voScannedAssemblies.Add(kvp.Value))
             {
-                FindVogenValueObjectsWithEfConverters(
-                    kvp.Value.GlobalNamespace,
-                    vogenValueObjects
-                );
+                FindVogenValueObjectsWithEfConverters(kvp.Value.GlobalNamespace, vogenValueObjects);
             }
         }
 
-        ScanModuleAssemblies(modules, moduleSymbols, (assembly, _) =>
-        {
-            if (voScannedAssemblies.Add(assembly))
+        ScanModuleAssemblies(
+            modules,
+            moduleSymbols,
+            (assembly, _) =>
             {
-                FindVogenValueObjectsWithEfConverters(
-                    assembly.GlobalNamespace,
-                    vogenValueObjects
-                );
+                if (voScannedAssemblies.Add(assembly))
+                {
+                    FindVogenValueObjectsWithEfConverters(
+                        assembly.GlobalNamespace,
+                        vogenValueObjects
+                    );
+                }
             }
-        });
+        );
 
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
@@ -549,7 +554,10 @@ internal static class SymbolDiscovery
                                     "ConfigureEndpoints"
                                 ),
                                 HasConfigureMenu = DeclaresMethod(typeSymbol, "ConfigureMenu"),
-                                HasConfigureMiddleware = DeclaresMethod(typeSymbol, "ConfigureMiddleware"),
+                                HasConfigureMiddleware = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureMiddleware"
+                                ),
                                 HasConfigurePermissions = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigurePermissions"
@@ -710,8 +718,9 @@ internal static class SymbolDiscovery
                 // Metadata types: method exists in compiled IL (not synthesized)
                 // IsImplicitlyDeclared filters out compiler-synthesized stubs for
                 // default interface method dispatch
-                if (!method.IsImplicitlyDeclared
-                    && method.Locations.Any(static l => l.IsInMetadata))
+                if (
+                    !method.IsImplicitlyDeclared && method.Locations.Any(static l => l.IsInMetadata)
+                )
                     return true;
             }
         }

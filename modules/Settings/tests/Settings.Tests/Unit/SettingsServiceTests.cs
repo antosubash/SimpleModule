@@ -18,7 +18,9 @@ public sealed class SettingsServiceTests : IDisposable
         var options = new DbContextOptionsBuilder<SettingsDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        var dbOptions = Options.Create(new DatabaseOptions { DefaultConnection = "Data Source=:memory:" });
+        var dbOptions = Options.Create(
+            new DatabaseOptions { DefaultConnection = "Data Source=:memory:" }
+        );
         _db = new SettingsDbContext(options, dbOptions);
         _db.Database.EnsureCreated();
 

@@ -29,9 +29,7 @@ internal sealed class ValueConverterConventionsEmitter : IEmitter
         foreach (var vo in data.VogenValueObjects)
         {
             sb.AppendLine($"        configurationBuilder.Properties<{vo.TypeFqn}>()");
-            sb.AppendLine(
-                $"            .HaveConversion<{vo.ConverterFqn}, {vo.ComparerFqn}>();"
-            );
+            sb.AppendLine($"            .HaveConversion<{vo.ConverterFqn}, {vo.ComparerFqn}>();");
         }
 
         sb.AppendLine("    }");
