@@ -2,22 +2,43 @@ import { spawn } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import fs from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
-// Get all module workspace paths
-const modules = [
-  'modules/Admin/src/Admin',
-  'modules/AuditLogs/src/AuditLogs',
-  'modules/Dashboard/src/Dashboard',
-  'modules/OpenIddict/src/OpenIddict',
-  'modules/Permissions/src/Permissions',
-  'modules/Products/src/Products',
-  'modules/Settings/src/Settings',
-  'modules/Users/src/Users',
-  'modules/PageBuilder/src/PageBuilder',
-];
+function discoverModules() {
+  const modulesDir = path.resolve(rootDir, 'modules');
+  const modules = [];
+
+  if (!fs.existsSync(modulesDir)) return modules;
+
+  // Scan modules directory
+  const moduleGroups = fs.readdirSync(modulesDir);
+
+  for (const group of moduleGroups) {
+    const srcDir = path.resolve(modulesDir, group, 'src');
+    if (!fs.existsSync(srcDir)) continue;
+
+    const moduleDirs = fs.readdirSync(srcDir);
+    for (const moduleName of moduleDirs) {
+      const modulePath = path.join(srcDir, moduleName);
+      const packagePath = path.join(modulePath, 'package.json');
+      const vitePath = path.join(modulePath, 'vite.config.ts');
+
+      // Include if has package.json AND vite.config.ts
+      if (fs.existsSync(packagePath) && fs.existsSync(vitePath)) {
+        const relPath = path.relative(rootDir, modulePath);
+        modules.push(relPath.split(path.sep).join('/'));
+      }
+    }
+  }
+
+  return modules.sort();
+}
+
+// Auto-discover all module workspace paths
+const modules = discoverModules();
 
 const childProcesses = [];
 
@@ -106,6 +127,7 @@ function shutdown() {
 // Allow syntax check
 if (process.argv.includes('--check')) {
   log('check', 'Syntax valid');
+  log('check', `Discovered ${modules.length} modules: ${modules.join(', ')}`);
   process.exit(0);
 }
 
