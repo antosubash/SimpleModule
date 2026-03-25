@@ -22,11 +22,17 @@ function startDotnetRun() {
   });
 
   proc.on('error', (err) => {
-    log('dotnet', `Error: ${err.message}`);
+    log('dotnet', `Critical error: ${err.message}`);
+    log('error', 'Failed to start dotnet backend. Shutting down.');
+    process.exit(1);
   });
 
   proc.on('exit', (code) => {
-    log('dotnet', `Exited with code ${code}`);
+    if (code !== 0) {
+      log('dotnet', `Exited with code ${code}`);
+      log('error', 'Backend process terminated unexpectedly. Shutting down.');
+      process.exit(1);
+    }
   });
 
   childProcesses.push(proc);
@@ -45,11 +51,12 @@ function startModuleWatch(modulePath) {
 
   proc.on('error', (err) => {
     log(moduleName, `Error: ${err.message}`);
+    // Module watch failure is non-fatal; continue running other watches
   });
 
   proc.on('exit', (code) => {
-    if (code !== null) {
-      log(moduleName, `Watch exited with code ${code}`);
+    if (code !== 0 && code !== null) {
+      log(moduleName, `Watch exited with non-zero code ${code}`);
     }
   });
 
@@ -67,11 +74,12 @@ function startClientAppWatch() {
 
   proc.on('error', (err) => {
     log('ClientApp', `Error: ${err.message}`);
+    // ClientApp watch failure is non-fatal; continue running backend and other modules
   });
 
   proc.on('exit', (code) => {
-    if (code !== null) {
-      log('ClientApp', `Watch exited with code ${code}`);
+    if (code !== 0 && code !== null) {
+      log('ClientApp', `Watch exited with non-zero code ${code}`);
     }
   });
 
