@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Settings\src\Settings\Settings.csproj" />
     <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs\AuditLogs.csproj" />
+    <ProjectReference Include="..\..\modules\FileStorage\src\FileStorage\FileStorage.csproj" />
     <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs.Contracts\AuditLogs.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -31,6 +31,8 @@
     <ProjectReference Include="..\..\modules\PageBuilder\src\PageBuilder\PageBuilder.csproj" />
     <ProjectReference Include="..\..\modules\Settings\src\Settings\Settings.csproj" />
     <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs\AuditLogs.csproj" />
+    <ProjectReference Include="..\..\modules\FileStorage\src\FileStorage\FileStorage.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <Import Project="..\..\framework\SimpleModule.Hosting\build\SimpleModule.Hosting.targets" />

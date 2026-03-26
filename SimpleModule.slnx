@@ -11,6 +11,10 @@
         <Project Path="framework/SimpleModule.Blazor/SimpleModule.Blazor.csproj" />
         <Project Path="framework/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
         <Project Path="framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
+        <Project Path="framework/SimpleModule.Storage/SimpleModule.Storage.csproj" />
+        <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
+        <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />
+        <Project Path="framework/SimpleModule.Storage.S3/SimpleModule.Storage.S3.csproj" />
     </Folder>
     <Folder Name="/cli/">
         <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
@@ -58,6 +62,11 @@
         <Project Path="modules/Settings/src/Settings.Contracts/Settings.Contracts.csproj" />
         <Project Path="modules/Settings/src/Settings/Settings.csproj" />
         <Project Path="modules/Settings/tests/Settings.Tests/Settings.Tests.csproj" />
+    </Folder>
+    <Folder Name="/modules/FileStorage/">
+        <Project Path="modules/FileStorage/src/FileStorage.Contracts/FileStorage.Contracts.csproj" />
+        <Project Path="modules/FileStorage/src/FileStorage/FileStorage.csproj" />
+        <Project Path="modules/FileStorage/tests/FileStorage.Tests/FileStorage.Tests.csproj" />
     </Folder>
     <Folder Name="/modules/AuditLogs/">
         <Project Path="modules/AuditLogs/src/AuditLogs.Contracts/AuditLogs.Contracts.csproj" />

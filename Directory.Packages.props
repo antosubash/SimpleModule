@@ -43,6 +43,10 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.3" />
     <!-- Value Objects -->
     <PackageVersion Include="Vogen" Version="8.0.5" />
+    <!-- Azure -->
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <!-- AWS -->
+    <PackageVersion Include="AWSSDK.S3" Version="3.7.500.2" />
     <!-- CLI -->
     <PackageVersion Include="Spectre.Console.Cli" Version="0.49.1" />
   </ItemGroup>
