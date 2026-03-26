@@ -2,11 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <IsPackable>true</IsPackable>
-    <Version>0.1.0-local</Version>
+    <Description>Core interfaces and attributes for SimpleModule modular monolith framework. Includes IModule, IEndpoint, [Dto], event bus, menu system, and Inertia.js integration.</Description>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="NetEscapades.EnumGenerators" />
+    <PackageReference Include="NetEscapades.EnumGenerators" PrivateAssets="all" />
   </ItemGroup>
 </Project>

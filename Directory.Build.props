@@ -16,6 +16,16 @@
     <!-- Hardlinks instead of file copies where possible -->
     <CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>true</CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>
   </PropertyGroup>
+  <!-- NuGet package metadata (version injected by CI via -p:Version) -->
+  <PropertyGroup>
+    <Authors>SimpleModule</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/antosubash/SimpleModule</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/antosubash/SimpleModule</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>modular-monolith;aspnetcore;blazor;react;inertia</PackageTags>
+    <Copyright>Copyright (c) SimpleModule contributors</Copyright>
+  </PropertyGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <AnalysisLevel>latest-all</AnalysisLevel>

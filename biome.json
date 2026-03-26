@@ -38,23 +38,14 @@
       }
     }
   },
-  "overrides": [
-    {
-      "includes": ["modules/*/src/*/types.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          },
-          "complexity": {
-            "noBannedTypes": "off",
-            "noEmptyTypeParameters": "off"
-          }
-        }
-      }
-    }
-  ],
   "files": {
-    "includes": ["modules/**", "packages/**", "template/**", "tests/**", "!**/wwwroot"]
+    "includes": [
+      "modules/**",
+      "packages/**",
+      "template/**",
+      "tests/**",
+      "!**/wwwroot",
+      "!**/types.ts"
+    ]
   }
 }

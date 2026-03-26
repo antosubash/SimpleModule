@@ -2,5 +2,6 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <Description>Storage abstraction for SimpleModule. Defines IStorageProvider interface for pluggable file storage backends.</Description>
   </PropertyGroup>
 </Project>
