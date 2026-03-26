@@ -33,7 +33,9 @@ public sealed class ModuleTemplates
             return FallbackContractsCsproj();
         }
 
-        return TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName);
+        return ReplaceFrameworkProjectRefs(
+            TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName)
+        );
     }
 
     public string ModuleCsproj(string moduleName)
@@ -47,7 +49,9 @@ public sealed class ModuleTemplates
         // Strip references to other modules and non-essential packages
         var stripPatterns = _otherModuleNames.Select(m => m).Append("Bogus").ToList();
 
-        return TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns);
+        return ReplaceFrameworkProjectRefs(
+            TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
+        );
     }
 
     public string TestCsproj(string moduleName)
@@ -59,7 +63,9 @@ public sealed class ModuleTemplates
         }
 
         var stripPatterns = _otherModuleNames.ToList();
-        return TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns);
+        return ReplaceFrameworkProjectRefs(
+            TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
+        );
     }
 
     // ── Simple C# files (read + rename) ──────────────────────────────
@@ -156,7 +162,9 @@ public sealed class ModuleTemplates
 
     public string GetAllEndpoint(string moduleName, string singularName)
     {
-        var refPath = RefModulePath(Path.Combine("Endpoints", _refModule!, $"GetAllEndpoint.cs"));
+        var refPath = _refModule is not null
+            ? RefModulePath(Path.Combine("Endpoints", _refModule, "GetAllEndpoint.cs"))
+            : null;
         if (refPath is null)
         {
             return FallbackGetAllEndpoint(moduleName, singularName);
@@ -724,6 +732,59 @@ public sealed class ModuleTemplates
         return File.Exists(path) ? path : null;
     }
 
+    /// <summary>
+    /// Replaces framework ProjectReference entries (SimpleModule.Core, SimpleModule.Database, etc.)
+    /// with PackageReference entries. Also adjusts Tests.Shared reference path.
+    /// </summary>
+    private static string ReplaceFrameworkProjectRefs(string csprojContent)
+    {
+        var lines = csprojContent.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+
+        // Map of framework project names to their NuGet package names
+        var frameworkPackages = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["SimpleModule.Core"] = "SimpleModule.Core",
+            ["SimpleModule.Database"] = "SimpleModule.Database",
+            ["SimpleModule.Hosting"] = "SimpleModule.Hosting",
+            ["SimpleModule.Blazor"] = "SimpleModule.Blazor",
+            ["SimpleModule.DevTools"] = "SimpleModule.DevTools",
+        };
+
+        var result = new List<string>();
+        foreach (var line in lines)
+        {
+            var replaced = false;
+            if (line.Contains("<ProjectReference", StringComparison.Ordinal))
+            {
+                foreach (var (projectName, packageName) in frameworkPackages)
+                {
+                    if (line.Contains($"{projectName}.csproj", StringComparison.Ordinal))
+                    {
+                        // Detect indentation
+                        var indent = line[..^line.TrimStart().Length];
+                        result.Add($"{indent}<PackageReference Include=\"{packageName}\" />");
+                        replaced = true;
+                        break;
+                    }
+                }
+            }
+
+            // Strip Tests.Shared reference (not available as a NuGet package)
+            if (!replaced && line.Contains("Tests.Shared", StringComparison.Ordinal)
+                && line.Contains("<ProjectReference", StringComparison.Ordinal))
+            {
+                replaced = true; // Skip this line entirely
+            }
+
+            if (!replaced)
+            {
+                result.Add(line);
+            }
+        }
+
+        return string.Join(Environment.NewLine, TemplateExtractor.CollapseBlankLines(result));
+    }
+
     private List<string> OtherModuleStripPatterns()
     {
         return _otherModuleNames.Select(m => $"SimpleModule.{m}").ToList();
@@ -831,22 +892,22 @@ public sealed class ModuleTemplates
                 <OutputType>Library</OutputType>
               </PropertyGroup>
               <ItemGroup>
-                <ProjectReference Include="..\..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
+                <PackageReference Include="SimpleModule.Core" />
               </ItemGroup>
             </Project>
             """;
 
     private static string FallbackModuleCsproj(string moduleName) =>
         $"""
-            <Project Sdk="Microsoft.NET.Sdk">
+            <Project Sdk="Microsoft.NET.Sdk.Razor">
               <PropertyGroup>
                 <TargetFramework>net10.0</TargetFramework>
                 <OutputType>Library</OutputType>
               </PropertyGroup>
               <ItemGroup>
                 <FrameworkReference Include="Microsoft.AspNetCore.App" />
-                <ProjectReference Include="..\..\..\..\SimpleModule.Core\SimpleModule.Core.csproj" />
-                <ProjectReference Include="..\..\..\..\SimpleModule.Database\SimpleModule.Database.csproj" />
+                <PackageReference Include="SimpleModule.Core" />
+                <PackageReference Include="SimpleModule.Database" />
                 <ProjectReference Include="..\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
               </ItemGroup>
             </Project>
@@ -874,7 +935,6 @@ public sealed class ModuleTemplates
               <ItemGroup>
                 <ProjectReference Include="..\..\src\{moduleName}\{moduleName}.csproj" />
                 <ProjectReference Include="..\..\src\{moduleName}.Contracts\{moduleName}.Contracts.csproj" />
-                <ProjectReference Include="..\..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
               </ItemGroup>
             </Project>
             """;
@@ -1018,7 +1078,7 @@ public sealed class ModuleTemplates
                             var items = await contracts.GetAll{{moduleName}}Async();
                             return TypedResults.Ok(items);
                         }
-                    );
+                    ).AllowAnonymous();
                 }
             }
             """;
@@ -1041,27 +1101,16 @@ public sealed class ModuleTemplates
 
     private static string FallbackIntegrationTestSkeleton(string moduleName, string singularName) =>
         $$"""
-            using System.Net;
             using FluentAssertions;
-            using SimpleModule.Tests.Shared.Fixtures;
 
             namespace {{moduleName}}.Tests.Integration;
 
-            public class {{moduleName}}EndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+            public sealed class {{moduleName}}EndpointTests
             {
-                private readonly HttpClient _client;
-
-                public {{moduleName}}EndpointTests(SimpleModuleWebApplicationFactory factory)
-                {
-                    _client = factory.CreateClient();
-                }
-
                 [Fact]
-                public async Task GetAll{{moduleName}}_Returns200()
+                public void Placeholder_ShouldPass()
                 {
-                    var response = await _client.GetAsync("/api/{{moduleName.ToLowerInvariant()}}");
-
-                    response.StatusCode.Should().Be(HttpStatusCode.OK);
+                    true.Should().BeTrue();
                 }
             }
             """;

@@ -170,7 +170,39 @@ public sealed class ProjectTemplates
             cleaned.Add(lines[i]);
         }
 
+        // Add SimpleModule framework package versions before the closing </ItemGroup>
+        var frameworkPackages = new[]
+        {
+            "    <!-- SimpleModule Framework -->",
+            "    <PackageVersion Include=\"SimpleModule.Core\" Version=\"0.1.0-local\" />",
+            "    <PackageVersion Include=\"SimpleModule.Database\" Version=\"0.1.0-local\" />",
+            "    <PackageVersion Include=\"SimpleModule.Hosting\" Version=\"0.1.0-local\" />",
+            "    <PackageVersion Include=\"SimpleModule.Generator\" Version=\"0.1.0-local\" />",
+        };
+
+        // Find the last </ItemGroup> and insert before it
+        var lastItemGroupClose = cleaned.FindLastIndex(l =>
+            l.TrimStart().StartsWith("</ItemGroup>", StringComparison.Ordinal));
+        if (lastItemGroupClose >= 0)
+        {
+            cleaned.InsertRange(lastItemGroupClose, frameworkPackages);
+        }
+
         return string.Join(Environment.NewLine, TemplateExtractor.CollapseBlankLines(cleaned));
+    }
+
+    public static string NugetConfig(string simpleModuleRepoPath)
+    {
+        var nupkgPath = Path.Combine(simpleModuleRepoPath, "nupkg").Replace('\\', '/');
+        return $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <configuration>
+              <packageSources>
+                <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+                <add key="SimpleModule-Local" value="{nupkgPath}" />
+              </packageSources>
+            </configuration>
+            """;
     }
 
     public string GlobalJson()
@@ -182,6 +214,94 @@ public sealed class ProjectTemplates
 
         var path = Path.Combine(_solution.RootPath, "global.json");
         return File.Exists(path) ? File.ReadAllText(path) : FallbackGlobalJson();
+    }
+
+    public static string RootPackageJson(string projectName, string frameworkPackagesPath)
+    {
+        return FallbackRootPackageJson(projectName, frameworkPackagesPath);
+    }
+
+    public string BiomeJson()
+    {
+        if (_solution is null)
+        {
+            return FallbackBiomeJson();
+        }
+
+        var path = Path.Combine(_solution.RootPath, "biome.json");
+        if (!File.Exists(path))
+        {
+            return FallbackBiomeJson();
+        }
+
+        var content = File.ReadAllText(path);
+
+        // Replace file includes: monorepo paths → project paths
+        content = content.Replace(
+            "\"modules/**\", \"packages/**\", \"template/**\", \"tests/**\"",
+            "\"src/**\", \"tests/**\"",
+            StringComparison.Ordinal
+        );
+
+        return content;
+    }
+
+    public string TsconfigJson()
+    {
+        if (_solution is null)
+        {
+            return FallbackTsconfigJson();
+        }
+
+        var path = Path.Combine(_solution.RootPath, "tsconfig.json");
+        if (!File.Exists(path))
+        {
+            return FallbackTsconfigJson();
+        }
+
+        var content = File.ReadAllText(path);
+
+        // Remove the SimpleModule.UI registry templates exclude entry
+        content = content.Replace(
+            ", \"src/SimpleModule.UI/registry/templates\"",
+            "",
+            StringComparison.Ordinal
+        );
+        content = content.Replace(
+            "\"src/SimpleModule.UI/registry/templates\", ",
+            "",
+            StringComparison.Ordinal
+        );
+        content = content.Replace(
+            "\"src/SimpleModule.UI/registry/templates\"",
+            "",
+            StringComparison.Ordinal
+        );
+
+        return content;
+    }
+
+    public string EditorConfig()
+    {
+        if (_solution is null)
+        {
+            return string.Empty;
+        }
+
+        var path = Path.Combine(_solution.RootPath, ".editorconfig");
+        if (!File.Exists(path))
+        {
+            return string.Empty;
+        }
+
+        var content = File.ReadAllText(path);
+        // Adjust test path glob for new project structure (modules under src/)
+        content = content.Replace(
+            "{tests,modules/*/tests}",
+            "{tests,src/modules/*/tests}",
+            StringComparison.Ordinal
+        );
+        return content;
     }
 
     public string ApiCsproj(string projectName)
@@ -350,7 +470,9 @@ public sealed class ProjectTemplates
 
         // Strip module contract references, OpenIddict, Bogus
         var stripPatterns = new List<string> { "modules", "OpenIddict", "Bogus" };
-        return TemplateExtractor.TransformCsproj(path, BaseProjectName, projectName, stripPatterns);
+        var result = TemplateExtractor.TransformCsproj(path, BaseProjectName, projectName, stripPatterns);
+        // Fix Host path: template\ → src\ (in repo it's under template/, in generated project it's under src/)
+        return result.Replace(@"template\", @"src\", StringComparison.Ordinal);
     }
 
     // ── Fallback templates ──────────────────────────────────────────
@@ -399,6 +521,11 @@ public sealed class ProjectTemplates
                 <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
               </PropertyGroup>
               <ItemGroup>
+                <!-- SimpleModule Framework -->
+                <PackageVersion Include="SimpleModule.Core" Version="0.1.0-local" />
+                <PackageVersion Include="SimpleModule.Database" Version="0.1.0-local" />
+                <PackageVersion Include="SimpleModule.Hosting" Version="0.1.0-local" />
+                <PackageVersion Include="SimpleModule.Generator" Version="0.1.0-local" />
                 <!-- Source Generator -->
                 <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" />
                 <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
@@ -506,8 +633,111 @@ public sealed class ProjectTemplates
                 <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
               </ItemGroup>
               <ItemGroup>
-                <ProjectReference Include="..\..\src\{projectName}.Api\{projectName}.Api.csproj" />
+                <ProjectReference Include="..\..\src\{projectName}.Host\{projectName}.Host.csproj" />
               </ItemGroup>
             </Project>
+            """;
+
+    private static string FallbackRootPackageJson(string projectName, string frameworkPackagesPath)
+    {
+        var name = projectName.ToLowerInvariant();
+        var pkgPath = frameworkPackagesPath.Replace('\\', '/');
+        return $$"""
+            {
+              "private": true,
+              "name": "{{name}}",
+              "version": "0.0.0",
+              "workspaces": [
+                "src/modules/*/src/*",
+                "src/{{name}}.Host/ClientApp"
+              ],
+              "scripts": {
+                "lint": "biome lint .",
+                "format": "biome format --write .",
+                "check": "biome check .",
+                "check:fix": "biome check --write .",
+                "build": "cross-env VITE_MODE=prod npm run build --workspaces --if-present",
+                "build:dev": "cross-env VITE_MODE=dev npm run build --workspaces --if-present"
+              },
+              "devDependencies": {
+                "@biomejs/biome": "^2.4.6",
+                "@tailwindcss/vite": "^4.2.1",
+                "@types/react": "^19.0.0",
+                "@types/react-dom": "^19.0.0",
+                "@vitejs/plugin-react": "^4.4.0",
+                "cross-env": "^7.0.3",
+                "typescript": "^5.8.0",
+                "vite": "^6.2.0"
+              },
+              "dependencies": {
+                "@inertiajs/react": "^2.0.0",
+                "@simplemodule/client": "file:{{pkgPath}}/SimpleModule.Client",
+                "@simplemodule/ui": "file:{{pkgPath}}/SimpleModule.UI",
+                "@simplemodule/theme-default": "file:{{pkgPath}}/SimpleModule.Theme.Default",
+                "react": "^19.0.0",
+                "react-dom": "^19.0.0",
+                "tailwindcss": "^4.2.1"
+              }
+            }
+            """;
+    }
+
+    private static string FallbackBiomeJson() =>
+        """
+            {
+              "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+              "vcs": {
+                "enabled": true,
+                "clientKind": "git",
+                "useIgnoreFile": true
+              },
+              "formatter": {
+                "enabled": true,
+                "indentStyle": "space",
+                "indentWidth": 2,
+                "lineWidth": 100
+              },
+              "css": {
+                "parser": {
+                  "tailwindDirectives": true
+                }
+              },
+              "javascript": {
+                "formatter": {
+                  "quoteStyle": "single",
+                  "trailingCommas": "all",
+                  "semicolons": "always"
+                }
+              },
+              "linter": {
+                "enabled": true,
+                "rules": {
+                  "recommended": true
+                }
+              },
+              "files": {
+                "includes": ["src/**", "tests/**", "!**/wwwroot"]
+              }
+            }
+            """;
+
+    private static string FallbackTsconfigJson() =>
+        """
+            {
+              "compilerOptions": {
+                "target": "ES2022",
+                "module": "ESNext",
+                "moduleResolution": "bundler",
+                "jsx": "react-jsx",
+                "strict": true,
+                "esModuleInterop": true,
+                "skipLibCheck": true,
+                "forceConsistentCasingInFileNames": true,
+                "resolveJsonModule": true,
+                "isolatedModules": true,
+                "noEmit": true
+              },
+              "exclude": ["node_modules", "**/wwwroot/**"]
+            }
             """;
 }

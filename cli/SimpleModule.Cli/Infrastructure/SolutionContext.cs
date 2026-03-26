@@ -13,12 +13,7 @@ public sealed class SolutionContext
     {
         RootPath = rootPath;
         SlnxPath = slnxPath;
-        ApiCsprojPath = Path.Combine(
-            rootPath,
-            "src",
-            "SimpleModule.Host",
-            "SimpleModule.Host.csproj"
-        );
+        ApiCsprojPath = DiscoverApiCsproj(rootPath);
         ModulesPath = Path.Combine(rootPath, "src", "modules");
 
         ExistingModules = Directory.Exists(ModulesPath)
@@ -60,4 +55,55 @@ public sealed class SolutionContext
 
     public string GetTestProjectPath(string moduleName) =>
         Path.Combine(ModulesPath, moduleName, "tests", $"{moduleName}.Tests");
+
+    public string GetModuleViewsPath(string moduleName) =>
+        Path.Combine(ModulesPath, moduleName, "src", moduleName, "Views");
+
+    public string GetModulePagesIndexPath(string moduleName) =>
+        Path.Combine(ModulesPath, moduleName, "src", moduleName, "Pages", "index.ts");
+
+    private static string DiscoverApiCsproj(string rootPath)
+    {
+        var srcPath = Path.Combine(rootPath, "src");
+
+        if (Directory.Exists(srcPath))
+        {
+            // Look for directories ending with .Host
+            foreach (var dir in Directory.GetDirectories(srcPath, "*.Host"))
+            {
+                var dirName = Path.GetFileName(dir);
+                var csproj = Path.Combine(dir, $"{dirName}.csproj");
+                if (File.Exists(csproj))
+                {
+                    return csproj;
+                }
+            }
+
+            // Fall back to directories ending with .Api
+            foreach (var dir in Directory.GetDirectories(srcPath, "*.Api"))
+            {
+                var dirName = Path.GetFileName(dir);
+                var csproj = Path.Combine(dir, $"{dirName}.csproj");
+                if (File.Exists(csproj))
+                {
+                    return csproj;
+                }
+            }
+        }
+
+        // Fall back to template path
+        var templatePath = Path.Combine(
+            rootPath,
+            "template",
+            "SimpleModule.Host",
+            "SimpleModule.Host.csproj"
+        );
+        if (File.Exists(templatePath))
+        {
+            return templatePath;
+        }
+
+        // Last resort: original hardcoded path
+        return Path.Combine(rootPath, "src", "SimpleModule.Host", "SimpleModule.Host.csproj");
+    }
 }

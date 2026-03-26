@@ -40,33 +40,6 @@ public sealed class CsprojConventionCheck : IDoctorCheck
                     $"{module}.csproj not found"
                 );
             }
-
-            var contractsCsproj = Path.Combine(
-                solution.GetModuleContractsPath(module),
-                $"{module}.Contracts.csproj"
-            );
-            if (File.Exists(contractsCsproj))
-            {
-                var doc = XDocument.Load(contractsCsproj);
-                var refs = doc.Root!.Descendants("ProjectReference")
-                    .Select(pr => pr.Attribute("Include")?.Value ?? "")
-                    .ToList();
-
-                var onlyRefsCore = refs.All(r =>
-                    r.Contains("Core", StringComparison.OrdinalIgnoreCase)
-                );
-                yield return onlyRefsCore
-                    ? new CheckResult(
-                        $"{module}.Contracts refs",
-                        CheckStatus.Pass,
-                        "references Core only"
-                    )
-                    : new CheckResult(
-                        $"{module}.Contracts refs",
-                        CheckStatus.Warning,
-                        "contracts project references more than just Core"
-                    );
-            }
         }
 
         // Generator check

@@ -1,4 +1,4 @@
-﻿using SimpleModule.Cli.Infrastructure;
+using SimpleModule.Cli.Infrastructure;
 using SimpleModule.Cli.Templates;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -15,122 +15,117 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         var solution = SolutionContext.Discover();
         if (solution is null)
         {
-            AnsiConsole.MarkupLine(
-                "[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]"
-            );
+            AnsiConsole.MarkupLine("[red]No .slnx file found. Run this command from inside a SimpleModule project.[/]");
             return 1;
         }
 
         if (solution.ExistingModules.Contains(moduleName, StringComparer.OrdinalIgnoreCase))
         {
-            AnsiConsole.MarkupLine($"[red]Module '{moduleName}' already exists.[/]");
+            AnsiConsole.MarkupLine($"[red]Module '{Markup.Escape(moduleName)}' already exists. Available modules: {Markup.Escape(string.Join(", ", solution.ExistingModules))}[/]");
             return 1;
         }
 
-        AnsiConsole.MarkupLine(
-            $"[blue]Creating module '{moduleName}' (singular: '{singularName}')...[/]"
-        );
-
         var templates = new ModuleTemplates(solution);
+        var ops = new List<(string Path, FileAction Action)>();
 
-        // Create directories
         var contractsDir = solution.GetModuleContractsPath(moduleName);
         var moduleDir = solution.GetModuleProjectPath(moduleName);
         var eventsDir = Path.Combine(contractsDir, "Events");
         var endpointsDir = Path.Combine(moduleDir, "Endpoints", moduleName);
         var testDir = solution.GetTestProjectPath(moduleName);
-        var unitTestDir = Path.Combine(testDir, "Unit");
-        var integrationTestDir = Path.Combine(testDir, "Integration");
 
-        Directory.CreateDirectory(eventsDir);
-        Directory.CreateDirectory(endpointsDir);
-        Directory.CreateDirectory(unitTestDir);
-        Directory.CreateDirectory(integrationTestDir);
+        void Plan(string path) => ops.Add((path, FileAction.Create));
+        Plan(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"));
+        Plan(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"));
+        Plan(Path.Combine(contractsDir, $"{singularName}.cs"));
+        Plan(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"));
+        Plan(Path.Combine(moduleDir, $"{moduleName}.csproj"));
+        Plan(Path.Combine(moduleDir, $"{moduleName}Module.cs"));
+        Plan(Path.Combine(moduleDir, $"{moduleName}Constants.cs"));
+        Plan(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"));
+        Plan(Path.Combine(moduleDir, $"{singularName}Service.cs"));
+        Plan(Path.Combine(endpointsDir, "GetAllEndpoint.cs"));
+        Plan(Path.Combine(testDir, $"{moduleName}.Tests.csproj"));
+        Plan(Path.Combine(testDir, "GlobalUsings.cs"));
+        Plan(Path.Combine(testDir, "Unit", $"{singularName}ServiceTests.cs"));
+        Plan(Path.Combine(testDir, "Integration", $"{moduleName}EndpointTests.cs"));
+        ops.Add((solution.SlnxPath, FileAction.Modify));
+        ops.Add((solution.ApiCsprojPath, FileAction.Modify));
 
-        // Contracts project files
-        WriteFile(
-            Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"),
-            templates.ContractsCsproj(moduleName)
-        );
-        WriteFile(
-            Path.Combine(contractsDir, $"I{singularName}Contracts.cs"),
-            templates.ContractsInterface(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(contractsDir, $"{singularName}.cs"),
-            templates.DtoClass(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"),
-            templates.EventClass(moduleName, singularName)
-        );
+        if (settings.DryRun)
+        {
+            RenderDryRunTree(moduleName, ops);
+            return 0;
+        }
 
-        // Module project files
-        WriteFile(
-            Path.Combine(moduleDir, $"{moduleName}.csproj"),
-            templates.ModuleCsproj(moduleName)
-        );
-        WriteFile(
-            Path.Combine(moduleDir, $"{moduleName}Module.cs"),
-            templates.ModuleClass(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(moduleDir, $"{moduleName}Constants.cs"),
-            templates.ConstantsClass(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(moduleDir, $"{moduleName}DbContext.cs"),
-            templates.DbContextClass(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(moduleDir, $"{singularName}Service.cs"),
-            templates.ServiceClass(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(endpointsDir, "GetAllEndpoint.cs"),
-            templates.GetAllEndpoint(moduleName, singularName)
-        );
+        AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .Start($"Creating module '{moduleName}'...", ctx =>
+            {
+                Directory.CreateDirectory(eventsDir);
+                Directory.CreateDirectory(endpointsDir);
+                Directory.CreateDirectory(Path.Combine(testDir, "Unit"));
+                Directory.CreateDirectory(Path.Combine(testDir, "Integration"));
 
-        // Test project files
-        WriteFile(
-            Path.Combine(testDir, $"{moduleName}.Tests.csproj"),
-            templates.TestCsproj(moduleName)
-        );
-        WriteFile(Path.Combine(testDir, "GlobalUsings.cs"), templates.GlobalUsings());
-        WriteFile(
-            Path.Combine(unitTestDir, $"{singularName}ServiceTests.cs"),
-            templates.UnitTestSkeleton(moduleName, singularName)
-        );
-        WriteFile(
-            Path.Combine(integrationTestDir, $"{moduleName}EndpointTests.cs"),
-            templates.IntegrationTestSkeleton(moduleName, singularName)
-        );
+                File.WriteAllText(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), templates.ContractsCsproj(moduleName));
+                File.WriteAllText(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"), templates.ContractsInterface(moduleName, singularName));
+                File.WriteAllText(Path.Combine(contractsDir, $"{singularName}.cs"), templates.DtoClass(moduleName, singularName));
+                File.WriteAllText(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"), templates.EventClass(moduleName, singularName));
 
-        // Modify solution files
-        AnsiConsole.MarkupLine("[blue]Updating solution files...[/]");
+                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}.csproj"), templates.ModuleCsproj(moduleName));
+                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Module.cs"), templates.ModuleClass(moduleName, singularName));
+                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Constants.cs"), templates.ConstantsClass(moduleName, singularName));
+                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"), templates.DbContextClass(moduleName, singularName));
+                File.WriteAllText(Path.Combine(moduleDir, $"{singularName}Service.cs"), templates.ServiceClass(moduleName, singularName));
+                File.WriteAllText(Path.Combine(endpointsDir, "GetAllEndpoint.cs"), templates.GetAllEndpoint(moduleName, singularName));
 
-        SlnxManipulator.AddModuleEntries(solution.SlnxPath, moduleName);
-        AnsiConsole.MarkupLine("[green]  + .slnx entries added[/]");
+                File.WriteAllText(Path.Combine(testDir, $"{moduleName}.Tests.csproj"), templates.TestCsproj(moduleName));
+                File.WriteAllText(Path.Combine(testDir, "GlobalUsings.cs"), templates.GlobalUsings());
+                File.WriteAllText(Path.Combine(testDir, "Unit", $"{singularName}ServiceTests.cs"), templates.UnitTestSkeleton(moduleName, singularName));
+                File.WriteAllText(Path.Combine(testDir, "Integration", $"{moduleName}EndpointTests.cs"), templates.IntegrationTestSkeleton(moduleName, singularName));
 
-        ProjectManipulator.AddProjectReference(
-            solution.ApiCsprojPath,
-            $@"..\modules\{moduleName}\src\{moduleName}\{moduleName}.csproj"
-        );
-        AnsiConsole.MarkupLine("[green]  + API project reference added[/]");
+                ctx.Status("Updating solution files...");
+                SlnxManipulator.AddModuleEntries(solution.SlnxPath, moduleName);
+                ProjectManipulator.AddProjectReference(
+                    solution.ApiCsprojPath,
+                    $@"..\modules\{moduleName}\src\{moduleName}\{moduleName}.csproj"
+                );
+            });
 
-        AnsiConsole.MarkupLine($"[green]Module '{moduleName}' created successfully![/]");
-        AnsiConsole.MarkupLine("");
-        AnsiConsole.MarkupLine("[dim]Files created:[/]");
-        AnsiConsole.MarkupLine($"[dim]  src/modules/{moduleName}/src/ (10 files)[/]");
-        AnsiConsole.MarkupLine($"[dim]  src/modules/{moduleName}/tests/ (3 files)[/]");
+        RenderCreatedTree(moduleName, ops);
 
+        AnsiConsole.MarkupLine($"\n[green]Module '{Markup.Escape(moduleName)}' created![/]");
+        AnsiConsole.MarkupLine("[dim]Next steps:[/]");
+        AnsiConsole.MarkupLine($"[dim]  sm new feature <FeatureName> --module {Markup.Escape(moduleName)}[/]");
+        AnsiConsole.MarkupLine("[dim]  dotnet build[/]");
         return 0;
     }
 
-    private static void WriteFile(string path, string content)
+    private static void RenderDryRunTree(string moduleName, List<(string Path, FileAction Action)> ops)
     {
-        File.WriteAllText(path, content);
-        var relativePath = Path.GetFileName(path);
-        AnsiConsole.MarkupLine($"[green]  + {relativePath}[/]");
+        AnsiConsole.MarkupLine("[dim]Dry run — no files written[/]\n");
+        var tree = new Tree($"[blue]{Markup.Escape(moduleName)}[/]");
+        foreach (var (path, action) in ops)
+        {
+            var label = action == FileAction.Modify
+                ? $"[yellow]{Markup.Escape(Path.GetFileName(path))}[/] [dim](modify)[/]"
+                : $"[green]{Markup.Escape(Path.GetFileName(path))}[/] [dim](create)[/]";
+            tree.AddNode(label);
+        }
+        AnsiConsole.Write(tree);
+    }
+
+    private static void RenderCreatedTree(string moduleName, List<(string Path, FileAction Action)> ops)
+    {
+        AnsiConsole.MarkupLine("");
+        var tree = new Tree($"[blue]{Markup.Escape(moduleName)}[/]");
+        foreach (var (path, action) in ops)
+        {
+            var label = action == FileAction.Modify
+                ? $"[yellow]{Markup.Escape(Path.GetFileName(path))}[/] [dim](modified)[/]"
+                : $"[green]{Markup.Escape(Path.GetFileName(path))}[/]";
+            tree.AddNode(label);
+        }
+        AnsiConsole.Write(tree);
     }
 }

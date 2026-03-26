@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -10,6 +10,10 @@ public sealed class NewModuleSettings : CommandSettings
     [Description("Module name in PascalCase (e.g. Invoices)")]
     public string? Name { get; set; }
 
+    [CommandOption("--dry-run")]
+    [Description("Show what would be created without writing any files")]
+    public bool DryRun { get; set; }
+
     public string ResolveName()
     {
         if (string.IsNullOrWhiteSpace(Name))
@@ -20,7 +24,7 @@ public sealed class NewModuleSettings : CommandSettings
         if (!char.IsUpper(Name[0]))
         {
             throw new InvalidOperationException(
-                "Module name must be PascalCase (start with uppercase letter)."
+                $"'{Name}' is not PascalCase. Did you mean '{char.ToUpperInvariant(Name[0])}{Name[1..]}'?"
             );
         }
 

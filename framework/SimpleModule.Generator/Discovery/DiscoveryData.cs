@@ -28,7 +28,8 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<ContractImplementationRecord> ContractImplementations,
     ImmutableArray<PermissionClassRecord> PermissionClasses,
     ImmutableArray<InterceptorInfoRecord> Interceptors,
-    ImmutableArray<VogenValueObjectRecord> VogenValueObjects
+    ImmutableArray<VogenValueObjectRecord> VogenValueObjects,
+    string HostAssemblyName
 )
 {
     public static readonly DiscoveryData Empty = new(
@@ -42,7 +43,8 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<ContractImplementationRecord>.Empty,
         ImmutableArray<PermissionClassRecord>.Empty,
         ImmutableArray<InterceptorInfoRecord>.Empty,
-        ImmutableArray<VogenValueObjectRecord>.Empty
+        ImmutableArray<VogenValueObjectRecord>.Empty,
+        ""
     );
 
     public bool Equals(DiscoveryData other)
@@ -57,7 +59,8 @@ internal readonly record struct DiscoveryData(
             && ContractImplementations.SequenceEqual(other.ContractImplementations)
             && PermissionClasses.SequenceEqual(other.PermissionClasses)
             && Interceptors.SequenceEqual(other.Interceptors)
-            && VogenValueObjects.SequenceEqual(other.VogenValueObjects);
+            && VogenValueObjects.SequenceEqual(other.VogenValueObjects)
+            && HostAssemblyName == other.HostAssemblyName;
     }
 
     public override int GetHashCode()
@@ -74,6 +77,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, PermissionClasses);
         hash = HashHelper.HashArray(hash, Interceptors);
         hash = HashHelper.HashArray(hash, VogenValueObjects);
+        hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
         return hash;
     }
 }

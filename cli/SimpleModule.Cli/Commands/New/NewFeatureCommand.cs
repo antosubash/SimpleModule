@@ -12,17 +12,13 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
         var solution = SolutionContext.Discover();
         if (solution is null)
         {
-            AnsiConsole.MarkupLine(
-                "[red]Could not find .slnx file. Run this command from within a SimpleModule project.[/]"
-            );
+            AnsiConsole.MarkupLine("[red]No .slnx file found. Run this command from inside a SimpleModule project.[/]");
             return 1;
         }
 
         if (solution.ExistingModules.Count == 0)
         {
-            AnsiConsole.MarkupLine(
-                "[red]No modules found. Create a module first with 'sm new module'.[/]"
-            );
+            AnsiConsole.MarkupLine("[red]No modules found. Create a module first with 'sm new module'.[/]");
             return 1;
         }
 
@@ -34,36 +30,67 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
         var singularName = ModuleTemplates.GetSingularName(moduleName);
 
         var templates = new FeatureTemplates(solution);
+        var ops = new List<(string Path, FileAction Action)>();
 
-        var endpointsDir = Path.Combine(
-            solution.GetModuleProjectPath(moduleName),
-            "Endpoints",
-            moduleName
-        );
-        Directory.CreateDirectory(endpointsDir);
+        var endpointsDir = Path.Combine(solution.GetModuleProjectPath(moduleName), "Endpoints", moduleName);
 
-        // Create endpoint (implements IEndpoint — auto-discovered by source generator)
-        var endpointPath = Path.Combine(endpointsDir, $"{featureName}Endpoint.cs");
-        File.WriteAllText(
-            endpointPath,
-            templates.Endpoint(moduleName, featureName, httpMethod, route, singularName)
-        );
-        AnsiConsole.MarkupLine($"[green]  + {featureName}Endpoint.cs[/]");
-
-        // Create validator if requested
+        ops.Add((Path.Combine(endpointsDir, $"{featureName}Endpoint.cs"), FileAction.Create));
         if (includeValidator)
+            ops.Add((Path.Combine(endpointsDir, $"{featureName}RequestValidator.cs"), FileAction.Create));
+
+        if (!settings.NoView)
         {
-            var validatorPath = Path.Combine(endpointsDir, $"{featureName}RequestValidator.cs");
-            File.WriteAllText(
-                validatorPath,
-                templates.Validator(moduleName, featureName, singularName)
-            );
-            AnsiConsole.MarkupLine($"[green]  + {featureName}RequestValidator.cs[/]");
+            ops.Add((Path.Combine(solution.GetModuleViewsPath(moduleName), $"{featureName}.tsx"), FileAction.Create));
+            ops.Add((solution.GetModulePagesIndexPath(moduleName), FileAction.Modify));
         }
 
-        AnsiConsole.MarkupLine(
-            $"[green]Endpoint '{featureName}' added to '{moduleName}' (auto-discovered via IEndpoint).[/]"
-        );
+        if (settings.DryRun)
+        {
+            RenderDryRunTree(ops);
+            return 0;
+        }
+
+        Directory.CreateDirectory(endpointsDir);
+        WriteFile(Path.Combine(endpointsDir, $"{featureName}Endpoint.cs"),
+            templates.Endpoint(moduleName, featureName, httpMethod, route, singularName));
+
+        if (includeValidator)
+            WriteFile(Path.Combine(endpointsDir, $"{featureName}RequestValidator.cs"),
+                templates.Validator(moduleName, featureName, singularName));
+
+        if (!settings.NoView)
+        {
+            var viewsDir = solution.GetModuleViewsPath(moduleName);
+            Directory.CreateDirectory(viewsDir);
+            WriteFile(Path.Combine(viewsDir, $"{featureName}.tsx"),
+                FeatureTemplates.ViewComponent(moduleName, featureName));
+
+            var indexPath = solution.GetModulePagesIndexPath(moduleName);
+            PagesRegistryFixer.AddEntry(indexPath, $"{moduleName}/{featureName}", $"../Views/{featureName}");
+            AnsiConsole.MarkupLine($"[green]  ~ Pages/index.ts[/]");
+        }
+
+        AnsiConsole.MarkupLine($"\n[green]Feature '{featureName}' added to '{moduleName}'.[/]");
         return 0;
+    }
+
+    private static void WriteFile(string path, string content)
+    {
+        File.WriteAllText(path, content);
+        AnsiConsole.MarkupLine($"[green]  + {Markup.Escape(Path.GetFileName(path))}[/]");
+    }
+
+    private static void RenderDryRunTree(List<(string Path, FileAction Action)> ops)
+    {
+        AnsiConsole.MarkupLine("[dim]Dry run — no files written[/]\n");
+        var tree = new Tree("[dim]Would create/modify:[/]");
+        foreach (var (path, action) in ops)
+        {
+            var label = action == FileAction.Modify
+                ? $"[yellow]{Markup.Escape(Path.GetFileName(path))}[/] [dim](modify)[/]"
+                : $"[green]{Markup.Escape(Path.GetFileName(path))}[/] [dim](create)[/]";
+            tree.AddNode(label);
+        }
+        AnsiConsole.Write(tree);
     }
 }

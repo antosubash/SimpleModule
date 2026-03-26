@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+    <Version>0.1.0-local</Version>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -12,5 +14,8 @@
     <ProjectReference Include="..\SimpleModule.Blazor\SimpleModule.Blazor.csproj" />
     <ProjectReference Include="..\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.DevTools\SimpleModule.DevTools.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="build\**\*" Pack="true" PackagePath="build\" />
   </ItemGroup>
 </Project>

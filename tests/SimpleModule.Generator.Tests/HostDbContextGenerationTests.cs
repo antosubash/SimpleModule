@@ -175,7 +175,7 @@ public class HostDbContextGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var source = GetHostDbContext(result);
-        source.Should().Contain("namespace SimpleModule.Host;");
+        source.Should().Contain("namespace TestAssembly;");
     }
 
     #endregion

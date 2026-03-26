@@ -10,6 +10,8 @@ internal static class SymbolDiscovery
 {
     internal static DiscoveryData Extract(Compilation compilation)
     {
+        var hostAssemblyName = compilation.Assembly.Name;
+
         var moduleAttributeSymbol = compilation.GetTypeByMetadataName(
             "SimpleModule.Core.ModuleAttribute"
         );
@@ -487,7 +489,8 @@ internal static class SymbolDiscovery
                     i.ConstructorParamTypeFqns.ToImmutableArray()
                 ))
                 .ToImmutableArray(),
-            vogenValueObjects.ToImmutableArray()
+            vogenValueObjects.ToImmutableArray(),
+            hostAssemblyName
         );
     }
 
