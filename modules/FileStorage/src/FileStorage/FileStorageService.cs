@@ -94,32 +94,29 @@ public sealed partial class FileStorageService(
 
     public async Task<IEnumerable<string>> GetFoldersAsync(string? parentFolder = null)
     {
-        var query = db.StoredFiles.AsNoTracking();
+        var query = db.StoredFiles.AsNoTracking().Where(f => f.Folder != null);
 
+        string? normalizedParent = null;
         if (parentFolder is not null)
         {
-            var normalizedParent = StoragePathHelper.Normalize(parentFolder);
-            query = query.Where(f => f.Folder != null && f.Folder.StartsWith(normalizedParent + "/"));
-
-            var folders = await query.Select(f => f.Folder!).Distinct().ToListAsync();
-            return folders
-                .Select(f => f[(normalizedParent.Length + 1)..])
-                .Select(f => f.Contains('/', StringComparison.Ordinal) ? f[..f.IndexOf('/', StringComparison.Ordinal)] : f)
-                .Distinct()
-                .Select(f => $"{normalizedParent}/{f}")
-                .Order();
+            normalizedParent = StoragePathHelper.Normalize(parentFolder);
+            query = query.Where(f => f.Folder!.StartsWith(normalizedParent + "/"));
         }
 
-        var topLevelFolders = await query
-            .Where(f => f.Folder != null)
-            .Select(f => f.Folder!)
-            .Distinct()
-            .ToListAsync();
+        var allFolders = await query.Select(f => f.Folder!).Distinct().ToListAsync();
 
-        return topLevelFolders
-            .Select(f => f.Contains('/', StringComparison.Ordinal) ? f[..f.IndexOf('/', StringComparison.Ordinal)] : f)
+        return allFolders
+            .Select(f => normalizedParent is not null ? f[(normalizedParent.Length + 1)..] : f)
+            .Select(GetTopSegment)
             .Distinct()
+            .Select(f => normalizedParent is not null ? $"{normalizedParent}/{f}" : f)
             .Order();
+    }
+
+    private static string GetTopSegment(string path)
+    {
+        var slashIndex = path.IndexOf('/', StringComparison.Ordinal);
+        return slashIndex < 0 ? path : path[..slashIndex];
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "File with ID {Id} not found")]

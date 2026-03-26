@@ -16,16 +16,15 @@ public class BrowseEndpoint : IViewEndpoint
                 "/browse",
                 async (string? folder, IFileStorageContracts fileStorage) =>
                 {
-                    var files = await fileStorage.GetFilesAsync(folder);
-                    var folders = await fileStorage.GetFoldersAsync(folder);
+                    var filesTask = fileStorage.GetFilesAsync(folder);
+                    var foldersTask = fileStorage.GetFoldersAsync(folder);
 
-                    string? parentFolder = null;
-                    if (folder is not null)
-                    {
-                        var normalized = StoragePathHelper.Normalize(folder);
-                        var lastSlash = normalized.LastIndexOf('/');
-                        parentFolder = lastSlash > 0 ? normalized[..lastSlash] : null;
-                    }
+                    var files = await filesTask;
+                    var folders = await foldersTask;
+
+                    var parentFolder = folder is not null
+                        ? StoragePathHelper.GetFolder(folder)
+                        : null;
 
                     return Inertia.Render(
                         "FileStorage/Browse",
