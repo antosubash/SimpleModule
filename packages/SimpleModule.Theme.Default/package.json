@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "@simplemodule/theme-default",
   "version": "0.0.0",
   "main": "theme.css"

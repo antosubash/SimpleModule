@@ -2,12 +2,11 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <IsPackable>true</IsPackable>
-    <Version>0.1.0-local</Version>
+    <Description>Multi-provider database support for SimpleModule. Schema isolation per module with SQLite, PostgreSQL, and SQL Server providers.</Description>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="NetEscapades.EnumGenerators" />
+    <PackageReference Include="NetEscapades.EnumGenerators" PrivateAssets="all" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />

@@ -3,8 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <IsPackable>true</IsPackable>
-    <Version>0.1.0-local</Version>
+    <Description>Roslyn source generator for SimpleModule. Auto-discovers modules, endpoints, and DTOs at compile time. Generates registration methods, JSON serializers, and TypeScript definitions.</Description>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <NoWarn>$(NoWarn);NU5128</NoWarn>

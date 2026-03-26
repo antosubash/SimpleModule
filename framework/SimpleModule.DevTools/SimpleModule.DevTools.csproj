@@ -2,8 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <IsPackable>true</IsPackable>
-    <Version>0.1.0-local</Version>
+    <Description>Development-time tooling for SimpleModule. Includes Vite dev watch service and diagnostics for local development.</Description>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.DevTools.Tests" />
