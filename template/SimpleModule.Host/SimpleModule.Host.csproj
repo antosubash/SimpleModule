@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <TargetFramework>net10.0</TargetFramework>
@@ -22,17 +22,17 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
-    <ProjectReference Include="..\..\modules\Dashboard\src\Dashboard\Dashboard.csproj" />
-    <ProjectReference Include="..\..\modules\Users\src\Users\Users.csproj" />
-    <ProjectReference Include="..\..\modules\OpenIddict\src\OpenIddict\OpenIddict.csproj" />
-    <ProjectReference Include="..\..\modules\Permissions\src\Permissions\Permissions.csproj" />
-    <ProjectReference Include="..\..\modules\Products\src\Products\Products.csproj" />
-    <ProjectReference Include="..\..\modules\Orders\src\Orders\Orders.csproj" />
-    <ProjectReference Include="..\..\modules\Admin\src\Admin\Admin.csproj" />
-    <ProjectReference Include="..\..\modules\PageBuilder\src\PageBuilder\PageBuilder.csproj" />
-    <ProjectReference Include="..\..\modules\Settings\src\Settings\Settings.csproj" />
-    <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs\AuditLogs.csproj" />
-    <ProjectReference Include="..\..\modules\FileStorage\src\FileStorage\FileStorage.csproj" />
+    <ProjectReference Include="..\..\modules\Dashboard\src\SimpleModule.Dashboard\SimpleModule.Dashboard.csproj" />
+    <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users\SimpleModule.Users.csproj" />
+    <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions\SimpleModule.Permissions.csproj" />
+    <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products\SimpleModule.Products.csproj" />
+    <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders\SimpleModule.Orders.csproj" />
+    <ProjectReference Include="..\..\modules\Admin\src\SimpleModule.Admin\SimpleModule.Admin.csproj" />
+    <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
+    <ProjectReference Include="..\..\modules\Settings\src\SimpleModule.Settings\SimpleModule.Settings.csproj" />
+    <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
+    <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>

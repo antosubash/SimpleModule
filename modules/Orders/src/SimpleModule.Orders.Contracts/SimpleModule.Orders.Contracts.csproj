@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <DefineConstants>$(DefineConstants);VOGEN_NO_VALIDATION</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Vogen" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
+  </ItemGroup>
+</Project>
