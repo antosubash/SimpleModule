@@ -1,4 +1,4 @@
-import type { Config } from '@measured/puck';
+import type { Config } from '@puckeditor/core';
 import { ButtonBlock } from './components/ButtonBlock';
 import { Card } from './components/Card';
 import { Flex } from './components/Flex';

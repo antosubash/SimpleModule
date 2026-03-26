@@ -1,8 +1,7 @@
-import { Render } from '@measured/puck/rsc';
+import { Render } from '@puckeditor/core/rsc';
 import { Alert, AlertDescription, Container } from '@simplemodule/ui';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { puckConfig } from '../puck/config';
-import { loadPuckCss } from '../puck/load-css';
 import type { Page } from '../types';
 
 interface Props {
@@ -11,7 +10,6 @@ interface Props {
 }
 
 export default function Viewer({ page, isDraft }: Props) {
-  useEffect(() => loadPuckCss(), []);
   const data = useMemo(() => {
     try {
       const parsed = JSON.parse(page.content);

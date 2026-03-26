@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Puck, usePuck } from '@measured/puck';
+import { Puck, usePuck } from '@puckeditor/core';
 import {
   Button,
   Card,
@@ -16,7 +16,6 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { puckConfig } from '../puck/config';
-import { loadPuckCss } from '../puck/load-css';
 import type { Page, PageTemplate } from '../types';
 
 interface Props {
@@ -120,8 +119,6 @@ function HeaderActions({ page }: { page: Page | null }) {
 
 export default function Editor({ page, templates }: Props) {
   const [showTemplatePicker, setShowTemplatePicker] = useState(!page && !!templates?.length);
-
-  useEffect(() => loadPuckCss(), []);
 
   // Hide the Blazor shell (sidebar + toggle) so the editor has full screen
   useEffect(() => {
