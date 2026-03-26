@@ -124,7 +124,7 @@ jobs:
       - name: Pack
         run: |
           VERSION="${{ needs.version.outputs.version }}"
-          for csproj in framework/*/*.csproj cli/*/*.csproj; do
+          for csproj in framework/*/*.csproj cli/*/*.csproj modules/*/src/*/*.csproj; do
             dotnet pack "$csproj" -c Release -p:Version=$VERSION --no-restore -o ./nupkgs
           done
 
