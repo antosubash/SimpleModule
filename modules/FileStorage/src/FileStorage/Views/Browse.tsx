@@ -203,8 +203,8 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
           <DialogHeader>
             <DialogTitle>Delete File</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This action
-              cannot be undone.
+              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
