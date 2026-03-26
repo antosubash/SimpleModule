@@ -1,4 +1,32 @@
 // Auto-generated from [Dto] types — do not edit
+export interface DashboardStats {
+  totalEntries: number;
+  uniqueUsers: number;
+  averageDurationMs: number;
+  errorRate: number;
+  bySource: any;
+  byAction: any;
+  byModule: any;
+  byStatusCategory: any;
+  byEntityType: any;
+  topUsers: NamedCount[];
+  topPaths: NamedCount[];
+  timeline: TimelinePoint[];
+  hourlyDistribution: NamedCount[];
+}
+
+export interface NamedCount {
+  name: string;
+  count: number;
+}
+
+export interface TimelinePoint {
+  date: string;
+  http: number;
+  domain: number;
+  changes: number;
+}
+
 export interface AuditEntry {
   id: number;
   correlationId: string;

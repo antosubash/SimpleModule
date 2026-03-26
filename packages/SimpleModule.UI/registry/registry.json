@@ -62,6 +62,30 @@
     "radixPackages": [],
     "exports": ["Card", "CardHeader", "CardTitle", "CardDescription", "CardContent", "CardFooter"]
   },
+  "calendar": {
+    "name": "Calendar",
+    "file": "calendar.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "extraPackages": ["react-day-picker"],
+    "exports": ["Calendar"]
+  },
+  "chart": {
+    "name": "Chart",
+    "file": "chart.tsx",
+    "dependencies": [],
+    "radixPackages": [],
+    "extraPackages": ["recharts"],
+    "exports": [
+      "ChartContainer",
+      "ChartTooltip",
+      "ChartTooltipContent",
+      "ChartLegend",
+      "ChartLegendContent",
+      "ChartStyle",
+      "useChart"
+    ]
+  },
   "checkbox": {
     "name": "Checkbox",
     "file": "checkbox.tsx",
@@ -99,6 +123,13 @@
       "CommandShortcut",
       "CommandSeparator"
     ]
+  },
+  "date-picker": {
+    "name": "DatePicker",
+    "file": "date-picker.tsx",
+    "dependencies": ["calendar", "button", "popover"],
+    "radixPackages": [],
+    "exports": ["DatePicker"]
   },
   "dialog": {
     "name": "Dialog",

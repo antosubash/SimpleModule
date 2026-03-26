@@ -4,4 +4,6 @@
 @source "../../../packages/SimpleModule.Client/";
 @source "../../../framework/SimpleModule.Blazor/**/*.razor";
 @source "../../../modules/**/Components/**/*.razor";
+@source "../../../modules/**/Views/**/*.tsx";
+@source "../../../modules/**/Pages/**/*.tsx";
 @source "./_scan/";

@@ -11,4 +11,9 @@ public interface IAuditLogContracts
     Task<AuditStats> GetStatsAsync(DateTimeOffset from, DateTimeOffset to);
     Task WriteBatchAsync(IReadOnlyList<AuditEntry> entries);
     Task<int> PurgeOlderThanAsync(DateTimeOffset cutoff);
+    Task<DashboardStats> GetDashboardStatsAsync(
+        DateTimeOffset from,
+        DateTimeOffset to,
+        string? userId = null
+    );
 }

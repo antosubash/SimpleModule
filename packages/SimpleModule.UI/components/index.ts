@@ -12,7 +12,18 @@ export {
   BreadcrumbSeparator,
 } from './breadcrumb';
 export { Button, buttonVariants } from './button';
+export { Calendar, type CalendarProps } from './calendar';
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
+export {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartStyle,
+  ChartTooltip,
+  ChartTooltipContent,
+  useChart,
+  type ChartConfig,
+} from './chart';
 export { Checkbox } from './checkbox';
 export { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';
 export {
@@ -27,6 +38,7 @@ export {
 } from './command';
 export { Container, containerVariants } from './container';
 export { DataGrid } from './data-grid';
+export { DatePicker, type DatePickerProps } from './date-picker';
 export {
   Dialog,
   DialogClose,

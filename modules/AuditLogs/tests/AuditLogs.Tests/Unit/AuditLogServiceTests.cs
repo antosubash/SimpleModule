@@ -1,8 +1,10 @@
 using AuditLogs.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using SimpleModule.AuditLogs;
 using SimpleModule.AuditLogs.Contracts;
+using SimpleModule.Database;
 
 namespace AuditLogs.Tests.Unit;
 
@@ -15,7 +17,10 @@ public sealed class AuditLogServiceTests : IDisposable
     public AuditLogServiceTests()
     {
         _db = _factory.Create();
-        _sut = new AuditLogService(_db, NullLogger<AuditLogService>.Instance);
+        var dbOpts = Options.Create(
+            new DatabaseOptions { DefaultConnection = "Data Source=:memory:" }
+        );
+        _sut = new AuditLogService(_db, dbOpts, NullLogger<AuditLogService>.Instance);
     }
 
     public void Dispose()

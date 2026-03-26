@@ -21,10 +21,25 @@ public class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEntry>
         builder.Property(e => e.Module).HasMaxLength(128);
         builder.Property(e => e.EntityType).HasMaxLength(256);
         builder.Property(e => e.EntityId).HasMaxLength(256);
+        // Primary sort index — used by all time-range queries
         builder.HasIndex(e => new { e.Timestamp }).IsDescending(true);
+
+        // User activity queries (filter by user + sort by time)
         builder.HasIndex(e => new { e.UserId, e.Timestamp }).IsDescending(false, true);
+
+        // Module activity queries (filter by module + sort by time)
         builder.HasIndex(e => new { e.Module, e.Timestamp }).IsDescending(false, true);
+
+        // Correlation tracing
         builder.HasIndex(e => e.CorrelationId);
+
+        // Entity change history
         builder.HasIndex(e => new { e.EntityType, e.EntityId });
+
+        // Dashboard aggregation indexes — supports GROUP BY queries
+        builder.HasIndex(e => e.Source);
+        builder.HasIndex(e => e.Action);
+        builder.HasIndex(e => e.StatusCode);
+        builder.HasIndex(e => e.Path);
     }
 }
