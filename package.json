@@ -8,7 +8,8 @@
     "packages/SimpleModule.Theme.Default",
     "packages/SimpleModule.UI",
     "template/SimpleModule.Host/ClientApp",
-    "tests/e2e"
+    "tests/e2e",
+    "docs/site"
   ],
   "scripts": {
     "dev": "node tools/dev-orchestrator.mjs",
