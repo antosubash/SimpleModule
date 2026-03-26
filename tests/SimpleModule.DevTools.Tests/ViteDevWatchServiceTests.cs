@@ -164,58 +164,116 @@ public sealed class DiscoverModuleDirectoriesTests : IDisposable
 
 public sealed class ContainsSegmentTests
 {
-    [Theory]
-    [InlineData("C:\\project\\wwwroot\\file.js", "wwwroot", true)]
-    [InlineData("C:\\project\\src\\file.js", "wwwroot", false)]
-    [InlineData("/project/node_modules/pkg/index.js", "node_modules", true)]
-    [InlineData("/project/my_node_modules_backup/file.js", "node_modules", false)]
-    [InlineData("C:\\a\\_scan\\file.css", "_scan", true)]
-    [InlineData("C:\\a\\scanner\\file.css", "_scan", false)]
-    public void ContainsSegment_Detects_Path_Segments(
-        string fullPath,
-        string segment,
-        bool expected
-    )
+    private static string P(params string[] parts) => Path.Combine(parts);
+
+    [Fact]
+    public void ContainsSegment_Detects_Matching_Segment()
     {
-        ViteDevWatchService.ContainsSegment(fullPath, segment).Should().Be(expected);
+        var path = P("project", "wwwroot", "file.js");
+        ViteDevWatchService.ContainsSegment(path, "wwwroot").Should().BeTrue();
+    }
+
+    [Fact]
+    public void ContainsSegment_Returns_False_For_Missing_Segment()
+    {
+        var path = P("project", "src", "file.js");
+        ViteDevWatchService.ContainsSegment(path, "wwwroot").Should().BeFalse();
+    }
+
+    [Fact]
+    public void ContainsSegment_Detects_NodeModules()
+    {
+        var path = P("project", "node_modules", "pkg", "index.js");
+        ViteDevWatchService.ContainsSegment(path, "node_modules").Should().BeTrue();
+    }
+
+    [Fact]
+    public void ContainsSegment_Does_Not_Match_Partial_Segment_Name()
+    {
+        var path = P("project", "my_node_modules_backup", "file.js");
+        ViteDevWatchService.ContainsSegment(path, "node_modules").Should().BeFalse();
+    }
+
+    [Fact]
+    public void ContainsSegment_Detects_Scan_Segment()
+    {
+        var path = P("a", "_scan", "file.css");
+        ViteDevWatchService.ContainsSegment(path, "_scan").Should().BeTrue();
+    }
+
+    [Fact]
+    public void ContainsSegment_Does_Not_Match_Scanner_For_Scan()
+    {
+        var path = P("a", "scanner", "file.css");
+        ViteDevWatchService.ContainsSegment(path, "_scan").Should().BeFalse();
     }
 
     [Fact]
     public void ContainsSegment_Is_Case_Insensitive()
     {
-        ViteDevWatchService
-            .ContainsSegment("C:\\project\\WWWROOT\\file.js", "wwwroot")
-            .Should()
-            .BeTrue();
+        var path = P("project", "WWWROOT", "file.js");
+        ViteDevWatchService.ContainsSegment(path, "wwwroot").Should().BeTrue();
     }
 }
 
 public sealed class ShouldIgnorePathTests
 {
-    [Theory]
-    [InlineData("C:\\modules\\Products\\wwwroot\\Products.pages.js", true)]
-    [InlineData("C:\\modules\\Products\\node_modules\\react\\index.js", true)]
-    [InlineData("C:\\modules\\Products\\Pages\\index.ts", false)]
-    [InlineData("C:\\modules\\Products\\Views\\Browse.tsx", false)]
-    public void ShouldIgnoreModulePath_Filters_Correctly(string path, bool expected)
+    private static string P(params string[] parts) => Path.Combine(parts);
+
+    [Fact]
+    public void ShouldIgnoreModulePath_Ignores_Wwwroot()
     {
-        ViteDevWatchService.ShouldIgnoreModulePath(path).Should().Be(expected);
+        var path = P("modules", "Products", "wwwroot", "Products.pages.js");
+        ViteDevWatchService.ShouldIgnoreModulePath(path).Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData("C:\\ClientApp\\node_modules\\react\\index.js", true)]
-    [InlineData("C:\\ClientApp\\app.tsx", false)]
-    public void ShouldIgnoreClientAppPath_Filters_Correctly(string path, bool expected)
+    [Fact]
+    public void ShouldIgnoreModulePath_Ignores_NodeModules()
     {
-        ViteDevWatchService.ShouldIgnoreClientAppPath(path).Should().Be(expected);
+        var path = P("modules", "Products", "node_modules", "react", "index.js");
+        ViteDevWatchService.ShouldIgnoreModulePath(path).Should().BeTrue();
     }
 
-    [Theory]
-    [InlineData("C:\\Styles\\_scan\\output.css", true)]
-    [InlineData("C:\\Styles\\app.css", false)]
-    public void ShouldIgnoreTailwindPath_Filters_Correctly(string path, bool expected)
+    [Fact]
+    public void ShouldIgnoreModulePath_Allows_Pages()
     {
-        ViteDevWatchService.ShouldIgnoreTailwindPath(path).Should().Be(expected);
+        var path = P("modules", "Products", "Pages", "index.ts");
+        ViteDevWatchService.ShouldIgnoreModulePath(path).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ShouldIgnoreModulePath_Allows_Views()
+    {
+        var path = P("modules", "Products", "Views", "Browse.tsx");
+        ViteDevWatchService.ShouldIgnoreModulePath(path).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ShouldIgnoreClientAppPath_Ignores_NodeModules()
+    {
+        var path = P("ClientApp", "node_modules", "react", "index.js");
+        ViteDevWatchService.ShouldIgnoreClientAppPath(path).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldIgnoreClientAppPath_Allows_Source_Files()
+    {
+        var path = P("ClientApp", "app.tsx");
+        ViteDevWatchService.ShouldIgnoreClientAppPath(path).Should().BeFalse();
+    }
+
+    [Fact]
+    public void ShouldIgnoreTailwindPath_Ignores_Scan_Directory()
+    {
+        var path = P("Styles", "_scan", "output.css");
+        ViteDevWatchService.ShouldIgnoreTailwindPath(path).Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldIgnoreTailwindPath_Allows_Source_Css()
+    {
+        var path = P("Styles", "app.css");
+        ViteDevWatchService.ShouldIgnoreTailwindPath(path).Should().BeFalse();
     }
 }
 
