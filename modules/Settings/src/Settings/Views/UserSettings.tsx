@@ -1,4 +1,12 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@simplemodule/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Container,
+} from '@simplemodule/ui';
 import { useState } from 'react';
 import type { SettingDefinition } from '../components/SettingField';
 import SettingField from '../components/SettingField';
@@ -46,7 +54,7 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <Container className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">My Settings</h1>
       {Object.entries(groups).map(([group, items]) => (
         <Card key={group} data-testid="setting-card">
@@ -87,6 +95,6 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
           </CardContent>
         </Card>
       ))}
-    </div>
+    </Container>
   );
 }

@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Container,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -138,7 +139,7 @@ export default function UsersEdit({
   const dialogConfig = confirmAction ? confirmDialogConfig[confirmAction] : null;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -449,6 +450,6 @@ export default function UsersEdit({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Container>
   );
 }

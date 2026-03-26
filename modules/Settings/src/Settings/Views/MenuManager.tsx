@@ -11,6 +11,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Container,
   PageHeader,
   ScrollArea,
   Tooltip,
@@ -154,7 +155,7 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
 
   return (
     <TooltipProvider>
-      <div className="mx-auto max-w-5xl space-y-6">
+      <Container className="space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -301,7 +302,7 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
             </CardContent>
           </Card>
         </div>
-      </div>
+      </Container>
     </TooltipProvider>
   );
 }

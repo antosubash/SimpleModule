@@ -1,5 +1,5 @@
 import { Render } from '@measured/puck/rsc';
-import { Alert, AlertDescription } from '@simplemodule/ui';
+import { Alert, AlertDescription, Container } from '@simplemodule/ui';
 import { useEffect, useMemo } from 'react';
 import { puckConfig } from '../puck/config';
 import { loadPuckCss } from '../puck/load-css';
@@ -25,13 +25,13 @@ export default function Viewer({ page, isDraft }: Props) {
   }, [page.content]);
 
   return (
-    <div className="max-w-4xl mx-auto py-8" data-testid="page-content">
+    <Container className="py-8" data-testid="page-content">
       {isDraft && (
         <Alert variant="warning" className="mb-6">
           <AlertDescription>Draft Preview — this version is not published</AlertDescription>
         </Alert>
       )}
       <Render config={puckConfig} data={data} />
-    </div>
+    </Container>
   );
 }

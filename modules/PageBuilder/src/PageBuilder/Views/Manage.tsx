@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  Container,
   DataGrid,
   Dialog,
   DialogContent,
@@ -76,7 +77,7 @@ export default function Manage({ pages }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <Container className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
@@ -260,6 +261,6 @@ export default function Manage({ pages }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Container>
   );
 }

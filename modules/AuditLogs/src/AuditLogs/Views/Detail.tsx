@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Container,
   PageHeader,
   Table,
   TableBody,
@@ -112,7 +113,7 @@ export default function Detail({ entry, correlated }: Props) {
   const isUpdate = hasUpdateStyle(changes);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader
         className="mb-0"
         title={`Audit Entry #${entry.id}`}
@@ -318,6 +319,6 @@ export default function Detail({ entry, correlated }: Props) {
           </CardContent>
         </Card>
       )}
-    </div>
+    </Container>
   );
 }

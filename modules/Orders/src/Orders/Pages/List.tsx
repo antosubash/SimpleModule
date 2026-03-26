@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   DataGrid,
   Dialog,
   DialogContent,
@@ -36,7 +37,7 @@ export default function List({ orders }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader
         className="mb-0"
         title="Orders"
@@ -137,6 +138,6 @@ export default function List({ orders }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Container>
   );
 }

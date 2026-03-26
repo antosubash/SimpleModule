@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   Field,
   FieldGroup,
   Input,
@@ -65,7 +66,7 @@ export default function Create({ products }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -158,6 +159,6 @@ export default function Create({ products }: Props) {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </Container>
   );
 }

@@ -8,6 +8,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Container,
   PageHeader,
   Spinner,
   Table,
@@ -37,7 +38,7 @@ export default function Home({ isAuthenticated, displayName, isDevelopment }: Ho
 
 function DashboardView({ displayName }: { displayName: string }) {
   return (
-    <>
+    <Container className="space-y-6">
       <PageHeader
         title={`Welcome back, ${displayName}`}
         description="Here's your development dashboard"
@@ -125,7 +126,7 @@ function DashboardView({ displayName }: { displayName: string }) {
       </div>
 
       <ApiTester />
-    </>
+    </Container>
   );
 }
 
@@ -497,7 +498,7 @@ function ApiTester() {
 
 function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
+    <Container className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
       <div className="text-center max-w-lg mx-auto">
         {/* Inline style required: Tailwind gradient utilities cannot reference CSS custom properties */}
         <div
@@ -558,6 +559,6 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
           </a>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

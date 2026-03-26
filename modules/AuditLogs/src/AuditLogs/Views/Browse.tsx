@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   DataGrid,
   Input,
   PageHeader,
@@ -143,7 +144,7 @@ export default function Browse({ result, filters }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader
         className="mb-0"
         title="Audit Logs"
@@ -341,6 +342,6 @@ export default function Browse({ result, filters }: Props) {
           )}
         </DataGrid>
       )}
-    </div>
+    </Container>
   );
 }

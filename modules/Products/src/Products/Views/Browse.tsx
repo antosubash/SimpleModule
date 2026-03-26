@@ -1,9 +1,9 @@
-import { Card, CardContent, PageHeader } from '@simplemodule/ui';
+import { Card, CardContent, Container, PageHeader } from '@simplemodule/ui';
 import type { Product } from '../types';
 
 export default function Browse({ products }: { products: Product[] }) {
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader className="mb-0" title="Products" description="Browse the product catalog." />
       <div className="space-y-3">
         {products.map((p) => (
@@ -15,6 +15,6 @@ export default function Browse({ products }: { products: Product[] }) {
           </Card>
         ))}
       </div>
-    </div>
+    </Container>
   );
 }

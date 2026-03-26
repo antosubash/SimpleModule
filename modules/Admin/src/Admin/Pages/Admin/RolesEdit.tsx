@@ -11,6 +11,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Container,
   Field,
   FieldGroup,
   Input,
@@ -60,7 +61,7 @@ export default function RolesEdit({
   tab,
 }: Props) {
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -169,6 +170,6 @@ export default function RolesEdit({
           </CardContent>
         </Card>
       )}
-    </div>
+    </Container>
   );
 }

@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  Container,
   DataGrid,
   Dialog,
   DialogContent,
@@ -51,7 +52,7 @@ export default function Roles({ roles }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader
         className="mb-0"
         title="Roles"
@@ -154,6 +155,6 @@ export default function Roles({ roles }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Container>
   );
 }

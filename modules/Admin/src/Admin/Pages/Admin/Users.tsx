@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  Container,
   Input,
   PageHeader,
   Table,
@@ -51,7 +52,7 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader
         className="mb-0"
         title="Users"
@@ -184,6 +185,6 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
           </div>
         </div>
       )}
-    </div>
+    </Container>
   );
 }

@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@simplemodule/ui';
+import { Container, Tabs, TabsContent, TabsList, TabsTrigger } from '@simplemodule/ui';
 import { useMemo, useState } from 'react';
 import type { SettingDefinition } from '../components/SettingField';
 import SettingGroup from '../components/SettingGroup';
@@ -46,7 +46,7 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
   };
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <Container className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
       <Tabs defaultValue="system">
         <TabsList>
@@ -76,6 +76,6 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
           ))}
         </TabsContent>
       </Tabs>
-    </div>
+    </Container>
   );
 }

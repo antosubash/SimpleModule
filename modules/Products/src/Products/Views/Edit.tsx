@@ -11,6 +11,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Container,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -44,7 +45,7 @@ export default function Edit({ product }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -117,6 +118,6 @@ export default function Edit({ product }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Container>
   );
 }

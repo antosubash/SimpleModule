@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   DataGrid,
   Dialog,
   DialogContent,
@@ -38,7 +39,7 @@ export default function Manage({ products }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <Container className="space-y-6">
       <PageHeader
         className="mb-0"
         title="Manage Products"
@@ -134,6 +135,6 @@ export default function Manage({ products }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Container>
   );
 }

@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   Field,
   FieldDescription,
   FieldGroup,
@@ -31,7 +32,7 @@ export default function ClientsCreate() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -88,6 +89,6 @@ export default function ClientsCreate() {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </Container>
   );
 }

@@ -9,6 +9,7 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  Container,
   DatePicker,
   PageHeader,
   Select,
@@ -284,7 +285,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4">
+    <Container className="space-y-4">
       <PageHeader
         className="mb-0"
         title="Audit Dashboard"
@@ -504,6 +505,6 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           </CardContent>
         </Card>
       )}
-    </div>
+    </Container>
   );
 }

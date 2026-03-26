@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Container,
   Field,
   FieldGroup,
   Input,
@@ -151,7 +152,7 @@ export default function ClientsEdit({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -296,6 +297,6 @@ export default function ClientsEdit({
           </CardContent>
         </Card>
       )}
-    </div>
+    </Container>
   );
 }

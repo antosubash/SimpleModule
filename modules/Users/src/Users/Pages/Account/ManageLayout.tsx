@@ -7,6 +7,7 @@ import {
   BreadcrumbSeparator,
   Card,
   CardContent,
+  Container,
   PageHeader,
 } from '@simplemodule/ui';
 
@@ -81,7 +82,7 @@ function NavLink({
 
 export default function ManageLayout({ activePage, children }: ManageLayoutProps) {
   return (
-    <div className="space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -125,6 +126,6 @@ export default function ManageLayout({ activePage, children }: ManageLayoutProps
           </Card>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

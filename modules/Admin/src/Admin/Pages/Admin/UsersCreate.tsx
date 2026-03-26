@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   Checkbox,
+  Container,
   Field,
   FieldGroup,
   Input,
@@ -34,7 +35,7 @@ export default function UsersCreate({ allRoles }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <Container className="space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -99,6 +100,6 @@ export default function UsersCreate({ allRoles }: Props) {
           </form>
         </CardContent>
       </Card>
-    </div>
+    </Container>
   );
 }
