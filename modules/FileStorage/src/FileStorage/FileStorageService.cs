@@ -51,21 +51,29 @@ public sealed partial class FileStorageService(
 
         var result = await storageProvider.SaveAsync(storagePath, content, contentType);
 
-        var storedFile = new StoredFile
+        try
         {
-            FileName = fileName,
-            StoragePath = result.Path,
-            ContentType = contentType,
-            Size = result.Size,
-            Folder = normalizedFolder,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
+            var storedFile = new StoredFile
+            {
+                FileName = fileName,
+                StoragePath = result.Path,
+                ContentType = contentType,
+                Size = result.Size,
+                Folder = normalizedFolder,
+                CreatedAt = DateTimeOffset.UtcNow,
+            };
 
-        db.StoredFiles.Add(storedFile);
-        await db.SaveChangesAsync();
+            db.StoredFiles.Add(storedFile);
+            await db.SaveChangesAsync();
 
-        LogFileUploaded(logger, storedFile.Id, storedFile.FileName);
-        return storedFile;
+            LogFileUploaded(logger, storedFile.Id, storedFile.FileName);
+            return storedFile;
+        }
+        catch
+        {
+            await storageProvider.DeleteAsync(result.Path);
+            throw;
+        }
     }
 
     public async Task DeleteFileAsync(FileStorageId id)
@@ -73,9 +81,10 @@ public sealed partial class FileStorageService(
         var file = await db.StoredFiles.FindAsync(id)
             ?? throw new InvalidOperationException($"File with ID {id} not found.");
 
-        await storageProvider.DeleteAsync(file.StoragePath);
         db.StoredFiles.Remove(file);
         await db.SaveChangesAsync();
+
+        await storageProvider.DeleteAsync(file.StoragePath);
 
         LogFileDeleted(logger, id, file.FileName);
     }

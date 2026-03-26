@@ -15,5 +15,6 @@ public class StoredFileConfiguration : IEntityTypeConfiguration<StoredFile>
         builder.Property(f => f.ContentType).IsRequired().HasMaxLength(256);
         builder.Property(f => f.Folder).HasMaxLength(1024);
         builder.HasIndex(f => f.Folder);
+        builder.HasIndex(f => new { f.Folder, f.FileName }).IsUnique();
     }
 }
