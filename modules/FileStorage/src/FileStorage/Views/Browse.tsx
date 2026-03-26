@@ -62,14 +62,14 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!deleteTarget) return;
-    router.delete(`/api/files/${deleteTarget.id}`, {
-      onSuccess: () => setDeleteTarget(null),
-    });
+    await fetch(`/api/files/${deleteTarget.id}`, { method: 'DELETE' });
+    setDeleteTarget(null);
+    router.reload();
   }
 
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -79,9 +79,8 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
       formData.append('folder', currentFolder);
     }
 
-    router.post('/api/files', formData, {
-      forceFormData: true,
-    });
+    await fetch('/api/files', { method: 'POST', body: formData });
+    router.reload();
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
