@@ -29,8 +29,8 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("using SimpleModule.Core.Menu;");
         sb.AppendLine("using SimpleModule.Database;");
         sb.AppendLine("using SimpleModule.Hosting;");
-        sb.AppendLine("using SimpleModule.Host;");
-        sb.AppendLine("using SimpleModule.Host.Components;");
+        sb.AppendLine($"using {data.HostAssemblyName};");
+        sb.AppendLine($"using {data.HostAssemblyName}.Components;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Hosting;");
         sb.AppendLine();

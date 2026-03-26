@@ -14,6 +14,10 @@ public sealed class NewProjectSettings : CommandSettings
     [Description("Output directory (defaults to current directory)")]
     public string? OutputDir { get; set; }
 
+    [CommandOption("--dry-run")]
+    [Description("Show what would be created without writing any files")]
+    public bool DryRun { get; set; }
+
     public string ResolveName()
     {
         if (string.IsNullOrWhiteSpace(Name))

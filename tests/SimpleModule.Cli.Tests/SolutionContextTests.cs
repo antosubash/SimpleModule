@@ -148,4 +148,24 @@ public sealed class SolutionContextTests : IDisposable
         ctx.ApiCsprojPath.Should().Contain("SimpleModule.Host");
         ctx.ApiCsprojPath.Should().EndWith(".csproj");
     }
+
+    [Fact]
+    public void GetModuleViewsPath_ReturnsCorrectPath()
+    {
+        File.WriteAllText(Path.Combine(_tempDir, "Test.slnx"), "<Solution />");
+        var ctx = SolutionContext.Discover(_tempDir)!;
+        ctx.GetModuleViewsPath("Products")
+            .Should()
+            .Be(Path.Combine(_tempDir, "src", "modules", "Products", "src", "Products", "Views"));
+    }
+
+    [Fact]
+    public void GetModulePagesIndexPath_ReturnsCorrectPath()
+    {
+        File.WriteAllText(Path.Combine(_tempDir, "Test.slnx"), "<Solution />");
+        var ctx = SolutionContext.Discover(_tempDir)!;
+        ctx.GetModulePagesIndexPath("Products")
+            .Should()
+            .Be(Path.Combine(_tempDir, "src", "modules", "Products", "src", "Products", "Pages", "index.ts"));
+    }
 }

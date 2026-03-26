@@ -27,7 +27,14 @@ public sealed class DoctorCommand : Command<DoctorSettings>
             new ProjectReferenceCheck(),
             new SlnxEntriesCheck(),
             new CsprojConventionCheck(),
+            new ContractsIsolationCheck(),
             new ModulePatternCheck(),
+            new ModuleAttributeCheck(),
+            new ViewEndpointNamingCheck(),
+            new PagesRegistryCheck(),
+            new ViteConfigCheck(),
+            new PackageJsonCheck(),
+            new NpmWorkspaceCheck(),
         ];
 
         var results = new List<CheckResult>();
@@ -80,7 +87,7 @@ public sealed class DoctorCommand : Command<DoctorSettings>
             if (!settings.Fix)
             {
                 AnsiConsole.MarkupLine(
-                    "[dim]Run with --fix to auto-fix missing slnx entries and project references.[/]"
+                    "[dim]Run with --fix to auto-fix missing slnx entries, project references, Pages registry entries, and npm workspace globs.[/]"
                 );
             }
 
@@ -126,6 +133,39 @@ public sealed class DoctorCommand : Command<DoctorSettings>
                 AnsiConsole.MarkupLine(
                     $"[green]  Fixed: added {moduleName} reference to API csproj[/]"
                 );
+            }
+
+            // Fix missing Pages/index.ts entries
+            if (result.Name.StartsWith("Pages -> ", StringComparison.Ordinal))
+            {
+                var componentKey = result.Name["Pages -> ".Length..];
+                var slashIndex = componentKey.IndexOf('/', StringComparison.Ordinal);
+                var moduleName = slashIndex >= 0
+                    ? componentKey[..slashIndex]
+                    : componentKey;
+                var featureName = slashIndex >= 0
+                    ? componentKey[(slashIndex + 1)..]
+                    : componentKey;
+                var indexPath = solution.GetModulePagesIndexPath(moduleName);
+                PagesRegistryFixer.AddEntry(indexPath, componentKey, $"../Views/{featureName}");
+                AnsiConsole.MarkupLine($"[green]  Fixed: added '{componentKey}' to Pages/index.ts[/]");
+            }
+
+            // Fix missing npm workspace entries
+            if (result.Name.StartsWith("NpmWorkspace -> ", StringComparison.Ordinal))
+            {
+                var moduleName = result.Name["NpmWorkspace -> ".Length..];
+                var rootPackageJson = Path.Combine(solution.RootPath, "package.json");
+                if (File.Exists(rootPackageJson))
+                {
+                    NpmWorkspaceFixer.AddWorkspaceGlob(
+                        rootPackageJson,
+                        $"src/modules/{moduleName}/src/*"
+                    );
+                    AnsiConsole.MarkupLine(
+                        $"[green]  Fixed: added {moduleName} workspace glob to package.json[/]"
+                    );
+                }
             }
         }
 

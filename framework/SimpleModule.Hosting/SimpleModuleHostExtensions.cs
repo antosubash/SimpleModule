@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SimpleModule.Blazor;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
@@ -66,7 +68,12 @@ public static class SimpleModuleHostExtensions
 
         // Authentication is configured by modules via their ConfigureServices
         // (e.g., OpenIddict registers SmartAuth policy scheme).
-        // No base AddAuthentication() call needed here — modules own it.
+        // Register a baseline so the middleware pipeline works even without an auth module.
+        builder.Services.AddAuthentication();
+        builder.Services.AddAuthorization();
+
+        // Register default IPublicMenuProvider if no module provides one
+        builder.Services.TryAddScoped<IPublicMenuProvider, DefaultPublicMenuProvider>();
 
         if (options.EnableHealthChecks)
         {
@@ -105,7 +112,22 @@ public static class SimpleModuleHostExtensions
 
                 if (scope.ServiceProvider.GetService(info.DbContextType) is DbContext db)
                 {
-                    await db.Database.MigrateAsync();
+                    // Use MigrateAsync when migrations exist, EnsureCreated otherwise
+                    // (projects scaffolded with sm new project have no migrations initially)
+                    if ((await db.Database.GetPendingMigrationsAsync()).Any()
+                        || (await db.Database.GetAppliedMigrationsAsync()).Any())
+                    {
+                        await db.Database.MigrateAsync();
+                    }
+                    else
+                    {
+                        var logger = scope.ServiceProvider.GetService<ILoggerFactory>()
+                            ?.CreateLogger("SimpleModule.Hosting");
+                        logger?.LogInformation(
+                            "No migrations found — using EnsureCreated to initialize database. " +
+                            "Add migrations for production use.");
+                        await db.Database.EnsureCreatedAsync();
+                    }
                 }
             }
         }

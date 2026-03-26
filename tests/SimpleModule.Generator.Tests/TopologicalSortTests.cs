@@ -233,7 +233,8 @@ public class TopologicalSortTests
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
-            ImmutableArray<VogenValueObjectRecord>.Empty
+            ImmutableArray<VogenValueObjectRecord>.Empty,
+            "SimpleModule.Host"
         );
 
         var result = TopologicalSort.SortModules(data);
@@ -292,7 +293,8 @@ public class TopologicalSortTests
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
-            ImmutableArray<VogenValueObjectRecord>.Empty
+            ImmutableArray<VogenValueObjectRecord>.Empty,
+            "SimpleModule.Host"
         );
 
         var result = TopologicalSort.SortModules(data);
@@ -363,7 +365,8 @@ public class TopologicalSortTests
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
-            ImmutableArray<VogenValueObjectRecord>.Empty
+            ImmutableArray<VogenValueObjectRecord>.Empty,
+            "SimpleModule.Host"
         );
 
         var result = TopologicalSort.SortModules(data);

@@ -123,7 +123,7 @@ internal sealed class HostDbContextEmitter : IEmitter
         }
 
         sb.AppendLine();
-        sb.AppendLine("namespace SimpleModule.Host;");
+        sb.AppendLine($"namespace {data.HostAssemblyName};");
         sb.AppendLine();
 
         // Class declaration with primary constructor

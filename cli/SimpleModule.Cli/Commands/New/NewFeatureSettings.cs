@@ -27,6 +27,14 @@ public sealed class NewFeatureSettings : CommandSettings
     [Description("Include a validator class")]
     public bool IncludeValidator { get; set; }
 
+    [CommandOption("--no-view")]
+    [Description("Skip creating the React view component and Pages/index.ts entry")]
+    public bool NoView { get; set; }
+
+    [CommandOption("--dry-run")]
+    [Description("Show what would be created without writing any files")]
+    public bool DryRun { get; set; }
+
     public string ResolveName()
     {
         if (string.IsNullOrWhiteSpace(Name))

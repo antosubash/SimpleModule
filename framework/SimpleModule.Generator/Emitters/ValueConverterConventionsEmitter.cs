@@ -17,7 +17,7 @@ internal sealed class ValueConverterConventionsEmitter : IEmitter
         sb.AppendLine();
         sb.AppendLine("using Microsoft.EntityFrameworkCore;");
         sb.AppendLine();
-        sb.AppendLine("namespace SimpleModule.Host;");
+        sb.AppendLine($"namespace {data.HostAssemblyName};");
         sb.AppendLine();
         sb.AppendLine("public partial class HostDbContext");
         sb.AppendLine("{");
