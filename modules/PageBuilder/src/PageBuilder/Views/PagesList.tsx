@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Card, CardContent, Container } from '@simplemodule/ui';
+import { Card, CardContent, PageShell } from '@simplemodule/ui';
 import type { PageSummary } from '../types';
 
 interface Props {
@@ -8,8 +8,7 @@ interface Props {
 
 export default function PagesList({ pages }: Props) {
   return (
-    <Container className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
+    <PageShell title="Pages">
       {pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <svg
@@ -44,6 +43,6 @@ export default function PagesList({ pages }: Props) {
           ))}
         </div>
       )}
-    </Container>
+    </PageShell>
   );
 }

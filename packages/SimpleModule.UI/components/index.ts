@@ -38,6 +38,7 @@ export {
 } from './command';
 export { Container, containerVariants } from './container';
 export { DataGrid } from './data-grid';
+export { DataGridPage, type DataGridPageProps } from './data-grid-page';
 export { DatePicker, type DatePickerProps } from './date-picker';
 export {
   Dialog,
@@ -67,6 +68,7 @@ export { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 export { Input, inputVariants } from './input';
 export { Label } from './label';
 export { PageHeader } from './page-header';
+export { type BreadcrumbEntry, PageShell, type PageShellProps } from './page-shell';
 export { Popover, PopoverContent, PopoverTrigger } from './popover';
 export { Progress } from './progress';
 export { RadioGroup, RadioGroupItem } from './radio-group';

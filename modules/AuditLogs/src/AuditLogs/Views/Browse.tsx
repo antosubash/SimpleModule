@@ -4,10 +4,8 @@ import {
   Button,
   Card,
   CardContent,
-  Container,
-  DataGrid,
+  DataGridPage,
   Input,
-  PageHeader,
   Select,
   SelectContent,
   SelectItem,
@@ -143,205 +141,176 @@ export default function Browse({ result, filters }: Props) {
     window.location.href = `/api/audit-logs/export?${query}`;
   }
 
-  return (
-    <Container className="space-y-6">
-      <PageHeader
-        className="mb-0"
-        title="Audit Logs"
-        description={`${result.totalCount} total entries`}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => exportLogs('csv')}>
-              Export CSV
-            </Button>
-            <Button variant="secondary" onClick={() => exportLogs('json')}>
-              Export JSON
-            </Button>
+  const filterPanel = (
+    <Card>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <div className="space-y-1">
+            <label htmlFor="filter-from" className="text-xs font-medium text-text-muted">
+              From
+            </label>
+            <Input
+              id="filter-from"
+              type="datetime-local"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
           </div>
-        }
-      />
-
-      <Card>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            <div className="space-y-1">
-              <label htmlFor="filter-from" className="text-xs font-medium text-text-muted">
-                From
-              </label>
-              <Input
-                id="filter-from"
-                type="datetime-local"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="filter-to" className="text-xs font-medium text-text-muted">
-                To
-              </label>
-              <Input
-                id="filter-to"
-                type="datetime-local"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-text-muted">Source</span>
-              <Select value={source} onValueChange={setSource}>
-                <SelectTrigger aria-label="Source">
-                  <SelectValue placeholder="All sources" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All</SelectItem>
-                  {Object.entries(SOURCE_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-text-muted">Action</span>
-              <Select value={action} onValueChange={setAction}>
-                <SelectTrigger aria-label="Action">
-                  <SelectValue placeholder="All actions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All</SelectItem>
-                  {Object.entries(ACTION_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>
-                      {v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="filter-module" className="text-xs font-medium text-text-muted">
-                Module
-              </label>
-              <Input
-                id="filter-module"
-                placeholder="e.g. Products"
-                value={module}
-                onChange={(e) => setModule(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label htmlFor="filter-search" className="text-xs font-medium text-text-muted">
-                Search
-              </label>
-              <Input
-                id="filter-search"
-                placeholder="Search..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
-            </div>
+          <div className="space-y-1">
+            <label htmlFor="filter-to" className="text-xs font-medium text-text-muted">
+              To
+            </label>
+            <Input
+              id="filter-to"
+              type="datetime-local"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
           </div>
-          <div className="mt-4 flex gap-2">
-            <Button onClick={applyFilters}>Apply</Button>
-            <Button variant="secondary" onClick={clearFilters}>
-              Clear
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {result.items.length === 0 ? (
-        <Card>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <svg
-                className="mb-4 h-12 w-12 text-text-muted/50"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                viewBox="0 0 24 24"
-                role="img"
-                aria-label="No audit logs"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                />
-              </svg>
-              <h3 className="text-sm font-medium">No audit logs found</h3>
-              <p className="mt-1 text-sm text-text-muted">
-                Try adjusting your filters or check back later.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <DataGrid data={result.items}>
-          {(pageData) => (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Module</TableHead>
-                  <TableHead>Path</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Duration</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pageData.map((entry) => (
-                  <TableRow
-                    key={entry.id}
-                    className="cursor-pointer"
-                    onClick={() => router.get(`/audit-logs/${entry.id}`)}
-                  >
-                    <TableCell className="whitespace-nowrap text-sm text-text-muted">
-                      {formatTimestamp(entry.timestamp)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={sourceBadgeVariant(entry.source)}>
-                        {SOURCE_LABELS[entry.source] ?? 'Unknown'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {entry.userName || entry.userId || '\u2014'}
-                    </TableCell>
-                    <TableCell>
-                      {entry.action != null ? (
-                        <Badge variant={actionBadgeVariant(entry.action)}>
-                          {ACTION_LABELS[entry.action] ?? 'Unknown'}
-                        </Badge>
-                      ) : (
-                        '\u2014'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">{entry.module || '\u2014'}</TableCell>
-                    <TableCell className="max-w-[200px] truncate text-sm text-text-muted">
-                      {entry.path || '\u2014'}
-                    </TableCell>
-                    <TableCell>
-                      {entry.statusCode != null ? (
-                        <Badge variant={statusBadgeVariant(entry.statusCode)}>
-                          {entry.statusCode}
-                        </Badge>
-                      ) : (
-                        '\u2014'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-text-muted">
-                      {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
-                    </TableCell>
-                  </TableRow>
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-text-muted">Source</span>
+            <Select value={source} onValueChange={setSource}>
+              <SelectTrigger aria-label="Source">
+                <SelectValue placeholder="All sources" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All</SelectItem>
+                {Object.entries(SOURCE_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>
+                    {v}
+                  </SelectItem>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </DataGrid>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-text-muted">Action</span>
+            <Select value={action} onValueChange={setAction}>
+              <SelectTrigger aria-label="Action">
+                <SelectValue placeholder="All actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All</SelectItem>
+                {Object.entries(ACTION_LABELS).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="filter-module" className="text-xs font-medium text-text-muted">
+              Module
+            </label>
+            <Input
+              id="filter-module"
+              placeholder="e.g. Products"
+              value={module}
+              onChange={(e) => setModule(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="filter-search" className="text-xs font-medium text-text-muted">
+              Search
+            </label>
+            <Input
+              id="filter-search"
+              placeholder="Search..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <Button onClick={applyFilters}>Apply</Button>
+          <Button variant="secondary" onClick={clearFilters}>
+            Clear
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <DataGridPage
+      title="Audit Logs"
+      description={`${result.totalCount} total entries`}
+      actions={
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => exportLogs('csv')}>
+            Export CSV
+          </Button>
+          <Button variant="secondary" onClick={() => exportLogs('json')}>
+            Export JSON
+          </Button>
+        </div>
+      }
+      data={result.items}
+      filterBar={filterPanel}
+      emptyTitle="No audit logs found"
+      emptyDescription="Try adjusting your filters or check back later."
+    >
+      {(pageData) => (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Module</TableHead>
+              <TableHead>Path</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Duration</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pageData.map((entry) => (
+              <TableRow
+                key={entry.id}
+                className="cursor-pointer"
+                onClick={() => router.get(`/audit-logs/${entry.id}`)}
+              >
+                <TableCell className="whitespace-nowrap text-sm text-text-muted">
+                  {formatTimestamp(entry.timestamp)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={sourceBadgeVariant(entry.source)}>
+                    {SOURCE_LABELS[entry.source] ?? 'Unknown'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {entry.userName || entry.userId || '\u2014'}
+                </TableCell>
+                <TableCell>
+                  {entry.action != null ? (
+                    <Badge variant={actionBadgeVariant(entry.action)}>
+                      {ACTION_LABELS[entry.action] ?? 'Unknown'}
+                    </Badge>
+                  ) : (
+                    '\u2014'
+                  )}
+                </TableCell>
+                <TableCell className="text-sm">{entry.module || '\u2014'}</TableCell>
+                <TableCell className="max-w-[200px] truncate text-sm text-text-muted">
+                  {entry.path || '\u2014'}
+                </TableCell>
+                <TableCell>
+                  {entry.statusCode != null ? (
+                    <Badge variant={statusBadgeVariant(entry.statusCode)}>{entry.statusCode}</Badge>
+                  ) : (
+                    '\u2014'
+                  )}
+                </TableCell>
+                <TableCell className="text-sm text-text-muted">
+                  {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
-    </Container>
+    </DataGridPage>
   );
 }

@@ -2,15 +2,13 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
-  Container,
-  DataGrid,
+  DataGridPage,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  PageHeader,
   Table,
   TableBody,
   TableCell,
@@ -51,38 +49,37 @@ export default function Roles({ roles }: Props) {
     });
   }
 
+  const errorAlert = deleteError ? (
+    <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
+      <span>{deleteError}</span>
+      <button
+        type="button"
+        className="text-danger hover:text-danger/80"
+        onClick={() => setDeleteError(null)}
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  ) : null;
+
   return (
-    <Container className="space-y-6">
-      <PageHeader
-        className="mb-0"
+    <>
+      <DataGridPage
         title="Roles"
         description="Manage application roles and permissions."
         actions={<Button onClick={() => router.get('/admin/roles/create')}>Create Role</Button>}
-      />
-
-      {deleteError && (
-        <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
-          <span>{deleteError}</span>
-          <button
-            type="button"
-            className="text-danger hover:text-danger/80"
-            onClick={() => setDeleteError(null)}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      <DataGrid data={roles}>
+        data={roles}
+        filterBar={errorAlert}
+      >
         {(pageData) => (
           <Table>
             <TableHeader>
@@ -134,7 +131,7 @@ export default function Roles({ roles }: Props) {
             </TableBody>
           </Table>
         )}
-      </DataGrid>
+      </DataGridPage>
 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
@@ -155,6 +152,6 @@ export default function Roles({ roles }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Container>
+    </>
   );
 }

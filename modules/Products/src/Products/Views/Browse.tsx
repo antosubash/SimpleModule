@@ -1,10 +1,9 @@
-import { Card, CardContent, Container, PageHeader } from '@simplemodule/ui';
+import { Card, CardContent, PageShell } from '@simplemodule/ui';
 import type { Product } from '../types';
 
 export default function Browse({ products }: { products: Product[] }) {
   return (
-    <Container className="space-y-6">
-      <PageHeader className="mb-0" title="Products" description="Browse the product catalog." />
+    <PageShell title="Products" description="Browse the product catalog.">
       <div className="space-y-3">
         {products.map((p) => (
           <Card key={p.id} data-testid="product-card">
@@ -15,6 +14,6 @@ export default function Browse({ products }: { products: Product[] }) {
           </Card>
         ))}
       </div>
-    </Container>
+    </PageShell>
   );
 }

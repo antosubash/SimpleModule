@@ -9,9 +9,8 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  Container,
   DatePicker,
-  PageHeader,
+  PageShell,
   Select,
   SelectContent,
   SelectItem,
@@ -285,42 +284,40 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
   );
 
   return (
-    <Container className="space-y-4">
-      <PageHeader
-        className="mb-0"
-        title="Audit Dashboard"
-        description="System activity overview and metrics"
-        actions={
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-text-muted">From</span>
-              <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Start date" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-text-muted">To</span>
-              <DatePicker value={dateTo} onChange={setDateTo} placeholder="End date" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-text-muted">User</span>
-              <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger className="w-[180px]" aria-label="User">
-                  <SelectValue placeholder="All users" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__all__">All users</SelectItem>
-                  {users.map((u) => (
-                    <SelectItem key={u.name} value={u.name}>
-                      {u.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={applyFilters}>Apply</Button>
+    <PageShell
+      className="space-y-4"
+      title="Audit Dashboard"
+      description="System activity overview and metrics"
+      actions={
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-text-muted">From</span>
+            <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Start date" />
           </div>
-        }
-      />
-
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-text-muted">To</span>
+            <DatePicker value={dateTo} onChange={setDateTo} placeholder="End date" />
+          </div>
+          <div className="space-y-1">
+            <span className="text-xs font-medium text-text-muted">User</span>
+            <Select value={selectedUser} onValueChange={setSelectedUser}>
+              <SelectTrigger className="w-[180px]" aria-label="User">
+                <SelectValue placeholder="All users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All users</SelectItem>
+                {users.map((u) => (
+                  <SelectItem key={u.name} value={u.name}>
+                    {u.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={applyFilters}>Apply</Button>
+        </div>
+      }
+    >
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KpiCard
@@ -505,6 +502,6 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           </CardContent>
         </Card>
       )}
-    </Container>
+    </PageShell>
   );
 }

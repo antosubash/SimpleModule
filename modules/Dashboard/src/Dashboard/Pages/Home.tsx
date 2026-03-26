@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
   Container,
-  PageHeader,
+  PageShell,
   Spinner,
   Table,
   TableBody,
@@ -38,12 +38,10 @@ export default function Home({ isAuthenticated, displayName, isDevelopment }: Ho
 
 function DashboardView({ displayName }: { displayName: string }) {
   return (
-    <Container className="space-y-6">
-      <PageHeader
-        title={`Welcome back, ${displayName}`}
-        description="Here's your development dashboard"
-      />
-
+    <PageShell
+      title={`Welcome back, ${displayName}`}
+      description="Here's your development dashboard"
+    >
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <a href="/Identity/Account/Manage" className="no-underline">
@@ -126,7 +124,7 @@ function DashboardView({ displayName }: { displayName: string }) {
       </div>
 
       <ApiTester />
-    </Container>
+    </PageShell>
   );
 }
 

@@ -6,8 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  Container,
-  PageHeader,
+  PageShell,
   Table,
   TableBody,
   TableCell,
@@ -41,7 +40,7 @@ function LabeledField({ label, children }: { label: string; children: React.Reac
   return (
     <div>
       <dt className="text-sm text-text-muted">{label}</dt>
-      <dd className="mt-1 text-sm font-medium text-text">{children || '—'}</dd>
+      <dd className="mt-1 text-sm font-medium text-text">{children || '\u2014'}</dd>
     </div>
   );
 }
@@ -113,17 +112,18 @@ export default function Detail({ entry, correlated }: Props) {
   const isUpdate = hasUpdateStyle(changes);
 
   return (
-    <Container className="space-y-6">
-      <PageHeader
-        className="mb-0"
-        title={`Audit Entry #${entry.id}`}
-        actions={
-          <Button variant="secondary" onClick={() => router.get('/audit-logs/browse')}>
-            Back to Browse
-          </Button>
-        }
-      />
-
+    <PageShell
+      title={`Audit Entry #${entry.id}`}
+      actions={
+        <Button variant="secondary" onClick={() => router.get('/audit-logs/browse')}>
+          Back to Browse
+        </Button>
+      }
+      breadcrumbs={[
+        { label: 'Audit Logs', href: '/audit-logs/browse' },
+        { label: `Entry #${entry.id}` },
+      ]}
+    >
       {/* Overview Card */}
       <Card>
         <CardHeader>
@@ -163,7 +163,7 @@ export default function Detail({ entry, correlated }: Props) {
                 {entry.queryString ? (
                   <span className="font-mono text-xs">{entry.queryString}</span>
                 ) : (
-                  '—'
+                  '\u2014'
                 )}
               </LabeledField>
               <LabeledField label="Status Code">
@@ -176,7 +176,7 @@ export default function Detail({ entry, correlated }: Props) {
                 </Badge>
               </LabeledField>
               <LabeledField label="Duration">
-                {entry.durationMs != null ? `${entry.durationMs}ms` : '—'}
+                {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
               </LabeledField>
             </dl>
             {entry.requestBody && (
@@ -206,7 +206,7 @@ export default function Detail({ entry, correlated }: Props) {
                 {entry.action != null ? (
                   <Badge>{ACTION_LABELS[entry.action] ?? `Unknown (${entry.action})`}</Badge>
                 ) : (
-                  '—'
+                  '\u2014'
                 )}
               </LabeledField>
             </dl>
@@ -242,15 +242,15 @@ export default function Detail({ entry, correlated }: Props) {
                     {isUpdate ? (
                       <>
                         <TableCell className="font-mono text-xs text-text-muted">
-                          {change.old != null ? String(change.old) : '—'}
+                          {change.old != null ? String(change.old) : '\u2014'}
                         </TableCell>
                         <TableCell className="font-mono text-xs">
-                          {change.new != null ? String(change.new) : '—'}
+                          {change.new != null ? String(change.new) : '\u2014'}
                         </TableCell>
                       </>
                     ) : (
                       <TableCell className="font-mono text-xs">
-                        {change.value != null ? String(change.value) : '—'}
+                        {change.value != null ? String(change.value) : '\u2014'}
                       </TableCell>
                     )}
                   </TableRow>
@@ -301,17 +301,17 @@ export default function Detail({ entry, correlated }: Props) {
                   >
                     <TableCell className="text-text-muted">#{e.id}</TableCell>
                     <TableCell>{formatTimestamp(e.timestamp)}</TableCell>
-                    <TableCell>{SOURCE_LABELS[e.source] ?? `Unknown`}</TableCell>
+                    <TableCell>{SOURCE_LABELS[e.source] ?? 'Unknown'}</TableCell>
                     <TableCell>
                       {e.action != null ? (
                         <Badge variant="outline">
                           {ACTION_LABELS[e.action] ?? `Unknown (${e.action})`}
                         </Badge>
                       ) : (
-                        '—'
+                        '\u2014'
                       )}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">{e.path || '—'}</TableCell>
+                    <TableCell className="font-mono text-xs">{e.path || '\u2014'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -319,6 +319,6 @@ export default function Detail({ entry, correlated }: Props) {
           </CardContent>
         </Card>
       )}
-    </Container>
+    </PageShell>
   );
 }

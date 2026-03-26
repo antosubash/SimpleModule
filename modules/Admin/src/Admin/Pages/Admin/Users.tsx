@@ -2,9 +2,8 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
-  Container,
   Input,
-  PageHeader,
+  PageShell,
   Table,
   TableBody,
   TableCell,
@@ -52,14 +51,11 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
   }
 
   return (
-    <Container className="space-y-6">
-      <PageHeader
-        className="mb-0"
-        title="Users"
-        description={`${totalCount} total users`}
-        actions={<Button onClick={() => router.get('/admin/users/create')}>Create User</Button>}
-      />
-
+    <PageShell
+      title="Users"
+      description={`${totalCount} total users`}
+      actions={<Button onClick={() => router.get('/admin/users/create')}>Create User</Button>}
+    >
       <form onSubmit={handleSearch} className="flex gap-2">
         <Input
           value={searchValue}
@@ -185,6 +181,6 @@ export default function Users({ users, search, page, totalPages, totalCount }: P
           </div>
         </div>
       )}
-    </Container>
+    </PageShell>
   );
 }

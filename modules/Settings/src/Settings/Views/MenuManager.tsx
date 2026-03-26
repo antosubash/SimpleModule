@@ -1,18 +1,11 @@
 import {
   Badge,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  Container,
-  PageHeader,
+  PageShell,
   ScrollArea,
   Tooltip,
   TooltipContent,
@@ -155,24 +148,11 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
 
   return (
     <TooltipProvider>
-      <Container className="space-y-6">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/admin/settings">Settings</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Menu Manager</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        <PageHeader
-          title="Menu Manager"
-          description="Configure the public navigation menu. Add, reorder, and organize menu items."
-        />
-
+      <PageShell
+        title="Menu Manager"
+        description="Configure the public navigation menu. Add, reorder, and organize menu items."
+        breadcrumbs={[{ label: 'Settings', href: '/admin/settings' }, { label: 'Menu Manager' }]}
+      >
         <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_3fr]">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -302,7 +282,7 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
             </CardContent>
           </Card>
         </div>
-      </Container>
+      </PageShell>
     </TooltipProvider>
   );
 }
