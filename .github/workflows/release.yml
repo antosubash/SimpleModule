@@ -157,3 +157,25 @@ jobs:
           for pkg in packages/SimpleModule.Client packages/SimpleModule.UI packages/SimpleModule.Theme.Default; do
             (cd "$pkg" && npm version "$VERSION" --no-git-tag-version && npm publish --access public)
           done
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [version, publish-nuget, publish-npm]
+    if: needs.version.outputs.skip != 'true'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --generate-notes \
+            --verify-tag
