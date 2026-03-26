@@ -1,3 +1,5 @@
+import '@puckeditor/core/puck.css';
+
 export const pages: Record<string, unknown> = {
   'PageBuilder/Manage': () => import('../Views/Manage'),
   'PageBuilder/Editor': () => import('../Views/Editor'),
