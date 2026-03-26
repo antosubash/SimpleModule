@@ -4,22 +4,22 @@
    ============================================================ */
 
 @theme {
-  /* --- Primary: Forest Green --- */
-  --color-primary: #16a34a;
-  --color-primary-hover: #15803d;
-  --color-primary-light: #4ade80;
-  --color-primary-subtle: rgba(22, 163, 74, 0.08);
-  --color-primary-ring: rgba(22, 163, 74, 0.25);
+  /* --- Primary: Emerald --- */
+  --color-primary: #059669;
+  --color-primary-hover: #047857;
+  --color-primary-light: #34d399;
+  --color-primary-subtle: rgba(5, 150, 105, 0.08);
+  --color-primary-ring: rgba(5, 150, 105, 0.25);
 
-  /* --- Accent: Deep Evergreen --- */
-  --color-accent: #166534;
-  --color-accent-hover: #14532d;
+  /* --- Accent: Teal --- */
+  --color-accent: #0f766e;
+  --color-accent-hover: #115e59;
 
   /* --- Semantic: Success --- */
-  --color-success: #16a34a;
-  --color-success-light: #4ade80;
-  --color-success-bg: rgba(22, 163, 74, 0.1);
-  --color-success-text: #15803d;
+  --color-success: #059669;
+  --color-success-light: #34d399;
+  --color-success-bg: rgba(5, 150, 105, 0.1);
+  --color-success-text: #047857;
 
   /* --- Semantic: Danger --- */
   --color-danger: #e11d48;
@@ -60,11 +60,11 @@
   /* --- Misc --- */
   --color-dark: #0f172a;
   --color-muted: #94a3b8;
-  --color-ring: rgba(22, 163, 74, 0.4);
+  --color-ring: rgba(5, 150, 105, 0.4);
 
   /* --- Shadows (themeable) --- */
-  --shadow-primary: 0 4px 14px rgba(22, 163, 74, 0.35);
-  --shadow-primary-hover: 0 6px 20px rgba(22, 163, 74, 0.5);
+  --shadow-primary: 0 4px 14px rgba(5, 150, 105, 0.35);
+  --shadow-primary-hover: 0 6px 20px rgba(5, 150, 105, 0.5);
   --shadow-danger: 0 4px 14px rgba(225, 29, 72, 0.25);
   --shadow-danger-hover: 0 6px 20px rgba(225, 29, 72, 0.4);
 }
@@ -73,11 +73,11 @@
    Dark Mode Overrides
    ============================================================ */
 .dark {
-  --color-primary-subtle: rgba(22, 163, 74, 0.15);
-  --color-primary-ring: rgba(22, 163, 74, 0.35);
+  --color-primary-subtle: rgba(5, 150, 105, 0.15);
+  --color-primary-ring: rgba(5, 150, 105, 0.35);
 
-  --color-success-bg: rgba(74, 222, 128, 0.12);
-  --color-success-text: #86efac;
+  --color-success-bg: rgba(52, 211, 153, 0.12);
+  --color-success-text: #6ee7b7;
 
   --color-danger-bg: rgba(225, 29, 72, 0.12);
   --color-danger-text: #fda4af;
@@ -171,7 +171,7 @@
   }
 
   ::selection {
-    background: rgba(22, 163, 74, 0.2);
+    background: rgba(5, 150, 105, 0.2);
   }
 }
 
@@ -211,10 +211,10 @@
   .btn-primary {
     @apply text-white;
     background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
   }
   .btn-primary:hover {
-    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
     transform: translateY(-1px);
   }
 
