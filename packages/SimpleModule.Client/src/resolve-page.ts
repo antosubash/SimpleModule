@@ -1,16 +1,17 @@
 export async function resolvePage(name: string) {
   const moduleName = name.split('/')[0];
+  const assemblyName = `SimpleModule.${moduleName}`;
   const cacheBuster = (document.querySelector('meta[name="cache-buster"]') as HTMLMetaElement)
     ?.content;
   const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
   const mod = await import(
     /* @vite-ignore */
-    `/_content/${moduleName}/${moduleName}.pages.js${suffix}`
+    `/_content/${assemblyName}/${assemblyName}.pages.js${suffix}`
   );
 
   if (!mod.pages) {
     throw new Error(
-      `Module "${moduleName}" does not export a "pages" record. Check ${moduleName}.pages.js.`,
+      `Module "${moduleName}" does not export a "pages" record. Check ${assemblyName}.pages.js.`,
     );
   }
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
@@ -15,16 +15,16 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\template\SimpleModule.Host\SimpleModule.Host.csproj" />
-    <ProjectReference Include="..\..\modules\Users\src\Users.Contracts\Users.Contracts.csproj" />
-    <ProjectReference Include="..\..\modules\Products\src\Products.Contracts\Products.Contracts.csproj" />
-    <ProjectReference Include="..\..\modules\Orders\src\Orders.Contracts\Orders.Contracts.csproj" />
-    <ProjectReference Include="..\..\modules\OpenIddict\src\OpenIddict\OpenIddict.csproj" />
-    <ProjectReference Include="..\..\modules\PageBuilder\src\PageBuilder\PageBuilder.csproj" />
-    <ProjectReference Include="..\..\modules\Permissions\src\Permissions\Permissions.csproj" />
-    <ProjectReference Include="..\..\modules\Permissions\src\Permissions.Contracts\Permissions.Contracts.csproj" />
-    <ProjectReference Include="..\..\modules\Settings\src\Settings\Settings.csproj" />
-    <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs\AuditLogs.csproj" />
-    <ProjectReference Include="..\..\modules\FileStorage\src\FileStorage\FileStorage.csproj" />
-    <ProjectReference Include="..\..\modules\AuditLogs\src\AuditLogs.Contracts\AuditLogs.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders.Contracts\SimpleModule.Orders.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions\SimpleModule.Permissions.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions.Contracts\SimpleModule.Permissions.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Settings\src\SimpleModule.Settings\SimpleModule.Settings.csproj" />
+    <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
+    <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
+    <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs.Contracts\SimpleModule.AuditLogs.Contracts.csproj" />
   </ItemGroup>
 </Project>
