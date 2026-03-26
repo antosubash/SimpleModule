@@ -1,4 +1,4 @@
-import { resolve, basename } from 'node:path';
+import { basename, resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type UserConfig } from 'vite';
 import { defaultVendors } from './vite-plugin-vendor.ts';

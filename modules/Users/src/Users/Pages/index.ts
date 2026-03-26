@@ -1,4 +1,4 @@
-export const pages: Record<string, any> = {
+export const pages: Record<string, unknown> = {
   'Users/Account/TwoFactorAuthentication': () => import('./Account/TwoFactorAuthentication'),
   'Users/Account/EnableAuthenticator': () => import('./Account/EnableAuthenticator'),
   'Users/Account/Disable2fa': () => import('./Account/Disable2fa'),

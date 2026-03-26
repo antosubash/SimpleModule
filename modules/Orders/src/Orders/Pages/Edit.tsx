@@ -116,6 +116,7 @@ export default function Edit({ order, products }: Props) {
                   </Button>
                 </div>
                 <div className="space-y-2">
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: line items have no stable ID */}
                   {items.map((item, index) => (
                     <div key={index} className="flex gap-2 items-center">
                       <Select

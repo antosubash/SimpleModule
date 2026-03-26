@@ -18,7 +18,9 @@ export default function SettingGroup({ group, definitions, values, onSave }: Set
       <CardContent className="space-y-6">
         {definitions.map((def) => (
           <div key={def.key}>
-            <label className="text-sm font-medium">{def.displayName}</label>
+            <label htmlFor={def.key} className="text-sm font-medium">
+              {def.displayName}
+            </label>
             <SettingField definition={def} currentValue={values[def.key]} onSave={onSave} />
           </div>
         ))}

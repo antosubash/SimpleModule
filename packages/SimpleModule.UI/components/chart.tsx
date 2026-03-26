@@ -40,7 +40,9 @@ function useContainerSize(containerRef: React.RefObject<HTMLDivElement | null>) 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+        setSize((prev) =>
+          prev.width === width && prev.height === height ? prev : { width, height },
+        );
       }
     });
 

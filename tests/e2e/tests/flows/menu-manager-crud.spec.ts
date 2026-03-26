@@ -4,9 +4,18 @@ import { MenuManagerPage } from '../../pages/settings/menu-manager.page';
 
 const createdIds: number[] = [];
 
-function trackCreated(resp: { url(): string; request(): { method(): string }; json(): Promise<any> }) {
+function trackCreated(resp: {
+  url(): string;
+  request(): { method(): string };
+  json(): Promise<unknown>;
+}) {
   if (resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST') {
-    resp.json().then((body) => { if (body?.id) createdIds.push(body.id); }).catch(() => {});
+    resp
+      .json()
+      .then((body: Record<string, unknown>) => {
+        if (body?.id) createdIds.push(body.id as number);
+      })
+      .catch(() => {});
   }
 }
 

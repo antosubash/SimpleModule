@@ -36,9 +36,9 @@ export const Logos: ComponentConfig<LogosProps> = {
   },
   render: ({ logos, grayscale }) => (
     <div className="flex flex-wrap items-center justify-center gap-8 py-8">
-      {logos.map((logo, i) => (
+      {logos.map((logo) => (
         <img
-          key={i}
+          key={`logo-${logo.src}`}
           src={logo.src}
           alt={logo.alt}
           className={`h-10 object-contain ${grayscale ? 'opacity-50 grayscale' : ''}`}

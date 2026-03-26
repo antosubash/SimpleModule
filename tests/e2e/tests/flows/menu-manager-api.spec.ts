@@ -8,7 +8,12 @@ test.describe('Menu Manager - API', () => {
 
     // Create
     const createResponse = await request.post('/api/settings/menus', {
-      data: { label, url: `/${faker.helpers.slugify(label).toLowerCase()}`, icon: '', isVisible: true },
+      data: {
+        label,
+        url: `/${faker.helpers.slugify(label).toLowerCase()}`,
+        icon: '',
+        isVisible: true,
+      },
     });
     expect(createResponse.status()).toBe(201);
     const created = await createResponse.json();
@@ -55,13 +60,24 @@ test.describe('Menu Manager - API', () => {
 
     // Create parent
     const parentResp = await request.post('/api/settings/menus', {
-      data: { label: parentLabel, url: `/${faker.helpers.slugify(parentLabel).toLowerCase()}`, icon: '', isVisible: true },
+      data: {
+        label: parentLabel,
+        url: `/${faker.helpers.slugify(parentLabel).toLowerCase()}`,
+        icon: '',
+        isVisible: true,
+      },
     });
     const parent = await parentResp.json();
 
     // Create child
     const childResp = await request.post('/api/settings/menus', {
-      data: { label: childLabel, url: `/${faker.helpers.slugify(childLabel).toLowerCase()}`, parentId: parent.id, icon: '', isVisible: true },
+      data: {
+        label: childLabel,
+        url: `/${faker.helpers.slugify(childLabel).toLowerCase()}`,
+        parentId: parent.id,
+        icon: '',
+        isVisible: true,
+      },
     });
     expect(childResp.status()).toBe(201);
     const child = await childResp.json();
@@ -103,7 +119,12 @@ test.describe('Menu Manager - API', () => {
 
     // Create item
     const createResp = await request.post('/api/settings/menus', {
-      data: { label, url: `/${faker.helpers.slugify(label).toLowerCase()}`, icon: '', isVisible: true },
+      data: {
+        label,
+        url: `/${faker.helpers.slugify(label).toLowerCase()}`,
+        icon: '',
+        isVisible: true,
+      },
     });
     const item = await createResp.json();
 
@@ -131,12 +152,22 @@ test.describe('Menu Manager - API', () => {
 
     // Create two items
     const resp1 = await request.post('/api/settings/menus', {
-      data: { label: label1, url: `/${faker.helpers.slugify(label1).toLowerCase()}`, icon: '', isVisible: true },
+      data: {
+        label: label1,
+        url: `/${faker.helpers.slugify(label1).toLowerCase()}`,
+        icon: '',
+        isVisible: true,
+      },
     });
     const item1 = await resp1.json();
 
     const resp2 = await request.post('/api/settings/menus', {
-      data: { label: label2, url: `/${faker.helpers.slugify(label2).toLowerCase()}`, icon: '', isVisible: true },
+      data: {
+        label: label2,
+        url: `/${faker.helpers.slugify(label2).toLowerCase()}`,
+        icon: '',
+        isVisible: true,
+      },
     });
     const item2 = await resp2.json();
 

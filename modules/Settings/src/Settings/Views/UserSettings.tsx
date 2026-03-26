@@ -57,7 +57,9 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
             {items.map((s) => (
               <div key={s.definition.key} className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">{s.definition.displayName}</label>
+                  <label htmlFor={s.definition.key} className="text-sm font-medium">
+                    {s.definition.displayName}
+                  </label>
                   <div className="flex items-center gap-2">
                     {s.isOverridden ? (
                       <>

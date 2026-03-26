@@ -13,6 +13,7 @@ export default function PagesList({ pages }: Props) {
       {pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <svg
+            aria-hidden="true"
             className="mb-4 h-12 w-12 text-muted-foreground/50"
             fill="none"
             stroke="currentColor"

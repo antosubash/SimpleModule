@@ -27,8 +27,8 @@ export const Stats: ComponentConfig<StatsProps> = {
   },
   render: ({ items }) => (
     <div className="grid grid-cols-3 gap-8 text-center py-8">
-      {items.map((item, i) => (
-        <div key={i}>
+      {items.map((item) => (
+        <div key={`stat-${item.label}`}>
           <div className="text-3xl font-extrabold text-primary">{item.value}</div>
           <div className="text-sm text-text-muted mt-1">{item.label}</div>
         </div>

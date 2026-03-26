@@ -81,7 +81,11 @@ function parseChanges(raw: string): ChangeEntry[] {
     }
     if (typeof parsed === 'object' && parsed !== null) {
       return Object.entries(parsed).map(([field, val]) => {
-        if (typeof val === 'object' && val !== null && ('old' in val || 'new' in val || 'oldValue' in val || 'newValue' in val)) {
+        if (
+          typeof val === 'object' &&
+          val !== null &&
+          ('old' in val || 'new' in val || 'oldValue' in val || 'newValue' in val)
+        ) {
           const v = val as { old?: unknown; new?: unknown; oldValue?: unknown; newValue?: unknown };
           return { field, old: v.old ?? v.oldValue, new: v.new ?? v.newValue };
         }

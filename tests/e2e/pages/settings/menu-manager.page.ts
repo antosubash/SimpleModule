@@ -69,9 +69,7 @@ export class MenuManagerPage {
 
   /** Scoped to tree area — use exact label to avoid duplicates */
   treeItemButton(label: string) {
-    return this.page
-      .getByRole('button', { name: new RegExp(`^${label}\\b`, 'i') })
-      .first();
+    return this.page.getByRole('button', { name: new RegExp(`^${label}\\b`, 'i') }).first();
   }
 
   async selectItem(label: string) {

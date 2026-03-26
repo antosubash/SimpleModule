@@ -1,4 +1,4 @@
-export const pages: Record<string, any> = {
+export const pages: Record<string, unknown> = {
   'Admin/Admin/Users': () => import('./Admin/Users'),
   'Admin/Admin/UsersCreate': () => import('./Admin/UsersCreate'),
   'Admin/Admin/UsersEdit': () => import('./Admin/UsersEdit'),

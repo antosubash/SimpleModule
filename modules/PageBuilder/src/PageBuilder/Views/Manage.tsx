@@ -88,6 +88,7 @@ export default function Manage({ pages }: Props) {
       {pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <svg
+            aria-hidden="true"
             className="mb-4 h-12 w-12 text-muted-foreground/50"
             fill="none"
             stroke="currentColor"
@@ -129,7 +130,10 @@ export default function Manage({ pages }: Props) {
                     <TableCell className="text-text-secondary">/p/{page.slug}</TableCell>
                     <TableCell>
                       <div className="flex gap-1.5">
-                        <Badge variant={page.isPublished ? 'success' : 'secondary'} data-testid="status-badge">
+                        <Badge
+                          variant={page.isPublished ? 'success' : 'secondary'}
+                          data-testid="status-badge"
+                        >
                           {page.isPublished ? 'Published' : 'Unpublished'}
                         </Badge>
                         {page.hasDraft && <Badge variant="warning">Draft</Badge>}
@@ -172,7 +176,11 @@ export default function Manage({ pages }: Props) {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" aria-label={`Actions for ${page.title}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Actions for ${page.title}`}
+                          >
                             <svg
                               width="16"
                               height="16"
@@ -190,11 +198,15 @@ export default function Manage({ pages }: Props) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => router.get(`/admin/pages/${page.id}/edit`)}>
+                          <DropdownMenuItem
+                            onClick={() => router.get(`/admin/pages/${page.id}/edit`)}
+                          >
                             Edit
                           </DropdownMenuItem>
                           {page.isPublished && (
-                            <DropdownMenuItem onClick={() => window.open(`/p/${page.slug}`, '_blank')}>
+                            <DropdownMenuItem
+                              onClick={() => window.open(`/p/${page.slug}`, '_blank')}
+                            >
                               View Page
                             </DropdownMenuItem>
                           )}

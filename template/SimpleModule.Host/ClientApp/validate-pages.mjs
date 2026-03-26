@@ -18,9 +18,9 @@
  *   1 = Mismatches found
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../../..');
@@ -60,10 +60,10 @@ function findCSharpFiles(dir) {
 function findCSharpEndpoints(content) {
   const pattern = /Inertia\.Render\s*\(\s*"([^"]+)"/g;
   const matches = new Set();
-  let match;
-
-  while ((match = pattern.exec(content)) !== null) {
+  let match = pattern.exec(content);
+  while (match !== null) {
     matches.add(match[1]);
+    match = pattern.exec(content);
   }
 
   return matches;
@@ -85,9 +85,10 @@ function findTypeScriptPages(content) {
 
     // Match single or double quoted keys with various import syntaxes
     const pattern = /['"`]([^'"`]+)['"`]\s*:\s*(?:\(\s*\)|(?:async\s*)?\(\s*\)\s*=>|import)/g;
-    let match;
-    while ((match = pattern.exec(line)) !== null) {
+    let match = pattern.exec(line);
+    while (match !== null) {
       matches.add(match[1]);
+      match = pattern.exec(line);
     }
   }
 
@@ -128,9 +129,7 @@ function validateModule(modulePath) {
   }
 
   // Compare
-  const missing = Array.from(csharpEndpoints).filter(
-    (ep) => !tsPages.has(ep)
-  );
+  const missing = Array.from(csharpEndpoints).filter((ep) => !tsPages.has(ep));
   const extra = Array.from(tsPages).filter((page) => !csharpEndpoints.has(page));
 
   return {
@@ -186,12 +185,8 @@ function main() {
     console.log();
   }
 
-  console.log(
-    `❌ Found ${invalid.length} module(s) with mismatches`
-  );
-  console.log(
-    'Please update the Pages/index.ts files to match C# endpoints.\n'
-  );
+  console.log(`❌ Found ${invalid.length} module(s) with mismatches`);
+  console.log('Please update the Pages/index.ts files to match C# endpoints.\n');
 
   process.exit(1);
 }

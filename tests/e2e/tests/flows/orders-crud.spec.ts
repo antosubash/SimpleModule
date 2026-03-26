@@ -2,7 +2,6 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect, test } from '../../fixtures/base';
 import { OrdersCreatePage } from '../../pages/orders/create.page';
-import { OrdersEditPage } from '../../pages/orders/edit.page';
 import { OrdersListPage } from '../../pages/orders/list.page';
 import { ProductsCreatePage } from '../../pages/products/create.page';
 

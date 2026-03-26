@@ -2,4 +2,3 @@
 export interface RoleId {
   value: string;
 }
-

@@ -1,4 +1,4 @@
-export const pages: Record<string, any> = {
+export const pages: Record<string, unknown> = {
   'Settings/AdminSettings': () => import('../Views/AdminSettings'),
   'Settings/UserSettings': () => import('../Views/UserSettings'),
   'Settings/MenuManager': () => import('../Views/MenuManager'),

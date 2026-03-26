@@ -107,6 +107,7 @@ function UriList({ label, name, values }: { label: string; name: string; values:
     <Field>
       <Label>{label}</Label>
       <div className="space-y-2">
+        {/* biome-ignore lint/suspicious/noArrayIndexKey: URIs can be duplicated, no stable ID */}
         {uris.map((uri, index) => (
           <div key={index} className="flex gap-2">
             <Input

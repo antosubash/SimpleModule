@@ -15,6 +15,7 @@ export { Button, buttonVariants } from './button';
 export { Calendar, type CalendarProps } from './calendar';
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 export {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
@@ -22,7 +23,6 @@ export {
   ChartTooltip,
   ChartTooltipContent,
   useChart,
-  type ChartConfig,
 } from './chart';
 export { Checkbox } from './checkbox';
 export { Collapsible, CollapsibleContent, CollapsibleTrigger } from './collapsible';

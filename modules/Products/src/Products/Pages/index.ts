@@ -1,4 +1,4 @@
-export const pages: Record<string, any> = {
+export const pages: Record<string, unknown> = {
   'Products/Browse': () => import('../Views/Browse'),
   'Products/Manage': () => import('../Views/Manage'),
   'Products/Create': () => import('../Views/Create'),

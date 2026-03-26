@@ -164,7 +164,7 @@ export default function Editor({ page, templates }: Props) {
   }
 
   const handlePublish = useCallback(
-    async (data: any) => {
+    async (data: Record<string, unknown>) => {
       const content = JSON.stringify(data);
 
       if (page) {
@@ -174,7 +174,9 @@ export default function Editor({ page, templates }: Props) {
           body: JSON.stringify({ content }),
         });
       } else {
-        const title = data.root?.props?.title || 'Untitled Page';
+        const root = data.root as Record<string, unknown> | undefined;
+        const props = root?.props as Record<string, unknown> | undefined;
+        const title = (props?.title as string) || 'Untitled Page';
         const createRes = await fetch('/api/pagebuilder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

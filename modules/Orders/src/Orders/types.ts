@@ -21,4 +21,3 @@ export interface UpdateOrderRequest {
   userId: string;
   items: OrderItem[];
 }
-

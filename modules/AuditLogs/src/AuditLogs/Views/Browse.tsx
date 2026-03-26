@@ -102,12 +102,8 @@ function buildFilterParams(f: Partial<AuditQueryRequest>): Record<string, string
 export default function Browse({ result, filters }: Props) {
   const [from, setFrom] = useState(filters.from ? String(filters.from) : '');
   const [to, setTo] = useState(filters.to ? String(filters.to) : '');
-  const [source, setSource] = useState(
-    filters.source != null ? String(filters.source) : '__all__',
-  );
-  const [action, setAction] = useState(
-    filters.action != null ? String(filters.action) : '__all__',
-  );
+  const [source, setSource] = useState(filters.source != null ? String(filters.source) : '__all__');
+  const [action, setAction] = useState(filters.action != null ? String(filters.action) : '__all__');
   const [module, setModule] = useState(filters.module ?? '');
   const [searchText, setSearchText] = useState(filters.searchText ?? '');
 

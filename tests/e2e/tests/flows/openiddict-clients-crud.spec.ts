@@ -36,7 +36,9 @@ test.describe('OpenIddict Clients CRUD', () => {
     if (listRes.ok()) {
       const body = await listRes.json();
       if (body?.props?.clients) {
-        const apiClient = body.props.clients.find((c: { clientId: string }) => c.clientId === clientId);
+        const apiClient = body.props.clients.find(
+          (c: { clientId: string }) => c.clientId === clientId,
+        );
         expect(apiClient).toBeTruthy();
         expect(apiClient.displayName).toBe(displayName);
       }

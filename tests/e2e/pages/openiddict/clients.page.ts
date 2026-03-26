@@ -44,7 +44,11 @@ export class ClientsCreatePage {
     return this.page.getByRole('heading', { name: /create client/i });
   }
 
-  async createClient(clientId: string, displayName: string, type: 'public' | 'confidential' = 'public') {
+  async createClient(
+    clientId: string,
+    displayName: string,
+    type: 'public' | 'confidential' = 'public',
+  ) {
     await this.page.getByLabel('Client ID').fill(clientId);
     await this.page.getByLabel('Display Name').fill(displayName);
     // Radix Select combobox — click to open, then click the option
