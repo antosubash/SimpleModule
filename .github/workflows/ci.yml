@@ -18,6 +18,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Download Tailwind CSS
+        run: bash tools/download-tailwind.sh
+
       - name: Restore
         run: dotnet restore
 
@@ -35,6 +38,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      - name: Download Tailwind CSS
+        run: bash tools/download-tailwind.sh
 
       - name: Test
         run: dotnet test --verbosity normal
@@ -66,6 +72,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Download Tailwind CSS
+        run: bash tools/download-tailwind.sh
+
       - name: Test with PostgreSQL
         run: dotnet test --verbosity normal
         env:
@@ -89,6 +98,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
+      - name: Download Tailwind CSS
+        run: bash tools/download-tailwind.sh
 
       - name: Publish
         run: dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj -c Release
