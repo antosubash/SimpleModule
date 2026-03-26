@@ -6,6 +6,7 @@
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
   </ItemGroup>
   <PropertyGroup>
+    <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

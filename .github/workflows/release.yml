@@ -122,11 +122,7 @@ jobs:
         run: dotnet restore
 
       - name: Pack
-        run: |
-          VERSION="${{ needs.version.outputs.version }}"
-          for csproj in framework/*/*.csproj cli/*/*.csproj modules/*/src/*/*.csproj; do
-            dotnet pack "$csproj" -c Release -p:Version=$VERSION --no-restore -o ./nupkgs
-          done
+        run: dotnet pack -c Release -p:Version=${{ needs.version.outputs.version }} --no-restore -o ./nupkgs
 
       - name: Push to NuGet
         run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
