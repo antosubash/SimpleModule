@@ -35,6 +35,7 @@ jobs:
     outputs:
       version: ${{ steps.bump.outputs.version }}
       skip: ${{ steps.check.outputs.skip }}
+      sha: ${{ steps.push.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -89,6 +90,7 @@ jobs:
 
       - name: Commit and tag
         if: steps.check.outputs.skip != 'true'
+        id: push
         run: |
           VERSION="${{ steps.bump.outputs.version }}"
           git config user.name "github-actions[bot]"
@@ -97,6 +99,7 @@ jobs:
           git commit -m "release: v${VERSION}"
           git tag "v${VERSION}"
           git push origin main --follow-tags
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   publish-nuget:
     runs-on: ubuntu-latest
@@ -105,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v${{ needs.version.outputs.version }}
+          ref: ${{ needs.version.outputs.sha }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -135,7 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: v${{ needs.version.outputs.version }}
+          ref: ${{ needs.version.outputs.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
