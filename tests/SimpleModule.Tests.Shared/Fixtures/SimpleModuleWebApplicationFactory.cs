@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Admin;
 using SimpleModule.AuditLogs;
 using SimpleModule.Database;
+using SimpleModule.FileStorage;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
@@ -147,6 +148,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         sp.GetRequiredService<PermissionsDbContext>().Database.EnsureCreated();
         sp.GetRequiredService<SettingsDbContext>().Database.EnsureCreated();
         sp.GetRequiredService<AuditLogsDbContext>().Database.EnsureCreated();
+        sp.GetRequiredService<FileStorageDbContext>().Database.EnsureCreated();
         sp.GetRequiredService<OpenIddictAppDbContext>().Database.EnsureCreated();
     }
 
