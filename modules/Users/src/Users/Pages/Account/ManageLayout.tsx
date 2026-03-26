@@ -1,15 +1,4 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  Card,
-  CardContent,
-  Container,
-  PageHeader,
-} from '@simplemodule/ui';
+import { Card, CardContent, PageShell } from '@simplemodule/ui';
 
 interface ManageLayoutProps {
   activePage: string;
@@ -82,25 +71,11 @@ function NavLink({
 
 export default function ManageLayout({ activePage, children }: ManageLayoutProps) {
   return (
-    <Container className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Account Settings</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <PageHeader
-        className="mb-0"
-        title="Account Settings"
-        description="Manage your profile, security, and preferences"
-      />
-
+    <PageShell
+      title="Account Settings"
+      description="Manage your profile, security, and preferences"
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Account Settings' }]}
+    >
       <div className="flex flex-col sm:flex-row gap-6">
         <aside className="sm:w-56 shrink-0">
           <Card className="sm:sticky sm:top-20">
@@ -126,6 +101,6 @@ export default function ManageLayout({ activePage, children }: ManageLayoutProps
           </Card>
         </div>
       </div>
-    </Container>
+    </PageShell>
   );
 }

@@ -1,4 +1,4 @@
-import { cva, type VariantProps } from 'class-variance-authority';
+﻿import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 import { cn } from '../lib/utils';
 
@@ -6,7 +6,7 @@ const containerVariants = cva('mx-auto w-full px-4 sm:px-6 lg:px-8', {
   variants: {
     size: {
       sm: 'max-w-3xl',
-      default: 'max-w-5xl',
+      default: 'max-w-7xl',
       lg: 'max-w-7xl',
       full: 'max-w-full',
     },
