@@ -6,7 +6,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- SM0012: contract interface size warning — keep as warning, don't promote to error -->
     <!-- SM0039: interceptor DbContext dependency — keep as warning, runtime fix handles it -->
-    <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039</WarningsNotAsErrors>
+    <!-- NU5104: NetEscapades.EnumGenerators is a prerelease source generator (PrivateAssets=all, not shipped) -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039;NU5104</WarningsNotAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <RunAnalyzers>true</RunAnalyzers>
     <!-- Reference assemblies: downstream projects skip recompile when only method bodies change -->
