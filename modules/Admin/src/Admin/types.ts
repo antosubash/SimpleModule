@@ -1,5 +1,6 @@
 // Auto-generated from [Dto] types — do not edit
-export type AdminPermissions = {};
+export interface AdminPermissions {
+}
 
 export interface AuditLogEntryDto {
   id: number;
@@ -10,3 +11,4 @@ export interface AuditLogEntryDto {
   details: string;
   timestamp: string;
 }
+

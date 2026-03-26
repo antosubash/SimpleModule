@@ -9,7 +9,7 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders;
 
-public partial class OrderService(
+public sealed partial class OrderService(
     OrdersDbContext db,
     IUserContracts users,
     IProductContracts products,
@@ -46,15 +46,16 @@ public partial class OrderService(
         var productList = await products.GetProductsByIdsAsync(productIds);
         var productMap = productList.ToDictionary(p => p.Id);
 
+        decimal total = 0;
         foreach (var item in request.Items)
         {
-            if (!productMap.ContainsKey(item.ProductId))
+            if (!productMap.TryGetValue(item.ProductId, out var product))
             {
                 throw new NotFoundException("Product", item.ProductId);
             }
-        }
 
-        var total = request.Items.Sum(item => productMap[item.ProductId].Price * item.Quantity);
+            total += product.Price * item.Quantity;
+        }
 
         var order = new Order
         {
@@ -92,15 +93,16 @@ public partial class OrderService(
         var productList = await products.GetProductsByIdsAsync(productIds);
         var productMap = productList.ToDictionary(p => p.Id);
 
+        decimal total = 0;
         foreach (var item in request.Items)
         {
-            if (!productMap.ContainsKey(item.ProductId))
+            if (!productMap.TryGetValue(item.ProductId, out var product))
             {
                 throw new NotFoundException("Product", item.ProductId);
             }
-        }
 
-        var total = request.Items.Sum(item => productMap[item.ProductId].Price * item.Quantity);
+            total += product.Price * item.Quantity;
+        }
 
         order.UserId = request.UserId;
         order.Items = request.Items;

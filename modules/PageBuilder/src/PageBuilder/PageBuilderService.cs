@@ -7,7 +7,7 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder;
 
-public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBuilderService> logger)
+public sealed partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBuilderService> logger)
     : IPageBuilderContracts,
         IPageBuilderTemplateContracts,
         IPageBuilderTagContracts
@@ -232,7 +232,8 @@ public partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBui
             await db
                 .Pages.IgnoreQueryFilters()
                 .Include(p => p.Tags)
-                .FirstOrDefaultAsync(p => p.Id == id) ?? throw new NotFoundException("Page", id);
+                .FirstOrDefaultAsync(p => p.Id == id)
+            ?? throw new NotFoundException("Page", id);
 
         page.Tags.Clear();
         db.Pages.Remove(page);

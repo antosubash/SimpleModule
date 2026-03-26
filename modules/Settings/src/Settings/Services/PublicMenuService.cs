@@ -6,7 +6,7 @@ using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings.Services;
 
-public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPublicMenuProvider
+public sealed class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPublicMenuProvider
 {
     private const string MenuTreeCacheKey = "PublicMenu_Tree";
     private const string HomePageCacheKey = "PublicMenu_Home";
@@ -70,7 +70,8 @@ public class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPubl
         var maxSortOrder =
             await db
                 .PublicMenuItems.Where(e => e.ParentId == request.ParentId)
-                .MaxAsync(e => (int?)e.SortOrder) ?? -1;
+                .MaxAsync(e => (int?)e.SortOrder)
+            ?? -1;
 
         if (request.IsHomePage)
             await ClearAllHomePageFlags();

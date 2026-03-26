@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
@@ -7,18 +8,26 @@ using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings;
 
-public partial class SettingsService(
+public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
+    IMemoryCache cache,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
 {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
+
     public async Task<string?> GetSettingAsync(
         string key,
         SettingScope scope,
         string? userId = null
     )
     {
+        var cacheKey = BuildCacheKey(key, scope, userId);
+
+        if (cache.TryGetValue(cacheKey, out string? cached))
+            return cached;
+
         var entity = await db
             .Settings.AsNoTracking()
             .FirstOrDefaultAsync(s =>
@@ -26,6 +35,8 @@ public partial class SettingsService(
                 && s.Scope == scope
                 && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
             );
+
+        cache.Set(cacheKey, entity?.Value, CacheDuration);
         return entity?.Value;
     }
 
@@ -93,6 +104,7 @@ public partial class SettingsService(
         }
 
         await db.SaveChangesAsync();
+        cache.Remove(BuildCacheKey(key, scope, userId));
         LogSettingUpdated(key, scope);
     }
 
@@ -108,6 +120,7 @@ public partial class SettingsService(
         {
             db.Settings.Remove(entity);
             await db.SaveChangesAsync();
+            cache.Remove(BuildCacheKey(key, scope, userId));
             LogSettingDeleted(key, scope);
         }
     }
@@ -159,4 +172,7 @@ public partial class SettingsService(
         Message = "Failed to deserialize setting {Key} to type {Type}: {Error}"
     )]
     private partial void LogDeserializationError(string key, string type, string error);
+
+    private static string BuildCacheKey(string key, SettingScope scope, string? userId) =>
+        userId is not null ? $"setting:{scope}:{userId}:{key}" : $"setting:{scope}:{key}";
 }

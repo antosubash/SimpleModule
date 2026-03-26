@@ -54,9 +54,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task UpdateContent_WithPermission_SavesPuckJson()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Update]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Update,
+        ]);
 
         var createResponse = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -81,9 +82,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task ViewerEndpoint_PublishedPage_ReturnsOk()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Publish]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Publish,
+        ]);
 
         var createResponse = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -136,9 +138,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task DeletePage_WithPermission_Returns204()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Delete,
+        ]);
 
         var createResponse = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -156,9 +159,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task DeletePage_SoftDeletes_StillInTrash()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Delete,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -180,13 +184,11 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task RestorePage_ReturnsToNormalList()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [
-                PageBuilderPermissions.Create,
-                PageBuilderPermissions.Delete,
-                PageBuilderPermissions.View,
-            ]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Delete,
+            PageBuilderPermissions.View,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -208,9 +210,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task PermanentDelete_RemovesFromTrash()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Delete,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -262,9 +265,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task DeleteTemplate_Returns204()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Delete]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Delete,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder/templates",
@@ -295,9 +299,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task AddTagToPage_Returns204()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Update]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Update,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -317,14 +322,12 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task UpdateContent_SavesToDraft_PublishCopiesIt()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [
-                PageBuilderPermissions.Create,
-                PageBuilderPermissions.Update,
-                PageBuilderPermissions.Publish,
-                PageBuilderPermissions.View,
-            ]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Update,
+            PageBuilderPermissions.Publish,
+            PageBuilderPermissions.View,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder",
@@ -374,9 +377,10 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
     [Fact]
     public async Task UpdatePage_WithMetadata_SavesFields()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [PageBuilderPermissions.Create, PageBuilderPermissions.Update]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            PageBuilderPermissions.Create,
+            PageBuilderPermissions.Update,
+        ]);
 
         var createRes = await client.PostAsJsonAsync(
             "/api/pagebuilder",

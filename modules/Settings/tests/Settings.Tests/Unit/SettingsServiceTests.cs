@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Settings;
@@ -11,6 +12,7 @@ namespace Settings.Tests.Unit;
 public sealed class SettingsServiceTests : IDisposable
 {
     private readonly SettingsDbContext _db;
+    private readonly MemoryCache _cache;
     private readonly SettingsService _service;
 
     public SettingsServiceTests()
@@ -24,20 +26,19 @@ public sealed class SettingsServiceTests : IDisposable
         _db = new SettingsDbContext(options, dbOptions);
         _db.Database.EnsureCreated();
 
-        var registry = new SettingsDefinitionRegistry(
-            [
-                new SettingDefinition
-                {
-                    Key = "theme",
-                    DisplayName = "Theme",
-                    Scope = SettingScope.User,
-                    DefaultValue = "\"light\"",
-                    Type = SettingType.Text,
-                },
-            ]
-        );
+        var registry = new SettingsDefinitionRegistry([
+            new SettingDefinition
+            {
+                Key = "theme",
+                DisplayName = "Theme",
+                Scope = SettingScope.User,
+                DefaultValue = "\"light\"",
+                Type = SettingType.Text,
+            },
+        ]);
 
-        _service = new SettingsService(_db, registry, NullLogger<SettingsService>.Instance);
+        _cache = new MemoryCache(new MemoryCacheOptions());
+        _service = new SettingsService(_db, registry, _cache, NullLogger<SettingsService>.Instance);
     }
 
     [Fact]
@@ -132,6 +133,7 @@ public sealed class SettingsServiceTests : IDisposable
 
     public void Dispose()
     {
+        _cache.Dispose();
         _db.Dispose();
         GC.SuppressFinalize(this);
     }

@@ -144,9 +144,10 @@ public class ProductsEndpointTests : IClassFixture<SimpleModuleWebApplicationFac
     [Fact]
     public async Task DeleteProduct_WithExistingId_Returns204()
     {
-        var client = _factory.CreateAuthenticatedClient(
-            [ProductsPermissions.Create, ProductsPermissions.Delete]
-        );
+        var client = _factory.CreateAuthenticatedClient([
+            ProductsPermissions.Create,
+            ProductsPermissions.Delete,
+        ]);
 
         // Create a product first
         var createRequest = new CreateProductRequest { Name = "ToDelete", Price = 5.00m };

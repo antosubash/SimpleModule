@@ -8,7 +8,6 @@ SHELL := /bin/bash
 
 HOST_PROJECT := template/SimpleModule.Host
 APPHOST_PROJECT := SimpleModule.AppHost
-CLI_PROJECT := cli/SimpleModule.Cli
 DB_FILE := $(HOST_PROJECT)/app.db
 
 # ─── Setup ───────────────────────────────────────
@@ -75,6 +74,7 @@ test: ## Run all .NET tests
 
 .PHONY: test-filter
 test-filter: ## Run filtered tests (usage: make test-filter F=ClassName)
+	@[ -n "$(F)" ] || { echo "Usage: make test-filter F=ClassName or F=MethodName"; exit 1; }
 	dotnet test --filter "FullyQualifiedName~$(F)"
 
 .PHONY: test-verbose
@@ -125,20 +125,40 @@ db-reset-docker: ## Reset the Docker PostgreSQL database (destroys volume)
 # ─── Code Quality ────────────────────────────────
 
 .PHONY: lint
-lint: ## Run Biome linter
+lint: ## Lint JS (Biome) and C# (CSharpier)
+	$(MAKE) lint-js
+	$(MAKE) lint-cs
+
+.PHONY: lint-js
+lint-js: ## Run Biome linter on JS/TS
 	npm run lint
 
+.PHONY: lint-cs
+lint-cs: ## Run CSharpier format check on C#
+	csharpier check .
+
 .PHONY: format
-format: ## Run Biome formatter (writes changes)
+format: ## Format JS (Biome) and C# (CSharpier)
+	$(MAKE) format-js
+	$(MAKE) format-cs
+
+.PHONY: format-js
+format-js: ## Run Biome formatter (writes changes)
 	npm run format
 
+.PHONY: format-cs
+format-cs: ## Run CSharpier formatter (writes changes)
+	csharpier format .
+
 .PHONY: check
-check: ## Run Biome lint + format check + page validation
+check: ## Run Biome check + CSharpier check + page validation
 	npm run check
+	csharpier check .
 
 .PHONY: check-fix
-check-fix: ## Auto-fix Biome lint + formatting issues
+check-fix: ## Auto-fix Biome + CSharpier formatting issues
 	npm run check:fix
+	csharpier format .
 
 .PHONY: validate-pages
 validate-pages: ## Validate C# endpoints have matching TS page entries
@@ -154,21 +174,13 @@ generate-types: ## Extract TypeScript types from source-generated DTOs
 ui-add: ## Add a Radix UI component (interactive)
 	npm run ui:add
 
-# ─── CLI (sm tool) ───────────────────────────────
+# ─── CI ─────────────────────────────────────────
 
-.PHONY: cli-install
-cli-install: ## Install the sm CLI tool locally
-	dotnet pack $(CLI_PROJECT)/SimpleModule.Cli.csproj -c Release
-	dotnet tool install --global --add-source $(CLI_PROJECT)/nupkg SimpleModule.Cli || \
-	dotnet tool update --global --add-source $(CLI_PROJECT)/nupkg SimpleModule.Cli
+.PHONY: ci
+ci: check build test ## Run what CI runs: lint, build, test
 
-.PHONY: doctor
-doctor: ## Run sm doctor to validate project structure
-	sm doctor
-
-.PHONY: doctor-fix
-doctor-fix: ## Run sm doctor with auto-fix
-	sm doctor --fix
+.PHONY: ci-full
+ci-full: check build-all test-all ## Full CI: lint, build (.NET + JS), all tests
 
 # ─── Docker ──────────────────────────────────────
 
@@ -213,8 +225,24 @@ pristine: clean-all setup ## Clean everything and reinstall from scratch
 
 # ─── Help ────────────────────────────────────────
 
+define HELP_HEADER
+\n\033[1m SimpleModule\033[0m — available targets\n
+endef
+
 .PHONY: help
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m  %-20s\033[0m %s\n", $$1, $$2}' | \
-		sort
+	@printf "$(HELP_HEADER)"
+	@awk ' \
+	/^# .+ Setup|^# .+ Build|^# .+ Run|^# .+ Test|^# .+ Database|^# .+ Code Qual|^# .+ Code Gen|^# .+ CI|^# .+ Docker|^# .+ Clean|^# .+ Help/ { \
+		section = $$0; \
+		gsub(/^# [^A-Z]*/, "", section); \
+		gsub(/ [^A-Z]*$$/, "", section); \
+		printf "\n\033[33m %s\033[0m\n", section; \
+		next \
+	} \
+	/^[a-zA-Z0-9_-]+:.*## / { \
+		target = $$0; sub(/:.*/, "", target); \
+		desc = $$0; sub(/.*## /, "", desc); \
+		printf "  \033[36m%-20s\033[0m %s\n", target, desc \
+	}' $(MAKEFILE_LIST)
+	@printf "\n"

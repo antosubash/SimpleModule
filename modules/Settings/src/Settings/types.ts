@@ -65,3 +65,4 @@ export interface UpdateSettingRequest {
   value: string;
   scope: any;
 }
+
