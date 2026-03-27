@@ -68,4 +68,3 @@ export interface UpdatePageRequest {
   metaKeywords: string;
   ogImage: string;
 }
-
