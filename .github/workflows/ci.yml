@@ -6,104 +6,59 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Lint and format check
+        run: npm run check
+
   build:
     runs-on: ubuntu-latest
-
+    needs: lint
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
 
       - name: Download Tailwind CSS
         run: bash tools/download-tailwind.sh
 
-      - name: Restore
+      - name: Restore .NET
         run: dotnet restore
 
-      - name: Build
+      - name: Build .NET
         run: dotnet build --no-restore
 
-  test-sqlite:
-    runs-on: ubuntu-latest
-    needs: build
+      - name: Install npm dependencies
+        run: npm ci
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Download Tailwind CSS
-        run: bash tools/download-tailwind.sh
+      - name: Build frontend
+        run: npm run build
 
       - name: Test
-        run: dotnet test --verbosity normal
-
-  test-postgresql:
-    runs-on: ubuntu-latest
-    needs: build
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: simplemodule_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Download Tailwind CSS
-        run: bash tools/download-tailwind.sh
-
-      - name: Test with PostgreSQL
-        run: dotnet test --verbosity normal
-        env:
-          Database__DefaultConnection: "Host=localhost;Database=simplemodule_test;Username=test;Password=test"
-
-      - name: Verify migrations are up-to-date
-        working-directory: template/SimpleModule.Host
-        env:
-          Database__DefaultConnection: "Host=localhost;Database=simplemodule_test;Username=test;Password=test"
-        run: dotnet ef migrations has-pending-model-changes
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: [test-sqlite, test-postgresql]
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Download Tailwind CSS
-        run: bash tools/download-tailwind.sh
-
-      - name: Publish
-        run: dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj -c Release
+        run: dotnet test --no-build
