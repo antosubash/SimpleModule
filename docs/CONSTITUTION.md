@@ -35,7 +35,7 @@ Only what is in Contracts. Everything else is internal.
 - DTOs and request types marked with `[Dto]` (auto-generates TypeScript types)
 - Value object IDs via Vogen with EF Core converters (Vogen is an allowed dependency in Contracts projects)
 - Events implementing `IEvent`
-- Permission constants via `IModulePermissions`
+- Permission constants via `IModulePermissions` (place in Contracts if other modules need to reference them)
 
 ### Module Lifecycle Hooks
 
@@ -64,7 +64,7 @@ All hooks are optional. All have default no-op implementations.
 - The module class is decorated with `[Module]` and implements `IModule`.
 - Module name, route prefix, and view prefix should be defined in a constants class (convention, not enforced by diagnostic).
 - One module, one DbContext (if data is needed).
-- SM0043 warns if a module class overrides nothing.
+- SM0043 warns if a module class overrides no lifecycle hooks (indicating a likely empty or placeholder module).
 
 ---
 
@@ -161,7 +161,7 @@ This is cosmetic organization -- all modules share one connection.
 ### PublishAsync vs PublishInBackground
 
 - **`PublishAsync<T>()`** -- synchronous dispatch. The caller blocks until all handlers complete. Exceptions propagate to the caller.
-- **`PublishInBackground<T>()`** -- fire-and-forget. Failures are logged, not thrown. Use for notifications where the caller must not block or fail (audit logging, cache invalidation).
+- **`PublishInBackground<T>()`** -- fire-and-forget. Failures are logged, not thrown. No cancellation token is accepted, so callers cannot cancel in-flight background work, and handlers may be interrupted on host shutdown. Use for notifications where the caller must not block or fail (audit logging, cache invalidation).
 
 ### When to Use Which Communication Pattern
 
@@ -300,7 +300,12 @@ Override `ConfigureSettings` on the module class.
 
 ### Types
 
-Text, Number, Bool, Json.
+| Type | Description |
+|------|-------------|
+| **Text** | String value (single-line) |
+| **Number** | Numeric value (integer or decimal) |
+| **Bool** | Boolean (true/false) |
+| **Json** | Arbitrary JSON value (for complex or structured settings) |
 
 ### Rules
 
@@ -393,10 +398,10 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | Diagnostic | Severity | Rule |
 |------------|----------|------|
 | SM0027 | Error | Permission field must be const string |
-| SM0031 | Warning | Permission value does not follow naming pattern |
+| SM0031 | Warning | Permission value must follow the `Module.Action` pattern (exactly one dot) |
 | SM0032 | Error | Permission class must be sealed |
 | SM0033 | Error | No duplicate permission values |
-| SM0034 | Warning | Permission value prefix must match module name |
+| SM0034 | Warning | Permission value prefix must match the owning module name |
 
 ### View Endpoints
 
