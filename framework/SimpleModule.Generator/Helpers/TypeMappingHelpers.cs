@@ -19,7 +19,18 @@ internal static class TypeMappingHelpers
     {
         var type = StripGlobalPrefix(typeFqn);
 
-        // Nullable<T> -> T | null
+        // Nullable shorthand (e.g. int?, bool?) -> T | null
+        // Roslyn's FullyQualifiedFormat with UseSpecialTypes produces "int?" not "System.Nullable<System.Int32>"
+        if (
+            type.EndsWith("?", StringComparison.Ordinal)
+            && !type.EndsWith(">", StringComparison.Ordinal)
+        )
+        {
+            var inner = type.Substring(0, type.Length - 1);
+            return MapCSharpTypeToTypeScript(inner, knownDtoTypes) + " | null";
+        }
+
+        // Nullable<T> -> T | null (explicit generic form, may appear in some Roslyn configurations)
         if (
             type.StartsWith("System.Nullable<", StringComparison.Ordinal)
             && type.EndsWith(">", StringComparison.Ordinal)
@@ -29,9 +40,9 @@ internal static class TypeMappingHelpers
                 "System.Nullable<".Length,
                 type.Length - "System.Nullable<".Length - 1
             );
-            // Strip any nested global:: prefix that Roslyn may add (e.g. int? -> Nullable<global::System.Int32>)
+            // Strip any nested global:: prefix that Roslyn may add
             inner = StripGlobalPrefix(inner);
-            return MapCSharpTypeToTypeScript("global::" + inner, knownDtoTypes) + " | null";
+            return MapCSharpTypeToTypeScript(inner, knownDtoTypes) + " | null";
         }
 
         // Dictionary types -> Record<K, V>
