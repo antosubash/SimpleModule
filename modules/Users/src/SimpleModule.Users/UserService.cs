@@ -101,9 +101,9 @@ public partial class UserService(
         IEnumerable<string> roleNames
     )
     {
-        var nameList = roleNames.ToList();
+        var nameCollection = roleNames as ICollection<string> ?? roleNames.ToList();
         var roles = await roleManager
-            .Roles.Where(r => nameList.Contains(r.Name!))
+            .Roles.Where(r => nameCollection.Contains(r.Name!))
             .ToDictionaryAsync(r => r.Name!, r => r.Id);
         return roles;
     }

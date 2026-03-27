@@ -70,8 +70,9 @@ public class AuthorizationEndpoint : IEndpoint
 
         var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
+        var userIdString = await userManager.GetUserIdAsync(user);
         identity
-            .SetClaim(Claims.Subject, await userManager.GetUserIdAsync(user))
+            .SetClaim(Claims.Subject, userIdString)
             .SetClaim(Claims.Email, await userManager.GetEmailAsync(user) ?? string.Empty)
             .SetClaim(Claims.Name, user.DisplayName);
 
@@ -85,7 +86,7 @@ public class AuthorizationEndpoint : IEndpoint
         var permissionContracts =
             context.RequestServices.GetRequiredService<IPermissionContracts>();
         var userContracts = context.RequestServices.GetRequiredService<IUserContracts>();
-        var userId = UserId.From(await userManager.GetUserIdAsync(user));
+        var userId = UserId.From(userIdString);
 
         // Get role IDs for permission lookup via contracts
         var roleIdMap = await userContracts.GetRoleIdsByNamesAsync(roles);

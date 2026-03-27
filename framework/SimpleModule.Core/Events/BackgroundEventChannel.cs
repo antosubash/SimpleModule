@@ -21,9 +21,6 @@ public sealed partial class BackgroundEventChannel(ILogger<BackgroundEventChanne
     internal void Enqueue<T>(T @event)
         where T : IEvent
     {
-        // Capture the event in a closure that will be executed by the background dispatcher.
-        // The dispatcher provides a scoped IServiceProvider with an EventBus for proper
-        // exception isolation semantics.
         Func<IServiceProvider, CancellationToken, Task> dispatch = (sp, ct) =>
         {
             var bus = sp.GetRequiredService<IEventBus>();

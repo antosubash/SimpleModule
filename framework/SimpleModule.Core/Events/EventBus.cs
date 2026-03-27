@@ -75,7 +75,7 @@ namespace SimpleModule.Core.Events;
 public sealed partial class EventBus(
     IServiceProvider serviceProvider,
     ILogger<EventBus> logger,
-    BackgroundEventChannel? backgroundChannel = null
+    BackgroundEventChannel backgroundChannel
 ) : IEventBus
 {
     /// <summary>
@@ -145,13 +145,6 @@ public sealed partial class EventBus(
     public void PublishInBackground<T>(T @event)
         where T : IEvent
     {
-        if (backgroundChannel is null)
-        {
-            throw new InvalidOperationException(
-                "Background event dispatch is not configured. Register BackgroundEventChannel and BackgroundEventDispatcher in DI."
-            );
-        }
-
         backgroundChannel.Enqueue(@event);
     }
 

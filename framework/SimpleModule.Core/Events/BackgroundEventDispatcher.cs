@@ -6,7 +6,8 @@ namespace SimpleModule.Core.Events;
 
 /// <summary>
 /// Background service that drains the <see cref="BackgroundEventChannel"/> and dispatches
-/// events to their handlers in a scoped DI context.
+/// events to their handlers in a scoped DI context. Events are dispatched concurrently
+/// to avoid head-of-line blocking from slow handlers.
 /// </summary>
 public sealed partial class BackgroundEventDispatcher(
     BackgroundEventChannel channel,
@@ -18,17 +19,25 @@ public sealed partial class BackgroundEventDispatcher(
     {
         await foreach (var dispatch in channel.Reader.ReadAllAsync(stoppingToken))
         {
-            try
-            {
-                using var scope = serviceProvider.CreateScope();
-                await dispatch(scope.ServiceProvider, stoppingToken);
-            }
+            _ = DispatchAsync(dispatch, stoppingToken);
+        }
+    }
+
+    private async Task DispatchAsync(
+        Func<IServiceProvider, CancellationToken, Task> dispatch,
+        CancellationToken stoppingToken
+    )
+    {
+        try
+        {
+            using var scope = serviceProvider.CreateScope();
+            await dispatch(scope.ServiceProvider, stoppingToken);
+        }
 #pragma warning disable CA1031 // Background dispatcher must not crash on handler failures
-            catch (Exception ex)
+        catch (Exception ex)
 #pragma warning restore CA1031
-            {
-                LogDispatchFailed(logger, ex);
-            }
+        {
+            LogDispatchFailed(logger, ex);
         }
     }
 
