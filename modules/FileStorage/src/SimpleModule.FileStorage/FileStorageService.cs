@@ -90,9 +90,12 @@ public sealed partial class FileStorageService(
         {
             await storageProvider.DeleteAsync(storagePath);
         }
+#pragma warning disable CA1031 // Storage deletion is best-effort after successful DB commit
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             LogStorageDeletionFailed(logger, id, storagePath, ex);
+            return;
         }
 
         LogFileDeleted(logger, id, file.FileName);
