@@ -213,15 +213,6 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
-    internal static readonly DiagnosticDescriptor ViewEndpointMissingPageRegistration = new(
-        id: "SM0016",
-        title: "View endpoint page not in Pages/index.ts",
-        messageFormat: "IViewEndpoint '{0}' in module '{1}' maps to page '{2}'. Ensure a matching entry exists in the module's Pages/index.ts: \"{2}\": () => import(\"...\"). Run 'npm run validate-pages' to verify.",
-        category: "SimpleModule.Generator",
-        defaultSeverity: DiagnosticSeverity.Info,
-        isEnabledByDefault: true
-    );
-
     internal static readonly DiagnosticDescriptor InterceptorDependsOnDbContext = new(
         id: "SM0039",
         title: "SaveChanges interceptor has transitive DbContext dependency",
