@@ -7,6 +7,7 @@ using SimpleModule.Settings.Services;
 
 namespace SimpleModule.Settings.Views;
 
+[ViewPage("Settings/MenuManager")]
 public class MenuManagerEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

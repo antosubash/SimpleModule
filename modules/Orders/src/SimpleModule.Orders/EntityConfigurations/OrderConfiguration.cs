@@ -2,8 +2,6 @@ using Bogus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimpleModule.Orders.Contracts;
-using SimpleModule.Products.Contracts;
-using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders.EntityConfigurations;
 
@@ -44,7 +42,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                     new
                     {
                         OrderId = OrderId.From(i),
-                        ProductId = ProductId.From(productId),
+                        ProductId = productId,
                         Quantity = quantity,
                     }
                 );
@@ -81,11 +79,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                 new Order
                 {
                     Id = OrderId.From(i),
-                    UserId = UserId.From(
-                        orderFaker
-                            .Random.Int(1, 10)
-                            .ToString(System.Globalization.CultureInfo.InvariantCulture)
-                    ),
+                    UserId = orderFaker
+                        .Random.Int(1, 10)
+                        .ToString(System.Globalization.CultureInfo.InvariantCulture),
                     Total = Math.Round(total, 2),
                     CreatedAt = orderFaker.Date.Between(
                         new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),

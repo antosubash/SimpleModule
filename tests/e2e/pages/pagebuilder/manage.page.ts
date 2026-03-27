@@ -4,7 +4,7 @@ export class PageBuilderManagePage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/admin/pages');
+    await this.page.goto('/pages/manage');
   }
 
   async showAllRows() {

@@ -20,6 +20,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
         sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
         sb.AppendLine("using SimpleModule.Core.Authorization;");
         sb.AppendLine();
@@ -153,6 +154,19 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             );
             sb.AppendLine("        });");
         }
+
+        sb.AppendLine();
+        sb.AppendLine("        // Register module instances for lifecycle management");
+        foreach (var module in sortedModules)
+        {
+            var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
+            sb.AppendLine(
+                $"        services.AddSingleton<global::SimpleModule.Core.IModule>({fieldName});"
+            );
+        }
+        sb.AppendLine(
+            "        services.AddHostedService<global::SimpleModule.Core.Hosting.ModuleLifecycleHostedService>();"
+        );
 
         sb.AppendLine();
         sb.AppendLine("        return services;");

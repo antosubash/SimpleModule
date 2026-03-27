@@ -60,22 +60,55 @@ internal static class SymbolDiscovery
 
         // Discover IEndpoint implementors per module assembly.
         // Classification is by interface type: IViewEndpoint -> view, IEndpoint -> API.
+        // Scan each assembly once, then match endpoints to the closest module by namespace.
         if (endpointInterfaceSymbol is not null)
         {
+            var endpointScannedAssemblies = new HashSet<IAssemblySymbol>(
+                SymbolEqualityComparer.Default
+            );
             foreach (var module in modules)
             {
                 if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                     continue;
 
                 var assembly = typeSymbol.ContainingAssembly;
+                if (!endpointScannedAssemblies.Add(assembly))
+                    continue;
+
+                var rawEndpoints = new List<EndpointInfo>();
+                var rawViews = new List<ViewInfo>();
                 FindEndpointTypes(
                     assembly.GlobalNamespace,
                     endpointInterfaceSymbol,
                     viewEndpointInterfaceSymbol,
-                    module.ModuleName,
-                    module.Endpoints,
-                    module.Views
+                    rawEndpoints,
+                    rawViews
                 );
+
+                // Match each endpoint/view to the module whose namespace is closest
+                foreach (var ep in rawEndpoints)
+                {
+                    var epFqn = TypeMappingHelpers.StripGlobalPrefix(ep.FullyQualifiedName);
+                    var ownerName = FindClosestModuleName(epFqn, modules);
+                    var owner = modules.Find(m => m.ModuleName == ownerName);
+                    if (owner is not null)
+                        owner.Endpoints.Add(ep);
+                }
+
+                foreach (var v in rawViews)
+                {
+                    var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
+                    var ownerName = FindClosestModuleName(vFqn, modules);
+                    var owner = modules.Find(m => m.ModuleName == ownerName);
+                    if (owner is not null)
+                    {
+                        // Set page name using owner module name if not already set via [ViewPage]
+                        if (v.Page is null)
+                            v.Page = ownerName + "/" + v.InferredClassName;
+
+                        owner.Views.Add(v);
+                    }
+                }
             }
         }
 
@@ -276,7 +309,7 @@ internal static class SymbolDiscovery
             );
         }
 
-        // Step 3c: Find IModulePermissions implementors in module assemblies
+        // Step 3c: Find IModulePermissions implementors in module and contracts assemblies
         var permissionClasses = new List<PermissionClassInfo>();
         var modulePermissionsSymbol = compilation.GetTypeByMetadataName(
             "SimpleModule.Core.Authorization.IModulePermissions"
@@ -295,6 +328,20 @@ internal static class SymbolDiscovery
                     module.ModuleName,
                     permissionClasses
                 );
+            }
+
+            // Also scan contracts assemblies for permission classes
+            foreach (var kvp in contractsAssemblySymbols)
+            {
+                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
+                {
+                    FindPermissionClasses(
+                        kvp.Value.GlobalNamespace,
+                        modulePermissionsSymbol,
+                        moduleName,
+                        permissionClasses
+                    );
+                }
             }
         }
 
@@ -424,7 +471,7 @@ internal static class SymbolDiscovery
                             e.AllowAnonymous
                         ))
                         .ToImmutableArray(),
-                    m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page))
+                    m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page ?? ""))
                         .ToImmutableArray()
                 ))
                 .ToImmutableArray(),
@@ -584,7 +631,6 @@ internal static class SymbolDiscovery
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol endpointInterfaceSymbol,
         INamedTypeSymbol? viewEndpointInterfaceSymbol,
-        string moduleName,
         List<EndpointInfo> endpoints,
         List<ViewInfo> views
     )
@@ -597,7 +643,6 @@ internal static class SymbolDiscovery
                     childNamespace,
                     endpointInterfaceSymbol,
                     viewEndpointInterfaceSymbol,
-                    moduleName,
                     endpoints,
                     views
                 );
@@ -613,6 +658,26 @@ internal static class SymbolDiscovery
                         && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol)
                     )
                     {
+                        // Prefer [ViewPage("Component")] attribute over class name inference
+                        string? page = null;
+                        foreach (var attr in typeSymbol.GetAttributes())
+                        {
+                            var attrName = attr.AttributeClass?.ToDisplayString(
+                                SymbolDisplayFormat.FullyQualifiedFormat
+                            );
+                            if (
+                                attrName
+                                == "global::SimpleModule.Core.ViewPageAttribute"
+                                && attr.ConstructorArguments.Length > 0
+                                && attr.ConstructorArguments[0].Value is string component
+                            )
+                            {
+                                page = component;
+                                break;
+                            }
+                        }
+
+                        // Infer class name for deferred page name computation
                         var className = typeSymbol.Name;
                         if (className.EndsWith("Endpoint", StringComparison.Ordinal))
                             className = className.Substring(
@@ -620,13 +685,17 @@ internal static class SymbolDiscovery
                                 className.Length - "Endpoint".Length
                             );
                         else if (className.EndsWith("View", StringComparison.Ordinal))
-                            className = className.Substring(0, className.Length - "View".Length);
+                            className = className.Substring(
+                                0,
+                                className.Length - "View".Length
+                            );
 
                         views.Add(
                             new ViewInfo
                             {
                                 FullyQualifiedName = fqn,
-                                Page = moduleName + "/" + className,
+                                Page = page,
+                                InferredClassName = className,
                             }
                         );
                     }

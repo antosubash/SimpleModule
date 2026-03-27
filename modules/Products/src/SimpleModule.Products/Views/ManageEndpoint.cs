@@ -6,6 +6,7 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Views;
 
+[ViewPage("Products/Manage")]
 public class ManageEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

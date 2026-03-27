@@ -9,6 +9,7 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.Dashboard.Views;
 
+[ViewPage("Dashboard/Home")]
 public class HomeEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

@@ -16,4 +16,23 @@ public interface IModule
     virtual void ConfigureMenu(IMenuBuilder menus) { }
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
+
+    /// <summary>
+    /// Called once during application startup after all services are registered.
+    /// Use for one-time initialization such as loading certificates, warming caches, or verifying external dependencies.
+    /// </summary>
+    virtual Task OnStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>
+    /// Called during graceful application shutdown.
+    /// Use for cleanup such as flushing buffers, closing connections, or draining background work.
+    /// </summary>
+    virtual Task OnStopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>
+    /// Returns the current health status of this module.
+    /// Called by the module health check endpoint to report per-module health.
+    /// </summary>
+    virtual Task<ModuleHealthStatus> CheckHealthAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(ModuleHealthStatus.Healthy);
 }

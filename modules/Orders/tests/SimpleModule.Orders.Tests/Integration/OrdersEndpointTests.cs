@@ -3,9 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
-using SimpleModule.Products.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
-using SimpleModule.Users.Contracts;
 
 namespace Orders.Tests.Integration;
 
@@ -45,8 +43,8 @@ public class OrdersEndpointTests : IClassFixture<SimpleModuleWebApplicationFacto
 
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("nonexistent-user-id"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 2 }],
+            UserId = "nonexistent-user-id",
+            Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
         };
 
         var response = await client.PostAsJsonAsync("/api/orders", request);
@@ -62,8 +60,8 @@ public class OrdersEndpointTests : IClassFixture<SimpleModuleWebApplicationFacto
 
         var request = new UpdateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
         var response = await client.PutAsJsonAsync("/api/orders/99999", request);

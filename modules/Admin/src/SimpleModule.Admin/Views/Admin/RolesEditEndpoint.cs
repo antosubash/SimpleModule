@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
@@ -11,34 +9,24 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Views.Admin;
 
+[ViewPage("Admin/Admin/RolesEdit")]
 public class RolesEditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/admin/roles/{id}/edit",
+                "/roles/{id}/edit",
                 async (
                     string id,
-                    RoleManager<ApplicationRole> roleManager,
-                    UserManager<ApplicationUser> userManager,
+                    IRoleAdminContracts roleAdmin,
                     IPermissionContracts permissionContracts,
                     PermissionRegistry permissionRegistry,
                     string? tab
                 ) =>
                 {
-                    var role = await roleManager.FindByIdAsync(id);
+                    var role = await roleAdmin.GetRoleByIdAsync(id);
                     if (role is null)
                         return TypedResults.NotFound();
-
-                    var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
-                    var users = usersInRole
-                        .Select(u => new
-                        {
-                            id = u.Id,
-                            displayName = u.DisplayName,
-                            email = u.Email,
-                        })
-                        .ToList();
 
                     var rolePermissions = (
                         await permissionContracts.GetPermissionsForRoleAsync(RoleId.From(id))
@@ -53,14 +41,8 @@ public class RolesEditEndpoint : IViewEndpoint
                         "Admin/Admin/RolesEdit",
                         new
                         {
-                            role = new
-                            {
-                                id = role.Id,
-                                name = role.Name,
-                                description = role.Description,
-                                createdAt = role.CreatedAt.ToString("O"),
-                            },
-                            users,
+                            role,
+                            users = Array.Empty<object>(),
                             rolePermissions,
                             permissionsByModule,
                             tab = tab ?? "details",

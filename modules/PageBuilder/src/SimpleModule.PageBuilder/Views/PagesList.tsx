@@ -33,7 +33,7 @@ export default function PagesList({ pages }: Props) {
       ) : (
         <div className="space-y-3">
           {pages.map((page) => (
-            <Link key={page.id} href={`/p/${page.slug}`}>
+            <Link key={page.id} href={`/pages/view/${page.slug}`}>
               <Card className="hover:bg-surface-elevated transition-colors cursor-pointer">
                 <CardContent className="p-4">
                   <span className="font-medium">{page.title}</span>

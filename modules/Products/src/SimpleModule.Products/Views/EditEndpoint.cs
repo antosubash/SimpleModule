@@ -8,6 +8,7 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Views;
 
+[ViewPage("Products/Edit")]
 public class EditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

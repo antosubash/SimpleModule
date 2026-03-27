@@ -8,12 +8,13 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder.Views;
 
+[ViewPage("PageBuilder/Viewer")]
 public class ViewerEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/p/{slug}",
+                "/view/{slug}",
                 async (string slug, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.GetPageBySlugAsync(slug);

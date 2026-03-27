@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Services;
@@ -29,35 +28,28 @@ public class AdminUsersEndpoint : IEndpoint
                 [FromForm] string password,
                 [FromForm] bool emailConfirmed,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-
-                var user = new ApplicationUser
-                {
-                    UserName = email,
-                    Email = email,
-                    DisplayName = displayName,
-                    EmailConfirmed = emailConfirmed,
-                };
-
-                var result = await userManager.CreateAsync(user, password);
-                if (!result.Succeeded)
-                {
-                    return TypedResults.Redirect("/admin/users?error=create-failed");
-                }
 
                 var form = await context.Request.ReadFormAsync();
                 var filteredRoles = form["roles"]
                     .Where(r => !string.IsNullOrEmpty(r))
                     .Select(r => r!)
                     .ToList();
-                if (filteredRoles.Count > 0)
+
+                var request = new CreateAdminUserRequest
                 {
-                    await userManager.AddToRolesAsync(user, filteredRoles);
-                }
+                    Email = email,
+                    DisplayName = displayName,
+                    Password = password,
+                    EmailConfirmed = emailConfirmed,
+                    Roles = filteredRoles,
+                };
+
+                var user = await userAdmin.CreateUserWithPasswordAsync(request);
 
                 await audit.LogAsync(user.Id, adminId, "UserCreated", $"Created user {email}");
 
@@ -74,23 +66,20 @@ public class AdminUsersEndpoint : IEndpoint
                 [FromForm] string email,
                 [FromForm] string? emailConfirmed,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
+
+                var request = new UpdateAdminUserRequest
                 {
-                    return TypedResults.NotFound();
-                }
+                    DisplayName = displayName,
+                    Email = email,
+                    EmailConfirmed = emailConfirmed is not null,
+                };
 
-                user.DisplayName = displayName;
-                user.Email = email;
-                user.UserName = email;
-                user.EmailConfirmed = emailConfirmed is not null;
-
-                await userManager.UpdateAsync(user);
+                await userAdmin.UpdateUserDetailsAsync(UserId.From(id), request);
                 await audit.LogAsync(
                     id,
                     adminId,
@@ -108,44 +97,25 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
                 var form = await context.Request.ReadFormAsync();
                 var newRoles = form["roles"]
                     .Where(r => !string.IsNullOrEmpty(r))
                     .Select(r => r!)
-                    .ToHashSet();
-                var currentRoles = (await userManager.GetRolesAsync(user)).ToHashSet();
+                    .ToList();
 
-                var toRemove = currentRoles.Except(newRoles).ToList();
-                var toAdd = newRoles.Except(currentRoles).ToList();
-
-                if (toRemove.Count > 0)
-                {
-                    await userManager.RemoveFromRolesAsync(user, toRemove);
-                    foreach (var role in toRemove)
-                    {
-                        await audit.LogAsync(id, adminId, "RoleRemoved", $"Removed role {role}");
-                    }
-                }
-
-                if (toAdd.Count > 0)
-                {
-                    await userManager.AddToRolesAsync(user, toAdd);
-                    foreach (var role in toAdd)
-                    {
-                        await audit.LogAsync(id, adminId, "RoleAdded", $"Added role {role}");
-                    }
-                }
+                await userAdmin.SetUserRolesAsync(UserId.From(id), newRoles);
+                await audit.LogAsync(
+                    id,
+                    adminId,
+                    "RolesUpdated",
+                    $"Set roles to [{string.Join(", ", newRoles)}]"
+                );
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=roles");
             }
@@ -207,19 +177,13 @@ public class AdminUsersEndpoint : IEndpoint
                 string id,
                 [FromForm] string newPassword,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                var token = await userManager.GeneratePasswordResetTokenAsync(user);
-                await userManager.ResetPasswordAsync(user, token, newPassword);
+                await userAdmin.ResetPasswordAsync(UserId.From(id), newPassword);
                 await audit.LogAsync(id, adminId, "PasswordReset");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
@@ -232,19 +196,13 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                await userManager.SetLockoutEnabledAsync(user, true);
-                await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+                await userAdmin.LockAccountAsync(UserId.From(id));
                 await audit.LogAsync(id, adminId, "AccountLocked");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
@@ -257,19 +215,13 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                await userManager.SetLockoutEndDateAsync(user, null);
-                await userManager.ResetAccessFailedCountAsync(user);
+                await userAdmin.UnlockAccountAsync(UserId.From(id));
                 await audit.LogAsync(id, adminId, "AccountUnlocked");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
@@ -282,19 +234,13 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                user.EmailConfirmed = false;
-                await userManager.UpdateAsync(user);
+                await userAdmin.ForceEmailReverificationAsync(UserId.From(id));
                 await audit.LogAsync(id, adminId, "EmailReverified");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
@@ -307,19 +253,13 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                await userManager.SetTwoFactorEnabledAsync(user, false);
-                await userManager.ResetAuthenticatorKeyAsync(user);
+                await userAdmin.DisableTwoFactorAsync(UserId.From(id));
                 await audit.LogAsync(id, adminId, "TwoFactorDisabled");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
@@ -332,21 +272,13 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                user.DeactivatedAt = DateTimeOffset.UtcNow;
-                await userManager.UpdateAsync(user);
-                await userManager.SetLockoutEnabledAsync(user, true);
-                await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+                await userAdmin.DeactivateAsync(UserId.From(id));
                 await audit.LogAsync(id, adminId, "UserDeactivated");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=details");
@@ -359,21 +291,13 @@ public class AdminUsersEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                UserManager<ApplicationUser> userManager,
+                IUserAdminContracts userAdmin,
                 AuditService audit
             ) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                var user = await userManager.FindByIdAsync(id);
-                if (user is null)
-                {
-                    return TypedResults.NotFound();
-                }
 
-                user.DeactivatedAt = null;
-                await userManager.UpdateAsync(user);
-                await userManager.SetLockoutEndDateAsync(user, null);
-                await userManager.ResetAccessFailedCountAsync(user);
+                await userAdmin.ReactivateAsync(UserId.From(id));
                 await audit.LogAsync(id, adminId, "UserReactivated");
 
                 return TypedResults.Redirect($"/admin/users/{id}/edit?tab=details");

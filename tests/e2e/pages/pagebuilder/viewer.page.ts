@@ -4,7 +4,7 @@ export class PageBuilderViewerPage {
   constructor(private page: Page) {}
 
   async goto(slug: string) {
-    await this.page.goto(`/p/${slug}`);
+    await this.page.goto(`/pages/view/${slug}`);
   }
 
   get content() {

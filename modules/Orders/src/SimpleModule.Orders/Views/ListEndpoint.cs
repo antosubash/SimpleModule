@@ -6,6 +6,7 @@ using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Views;
 
+[ViewPage("Orders/List")]
 public class ListEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

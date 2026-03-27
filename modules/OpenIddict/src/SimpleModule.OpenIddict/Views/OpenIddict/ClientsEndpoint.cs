@@ -6,12 +6,13 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.OpenIddict.Views.OpenIddict;
 
+[ViewPage("OpenIddict/OpenIddict/Clients")]
 public class ClientsEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/openiddict/clients",
+                "/clients",
                 async (IOpenIddictApplicationManager manager) =>
                 {
                     var clients = new List<object>();

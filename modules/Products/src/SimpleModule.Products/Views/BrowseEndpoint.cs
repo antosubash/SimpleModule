@@ -7,6 +7,7 @@ using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Views;
 
+[ViewPage("Products/Browse")]
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

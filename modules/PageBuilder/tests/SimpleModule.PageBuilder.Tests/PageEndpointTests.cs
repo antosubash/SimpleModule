@@ -96,7 +96,7 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
         await client.PostAsync($"/api/pagebuilder/{created!.Id}/publish", null);
 
         var anonClient = _factory.CreateClient();
-        var response = await anonClient.GetAsync("/p/viewer-test");
+        var response = await anonClient.GetAsync("/pages/view/viewer-test");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -111,7 +111,7 @@ public class PageEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory
         );
 
         var anonClient = _factory.CreateClient();
-        var response = await anonClient.GetAsync("/p/unpublished-page");
+        var response = await anonClient.GetAsync("/pages/view/unpublished-page");
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 

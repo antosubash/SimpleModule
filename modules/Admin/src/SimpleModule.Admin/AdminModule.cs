@@ -8,7 +8,7 @@ using SimpleModule.Database;
 
 namespace SimpleModule.Admin;
 
-[Module(AdminConstants.ModuleName)]
+[Module(AdminConstants.ModuleName, ViewPrefix = "/admin")]
 public class AdminModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

@@ -9,12 +9,13 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Views.Account;
 
+[ViewPage("Users/Account/GenerateRecoveryCodes")]
 public class GenerateRecoveryCodesEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Identity/Account/Manage/GenerateRecoveryCodes",
+                "/GenerateRecoveryCodes",
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

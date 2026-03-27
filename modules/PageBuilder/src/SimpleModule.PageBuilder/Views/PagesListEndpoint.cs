@@ -7,12 +7,13 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder.Views;
 
+[ViewPage("PageBuilder/PagesList")]
 public class PagesListEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/pages",
+                "/",
                 async (IPageBuilderContracts pageBuilder) =>
                     Inertia.Render(
                         "PageBuilder/PagesList",

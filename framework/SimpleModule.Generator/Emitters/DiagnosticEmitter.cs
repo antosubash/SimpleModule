@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace SimpleModule.Generator;
@@ -81,7 +83,7 @@ internal sealed class DiagnosticEmitter : IEmitter
     internal static readonly DiagnosticDescriptor ContractInterfaceTooLargeWarning = new(
         id: "SM0012",
         title: "Contract interface has too many methods",
-        messageFormat: "Contract interface '{0}' has {1} methods, which exceeds the recommended maximum of 15. Large contract interfaces force consuming modules to depend on methods they don't use. Consider splitting into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Thresholds are configurable in .editorconfig: simplemodule.max_contract_methods_warn = 15, simplemodule.max_contract_methods_error = 20. Learn more: https://docs.simplemodule.dev/contract-design.",
+        messageFormat: "Contract interface '{0}' has {1} methods, which exceeds the recommended maximum of 15. Large contract interfaces force consuming modules to depend on methods they don't use. Consider splitting into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Warning threshold: 15 methods, error threshold: 20 methods. Learn more: https://docs.simplemodule.dev/contract-design.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true
@@ -90,7 +92,7 @@ internal sealed class DiagnosticEmitter : IEmitter
     internal static readonly DiagnosticDescriptor ContractInterfaceTooLargeError = new(
         id: "SM0013",
         title: "Contract interface must be split",
-        messageFormat: "Contract interface '{0}' has {1} methods and must be split before the project will compile. Interfaces with more than 20 methods are not allowed. Split into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Thresholds are configurable in .editorconfig: simplemodule.max_contract_methods_warn = 15, simplemodule.max_contract_methods_error = 20. Learn more: https://docs.simplemodule.dev/contract-design.",
+        messageFormat: "Contract interface '{0}' has {1} methods and must be split before the project will compile. Interfaces with more than 20 methods are not allowed. Split into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Warning threshold: 15 methods, error threshold: 20 methods. Learn more: https://docs.simplemodule.dev/contract-design.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true
@@ -249,6 +251,15 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor EmptyModuleWarning = new(
+        id: "SM0043",
+        title: "Module does not override any IModule methods",
+        messageFormat: "Module '{0}' implements IModule but does not override any configuration methods (ConfigureServices, ConfigureMenu, etc.). This module will be discovered but has no effect. If this is intentional, add at least ConfigureServices with a comment explaining why.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -288,6 +299,33 @@ internal sealed class DiagnosticEmitter : IEmitter
             else
             {
                 seenModuleNames[module.ModuleName] = module.FullyQualifiedName;
+            }
+        }
+
+        // SM0043: Empty module (no IModule methods overridden)
+        var moduleNamesWithDbContext = new HashSet<string>(
+            data.DbContexts.Select(db => db.ModuleName),
+            StringComparer.Ordinal
+        );
+        foreach (var module in data.Modules)
+        {
+            if (!module.HasConfigureServices
+                && !module.HasConfigureEndpoints
+                && !module.HasConfigureMenu
+                && !module.HasConfigurePermissions
+                && !module.HasConfigureMiddleware
+                && !module.HasConfigureSettings
+                && module.Endpoints.Length == 0
+                && module.Views.Length == 0
+                && !moduleNamesWithDbContext.Contains(module.ModuleName))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        EmptyModuleWarning,
+                        Location.None,
+                        module.ModuleName
+                    )
+                );
             }
         }
 
@@ -776,6 +814,7 @@ internal sealed class DiagnosticEmitter : IEmitter
         {
             if (module.Views.Length > 0 && string.IsNullOrEmpty(module.ViewPrefix))
             {
+#pragma warning disable CA1308 // Route prefixes are conventionally lowercase
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         ViewEndpointWithoutViewPrefix,
@@ -785,6 +824,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                         module.ModuleName.ToLowerInvariant()
                     )
                 );
+#pragma warning restore CA1308
             }
         }
 

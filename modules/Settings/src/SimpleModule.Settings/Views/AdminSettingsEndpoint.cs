@@ -8,6 +8,7 @@ using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Settings.Views;
 
+[ViewPage("Settings/AdminSettings")]
 public class AdminSettingsEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

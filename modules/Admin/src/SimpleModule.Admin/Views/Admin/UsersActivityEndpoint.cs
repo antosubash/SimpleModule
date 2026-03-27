@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
@@ -19,7 +18,7 @@ public class UsersActivityEndpoint : IEndpoint
                 async (
                     string id,
                     AdminDbContext adminDb,
-                    UserManager<ApplicationUser> userManager,
+                    IUserAdminContracts userAdmin,
                     int page = 1
                 ) =>
                 {
@@ -39,9 +38,17 @@ public class UsersActivityEndpoint : IEndpoint
                         .ToListAsync();
 
                     var performerIds = entries.Select(e => e.PerformedByUserId).Distinct().ToList();
-                    var performers = await userManager
-                        .Users.Where(u => performerIds.Contains(u.Id))
-                        .ToDictionaryAsync(u => u.Id, u => u.DisplayName);
+                    var performers = new Dictionary<string, string>();
+                    foreach (var performerId in performerIds)
+                    {
+                        var performer = await userAdmin.GetAdminUserByIdAsync(
+                            UserId.From(performerId)
+                        );
+                        if (performer is not null)
+                        {
+                            performers[performerId] = performer.DisplayName;
+                        }
+                    }
 
                     var total = await adminDb.AuditLogEntries.CountAsync(e => e.UserId == id);
 

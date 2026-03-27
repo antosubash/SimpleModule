@@ -8,6 +8,7 @@ using SimpleModule.Storage;
 
 namespace SimpleModule.FileStorage.Views;
 
+[ViewPage("FileStorage/Browse")]
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

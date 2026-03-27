@@ -7,12 +7,13 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.OpenIddict.Views.OpenIddict;
 
+[ViewPage("OpenIddict/OpenIddict/ClientsEdit")]
 public class ClientsEditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/openiddict/clients/{id}/edit",
+                "/clients/{id}/edit",
                 async (string id, IOpenIddictApplicationManager manager, string? tab) =>
                 {
                     var application = await manager.FindByIdAsync(id);

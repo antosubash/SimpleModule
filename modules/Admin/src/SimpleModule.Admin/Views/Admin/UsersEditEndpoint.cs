@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
@@ -11,6 +10,7 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Views.Admin;
 
+[ViewPage("Admin/Admin/UsersEdit")]
 public class UsersEditEndpoint : IViewEndpoint
 {
     private const int ActivityPageSize = 20;
@@ -18,23 +18,22 @@ public class UsersEditEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/admin/users/{id}/edit",
+                "/users/{id}/edit",
                 async (
                     string id,
-                    UserManager<ApplicationUser> userManager,
-                    RoleManager<ApplicationRole> roleManager,
+                    IUserAdminContracts userAdmin,
+                    IRoleAdminContracts roleAdmin,
                     IPermissionContracts permissionContracts,
                     AdminDbContext adminDb,
                     PermissionRegistry permissionRegistry,
                     string? tab
                 ) =>
                 {
-                    var user = await userManager.FindByIdAsync(id);
+                    var user = await userAdmin.GetAdminUserByIdAsync(UserId.From(id));
                     if (user is null)
                         return TypedResults.NotFound();
 
-                    var userRoles = await userManager.GetRolesAsync(user);
-                    var allRoles = await roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
+                    var allRoles = await roleAdmin.GetAllRolesAsync();
 
                     // User direct permissions
                     var userPermissions = (
@@ -67,9 +66,17 @@ public class UsersEditEndpoint : IViewEndpoint
                         .Select(e => e.PerformedByUserId)
                         .Distinct()
                         .ToList();
-                    var performers = await userManager
-                        .Users.Where(u => performerIds.Contains(u.Id))
-                        .ToDictionaryAsync(u => u.Id, u => u.DisplayName);
+                    var performers = new Dictionary<string, string>();
+                    foreach (var performerId in performerIds)
+                    {
+                        var performer = await userAdmin.GetAdminUserByIdAsync(
+                            UserId.From(performerId)
+                        );
+                        if (performer is not null)
+                        {
+                            performers[performerId] = performer.DisplayName;
+                        }
+                    }
 
                     var activityWithNames = activityLog.Select(e => new
                     {
@@ -88,30 +95,10 @@ public class UsersEditEndpoint : IViewEndpoint
                         "Admin/Admin/UsersEdit",
                         new
                         {
-                            user = new
-                            {
-                                id = user.Id,
-                                displayName = user.DisplayName,
-                                email = user.Email,
-                                emailConfirmed = user.EmailConfirmed,
-                                twoFactorEnabled = user.TwoFactorEnabled,
-                                isLockedOut = user.LockoutEnd.HasValue
-                                    && user.LockoutEnd > DateTimeOffset.UtcNow,
-                                isDeactivated = user.DeactivatedAt.HasValue,
-                                accessFailedCount = user.AccessFailedCount,
-                                createdAt = user.CreatedAt.ToString("O"),
-                                lastLoginAt = user.LastLoginAt?.ToString("O"),
-                            },
-                            userRoles = userRoles.ToList(),
+                            user,
+                            userRoles = user.Roles,
                             userPermissions,
-                            allRoles = allRoles
-                                .Select(r => new
-                                {
-                                    id = r.Id,
-                                    name = r.Name,
-                                    description = r.Description,
-                                })
-                                .ToList(),
+                            allRoles,
                             permissionsByModule,
                             activityLog = activityWithNames,
                             activityTotal,

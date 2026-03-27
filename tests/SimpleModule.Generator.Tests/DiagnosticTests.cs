@@ -730,7 +730,10 @@ public class DiagnosticTests
             namespace TestApp.Notifications
             {
                 [Module("Notifications")]
-                public class NotificationsModule : IModule { }
+                public class NotificationsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration config) { }
+                }
             }
             """;
 

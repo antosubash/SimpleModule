@@ -36,15 +36,16 @@ public sealed partial class OrderService(
 
     public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
     {
-        var user = await users.GetUserByIdAsync(request.UserId);
+        var userId = UserId.From(request.UserId);
+        var user = await users.GetUserByIdAsync(userId);
         if (user is null)
         {
             throw new NotFoundException("User", request.UserId);
         }
 
-        var productIds = request.Items.Select(i => i.ProductId).Distinct();
+        var productIds = request.Items.Select(i => ProductId.From(i.ProductId)).Distinct();
         var productList = await products.GetProductsByIdsAsync(productIds);
-        var productMap = productList.ToDictionary(p => p.Id);
+        var productMap = productList.ToDictionary(p => p.Id.Value);
 
         decimal total = 0;
         foreach (var item in request.Items)
@@ -83,15 +84,16 @@ public sealed partial class OrderService(
             throw new NotFoundException("Order", id);
         }
 
-        var user = await users.GetUserByIdAsync(request.UserId);
+        var userId = UserId.From(request.UserId);
+        var user = await users.GetUserByIdAsync(userId);
         if (user is null)
         {
             throw new NotFoundException("User", request.UserId);
         }
 
-        var productIds = request.Items.Select(i => i.ProductId).Distinct();
+        var productIds = request.Items.Select(i => ProductId.From(i.ProductId)).Distinct();
         var productList = await products.GetProductsByIdsAsync(productIds);
-        var productMap = productList.ToDictionary(p => p.Id);
+        var productMap = productList.ToDictionary(p => p.Id.Value);
 
         decimal total = 0;
         foreach (var item in request.Items)
@@ -139,7 +141,7 @@ public sealed partial class OrderService(
     private static partial void LogOrderCreated(
         ILogger logger,
         OrderId orderId,
-        UserId userId,
+        string userId,
         decimal total
     );
 
@@ -150,7 +152,7 @@ public sealed partial class OrderService(
     private static partial void LogOrderUpdated(
         ILogger logger,
         OrderId orderId,
-        UserId userId,
+        string userId,
         decimal total
     );
 

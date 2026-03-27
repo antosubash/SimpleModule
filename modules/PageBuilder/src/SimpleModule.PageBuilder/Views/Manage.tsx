@@ -80,12 +80,12 @@ export default function Manage({ pages }: Props) {
       <DataGridPage
         title="Pages"
         description="Manage content pages"
-        actions={<Button onClick={() => router.get('/admin/pages/new')}>New Page</Button>}
+        actions={<Button onClick={() => router.get('/pages/new')}>New Page</Button>}
         data={pages}
         emptyTitle="No pages yet"
         emptyDescription="Get started by creating your first content page."
         emptyAction={
-          <Button size="sm" onClick={() => router.get('/admin/pages/new')}>
+          <Button size="sm" onClick={() => router.get('/pages/new')}>
             New Page
           </Button>
         }
@@ -106,7 +106,7 @@ export default function Manage({ pages }: Props) {
               {pageData.map((page) => (
                 <TableRow key={page.id}>
                   <TableCell className="font-medium">{page.title}</TableCell>
-                  <TableCell className="text-text-secondary">/p/{page.slug}</TableCell>
+                  <TableCell className="text-text-secondary">/pages/view/{page.slug}</TableCell>
                   <TableCell>
                     <div className="flex gap-1.5">
                       <Badge
@@ -174,20 +174,20 @@ export default function Manage({ pages }: Props) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.get(`/admin/pages/${page.id}/edit`)}
+                          onClick={() => router.get(`/pages/${page.id}/edit`)}
                         >
                           Edit
                         </DropdownMenuItem>
                         {page.isPublished && (
                           <DropdownMenuItem
-                            onClick={() => window.open(`/p/${page.slug}`, '_blank')}
+                            onClick={() => window.open(`/pages/view/${page.slug}`, '_blank')}
                           >
                             View Page
                           </DropdownMenuItem>
                         )}
                         {page.hasDraft && (
                           <DropdownMenuItem
-                            onClick={() => window.open(`/p/${page.slug}/draft`, '_blank')}
+                            onClick={() => window.open(`/pages/view/${page.slug}/draft`, '_blank')}
                           >
                             Preview Draft
                           </DropdownMenuItem>

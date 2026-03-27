@@ -5,10 +5,10 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
-using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders.Views;
 
+[ViewPage("Orders/Create")]
 public class CreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
@@ -28,11 +28,11 @@ public class CreateEndpoint : IViewEndpoint
             {
                 var request = new CreateOrderRequest
                 {
-                    UserId = UserId.From(body.UserId),
+                    UserId = body.UserId,
                     Items = body
                         .Items.Select(i => new OrderItem
                         {
-                            ProductId = ProductId.From(i.ProductId),
+                            ProductId = i.ProductId,
                             Quantity = i.Quantity,
                         })
                         .ToList(),

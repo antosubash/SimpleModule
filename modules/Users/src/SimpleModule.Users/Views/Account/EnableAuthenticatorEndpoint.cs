@@ -12,6 +12,7 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Views.Account;
 
+[ViewPage("Users/Account/EnableAuthenticator")]
 public class EnableAuthenticatorEndpoint : IViewEndpoint
 {
     private static readonly CompositeFormat AuthenticatorUriFormat = CompositeFormat.Parse(
@@ -21,7 +22,7 @@ public class EnableAuthenticatorEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Identity/Account/Manage/EnableAuthenticator",
+                "/EnableAuthenticator",
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

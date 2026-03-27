@@ -188,7 +188,7 @@ export default function Editor({ page, templates }: Props) {
         });
       }
 
-      router.visit('/admin/pages');
+      router.visit('/pages/manage');
     },
     [page],
   );
@@ -198,7 +198,7 @@ export default function Editor({ page, templates }: Props) {
       <Dialog
         open
         onOpenChange={(open) => {
-          if (!open) router.visit('/admin/pages');
+          if (!open) router.visit('/pages/manage');
         }}
       >
         <DialogContent className="sm:max-w-lg">
@@ -241,7 +241,7 @@ export default function Editor({ page, templates }: Props) {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => router.visit('/admin/pages')}>
+            <Button variant="outline" onClick={() => router.visit('/pages/manage')}>
               Cancel
             </Button>
           </DialogFooter>
@@ -263,7 +263,7 @@ export default function Editor({ page, templates }: Props) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.visit('/admin/pages')}
+                onClick={() => router.visit('/pages/manage')}
                 className="gap-1"
               >
                 <svg

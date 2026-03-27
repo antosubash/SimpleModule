@@ -21,6 +21,7 @@
     </Folder>
     <Folder Name="/modules/" />
     <Folder Name="/modules/Dashboard/">
+        <Project Path="modules/Dashboard/src/SimpleModule.Dashboard.Contracts/SimpleModule.Dashboard.Contracts.csproj" />
         <Project Path="modules/Dashboard/src/SimpleModule.Dashboard/SimpleModule.Dashboard.csproj" />
     </Folder>
     <Folder Name="/modules/Orders/">

@@ -1,8 +1,6 @@
 using FluentAssertions;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.Endpoints.Orders;
-using SimpleModule.Products.Contracts;
-using SimpleModule.Users.Contracts;
 
 namespace Orders.Tests.Unit;
 
@@ -13,8 +11,8 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 2 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
         };
 
         var result = CreateRequestValidator.Validate(request);
@@ -28,7 +26,7 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
         var result = CreateRequestValidator.Validate(request);
@@ -40,7 +38,7 @@ public sealed class CreateRequestValidatorTests
     [Fact]
     public void Validate_WithEmptyItems_ReturnsError()
     {
-        var request = new CreateOrderRequest { UserId = UserId.From("1"), Items = [] };
+        var request = new CreateOrderRequest { UserId = "1", Items = [] };
 
         var result = CreateRequestValidator.Validate(request);
 
@@ -53,8 +51,8 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 0 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 0 }],
         };
 
         var result = CreateRequestValidator.Validate(request);

@@ -25,3 +25,8 @@ SM0034 | SimpleModule.Generator | Warning | Permission value prefix does not mat
 SM0035 | SimpleModule.Generator | Warning | DTO type in contracts has no public properties
 SM0038 | SimpleModule.Generator | Warning | Infrastructure type in Contracts assembly
 SM0039 | SimpleModule.Generator | Warning | SaveChanges interceptor has transitive DbContext dependency
+SM0015 | SimpleModule.Generator | Error | Duplicate view page name across modules
+SM0040 | SimpleModule.Generator | Error | Duplicate module name
+SM0041 | SimpleModule.Generator | Warning | View page name does not match module name prefix
+SM0042 | SimpleModule.Generator | Error | Module has view endpoints but no ViewPrefix
+SM0043 | SimpleModule.Generator | Warning | Module does not override any IModule methods

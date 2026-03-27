@@ -209,6 +209,21 @@ sm doctor [--fix]           # validate project structure, auto-fix issues
 - Each module registers `ModuleDbContextInfo` for schema isolation.
 - Uses `EnsureCreated()` — for production migrations, use EF Core migrations per module.
 
+### Unified HostDbContext (Known Limitation)
+
+All module entities are currently merged into a single `HostDbContext` by the source generator. This means all modules share one database connection and one migration history. Trade-offs:
+
+- **Schema changes in one module block deployments of others** — a migration in Products prevents independent Orders deployment.
+- **Only one module can own IdentityDbContext** (SM0003 enforces this).
+- **Schema isolation is provider-dependent** — SQLite uses table prefixes, PostgreSQL uses schemas. Raw SQL or cross-module queries leak this abstraction.
+
+**Future path:** The `IModuleDbContext` marker interface (in `SimpleModule.Core.Hosting`) exists as a stepping stone. Modules implementing it declare their schema name. A future generator update can use this to support:
+1. Per-module connection strings (opt-in)
+2. Independent migration histories per module
+3. A path toward separate databases for modules that need microservice-level isolation
+
+For now, the unified context remains the default. Design modules with minimal cross-entity queries to ease future decoupling.
+
 ### EF Core Interceptor DI Patterns
 
 **Problem:** SaveChangesInterceptors registered in DI can cause circular dependencies when they depend on services that themselves depend on DbContext. For example: `SaveChangesInterceptor → ISettings → SettingsService → SettingsDbContext` creates a deadlock during construction.
