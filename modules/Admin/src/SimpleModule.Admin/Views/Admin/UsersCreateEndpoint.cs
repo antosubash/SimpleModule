@@ -1,30 +1,21 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Views.Admin;
 
+[ViewPage("Admin/Admin/UsersCreate")]
 public class UsersCreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/admin/users/create",
-                async (RoleManager<ApplicationRole> roleManager) =>
+                "/users/create",
+                async (IRoleAdminContracts roleAdmin) =>
                 {
-                    var allRoles = await roleManager
-                        .Roles.OrderBy(r => r.Name)
-                        .Select(r => new
-                        {
-                            id = r.Id,
-                            name = r.Name,
-                            description = r.Description,
-                        })
-                        .ToListAsync();
+                    var allRoles = await roleAdmin.GetAllRolesAsync();
 
                     return Inertia.Render("Admin/Admin/UsersCreate", new { allRoles });
                 }

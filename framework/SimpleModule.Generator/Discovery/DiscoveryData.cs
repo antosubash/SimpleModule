@@ -349,7 +349,8 @@ internal sealed class EndpointInfo
 internal sealed class ViewInfo
 {
     public string FullyQualifiedName { get; set; } = "";
-    public string Page { get; set; } = "";
+    public string? Page { get; set; }
+    public string InferredClassName { get; set; } = "";
 }
 
 internal sealed class DtoTypeInfo

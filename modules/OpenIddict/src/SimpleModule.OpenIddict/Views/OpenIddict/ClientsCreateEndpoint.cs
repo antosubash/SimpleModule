@@ -5,12 +5,13 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.OpenIddict.Views.OpenIddict;
 
+[ViewPage("OpenIddict/OpenIddict/ClientsCreate")]
 public class ClientsCreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/openiddict/clients/create",
+                "/clients/create",
                 () => Inertia.Render("OpenIddict/OpenIddict/ClientsCreate", new { })
             )
             .RequireAuthorization(policy => policy.RequireRole("Admin"));

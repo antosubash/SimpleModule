@@ -5,16 +5,17 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Views.Account;
 
+[ViewPage("Users/Account/TwoFactorAuthentication")]
 public class TwoFactorAuthenticationEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Identity/Account/Manage/TwoFactorAuthentication",
+                "/TwoFactorAuthentication",
                 async (
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,

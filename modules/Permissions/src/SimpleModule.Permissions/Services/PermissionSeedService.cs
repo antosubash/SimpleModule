@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Permissions.Contracts;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 using RolePermission = SimpleModule.Permissions.Entities.RolePermission;
 
 namespace SimpleModule.Permissions.Services;

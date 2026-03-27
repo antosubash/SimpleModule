@@ -1,14 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Services;
 using SimpleModule.Core;
 using SimpleModule.Permissions.Contracts;
-using SimpleModule.Users;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Endpoints.Admin;
 
@@ -28,7 +26,7 @@ public class AdminRolesEndpoint : IEndpoint
                     [FromForm] string name,
                     [FromForm] string? description,
                     HttpContext context,
-                    RoleManager<ApplicationRole> roleManager,
+                    IRoleAdminContracts roleAdmin,
                     IPermissionContracts permissionContracts,
                     AuditService audit
                 ) =>
@@ -37,15 +35,8 @@ public class AdminRolesEndpoint : IEndpoint
                     if (string.IsNullOrEmpty(trimmedName))
                         return TypedResults.Redirect("/admin/roles/create");
 
-                    var role = new ApplicationRole
-                    {
-                        Name = trimmedName,
-                        Description = description?.Trim() is { Length: > 0 } d ? d : null,
-                    };
-
-                    var result = await roleManager.CreateAsync(role);
-                    if (!result.Succeeded)
-                        return TypedResults.Redirect("/admin/roles/create");
+                    var trimmedDescription = description?.Trim() is { Length: > 0 } d ? d : null;
+                    var role = await roleAdmin.CreateRoleAsync(trimmedName, trimmedDescription);
 
                     var form = await context.Request.ReadFormAsync();
                     var filteredPermissions = form["permissions"]
@@ -61,7 +52,8 @@ public class AdminRolesEndpoint : IEndpoint
                         );
                     }
 
-                    var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                    var adminUserId =
+                        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                     await audit.LogAsync(
                         role.Id,
                         adminUserId,
@@ -83,24 +75,29 @@ public class AdminRolesEndpoint : IEndpoint
                     [FromForm] string name,
                     [FromForm] string? description,
                     HttpContext context,
-                    RoleManager<ApplicationRole> roleManager,
+                    IRoleAdminContracts roleAdmin,
                     AuditService audit
                 ) =>
                 {
-                    var role = await roleManager.FindByIdAsync(id);
+                    var role = await roleAdmin.GetRoleByIdAsync(id);
                     if (role is null)
                         return TypedResults.NotFound();
 
-                    role.Name = name.Trim();
-                    role.Description = description?.Trim() is { Length: > 0 } d ? d : null;
-                    await roleManager.UpdateAsync(role);
+                    var trimmedName = name.Trim();
+                    var trimmedDescription = description?.Trim() is { Length: > 0 } d ? d : null;
+                    await roleAdmin.UpdateRoleAsync(
+                        id,
+                        trimmedName,
+                        trimmedDescription
+                    );
 
-                    var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                    var adminUserId =
+                        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                     await audit.LogAsync(
-                        role.Id,
+                        id,
                         adminUserId,
                         "RoleUpdated",
-                        $"Role '{role.Name}' updated"
+                        $"Role '{trimmedName}' updated"
                     );
 
                     return TypedResults.Redirect($"/admin/roles/{id}/edit?tab=details");
@@ -115,12 +112,12 @@ public class AdminRolesEndpoint : IEndpoint
                 async Task<IResult> (
                     string id,
                     HttpContext context,
-                    RoleManager<ApplicationRole> roleManager,
+                    IRoleAdminContracts roleAdmin,
                     IPermissionContracts permissionContracts,
                     AuditService audit
                 ) =>
                 {
-                    var role = await roleManager.FindByIdAsync(id);
+                    var role = await roleAdmin.GetRoleByIdAsync(id);
                     if (role is null)
                         return TypedResults.NotFound();
 
@@ -135,13 +132,14 @@ public class AdminRolesEndpoint : IEndpoint
                         roleId
                     );
 
-                    var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                    var adminUserId =
+                        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
                     // Audit removed permissions
                     foreach (var perm in currentPermissions.Where(p => !newPermissions.Contains(p)))
                     {
                         await audit.LogAsync(
-                            role.Id,
+                            id,
                             adminUserId,
                             "RolePermissionRemoved",
                             $"Permission '{perm}' removed from role '{role.Name}'"
@@ -149,10 +147,12 @@ public class AdminRolesEndpoint : IEndpoint
                     }
 
                     // Audit added permissions
-                    foreach (var perm in newPermissions.Where(p => !currentPermissions.Contains(p)))
+                    foreach (
+                        var perm in newPermissions.Where(p => !currentPermissions.Contains(p))
+                    )
                     {
                         await audit.LogAsync(
-                            role.Id,
+                            id,
                             adminUserId,
                             "RolePermissionAdded",
                             $"Permission '{perm}' added to role '{role.Name}'"
@@ -172,34 +172,35 @@ public class AdminRolesEndpoint : IEndpoint
             async Task<IResult> (
                 string id,
                 HttpContext context,
-                RoleManager<ApplicationRole> roleManager,
-                UserManager<ApplicationUser> userManager,
+                IRoleAdminContracts roleAdmin,
                 IPermissionContracts permissionContracts,
                 AuditService audit
             ) =>
             {
-                var role = await roleManager.FindByIdAsync(id);
+                var role = await roleAdmin.GetRoleByIdAsync(id);
                 if (role is null)
                     return TypedResults.NotFound();
 
-                var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
-                if (usersInRole.Count > 0)
+                var hasUsers = await roleAdmin.HasUsersInRoleAsync(id);
+                if (hasUsers)
                     return TypedResults.BadRequest(
                         new { error = "Cannot delete a role that has users assigned to it." }
                     );
 
                 // Remove role permissions first
-                await permissionContracts.SetPermissionsForRoleAsync(RoleId.From(id), []);
+                var roleId = RoleId.From(id);
+                await permissionContracts.SetPermissionsForRoleAsync(roleId, []);
 
-                var adminUserId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                var adminUserId =
+                    context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 await audit.LogAsync(
-                    role.Id,
+                    id,
                     adminUserId,
                     "RoleDeleted",
                     $"Role '{role.Name}' deleted"
                 );
 
-                await roleManager.DeleteAsync(role);
+                await roleAdmin.DeleteRoleAsync(id);
 
                 return TypedResults.Redirect("/admin/roles");
             }

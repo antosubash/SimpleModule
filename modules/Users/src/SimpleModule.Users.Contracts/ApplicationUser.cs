@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
-namespace SimpleModule.Users.Entities;
+namespace SimpleModule.Users.Contracts;
 
 public class ApplicationUser : IdentityUser
 {

@@ -7,12 +7,13 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder.Views;
 
+[ViewPage("PageBuilder/ViewerDraft")]
 public class ViewerDraftEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/p/{slug}/draft",
+                "/view/{slug}/draft",
                 async (string slug, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.GetPageBySlugAsync(slug);
@@ -34,7 +35,7 @@ public class ViewerDraftEndpoint : IViewEndpoint
                     };
 
                     return Inertia.Render(
-                        "PageBuilder/Viewer",
+                        "PageBuilder/ViewerDraft",
                         new { page = viewerPage, isDraft = true }
                     );
                 }

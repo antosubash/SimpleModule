@@ -4,7 +4,7 @@ export class PageBuilderEditorPage {
   constructor(private page: Page) {}
 
   async gotoNew() {
-    await this.page.goto('/admin/pages/new');
+    await this.page.goto('/pages/new');
     // Wait for either the template picker dialog or the editor to appear
     await Promise.race([
       this.page.getByRole('dialog').waitFor({ state: 'visible', timeout: 10000 }),
@@ -19,7 +19,7 @@ export class PageBuilderEditorPage {
   }
 
   async gotoEdit(id: number) {
-    await this.page.goto(`/admin/pages/${id}/edit`);
+    await this.page.goto(`/pages/${id}/edit`);
   }
 
   get editorOverlay() {
@@ -60,6 +60,6 @@ export class PageBuilderEditorPage {
   /** Click Puck's publish button and wait for navigation back to manage */
   async publish() {
     await this.publishButton.click();
-    await this.page.waitForURL('**/admin/pages', { timeout: 10000 });
+    await this.page.waitForURL('**/pages/manage', { timeout: 10000 });
   }
 }

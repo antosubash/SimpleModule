@@ -8,7 +8,5 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Vogen" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
-    <ProjectReference Include="..\..\..\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
   </ItemGroup>
 </Project>

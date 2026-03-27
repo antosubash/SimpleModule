@@ -27,7 +27,7 @@ public static class FakeDataGenerators
 
     public static Faker<OrderItem> OrderItemFaker { get; } =
         new Faker<OrderItem>()
-            .RuleFor(oi => oi.ProductId, f => ProductId.From(f.Random.Int(1, 100)))
+            .RuleFor(oi => oi.ProductId, f => f.Random.Int(1, 100))
             .RuleFor(oi => oi.Quantity, f => f.Random.Int(1, 10));
 
     public static Faker<Order> OrderFaker { get; } =
@@ -35,7 +35,7 @@ public static class FakeDataGenerators
             .RuleFor(o => o.Id, f => OrderId.From(f.IndexFaker + 1))
             .RuleFor(
                 o => o.UserId,
-                f => UserId.From(f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture))
+                f => f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture)
             )
             .RuleFor(o => o.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)))
             .RuleFor(o => o.Total, f => f.Finance.Amount(10, 500))
@@ -45,7 +45,7 @@ public static class FakeDataGenerators
         new Faker<CreateOrderRequest>()
             .RuleFor(
                 r => r.UserId,
-                f => UserId.From(f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture))
+                f => f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture)
             )
             .RuleFor(r => r.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)));
 
@@ -53,7 +53,7 @@ public static class FakeDataGenerators
         new Faker<UpdateOrderRequest>()
             .RuleFor(
                 r => r.UserId,
-                f => UserId.From(f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture))
+                f => f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture)
             )
             .RuleFor(r => r.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)));
 

@@ -56,4 +56,13 @@ public class FakeUserContracts : IUserContracts
         Users.Remove(user);
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyDictionary<string, string>> GetRoleIdsByNamesAsync(
+        IEnumerable<string> roleNames
+    )
+    {
+        // Fake: return role name as both key and ID
+        var dict = roleNames.ToDictionary(name => name, name => name);
+        return Task.FromResult<IReadOnlyDictionary<string, string>>(dict);
+    }
 }

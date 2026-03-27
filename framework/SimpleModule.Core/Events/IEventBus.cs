@@ -30,4 +30,17 @@ public interface IEventBus
     /// </remarks>
     Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
         where T : IEvent;
+
+    /// <summary>
+    /// Enqueues an event for background dispatch, returning immediately without waiting for handlers.
+    /// </summary>
+    /// <typeparam name="T">The event type, must implement <see cref="IEvent"/>.</typeparam>
+    /// <param name="event">The event to publish in the background.</param>
+    /// <remarks>
+    /// The event is dispatched asynchronously by a background service. Handler exceptions are
+    /// logged but do not propagate to the caller. Use this for fire-and-forget events where
+    /// the caller does not need to know if handlers succeeded (e.g., audit logging, notifications).
+    /// </remarks>
+    void PublishInBackground<T>(T @event)
+        where T : IEvent;
 }

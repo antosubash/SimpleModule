@@ -6,12 +6,13 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.Admin.Views.Admin;
 
+[ViewPage("Admin/Admin/RolesCreate")]
 public class RolesCreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/admin/roles/create",
+                "/roles/create",
                 (PermissionRegistry permissionRegistry) =>
                 {
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(

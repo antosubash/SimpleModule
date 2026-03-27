@@ -59,7 +59,7 @@ test.describe
 
     test('unpublished page returns 404 on public viewer', async ({ page }) => {
       // UI: navigate to the page's public URL
-      const response = await page.goto(`/p/${pageSlug}`);
+      const response = await page.goto(`/pages/view/${pageSlug}`);
       expect(response?.status()).toBe(404);
     });
 
@@ -187,7 +187,7 @@ test.describe('PageBuilder editor navigation', () => {
 
     // UI: click New Page
     await manage.newPageButton.click();
-    await page.waitForURL('**/admin/pages/new');
+    await page.waitForURL('**/pages/new');
 
     // Dismiss template picker if it appears
     const blankBtn = page.getByRole('button', { name: /blank page/i });
@@ -200,7 +200,7 @@ test.describe('PageBuilder editor navigation', () => {
 
     // UI: click back button
     await page.getByRole('button', { name: /back to pages/i }).click();
-    await page.waitForURL('**/admin/pages');
+    await page.waitForURL('**/pages/manage');
   });
 
   test('edit navigates to editor for existing page', async ({ page, request }) => {
@@ -211,7 +211,7 @@ test.describe('PageBuilder editor navigation', () => {
     const created = await createRes.json();
 
     // UI: navigate to editor
-    await page.goto(`/admin/pages/${created.id}/edit`);
+    await page.goto(`/pages/${created.id}/edit`);
     await expect(page.getByTestId('puck-editor')).toBeVisible({ timeout: 10000 });
 
     // Cleanup

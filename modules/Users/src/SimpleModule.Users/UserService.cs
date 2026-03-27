@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Users.Entities;
 
 namespace SimpleModule.Users;
 
 public partial class UserService(
     UserManager<ApplicationUser> userManager,
+    RoleManager<ApplicationRole> roleManager,
     ILogger<UserService> logger
 ) : IUserContracts
 {
@@ -95,6 +95,17 @@ public partial class UserService(
         await userManager.DeleteAsync(user);
 
         LogUserDeleted(logger, id);
+    }
+
+    public async Task<IReadOnlyDictionary<string, string>> GetRoleIdsByNamesAsync(
+        IEnumerable<string> roleNames
+    )
+    {
+        var nameCollection = roleNames as ICollection<string> ?? roleNames.ToList();
+        var roles = await roleManager
+            .Roles.Where(r => nameCollection.Contains(r.Name!))
+            .ToDictionaryAsync(r => r.Name!, r => r.Id);
+        return roles;
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "User with ID {UserId} not found")]

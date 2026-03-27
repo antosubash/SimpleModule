@@ -4,12 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users;
 
-[Module(UsersConstants.ModuleName)]
+[Module(UsersConstants.ModuleName, ViewPrefix = "/Identity/Account/Manage")]
 public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

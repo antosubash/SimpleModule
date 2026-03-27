@@ -15,7 +15,7 @@ public static class CreateRequestValidator
     {
         var builder = new ValidationBuilder()
             .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.UserId.Value),
+                string.IsNullOrWhiteSpace(request.UserId),
                 OrdersConstants.Fields.UserId,
                 OrdersConstants.ValidationMessages.UserIdRequired
             )

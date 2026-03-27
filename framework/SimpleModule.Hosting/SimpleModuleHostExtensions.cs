@@ -63,6 +63,8 @@ public static class SimpleModuleHostExtensions
             builder.Services.AddSimpleModuleBlazor();
         }
 
+        builder.Services.AddSingleton<BackgroundEventChannel>();
+        builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<InertiaSharedData>();
 

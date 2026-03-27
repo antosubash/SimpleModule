@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Users.Entities;
 
 namespace Users.Tests.Unit;
 
 public sealed class UserServiceTests
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly UserService _sut;
 
     public UserServiceTests()
@@ -26,7 +26,14 @@ public sealed class UserServiceTests
             null,
             null
         );
-        _sut = new UserService(_userManager, NullLogger<UserService>.Instance);
+        _roleManager = Substitute.For<RoleManager<ApplicationRole>>(
+            Substitute.For<IRoleStore<ApplicationRole>>(),
+            null,
+            null,
+            null,
+            null
+        );
+        _sut = new UserService(_userManager, _roleManager, NullLogger<UserService>.Instance);
     }
 
     [Fact]

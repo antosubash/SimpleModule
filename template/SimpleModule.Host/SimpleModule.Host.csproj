@@ -4,10 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <InvariantGlobalization>false</InvariantGlobalization>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <!-- TODO: Remove after migrating Admin/OpenIddict/Permissions to use Users.Contracts -->
-    <NoWarn>$(NoWarn);SM0011</NoWarn>
-    <!-- TODO: Remove after adding [NoDtoGeneration] to non-DTO types in Contracts assemblies -->
-    <NoWarn>$(NoWarn);SM0035;SM0038</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.Tests.Shared" />

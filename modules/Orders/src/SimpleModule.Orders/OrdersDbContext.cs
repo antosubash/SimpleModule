@@ -3,8 +3,6 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.EntityConfigurations;
-using SimpleModule.Products.Contracts;
-using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Orders;
 
@@ -28,11 +26,5 @@ public class OrdersDbContext(
         configurationBuilder
             .Properties<OrderId>()
             .HaveConversion<OrderId.EfCoreValueConverter, OrderId.EfCoreValueComparer>();
-        configurationBuilder
-            .Properties<UserId>()
-            .HaveConversion<UserId.EfCoreValueConverter, UserId.EfCoreValueComparer>();
-        configurationBuilder
-            .Properties<ProductId>()
-            .HaveConversion<ProductId.EfCoreValueConverter, ProductId.EfCoreValueComparer>();
     }
 }

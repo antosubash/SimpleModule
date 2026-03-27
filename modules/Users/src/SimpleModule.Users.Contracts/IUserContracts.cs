@@ -8,4 +8,5 @@ public interface IUserContracts
     Task<UserDto> CreateUserAsync(CreateUserRequest request);
     Task<UserDto> UpdateUserAsync(UserId id, UpdateUserRequest request);
     Task DeleteUserAsync(UserId id);
+    Task<IReadOnlyDictionary<string, string>> GetRoleIdsByNamesAsync(IEnumerable<string> roleNames);
 }

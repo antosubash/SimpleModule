@@ -8,6 +8,7 @@ using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.AuditLogs.Views;
 
+[ViewPage("AuditLogs/Detail")]
 public class DetailEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>

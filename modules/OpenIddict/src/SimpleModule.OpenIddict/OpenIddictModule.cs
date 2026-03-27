@@ -15,7 +15,7 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace SimpleModule.OpenIddict;
 
-[Module(OpenIddictModuleConstants.ModuleName)]
+[Module(OpenIddictModuleConstants.ModuleName, ViewPrefix = "/openiddict")]
 public class OpenIddictModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

@@ -72,8 +72,11 @@ namespace SimpleModule.Core.Events;
 /// to know which handlers failed, inspect the <see cref="AggregateException.InnerExceptions"/> collection.
 /// </para>
 /// </remarks>
-public sealed partial class EventBus(IServiceProvider serviceProvider, ILogger<EventBus> logger)
-    : IEventBus
+public sealed partial class EventBus(
+    IServiceProvider serviceProvider,
+    ILogger<EventBus> logger,
+    BackgroundEventChannel backgroundChannel
+) : IEventBus
 {
     /// <summary>
     /// Publishes an event to all registered handlers, ensuring all handlers execute even if some fail.
@@ -136,6 +139,13 @@ public sealed partial class EventBus(IServiceProvider serviceProvider, ILogger<E
                 exceptions
             );
         }
+    }
+
+    /// <inheritdoc/>
+    public void PublishInBackground<T>(T @event)
+        where T : IEvent
+    {
+        backgroundChannel.Enqueue(@event);
     }
 
     [LoggerMessage(

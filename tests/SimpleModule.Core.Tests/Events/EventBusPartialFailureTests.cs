@@ -91,7 +91,7 @@ public sealed class EventBusPartialFailureTests
         services.AddSingleton<IEventHandler<TestEvent>>(failingHandler);
         services.AddSingleton<IEventHandler<TestEvent>>(successHandler2);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var testEvent = new TestEvent("test-value");
         var act = async () => await bus.PublishAsync(testEvent);
@@ -122,7 +122,7 @@ public sealed class EventBusPartialFailureTests
         services.AddSingleton<IEventHandler<TestEvent>>(new FailingHandler(exception2));
         services.AddSingleton<IEventHandler<TestEvent>>(new FailingHandler(exception3));
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = async () => await bus.PublishAsync(new TestEvent("test"));
 
@@ -155,7 +155,7 @@ public sealed class EventBusPartialFailureTests
         );
 
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         await bus.PublishAsync(new TestEvent("test"));
 
@@ -188,7 +188,7 @@ public sealed class EventBusPartialFailureTests
         );
 
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = async () => await bus.PublishAsync(new TestEvent("test"));
 
@@ -217,7 +217,7 @@ public sealed class EventBusPartialFailureTests
         services.AddSingleton<IEventHandler<TestEvent>>(successHandler2);
         services.AddSingleton<IEventHandler<TestEvent>>(successHandler3);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = async () => await bus.PublishAsync(new TestEvent("test"));
 
@@ -237,7 +237,7 @@ public sealed class EventBusPartialFailureTests
         var services = new ServiceCollection();
         services.AddSingleton<IEventHandler<TestEvent>>(new FailingHandler());
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = async () => await bus.PublishAsync(new TestEvent("test"));
 
@@ -273,7 +273,7 @@ public sealed class EventBusPartialFailureTests
         services.AddSingleton<IEventHandler<TestEvent>>(handler1);
         services.AddSingleton<IEventHandler<TestEvent>>(handler2);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         using var cts = new CancellationTokenSource();
         await bus.PublishAsync(new TestEvent("test"), cts.Token);
@@ -301,7 +301,7 @@ public sealed class EventBusPartialFailureTests
         services.AddSingleton<IEventHandler<TestEvent>>(handler);
         services.AddSingleton<IEventHandler<TestEvent>>(new FailingHandler());
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         using var cts = new CancellationTokenSource();
 
@@ -324,7 +324,7 @@ public sealed class EventBusPartialFailureTests
         services.AddSingleton<IEventHandler<TestEvent>>(handler1);
         services.AddSingleton<IEventHandler<TestEvent>>(handler2);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = async () => await bus.PublishAsync(new TestEvent("test"));
 
@@ -341,7 +341,7 @@ public sealed class EventBusPartialFailureTests
     {
         var services = new ServiceCollection();
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = async () => await bus.PublishAsync(new TestEvent("test"));
 

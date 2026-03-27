@@ -73,14 +73,14 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 3 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 3 }],
         };
 
         var order = await _sut.CreateOrderAsync(request);
 
         order.Total.Should().Be(75.00m);
-        order.UserId.Should().Be(UserId.From("1"));
+        order.UserId.Should().Be("1");
         order.Items.Should().HaveCount(1);
     }
 
@@ -91,8 +91,8 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("999"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            UserId = "999",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
         var act = () => _sut.CreateOrderAsync(request);
@@ -112,8 +112,8 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(999), Quantity = 1 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 999, Quantity = 1 }],
         };
 
         var act = () => _sut.CreateOrderAsync(request);
@@ -153,8 +153,8 @@ public sealed class OrderServiceTests : IDisposable
 
         var request = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
         var created = await _sut.CreateOrderAsync(request);
@@ -188,15 +188,15 @@ public sealed class OrderServiceTests : IDisposable
 
         var createRequest = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
         var created = await _sut.CreateOrderAsync(createRequest);
 
         var updateRequest = new UpdateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 5 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 5 }],
         };
         var updated = await _sut.UpdateOrderAsync(created.Id, updateRequest);
 
@@ -210,8 +210,8 @@ public sealed class OrderServiceTests : IDisposable
     {
         var request = new UpdateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
         var act = () => _sut.UpdateOrderAsync(OrderId.From(99999), request);
@@ -243,8 +243,8 @@ public sealed class OrderServiceTests : IDisposable
 
         var createRequest = new CreateOrderRequest
         {
-            UserId = UserId.From("1"),
-            Items = [new OrderItem { ProductId = ProductId.From(1), Quantity = 1 }],
+            UserId = "1",
+            Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
         var created = await _sut.CreateOrderAsync(createRequest);
 

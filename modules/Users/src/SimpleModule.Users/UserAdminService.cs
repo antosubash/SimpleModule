@@ -1,0 +1,214 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using SimpleModule.Core;
+using SimpleModule.Core.Exceptions;
+using SimpleModule.Users.Contracts;
+
+namespace SimpleModule.Users;
+
+public sealed class UserAdminService(
+    UserManager<ApplicationUser> userManager
+) : IUserAdminContracts
+{
+    public async Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(
+        string? search,
+        int page,
+        int pageSize
+    )
+    {
+        var query = userManager.Users.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Trim()}%";
+            query = query.Where(u =>
+                (u.Email != null && EF.Functions.Like(u.Email, pattern))
+                || EF.Functions.Like(u.DisplayName, pattern)
+                || (u.UserName != null && EF.Functions.Like(u.UserName, pattern))
+            );
+        }
+
+        var totalCount = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+        page = Math.Clamp(page, 1, Math.Max(1, totalPages));
+
+        var users = await query
+            .OrderBy(u => u.DisplayName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var items = new List<AdminUserDto>(users.Count);
+        foreach (var user in users)
+        {
+            var roles = await userManager.GetRolesAsync(user);
+            items.Add(MapToAdminDto(user, roles.ToList()));
+        }
+
+        return new PagedResult<AdminUserDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+        };
+    }
+
+    public async Task<AdminUserDto?> GetAdminUserByIdAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value);
+        if (user is null)
+        {
+            return null;
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        return MapToAdminDto(user, roles.ToList());
+    }
+
+    public async Task<AdminUserDto> CreateUserWithPasswordAsync(CreateAdminUserRequest request)
+    {
+        var user = new ApplicationUser
+        {
+            UserName = request.Email,
+            Email = request.Email,
+            DisplayName = request.DisplayName,
+            EmailConfirmed = request.EmailConfirmed,
+        };
+
+        var result = await userManager.CreateAsync(user, request.Password);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description });
+            throw new ValidationException(errors);
+        }
+
+        if (request.Roles.Count > 0)
+        {
+            await userManager.AddToRolesAsync(user, request.Roles);
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        return MapToAdminDto(user, roles.ToList());
+    }
+
+    public async Task UpdateUserDetailsAsync(UserId id, UpdateAdminUserRequest request)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        user.DisplayName = request.DisplayName;
+        user.Email = request.Email;
+        user.UserName = request.Email;
+        user.EmailConfirmed = request.EmailConfirmed;
+
+        await userManager.UpdateAsync(user);
+    }
+
+    public async Task SetUserRolesAsync(UserId id, IEnumerable<string> roles)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        var newRoles = roles.ToHashSet();
+        var currentRoles = (await userManager.GetRolesAsync(user)).ToHashSet();
+
+        var toRemove = currentRoles.Except(newRoles).ToList();
+        var toAdd = newRoles.Except(currentRoles).ToList();
+
+        if (toRemove.Count > 0)
+        {
+            await userManager.RemoveFromRolesAsync(user, toRemove);
+        }
+
+        if (toAdd.Count > 0)
+        {
+            await userManager.AddToRolesAsync(user, toAdd);
+        }
+    }
+
+    public async Task ResetPasswordAsync(UserId id, string newPassword)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description });
+            throw new ValidationException(errors);
+        }
+    }
+
+    public async Task LockAccountAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        await userManager.SetLockoutEnabledAsync(user, true);
+        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+    }
+
+    public async Task UnlockAccountAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        await userManager.SetLockoutEndDateAsync(user, null);
+        await userManager.ResetAccessFailedCountAsync(user);
+    }
+
+    public async Task DeactivateAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        user.DeactivatedAt = DateTimeOffset.UtcNow;
+        await userManager.UpdateAsync(user);
+        await userManager.SetLockoutEnabledAsync(user, true);
+        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+    }
+
+    public async Task ReactivateAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        user.DeactivatedAt = null;
+        await userManager.UpdateAsync(user);
+        await userManager.SetLockoutEndDateAsync(user, null);
+        await userManager.ResetAccessFailedCountAsync(user);
+    }
+
+    public async Task ForceEmailReverificationAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        user.EmailConfirmed = false;
+        await userManager.UpdateAsync(user);
+    }
+
+    public async Task DisableTwoFactorAsync(UserId id)
+    {
+        var user = await userManager.FindByIdAsync(id.Value)
+            ?? throw new NotFoundException("User", id);
+
+        await userManager.SetTwoFactorEnabledAsync(user, false);
+        await userManager.ResetAuthenticatorKeyAsync(user);
+    }
+
+    private static AdminUserDto MapToAdminDto(ApplicationUser user, List<string> roles) =>
+        new()
+        {
+            Id = user.Id,
+            DisplayName = user.DisplayName,
+            Email = user.Email,
+            EmailConfirmed = user.EmailConfirmed,
+            Roles = roles,
+            IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
+            IsDeactivated = user.DeactivatedAt.HasValue,
+            CreatedAt = user.CreatedAt.ToString("O"),
+        };
+}

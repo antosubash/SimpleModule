@@ -601,7 +601,7 @@ namespace SimpleModule.Host.Migrations
                         });
                 });
 
-            modelBuilder.Entity("SimpleModule.Users.Entities.ApplicationRole", b =>
+            modelBuilder.Entity("SimpleModule.Users.Contracts.ApplicationRole", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -633,7 +633,7 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("Users_AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("SimpleModule.Users.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("SimpleModule.Users.Contracts.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -712,7 +712,7 @@ namespace SimpleModule.Host.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("SimpleModule.Users.Entities.ApplicationRole", null)
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -721,7 +721,7 @@ namespace SimpleModule.Host.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("SimpleModule.Users.Entities.ApplicationUser", null)
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -730,7 +730,7 @@ namespace SimpleModule.Host.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("SimpleModule.Users.Entities.ApplicationUser", null)
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -739,13 +739,13 @@ namespace SimpleModule.Host.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("SimpleModule.Users.Entities.ApplicationRole", null)
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SimpleModule.Users.Entities.ApplicationUser", null)
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -754,7 +754,7 @@ namespace SimpleModule.Host.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("SimpleModule.Users.Entities.ApplicationUser", null)
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -1,9 +1,7 @@
-using SimpleModule.Users.Contracts;
-
 namespace SimpleModule.Orders.Contracts;
 
 public class CreateOrderRequest
 {
-    public UserId UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public List<OrderItem> Items { get; set; } = new();
 }

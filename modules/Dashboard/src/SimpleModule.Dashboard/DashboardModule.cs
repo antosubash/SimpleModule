@@ -2,13 +2,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
+using SimpleModule.Dashboard.Contracts;
 
 namespace SimpleModule.Dashboard;
 
-[Module(DashboardConstants.ModuleName, RoutePrefix = DashboardConstants.RoutePrefix)]
+[Module(DashboardConstants.ModuleName, RoutePrefix = DashboardConstants.RoutePrefix, ViewPrefix = "/")]
 public class DashboardModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration configuration) { }
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddScoped<IDashboardContracts, DashboardContractsService>();
+    }
 
     public void ConfigureMenu(IMenuBuilder menus)
     {

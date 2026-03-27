@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace SimpleModule.Generator;
@@ -81,7 +83,7 @@ internal sealed class DiagnosticEmitter : IEmitter
     internal static readonly DiagnosticDescriptor ContractInterfaceTooLargeWarning = new(
         id: "SM0012",
         title: "Contract interface has too many methods",
-        messageFormat: "Contract interface '{0}' has {1} methods, which exceeds the recommended maximum of 15. Large contract interfaces force consuming modules to depend on methods they don't use. Consider splitting into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Thresholds are configurable in .editorconfig: simplemodule.max_contract_methods_warn = 15, simplemodule.max_contract_methods_error = 20. Learn more: https://docs.simplemodule.dev/contract-design.",
+        messageFormat: "Contract interface '{0}' has {1} methods, which exceeds the recommended maximum of 15. Large contract interfaces force consuming modules to depend on methods they don't use. Consider splitting into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Warning threshold: 15 methods, error threshold: 20 methods. Learn more: https://docs.simplemodule.dev/contract-design.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true
@@ -90,7 +92,7 @@ internal sealed class DiagnosticEmitter : IEmitter
     internal static readonly DiagnosticDescriptor ContractInterfaceTooLargeError = new(
         id: "SM0013",
         title: "Contract interface must be split",
-        messageFormat: "Contract interface '{0}' has {1} methods and must be split before the project will compile. Interfaces with more than 20 methods are not allowed. Split into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Thresholds are configurable in .editorconfig: simplemodule.max_contract_methods_warn = 15, simplemodule.max_contract_methods_error = 20. Learn more: https://docs.simplemodule.dev/contract-design.",
+        messageFormat: "Contract interface '{0}' has {1} methods and must be split before the project will compile. Interfaces with more than 20 methods are not allowed. Split into focused interfaces (e.g., I{2}Queries, I{2}Commands). Your module class can implement all of them. Warning threshold: 15 methods, error threshold: 20 methods. Learn more: https://docs.simplemodule.dev/contract-design.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true
@@ -204,10 +206,55 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor DuplicateViewPageName = new(
+        id: "SM0015",
+        title: "Duplicate view page name across modules",
+        messageFormat: "View page name '{0}' is registered by multiple endpoints: '{1}' (module {2}) and '{3}' (module {4}). Each IViewEndpoint must map to a unique page name. Rename one of the endpoint classes or move it to a different module.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     internal static readonly DiagnosticDescriptor InterceptorDependsOnDbContext = new(
         id: "SM0039",
         title: "SaveChanges interceptor has transitive DbContext dependency",
         messageFormat: "ISaveChangesInterceptor '{0}' in module '{1}' has a constructor parameter '{2}' whose implementation depends on a DbContext. This creates a circular dependency when ModuleDbContextOptionsBuilder resolves interceptors from DI during DbContext options construction. To fix: make the parameter optional and resolve it lazily, or remove the dependency.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor DuplicateModuleName = new(
+        id: "SM0040",
+        title: "Duplicate module name",
+        messageFormat: "Module name '{0}' is used by both '{1}' and '{2}'. Each module must have a unique name. Duplicate names cause route prefix conflicts, database schema collisions, and ambiguous TypeScript module grouping.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ViewPagePrefixMismatch = new(
+        id: "SM0041",
+        title: "View page name does not match module name prefix",
+        messageFormat: "View endpoint '{0}' in module '{1}' maps to page '{2}', but page names should start with the module name prefix '{1}/'. This causes the React page resolver to look for the page bundle in the wrong module. Rename the endpoint class or move it to the correct module.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ViewEndpointWithoutViewPrefix = new(
+        id: "SM0042",
+        title: "Module has view endpoints but no ViewPrefix",
+        messageFormat: "Module '{0}' contains {1} IViewEndpoint implementation(s) but does not define a ViewPrefix. View endpoints will not be routed correctly. Add ViewPrefix to the [Module] attribute: [Module(\"{0}\", ViewPrefix = \"/{2}\")].",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor EmptyModuleWarning = new(
+        id: "SM0043",
+        title: "Module does not override any IModule methods",
+        messageFormat: "Module '{0}' implements IModule but does not override any configuration methods (ConfigureServices, ConfigureMenu, etc.). This module will be discovered but has no effect. If this is intentional, add at least ConfigureServices with a comment explaining why.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true
@@ -225,6 +272,58 @@ internal sealed class DiagnosticEmitter : IEmitter
                         EmptyModuleName,
                         Location.None,
                         Strip(module.FullyQualifiedName)
+                    )
+                );
+            }
+        }
+
+        // SM0040: Duplicate module name
+        var seenModuleNames = new Dictionary<string, string>();
+        foreach (var module in data.Modules)
+        {
+            if (string.IsNullOrEmpty(module.ModuleName))
+                continue;
+
+            if (seenModuleNames.TryGetValue(module.ModuleName, out var existingFqn))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DuplicateModuleName,
+                        Location.None,
+                        module.ModuleName,
+                        Strip(existingFqn),
+                        Strip(module.FullyQualifiedName)
+                    )
+                );
+            }
+            else
+            {
+                seenModuleNames[module.ModuleName] = module.FullyQualifiedName;
+            }
+        }
+
+        // SM0043: Empty module (no IModule methods overridden)
+        var moduleNamesWithDbContext = new HashSet<string>(
+            data.DbContexts.Select(db => db.ModuleName),
+            StringComparer.Ordinal
+        );
+        foreach (var module in data.Modules)
+        {
+            if (!module.HasConfigureServices
+                && !module.HasConfigureEndpoints
+                && !module.HasConfigureMenu
+                && !module.HasConfigurePermissions
+                && !module.HasConfigureMiddleware
+                && !module.HasConfigureSettings
+                && module.Endpoints.Length == 0
+                && module.Views.Length == 0
+                && !moduleNamesWithDbContext.Contains(module.ModuleName))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        EmptyModuleWarning,
+                        Location.None,
+                        module.ModuleName
                     )
                 );
             }
@@ -655,6 +754,77 @@ internal sealed class DiagnosticEmitter : IEmitter
                         Strip(dto.FullyQualifiedName)
                     )
                 );
+            }
+        }
+
+        // SM0015: Duplicate view page name across modules
+        var seenPages =
+            new Dictionary<string, (string EndpointFqn, string ModuleName)>();
+        foreach (var module in data.Modules)
+        {
+            foreach (var view in module.Views)
+            {
+                if (seenPages.TryGetValue(view.Page, out var existing))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DuplicateViewPageName,
+                            Location.None,
+                            view.Page,
+                            Strip(existing.EndpointFqn),
+                            existing.ModuleName,
+                            Strip(view.FullyQualifiedName),
+                            module.ModuleName
+                        )
+                    );
+                }
+                else
+                {
+                    seenPages[view.Page] = (view.FullyQualifiedName, module.ModuleName);
+                }
+            }
+        }
+
+        // SM0041: View page prefix must match module name
+        foreach (var module in data.Modules)
+        {
+            if (string.IsNullOrEmpty(module.ModuleName))
+                continue;
+
+            var expectedPrefix = module.ModuleName + "/";
+            foreach (var view in module.Views)
+            {
+                if (!view.Page.StartsWith(expectedPrefix, System.StringComparison.Ordinal))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            ViewPagePrefixMismatch,
+                            Location.None,
+                            Strip(view.FullyQualifiedName),
+                            module.ModuleName,
+                            view.Page
+                        )
+                    );
+                }
+            }
+        }
+
+        // SM0042: Module with views but no ViewPrefix
+        foreach (var module in data.Modules)
+        {
+            if (module.Views.Length > 0 && string.IsNullOrEmpty(module.ViewPrefix))
+            {
+#pragma warning disable CA1308 // Route prefixes are conventionally lowercase
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ViewEndpointWithoutViewPrefix,
+                        Location.None,
+                        module.ModuleName,
+                        module.Views.Length,
+                        module.ModuleName.ToLowerInvariant()
+                    )
+                );
+#pragma warning restore CA1308
             }
         }
 

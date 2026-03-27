@@ -52,7 +52,7 @@ public sealed class EventBusTests
         var services = new ServiceCollection();
         services.AddSingleton<IEventHandler<TestEvent>>(handler);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         await bus.PublishAsync(new TestEvent("test"));
 
@@ -68,7 +68,7 @@ public sealed class EventBusTests
         services.AddSingleton<IEventHandler<TestEvent>>(handler1);
         services.AddSingleton<IEventHandler<TestEvent>>(handler2);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         await bus.PublishAsync(new TestEvent("test"));
 
@@ -81,7 +81,7 @@ public sealed class EventBusTests
     {
         var services = new ServiceCollection();
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = () => bus.PublishAsync(new TestEvent("test"));
 
@@ -96,7 +96,7 @@ public sealed class EventBusTests
         services.AddSingleton<IEventHandler<TestEvent>>(new ThrowingEventHandler());
         services.AddSingleton<IEventHandler<TestEvent>>(successHandler);
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = () => bus.PublishAsync(new TestEvent("test"));
 
@@ -111,7 +111,7 @@ public sealed class EventBusTests
         var services = new ServiceCollection();
         services.AddSingleton<IEventHandler<TestEvent>>(new ThrowingEventHandler());
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = () => bus.PublishAsync(new TestEvent("test"));
 
@@ -127,7 +127,7 @@ public sealed class EventBusTests
         services.AddSingleton<IEventHandler<TestEvent>>(new ThrowingEventHandler());
         services.AddSingleton<IEventHandler<TestEvent>>(new ThrowingEventHandler());
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         var act = () => bus.PublishAsync(new TestEvent("test"));
 
@@ -144,7 +144,7 @@ public sealed class EventBusTests
         services.AddSingleton<IEventHandler<TestEvent>>(new OrderTrackingHandler(callOrder, 2));
         services.AddSingleton<IEventHandler<TestEvent>>(new OrderTrackingHandler(callOrder, 3));
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
 
         await bus.PublishAsync(new TestEvent("test"));
 
@@ -166,7 +166,7 @@ public sealed class EventBusTests
             )
         );
         var provider = services.BuildServiceProvider();
-        var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
+        var bus = new EventBus(provider, NullLogger<EventBus>.Instance, new BackgroundEventChannel(NullLogger<BackgroundEventChannel>.Instance));
         using var cts = new CancellationTokenSource();
 
         await bus.PublishAsync(new TestEvent("test"), cts.Token);

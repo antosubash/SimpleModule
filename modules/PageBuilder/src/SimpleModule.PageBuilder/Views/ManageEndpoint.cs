@@ -6,12 +6,13 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder.Views;
 
+[ViewPage("PageBuilder/Manage")]
 public class ManageEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/admin/pages",
+                "/manage",
                 async (IPageBuilderContracts pageBuilder) =>
                     Inertia.Render(
                         "PageBuilder/Manage",

@@ -9,6 +9,7 @@ using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Settings.Views;
 
+[ViewPage("Settings/UserSettings")]
 public class UserSettingsEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
