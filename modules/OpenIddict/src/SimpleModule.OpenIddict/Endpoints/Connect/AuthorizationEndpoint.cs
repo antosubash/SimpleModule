@@ -5,16 +5,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using SimpleModule.Core;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Permissions.Contracts;
-using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Users.Entities;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace SimpleModule.OpenIddict.Endpoints.Connect;
@@ -87,18 +84,15 @@ public class AuthorizationEndpoint : IEndpoint
         // Load permissions via IPermissionContracts
         var permissionContracts =
             context.RequestServices.GetRequiredService<IPermissionContracts>();
+        var userContracts = context.RequestServices.GetRequiredService<IUserContracts>();
         var userId = UserId.From(await userManager.GetUserIdAsync(user));
 
-        // Get role IDs for permission lookup
-        var usersDb = context.RequestServices.GetRequiredService<UsersDbContext>();
-        var roleIds = await usersDb
-            .Roles.Where(r => roles.Contains(r.Name!))
-            .Select(r => r.Id)
-            .ToListAsync();
+        // Get role IDs for permission lookup via contracts
+        var roleIdMap = await userContracts.GetRoleIdsByNamesAsync(roles);
 
         var allPermissions = await permissionContracts.GetAllPermissionsForUserAsync(
             userId,
-            roleIds.Select(id => RoleId.From(id))
+            roleIdMap.Values.Select(id => RoleId.From(id))
         );
 
         foreach (var permission in allPermissions)

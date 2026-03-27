@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users;

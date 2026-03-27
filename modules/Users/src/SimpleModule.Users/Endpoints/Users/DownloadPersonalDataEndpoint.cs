@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Users.Constants;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;
 

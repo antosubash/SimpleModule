@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Views.Account;
 

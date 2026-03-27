@@ -7,7 +7,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using SimpleModule.Core;
 using SimpleModule.OpenIddict.Contracts;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace SimpleModule.OpenIddict.Endpoints.Connect;

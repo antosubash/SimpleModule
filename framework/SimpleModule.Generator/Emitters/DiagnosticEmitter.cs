@@ -204,6 +204,24 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor DuplicateViewPageName = new(
+        id: "SM0015",
+        title: "Duplicate view page name across modules",
+        messageFormat: "View page name '{0}' is registered by multiple endpoints: '{1}' (module {2}) and '{3}' (module {4}). Each IViewEndpoint must map to a unique page name. Rename one of the endpoint classes or move it to a different module.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ViewEndpointMissingPageRegistration = new(
+        id: "SM0016",
+        title: "View endpoint page not in Pages/index.ts",
+        messageFormat: "IViewEndpoint '{0}' in module '{1}' maps to page '{2}'. Ensure a matching entry exists in the module's Pages/index.ts: \"{2}\": () => import(\"...\"). Run 'npm run validate-pages' to verify.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true
+    );
+
     internal static readonly DiagnosticDescriptor InterceptorDependsOnDbContext = new(
         id: "SM0039",
         title: "SaveChanges interceptor has transitive DbContext dependency",
@@ -655,6 +673,34 @@ internal sealed class DiagnosticEmitter : IEmitter
                         Strip(dto.FullyQualifiedName)
                     )
                 );
+            }
+        }
+
+        // SM0015: Duplicate view page name across modules
+        var seenPages =
+            new Dictionary<string, (string EndpointFqn, string ModuleName)>();
+        foreach (var module in data.Modules)
+        {
+            foreach (var view in module.Views)
+            {
+                if (seenPages.TryGetValue(view.Page, out var existing))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            DuplicateViewPageName,
+                            Location.None,
+                            view.Page,
+                            Strip(existing.EndpointFqn),
+                            existing.ModuleName,
+                            Strip(view.FullyQualifiedName),
+                            module.ModuleName
+                        )
+                    );
+                }
+                else
+                {
+                    seenPages[view.Page] = (view.FullyQualifiedName, module.ModuleName);
+                }
             }
         }
 

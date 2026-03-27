@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Views.Admin;
 

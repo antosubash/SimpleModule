@@ -7,8 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Services;
 using SimpleModule.Core;
 using SimpleModule.Permissions.Contracts;
-using SimpleModule.Users;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Endpoints.Admin;
 

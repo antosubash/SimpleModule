@@ -7,6 +7,6 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.Permissions.Contracts\SimpleModule.Permissions.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users\SimpleModule.Users.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
   </ItemGroup>
 </Project>

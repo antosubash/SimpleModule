@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Account;
 

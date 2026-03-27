@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Users.Entities;
 
 namespace Admin.Tests.Integration;
 

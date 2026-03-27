@@ -58,6 +58,12 @@ public sealed partial class AuditingEventBus(
         }
     }
 
+    public void PublishInBackground<T>(T @event)
+        where T : IEvent
+    {
+        inner.PublishInBackground(@event);
+    }
+
     private AuditEntry ExtractAuditEntry<T>(T @event)
         where T : IEvent
     {

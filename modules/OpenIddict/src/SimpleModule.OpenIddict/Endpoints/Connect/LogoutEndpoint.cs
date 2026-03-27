@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Server.AspNetCore;
 using SimpleModule.Core;
 using SimpleModule.OpenIddict.Contracts;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.OpenIddict.Endpoints.Connect;
 

@@ -12,7 +12,7 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.OpenIddict.Contracts\SimpleModule.OpenIddict.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users\SimpleModule.Users.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Permissions\src\SimpleModule.Permissions.Contracts\SimpleModule.Permissions.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -7,8 +7,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Permissions.Contracts;
-using SimpleModule.Users;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Admin.Views.Admin;
 

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Tests.Shared.Fixtures;
-using SimpleModule.Users.Entities;
+using SimpleModule.Users.Contracts;
 
 namespace Admin.Tests.Integration;
 
