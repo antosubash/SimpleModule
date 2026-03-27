@@ -875,4 +875,318 @@ public class DiagnosticTests
     }
 
     #endregion
+
+    #region SM0015: Duplicate view page name
+
+    [Fact]
+    public void SM0015_DifferentModulesSameClassName_NoDiagnostic()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp.ModuleA
+            {
+                [Module("ModuleA", ViewPrefix = "/module-a")]
+                public class ModuleAModule : IModule { }
+            }
+
+            namespace TestApp.ModuleA.Views
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/browse", () => "browse");
+                    }
+                }
+            }
+
+            namespace TestApp.ModuleB
+            {
+                [Module("ModuleB", ViewPrefix = "/module-b")]
+                public class ModuleBModule : IModule { }
+            }
+
+            namespace TestApp.ModuleB.Views
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/browse", () => "browse");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        // "ModuleA/Browse" and "ModuleB/Browse" are different page names — no conflict
+        diagnostics.Should().NotContain(d => d.Id == "SM0015");
+    }
+
+    [Fact]
+    public void SM0015_UniquePageNames_NoDiagnostic()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Test", ViewPrefix = "/test")]
+                public class TestModule : IModule { }
+            }
+
+            namespace TestApp.Views
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/browse", () => "browse");
+                    }
+                }
+
+                public class CreateEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/create", () => "create");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().NotContain(d => d.Id == "SM0015");
+    }
+
+    #endregion
+
+    #region SM0040: Duplicate module name
+
+    [Fact]
+    public void SM0040_DuplicateModuleName_ReportsError()
+    {
+        var source = """
+            using SimpleModule.Core;
+
+            namespace TestApp.ModuleA
+            {
+                [Module("Products")]
+                public class ProductsModuleA : IModule { }
+            }
+
+            namespace TestApp.ModuleB
+            {
+                [Module("Products")]
+                public class ProductsModuleB : IModule { }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().Contain(d => d.Id == "SM0040");
+        var diag = diagnostics.First(d => d.Id == "SM0040");
+        var message = diag.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().Contain("Products");
+        message.Should().Contain("ProductsModuleA");
+        message.Should().Contain("ProductsModuleB");
+    }
+
+    [Fact]
+    public void SM0040_UniqueModuleNames_NoDiagnostic()
+    {
+        var source = """
+            using SimpleModule.Core;
+
+            namespace TestApp.ModuleA
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace TestApp.ModuleB
+            {
+                [Module("Orders")]
+                public class OrdersModule : IModule { }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().NotContain(d => d.Id == "SM0040");
+    }
+
+    [Fact]
+    public void SM0040_ThreeModulesSameName_ReportsError()
+    {
+        var source = """
+            using SimpleModule.Core;
+
+            namespace TestApp.A { [Module("Catalog")] public class CatalogA : IModule { } }
+            namespace TestApp.B { [Module("Catalog")] public class CatalogB : IModule { } }
+            namespace TestApp.C { [Module("Catalog")] public class CatalogC : IModule { } }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().Contain(d => d.Id == "SM0040");
+        // At least two diagnostics (B conflicts with A, C conflicts with A)
+        diagnostics.Where(d => d.Id == "SM0040").Should().HaveCountGreaterThanOrEqualTo(2);
+    }
+
+    #endregion
+
+    #region SM0041: View page prefix mismatch
+
+    [Fact]
+    public void SM0041_PagePrefixMatchesModuleName_NoDiagnostic()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Products", ViewPrefix = "/products")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace TestApp.Views
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/browse", () => "browse");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        // Page name "Products/Browse" starts with "Products/" — no mismatch
+        diagnostics.Should().NotContain(d => d.Id == "SM0041");
+    }
+
+    #endregion
+
+    #region SM0042: Module with views but no ViewPrefix
+
+    [Fact]
+    public void SM0042_ViewEndpointWithoutViewPrefix_ReportsError()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace TestApp.Views
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/browse", () => "browse");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().Contain(d => d.Id == "SM0042");
+        var diag = diagnostics.First(d => d.Id == "SM0042");
+        var message = diag.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().Contain("Products");
+        message.Should().Contain("/products");
+    }
+
+    [Fact]
+    public void SM0042_ViewEndpointWithViewPrefix_NoDiagnostic()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Products", ViewPrefix = "/products")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace TestApp.Views
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/browse", () => "browse");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().NotContain(d => d.Id == "SM0042");
+    }
+
+    [Fact]
+    public void SM0042_NoViewEndpoints_NoDiagnostic()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace TestApp.Endpoints
+            {
+                public class ListEndpoint : IEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/", () => "list");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        // No IViewEndpoint, so SM0042 should not fire even without ViewPrefix
+        diagnostics.Should().NotContain(d => d.Id == "SM0042");
+    }
+
+    #endregion
 }

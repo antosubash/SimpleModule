@@ -222,6 +222,33 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor DuplicateModuleName = new(
+        id: "SM0040",
+        title: "Duplicate module name",
+        messageFormat: "Module name '{0}' is used by both '{1}' and '{2}'. Each module must have a unique name. Duplicate names cause route prefix conflicts, database schema collisions, and ambiguous TypeScript module grouping.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ViewPagePrefixMismatch = new(
+        id: "SM0041",
+        title: "View page name does not match module name prefix",
+        messageFormat: "View endpoint '{0}' in module '{1}' maps to page '{2}', but page names should start with the module name prefix '{1}/'. This causes the React page resolver to look for the page bundle in the wrong module. Rename the endpoint class or move it to the correct module.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor ViewEndpointWithoutViewPrefix = new(
+        id: "SM0042",
+        title: "Module has view endpoints but no ViewPrefix",
+        messageFormat: "Module '{0}' contains {1} IViewEndpoint implementation(s) but does not define a ViewPrefix. View endpoints will not be routed correctly. Add ViewPrefix to the [Module] attribute: [Module(\"{0}\", ViewPrefix = \"/{2}\")].",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -236,6 +263,31 @@ internal sealed class DiagnosticEmitter : IEmitter
                         Strip(module.FullyQualifiedName)
                     )
                 );
+            }
+        }
+
+        // SM0040: Duplicate module name
+        var seenModuleNames = new Dictionary<string, string>();
+        foreach (var module in data.Modules)
+        {
+            if (string.IsNullOrEmpty(module.ModuleName))
+                continue;
+
+            if (seenModuleNames.TryGetValue(module.ModuleName, out var existingFqn))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DuplicateModuleName,
+                        Location.None,
+                        module.ModuleName,
+                        Strip(existingFqn),
+                        Strip(module.FullyQualifiedName)
+                    )
+                );
+            }
+            else
+            {
+                seenModuleNames[module.ModuleName] = module.FullyQualifiedName;
             }
         }
 
@@ -692,6 +744,47 @@ internal sealed class DiagnosticEmitter : IEmitter
                 {
                     seenPages[view.Page] = (view.FullyQualifiedName, module.ModuleName);
                 }
+            }
+        }
+
+        // SM0041: View page prefix must match module name
+        foreach (var module in data.Modules)
+        {
+            if (string.IsNullOrEmpty(module.ModuleName))
+                continue;
+
+            var expectedPrefix = module.ModuleName + "/";
+            foreach (var view in module.Views)
+            {
+                if (!view.Page.StartsWith(expectedPrefix, System.StringComparison.Ordinal))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            ViewPagePrefixMismatch,
+                            Location.None,
+                            Strip(view.FullyQualifiedName),
+                            module.ModuleName,
+                            view.Page
+                        )
+                    );
+                }
+            }
+        }
+
+        // SM0042: Module with views but no ViewPrefix
+        foreach (var module in data.Modules)
+        {
+            if (module.Views.Length > 0 && string.IsNullOrEmpty(module.ViewPrefix))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ViewEndpointWithoutViewPrefix,
+                        Location.None,
+                        module.ModuleName,
+                        module.Views.Length,
+                        module.ModuleName.ToLowerInvariant()
+                    )
+                );
             }
         }
 
