@@ -76,3 +76,9 @@ sm new project MyApp
 # Create in a specific directory
 sm new project MyApp --output ~/projects
 ```
+
+## Next Steps
+
+- [sm new module](/cli/new-module) -- add a module to your project
+- [Quick Start](/getting-started/quick-start) -- build and run your new project
+- [Project Structure](/getting-started/project-structure) -- understand the generated layout

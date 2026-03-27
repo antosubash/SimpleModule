@@ -295,3 +295,9 @@ Key implementation details:
 - Failed handlers are logged with structured logging (`[LoggerMessage]` source generator)
 - The `CancellationToken` is passed to every handler, allowing cooperative cancellation
 - The `EventBus` is registered as scoped, so handlers share the same DI scope as the request
+
+## Next Steps
+
+- [Permissions](/guide/permissions) -- claims-based authorization for endpoints
+- [Database](/guide/database) -- persistence patterns commonly paired with events
+- [Unit Tests](/testing/unit-tests) -- how to test event handlers and partial failure scenarios

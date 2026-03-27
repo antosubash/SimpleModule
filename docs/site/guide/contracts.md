@@ -320,3 +320,9 @@ Any module can implement `IEventHandler<OrderCreatedEvent>` to react when an ord
 | Events (`IEvent`) | Contracts project | Cross-module event definitions |
 | `[Dto]` | On types outside contracts | Opt-in to TypeScript generation |
 | `[NoDtoGeneration]` | On types inside contracts | Opt-out of TypeScript generation |
+
+## Next Steps
+
+- [Database](/guide/database) -- configure per-module database contexts and schema isolation
+- [Event Bus](/guide/events) -- publish and handle cross-module events
+- [Type Generation](/advanced/type-generation) -- how DTOs become TypeScript interfaces

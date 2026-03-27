@@ -360,3 +360,9 @@ Full `Database` configuration section:
 | `DefaultConnection` | `string` | Connection string shared by all modules (required) |
 | `Provider` | `string?` | Explicit provider override. Auto-detected from connection string if omitted |
 | `ModuleConnections` | `Dictionary<string, string>` | Per-module connection strings for database isolation |
+
+## Next Steps
+
+- [Event Bus](/guide/events) -- cross-module communication via events
+- [EF Core Interceptors](/advanced/interceptors) -- safe dependency injection patterns for interceptors
+- [Deployment](/advanced/deployment) -- production database configuration and migrations

@@ -199,3 +199,9 @@ ASP.NET loads configuration from multiple sources. Later sources override earlie
 4. Command-line arguments (highest priority)
 
 For the `Development` environment, the effective configuration merges `appsettings.json` with `appsettings.Development.json`, with the Development file winning on conflicts.
+
+## Next Steps
+
+- [API Reference](/reference/api) -- complete interface and type documentation
+- [Deployment](/advanced/deployment) -- production configuration and Docker setup
+- [Database](/guide/database) -- database-specific configuration details

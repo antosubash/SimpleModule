@@ -290,3 +290,9 @@ In CI, the Playwright configuration automatically:
 ```
 
 Test results are available as an HTML report via `npm run report` (or `npx playwright show-report` from `tests/e2e/`).
+
+## Next Steps
+
+- [Deployment](/advanced/deployment) -- CI/CD pipeline and Docker configuration
+- [CLI Overview](/cli/overview) -- project scaffolding and validation tools
+- [Configuration Reference](/reference/configuration) -- all framework settings

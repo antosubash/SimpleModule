@@ -73,3 +73,9 @@ sm new feature CreateInvoice --module Invoices --method POST --route / --validat
 # Interactive
 sm new feature
 ```
+
+## Next Steps
+
+- [Endpoints](/guide/endpoints) -- API and view endpoint patterns in detail
+- [Pages Registry](/frontend/pages) -- register your new page component
+- [sm doctor](/cli/doctor) -- validate everything is wired correctly

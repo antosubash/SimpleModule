@@ -327,3 +327,9 @@ public class WebhooksModule : IModule
 ::: danger
 When you override `ConfigureEndpoints`, the auto-discovery of `IEndpoint` classes is **skipped** for that module. You are responsible for mapping all endpoints manually. `IViewEndpoint` classes are still auto-discovered regardless.
 :::
+
+## Next Steps
+
+- [Endpoints](/guide/endpoints) -- API and view endpoint patterns
+- [Contracts & DTOs](/guide/contracts) -- define the public interface between modules
+- [Source Generator](/advanced/source-generator) -- how modules are discovered at compile time

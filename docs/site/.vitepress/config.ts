@@ -16,10 +16,12 @@ export default defineConfig({
     logo: '/favicon.svg',
 
     nav: [
-      { text: 'Guide', link: '/getting-started/introduction' },
+      { text: 'Getting Started', link: '/getting-started/introduction' },
+      { text: 'Guide', link: '/guide/modules' },
       { text: 'Frontend', link: '/frontend/overview' },
       { text: 'CLI', link: '/cli/overview' },
       { text: 'Testing', link: '/testing/overview' },
+      { text: 'Advanced', link: '/advanced/source-generator' },
       { text: 'Reference', link: '/reference/api' },
     ],
 
@@ -129,6 +131,11 @@ export default defineConfig({
 
     search: {
       provider: 'local',
+    },
+
+    docFooter: {
+      prev: false,
+      next: false,
     },
 
     footer: {

@@ -177,3 +177,4 @@ You don't write registration code, startup configuration, or reflection-based di
 
 - [Quick Start](./quick-start) -- install the CLI and create your first project in under five minutes
 - [Project Structure](./project-structure) -- understand how a SimpleModule solution is organized
+- [Modules](/guide/modules) -- deep dive into the module system

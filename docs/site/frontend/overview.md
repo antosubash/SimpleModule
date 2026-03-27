@@ -127,3 +127,9 @@ export default function Browse({ products }: { products: Product[] }) {
   );
 }
 ```
+
+## Next Steps
+
+- [Pages Registry](/frontend/pages) -- how page components are resolved and loaded
+- [UI Components](/frontend/components) -- the shared Radix UI component library
+- [Styling & Theming](/frontend/styling) -- Tailwind CSS configuration and theme customization
