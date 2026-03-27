@@ -523,3 +523,9 @@ public static IServiceCollection CollectModuleMenuItems(
 ```
 
 Invokes `ConfigureMenu` on all modules that implement it and registers the resulting `IMenuRegistry` as a singleton.
+
+## Next Steps
+
+- [Configuration Reference](/reference/configuration) -- all framework configuration options
+- [Source Generator](/advanced/source-generator) -- how these extension methods are generated
+- [Modules](/guide/modules) -- practical guide to using these interfaces

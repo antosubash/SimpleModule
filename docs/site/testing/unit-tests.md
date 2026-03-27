@@ -193,3 +193,9 @@ public async Task HandleAsync_LogsEvent()
 ```
 
 For testing the `EventBus` itself, including partial failure semantics, see the `EventBusPartialFailureTests` in the core test project.
+
+## Next Steps
+
+- [Integration Tests](/testing/integration-tests) -- test HTTP endpoints through the full pipeline
+- [E2E Tests](/testing/e2e-tests) -- browser-based testing with Playwright
+- [Event Bus](/guide/events) -- understand event handler patterns and partial failure

@@ -404,3 +404,9 @@ If you prefer not to use the CLI, here are the steps:
 ::: tip Use the CLI
 `sm new module <Name>` does all of this in seconds and ensures nothing is missed. Use `sm doctor --fix` afterward to verify everything is wired correctly.
 :::
+
+## Next Steps
+
+- [Modules](/guide/modules) -- how modules are defined and discovered
+- [Endpoints](/guide/endpoints) -- API and view endpoint patterns
+- [Contracts & DTOs](/guide/contracts) -- cross-module communication boundaries

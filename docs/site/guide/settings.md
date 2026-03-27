@@ -249,3 +249,9 @@ Follow the `module.category.name` pattern for setting keys:
 ::: tip
 Use dot-separated keys for consistency. The `Group` property on `SettingDefinition` controls visual grouping in the UI independently from the key structure.
 :::
+
+## Next Steps
+
+- [Inertia.js Integration](/guide/inertia) -- how server data reaches React components
+- [Frontend Overview](/frontend/overview) -- the complete frontend architecture
+- [Configuration Reference](/reference/configuration) -- all framework configuration options

@@ -250,3 +250,9 @@ public async Task Create_product_forbidden_without_permission()
     response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 }
 ```
+
+## Next Steps
+
+- [Menus](/guide/menus) -- navigation menu system with auth-aware visibility
+- [Settings](/guide/settings) -- module-scoped configurable settings
+- [Integration Tests](/testing/integration-tests) -- test permission-protected endpoints end-to-end

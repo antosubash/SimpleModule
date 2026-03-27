@@ -231,3 +231,9 @@ env:
 ```
 
 The `DatabaseOptions` configuration picks this up automatically, and module `DbContext` instances use the configured provider.
+
+## Next Steps
+
+- [E2E Tests](/testing/e2e-tests) -- browser-based testing with Playwright
+- [Permissions](/guide/permissions) -- how to test permission-protected endpoints
+- [Deployment](/advanced/deployment) -- CI/CD pipeline configuration

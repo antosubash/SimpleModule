@@ -176,3 +176,9 @@ The pages registry supports both lazy and eager component imports:
 ```
 
 Lazy imports are recommended because they allow Vite to code-split within the module bundle. The `resolvePage` function handles both patterns transparently.
+
+## Next Steps
+
+- [UI Components](/frontend/components) -- the shared Radix UI component library
+- [Styling & Theming](/frontend/styling) -- Tailwind CSS configuration and theming
+- [Vite Build System](/frontend/vite) -- how module bundles are built

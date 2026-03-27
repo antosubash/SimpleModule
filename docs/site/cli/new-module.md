@@ -103,3 +103,9 @@ sm new module
 # Direct mode
 sm new module Invoices
 ```
+
+## Next Steps
+
+- [sm new feature](/cli/new-feature) -- add endpoints and pages to your module
+- [Modules](/guide/modules) -- deep dive into the module system
+- [sm doctor](/cli/doctor) -- validate your project structure after changes

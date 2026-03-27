@@ -223,3 +223,9 @@ dotnet ef database update \
 ::: tip
 Each module has its own DbContext and schema. In PostgreSQL, modules use separate schemas for isolation. In SQLite, modules use table prefixes.
 :::
+
+## Next Steps
+
+- [Configuration Reference](/reference/configuration) -- all framework settings in one place
+- [API Reference](/reference/api) -- complete interface and type documentation
+- [Database](/guide/database) -- module database contexts and migration patterns

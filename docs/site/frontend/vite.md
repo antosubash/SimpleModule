@@ -224,3 +224,9 @@ modules/Products/src/Products/wwwroot/
 ```
 
 These files are served as static content via ASP.NET's `_content/{ModuleName}/` path, which is how `resolvePage` finds them at `/_content/Products/Products.pages.js`.
+
+## Next Steps
+
+- [Testing Overview](/testing/overview) -- test strategies for your modules
+- [CLI Overview](/cli/overview) -- scaffold modules and features with the `sm` command
+- [Deployment](/advanced/deployment) -- production builds and Docker configuration

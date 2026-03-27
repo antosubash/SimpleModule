@@ -153,3 +153,9 @@ internal readonly record struct InterceptorInfoRecord(
 | Resolve services inside interception methods | Resolve services in the constructor |
 | Use `?.GetService<T>()` for null safety | Assume services are always available |
 | Keep constructors minimal | Add complex initialization logic to constructors |
+
+## Next Steps
+
+- [Deployment](/advanced/deployment) -- production configuration and CI/CD pipeline
+- [Database](/guide/database) -- module database contexts and schema isolation
+- [Configuration Reference](/reference/configuration) -- all framework settings

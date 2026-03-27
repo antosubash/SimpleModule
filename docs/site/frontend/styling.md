@@ -197,3 +197,9 @@ Biome is configured to understand Tailwind CSS directives like `@theme`, `@layer
 ```
 
 This prevents false-positive lint/format errors on Tailwind-specific CSS syntax.
+
+## Next Steps
+
+- [Vite Build System](/frontend/vite) -- how styles are bundled per module
+- [UI Components](/frontend/components) -- pre-built components using these styles
+- [Inertia.js Integration](/guide/inertia) -- how server data flows to styled React components

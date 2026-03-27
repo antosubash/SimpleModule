@@ -242,3 +242,9 @@ dotnet build
 ```
 The incremental cache occasionally needs a full rebuild to reset.
 :::
+
+## Next Steps
+
+- [Type Generation](/advanced/type-generation) -- how DTOs become TypeScript interfaces
+- [Modules](/guide/modules) -- how modules are defined and registered
+- [API Reference](/reference/api) -- all generated extension methods

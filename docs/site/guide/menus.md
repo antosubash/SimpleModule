@@ -228,3 +228,9 @@ Menu data is typically shared with the frontend via Inertia shared data or API e
 - **`UserDropdown`** renders `MenuSection.UserDropdown` items
 
 The `RequiresAuth` property controls visibility -- items with `RequiresAuth = true` are only shown to authenticated users.
+
+## Next Steps
+
+- [Settings](/guide/settings) -- module-scoped configurable settings
+- [Inertia.js Integration](/guide/inertia) -- how server data flows to React pages
+- [Frontend Overview](/frontend/overview) -- the React + Inertia.js architecture

@@ -181,3 +181,9 @@ The UI package relies on these key dependencies:
 - **recharts** -- Charting library
 
 React and React-DOM are peer dependencies -- they are provided by the host application, not bundled.
+
+## Next Steps
+
+- [Styling & Theming](/frontend/styling) -- Tailwind CSS configuration and theme customization
+- [Vite Build System](/frontend/vite) -- how module bundles are built and served
+- [Pages Registry](/frontend/pages) -- how components are registered and resolved

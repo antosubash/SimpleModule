@@ -267,3 +267,9 @@ The `extract-ts-types.mjs` tool then:
 4. Writes a `types.ts` file to the module's source directory
 
 Property names are automatically converted from `PascalCase` (C#) to `camelCase` (TypeScript) during generation, matching the default `System.Text.Json` serialization behavior.
+
+## Next Steps
+
+- [EF Core Interceptors](/advanced/interceptors) -- safe DI patterns for database interceptors
+- [Contracts & DTOs](/guide/contracts) -- where DTO types are defined
+- [Frontend Overview](/frontend/overview) -- how generated types are used in React

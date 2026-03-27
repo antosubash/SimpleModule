@@ -296,3 +296,5 @@ During local development with `npm run dev`, the app uses SQLite by default -- n
 ## Next Steps
 
 - [Project Structure](./project-structure) -- understand how the solution is organized
+- [Modules](/guide/modules) -- deep dive into the module system
+- [Endpoints](/guide/endpoints) -- learn about API and view endpoint patterns

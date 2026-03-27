@@ -415,3 +415,9 @@ modules/Products/src/Products/
 - `Endpoints/` contains `IEndpoint` classes (API), organized by resource
 - `Views/` contains `IViewEndpoint` classes (Inertia pages)
 - Validators sit alongside their corresponding endpoint
+
+## Next Steps
+
+- [Contracts & DTOs](/guide/contracts) -- define shared types and cross-module interfaces
+- [Inertia.js Integration](/guide/inertia) -- how view endpoints render React pages
+- [Permissions](/guide/permissions) -- protect endpoints with claims-based authorization

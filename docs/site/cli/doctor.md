@@ -115,3 +115,9 @@ Add `sm doctor` to your CI pipeline to catch structural issues early:
 ```
 
 The non-zero exit code on failure makes it suitable for CI gates. Pair it with `--fix` in a pre-commit hook for local development if desired.
+
+## Next Steps
+
+- [Testing Overview](/testing/overview) -- test strategies for your modules
+- [Deployment](/advanced/deployment) -- CI/CD pipeline and production configuration
+- [Project Structure](/getting-started/project-structure) -- understand the expected layout

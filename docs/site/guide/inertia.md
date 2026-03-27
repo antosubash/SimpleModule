@@ -392,3 +392,9 @@ export default function Browse({ products }: { products: Product[] }) {
 6. React hydrates, `resolvePage("Products/Browse")` imports `Products.pages.js`
 7. The Browse component renders with the server-provided products array
 8. On subsequent navigation: only JSON is returned, React swaps the component
+
+## Next Steps
+
+- [Frontend Overview](/frontend/overview) -- the complete React + Inertia.js architecture
+- [Pages Registry](/frontend/pages) -- how page components are resolved at runtime
+- [Vite Build System](/frontend/vite) -- module-scoped library mode builds
