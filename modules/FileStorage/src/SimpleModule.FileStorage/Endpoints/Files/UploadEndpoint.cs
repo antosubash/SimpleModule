@@ -12,8 +12,13 @@ public class UploadEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/",
-                async (IFormFile file, string? folder, IFileStorageContracts files) =>
+                async Task<IResult> (IFormFile? file, string? folder, IFileStorageContracts files) =>
                 {
+                    if (file is null || file.Length == 0)
+                    {
+                        return TypedResults.BadRequest("A file is required.");
+                    }
+
                     await using var stream = file.OpenReadStream();
                     var storedFile = await files.UploadFileAsync(
                         stream,

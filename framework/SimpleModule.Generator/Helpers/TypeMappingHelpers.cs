@@ -29,7 +29,32 @@ internal static class TypeMappingHelpers
                 "System.Nullable<".Length,
                 type.Length - "System.Nullable<".Length - 1
             );
+            // Strip any nested global:: prefix that Roslyn may add (e.g. int? -> Nullable<global::System.Int32>)
+            inner = StripGlobalPrefix(inner);
             return MapCSharpTypeToTypeScript("global::" + inner, knownDtoTypes) + " | null";
+        }
+
+        // Dictionary types -> Record<K, V>
+        if (
+            type.StartsWith("System.Collections.Generic.Dictionary<", StringComparison.Ordinal)
+            || type.StartsWith("System.Collections.Generic.IDictionary<", StringComparison.Ordinal)
+            || type.StartsWith(
+                "System.Collections.Generic.IReadOnlyDictionary<",
+                StringComparison.Ordinal
+            )
+        )
+        {
+            var start = type.IndexOf('<') + 1;
+            var inner = type.Substring(start, type.Length - start - 1);
+            var commaIndex = FindTopLevelComma(inner);
+            if (commaIndex >= 0)
+            {
+                var keyType = inner.Substring(0, commaIndex).Trim();
+                var valueType = inner.Substring(commaIndex + 1).Trim();
+                var tsKey = MapCSharpTypeToTypeScript("global::" + keyType, knownDtoTypes);
+                var tsValue = MapCSharpTypeToTypeScript("global::" + valueType, knownDtoTypes);
+                return $"Record<{tsKey}, {tsValue}>";
+            }
         }
 
         // Collection types
@@ -76,8 +101,34 @@ internal static class TypeMappingHelpers
             or "System.DateOnly"
             or "System.TimeOnly" => "string",
             "System.Guid" => "string",
+            "object" or "System.Object" => "unknown",
             _ => "any",
         };
+    }
+
+    /// <summary>
+    /// Finds the index of the first comma that is not nested inside angle brackets.
+    /// Used to split generic type arguments like "string, int" in Dictionary&lt;string, int&gt;.
+    /// </summary>
+    private static int FindTopLevelComma(string text)
+    {
+        var depth = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
+            switch (text[i])
+            {
+                case '<':
+                    depth++;
+                    break;
+                case '>':
+                    depth--;
+                    break;
+                case ',' when depth == 0:
+                    return i;
+            }
+        }
+
+        return -1;
     }
 
     internal static string GetModuleNameFromFqn(string fqn)
