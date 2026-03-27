@@ -40,15 +40,16 @@ for (const file of files) {
   if (!tsMatch) continue;
 
   const tsContent = tsMatch[1];
+  const projectDir = `SimpleModule.${moduleName}`;
   const outPath = resolve(
     modulesDir,
     moduleName,
     'src',
-    moduleName,
+    projectDir,
     'types.ts',
   );
 
-  mkdirSync(resolve(modulesDir, moduleName, 'src', moduleName), {
+  mkdirSync(resolve(modulesDir, moduleName, 'src', projectDir), {
     recursive: true,
   });
   writeFileSync(

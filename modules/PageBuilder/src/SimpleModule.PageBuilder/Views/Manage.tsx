@@ -173,9 +173,7 @@ export default function Manage({ pages }: Props) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => router.get(`/pages/${page.id}/edit`)}
-                        >
+                        <DropdownMenuItem onClick={() => router.get(`/pages/${page.id}/edit`)}>
                           Edit
                         </DropdownMenuItem>
                         {page.isPublished && (
