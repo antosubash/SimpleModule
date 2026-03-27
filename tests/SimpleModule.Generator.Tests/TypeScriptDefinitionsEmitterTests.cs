@@ -96,10 +96,8 @@ public class TypeScriptDefinitionsEmitterTests
     }
 
     [Fact]
-    public void Dto_WithNullableShorthandValueType_MapsToAny()
+    public void Dto_WithNullableShorthandValueType_MapsToNullUnion()
     {
-        // Note: Nullable<T> via shorthand (int?) produces FQNs with nested global:: prefixes
-        // that the TypeMappingHelpers does not currently resolve. This test documents that behavior.
         var source = """
             using SimpleModule.Core;
 
@@ -120,10 +118,7 @@ public class TypeScriptDefinitionsEmitterTests
 
         var tsSource = GetGeneratedSource(result, "DtoTypeScript_Contracts.g.cs");
 
-        // Current behavior: nullable value types via shorthand (int?) map to `any`
-        // because Roslyn represents them with nested global:: prefixes that
-        // MapCSharpTypeToTypeScript doesn't resolve.
-        tsSource.Should().Contain("optionalCount: any;");
+        tsSource.Should().Contain("optionalCount: number | null;");
     }
 
     [Fact]
@@ -262,6 +257,33 @@ public class TypeScriptDefinitionsEmitterTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         result.GeneratedTrees.Should().NotContain(t => t.FilePath.Contains("DtoTypeScript_"));
+    }
+
+    [Fact]
+    public void Dto_WithDictionary_MapsToRecord()
+    {
+        var source = """
+            using System.Collections.Generic;
+            using SimpleModule.Core;
+
+            namespace TestApp.Contracts;
+
+            [Module("TestApp")]
+            public class TestAppModule : IModule { }
+
+            [Dto]
+            public class StatsDto
+            {
+                public Dictionary<string, int> CountByCategory { get; set; } = new();
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var tsSource = GetGeneratedSource(result, "DtoTypeScript_Contracts.g.cs");
+
+        tsSource.Should().Contain("countByCategory: Record<string, number>;");
     }
 
     [Fact]

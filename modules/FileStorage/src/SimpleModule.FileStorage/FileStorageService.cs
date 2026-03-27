@@ -81,10 +81,22 @@ public sealed partial class FileStorageService(
         var file = await db.StoredFiles.FindAsync(id)
             ?? throw new InvalidOperationException($"File with ID {id} not found.");
 
+        var storagePath = file.StoragePath;
+
         db.StoredFiles.Remove(file);
         await db.SaveChangesAsync();
 
-        await storageProvider.DeleteAsync(file.StoragePath);
+        try
+        {
+            await storageProvider.DeleteAsync(storagePath);
+        }
+#pragma warning disable CA1031 // Storage deletion is best-effort after successful DB commit
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogStorageDeletionFailed(logger, id, storagePath, ex);
+            return;
+        }
 
         LogFileDeleted(logger, id, file.FileName);
     }
@@ -136,4 +148,7 @@ public sealed partial class FileStorageService(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "File deleted: {Id} ({FileName})")]
     private static partial void LogFileDeleted(ILogger logger, FileStorageId id, string fileName);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to delete storage for file {Id} at path {Path}. Storage may contain orphaned data")]
+    private static partial void LogStorageDeletionFailed(ILogger logger, FileStorageId id, string path, Exception exception);
 }

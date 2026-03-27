@@ -29,6 +29,13 @@ public static class GeneratorTestHelper
             MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Collections.dll"))
         );
 
+        // Add generic collections reference (Dictionary<,> may not be type-forwarded from System.Runtime on all platforms)
+        references.Add(
+            MetadataReference.CreateFromFile(
+                typeof(System.Collections.Generic.Dictionary<,>).Assembly.Location
+            )
+        );
+
         // Add ASP.NET Core references for IServiceCollection, IEndpointRouteBuilder, IConfiguration
         var aspNetDir = Path.GetDirectoryName(
             typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location
