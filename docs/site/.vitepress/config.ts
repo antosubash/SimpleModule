@@ -8,9 +8,7 @@ export default defineConfig({
 
   cleanUrls: true,
 
-  ignoreDeadLinks: [
-    /localhost/,
-  ],
+  ignoreDeadLinks: [/localhost/],
 
   themeConfig: {
     logo: '/favicon.svg',
@@ -120,9 +118,7 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/anthropics/SimpleModule' },
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/anthropics/SimpleModule' }],
 
     editLink: {
       pattern: 'https://github.com/anthropics/SimpleModule/edit/main/docs/site/:path',
