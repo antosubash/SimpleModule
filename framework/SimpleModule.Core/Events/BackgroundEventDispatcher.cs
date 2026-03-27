@@ -11,7 +11,7 @@ namespace SimpleModule.Core.Events;
 /// </summary>
 public sealed partial class BackgroundEventDispatcher(
     BackgroundEventChannel channel,
-    IServiceProvider serviceProvider,
+    IServiceScopeFactory scopeFactory,
     ILogger<BackgroundEventDispatcher> logger
 ) : BackgroundService
 {
@@ -30,7 +30,7 @@ public sealed partial class BackgroundEventDispatcher(
     {
         try
         {
-            using var scope = serviceProvider.CreateScope();
+            using var scope = scopeFactory.CreateScope();
             await dispatch(scope.ServiceProvider, stoppingToken);
         }
 #pragma warning disable CA1031 // Background dispatcher must not crash on handler failures
