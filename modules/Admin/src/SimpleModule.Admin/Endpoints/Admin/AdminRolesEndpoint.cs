@@ -1,9 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using SimpleModule.Admin.Services;
 using SimpleModule.Core;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
@@ -27,8 +25,7 @@ public class AdminRolesEndpoint : IEndpoint
                     [FromForm] string? description,
                     HttpContext context,
                     IRoleAdminContracts roleAdmin,
-                    IPermissionContracts permissionContracts,
-                    AuditService audit
+                    IPermissionContracts permissionContracts
                 ) =>
                 {
                     var trimmedName = name.Trim();
@@ -52,15 +49,6 @@ public class AdminRolesEndpoint : IEndpoint
                         );
                     }
 
-                    var adminUserId =
-                        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                    await audit.LogAsync(
-                        role.Id,
-                        adminUserId,
-                        "RoleCreated",
-                        $"Role '{trimmedName}' created"
-                    );
-
                     return TypedResults.Redirect($"/admin/roles/{role.Id}/edit");
                 }
             )
@@ -74,9 +62,7 @@ public class AdminRolesEndpoint : IEndpoint
                     string id,
                     [FromForm] string name,
                     [FromForm] string? description,
-                    HttpContext context,
-                    IRoleAdminContracts roleAdmin,
-                    AuditService audit
+                    IRoleAdminContracts roleAdmin
                 ) =>
                 {
                     var role = await roleAdmin.GetRoleByIdAsync(id);
@@ -85,20 +71,7 @@ public class AdminRolesEndpoint : IEndpoint
 
                     var trimmedName = name.Trim();
                     var trimmedDescription = description?.Trim() is { Length: > 0 } d ? d : null;
-                    await roleAdmin.UpdateRoleAsync(
-                        id,
-                        trimmedName,
-                        trimmedDescription
-                    );
-
-                    var adminUserId =
-                        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                    await audit.LogAsync(
-                        id,
-                        adminUserId,
-                        "RoleUpdated",
-                        $"Role '{trimmedName}' updated"
-                    );
+                    await roleAdmin.UpdateRoleAsync(id, trimmedName, trimmedDescription);
 
                     return TypedResults.Redirect($"/admin/roles/{id}/edit?tab=details");
                 }
@@ -113,8 +86,7 @@ public class AdminRolesEndpoint : IEndpoint
                     string id,
                     HttpContext context,
                     IRoleAdminContracts roleAdmin,
-                    IPermissionContracts permissionContracts,
-                    AuditService audit
+                    IPermissionContracts permissionContracts
                 ) =>
                 {
                     var role = await roleAdmin.GetRoleByIdAsync(id);
@@ -128,37 +100,6 @@ public class AdminRolesEndpoint : IEndpoint
                         .ToHashSet(StringComparer.Ordinal);
 
                     var roleId = RoleId.From(id);
-                    var currentPermissions = await permissionContracts.GetPermissionsForRoleAsync(
-                        roleId
-                    );
-
-                    var adminUserId =
-                        context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-
-                    // Audit removed permissions
-                    foreach (var perm in currentPermissions.Where(p => !newPermissions.Contains(p)))
-                    {
-                        await audit.LogAsync(
-                            id,
-                            adminUserId,
-                            "RolePermissionRemoved",
-                            $"Permission '{perm}' removed from role '{role.Name}'"
-                        );
-                    }
-
-                    // Audit added permissions
-                    foreach (
-                        var perm in newPermissions.Where(p => !currentPermissions.Contains(p))
-                    )
-                    {
-                        await audit.LogAsync(
-                            id,
-                            adminUserId,
-                            "RolePermissionAdded",
-                            $"Permission '{perm}' added to role '{role.Name}'"
-                        );
-                    }
-
                     await permissionContracts.SetPermissionsForRoleAsync(roleId, newPermissions);
 
                     return TypedResults.Redirect($"/admin/roles/{id}/edit?tab=permissions");
@@ -171,10 +112,8 @@ public class AdminRolesEndpoint : IEndpoint
             "/{id}",
             async Task<IResult> (
                 string id,
-                HttpContext context,
                 IRoleAdminContracts roleAdmin,
-                IPermissionContracts permissionContracts,
-                AuditService audit
+                IPermissionContracts permissionContracts
             ) =>
             {
                 var role = await roleAdmin.GetRoleByIdAsync(id);
@@ -190,15 +129,6 @@ public class AdminRolesEndpoint : IEndpoint
                 // Remove role permissions first
                 var roleId = RoleId.From(id);
                 await permissionContracts.SetPermissionsForRoleAsync(roleId, []);
-
-                var adminUserId =
-                    context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                await audit.LogAsync(
-                    id,
-                    adminUserId,
-                    "RoleDeleted",
-                    $"Role '{role.Name}' deleted"
-                );
 
                 await roleAdmin.DeleteRoleAsync(id);
 

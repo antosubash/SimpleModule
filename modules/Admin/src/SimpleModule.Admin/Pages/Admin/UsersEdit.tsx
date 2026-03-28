@@ -26,7 +26,6 @@ import {
   Label,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { ActivityTimeline } from '../components/ActivityTimeline';
 import { PermissionGroups } from '../components/PermissionGroups';
 import { TabNav } from '../components/TabNav';
 
@@ -49,30 +48,20 @@ interface Role {
   description: string | null;
 }
 
-interface ActivityEntry {
-  id: number;
-  action: string;
-  details: string | null;
-  performedBy: string;
-  timestamp: string;
-}
-
 interface Props {
   user: UserDetail;
   userRoles: string[];
   userPermissions: string[];
   allRoles: Role[];
   permissionsByModule: Record<string, string[]>;
-  activityLog: ActivityEntry[];
-  activityTotal: number;
   tab: string;
+  currentUserId: string;
 }
 
 const tabs = [
   { id: 'details', label: 'Details' },
   { id: 'roles', label: 'Roles & Permissions' },
   { id: 'security', label: 'Security' },
-  { id: 'activity', label: 'Activity' },
 ];
 
 type ConfirmAction = 'deactivate' | 'reverify' | 'disable2fa' | null;
@@ -83,22 +72,13 @@ export default function UsersEdit({
   userPermissions,
   allRoles,
   permissionsByModule,
-  activityLog,
-  activityTotal,
   tab,
+  currentUserId,
 }: Props) {
-  const [activityEntries, setActivityEntries] = useState(activityLog);
-  const [activityPage, setActivityPage] = useState(1);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  async function loadMoreActivity() {
-    const nextPage = activityPage + 1;
-    const res = await fetch(`/admin/users/${user.id}/activity?page=${nextPage}`);
-    const data = await res.json();
-    setActivityEntries((prev) => [...prev, ...data.entries]);
-    setActivityPage(nextPage);
-  }
+  const isSelf = user.id === currentUserId;
 
   function handleConfirmAction() {
     switch (confirmAction) {
@@ -153,7 +133,9 @@ export default function UsersEdit({
       </Breadcrumb>
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Edit User</h1>
+        {isSelf && <Badge variant="info">You</Badge>}
         {user.isDeactivated && <Badge variant="secondary">Deactivated</Badge>}
+        {user.isLockedOut && !user.isDeactivated && <Badge variant="danger">Locked</Badge>}
       </div>
 
       <TabNav tabs={tabs} activeTab={tab} baseUrl={`/admin/users/${user.id}/edit`} />
@@ -212,6 +194,8 @@ export default function UsersEdit({
                     Reactivate Account
                   </Button>
                 </div>
+              ) : isSelf ? (
+                <p className="text-sm text-text-muted">You cannot deactivate your own account.</p>
               ) : (
                 <div>
                   <p className="text-sm text-text-muted mb-3">
@@ -348,6 +332,8 @@ export default function UsersEdit({
                     Unlock Account
                   </Button>
                 </div>
+              ) : isSelf ? (
+                <p className="text-sm text-text-muted">You cannot lock your own account.</p>
               ) : (
                 <div>
                   <p className="text-sm text-success mb-3">This account is active.</p>
@@ -410,25 +396,16 @@ export default function UsersEdit({
                     {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}
                   </span>
                 </div>
+                <div>
+                  <span className="text-text-muted">Created:</span>
+                  <span className="ml-2 font-medium">
+                    {new Date(user.createdAt).toLocaleString()}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
         </>
-      )}
-
-      {tab === 'activity' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity Log</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ActivityTimeline
-              entries={activityEntries}
-              total={activityTotal}
-              onLoadMore={loadMoreActivity}
-            />
-          </CardContent>
-        </Card>
       )}
 
       <Dialog

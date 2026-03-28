@@ -88,7 +88,7 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
     }
 
     [Fact(
-        Skip = "UsersEditEndpoint depends on PermissionRegistry and AdminDbContext which require full module initialization in test setup"
+        Skip = "UsersEditEndpoint depends on PermissionRegistry which requires full module initialization in test setup"
     )]
     public async Task GetUsersEdit_ExistingUser_Returns200()
     {
@@ -190,16 +190,23 @@ public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationF
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
     }
 
-    [Fact(
-        Skip = "UsersActivityEndpoint depends on AdminDbContext which requires full module initialization in test setup"
-    )]
-    public async Task GetActivity_ValidUser_Returns200()
+    [Fact]
+    public async Task LockUser_Self_ReturnsBadRequest()
     {
-        var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
-        var response = await client.GetAsync($"/admin/users/{userId}/activity");
+        var response = await client.PostAsync("/admin/users/admin-test-id/lock", null);
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task DeactivateUser_Self_ReturnsBadRequest()
+    {
+        var client = CreateAdminClient();
+
+        var response = await client.PostAsync("/admin/users/admin-test-id/deactivate", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }

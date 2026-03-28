@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Admin.Contracts;
-using SimpleModule.Admin.Services;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
-using SimpleModule.Database;
 
 namespace SimpleModule.Admin;
 
@@ -13,8 +11,6 @@ public class AdminModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<AdminDbContext>(configuration, AdminConstants.ModuleName);
-        services.AddScoped<AuditService>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

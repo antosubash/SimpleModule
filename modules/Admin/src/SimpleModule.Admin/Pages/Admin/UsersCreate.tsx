@@ -16,6 +16,7 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 
 interface Role {
   id: string;
@@ -28,10 +29,23 @@ interface Props {
 }
 
 export default function UsersCreate({ allRoles }: Props) {
+  const [formError, setFormError] = useState<string | null>(null);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    router.post('/admin/users', formData);
+    if (formData.get('password') !== formData.get('confirmPassword')) {
+      setFormError('Passwords do not match.');
+      return;
+    }
+    setFormError(null);
+    router.post('/admin/users', formData, {
+      onError: () => {
+        setFormError(
+          'Failed to create user. The email may already be in use or the password does not meet requirements.',
+        );
+      },
+    });
   }
 
   return (
@@ -53,6 +67,11 @@ export default function UsersCreate({ allRoles }: Props) {
         <CardContent className="p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
+              {formError && (
+                <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
+                  {formError}
+                </div>
+              )}
               <Field>
                 <Label htmlFor="displayName">Display Name</Label>
                 <Input id="displayName" name="displayName" required />

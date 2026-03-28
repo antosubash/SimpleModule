@@ -2,8 +2,8 @@ import { router } from '@inertiajs/react';
 import {
   Badge,
   Button,
+  DataGridPage,
   Input,
-  PageShell,
   Table,
   TableBody,
   TableCell,
@@ -30,6 +30,9 @@ interface Props {
   page: number;
   totalPages: number;
   totalCount: number;
+  allRoles: string[];
+  filterStatus: string;
+  filterRole: string;
 }
 
 function userStatus(user: User) {
@@ -38,149 +41,180 @@ function userStatus(user: User) {
   return { label: 'Active', variant: 'success' as const };
 }
 
-export default function Users({ users, search, page, totalPages, totalCount }: Props) {
+export default function Users({
+  users,
+  search,
+  page,
+  totalPages,
+  totalCount,
+  allRoles,
+  filterStatus,
+  filterRole,
+}: Props) {
   const [searchValue, setSearchValue] = useState(search);
+
+  function navigate(params: Record<string, string | number>) {
+    router.get(
+      '/admin/users',
+      { search: searchValue, page: 1, filterStatus, filterRole, ...params },
+      { preserveState: true },
+    );
+  }
 
   function handleSearch(e: FormEvent) {
     e.preventDefault();
-    router.get('/admin/users', { search: searchValue, page: 1 }, { preserveState: true });
+    navigate({ search: searchValue });
   }
 
   function goToPage(p: number) {
-    router.get('/admin/users', { search: searchValue, page: p }, { preserveState: true });
+    router.get(
+      '/admin/users',
+      { search: searchValue, page: p, filterStatus, filterRole },
+      { preserveState: true },
+    );
   }
 
-  return (
-    <PageShell
-      title="Users"
-      description={`${totalCount} total users`}
-      actions={<Button onClick={() => router.get('/admin/users/create')}>Create User</Button>}
-    >
-      <form onSubmit={handleSearch} className="flex gap-2">
+  const filterBar = (
+    <div className="flex flex-col sm:flex-row gap-2">
+      <form onSubmit={handleSearch} className="flex gap-2 flex-1">
         <Input
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           placeholder="Search by name or email..."
           className="flex-1"
         />
-        <Button type="submit">Search</Button>
+        <Button type="submit" variant="secondary">
+          Search
+        </Button>
       </form>
+      <select
+        value={filterStatus}
+        onChange={(e) => navigate({ filterStatus: e.target.value })}
+        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+      >
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="locked">Locked</option>
+        <option value="deactivated">Deactivated</option>
+      </select>
+      {allRoles.length > 0 && (
+        <select
+          value={filterRole}
+          onChange={(e) => navigate({ filterRole: e.target.value })}
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        >
+          <option value="">All roles</option>
+          {allRoles.map((role) => (
+            <option key={role} value={role}>
+              {role}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Roles</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => {
-            const status = userStatus(user);
-            return (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.displayName || '\u2014'}</TableCell>
-                <TableCell className="text-text-secondary">
-                  {user.email}
-                  {!user.emailConfirmed && (
-                    <Badge variant="warning" className="ml-2">
-                      unverified
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1 flex-wrap">
-                    {user.roles.map((role) => (
-                      <Badge key={role} variant="info">
-                        {role}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={status.variant}>{status.label}</Badge>
-                </TableCell>
-                <TableCell className="text-sm text-text-muted">
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.get(`/admin/users/${user.id}/edit`)}
-                  >
-                    Edit
-                  </Button>
-                </TableCell>
+  return (
+    <DataGridPage
+      title="Users"
+      description={`${totalCount} total users`}
+      actions={<Button onClick={() => router.get('/admin/users/create')}>Create User</Button>}
+      data={users}
+      filterBar={filterBar}
+      emptyTitle="No users found"
+      emptyDescription={
+        search ? `No users matching "${search}".` : 'Get started by creating your first user.'
+      }
+      emptyAction={
+        !search ? (
+          <Button onClick={() => router.get('/admin/users/create')}>Create User</Button>
+        ) : undefined
+      }
+    >
+      {(pageData) => (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Roles</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead />
               </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {pageData.map((user) => {
+                const status = userStatus(user);
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.displayName || '\u2014'}</TableCell>
+                    <TableCell className="text-text-secondary">
+                      {user.email}
+                      {!user.emailConfirmed && (
+                        <Badge variant="warning" className="ml-2">
+                          unverified
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 flex-wrap">
+                        {user.roles.map((role) => (
+                          <Badge key={role} variant="info">
+                            {role}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-text-muted">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.get(`/admin/users/${user.id}/edit`)}
+                      >
+                        Edit
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
 
-      {users.length === 0 && search && (
-        <p className="py-8 text-center text-sm text-text-muted">
-          No users found matching &ldquo;{search}&rdquo;.
-        </p>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <span className="text-sm text-text-muted">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => goToPage(page - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => goToPage(page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-muted">
-            Showing page {page} of {totalPages} ({totalCount} users)
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => goToPage(page - 1)}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={p === page ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => goToPage(p)}
-              >
-                {p}
-              </Button>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => goToPage(page + 1)}
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </Button>
-          </div>
-        </div>
-      )}
-    </PageShell>
+    </DataGridPage>
   );
 }
