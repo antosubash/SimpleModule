@@ -108,6 +108,45 @@ test-e2e-report: ## View Playwright HTML test report
 .PHONY: test-all
 test-all: test test-e2e ## Run all .NET and e2e tests
 
+# ─── Load Testing (k6) ──────────────────────────
+
+K6_DIR := tests/k6
+
+.PHONY: k6-smoke
+k6-smoke: ## Run k6 smoke test (health endpoints)
+	k6 run $(K6_DIR)/scenarios/health.js
+
+.PHONY: k6-auth
+k6-auth: ## Run k6 auth load test
+	k6 run $(K6_DIR)/scenarios/auth.js
+
+.PHONY: k6-products
+k6-products: ## Run k6 products CRUD load test
+	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/products.js
+
+.PHONY: k6-orders
+k6-orders: ## Run k6 orders CRUD load test
+	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/orders.js
+
+.PHONY: k6-pages
+k6-pages: ## Run k6 page builder load test
+	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/pages.js
+
+.PHONY: k6-mixed
+k6-mixed: ## Run k6 mixed traffic load test (realistic simulation)
+	k6 run $(K6_DIR)/scenarios/mixed.js
+
+.PHONY: k6-stress
+k6-stress: ## Run k6 stress test (mixed scenario, high load)
+	K6_PROFILE=stress k6 run $(K6_DIR)/scenarios/mixed.js
+
+.PHONY: k6-spike
+k6-spike: ## Run k6 spike test (sudden traffic burst)
+	K6_PROFILE=spike k6 run $(K6_DIR)/scenarios/mixed.js
+
+.PHONY: k6-all
+k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-mixed ## Run all k6 load test scenarios
+
 # ─── Database ────────────────────────────────────
 
 .PHONY: db-reset
@@ -233,7 +272,7 @@ endef
 help: ## Show this help
 	@printf "$(HELP_HEADER)"
 	@awk ' \
-	/^# .+ Setup|^# .+ Build|^# .+ Run|^# .+ Test|^# .+ Database|^# .+ Code Qual|^# .+ Code Gen|^# .+ CI|^# .+ Docker|^# .+ Clean|^# .+ Help/ { \
+	/^# .+ Setup|^# .+ Build|^# .+ Run|^# .+ Test|^# .+ Load Test|^# .+ Database|^# .+ Code Qual|^# .+ Code Gen|^# .+ CI|^# .+ Docker|^# .+ Clean|^# .+ Help/ { \
 		section = $$0; \
 		gsub(/^# [^A-Z]*/, "", section); \
 		gsub(/ [^A-Z]*$$/, "", section); \

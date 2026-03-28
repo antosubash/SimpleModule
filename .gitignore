@@ -429,5 +429,8 @@ template/SimpleModule.Host/Styles/_scan/
 
 *.stamp
 
+# k6 load test output
+tests/k6/results/
+
 # Website build output
 website/dist/

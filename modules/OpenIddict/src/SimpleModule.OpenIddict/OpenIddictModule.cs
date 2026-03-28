@@ -42,6 +42,12 @@ public class OpenIddictModule : IModule
 
                 options.AllowRefreshTokenFlow();
 
+                // Enable password grant in Development for load testing (k6, etc.)
+                if (configuration.GetValue<bool>("OpenIddict:AllowPasswordGrant"))
+                {
+                    options.AllowPasswordFlow();
+                }
+
                 options
                     .SetAuthorizationEndpointUris(ConnectRouteConstants.ConnectAuthorize)
                     .SetTokenEndpointUris(ConnectRouteConstants.ConnectToken)
@@ -89,6 +95,7 @@ public class OpenIddictModule : IModule
                 options
                     .UseAspNetCore()
                     .EnableAuthorizationEndpointPassthrough()
+                    .EnableTokenEndpointPassthrough()
                     .EnableEndSessionEndpointPassthrough()
                     .EnableUserInfoEndpointPassthrough();
             })
