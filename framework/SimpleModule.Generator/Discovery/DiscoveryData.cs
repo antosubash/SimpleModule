@@ -319,7 +319,25 @@ internal readonly record struct InterceptorInfoRecord(
 internal readonly record struct ModuleOptionsRecord(
     string FullyQualifiedName,
     string ModuleName
-);
+)
+{
+    internal static Dictionary<string, List<ModuleOptionsRecord>> GroupByModule(
+        ImmutableArray<ModuleOptionsRecord> options
+    )
+    {
+        var result = new Dictionary<string, List<ModuleOptionsRecord>>();
+        foreach (var opt in options)
+        {
+            if (!result.TryGetValue(opt.ModuleName, out var list))
+            {
+                list = new List<ModuleOptionsRecord>();
+                result[opt.ModuleName] = list;
+            }
+            list.Add(opt);
+        }
+        return result;
+    }
+}
 
 internal readonly record struct VogenValueObjectRecord(
     string TypeFqn,
@@ -437,12 +455,6 @@ internal sealed class InterceptorInfo
     public string FullyQualifiedName { get; set; } = "";
     public string ModuleName { get; set; } = "";
     public List<string> ConstructorParamTypeFqns { get; set; } = new();
-}
-
-internal sealed class ModuleOptionsInfo
-{
-    public string FullyQualifiedName { get; set; } = "";
-    public string ModuleName { get; set; } = "";
 }
 
 #endregion

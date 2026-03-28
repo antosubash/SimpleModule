@@ -16,6 +16,6 @@ namespace SimpleModule.Core;
 /// </code>
 /// Module code reads configured values via <c>IOptions&lt;TOptions&gt;</c> injection.
 /// </remarks>
-#pragma warning disable CA1040 // Avoid empty interfaces — marker interface by design
+#pragma warning disable CA1040 // Avoid empty interfaces
 public interface IModuleOptions;
 #pragma warning restore CA1040

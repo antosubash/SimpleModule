@@ -76,8 +76,6 @@ public class BrowseEndpoint(IOptions<ProductsModuleOptions> options) : IViewEndp
 **Rules:**
 - At most one `IModuleOptions` class per module (SM0044 warns on duplicates).
 - Options classes may live in the module assembly or its Contracts assembly.
-- SM0045 warns if an options class cannot be matched to a known module.
-
 ### What a Module Must Never Expose
 
 - Entity classes
@@ -399,7 +397,6 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | SM0040 | Error | No duplicate module names |
 | SM0043 | Warning | Module must override at least one IModule method |
 | SM0044 | Warning | Multiple IModuleOptions for same module |
-| SM0045 | Warning | IModuleOptions class not associated with any module |
 
 ### Dependencies
 

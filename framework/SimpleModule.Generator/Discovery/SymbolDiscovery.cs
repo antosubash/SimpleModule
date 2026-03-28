@@ -396,25 +396,23 @@ internal static class SymbolDiscovery
         );
 
         // Step 3f: Find IModuleOptions implementors in module and contracts assemblies
-        var moduleOptionsList = new List<ModuleOptionsInfo>();
+        var moduleOptionsList = new List<ModuleOptionsRecord>();
         var moduleOptionsSymbol = compilation.GetTypeByMetadataName(
             "SimpleModule.Core.IModuleOptions"
         );
         if (moduleOptionsSymbol is not null)
         {
-            foreach (var module in modules)
-            {
-                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                    continue;
-
-                var moduleAssembly = typeSymbol.ContainingAssembly;
-                FindModuleOptionsClasses(
-                    moduleAssembly.GlobalNamespace,
-                    moduleOptionsSymbol,
-                    module.ModuleName,
-                    moduleOptionsList
-                );
-            }
+            ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                    FindModuleOptionsClasses(
+                        assembly.GlobalNamespace,
+                        moduleOptionsSymbol,
+                        module.ModuleName,
+                        moduleOptionsList
+                    )
+            );
 
             // Also scan contracts assemblies for module options classes
             foreach (var kvp in contractsAssemblySymbols)
@@ -573,9 +571,7 @@ internal static class SymbolDiscovery
                 ))
                 .ToImmutableArray(),
             vogenValueObjects.ToImmutableArray(),
-            moduleOptionsList
-                .Select(o => new ModuleOptionsRecord(o.FullyQualifiedName, o.ModuleName))
-                .ToImmutableArray(),
+            moduleOptionsList.ToImmutableArray(),
             hostAssemblyName
         );
     }
@@ -1270,32 +1266,47 @@ internal static class SymbolDiscovery
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol moduleOptionsSymbol,
         string moduleName,
-        List<ModuleOptionsInfo> results
+        List<ModuleOptionsRecord> results
+    )
+    {
+        FindConcreteClassesImplementing(
+            namespaceSymbol,
+            moduleOptionsSymbol,
+            typeSymbol =>
+                results.Add(
+                    new ModuleOptionsRecord(
+                        typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        moduleName
+                    )
+                )
+        );
+    }
+
+    /// <summary>
+    /// Recursively walks namespaces and invokes <paramref name="onMatch"/> for each
+    /// concrete (non-abstract, non-static) class that implements the given interface.
+    /// </summary>
+    private static void FindConcreteClassesImplementing(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol interfaceSymbol,
+        Action<INamedTypeSymbol> onMatch
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
             if (member is INamespaceSymbol childNs)
             {
-                FindModuleOptionsClasses(childNs, moduleOptionsSymbol, moduleName, results);
+                FindConcreteClassesImplementing(childNs, interfaceSymbol, onMatch);
             }
             else if (
                 member is INamedTypeSymbol typeSymbol
                 && typeSymbol.TypeKind == TypeKind.Class
                 && !typeSymbol.IsAbstract
                 && !typeSymbol.IsStatic
-                && ImplementsInterface(typeSymbol, moduleOptionsSymbol)
+                && ImplementsInterface(typeSymbol, interfaceSymbol)
             )
             {
-                results.Add(
-                    new ModuleOptionsInfo
-                    {
-                        FullyQualifiedName = typeSymbol.ToDisplayString(
-                            SymbolDisplayFormat.FullyQualifiedFormat
-                        ),
-                        ModuleName = moduleName,
-                    }
-                );
+                onMatch(typeSymbol);
             }
         }
     }

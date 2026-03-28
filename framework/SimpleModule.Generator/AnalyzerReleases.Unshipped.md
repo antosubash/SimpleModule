@@ -31,4 +31,3 @@ SM0041 | SimpleModule.Generator | Warning | View page name does not match module
 SM0042 | SimpleModule.Generator | Error | Module has view endpoints but no ViewPrefix
 SM0043 | SimpleModule.Generator | Warning | Module does not override any IModule methods
 SM0044 | SimpleModule.Generator | Warning | Multiple IModuleOptions for same module
-SM0045 | SimpleModule.Generator | Warning | IModuleOptions class not associated with any module

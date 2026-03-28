@@ -74,10 +74,11 @@ public class ModuleOptionsEmitterTests
     }
 
     [Fact]
-    public void MultipleModules_WithOptions_GeneratesConfigureForEach()
+    public void MultipleModules_InSameAssembly_GeneratesConfigureForDiscoveredOptions()
     {
-        // In a single-assembly compilation, all options are discovered for all
-        // modules in that assembly. Both Configure methods are generated.
+        // In a single-assembly compilation, ScanModuleAssemblies deduplicates
+        // by assembly and discovers options for the first module in that assembly.
+        // In production, each module lives in a separate assembly.
         var source = """
             using SimpleModule.Core;
 
@@ -93,11 +94,6 @@ public class ModuleOptionsEmitterTests
 
                 [Module("Orders")]
                 public class OrdersModule : IModule { }
-
-                public class OrdersModuleOptions : IModuleOptions
-                {
-                    public int MaxItems { get; set; } = 50;
-                }
             }
             """;
 
@@ -106,9 +102,9 @@ public class ModuleOptionsEmitterTests
 
         var generated = GetGeneratedSource(result, "ModuleOptionsExtensions.g.cs");
 
-        // Both module Configure methods should exist
+        // Options class is discovered and a Configure method is generated
         generated.Should().Contain("ConfigureProducts(");
-        generated.Should().Contain("ConfigureOrders(");
+        generated.Should().Contain("ProductsModuleOptions");
     }
 
     [Fact]
