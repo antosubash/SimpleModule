@@ -31,8 +31,8 @@ public static class AuditLogsScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(15)),
-            Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(1))
+            Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(5)),
+            Simulation.KeepConstant(copies: 50, during: TimeSpan.FromSeconds(20))
         );
     }
 }
