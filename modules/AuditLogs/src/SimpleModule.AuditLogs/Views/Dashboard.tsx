@@ -67,6 +67,13 @@ const STATUS_COLORS: Record<string, string> = {
   Other: 'var(--color-muted)',
 };
 
+const DATE_PRESETS = [
+  { label: 'Last 24h', hours: 24 },
+  { label: 'Last 7 days', hours: 168 },
+  { label: 'Last 30 days', hours: 720 },
+  { label: 'Last 90 days', hours: 2160 },
+];
+
 // ---- Helpers ----
 
 function dictToChartData(dict: Record<string, number>): { name: string; value: number }[] {
@@ -86,15 +93,17 @@ function KpiCard({
   value,
   subtitle,
   accent,
+  onClick,
 }: {
   title: string;
   value: string;
   subtitle?: string;
   accent?: 'default' | 'danger';
+  onClick?: () => void;
 }) {
   return (
-    <Card>
-      <CardContent className="p-5">
+    <Card className={onClick ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}>
+      <CardContent className="p-5" onClick={onClick}>
         <p className="text-xs font-medium tracking-wide text-text-muted uppercase">{title}</p>
         <p
           className={`mt-1 text-2xl font-bold tabular-nums ${
@@ -223,12 +232,33 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
   const [dateTo, setDateTo] = useState<Date | undefined>(new Date(to));
   const [selectedUser, setSelectedUser] = useState(userId || '__all__');
 
+  function navigate(params: Record<string, string>) {
+    router.get('/audit-logs/dashboard', params);
+  }
+
   function applyFilters() {
     const params: Record<string, string> = {};
     if (dateFrom) params.from = dateFrom.toISOString();
     if (dateTo) params.to = dateTo.toISOString();
     if (selectedUser && selectedUser !== '__all__') params.userId = selectedUser;
-    router.get('/audit-logs/dashboard', params);
+    navigate(params);
+  }
+
+  function applyDatePreset(hours: number) {
+    const now = new Date();
+    const past = new Date(now.getTime() - hours * 60 * 60 * 1000);
+    setDateFrom(past);
+    setDateTo(now);
+    const params: Record<string, string> = {
+      from: past.toISOString(),
+      to: now.toISOString(),
+    };
+    if (selectedUser && selectedUser !== '__all__') params.userId = selectedUser;
+    navigate(params);
+  }
+
+  function browseWithFilter(params: Record<string, string>) {
+    router.get('/audit-logs/browse', { from, to, ...params });
   }
 
   // Prepare chart data
@@ -290,6 +320,17 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       description="System activity overview and metrics"
       actions={
         <div className="flex flex-wrap items-end gap-2">
+          {/* Quick date presets */}
+          {DATE_PRESETS.map((preset) => (
+            <Button
+              key={preset.hours}
+              variant="ghost"
+              size="sm"
+              onClick={() => applyDatePreset(preset.hours)}
+            >
+              {preset.label}
+            </Button>
+          ))}
           <div className="space-y-1">
             <span className="text-xs font-medium text-text-muted">From</span>
             <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Start date" />
@@ -324,18 +365,21 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           title="Total Events"
           value={stats.totalEntries.toLocaleString()}
           subtitle={`${formatDate(from)} \u2014 ${formatDate(to)}`}
+          onClick={() => browseWithFilter({})}
         />
         <KpiCard title="Unique Users" value={stats.uniqueUsers.toLocaleString()} />
         <KpiCard
           title="Avg Response"
           value={stats.averageDurationMs > 0 ? `${stats.averageDurationMs}ms` : '\u2014'}
           subtitle="HTTP requests"
+          onClick={() => browseWithFilter({ source: '0' })}
         />
         <KpiCard
           title="Error Rate"
           value={stats.errorRate > 0 ? `${stats.errorRate}%` : '0%'}
           accent={stats.errorRate > 5 ? 'danger' : 'default'}
           subtitle="4xx + 5xx responses"
+          onClick={() => browseWithFilter({ statusCode: '400' })}
         />
       </div>
 

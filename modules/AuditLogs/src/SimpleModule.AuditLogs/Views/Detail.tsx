@@ -13,7 +13,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from '@simplemodule/ui';
+import { useState } from 'react';
 import type { AuditEntry } from '../types';
 
 interface Props {
@@ -36,6 +41,28 @@ const ACTION_LABELS: Record<number, string> = {
   10: 'Other',
 };
 
+function sourceBadgeVariant(source: number) {
+  if (source === 1) return 'success' as const;
+  if (source === 2) return 'warning' as const;
+  return 'default' as const;
+}
+
+function actionBadgeVariant(action: number | null | undefined) {
+  if (action == null) return 'default' as const;
+  if (action === 0) return 'success' as const;
+  if (action === 2) return 'danger' as const;
+  if (action === 5 || action === 7) return 'warning' as const;
+  return 'info' as const;
+}
+
+function statusBadgeVariant(statusCode: number | null | undefined) {
+  if (statusCode == null) return 'default' as const;
+  if (statusCode >= 200 && statusCode < 300) return 'success' as const;
+  if (statusCode >= 400 && statusCode < 500) return 'warning' as const;
+  if (statusCode >= 500) return 'danger' as const;
+  return 'default' as const;
+}
+
 function LabeledField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -46,7 +73,28 @@ function LabeledField({ label, children }: { label: string; children: React.Reac
 }
 
 function formatTimestamp(ts: string): string {
-  return new Date(ts).toLocaleString();
+  return new Date(ts).toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+function relativeTime(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diffSec = Math.floor((now - then) / 1000);
+  if (diffSec < 60) return 'just now';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 30) return `${diffDay}d ago`;
+  return formatTimestamp(iso);
 }
 
 function formatJson(raw: string): string {
@@ -69,7 +117,6 @@ function parseChanges(raw: string): ChangeEntry[] {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       return (parsed as Array<Record<string, unknown>>).map((item) => {
-        // Normalize both { old, new } and { oldValue, newValue } formats
         if ('old' in item || 'new' in item) {
           return { field: String(item.field ?? ''), old: item.old, new: item.new };
         }
@@ -102,6 +149,52 @@ function hasUpdateStyle(changes: ChangeEntry[]): boolean {
   return changes.some((c) => 'old' in c || 'new' in c);
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="ml-2 inline-flex items-center rounded p-1 text-text-muted hover:bg-surface-secondary hover:text-text"
+        >
+          {copied ? (
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          ) : (
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          )}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{copied ? 'Copied!' : 'Copy to clipboard'}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 export default function Detail({ entry, correlated }: Props) {
   const showHttp = !!entry.httpMethod;
   const showDomain = !!(entry.module || entry.entityType || entry.action != null);
@@ -112,213 +205,253 @@ export default function Detail({ entry, correlated }: Props) {
   const isUpdate = hasUpdateStyle(changes);
 
   return (
-    <PageShell
-      title={`Audit Entry #${entry.id}`}
-      actions={
-        <Button variant="secondary" onClick={() => router.get('/audit-logs/browse')}>
-          Back to Browse
-        </Button>
-      }
-      breadcrumbs={[
-        { label: 'Audit Logs', href: '/audit-logs/browse' },
-        { label: `Entry #${entry.id}` },
-      ]}
-    >
-      {/* Overview Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Overview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <LabeledField label="Timestamp">{formatTimestamp(entry.timestamp)}</LabeledField>
-            <LabeledField label="Source">
-              {SOURCE_LABELS[entry.source] ?? `Unknown (${entry.source})`}
-            </LabeledField>
-            <LabeledField label="Correlation ID">
-              <span className="font-mono text-xs">{entry.correlationId}</span>
-            </LabeledField>
-            <LabeledField label="User">{entry.userName || entry.userId}</LabeledField>
-            <LabeledField label="IP Address">{entry.ipAddress}</LabeledField>
-            <LabeledField label="User Agent">{entry.userAgent}</LabeledField>
-          </dl>
-        </CardContent>
-      </Card>
-
-      {/* HTTP Details Card */}
-      {showHttp && (
+    <TooltipProvider>
+      <PageShell
+        title={`Audit Entry #${entry.id}`}
+        actions={
+          <Button variant="secondary" onClick={() => router.get('/audit-logs/browse')}>
+            Back to Browse
+          </Button>
+        }
+        breadcrumbs={[
+          { label: 'Audit Logs', href: '/audit-logs/browse' },
+          { label: `Entry #${entry.id}` },
+        ]}
+      >
+        {/* Overview Card */}
         <Card>
           <CardHeader>
-            <CardTitle>HTTP Details</CardTitle>
+            <CardTitle>Overview</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <LabeledField label="Method + Path">
-                <Badge variant="outline" className="mr-2">
-                  {entry.httpMethod}
-                </Badge>
-                <span className="font-mono text-xs">{entry.path}</span>
+              <LabeledField label="Timestamp">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>{relativeTime(entry.timestamp)}</span>
+                  </TooltipTrigger>
+                  <TooltipContent>{formatTimestamp(entry.timestamp)}</TooltipContent>
+                </Tooltip>
               </LabeledField>
-              <LabeledField label="Query String">
-                {entry.queryString ? (
-                  <span className="font-mono text-xs">{entry.queryString}</span>
-                ) : (
-                  '\u2014'
-                )}
-              </LabeledField>
-              <LabeledField label="Status Code">
-                <Badge
-                  variant={
-                    entry.statusCode >= 200 && entry.statusCode < 300 ? 'default' : 'destructive'
-                  }
-                >
-                  {entry.statusCode}
+              <LabeledField label="Source">
+                <Badge variant={sourceBadgeVariant(entry.source)}>
+                  {SOURCE_LABELS[entry.source] ?? `Unknown (${entry.source})`}
                 </Badge>
               </LabeledField>
-              <LabeledField label="Duration">
-                {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
+              <LabeledField label="Correlation ID">
+                <span className="inline-flex items-center">
+                  <span className="font-mono text-xs">{entry.correlationId}</span>
+                  <CopyButton text={entry.correlationId} />
+                </span>
               </LabeledField>
-            </dl>
-            {entry.requestBody && (
-              <div className="mt-4">
-                <p className="mb-1 text-sm text-text-muted">Request Body</p>
-                <pre className="overflow-auto rounded-md bg-surface-secondary p-3 text-xs">
-                  {formatJson(entry.requestBody)}
-                </pre>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Domain Details Card */}
-      {showDomain && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Domain Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <LabeledField label="Module">{entry.module}</LabeledField>
-              <LabeledField label="Entity Type">{entry.entityType}</LabeledField>
-              <LabeledField label="Entity ID">{entry.entityId}</LabeledField>
-              <LabeledField label="Action">
-                {entry.action != null ? (
-                  <Badge>{ACTION_LABELS[entry.action] ?? `Unknown (${entry.action})`}</Badge>
-                ) : (
-                  '\u2014'
-                )}
-              </LabeledField>
+              <LabeledField label="User">{entry.userName || entry.userId}</LabeledField>
+              <LabeledField label="IP Address">{entry.ipAddress}</LabeledField>
+              <LabeledField label="User Agent">{entry.userAgent}</LabeledField>
             </dl>
           </CardContent>
         </Card>
-      )}
 
-      {/* Changes Card */}
-      {showChanges && changes.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Changes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Field</TableHead>
-                  {isUpdate ? (
-                    <>
-                      <TableHead>Old</TableHead>
-                      <TableHead>New</TableHead>
-                    </>
+        {/* HTTP Details Card */}
+        {showHttp && (
+          <Card>
+            <CardHeader>
+              <CardTitle>HTTP Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <LabeledField label="Method + Path">
+                  <Badge variant="outline" className="mr-2">
+                    {entry.httpMethod}
+                  </Badge>
+                  <span className="font-mono text-xs">{entry.path}</span>
+                </LabeledField>
+                <LabeledField label="Query String">
+                  {entry.queryString ? (
+                    <span className="font-mono text-xs">{entry.queryString}</span>
                   ) : (
-                    <TableHead>Value</TableHead>
+                    '\u2014'
                   )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {changes.map((change) => (
-                  <TableRow key={change.field}>
-                    <TableCell className="font-medium">{change.field}</TableCell>
+                </LabeledField>
+                <LabeledField label="Status Code">
+                  <Badge variant={statusBadgeVariant(entry.statusCode)}>{entry.statusCode}</Badge>
+                </LabeledField>
+                <LabeledField label="Duration">
+                  {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
+                </LabeledField>
+              </dl>
+              {entry.requestBody && (
+                <div className="mt-4">
+                  <p className="mb-1 text-sm text-text-muted">Request Body</p>
+                  <pre className="overflow-auto rounded-md bg-surface-secondary p-3 text-xs">
+                    {formatJson(entry.requestBody)}
+                  </pre>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Domain Details Card */}
+        {showDomain && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Domain Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <LabeledField label="Module">{entry.module}</LabeledField>
+                <LabeledField label="Entity Type">{entry.entityType}</LabeledField>
+                <LabeledField label="Entity ID">{entry.entityId}</LabeledField>
+                <LabeledField label="Action">
+                  {entry.action != null ? (
+                    <Badge variant={actionBadgeVariant(entry.action)}>
+                      {ACTION_LABELS[entry.action] ?? `Unknown (${entry.action})`}
+                    </Badge>
+                  ) : (
+                    '\u2014'
+                  )}
+                </LabeledField>
+              </dl>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Changes Card */}
+        {showChanges && changes.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Changes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Field</TableHead>
                     {isUpdate ? (
                       <>
-                        <TableCell className="font-mono text-xs text-text-muted">
-                          {change.old != null ? String(change.old) : '\u2014'}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {change.new != null ? String(change.new) : '\u2014'}
-                        </TableCell>
+                        <TableHead>Old Value</TableHead>
+                        <TableHead>New Value</TableHead>
                       </>
                     ) : (
-                      <TableCell className="font-mono text-xs">
-                        {change.value != null ? String(change.value) : '\u2014'}
-                      </TableCell>
+                      <TableHead>Value</TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Metadata Card */}
-      {showMetadata && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Metadata</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="overflow-auto rounded-md bg-surface-secondary p-3 text-xs">
-              {formatJson(entry.metadata)}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Correlated Entries Card */}
-      {correlated.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Correlated Entries</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Timestamp</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Path</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {correlated.map((e) => (
-                  <TableRow
-                    key={e.id}
-                    className="cursor-pointer"
-                    onClick={() => router.get(`/audit-logs/${e.id}`)}
-                  >
-                    <TableCell className="text-text-muted">#{e.id}</TableCell>
-                    <TableCell>{formatTimestamp(e.timestamp)}</TableCell>
-                    <TableCell>{SOURCE_LABELS[e.source] ?? 'Unknown'}</TableCell>
-                    <TableCell>
-                      {e.action != null ? (
-                        <Badge variant="outline">
-                          {ACTION_LABELS[e.action] ?? `Unknown (${e.action})`}
-                        </Badge>
+                </TableHeader>
+                <TableBody>
+                  {changes.map((change) => (
+                    <TableRow key={change.field}>
+                      <TableCell className="font-medium">{change.field}</TableCell>
+                      {isUpdate ? (
+                        <>
+                          <TableCell>
+                            {change.old != null ? (
+                              <span className="inline-block rounded bg-danger/10 px-1.5 py-0.5 font-mono text-xs text-danger">
+                                {String(change.old)}
+                              </span>
+                            ) : (
+                              <span className="text-text-muted">\u2014</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {change.new != null ? (
+                              <span className="inline-block rounded bg-success/10 px-1.5 py-0.5 font-mono text-xs text-success">
+                                {String(change.new)}
+                              </span>
+                            ) : (
+                              <span className="text-text-muted">\u2014</span>
+                            )}
+                          </TableCell>
+                        </>
                       ) : (
-                        '\u2014'
+                        <TableCell className="font-mono text-xs">
+                          {change.value != null ? String(change.value) : '\u2014'}
+                        </TableCell>
                       )}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">{e.path || '\u2014'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Metadata Card */}
+        {showMetadata && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Metadata</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="overflow-auto rounded-md bg-surface-secondary p-3 text-xs">
+                {formatJson(entry.metadata)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Correlated Entries Card */}
+        {correlated.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Correlated Entries
+                <span className="ml-2 text-sm font-normal text-text-muted">
+                  ({correlated.length} related)
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Module</TableHead>
+                    <TableHead>Path</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-    </PageShell>
+                </TableHeader>
+                <TableBody>
+                  {correlated.map((e) => (
+                    <TableRow
+                      key={e.id}
+                      className={`cursor-pointer ${e.id === entry.id ? 'bg-primary/5' : ''}`}
+                      onClick={() => router.get(`/audit-logs/${e.id}`)}
+                    >
+                      <TableCell className="text-text-muted">#{e.id}</TableCell>
+                      <TableCell className="text-sm">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>{relativeTime(e.timestamp)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>{formatTimestamp(e.timestamp)}</TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={sourceBadgeVariant(e.source)}>
+                          {SOURCE_LABELS[e.source] ?? 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {e.action != null ? (
+                          <Badge variant={actionBadgeVariant(e.action)}>
+                            {ACTION_LABELS[e.action] ?? `Unknown (${e.action})`}
+                          </Badge>
+                        ) : (
+                          '\u2014'
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">{e.module || '\u2014'}</TableCell>
+                      <TableCell className="font-mono text-xs">{e.path || '\u2014'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </PageShell>
+    </TooltipProvider>
   );
 }
