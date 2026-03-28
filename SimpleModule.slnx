@@ -94,6 +94,8 @@
         <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
         <Project Path="tests/SimpleModule.DevTools.Tests/SimpleModule.DevTools.Tests.csproj" />
         <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
+        <Project Path="tests/SimpleModule.Benchmarks/SimpleModule.Benchmarks.csproj" />
+        <Project Path="tests/SimpleModule.LoadTests/SimpleModule.LoadTests.csproj" />
     </Folder>
     <Project Path="SimpleModule.AppHost/SimpleModule.AppHost.csproj" />
     <Project Path="SimpleModule.ServiceDefaults/SimpleModule.ServiceDefaults.csproj" />
