@@ -27,7 +27,7 @@ export interface Page {
   createdAt: string;
   updatedAt: string;
   tags: PageTag[];
-  deletedAt: any;
+  deletedAt: string | null;
 }
 
 export interface PageSummary {
@@ -39,7 +39,7 @@ export interface PageSummary {
   order: number;
   createdAt: string;
   updatedAt: string;
-  deletedAt: any;
+  deletedAt: string | null;
   tags: string[];
 }
 

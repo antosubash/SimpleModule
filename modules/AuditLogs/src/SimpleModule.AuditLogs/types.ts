@@ -4,11 +4,11 @@ export interface DashboardStats {
   uniqueUsers: number;
   averageDurationMs: number;
   errorRate: number;
-  bySource: any;
-  byAction: any;
-  byModule: any;
-  byStatusCategory: any;
-  byEntityType: any;
+  bySource: Record<string, number>;
+  byAction: Record<string, number>;
+  byModule: Record<string, number>;
+  byStatusCategory: Record<string, number>;
+  byEntityType: Record<string, number>;
   topUsers: NamedCount[];
   topPaths: NamedCount[];
   timeline: TimelinePoint[];
@@ -39,13 +39,13 @@ export interface AuditEntry {
   httpMethod: string;
   path: string;
   queryString: string;
-  statusCode: any;
-  durationMs: any;
+  statusCode: number | null;
+  durationMs: number | null;
   requestBody: string;
   module: string;
   entityType: string;
   entityId: string;
-  action: any;
+  action: any | null;
   changes: string;
   metadata: string;
 }
@@ -56,20 +56,20 @@ export interface AuditExportRequest {
 }
 
 export interface AuditQueryRequest {
-  from: any;
-  to: any;
+  from: string | null;
+  to: string | null;
   userId: string;
   module: string;
   entityType: string;
   entityId: string;
-  source: any;
-  action: any;
-  statusCode: any;
+  source: any | null;
+  action: any | null;
+  statusCode: number | null;
   searchText: string;
-  page: any;
-  pageSize: any;
+  page: number | null;
+  pageSize: number | null;
   sortBy: string;
-  sortDescending: any;
+  sortDescending: boolean | null;
   effectivePage: number;
   effectivePageSize: number;
   effectiveSortBy: string;
@@ -79,7 +79,7 @@ export interface AuditQueryRequest {
 export interface AuditStats {
   totalEntries: number;
   uniqueUsers: number;
-  byModule: any;
-  byAction: any;
-  byStatusCode: any;
+  byModule: Record<string, number>;
+  byAction: Record<string, number>;
+  byStatusCode: Record<string, number>;
 }
