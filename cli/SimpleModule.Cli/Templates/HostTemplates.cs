@@ -118,10 +118,7 @@ public sealed class HostTemplates
     /// </summary>
     public static string RoutesRazor()
     {
-        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.Routes.razor");
-
-        // Strip AdditionalAssemblies attribute (module-specific)
-        var lines = content.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Components.Routes.razor");
         lines.RemoveAll(line => line.Contains("AdditionalAssemblies", StringComparison.Ordinal));
 
         // Fix unclosed Router tag: replace trailing open attribute list with closing >
@@ -191,10 +188,7 @@ public sealed class HostTemplates
     /// </summary>
     public static string AppCss()
     {
-        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Styles.app.css");
-
-        // Strip _scan/ references (build artifact, not needed in new projects)
-        var lines = content.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Styles.app.css");
         lines.RemoveAll(line => line.Contains("_scan/", StringComparison.Ordinal));
 
         // Replace module source paths for new project structure (template/ → src/)

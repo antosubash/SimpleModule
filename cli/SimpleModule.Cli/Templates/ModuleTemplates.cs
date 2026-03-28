@@ -635,36 +635,7 @@ public sealed class ModuleTemplates
         }
 
         var otherModulePatterns = OtherModuleStripPatterns();
-
-        // Also strip test methods that reference cross-module types
-        var lines = File.ReadAllLines(refPath).ToList();
-
-        // Strip cross-module usings
-        lines.RemoveAll(line =>
-            line.TrimStart().StartsWith("using ", StringComparison.Ordinal)
-            && otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal))
-        );
-
-        // Keep only the first test method (GetAll returns 200), remove others
-        var testCount = 0;
-        lines = TemplateExtractor.RemoveBraceBlocks(
-            lines,
-            line =>
-            {
-                if (line.Contains("[Fact]", StringComparison.Ordinal))
-                {
-                    testCount++;
-                    return testCount > 1;
-                }
-
-                return false;
-            }
-        );
-
-        // Also remove the [Fact] attribute lines for stripped tests
-        // (RemoveBraceBlocks removes from the line AFTER [Fact], so we need to handle this differently)
-        // Actually, let's re-approach: keep only first [Fact] and its method
-        lines = KeepFirstTestMethod(File.ReadAllLines(refPath).ToList(), otherModulePatterns);
+        var lines = KeepFirstTestMethod(File.ReadAllLines(refPath).ToList(), otherModulePatterns);
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
 
@@ -841,16 +812,6 @@ public sealed class ModuleTemplates
             if (skipping)
             {
                 braceDepth += CountBraces(lines[i]);
-
-                // Once we see the method's closing brace
-                if (braceDepth > 0 && CountBraces(lines[i]) < 0)
-                {
-                    var net = 0;
-                    for (var j = i; j < lines.Count; j++)
-                    {
-                        net += CountBraces(lines[j]);
-                    }
-                }
 
                 if (trimmed.StartsWith('}') && braceDepth <= 0)
                 {

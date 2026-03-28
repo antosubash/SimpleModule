@@ -5,8 +5,11 @@ namespace SimpleModule.Cli.Infrastructure;
 public static class NuGetVersionResolver
 {
     private const string FallbackVersion = "0.0.15";
-    private const string NuGetIndexUrl =
-        "https://api.nuget.org/v3-flatcontainer/simplemodule.core/index.json";
+    private static readonly Uri NuGetIndexUri =
+        new("https://api.nuget.org/v3-flatcontainer/simplemodule.core/index.json");
+
+    // Shared HttpClient avoids socket exhaustion from repeated instantiation.
+    private static readonly HttpClient SharedHttpClient = new() { Timeout = TimeSpan.FromSeconds(5) };
 
     /// <summary>
     /// Resolves the SimpleModule framework version to use for a new project.
@@ -44,8 +47,8 @@ public static class NuGetVersionResolver
     {
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-            var json = client.GetStringAsync(new Uri(NuGetIndexUrl)).GetAwaiter().GetResult();
+            // Intentional sync-over-async: CLI runs single-threaded, no deadlock risk.
+            var json = SharedHttpClient.GetStringAsync(NuGetIndexUri).GetAwaiter().GetResult();
             using var doc = JsonDocument.Parse(json);
 
             if (
@@ -81,11 +84,6 @@ public static class NuGetVersionResolver
         try
         {
             var path = Path.Combine(rootPath, "version.json");
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
             var json = File.ReadAllText(path);
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("version", out var version))

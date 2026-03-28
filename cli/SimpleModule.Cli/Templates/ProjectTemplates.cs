@@ -232,7 +232,7 @@ public sealed class ProjectTemplates
 
     public string RootPackageJson(string projectName, string? frameworkPackagesPath)
     {
-        return FallbackRootPackageJson(projectName, frameworkPackagesPath, _frameworkVersion);
+        return GenerateRootPackageJson(projectName, frameworkPackagesPath, _frameworkVersion);
     }
 
     public string BiomeJson()
@@ -696,7 +696,7 @@ public sealed class ProjectTemplates
             </Project>
             """;
 
-    private static string FallbackRootPackageJson(
+    private static string GenerateRootPackageJson(
         string projectName,
         string? frameworkPackagesPath,
         string frameworkVersion

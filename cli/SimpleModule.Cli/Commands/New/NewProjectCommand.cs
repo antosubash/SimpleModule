@@ -206,6 +206,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         Plan(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"));
         Plan(Path.Combine(hostDir, "ClientApp", "package.json"));
         Plan(Path.Combine(hostDir, "Styles", "app.css"));
+        Plan(Path.Combine(hostDir, "wwwroot", "css", "app.css"));
         Plan(Path.Combine(hostDir, "appsettings.json"));
         Plan(Path.Combine(hostDir, "appsettings.Development.json"));
         Plan(Path.Combine(hostDir, "Properties", "launchSettings.json"));

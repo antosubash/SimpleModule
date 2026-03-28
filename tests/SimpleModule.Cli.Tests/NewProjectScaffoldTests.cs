@@ -8,6 +8,7 @@ namespace SimpleModule.Cli.Tests;
 [Trait("Category", "Integration")]
 public sealed class NewProjectScaffoldTests : IDisposable
 {
+    private const string TestVersion = "0.0.15";
     private readonly string _tempDir;
 
     public NewProjectScaffoldTests()
@@ -31,12 +32,8 @@ public sealed class NewProjectScaffoldTests : IDisposable
     [Fact]
     public void Scaffold_CreatesExpectedFiles()
     {
-        const string projectName = "TestApp";
-        var rootDir = Path.Combine(_tempDir, projectName);
+        var (projectName, rootDir) = ScaffoldStandalone();
 
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: "0.0.15");
-
-        // Verify key files exist
         File.Exists(Path.Combine(rootDir, $"{projectName}.slnx")).Should().BeTrue();
         File.Exists(Path.Combine(rootDir, "Directory.Build.props")).Should().BeTrue();
         File.Exists(Path.Combine(rootDir, "Directory.Packages.props")).Should().BeTrue();
@@ -51,23 +48,17 @@ public sealed class NewProjectScaffoldTests : IDisposable
     [Fact]
     public void Scaffold_DirectoryPackagesProps_UsesPublishedVersion()
     {
-        const string projectName = "TestApp";
-        var rootDir = Path.Combine(_tempDir, projectName);
-
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: "0.0.15");
+        var (_, rootDir) = ScaffoldStandalone();
 
         var content = File.ReadAllText(Path.Combine(rootDir, "Directory.Packages.props"));
-        content.Should().Contain("Version=\"0.0.15\"");
+        content.Should().Contain($"Version=\"{TestVersion}\"");
         content.Should().NotContain("0.1.0-local");
     }
 
     [Fact]
     public void Scaffold_NugetConfig_OnlyContainsNuGetOrg()
     {
-        const string projectName = "TestApp";
-        var rootDir = Path.Combine(_tempDir, projectName);
-
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: "0.0.15");
+        var (_, rootDir) = ScaffoldStandalone();
 
         var content = File.ReadAllText(Path.Combine(rootDir, "nuget.config"));
         content.Should().Contain("nuget.org");
@@ -78,33 +69,28 @@ public sealed class NewProjectScaffoldTests : IDisposable
     [Fact]
     public void Scaffold_PackageJson_UsesPublishedNpmPackages()
     {
-        const string projectName = "TestApp";
-        var rootDir = Path.Combine(_tempDir, projectName);
-
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: "0.0.15");
+        var (_, rootDir) = ScaffoldStandalone();
 
         var content = File.ReadAllText(Path.Combine(rootDir, "package.json"));
-        content.Should().Contain("\"@simplemodule/client\": \"^0.0.15\"");
-        content.Should().Contain("\"@simplemodule/ui\": \"^0.0.15\"");
-        content.Should().Contain("\"@simplemodule/theme-default\": \"^0.0.15\"");
+        content.Should().Contain($"\"@simplemodule/client\": \"^{TestVersion}\"");
+        content.Should().Contain($"\"@simplemodule/ui\": \"^{TestVersion}\"");
+        content.Should().Contain($"\"@simplemodule/theme-default\": \"^{TestVersion}\"");
         content.Should().NotContain("file:");
     }
 
     [Fact]
     public void Scaffold_WithSolution_UsesLocalPackages()
     {
-        // When run from the framework repo, it should still use file: references for npm
         var solution = SolutionContext.Discover();
         if (solution is null)
         {
-            // Skip if not running from framework repo
             return;
         }
 
         const string projectName = "TestApp";
         var rootDir = Path.Combine(_tempDir, projectName);
 
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution, frameworkVersion: "0.0.15");
+        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution, frameworkVersion: TestVersion);
 
         var content = File.ReadAllText(Path.Combine(rootDir, "package.json"));
         content.Should().Contain("file:");
@@ -113,14 +99,12 @@ public sealed class NewProjectScaffoldTests : IDisposable
     [Fact]
     public void ScaffoldedProject_DotnetBuildSucceeds()
     {
+        var frameworkVersion = NuGetVersionResolver.ResolveVersion();
         const string projectName = "TestApp";
         var rootDir = Path.Combine(_tempDir, projectName);
 
-        var frameworkVersion = NuGetVersionResolver.ResolveVersion();
-
         NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: frameworkVersion);
 
-        // Run dotnet build on the scaffolded project
         var slnxPath = Path.Combine(rootDir, $"{projectName}.slnx");
         var psi = new ProcessStartInfo
         {
@@ -146,5 +130,12 @@ public sealed class NewProjectScaffoldTests : IDisposable
             """;
 
         process.ExitCode.Should().Be(0, $"dotnet build should succeed.\n{buildOutput}");
+    }
+
+    private (string ProjectName, string RootDir) ScaffoldStandalone(string projectName = "TestApp")
+    {
+        var rootDir = Path.Combine(_tempDir, projectName);
+        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: TestVersion);
+        return (projectName, rootDir);
     }
 }
