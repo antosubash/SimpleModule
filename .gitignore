@@ -428,3 +428,6 @@ template/SimpleModule.Host/wwwroot/*
 template/SimpleModule.Host/Styles/_scan/
 
 *.stamp
+
+# Website build output
+website/dist/

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34d399;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2dd4bf;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad3" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#047857;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f766e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Module block: top-left -->
+  <rect x="96" y="96" width="140" height="140" rx="20" fill="url(#grad1)" />
+
+  <!-- Module block: top-right -->
+  <rect x="276" y="96" width="140" height="140" rx="20" fill="url(#grad2)" />
+
+  <!-- Module block: bottom-left -->
+  <rect x="96" y="276" width="140" height="140" rx="20" fill="url(#grad2)" />
+
+  <!-- Module block: bottom-right (accent - the "active" module) -->
+  <rect x="276" y="276" width="140" height="140" rx="20" fill="url(#grad3)" />
+
+  <!-- Connector lines between modules (subtle) -->
+  <line x1="236" y1="166" x2="276" y2="166" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,4" />
+  <line x1="236" y1="346" x2="276" y2="346" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,4" />
+  <line x1="166" y1="236" x2="166" y2="276" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,4" />
+  <line x1="346" y1="236" x2="346" y2="276" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" stroke-dasharray="6,4" />
+
+  <!-- "S" letterform subtly embedded via highlights on top-left and bottom-right blocks -->
+  <rect x="116" y="116" width="100" height="6" rx="3" fill="white" opacity="0.35" />
+  <rect x="296" y="390" width="100" height="6" rx="3" fill="white" opacity="0.35" />
+
+  <!-- Small dot connectors at the junction points -->
+  <circle cx="256" cy="166" r="5" fill="#a7f3d0" />
+  <circle cx="256" cy="346" r="5" fill="#a7f3d0" />
+  <circle cx="166" cy="256" r="5" fill="#a7f3d0" />
+  <circle cx="346" cy="256" r="5" fill="#a7f3d0" />
+</svg>
