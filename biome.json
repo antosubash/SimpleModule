@@ -38,23 +38,15 @@
       }
     }
   },
-  "overrides": [
-    {
-      "includes": ["modules/*/src/*/types.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noExplicitAny": "off"
-          },
-          "complexity": {
-            "noBannedTypes": "off",
-            "noEmptyTypeParameters": "off"
-          }
-        }
-      }
-    }
-  ],
   "files": {
-    "includes": ["modules/**", "packages/**", "template/**", "tests/**", "docs/**", "!**/wwwroot"]
+    "includes": [
+      "modules/**",
+      "packages/**",
+      "template/**",
+      "tests/**",
+      "docs/**",
+      "!**/wwwroot",
+      "!modules/*/src/*/types.ts"
+    ]
   }
 }
