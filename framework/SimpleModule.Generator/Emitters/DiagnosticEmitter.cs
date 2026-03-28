@@ -260,6 +260,24 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    private static readonly DiagnosticDescriptor MultipleModuleOptions = new(
+        id: "SM0044",
+        title: "Multiple IModuleOptions for same module",
+        messageFormat: "Module '{0}' has multiple IModuleOptions implementations: '{1}' and '{2}'. Each module should have at most one options class. Only the first will be used.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor ModuleOptionsOrphan = new(
+        id: "SM0045",
+        title: "IModuleOptions class not associated with any module",
+        messageFormat: "Options class '{0}' implements IModuleOptions but is associated with module '{1}' which was not found. Ensure the options class is in the same assembly as its module or the module's contracts assembly.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -848,6 +866,56 @@ internal sealed class DiagnosticEmitter : IEmitter
                         );
                     }
                 }
+            }
+        }
+
+        // SM0044: Multiple IModuleOptions for same module
+        var optionsByModule = new Dictionary<string, List<ModuleOptionsRecord>>();
+        foreach (var opt in data.ModuleOptions)
+        {
+            if (!optionsByModule.TryGetValue(opt.ModuleName, out var list))
+            {
+                list = new List<ModuleOptionsRecord>();
+                optionsByModule[opt.ModuleName] = list;
+            }
+            list.Add(opt);
+        }
+
+        foreach (var kvp in optionsByModule)
+        {
+            if (kvp.Value.Count > 1)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MultipleModuleOptions,
+                        Location.None,
+                        kvp.Key,
+                        Strip(kvp.Value[0].FullyQualifiedName),
+                        Strip(kvp.Value[1].FullyQualifiedName)
+                    )
+                );
+            }
+        }
+
+        // SM0045: IModuleOptions class not associated with a known module
+        var knownModuleNames = new HashSet<string>();
+        foreach (var module in data.Modules)
+        {
+            knownModuleNames.Add(module.ModuleName);
+        }
+
+        foreach (var opt in data.ModuleOptions)
+        {
+            if (!knownModuleNames.Contains(opt.ModuleName))
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ModuleOptionsOrphan,
+                        Location.None,
+                        Strip(opt.FullyQualifiedName),
+                        opt.ModuleName
+                    )
+                );
             }
         }
     }

@@ -51,6 +51,33 @@ All hooks are optional. All have default no-op implementations.
 8. **OnStopAsync** -- graceful shutdown cleanup
 9. **CheckHealthAsync** -- report module health status (Healthy, Degraded, Unhealthy)
 
+### Module Options
+
+Modules can expose configurable behavior via the `IModuleOptions` marker interface. The source generator auto-discovers these classes and generates typed `Configure{Module}()` extension methods on `SimpleModuleOptions`.
+
+```csharp
+// Module defines options
+public class ProductsModuleOptions : IModuleOptions
+{
+    public int DefaultPageSize { get; set; } = 10;
+    public int MaxPageSize { get; set; } = 100;
+}
+
+// Host app configures them
+builder.AddSimpleModule(o =>
+{
+    o.ConfigureProducts(p => p.MaxPageSize = 50);
+});
+
+// Module reads them via IOptions<T>
+public class BrowseEndpoint(IOptions<ProductsModuleOptions> options) : IViewEndpoint { ... }
+```
+
+**Rules:**
+- At most one `IModuleOptions` class per module (SM0044 warns on duplicates).
+- Options classes may live in the module assembly or its Contracts assembly.
+- SM0045 warns if an options class cannot be matched to a known module.
+
 ### What a Module Must Never Expose
 
 - Entity classes
@@ -371,6 +398,8 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | SM0002 | Warning | Module name must not be empty |
 | SM0040 | Error | No duplicate module names |
 | SM0043 | Warning | Module must override at least one IModule method |
+| SM0044 | Warning | Multiple IModuleOptions for same module |
+| SM0045 | Warning | IModuleOptions class not associated with any module |
 
 ### Dependencies
 

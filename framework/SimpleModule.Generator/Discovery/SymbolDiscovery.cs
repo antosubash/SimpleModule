@@ -395,6 +395,42 @@ internal static class SymbolDiscovery
             }
         );
 
+        // Step 3f: Find IModuleOptions implementors in module and contracts assemblies
+        var moduleOptionsList = new List<ModuleOptionsInfo>();
+        var moduleOptionsSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IModuleOptions"
+        );
+        if (moduleOptionsSymbol is not null)
+        {
+            foreach (var module in modules)
+            {
+                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
+                    continue;
+
+                var moduleAssembly = typeSymbol.ContainingAssembly;
+                FindModuleOptionsClasses(
+                    moduleAssembly.GlobalNamespace,
+                    moduleOptionsSymbol,
+                    module.ModuleName,
+                    moduleOptionsList
+                );
+            }
+
+            // Also scan contracts assemblies for module options classes
+            foreach (var kvp in contractsAssemblySymbols)
+            {
+                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
+                {
+                    FindModuleOptionsClasses(
+                        kvp.Value.GlobalNamespace,
+                        moduleOptionsSymbol,
+                        moduleName,
+                        moduleOptionsList
+                    );
+                }
+            }
+        }
+
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
         var illegalReferences = new List<IllegalModuleReferenceRecord>();
@@ -537,6 +573,9 @@ internal static class SymbolDiscovery
                 ))
                 .ToImmutableArray(),
             vogenValueObjects.ToImmutableArray(),
+            moduleOptionsList
+                .Select(o => new ModuleOptionsRecord(o.FullyQualifiedName, o.ModuleName))
+                .ToImmutableArray(),
             hostAssemblyName
         );
     }
@@ -1223,6 +1262,40 @@ internal static class SymbolDiscovery
                 }
 
                 results.Add(info);
+            }
+        }
+    }
+
+    private static void FindModuleOptionsClasses(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol moduleOptionsSymbol,
+        string moduleName,
+        List<ModuleOptionsInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindModuleOptionsClasses(childNs, moduleOptionsSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Class
+                && !typeSymbol.IsAbstract
+                && !typeSymbol.IsStatic
+                && ImplementsInterface(typeSymbol, moduleOptionsSymbol)
+            )
+            {
+                results.Add(
+                    new ModuleOptionsInfo
+                    {
+                        FullyQualifiedName = typeSymbol.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        ),
+                        ModuleName = moduleName,
+                    }
+                );
             }
         }
     }
