@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Products.Contracts;
@@ -14,10 +14,14 @@ public class BrowseEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/browse",
-                async (IProductContracts products) =>
+                async (IProductContracts products, IOptions<ProductsModuleOptions> options) =>
                     Inertia.Render(
                         "Products/Browse",
-                        new { products = await products.GetAllProductsAsync() }
+                        new
+                        {
+                            products = await products.GetAllProductsAsync(),
+                            pageSize = options.Value.DefaultPageSize,
+                        }
                     )
             )
             .AllowAnonymous();

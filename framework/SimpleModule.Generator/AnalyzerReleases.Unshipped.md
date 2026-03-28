@@ -30,3 +30,4 @@ SM0040 | SimpleModule.Generator | Error | Duplicate module name
 SM0041 | SimpleModule.Generator | Warning | View page name does not match module name prefix
 SM0042 | SimpleModule.Generator | Error | Module has view endpoints but no ViewPrefix
 SM0043 | SimpleModule.Generator | Warning | Module does not override any IModule methods
+SM0044 | SimpleModule.Generator | Warning | Multiple IModuleOptions for same module

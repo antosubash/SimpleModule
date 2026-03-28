@@ -234,6 +234,7 @@ public class TopologicalSortTests
             ImmutableArray<PermissionClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
+            ImmutableArray<ModuleOptionsRecord>.Empty,
             "SimpleModule.Host"
         );
 
@@ -294,6 +295,7 @@ public class TopologicalSortTests
             ImmutableArray<PermissionClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
+            ImmutableArray<ModuleOptionsRecord>.Empty,
             "SimpleModule.Host"
         );
 
@@ -366,6 +368,7 @@ public class TopologicalSortTests
             ImmutableArray<PermissionClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
+            ImmutableArray<ModuleOptionsRecord>.Empty,
             "SimpleModule.Host"
         );
 

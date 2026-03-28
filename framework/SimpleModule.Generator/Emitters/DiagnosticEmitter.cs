@@ -260,6 +260,15 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    private static readonly DiagnosticDescriptor MultipleModuleOptions = new(
+        id: "SM0044",
+        title: "Multiple IModuleOptions for same module",
+        messageFormat: "Module '{0}' has multiple IModuleOptions implementations: '{1}' and '{2}'. Each module should have at most one options class. Only the first will be used.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -848,6 +857,25 @@ internal sealed class DiagnosticEmitter : IEmitter
                         );
                     }
                 }
+            }
+        }
+
+        // SM0044: Multiple IModuleOptions for same module
+        var optionsByModule = ModuleOptionsRecord.GroupByModule(data.ModuleOptions);
+
+        foreach (var kvp in optionsByModule)
+        {
+            if (kvp.Value.Count > 1)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MultipleModuleOptions,
+                        Location.None,
+                        kvp.Key,
+                        Strip(kvp.Value[0].FullyQualifiedName),
+                        Strip(kvp.Value[1].FullyQualifiedName)
+                    )
+                );
             }
         }
     }

@@ -29,6 +29,7 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<PermissionClassRecord> PermissionClasses,
     ImmutableArray<InterceptorInfoRecord> Interceptors,
     ImmutableArray<VogenValueObjectRecord> VogenValueObjects,
+    ImmutableArray<ModuleOptionsRecord> ModuleOptions,
     string HostAssemblyName
 )
 {
@@ -44,6 +45,7 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<PermissionClassRecord>.Empty,
         ImmutableArray<InterceptorInfoRecord>.Empty,
         ImmutableArray<VogenValueObjectRecord>.Empty,
+        ImmutableArray<ModuleOptionsRecord>.Empty,
         ""
     );
 
@@ -60,6 +62,7 @@ internal readonly record struct DiscoveryData(
             && PermissionClasses.SequenceEqual(other.PermissionClasses)
             && Interceptors.SequenceEqual(other.Interceptors)
             && VogenValueObjects.SequenceEqual(other.VogenValueObjects)
+            && ModuleOptions.SequenceEqual(other.ModuleOptions)
             && HostAssemblyName == other.HostAssemblyName;
     }
 
@@ -77,6 +80,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, PermissionClasses);
         hash = HashHelper.HashArray(hash, Interceptors);
         hash = HashHelper.HashArray(hash, VogenValueObjects);
+        hash = HashHelper.HashArray(hash, ModuleOptions);
         hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
         return hash;
     }
@@ -309,6 +313,29 @@ internal readonly record struct InterceptorInfoRecord(
         hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, ConstructorParamTypeFqns);
         return hash;
+    }
+}
+
+internal readonly record struct ModuleOptionsRecord(
+    string FullyQualifiedName,
+    string ModuleName
+)
+{
+    internal static Dictionary<string, List<ModuleOptionsRecord>> GroupByModule(
+        ImmutableArray<ModuleOptionsRecord> options
+    )
+    {
+        var result = new Dictionary<string, List<ModuleOptionsRecord>>();
+        foreach (var opt in options)
+        {
+            if (!result.TryGetValue(opt.ModuleName, out var list))
+            {
+                list = new List<ModuleOptionsRecord>();
+                result[opt.ModuleName] = list;
+            }
+            list.Add(opt);
+        }
+        return result;
     }
 }
 

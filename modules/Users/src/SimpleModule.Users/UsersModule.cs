@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
@@ -17,20 +18,12 @@ public class UsersModule : IModule
         services.AddModuleDbContext<UsersDbContext>(configuration, UsersConstants.ModuleName);
 
         services
-            .AddIdentity<ApplicationUser, ApplicationRole>(options =>
-            {
-                options.Password.RequiredLength = 8;
-                options.Password.RequireDigit = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-                options.Lockout.MaxFailedAccessAttempts = 5;
-                options.User.RequireUniqueEmail = true;
-                options.SignIn.RequireConfirmedEmail = false;
-            })
+            .AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<UsersDbContext>()
             .AddDefaultTokenProviders();
+
+        // Bridge UsersModuleOptions into ASP.NET Identity options
+        services.AddSingleton<IPostConfigureOptions<IdentityOptions>, ApplyUsersModuleOptions>();
 
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();

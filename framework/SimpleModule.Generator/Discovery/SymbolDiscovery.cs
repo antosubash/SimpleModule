@@ -395,6 +395,40 @@ internal static class SymbolDiscovery
             }
         );
 
+        // Step 3f: Find IModuleOptions implementors in module and contracts assemblies
+        var moduleOptionsList = new List<ModuleOptionsRecord>();
+        var moduleOptionsSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IModuleOptions"
+        );
+        if (moduleOptionsSymbol is not null)
+        {
+            ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                    FindModuleOptionsClasses(
+                        assembly.GlobalNamespace,
+                        moduleOptionsSymbol,
+                        module.ModuleName,
+                        moduleOptionsList
+                    )
+            );
+
+            // Also scan contracts assemblies for module options classes
+            foreach (var kvp in contractsAssemblySymbols)
+            {
+                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
+                {
+                    FindModuleOptionsClasses(
+                        kvp.Value.GlobalNamespace,
+                        moduleOptionsSymbol,
+                        moduleName,
+                        moduleOptionsList
+                    );
+                }
+            }
+        }
+
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
         var illegalReferences = new List<IllegalModuleReferenceRecord>();
@@ -537,6 +571,7 @@ internal static class SymbolDiscovery
                 ))
                 .ToImmutableArray(),
             vogenValueObjects.ToImmutableArray(),
+            moduleOptionsList.ToImmutableArray(),
             hostAssemblyName
         );
     }
@@ -1223,6 +1258,55 @@ internal static class SymbolDiscovery
                 }
 
                 results.Add(info);
+            }
+        }
+    }
+
+    private static void FindModuleOptionsClasses(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol moduleOptionsSymbol,
+        string moduleName,
+        List<ModuleOptionsRecord> results
+    )
+    {
+        FindConcreteClassesImplementing(
+            namespaceSymbol,
+            moduleOptionsSymbol,
+            typeSymbol =>
+                results.Add(
+                    new ModuleOptionsRecord(
+                        typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        moduleName
+                    )
+                )
+        );
+    }
+
+    /// <summary>
+    /// Recursively walks namespaces and invokes <paramref name="onMatch"/> for each
+    /// concrete (non-abstract, non-static) class that implements the given interface.
+    /// </summary>
+    private static void FindConcreteClassesImplementing(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol interfaceSymbol,
+        Action<INamedTypeSymbol> onMatch
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindConcreteClassesImplementing(childNs, interfaceSymbol, onMatch);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Class
+                && !typeSymbol.IsAbstract
+                && !typeSymbol.IsStatic
+                && ImplementsInterface(typeSymbol, interfaceSymbol)
+            )
+            {
+                onMatch(typeSymbol);
             }
         }
     }

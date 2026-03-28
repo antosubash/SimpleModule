@@ -47,10 +47,12 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("        this WebApplicationBuilder builder,");
         sb.AppendLine("        System.Action<SimpleModuleOptions>? configure = null)");
         sb.AppendLine("    {");
+        sb.AppendLine("        SimpleModuleOptions? smOptions = null;");
         sb.AppendLine("        builder.AddSimpleModuleInfrastructure(o =>");
         sb.AppendLine("        {");
         sb.AppendLine("            o.ShellComponent ??= typeof(InertiaShell);");
         sb.AppendLine("            configure?.Invoke(o);");
+        sb.AppendLine("            smOptions = o;");
         sb.AppendLine("        });");
         sb.AppendLine();
         sb.AppendLine("        // Source-generated module registration");
@@ -59,6 +61,9 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine(
             "        builder.Services.AddModuleDbContext<HostDbContext>(builder.Configuration, global::SimpleModule.Database.DatabaseConstants.HostModuleName);"
         );
+        sb.AppendLine();
+        sb.AppendLine("        // Register module options (IModuleOptions auto-discovery)");
+        sb.AppendLine("        smOptions?.ApplyModuleOptions(builder.Services, ModuleOptionsExtensions.RegisterModuleOptionsDefaults);");
         sb.AppendLine();
         sb.AppendLine("        builder.Services.CollectModuleMenuItems();");
         sb.AppendLine("        builder.Services.CollectModuleSettings();");

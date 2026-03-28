@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SimpleModule.AuditLogs.Contracts;
 
 namespace SimpleModule.AuditLogs.Pipeline;
@@ -8,16 +9,15 @@ namespace SimpleModule.AuditLogs.Pipeline;
 public sealed partial class AuditWriterService(
     AuditChannel channel,
     IServiceScopeFactory scopeFactory,
+    IOptions<AuditLogsModuleOptions> moduleOptions,
     ILogger<AuditWriterService> logger
 ) : BackgroundService
 {
-    private const int BatchSize = 100;
-    private static readonly TimeSpan FlushInterval = TimeSpan.FromSeconds(2);
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         LogStarted(logger);
-        var batch = new List<AuditEntry>(BatchSize);
+        var opts = moduleOptions.Value;
+        var batch = new List<AuditEntry>(opts.WriterBatchSize);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -26,10 +26,10 @@ public sealed partial class AuditWriterService(
                 if (await channel.Reader.WaitToReadAsync(stoppingToken))
                 {
                     batch.Clear();
-                    var deadline = DateTimeOffset.UtcNow.Add(FlushInterval);
+                    var deadline = DateTimeOffset.UtcNow.Add(opts.WriterFlushInterval);
 
                     while (
-                        batch.Count < BatchSize
+                        batch.Count < opts.WriterBatchSize
                         && DateTimeOffset.UtcNow < deadline
                         && channel.Reader.TryRead(out var entry)
                     )
