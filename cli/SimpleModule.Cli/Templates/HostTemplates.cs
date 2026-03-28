@@ -24,23 +24,15 @@ public sealed class HostTemplates
         "ReferenceOutputAssembly=",
     ];
 
-    private readonly string _templateHostDir;
-
-    public HostTemplates(SolutionContext solution)
-    {
-        _templateHostDir = Path.Combine(solution.RootPath, "template", "SimpleModule.Host");
-    }
-
     /// <summary>
     /// Transform the Host .csproj: strip module ProjectReferences, ServiceDefaults,
     /// InternalsVisibleTo, NoWarn/SM0011/SM0035/SM0038/TODO lines, EF Core Design package,
     /// and the Import Project line. Replace framework ProjectReferences with PackageReferences.
     /// Replace SimpleModule with projectName.
     /// </summary>
-    public string HostCsproj(string projectName)
+    public static string HostCsproj(string projectName)
     {
-        var path = Path.Combine(_templateHostDir, "SimpleModule.Host.csproj");
-        var lines = File.ReadAllLines(path).ToList();
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.SimpleModule.Host.csproj");
 
         // Strip lines containing patterns that should not appear in a new project
         lines.RemoveAll(line =>
@@ -83,17 +75,18 @@ public sealed class HostTemplates
     }
 
     /// <summary>
-    /// Copy Program.cs, remove ServiceDefaults and MapDefaultEndpoints lines.
+    /// Copy Program.cs, remove ServiceDefaults, MapDefaultEndpoints, and Storage.Local lines.
     /// Framework method names (AddSimpleModule, UseSimpleModule) are kept as-is.
     /// </summary>
-    public string ProgramCs()
+    public static string ProgramCs()
     {
-        var path = Path.Combine(_templateHostDir, "Program.cs");
-        var lines = File.ReadAllLines(path).ToList();
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Program.cs");
 
         lines.RemoveAll(line =>
             line.Contains("ServiceDefaults", StringComparison.Ordinal)
             || line.Contains("MapDefaultEndpoints", StringComparison.Ordinal)
+            || line.Contains("Storage.Local", StringComparison.Ordinal)
+            || line.Contains("AddLocalStorage", StringComparison.Ordinal)
         );
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
@@ -104,81 +97,84 @@ public sealed class HostTemplates
     /// <summary>
     /// Copy App.razor, replace SimpleModule with projectName.
     /// </summary>
-    public string AppRazor(string projectName)
+    public static string AppRazor(string projectName)
     {
-        var path = Path.Combine(_templateHostDir, "Components", "App.razor");
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.App.razor");
         return ReplaceProjectName(content, projectName);
     }
 
     /// <summary>
     /// Copy InertiaShell.razor, replace SimpleModule with projectName.
     /// </summary>
-    public string InertiaShellRazor(string projectName)
+    public static string InertiaShellRazor(string projectName)
     {
-        var path = Path.Combine(_templateHostDir, "Components", "InertiaShell.razor");
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.InertiaShell.razor");
         return ReplaceProjectName(content, projectName);
     }
 
     /// <summary>
-    /// Generate a clean Routes.razor WITHOUT the AdditionalAssemblies Users module reference.
+    /// Copy Routes.razor, stripping AdditionalAssemblies references and
+    /// closing the Router tag properly.
     /// </summary>
     public static string RoutesRazor()
     {
-        return """
-            <Router AppAssembly="typeof(App).Assembly">
-                <Found Context="routeData">
-                    <RouteView RouteData="routeData" DefaultLayout="typeof(SimpleModule.Blazor.Components.Layout.MainLayout)" />
-                </Found>
-            </Router>
-            """;
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Components.Routes.razor");
+        lines.RemoveAll(line => line.Contains("AdditionalAssemblies", StringComparison.Ordinal));
+
+        // Fix unclosed Router tag: replace trailing open attribute list with closing >
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var trimmed = lines[i].TrimEnd();
+            if (trimmed.Contains("<Router", StringComparison.Ordinal) && !trimmed.EndsWith('>'))
+            {
+                lines[i] = trimmed + ">";
+            }
+        }
+
+        lines = TemplateExtractor.CollapseBlankLines(lines);
+
+        return string.Join(Environment.NewLine, lines);
     }
 
     /// <summary>
     /// Copy _Imports.razor, replace SimpleModule with projectName.
     /// </summary>
-    public string ImportsRazor(string projectName)
+    public static string ImportsRazor(string projectName)
     {
-        var path = Path.Combine(_templateHostDir, "Components", "_Imports.razor");
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components._Imports.razor");
         return ReplaceProjectName(content, projectName);
     }
 
     /// <summary>
     /// Copy app.tsx as-is.
     /// </summary>
-    public string AppTsx()
+    public static string AppTsx()
     {
-        var path = Path.Combine(_templateHostDir, "ClientApp", "app.tsx");
-        return File.ReadAllText(path);
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.app.tsx");
     }
 
     /// <summary>
     /// Copy vite.config.ts as-is.
     /// </summary>
-    public string ViteConfig()
+    public static string ViteConfig()
     {
-        var path = Path.Combine(_templateHostDir, "ClientApp", "vite.config.ts");
-        return File.ReadAllText(path);
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.vite.config.ts");
     }
 
     /// <summary>
     /// Copy validate-pages.mjs as-is.
     /// </summary>
-    public string ValidatePages()
+    public static string ValidatePages()
     {
-        var path = Path.Combine(_templateHostDir, "ClientApp", "validate-pages.mjs");
-        return File.ReadAllText(path);
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.validate-pages.mjs");
     }
 
     /// <summary>
     /// Copy ClientApp/package.json, replace @simplemodule/app with @{projectName}/app.
     /// </summary>
-    public string ClientAppPackageJson(string projectName)
+    public static string ClientAppPackageJson(string projectName)
     {
-        var path = Path.Combine(_templateHostDir, "ClientApp", "package.json");
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.package.json");
         return content.Replace(
             "@simplemodule/app",
             $"@{projectName.ToLowerInvariant()}/app",
@@ -188,44 +184,46 @@ public sealed class HostTemplates
 
     /// <summary>
     /// Return a clean Styles/app.css with tailwindcss import, theme import,
-    /// and @source directives for modules. NO _scan/ import.
+    /// and @source directives for modules. Strip _scan/ import if present.
     /// </summary>
     public static string AppCss()
     {
-        return """
-            @import "tailwindcss";
-            @import "@simplemodule/theme-default/theme.css";
-            @source "../../../modules/**/Components/**/*.razor";
-            @source "../../../modules/**/Views/**/*.tsx";
-            @source "../../../modules/**/Pages/**/*.tsx";
-            """;
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Styles.app.css");
+        lines.RemoveAll(line => line.Contains("_scan/", StringComparison.Ordinal));
+
+        // Replace module source paths for new project structure (template/ → src/)
+        var result = string.Join(Environment.NewLine, lines);
+        result = result.Replace(
+            "../../modules/",
+            "../../../modules/",
+            StringComparison.Ordinal
+        );
+
+        return result;
     }
 
     /// <summary>
     /// Copy appsettings.json as-is.
     /// </summary>
-    public string AppSettings()
+    public static string AppSettings()
     {
-        var path = Path.Combine(_templateHostDir, "appsettings.json");
-        return File.ReadAllText(path);
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.appsettings.json");
     }
 
     /// <summary>
     /// Copy appsettings.Development.json as-is.
     /// </summary>
-    public string AppSettingsDevelopment()
+    public static string AppSettingsDevelopment()
     {
-        var path = Path.Combine(_templateHostDir, "appsettings.Development.json");
-        return File.ReadAllText(path);
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.appsettings.Development.json");
     }
 
     /// <summary>
     /// Copy launchSettings.json, replace SimpleModule with projectName.
     /// </summary>
-    public string LaunchSettings(string projectName)
+    public static string LaunchSettings(string projectName)
     {
-        var path = Path.Combine(_templateHostDir, "Properties", "launchSettings.json");
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Properties.launchSettings.json");
         return ReplaceProjectName(content, projectName);
     }
 
