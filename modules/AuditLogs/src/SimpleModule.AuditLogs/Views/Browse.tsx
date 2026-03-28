@@ -24,6 +24,15 @@ import {
 } from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
 import type { AuditEntry, AuditQueryRequest } from '../types';
+import {
+  ACTION_LABELS,
+  actionBadgeVariant,
+  formatTimestamp,
+  relativeTime,
+  SOURCE_LABELS,
+  sourceBadgeVariant,
+  statusBadgeVariant,
+} from '../utils/audit-utils';
 
 interface PagedResult<T> {
   items: T[];
@@ -37,80 +46,12 @@ interface Props {
   filters: AuditQueryRequest;
 }
 
-const SOURCE_LABELS: Record<number, string> = {
-  0: 'HTTP',
-  1: 'Domain',
-  2: 'Changes',
-};
-
-const ACTION_LABELS: Record<number, string> = {
-  0: 'Created',
-  1: 'Updated',
-  2: 'Deleted',
-  3: 'Viewed',
-  4: 'Login OK',
-  5: 'Login Fail',
-  6: 'Perm Granted',
-  7: 'Perm Revoked',
-  8: 'Setting Changed',
-  9: 'Exported',
-  10: 'Other',
-};
-
 const DATE_PRESETS = [
   { label: 'Last hour', hours: 1 },
   { label: 'Last 24h', hours: 24 },
   { label: 'Last 7 days', hours: 168 },
   { label: 'Last 30 days', hours: 720 },
 ];
-
-function sourceBadgeVariant(source: number) {
-  if (source === 1) return 'success' as const;
-  if (source === 2) return 'warning' as const;
-  return 'default' as const;
-}
-
-function statusBadgeVariant(statusCode: number | null | undefined) {
-  if (statusCode == null) return 'default' as const;
-  if (statusCode >= 200 && statusCode < 300) return 'success' as const;
-  if (statusCode >= 400 && statusCode < 500) return 'warning' as const;
-  if (statusCode >= 500) return 'danger' as const;
-  return 'default' as const;
-}
-
-function actionBadgeVariant(action: number | null | undefined) {
-  if (action == null) return 'default' as const;
-  if (action === 0) return 'success' as const;
-  if (action === 2) return 'danger' as const;
-  if (action === 5 || action === 7) return 'warning' as const;
-  return 'info' as const;
-}
-
-function formatTimestamp(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
-
-function relativeTime(iso: string): string {
-  const now = Date.now();
-  const then = new Date(iso).getTime();
-  const diffSec = Math.floor((now - then) / 1000);
-  if (diffSec < 60) return 'just now';
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 30) return `${diffDay}d ago`;
-  return formatTimestamp(iso);
-}
 
 function buildFilterParams(f: Partial<AuditQueryRequest>, page?: number): Record<string, string> {
   const params: Record<string, string> = {};
@@ -120,7 +61,7 @@ function buildFilterParams(f: Partial<AuditQueryRequest>, page?: number): Record
   if (f.action != null) params.action = String(f.action);
   if (f.module) params.module = f.module;
   if (f.searchText) params.searchText = f.searchText;
-  if (f.statusCode != null) params.statusCode = String(f.statusCode);
+
   if (page && page > 1) params.page = String(page);
   return params;
 }
@@ -162,9 +103,6 @@ export default function Browse({ result, filters }: Props) {
   const [action, setAction] = useState(filters.action != null ? String(filters.action) : '__all__');
   const [module, setModule] = useState(filters.module ?? '');
   const [searchText, setSearchText] = useState(filters.searchText ?? '');
-  const [statusCode, setStatusCode] = useState(
-    filters.statusCode != null ? String(filters.statusCode) : '__all__',
-  );
 
   const totalPages = Math.max(1, Math.ceil(result.totalCount / result.pageSize));
   const currentPage = result.page;
@@ -177,7 +115,6 @@ export default function Browse({ result, filters }: Props) {
       action: action !== '__all__' ? Number(action) : undefined,
       module: module || undefined,
       searchText: searchText || undefined,
-      statusCode: statusCode !== '__all__' ? Number(statusCode) : undefined,
     };
   }
 
@@ -187,13 +124,6 @@ export default function Browse({ result, filters }: Props) {
   }
 
   function clearFilters() {
-    setFrom('');
-    setTo('');
-    setSource('__all__');
-    setAction('__all__');
-    setModule('');
-    setSearchText('');
-    setStatusCode('__all__');
     router.get('/audit-logs/browse');
   }
 
@@ -202,8 +132,6 @@ export default function Browse({ result, filters }: Props) {
     const past = new Date(now.getTime() - hours * 60 * 60 * 1000);
     const toLocal = now.toISOString().slice(0, 16);
     const fromLocal = past.toISOString().slice(0, 16);
-    setFrom(fromLocal);
-    setTo(toLocal);
     router.get(
       '/audit-logs/browse',
       buildFilterParams({
@@ -229,13 +157,7 @@ export default function Browse({ result, filters }: Props) {
   }
 
   const hasActiveFilters =
-    from ||
-    to ||
-    source !== '__all__' ||
-    action !== '__all__' ||
-    module ||
-    searchText ||
-    statusCode !== '__all__';
+    from || to || source !== '__all__' || action !== '__all__' || module || searchText;
 
   const startItem = (currentPage - 1) * result.pageSize + 1;
   const endItem = Math.min(currentPage * result.pageSize, result.totalCount);
@@ -328,21 +250,6 @@ export default function Browse({ result, filters }: Props) {
                           {v}
                         </SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-text-muted">Status</span>
-                  <Select value={statusCode} onValueChange={setStatusCode}>
-                    <SelectTrigger aria-label="Status code">
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__all__">All statuses</SelectItem>
-                      <SelectItem value="200">2xx Success</SelectItem>
-                      <SelectItem value="300">3xx Redirect</SelectItem>
-                      <SelectItem value="400">4xx Client Error</SelectItem>
-                      <SelectItem value="500">5xx Server Error</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -500,9 +407,9 @@ export default function Browse({ result, filters }: Props) {
                 >
                   <ChevronLeft />
                 </Button>
-                {paginationRange(currentPage, totalPages).map((p, i) =>
-                  p === 'ellipsis' ? (
-                    <span key={`ellipsis-${i}`} className="px-1 text-sm text-text-muted">
+                {paginationRange(currentPage, totalPages).map((p) =>
+                  p === 'ellipsis-start' || p === 'ellipsis-end' ? (
+                    <span key={p} className="px-1 text-sm text-text-muted">
                       ...
                     </span>
                   ) : (
@@ -535,17 +442,20 @@ export default function Browse({ result, filters }: Props) {
 }
 
 /** Build a compact pagination range: 1 ... 4 5 [6] 7 8 ... 20 */
-function paginationRange(current: number, total: number): (number | 'ellipsis')[] {
+function paginationRange(
+  current: number,
+  total: number,
+): (number | 'ellipsis-start' | 'ellipsis-end')[] {
   if (total <= 7) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
-  const pages: (number | 'ellipsis')[] = [];
+  const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = [];
   pages.push(1);
-  if (current > 3) pages.push('ellipsis');
+  if (current > 3) pages.push('ellipsis-start');
   const start = Math.max(2, current - 1);
   const end = Math.min(total - 1, current + 1);
   for (let i = start; i <= end; i++) pages.push(i);
-  if (current < total - 2) pages.push('ellipsis');
+  if (current < total - 2) pages.push('ellipsis-end');
   pages.push(total);
   return pages;
 }

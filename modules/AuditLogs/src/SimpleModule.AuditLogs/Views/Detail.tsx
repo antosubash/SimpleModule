@@ -18,49 +18,21 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@simplemodule/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AuditEntry } from '../types';
+import {
+  ACTION_LABELS,
+  actionBadgeVariant,
+  formatTimestamp,
+  relativeTime,
+  SOURCE_LABELS,
+  sourceBadgeVariant,
+  statusBadgeVariant,
+} from '../utils/audit-utils';
 
 interface Props {
   entry: AuditEntry;
   correlated: AuditEntry[];
-}
-
-const SOURCE_LABELS: Record<number, string> = { 0: 'HTTP', 1: 'Domain', 2: 'Changes' };
-const ACTION_LABELS: Record<number, string> = {
-  0: 'Created',
-  1: 'Updated',
-  2: 'Deleted',
-  3: 'Viewed',
-  4: 'Login OK',
-  5: 'Login Fail',
-  6: 'Perm Granted',
-  7: 'Perm Revoked',
-  8: 'Setting Changed',
-  9: 'Exported',
-  10: 'Other',
-};
-
-function sourceBadgeVariant(source: number) {
-  if (source === 1) return 'success' as const;
-  if (source === 2) return 'warning' as const;
-  return 'default' as const;
-}
-
-function actionBadgeVariant(action: number | null | undefined) {
-  if (action == null) return 'default' as const;
-  if (action === 0) return 'success' as const;
-  if (action === 2) return 'danger' as const;
-  if (action === 5 || action === 7) return 'warning' as const;
-  return 'info' as const;
-}
-
-function statusBadgeVariant(statusCode: number | null | undefined) {
-  if (statusCode == null) return 'default' as const;
-  if (statusCode >= 200 && statusCode < 300) return 'success' as const;
-  if (statusCode >= 400 && statusCode < 500) return 'warning' as const;
-  if (statusCode >= 500) return 'danger' as const;
-  return 'default' as const;
 }
 
 function LabeledField({ label, children }: { label: string; children: React.ReactNode }) {
@@ -70,31 +42,6 @@ function LabeledField({ label, children }: { label: string; children: React.Reac
       <dd className="mt-1 text-sm font-medium text-text">{children || '\u2014'}</dd>
     </div>
   );
-}
-
-function formatTimestamp(ts: string): string {
-  return new Date(ts).toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
-
-function relativeTime(iso: string): string {
-  const now = Date.now();
-  const then = new Date(iso).getTime();
-  const diffSec = Math.floor((now - then) / 1000);
-  if (diffSec < 60) return 'just now';
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 30) return `${diffDay}d ago`;
-  return formatTimestamp(iso);
 }
 
 function formatJson(raw: string): string {
@@ -152,10 +99,15 @@ function hasUpdateStyle(changes: ChangeEntry[]): boolean {
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
 
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(id);
+  }, [copied]);
+
   function handleCopy() {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => {});
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -173,6 +125,7 @@ function CopyButton({ text }: { text: string }) {
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path d="M20 6 9 17l-5-5" />
             </svg>
@@ -183,6 +136,7 @@ function CopyButton({ text }: { text: string }) {
               stroke="currentColor"
               strokeWidth="2"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <rect x="9" y="9" width="13" height="13" rx="2" />
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />

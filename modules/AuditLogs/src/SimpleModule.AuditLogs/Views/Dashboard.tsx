@@ -232,33 +232,28 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
   const [dateTo, setDateTo] = useState<Date | undefined>(new Date(to));
   const [selectedUser, setSelectedUser] = useState(userId || '__all__');
 
-  function navigate(params: Record<string, string>) {
-    router.get('/audit-logs/dashboard', params);
-  }
-
   function applyFilters() {
     const params: Record<string, string> = {};
     if (dateFrom) params.from = dateFrom.toISOString();
     if (dateTo) params.to = dateTo.toISOString();
     if (selectedUser && selectedUser !== '__all__') params.userId = selectedUser;
-    navigate(params);
+    router.get('/audit-logs/dashboard', params);
   }
 
   function applyDatePreset(hours: number) {
     const now = new Date();
     const past = new Date(now.getTime() - hours * 60 * 60 * 1000);
-    setDateFrom(past);
-    setDateTo(now);
     const params: Record<string, string> = {
       from: past.toISOString(),
       to: now.toISOString(),
     };
     if (selectedUser && selectedUser !== '__all__') params.userId = selectedUser;
-    navigate(params);
+    router.get('/audit-logs/dashboard', params);
   }
 
   function browseWithFilter(params: Record<string, string>) {
-    router.get('/audit-logs/browse', { from, to, ...params });
+    const toLocal = (iso: string) => iso.slice(0, 16);
+    router.get('/audit-logs/browse', { from: toLocal(from), to: toLocal(to), ...params });
   }
 
   // Prepare chart data
@@ -379,7 +374,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           value={stats.errorRate > 0 ? `${stats.errorRate}%` : '0%'}
           accent={stats.errorRate > 5 ? 'danger' : 'default'}
           subtitle="4xx + 5xx responses"
-          onClick={() => browseWithFilter({ statusCode: '400' })}
+          onClick={() => browseWithFilter({})}
         />
       </div>
 
