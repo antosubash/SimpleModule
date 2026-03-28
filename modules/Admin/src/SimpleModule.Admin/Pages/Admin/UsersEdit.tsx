@@ -24,6 +24,12 @@ import {
   FieldGroup,
   Input,
   Label,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
 import { PermissionGroups } from '../components/PermissionGroups';
@@ -49,11 +55,20 @@ interface Role {
   description: string | null;
 }
 
+interface Session {
+  tokenId: string;
+  type: string;
+  applicationName: string | null;
+  creationDate: string | null;
+  expirationDate: string | null;
+}
+
 interface Props {
   user: UserDetail;
   userPermissions: string[];
   allRoles: Role[];
   permissionsByModule: Record<string, string[]>;
+  activeSessions: Session[];
   tab: string;
   currentUserId: string;
 }
@@ -62,15 +77,17 @@ const tabs = [
   { id: 'details', label: 'Details' },
   { id: 'roles', label: 'Roles & Permissions' },
   { id: 'security', label: 'Security' },
+  { id: 'sessions', label: 'Sessions' },
 ];
 
-type ConfirmAction = 'deactivate' | 'reverify' | 'disable2fa' | null;
+type ConfirmAction = 'deactivate' | 'reverify' | 'disable2fa' | 'revokeAll' | null;
 
 export default function UsersEdit({
   user,
   userPermissions,
   allRoles,
   permissionsByModule,
+  activeSessions,
   tab,
   currentUserId,
 }: Props) {
@@ -89,6 +106,9 @@ export default function UsersEdit({
         break;
       case 'disable2fa':
         router.post(`/admin/users/${user.id}/disable-2fa`);
+        break;
+      case 'revokeAll':
+        router.delete(`/admin/users/${user.id}/sessions`);
         break;
     }
     setConfirmAction(null);
@@ -112,6 +132,12 @@ export default function UsersEdit({
       title: 'Disable Two-Factor Authentication',
       description: 'This will disable 2FA and reset the authenticator for this user. Are you sure?',
       action: 'Disable 2FA',
+    },
+    revokeAll: {
+      title: 'Revoke All Sessions',
+      description:
+        'This will invalidate all active sessions for this user. They will need to sign in again.',
+      action: 'Revoke All',
     },
   };
 
@@ -405,6 +431,73 @@ export default function UsersEdit({
             </CardContent>
           </Card>
         </>
+      )}
+
+      {tab === 'sessions' && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Active Sessions</CardTitle>
+              {activeSessions.length > 0 && (
+                <Button variant="danger" size="sm" onClick={() => setConfirmAction('revokeAll')}>
+                  Revoke All
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {activeSessions.length === 0 ? (
+              <p className="text-sm text-text-muted">No active sessions.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Application</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activeSessions.map((session) => (
+                    <TableRow key={session.tokenId}>
+                      <TableCell>
+                        <Badge variant={session.type === 'refresh_token' ? 'info' : 'secondary'}>
+                          {session.type === 'refresh_token' ? 'Refresh' : 'Access'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {session.applicationName || '\u2014'}
+                      </TableCell>
+                      <TableCell className="text-sm text-text-muted">
+                        {session.creationDate
+                          ? new Date(session.creationDate).toLocaleString()
+                          : '\u2014'}
+                      </TableCell>
+                      <TableCell className="text-sm text-text-muted">
+                        {session.expirationDate
+                          ? new Date(session.expirationDate).toLocaleString()
+                          : 'Never'}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() =>
+                            router.delete(`/admin/users/${user.id}/sessions/${session.tokenId}`)
+                          }
+                        >
+                          Revoke
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       <Dialog

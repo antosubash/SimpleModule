@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
+using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
 
@@ -23,6 +24,7 @@ public class UsersEditEndpoint : IViewEndpoint
                     IUserAdminContracts userAdmin,
                     IRoleAdminContracts roleAdmin,
                     IPermissionContracts permissionContracts,
+                    IOpenIddictSessionContracts sessionContracts,
                     PermissionRegistry permissionRegistry,
                     string? tab
                 ) =>
@@ -35,10 +37,12 @@ public class UsersEditEndpoint : IViewEndpoint
                     var permsTask = permissionContracts.GetPermissionsForUserAsync(
                         UserId.From(id)
                     );
-                    await Task.WhenAll(rolesTask, permsTask);
+                    var sessionsTask = sessionContracts.GetActiveSessionsForUserAsync(id);
+                    await Task.WhenAll(rolesTask, permsTask, sessionsTask);
 
                     var allRoles = rolesTask.Result;
                     var userPermissions = permsTask.Result.ToList();
+                    var activeSessions = sessionsTask.Result;
 
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
                         kvp => kvp.Key,
@@ -56,6 +60,7 @@ public class UsersEditEndpoint : IViewEndpoint
                             userPermissions,
                             allRoles,
                             permissionsByModule,
+                            activeSessions,
                             tab = tab ?? "details",
                             currentUserId,
                         }
