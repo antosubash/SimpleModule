@@ -8,10 +8,12 @@ public sealed class ProjectTemplates
 {
     private const string BaseProjectName = "SimpleModule";
     private readonly SolutionContext? _solution;
+    private readonly string _frameworkVersion;
 
-    public ProjectTemplates(SolutionContext? solution)
+    public ProjectTemplates(SolutionContext? solution, string frameworkVersion)
     {
         _solution = solution;
+        _frameworkVersion = frameworkVersion;
     }
 
     public string Slnx(string projectName)
@@ -174,10 +176,10 @@ public sealed class ProjectTemplates
         var frameworkPackages = new[]
         {
             "    <!-- SimpleModule Framework -->",
-            "    <PackageVersion Include=\"SimpleModule.Core\" Version=\"0.1.0-local\" />",
-            "    <PackageVersion Include=\"SimpleModule.Database\" Version=\"0.1.0-local\" />",
-            "    <PackageVersion Include=\"SimpleModule.Hosting\" Version=\"0.1.0-local\" />",
-            "    <PackageVersion Include=\"SimpleModule.Generator\" Version=\"0.1.0-local\" />",
+            $"    <PackageVersion Include=\"SimpleModule.Core\" Version=\"{_frameworkVersion}\" />",
+            $"    <PackageVersion Include=\"SimpleModule.Database\" Version=\"{_frameworkVersion}\" />",
+            $"    <PackageVersion Include=\"SimpleModule.Hosting\" Version=\"{_frameworkVersion}\" />",
+            $"    <PackageVersion Include=\"SimpleModule.Generator\" Version=\"{_frameworkVersion}\" />",
         };
 
         // Find the last </ItemGroup> and insert before it
@@ -191,8 +193,20 @@ public sealed class ProjectTemplates
         return string.Join(Environment.NewLine, TemplateExtractor.CollapseBlankLines(cleaned));
     }
 
-    public static string NugetConfig(string simpleModuleRepoPath)
+    public static string NugetConfig(string? simpleModuleRepoPath = null)
     {
+        if (simpleModuleRepoPath is null)
+        {
+            return """
+                <?xml version="1.0" encoding="utf-8"?>
+                <configuration>
+                  <packageSources>
+                    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+                  </packageSources>
+                </configuration>
+                """;
+        }
+
         var nupkgPath = Path.Combine(simpleModuleRepoPath, "nupkg").Replace('\\', '/');
         return $"""
             <?xml version="1.0" encoding="utf-8"?>
@@ -216,9 +230,9 @@ public sealed class ProjectTemplates
         return File.Exists(path) ? File.ReadAllText(path) : FallbackGlobalJson();
     }
 
-    public static string RootPackageJson(string projectName, string frameworkPackagesPath)
+    public string RootPackageJson(string projectName, string? frameworkPackagesPath)
     {
-        return FallbackRootPackageJson(projectName, frameworkPackagesPath);
+        return FallbackRootPackageJson(projectName, frameworkPackagesPath, _frameworkVersion);
     }
 
     public string BiomeJson()
@@ -285,13 +299,13 @@ public sealed class ProjectTemplates
     {
         if (_solution is null)
         {
-            return string.Empty;
+            return FallbackEditorConfig();
         }
 
         var path = Path.Combine(_solution.RootPath, ".editorconfig");
         if (!File.Exists(path))
         {
-            return string.Empty;
+            return FallbackEditorConfig();
         }
 
         var content = File.ReadAllText(path);
@@ -303,6 +317,49 @@ public sealed class ProjectTemplates
         );
         return content;
     }
+
+    private static string FallbackEditorConfig() =>
+        """
+            root = true
+
+            [*.cs]
+            # File-scoped namespaces
+            csharp_style_namespace_declarations = file_scoped:error
+
+            # Naming: private fields _camelCase
+            dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+            dotnet_naming_rule.private_fields_underscore.style = underscore_prefix
+            dotnet_naming_rule.private_fields_underscore.severity = error
+            dotnet_naming_symbol.private_fields.applicable_kinds = field
+            dotnet_naming_symbol.private_fields.applicable_accessibilities = private
+            dotnet_naming_style.underscore_prefix.required_prefix = _
+            dotnet_naming_style.underscore_prefix.capitalization = camel_case
+
+            # Suppressions for modular monolith patterns
+            dotnet_diagnostic.IDE0058.severity = none
+            dotnet_diagnostic.IDE0130.severity = none
+            dotnet_diagnostic.CA1062.severity = none
+            dotnet_diagnostic.CA1848.severity = none
+            dotnet_diagnostic.CA1034.severity = none
+            dotnet_diagnostic.CA1515.severity = none
+            dotnet_diagnostic.CA1050.severity = none
+            dotnet_diagnostic.CA1724.severity = none
+            dotnet_diagnostic.CA2007.severity = none
+            dotnet_diagnostic.CA1716.severity = none
+            dotnet_diagnostic.CA2227.severity = none
+            dotnet_diagnostic.CA1002.severity = none
+            dotnet_diagnostic.IDE0046.severity = none
+            dotnet_diagnostic.IDE0010.severity = none
+            dotnet_diagnostic.IDE0072.severity = none
+            dotnet_diagnostic.CA1812.severity = none
+            dotnet_diagnostic.CA1707.severity = none
+
+            [{tests,src/modules/*/tests}/**/*.cs]
+            # Allow underscore method names in tests (Method_Scenario_Expected)
+            dotnet_diagnostic.CA1707.severity = none
+            dotnet_diagnostic.CA2234.severity = none
+            """;
+
 
     public string ApiCsproj(string projectName)
     {
@@ -514,18 +571,18 @@ public sealed class ProjectTemplates
             </Project>
             """;
 
-    private static string FallbackDirectoryPackagesProps() =>
-        """
+    private string FallbackDirectoryPackagesProps() =>
+        $"""
             <Project>
               <PropertyGroup>
                 <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
               </PropertyGroup>
               <ItemGroup>
                 <!-- SimpleModule Framework -->
-                <PackageVersion Include="SimpleModule.Core" Version="0.1.0-local" />
-                <PackageVersion Include="SimpleModule.Database" Version="0.1.0-local" />
-                <PackageVersion Include="SimpleModule.Hosting" Version="0.1.0-local" />
-                <PackageVersion Include="SimpleModule.Generator" Version="0.1.0-local" />
+                <PackageVersion Include="SimpleModule.Core" Version="{_frameworkVersion}" />
+                <PackageVersion Include="SimpleModule.Database" Version="{_frameworkVersion}" />
+                <PackageVersion Include="SimpleModule.Hosting" Version="{_frameworkVersion}" />
+                <PackageVersion Include="SimpleModule.Generator" Version="{_frameworkVersion}" />
                 <!-- Source Generator -->
                 <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" />
                 <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
@@ -541,6 +598,7 @@ public sealed class ProjectTemplates
                 <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
                 <PackageVersion Include="FluentAssertions" Version="8.3.0" />
                 <PackageVersion Include="NSubstitute" Version="5.3.0" />
+                <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.3" />
               </ItemGroup>
             </Project>
             """;
@@ -638,10 +696,32 @@ public sealed class ProjectTemplates
             </Project>
             """;
 
-    private static string FallbackRootPackageJson(string projectName, string frameworkPackagesPath)
+    private static string FallbackRootPackageJson(
+        string projectName,
+        string? frameworkPackagesPath,
+        string frameworkVersion
+    )
     {
         var name = projectName.ToLowerInvariant();
-        var pkgPath = frameworkPackagesPath.Replace('\\', '/');
+
+        string clientDep;
+        string uiDep;
+        string themeDep;
+
+        if (frameworkPackagesPath is not null)
+        {
+            var pkgPath = frameworkPackagesPath.Replace('\\', '/');
+            clientDep = $"\"file:{pkgPath}/SimpleModule.Client\"";
+            uiDep = $"\"file:{pkgPath}/SimpleModule.UI\"";
+            themeDep = $"\"file:{pkgPath}/SimpleModule.Theme.Default\"";
+        }
+        else
+        {
+            clientDep = $"\"^{frameworkVersion}\"";
+            uiDep = $"\"^{frameworkVersion}\"";
+            themeDep = $"\"^{frameworkVersion}\"";
+        }
+
         return $$"""
             {
               "private": true,
@@ -671,9 +751,9 @@ public sealed class ProjectTemplates
               },
               "dependencies": {
                 "@inertiajs/react": "^2.0.0",
-                "@simplemodule/client": "file:{{pkgPath}}/SimpleModule.Client",
-                "@simplemodule/ui": "file:{{pkgPath}}/SimpleModule.UI",
-                "@simplemodule/theme-default": "file:{{pkgPath}}/SimpleModule.Theme.Default",
+                "@simplemodule/client": {{clientDep}},
+                "@simplemodule/ui": {{uiDep}},
+                "@simplemodule/theme-default": {{themeDep}},
                 "react": "^19.0.0",
                 "react-dom": "^19.0.0",
                 "tailwindcss": "^4.2.1"

@@ -4,17 +4,19 @@ namespace SimpleModule.Cli.Templates;
 
 public sealed class ModuleTemplates
 {
-    private readonly SolutionContext _solution;
+    private readonly SolutionContext? _solution;
     private readonly string? _refModule;
     private readonly string? _refSingular;
     private readonly IReadOnlyList<string> _otherModuleNames;
 
-    public ModuleTemplates(SolutionContext solution)
+    public ModuleTemplates(SolutionContext? solution)
     {
         _solution = solution;
-        _refModule = solution.ExistingModules.Count > 0 ? solution.ExistingModules[0] : null;
+        _refModule = solution is not null && solution.ExistingModules.Count > 0
+            ? solution.ExistingModules[0]
+            : null;
         _refSingular = _refModule is not null ? GetSingularName(_refModule) : null;
-        _otherModuleNames = _refModule is not null
+        _otherModuleNames = _refModule is not null && solution is not null
             ? solution
                 .ExistingModules.Where(m =>
                     !string.Equals(m, _refModule, StringComparison.OrdinalIgnoreCase)
@@ -701,7 +703,7 @@ public sealed class ModuleTemplates
 
     private string? RefContractsPath(string relativePath)
     {
-        if (_refModule is null)
+        if (_refModule is null || _solution is null)
         {
             return null;
         }
@@ -712,7 +714,7 @@ public sealed class ModuleTemplates
 
     private string? RefModulePath(string relativePath)
     {
-        if (_refModule is null)
+        if (_refModule is null || _solution is null)
         {
             return null;
         }
@@ -723,7 +725,7 @@ public sealed class ModuleTemplates
 
     private string? RefTestPath(string relativePath)
     {
-        if (_refModule is null)
+        if (_refModule is null || _solution is null)
         {
             return null;
         }
@@ -1002,16 +1004,8 @@ public sealed class ModuleTemplates
             {
                 public const string ModuleName = "{{moduleName}}";
                 public const string RoutePrefix = "/api/{{moduleName.ToLowerInvariant()}}";
-
-                public static class Fields
-                {
-                    public const string Name = "Name";
-                }
-
-                public static class ValidationMessages
-                {
-                    public const string NameRequired = "Name is required.";
-                }
+                public const string FieldName = "Name";
+                public const string NameRequired = "Name is required.";
             }
             """;
 
@@ -1033,6 +1027,8 @@ public sealed class ModuleTemplates
 
                 protected override void OnModelCreating(ModelBuilder modelBuilder)
                 {
+                    ArgumentNullException.ThrowIfNull(modelBuilder);
+
                     modelBuilder.Entity<{{singularName}}>(entity =>
                     {
                         entity.HasKey(e => e.Id);
@@ -1053,7 +1049,7 @@ public sealed class ModuleTemplates
             public class {{singularName}}Service({{moduleName}}DbContext db) : I{{singularName}}Contracts
             {
                 public async Task<IEnumerable<{{singularName}}>> GetAll{{moduleName}}Async() =>
-                    await db.{{moduleName}}.ToListAsync();
+                    await db.{{moduleName}}.ToListAsync().ConfigureAwait(false);
             }
             """;
 
@@ -1075,7 +1071,7 @@ public sealed class ModuleTemplates
                         "/",
                         async (I{{singularName}}Contracts contracts) =>
                         {
-                            var items = await contracts.GetAll{{moduleName}}Async();
+                            var items = await contracts.GetAll{{moduleName}}Async().ConfigureAwait(false);
                             return TypedResults.Ok(items);
                         }
                     ).AllowAnonymous();
