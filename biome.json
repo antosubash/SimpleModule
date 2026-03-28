@@ -55,6 +55,14 @@
     }
   ],
   "files": {
-    "includes": ["modules/**", "packages/**", "template/**", "tests/**", "docs/**", "!**/wwwroot"]
+    "includes": [
+      "modules/**",
+      "packages/**",
+      "template/**",
+      "tests/**",
+      "docs/**",
+      "website/**",
+      "!**/wwwroot"
+    ]
   }
 }

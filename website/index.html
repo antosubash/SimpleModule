@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimpleModule — Modular Monolith Framework for .NET</title>
+    <meta
+      name="description"
+      content="A modular monolith framework for .NET 10 with compile-time module discovery via Roslyn source generators. React 19 + Inertia.js frontend served via Blazor SSR."
+    />
+    <meta property="og:title" content="SimpleModule — Modular Monolith Framework for .NET" />
+    <meta
+      property="og:description"
+      content="Compile-time module discovery via Roslyn source generators. React 19 + Inertia.js. Full-stack type safety."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="bg-surface-sunken text-text">
+    <!-- ============================================================
+         Nav
+         ============================================================ -->
+    <nav class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-lg border-b border-border">
+      <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 no-underline">
+          <img src="/logo.svg" alt="SimpleModule" class="h-8 w-8" />
+          <span
+            class="text-lg font-bold tracking-tight text-text"
+            style="font-family: 'Sora', system-ui, sans-serif"
+            >SimpleModule</span
+          >
+        </a>
+        <div class="hidden md:flex items-center gap-6 text-sm">
+          <a href="#features" class="text-text-secondary no-underline hover:text-text">Features</a>
+          <a href="#modules" class="text-text-secondary no-underline hover:text-text">Modules</a>
+          <a href="#quick-start" class="text-text-secondary no-underline hover:text-text"
+            >Quick Start</a
+          >
+          <a
+            href="https://github.com/antosubash/SimpleModule"
+            target="_blank"
+            rel="noopener"
+            class="text-text-secondary no-underline hover:text-text flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              />
+            </svg>
+            GitHub
+          </a>
+          <a href="/getting-started/introduction" class="btn-primary btn-sm no-underline"
+            >Get Started</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- ============================================================
+         Hero
+         ============================================================ -->
+    <section class="hero-gradient pt-32 pb-20 px-6">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-subtle text-primary text-xs font-semibold mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          Open Source &middot; MIT License
+        </div>
+        <h1
+          class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6"
+          style="font-family: 'Sora', system-ui, sans-serif"
+        >
+          Build modular .NET apps with
+          <span class="gradient-text">compile-time discovery</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
+          A modular monolith framework for .NET 10. Roslyn source generators discover your modules
+          at build time. React 19 + Inertia.js frontend. Full-stack type safety.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/getting-started/introduction" class="btn-primary btn-lg no-underline">
+            Get Started
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <a
+            href="https://github.com/antosubash/SimpleModule"
+            target="_blank"
+            rel="noopener"
+            class="btn-secondary btn-lg no-underline"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+              />
+            </svg>
+            View on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         Features
+         ============================================================ -->
+    <section id="features" class="py-20 px-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14">
+          <h2
+            class="text-3xl sm:text-4xl font-bold mb-4"
+            style="font-family: 'Sora', system-ui, sans-serif"
+          >
+            Everything you need for
+            <span class="gradient-text">modular .NET apps</span>
+          </h2>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+            A complete framework with compile-time safety, full-stack type generation, and
+            batteries-included modules.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Feature 1 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Compile-time Discovery</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              Roslyn source generators scan your modules at build time. Endpoints, DTOs, and menus
+              are auto-registered with generated code you can inspect.
+            </p>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">React 19 + Inertia.js</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              Build modern React frontends with server-driven navigation. Each module ships its own
+              pages bundle, dynamically loaded by the host app via Blazor SSR.
+            </p>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Module Isolation</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              Each module gets its own database schema, permissions, settings, and menu entries.
+              Cross-module communication happens through contracts and events.
+            </p>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Full-stack Type Safety</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              C# DTOs marked with <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">[Dto]</code> automatically generate TypeScript interfaces. Full IDE
+              autocomplete across the stack.
+            </p>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">CLI Tooling</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              Scaffold projects, modules, and features with the
+              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">sm</code> CLI. Built-in
+              doctor command validates your project structure and auto-fixes issues.
+            </p>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Multi-Provider Database</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              SQLite for development, PostgreSQL or SQL Server for production. Schema isolation per
+              module with automatic table prefix management.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         Code Examples
+         ============================================================ -->
+    <section class="section-gradient py-20 px-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14">
+          <h2
+            class="text-3xl sm:text-4xl font-bold mb-4"
+            style="font-family: 'Sora', system-ui, sans-serif"
+          >
+            Clean, <span class="gradient-text">convention-based</span> code
+          </h2>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+            Define modules and endpoints with minimal boilerplate. The source generator handles the
+            wiring.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Module definition -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span class="text-sm font-semibold text-text">Define a Module</span>
+            </div>
+            <pre class="code-block"><code><span style="color:#7dd3fc">// BlogModule.cs</span>
+[<span style="color:#34d399">Module</span>(<span style="color:#fbbf24">"Blog"</span>, RoutePrefix = <span style="color:#fbbf24">"blog"</span>)]
+<span style="color:#c084fc">public class</span> <span style="color:#34d399">BlogModule</span> : <span style="color:#34d399">IModule</span>
+{
+    <span style="color:#c084fc">public void</span> <span style="color:#93c5fd">ConfigureServices</span>(
+        <span style="color:#34d399">IServiceCollection</span> services,
+        <span style="color:#34d399">IConfiguration</span> config)
+    {
+        services.AddDbContext&lt;<span style="color:#34d399">BlogDbContext</span>&gt;();
+        services.AddScoped&lt;<span style="color:#34d399">IBlogContracts</span>,
+                            <span style="color:#34d399">BlogContracts</span>&gt;();
+    }
+}</code></pre>
+          </div>
+
+          <!-- Endpoint definition -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span class="text-sm font-semibold text-text">Create an Endpoint</span>
+            </div>
+            <pre class="code-block"><code><span style="color:#7dd3fc">// Endpoints/Blog/Browse.cs</span>
+<span style="color:#c084fc">public class</span> <span style="color:#34d399">Browse</span> : <span style="color:#34d399">IViewEndpoint</span>
+{
+    <span style="color:#c084fc">public static void</span> <span style="color:#93c5fd">Map</span>(<span style="color:#34d399">IEndpointRouteBuilder</span> app)
+    {
+        app.MapGet(<span style="color:#fbbf24">"/"</span>, <span style="color:#c084fc">async</span> (
+            <span style="color:#34d399">BlogDbContext</span> db,
+            <span style="color:#34d399">HttpContext</span> http) =&gt;
+        {
+            <span style="color:#c084fc">var</span> posts = <span style="color:#c084fc">await</span> db.Posts
+                .OrderByDescending(p =&gt; p.CreatedAt)
+                .ToListAsync();
+
+            <span style="color:#c084fc">return</span> Inertia.Render(
+                <span style="color:#fbbf24">"Blog/Browse"</span>,
+                <span style="color:#c084fc">new</span> { Posts = posts });
+        });
+    }
+}</code></pre>
+          </div>
+
+          <!-- DTO → TypeScript -->
+          <div class="lg:col-span-2">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span class="text-sm font-semibold text-text"
+                >Full-stack Type Safety: C# DTO &rarr; TypeScript (auto-generated)</span
+              >
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <pre class="code-block"><code><span style="color:#7dd3fc">// C# — BlogPost.cs</span>
+[<span style="color:#34d399">Dto</span>]
+<span style="color:#c084fc">public class</span> <span style="color:#34d399">BlogPostDto</span>
+{
+    <span style="color:#c084fc">public</span> <span style="color:#34d399">Guid</span> Id { <span style="color:#c084fc">get</span>; <span style="color:#c084fc">set</span>; }
+    <span style="color:#c084fc">public</span> <span style="color:#34d399">string</span> Title { <span style="color:#c084fc">get</span>; <span style="color:#c084fc">set</span>; }
+    <span style="color:#c084fc">public</span> <span style="color:#34d399">string</span> Content { <span style="color:#c084fc">get</span>; <span style="color:#c084fc">set</span>; }
+    <span style="color:#c084fc">public</span> <span style="color:#34d399">DateTime</span> CreatedAt { <span style="color:#c084fc">get</span>; <span style="color:#c084fc">set</span>; }
+}</code></pre>
+              <pre class="code-block"><code><span style="color:#7dd3fc">// TypeScript — auto-generated</span>
+<span style="color:#c084fc">export interface</span> <span style="color:#34d399">BlogPostDto</span> {
+  id: <span style="color:#34d399">string</span>;
+  title: <span style="color:#34d399">string</span>;
+  content: <span style="color:#34d399">string</span>;
+  createdAt: <span style="color:#34d399">string</span>;
+}</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         Built-in Modules Showcase
+         ============================================================ -->
+    <section id="modules" class="py-20 px-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-14">
+          <h2
+            class="text-3xl sm:text-4xl font-bold mb-4"
+            style="font-family: 'Sora', system-ui, sans-serif"
+          >
+            <span class="gradient-text">Batteries included</span>
+          </h2>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+            Ship faster with 9 built-in modules covering authentication, administration, and common
+            application concerns.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Admin</h3>
+            <p class="text-xs text-text-secondary">System administration and management panel</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Users</h3>
+            <p class="text-xs text-text-secondary">User management and profile handling</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Permissions</h3>
+            <p class="text-xs text-text-secondary">Role-based access control (RBAC)</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Dashboard</h3>
+            <p class="text-xs text-text-secondary">Analytics and overview widgets</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Audit Logs</h3>
+            <p class="text-xs text-text-secondary">Activity tracking and audit trail</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Settings</h3>
+            <p class="text-xs text-text-secondary">Runtime-configurable app settings</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">File Storage</h3>
+            <p class="text-xs text-text-secondary">Local, Azure Blob, and S3 providers</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">OpenIddict</h3>
+            <p class="text-xs text-text-secondary">OpenID Connect &amp; OAuth 2.0</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Page Builder</h3>
+            <p class="text-xs text-text-secondary">Dynamic page composition</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         Architecture
+         ============================================================ -->
+    <section class="section-gradient py-20 px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-14">
+          <h2
+            class="text-3xl sm:text-4xl font-bold mb-4"
+            style="font-family: 'Sora', system-ui, sans-serif"
+          >
+            How it <span class="gradient-text">works</span>
+          </h2>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+            A single deployable host discovers and wires modules at compile time.
+          </p>
+        </div>
+
+        <div class="max-w-lg mx-auto">
+          <!-- Host -->
+          <div class="arch-box-primary">SimpleModule.Host</div>
+          <div class="arch-connector"></div>
+
+          <!-- Source Generator -->
+          <div class="arch-box border-primary/30 bg-primary-subtle">
+            <span class="gradient-text font-bold">Roslyn Source Generator</span>
+            <span class="text-text-secondary text-xs block mt-0.5">
+              Discovers modules, endpoints, DTOs at build time
+            </span>
+          </div>
+          <div class="arch-connector"></div>
+
+          <!-- Modules row -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="arch-box">
+              <span class="text-xs font-bold">Admin</span>
+              <span class="text-text-muted text-xs block">DbContext</span>
+              <span class="text-text-muted text-xs block">Endpoints</span>
+              <span class="text-text-muted text-xs block">React Pages</span>
+            </div>
+            <div class="arch-box">
+              <span class="text-xs font-bold">Users</span>
+              <span class="text-text-muted text-xs block">DbContext</span>
+              <span class="text-text-muted text-xs block">Endpoints</span>
+              <span class="text-text-muted text-xs block">React Pages</span>
+            </div>
+            <div class="arch-box">
+              <span class="text-xs font-bold">Your Module</span>
+              <span class="text-text-muted text-xs block">DbContext</span>
+              <span class="text-text-muted text-xs block">Endpoints</span>
+              <span class="text-text-muted text-xs block">React Pages</span>
+            </div>
+          </div>
+          <div class="arch-connector"></div>
+
+          <!-- Communication -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="arch-box">
+              <span class="text-xs font-bold">Contracts</span>
+              <span class="text-text-muted text-xs block">Cross-module APIs</span>
+            </div>
+            <div class="arch-box">
+              <span class="text-xs font-bold">Event Bus</span>
+              <span class="text-text-muted text-xs block">Decoupled messaging</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         Quick Start
+         ============================================================ -->
+    <section id="quick-start" class="py-20 px-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-14">
+          <h2
+            class="text-3xl sm:text-4xl font-bold mb-4"
+            style="font-family: 'Sora', system-ui, sans-serif"
+          >
+            Up and running in <span class="gradient-text">minutes</span>
+          </h2>
+          <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+            Four commands to go from zero to a running modular monolith.
+          </p>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Step 1 -->
+          <div class="card flex items-start gap-4">
+            <div class="step-number mt-0.5">1</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-bold mb-1">Install the CLI</h3>
+              <pre class="code-block !mb-0"><code>dotnet tool install -g SimpleModule.Cli</code></pre>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="card flex items-start gap-4">
+            <div class="step-number mt-0.5">2</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-bold mb-1">Create a new project</h3>
+              <pre class="code-block !mb-0"><code>sm new project MyApp</code></pre>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="card flex items-start gap-4">
+            <div class="step-number mt-0.5">3</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-bold mb-1">Add a module</h3>
+              <pre class="code-block !mb-0"><code>cd MyApp &amp;&amp; sm new module Blog</code></pre>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="card flex items-start gap-4">
+            <div class="step-number mt-0.5">4</div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-bold mb-1">Run your app</h3>
+              <pre class="code-block !mb-0"><code>npm run dev</code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CTA
+         ============================================================ -->
+    <section class="hero-gradient py-20 px-6">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2
+          class="text-3xl sm:text-4xl font-bold mb-4"
+          style="font-family: 'Sora', system-ui, sans-serif"
+        >
+          Ready to build?
+        </h2>
+        <p class="text-text-secondary text-lg mb-8">
+          Start building your modular .NET application today. Open source, MIT licensed.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="/getting-started/introduction" class="btn-primary btn-lg no-underline">
+            Read the Docs
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+          <a
+            href="https://github.com/antosubash/SimpleModule"
+            target="_blank"
+            rel="noopener"
+            class="btn-outline btn-lg no-underline"
+          >
+            Star on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         Footer
+         ============================================================ -->
+    <footer class="border-t border-border py-10 px-6">
+      <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <img src="/logo.svg" alt="SimpleModule" class="h-6 w-6" />
+          <span class="text-sm text-text-secondary">
+            Built by
+            <a
+              href="https://github.com/antosubash"
+              target="_blank"
+              rel="noopener"
+              class="no-underline font-medium text-text hover:text-primary"
+              >Anto Subash</a
+            >
+          </span>
+        </div>
+        <div class="flex items-center gap-6 text-sm text-text-secondary">
+          <a href="/getting-started/introduction" class="no-underline hover:text-text"
+            >Documentation</a
+          >
+          <a
+            href="https://github.com/antosubash/SimpleModule"
+            target="_blank"
+            rel="noopener"
+            class="no-underline hover:text-text"
+            >GitHub</a
+          >
+          <span>MIT License</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
