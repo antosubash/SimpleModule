@@ -45,6 +45,7 @@
       "template/**",
       "tests/**",
       "docs/**",
+      "website/**",
       "!**/wwwroot",
       "!modules/*/src/*/types.ts"
     ]
