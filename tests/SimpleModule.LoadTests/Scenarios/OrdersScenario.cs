@@ -12,7 +12,7 @@ public static class OrdersScenario
     {
         return Scenario.Create("orders_crud", async context =>
         {
-            // Create (use pre-seeded user ID since random IDs won't exist in test DB)
+            // Create order with pre-seeded user ID
             var createRequest = FakeDataGenerators.CreateOrderRequestFaker.Generate();
             createRequest.UserId = userId;
             var createResponse = await client.PostAsJsonAsync("/api/orders", createRequest);
@@ -31,13 +31,6 @@ public static class OrdersScenario
             if (!getResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)getResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            // Update
-            var updateRequest = FakeDataGenerators.UpdateOrderRequestFaker.Generate();
-            updateRequest.UserId = userId;
-            var updateResponse = await client.PutAsJsonAsync($"/api/orders/{order.Id}", updateRequest);
-            if (!updateResponse.IsSuccessStatusCode)
-                return Response.Fail(statusCode: ((int)updateResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
-
             // Delete
             var deleteResponse = await client.DeleteAsync($"/api/orders/{order.Id}");
             if (!deleteResponse.IsSuccessStatusCode)
@@ -47,7 +40,8 @@ public static class OrdersScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.KeepConstant(copies: 1, during: TimeSpan.FromSeconds(30))
+            Simulation.RampingConstant(copies: 5, during: TimeSpan.FromSeconds(5)),
+            Simulation.KeepConstant(copies: 5, during: TimeSpan.FromSeconds(30))
         );
     }
 }

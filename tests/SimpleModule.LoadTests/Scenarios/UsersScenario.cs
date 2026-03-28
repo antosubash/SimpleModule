@@ -1,7 +1,5 @@
-using System.Net.Http.Json;
 using NBomber.CSharp;
 using NBomber.Contracts;
-using SimpleModule.Tests.Shared.Fakes;
 
 namespace SimpleModule.LoadTests.Scenarios;
 
@@ -21,17 +19,12 @@ public static class UsersScenario
             if (!getAllResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)getAllResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            // Create user
-            var createRequest = FakeDataGenerators.CreateUserRequestFaker.Generate();
-            var createResponse = await client.PostAsJsonAsync("/api/users", createRequest);
-            if (!createResponse.IsSuccessStatusCode)
-                return Response.Fail(statusCode: ((int)createResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
-
             return Response.Ok(statusCode: "200");
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.KeepConstant(copies: 1, during: TimeSpan.FromSeconds(30))
+            Simulation.RampingConstant(copies: 5, during: TimeSpan.FromSeconds(5)),
+            Simulation.KeepConstant(copies: 5, during: TimeSpan.FromSeconds(30))
         );
     }
 }

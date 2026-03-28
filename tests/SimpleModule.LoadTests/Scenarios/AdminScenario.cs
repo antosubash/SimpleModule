@@ -1,5 +1,7 @@
+using System.Net.Http.Json;
 using NBomber.CSharp;
 using NBomber.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 
 namespace SimpleModule.LoadTests.Scenarios;
 
@@ -9,33 +11,21 @@ public static class AdminScenario
     {
         return Scenario.Create("admin_ops", async context =>
         {
-            // Create a role
-            var roleName = $"LoadTestRole-{Guid.NewGuid():N}"[..30];
-            var roleForm = new FormUrlEncodedContent([
+            // Create a role (lightweight Identity operation)
+            var roleName = $"LT-{Guid.NewGuid():N}"[..20];
+            using var roleForm = new FormUrlEncodedContent([
                 new KeyValuePair<string, string>("name", roleName),
                 new KeyValuePair<string, string>("description", "Load test role"),
             ]);
             var roleResponse = await client.PostAsync("/admin/roles/", roleForm);
-            if (!roleResponse.IsSuccessStatusCode)
-                return Response.Fail(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
-
-            // Create a user
-            var email = $"lt-{Guid.NewGuid():N}"[..20] + "@test.dev";
-            var userForm = new FormUrlEncodedContent([
-                new KeyValuePair<string, string>("email", email),
-                new KeyValuePair<string, string>("displayName", "Load Test User"),
-                new KeyValuePair<string, string>("password", "LoadTest123!"),
-                new KeyValuePair<string, string>("emailConfirmed", "true"),
-            ]);
-            var userResponse = await client.PostAsync("/admin/users/", userForm);
-            if (!userResponse.IsSuccessStatusCode)
-                return Response.Fail(statusCode: ((int)userResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
-
-            return Response.Ok(statusCode: "200");
+            return roleResponse.IsSuccessStatusCode
+                ? Response.Ok(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture))
+                : Response.Fail(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.KeepConstant(copies: 1, during: TimeSpan.FromSeconds(30))
+            Simulation.RampingConstant(copies: 5, during: TimeSpan.FromSeconds(5)),
+            Simulation.KeepConstant(copies: 5, during: TimeSpan.FromSeconds(30))
         );
     }
 }

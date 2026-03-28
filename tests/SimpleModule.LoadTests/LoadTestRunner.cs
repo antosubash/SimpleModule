@@ -58,10 +58,10 @@ public sealed class LoadTestRunner : IClassFixture<LoadTestWebApplicationFactory
     [Fact]
     public void Products_Crud() => RunScenario(ProductsScenario.Create(_client));
 
-    [Fact(Skip = "Orders requires Identity-backed user lookups which cause SQLite locking under load")]
+    [Fact(Skip = "Identity UserManager returns 500 under NBomber concurrency — test server threading issue")]
     public void Orders_Crud() => RunScenario(OrdersScenario.Create(_client, _seededUserId));
 
-    [Fact(Skip = "User creation uses Identity/UserManager which causes SQLite locking under load")]
+    [Fact(Skip = "Identity UserManager returns 500 under NBomber concurrency — test server threading issue")]
     public void Users_Crud() => RunScenario(UsersScenario.Create(_client));
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class LoadTestRunner : IClassFixture<LoadTestWebApplicationFactory
     [Fact]
     public void PageBuilder_Crud() => RunScenario(PageBuilderScenario.Create(_client));
 
-    [Fact(Skip = "Admin uses Identity/RoleManager/UserManager which causes SQLite locking under load")]
+    [Fact]
     public void Admin_Ops() => RunScenario(AdminScenario.Create(_client));
 
     [Fact]

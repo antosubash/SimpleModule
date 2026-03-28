@@ -33,8 +33,8 @@ public static class PageBuilderScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 2, during: TimeSpan.FromSeconds(5)),
-            Simulation.KeepConstant(copies: 2, during: TimeSpan.FromSeconds(30))
+            Simulation.RampingConstant(copies: 5, during: TimeSpan.FromSeconds(5)),
+            Simulation.KeepConstant(copies: 5, during: TimeSpan.FromSeconds(30))
         );
     }
 }

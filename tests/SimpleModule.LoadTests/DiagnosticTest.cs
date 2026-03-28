@@ -73,4 +73,50 @@ public sealed class DiagnosticTest : IClassFixture<LoadTestWebApplicationFactory
         var body = await resp.Content.ReadAsStringAsync();
         Assert.True(resp.IsSuccessStatusCode, $"Admin create role: {resp.StatusCode} - {body[..Math.Min(body.Length, 300)]}");
     }
+
+    [Fact]
+    public async Task Admin_Concurrent_Creates()
+    {
+        var tasks = Enumerable.Range(0, 5).Select(async i =>
+        {
+            using var form = new FormUrlEncodedContent([
+                new KeyValuePair<string, string>("name", $"ConcRole-{Guid.NewGuid():N}"[..20]),
+                new KeyValuePair<string, string>("description", "Concurrent test"),
+            ]);
+            var resp = await _client.PostAsync("/admin/roles/", form);
+            var body = await resp.Content.ReadAsStringAsync();
+            return $"[{i}] {resp.StatusCode}: {body[..Math.Min(body.Length, 200)]}";
+        });
+
+        var results = await Task.WhenAll(tasks);
+        foreach (var r in results)
+        {
+            Assert.DoesNotContain("500", r, StringComparison.Ordinal);
+            Assert.DoesNotContain("InternalServerError", r, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public async Task Admin_RapidFire_50_Requests()
+    {
+        // Simulate NBomber-like rapid fire: 50 sequential requests as fast as possible
+        var failures = new List<string>();
+        for (var i = 0; i < 50; i++)
+        {
+            using var form = new FormUrlEncodedContent([
+                new KeyValuePair<string, string>("name", $"Rapid-{Guid.NewGuid():N}"[..20]),
+                new KeyValuePair<string, string>("description", "Rapid fire test"),
+            ]);
+            var resp = await _client.PostAsync("/admin/roles/", form);
+            if (!resp.IsSuccessStatusCode)
+            {
+                var body = await resp.Content.ReadAsStringAsync();
+                failures.Add($"[{i}] {resp.StatusCode}: {body[..Math.Min(body.Length, 200)]}");
+                if (failures.Count >= 3)
+                    break; // Capture first 3 failures
+            }
+        }
+
+        Assert.True(failures.Count == 0, $"Failures:\n{string.Join("\n", failures)}");
+    }
 }
