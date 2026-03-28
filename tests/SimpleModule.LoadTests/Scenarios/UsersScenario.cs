@@ -9,7 +9,7 @@ public static class UsersScenario
     {
         return Scenario.Create("users_crud", async context =>
         {
-            // Get current user
+            // Get current user (requires NameIdentifier to match a real Identity user)
             var meResponse = await client.GetAsync("/api/users/me");
             if (!meResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)meResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));

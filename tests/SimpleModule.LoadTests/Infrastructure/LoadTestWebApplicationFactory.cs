@@ -135,10 +135,19 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
 
     public HttpClient CreateServiceAccountClient()
     {
+        return CreateServiceAccountClientWithUserId("service-account");
+    }
+
+    /// <summary>
+    /// Creates an authenticated client whose NameIdentifier matches a real Identity user.
+    /// Use this for endpoints that look up the current user via UserManager (e.g., /api/users/me).
+    /// </summary>
+    public HttpClient CreateServiceAccountClientWithUserId(string userId)
+    {
         return CreateAuthenticatedClient(
             AllPermissions,
             new Claim(ClaimTypes.Role, "Admin"),
-            new Claim(ClaimTypes.NameIdentifier, "service-account"),
+            new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Name, "Load Test Service Account"),
             new Claim(ClaimTypes.Email, "loadtest@simplemodule.dev")
         );

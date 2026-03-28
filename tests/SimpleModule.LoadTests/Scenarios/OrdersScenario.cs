@@ -2,19 +2,27 @@ using System.Net.Http.Json;
 using NBomber.CSharp;
 using NBomber.Contracts;
 using SimpleModule.Orders.Contracts;
-using SimpleModule.Tests.Shared.Fakes;
 
 namespace SimpleModule.LoadTests.Scenarios;
 
 public static class OrdersScenario
 {
-    public static ScenarioProps Create(HttpClient client, string userId)
+    public static ScenarioProps Create(HttpClient client, string userId, int[] productIds)
     {
         return Scenario.Create("orders_crud", async context =>
         {
-            // Create order with pre-seeded user ID
-            var createRequest = FakeDataGenerators.CreateOrderRequestFaker.Generate();
-            createRequest.UserId = userId;
+            // Build order items using real product IDs
+            var items = productIds.Select(pid => new OrderItem
+            {
+                ProductId = pid,
+                Quantity = context.ScenarioInfo.InstanceNumber % 4 + 1,
+            }).ToList();
+
+            var createRequest = new CreateOrderRequest
+            {
+                UserId = userId,
+                Items = items,
+            };
             var createResponse = await client.PostAsJsonAsync("/api/orders", createRequest);
             if (!createResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)createResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
