@@ -45,8 +45,8 @@ public static class ProductsScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 5, during: TimeSpan.FromSeconds(5)),
-            Simulation.KeepConstant(copies: 5, during: TimeSpan.FromSeconds(30))
+            Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(15)),
+            Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(1))
         );
     }
 }
