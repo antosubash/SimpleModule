@@ -24,35 +24,15 @@ public sealed class HostTemplates
         "ReferenceOutputAssembly=",
     ];
 
-    private readonly string? _templateHostDir;
-
-    public HostTemplates(SolutionContext? solution)
-    {
-        _templateHostDir = solution is not null
-            ? Path.Combine(solution.RootPath, "template", "SimpleModule.Host")
-            : null;
-    }
-
     /// <summary>
     /// Transform the Host .csproj: strip module ProjectReferences, ServiceDefaults,
     /// InternalsVisibleTo, NoWarn/SM0011/SM0035/SM0038/TODO lines, EF Core Design package,
     /// and the Import Project line. Replace framework ProjectReferences with PackageReferences.
     /// Replace SimpleModule with projectName.
     /// </summary>
-    public string HostCsproj(string projectName)
+    public static string HostCsproj(string projectName)
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackHostCsproj(projectName);
-        }
-
-        var path = Path.Combine(_templateHostDir, "SimpleModule.Host.csproj");
-        if (!File.Exists(path))
-        {
-            return FallbackHostCsproj(projectName);
-        }
-
-        var lines = File.ReadAllLines(path).ToList();
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.SimpleModule.Host.csproj");
 
         // Strip lines containing patterns that should not appear in a new project
         lines.RemoveAll(line =>
@@ -95,23 +75,12 @@ public sealed class HostTemplates
     }
 
     /// <summary>
-    /// Copy Program.cs, remove ServiceDefaults and MapDefaultEndpoints lines.
+    /// Copy Program.cs, remove ServiceDefaults, MapDefaultEndpoints, and Storage.Local lines.
     /// Framework method names (AddSimpleModule, UseSimpleModule) are kept as-is.
     /// </summary>
-    public string ProgramCs()
+    public static string ProgramCs()
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackProgramCs();
-        }
-
-        var path = Path.Combine(_templateHostDir, "Program.cs");
-        if (!File.Exists(path))
-        {
-            return FallbackProgramCs();
-        }
-
-        var lines = File.ReadAllLines(path).ToList();
+        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Program.cs");
 
         lines.RemoveAll(line =>
             line.Contains("ServiceDefaults", StringComparison.Ordinal)
@@ -128,136 +97,87 @@ public sealed class HostTemplates
     /// <summary>
     /// Copy App.razor, replace SimpleModule with projectName.
     /// </summary>
-    public string AppRazor(string projectName)
+    public static string AppRazor(string projectName)
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackAppRazor(projectName);
-        }
-
-        var path = Path.Combine(_templateHostDir, "Components", "App.razor");
-        if (!File.Exists(path))
-        {
-            return FallbackAppRazor(projectName);
-        }
-
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.App.razor");
         return ReplaceProjectName(content, projectName);
     }
 
     /// <summary>
     /// Copy InertiaShell.razor, replace SimpleModule with projectName.
     /// </summary>
-    public string InertiaShellRazor(string projectName)
+    public static string InertiaShellRazor(string projectName)
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackInertiaShellRazor(projectName);
-        }
-
-        var path = Path.Combine(_templateHostDir, "Components", "InertiaShell.razor");
-        if (!File.Exists(path))
-        {
-            return FallbackInertiaShellRazor(projectName);
-        }
-
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.InertiaShell.razor");
         return ReplaceProjectName(content, projectName);
     }
 
     /// <summary>
-    /// Generate a clean Routes.razor WITHOUT the AdditionalAssemblies Users module reference.
+    /// Copy Routes.razor, stripping AdditionalAssemblies references and
+    /// closing the Router tag properly.
     /// </summary>
     public static string RoutesRazor()
     {
-        return """
-            <Router AppAssembly="typeof(App).Assembly">
-                <Found Context="routeData">
-                    <RouteView RouteData="routeData" DefaultLayout="typeof(SimpleModule.Blazor.Components.Layout.MainLayout)" />
-                </Found>
-            </Router>
-            """;
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.Routes.razor");
+
+        // Strip AdditionalAssemblies attribute (module-specific)
+        var lines = content.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+        lines.RemoveAll(line => line.Contains("AdditionalAssemblies", StringComparison.Ordinal));
+
+        // Fix unclosed Router tag: replace trailing open attribute list with closing >
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var trimmed = lines[i].TrimEnd();
+            if (trimmed.Contains("<Router", StringComparison.Ordinal) && !trimmed.EndsWith('>'))
+            {
+                lines[i] = trimmed + ">";
+            }
+        }
+
+        lines = TemplateExtractor.CollapseBlankLines(lines);
+
+        return string.Join(Environment.NewLine, lines);
     }
 
     /// <summary>
     /// Copy _Imports.razor, replace SimpleModule with projectName.
     /// </summary>
-    public string ImportsRazor(string projectName)
+    public static string ImportsRazor(string projectName)
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackImportsRazor(projectName);
-        }
-
-        var path = Path.Combine(_templateHostDir, "Components", "_Imports.razor");
-        if (!File.Exists(path))
-        {
-            return FallbackImportsRazor(projectName);
-        }
-
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components._Imports.razor");
         return ReplaceProjectName(content, projectName);
     }
 
     /// <summary>
     /// Copy app.tsx as-is.
     /// </summary>
-    public string AppTsx()
+    public static string AppTsx()
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackAppTsx();
-        }
-
-        var path = Path.Combine(_templateHostDir, "ClientApp", "app.tsx");
-        return File.Exists(path) ? File.ReadAllText(path) : FallbackAppTsx();
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.app.tsx");
     }
 
     /// <summary>
     /// Copy vite.config.ts as-is.
     /// </summary>
-    public string ViteConfig()
+    public static string ViteConfig()
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackViteConfig();
-        }
-
-        var path = Path.Combine(_templateHostDir, "ClientApp", "vite.config.ts");
-        return File.Exists(path) ? File.ReadAllText(path) : FallbackViteConfig();
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.vite.config.ts");
     }
 
     /// <summary>
     /// Copy validate-pages.mjs as-is.
     /// </summary>
-    public string ValidatePages()
+    public static string ValidatePages()
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackValidatePages();
-        }
-
-        var path = Path.Combine(_templateHostDir, "ClientApp", "validate-pages.mjs");
-        return File.Exists(path) ? File.ReadAllText(path) : FallbackValidatePages();
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.validate-pages.mjs");
     }
 
     /// <summary>
     /// Copy ClientApp/package.json, replace @simplemodule/app with @{projectName}/app.
     /// </summary>
-    public string ClientAppPackageJson(string projectName)
+    public static string ClientAppPackageJson(string projectName)
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackClientAppPackageJson(projectName);
-        }
-
-        var path = Path.Combine(_templateHostDir, "ClientApp", "package.json");
-        if (!File.Exists(path))
-        {
-            return FallbackClientAppPackageJson(projectName);
-        }
-
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.package.json");
         return content.Replace(
             "@simplemodule/app",
             $"@{projectName.ToLowerInvariant()}/app",
@@ -267,64 +187,49 @@ public sealed class HostTemplates
 
     /// <summary>
     /// Return a clean Styles/app.css with tailwindcss import, theme import,
-    /// and @source directives for modules. NO _scan/ import.
+    /// and @source directives for modules. Strip _scan/ import if present.
     /// </summary>
     public static string AppCss()
     {
-        return """
-            @import "tailwindcss";
-            @import "@simplemodule/theme-default/theme.css";
-            @source "../../../modules/**/Components/**/*.razor";
-            @source "../../../modules/**/Views/**/*.tsx";
-            @source "../../../modules/**/Pages/**/*.tsx";
-            """;
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Styles.app.css");
+
+        // Strip _scan/ references (build artifact, not needed in new projects)
+        var lines = content.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+        lines.RemoveAll(line => line.Contains("_scan/", StringComparison.Ordinal));
+
+        // Replace module source paths for new project structure (template/ → src/)
+        var result = string.Join(Environment.NewLine, lines);
+        result = result.Replace(
+            "../../modules/",
+            "../../../modules/",
+            StringComparison.Ordinal
+        );
+
+        return result;
     }
 
     /// <summary>
     /// Copy appsettings.json as-is.
     /// </summary>
-    public string AppSettings()
+    public static string AppSettings()
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackAppSettings();
-        }
-
-        var path = Path.Combine(_templateHostDir, "appsettings.json");
-        return File.Exists(path) ? File.ReadAllText(path) : FallbackAppSettings();
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.appsettings.json");
     }
 
     /// <summary>
     /// Copy appsettings.Development.json as-is.
     /// </summary>
-    public string AppSettingsDevelopment()
+    public static string AppSettingsDevelopment()
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackAppSettingsDevelopment();
-        }
-
-        var path = Path.Combine(_templateHostDir, "appsettings.Development.json");
-        return File.Exists(path) ? File.ReadAllText(path) : FallbackAppSettingsDevelopment();
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.appsettings.Development.json");
     }
 
     /// <summary>
     /// Copy launchSettings.json, replace SimpleModule with projectName.
     /// </summary>
-    public string LaunchSettings(string projectName)
+    public static string LaunchSettings(string projectName)
     {
-        if (_templateHostDir is null)
-        {
-            return FallbackLaunchSettings(projectName);
-        }
-
-        var path = Path.Combine(_templateHostDir, "Properties", "launchSettings.json");
-        if (!File.Exists(path))
-        {
-            return FallbackLaunchSettings(projectName);
-        }
-
-        var content = File.ReadAllText(path);
+        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Properties.launchSettings.json");
         return ReplaceProjectName(content, projectName);
     }
 
@@ -424,198 +329,4 @@ public sealed class HostTemplates
 
         return result;
     }
-
-    // ── Fallback templates ────────────────────────────────────────────
-
-    private static string FallbackHostCsproj(string projectName) =>
-        $"""
-            <Project Sdk="Microsoft.NET.Sdk.Web">
-              <PropertyGroup>
-                <TargetFramework>net10.0</TargetFramework>
-              </PropertyGroup>
-              <ItemGroup>
-                <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-                <PackageReference Include="Swashbuckle.AspNetCore" />
-                <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
-              </ItemGroup>
-              <ItemGroup>
-                <PackageReference Include="SimpleModule.Hosting" />
-                <PackageReference Include="SimpleModule.Generator" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
-              </ItemGroup>
-            </Project>
-            """;
-
-    private static string FallbackProgramCs() =>
-        """
-            using SimpleModule.Hosting;
-
-            var builder = WebApplication.CreateBuilder(args);
-
-            builder.AddSimpleModule();
-
-            var app = builder.Build();
-
-            await app.UseSimpleModule();
-
-            await app.RunAsync();
-            """;
-
-    private static string FallbackAppRazor(string projectName) =>
-        $$"""
-            <!DOCTYPE html>
-            <html lang="en" class="dark">
-            <head>
-                <meta charset="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>{{projectName}}</title>
-                <link rel="stylesheet" href="css/app.css" />
-                <HeadOutlet />
-            </head>
-            <body>
-                <Routes />
-                <script src="js/app.js"></script>
-            </body>
-            </html>
-            """;
-
-    private static string FallbackInertiaShellRazor(string projectName) =>
-        $$"""
-            @using Microsoft.AspNetCore.Components
-            @using Microsoft.AspNetCore.Components.Web
-
-            <div id="app" data-page="@PageJson"></div>
-
-            @code {
-                [Parameter] public string PageJson { get; set; } = string.Empty;
-            }
-            """;
-
-    private static string FallbackImportsRazor(string projectName) =>
-        $$"""
-            @using Microsoft.AspNetCore.Components.Routing
-            @using Microsoft.AspNetCore.Components.Web
-            @using {{projectName}}.Host.Components
-            """;
-
-    private static string FallbackAppTsx() =>
-        """
-            import { createInertiaApp } from '@inertiajs/react';
-            import { createRoot } from 'react-dom/client';
-            import { resolvePage } from '@simplemodule/client/resolve-page';
-
-            createInertiaApp({
-              resolve: resolvePage,
-              setup({ el, App, props }) {
-                createRoot(el).render(<App {...props} />);
-              },
-            });
-            """;
-
-    private static string FallbackViteConfig() =>
-        """
-            import { defineConfig } from 'vite';
-            import react from '@vitejs/plugin-react';
-            import { simpleModuleVendor } from '@simplemodule/client/vite';
-
-            export default defineConfig({
-              plugins: [simpleModuleVendor(), react()],
-              build: {
-                rollupOptions: {
-                  input: 'app.tsx',
-                  output: {
-                    entryFileNames: 'js/app.js',
-                    dir: '../wwwroot',
-                  },
-                },
-                sourcemap: process.env.VITE_MODE !== 'prod',
-                minify: process.env.VITE_MODE === 'prod',
-              },
-            });
-            """;
-
-    private static string FallbackValidatePages() =>
-        """
-            // Placeholder: validate-pages script
-            // Run this to check that all C# IViewEndpoints have matching page entries
-            console.log('validate-pages: OK');
-            """;
-
-    private static string FallbackClientAppPackageJson(string projectName)
-    {
-        var name = projectName.ToLowerInvariant();
-        return $$"""
-            {
-              "private": true,
-              "name": "@{{name}}/app",
-              "version": "0.0.0",
-              "scripts": {
-                "build": "vite build",
-                "build:dev": "cross-env VITE_MODE=dev vite build",
-                "watch": "cross-env VITE_MODE=dev vite build --watch",
-                "validate-pages": "node validate-pages.mjs"
-              },
-              "dependencies": {
-                "@inertiajs/react": "^2.0.0",
-                "react": "^19.0.0",
-                "react-dom": "^19.0.0"
-              }
-            }
-            """;
-    }
-
-    private static string FallbackAppSettings() =>
-        """
-            {
-              "Database": {
-                "DefaultConnection": "Data Source=app.db"
-              },
-              "Storage": {
-                "Provider": "Local",
-                "Local": {
-                  "Path": "./storage"
-                }
-              },
-              "Logging": {
-                "LogLevel": {
-                  "Default": "Information",
-                  "Microsoft.AspNetCore": "Warning"
-                }
-              }
-            }
-            """;
-
-    private static string FallbackAppSettingsDevelopment() =>
-        """
-            {
-              "Logging": {
-                "LogLevel": {
-                  "Default": "Information",
-                  "Microsoft.EntityFrameworkCore.Database.Command": "Information"
-                },
-                "Console": {
-                  "FormatterName": "simple",
-                  "FormatterOptions": {
-                    "TimestampFormat": "HH:mm:ss ",
-                    "SingleLine": true
-                  }
-                }
-              }
-            }
-            """;
-
-    private static string FallbackLaunchSettings(string projectName) =>
-        $$"""
-            {
-              "profiles": {
-                "{{projectName}}.Host": {
-                  "commandName": "Project",
-                  "launchBrowser": false,
-                  "applicationUrl": "https://localhost:5001;http://localhost:5000",
-                  "environmentVariables": {
-                    "ASPNETCORE_ENVIRONMENT": "Development"
-                  }
-                }
-              }
-            }
-            """;
 }

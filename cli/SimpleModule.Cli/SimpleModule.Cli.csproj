@@ -11,4 +11,20 @@
     <PackageReference Include="NetEscapades.EnumGenerators" />
     <PackageReference Include="Spectre.Console.Cli" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\SimpleModule.Host.csproj" LogicalName="Templates.Host.SimpleModule.Host.csproj" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Program.cs" LogicalName="Templates.Host.Program.cs" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\appsettings.json" LogicalName="Templates.Host.appsettings.json" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\appsettings.Development.json" LogicalName="Templates.Host.appsettings.Development.json" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Components\App.razor" LogicalName="Templates.Host.Components.App.razor" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Components\InertiaShell.razor" LogicalName="Templates.Host.Components.InertiaShell.razor" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Components\Routes.razor" LogicalName="Templates.Host.Components.Routes.razor" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Components\_Imports.razor" LogicalName="Templates.Host.Components._Imports.razor" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\ClientApp\app.tsx" LogicalName="Templates.Host.ClientApp.app.tsx" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\ClientApp\vite.config.ts" LogicalName="Templates.Host.ClientApp.vite.config.ts" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\ClientApp\validate-pages.mjs" LogicalName="Templates.Host.ClientApp.validate-pages.mjs" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\ClientApp\package.json" LogicalName="Templates.Host.ClientApp.package.json" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Styles\app.css" LogicalName="Templates.Host.Styles.app.css" />
+    <EmbeddedResource Include="..\..\template\SimpleModule.Host\Properties\launchSettings.json" LogicalName="Templates.Host.Properties.launchSettings.json" />
+  </ItemGroup>
 </Project>

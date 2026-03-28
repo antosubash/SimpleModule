@@ -61,7 +61,6 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         string frameworkVersion)
     {
         var projectTemplates = new ProjectTemplates(solution, frameworkVersion);
-        var hostTemplates = new HostTemplates(solution);
         var moduleTemplates = new ModuleTemplates(solution);
 
         const string moduleName = "Items";
@@ -117,21 +116,21 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         );
 
         // ── Host project ──────────────────────────────────────
-        File.WriteAllText(Path.Combine(hostDir, $"{projectName}.Host.csproj"), hostTemplates.HostCsproj(projectName));
-        File.WriteAllText(Path.Combine(hostDir, "Program.cs"), hostTemplates.ProgramCs());
-        File.WriteAllText(Path.Combine(hostDir, "Components", "App.razor"), hostTemplates.AppRazor(projectName));
-        File.WriteAllText(Path.Combine(hostDir, "Components", "InertiaShell.razor"), hostTemplates.InertiaShellRazor(projectName));
+        File.WriteAllText(Path.Combine(hostDir, $"{projectName}.Host.csproj"), HostTemplates.HostCsproj(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Program.cs"), HostTemplates.ProgramCs());
+        File.WriteAllText(Path.Combine(hostDir, "Components", "App.razor"), HostTemplates.AppRazor(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Components", "InertiaShell.razor"), HostTemplates.InertiaShellRazor(projectName));
         File.WriteAllText(Path.Combine(hostDir, "Components", "Routes.razor"), HostTemplates.RoutesRazor());
-        File.WriteAllText(Path.Combine(hostDir, "Components", "_Imports.razor"), hostTemplates.ImportsRazor(projectName));
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), hostTemplates.AppTsx());
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "vite.config.ts"), hostTemplates.ViteConfig());
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"), hostTemplates.ValidatePages());
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "package.json"), hostTemplates.ClientAppPackageJson(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Components", "_Imports.razor"), HostTemplates.ImportsRazor(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), HostTemplates.AppTsx());
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "vite.config.ts"), HostTemplates.ViteConfig());
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"), HostTemplates.ValidatePages());
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "package.json"), HostTemplates.ClientAppPackageJson(projectName));
         File.WriteAllText(Path.Combine(hostDir, "Styles", "app.css"), HostTemplates.AppCss());
         File.WriteAllText(Path.Combine(hostDir, "wwwroot", "css", "app.css"), MinimalAppCss());
-        File.WriteAllText(Path.Combine(hostDir, "appsettings.json"), hostTemplates.AppSettings());
-        File.WriteAllText(Path.Combine(hostDir, "appsettings.Development.json"), hostTemplates.AppSettingsDevelopment());
-        File.WriteAllText(Path.Combine(hostDir, "Properties", "launchSettings.json"), hostTemplates.LaunchSettings(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "appsettings.json"), HostTemplates.AppSettings());
+        File.WriteAllText(Path.Combine(hostDir, "appsettings.Development.json"), HostTemplates.AppSettingsDevelopment());
+        File.WriteAllText(Path.Combine(hostDir, "Properties", "launchSettings.json"), HostTemplates.LaunchSettings(projectName));
 
         // ── Home module ───────────────────────────────────────
         File.WriteAllText(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), moduleTemplates.ContractsCsproj(moduleName));
