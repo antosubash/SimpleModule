@@ -1,16 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings.Services;
 
-public sealed class PublicMenuService(SettingsDbContext db, IMemoryCache cache) : IPublicMenuProvider
+public sealed class PublicMenuService(
+    SettingsDbContext db,
+    IMemoryCache cache,
+    IOptions<SettingsModuleOptions> moduleOptions
+) : IPublicMenuProvider
 {
     private const string MenuTreeCacheKey = "PublicMenu_Tree";
     private const string HomePageCacheKey = "PublicMenu_Home";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
 
     public async Task<IReadOnlyList<PublicMenuItem>> GetMenuTreeAsync()
     {
@@ -26,7 +30,7 @@ public sealed class PublicMenuService(SettingsDbContext db, IMemoryCache cache) 
             .ToListAsync();
 
         var tree = BuildPublicTree(entities, parentId: null);
-        cache.Set(MenuTreeCacheKey, tree, CacheDuration);
+        cache.Set(MenuTreeCacheKey, tree, moduleOptions.Value.CacheDuration);
         return tree;
     }
 
@@ -45,7 +49,7 @@ public sealed class PublicMenuService(SettingsDbContext db, IMemoryCache cache) 
             .FirstOrDefaultAsync();
 
         var url = entity is not null ? (entity.Url ?? entity.PageRoute) : null;
-        cache.Set(HomePageCacheKey, url, CacheDuration);
+        cache.Set(HomePageCacheKey, url, moduleOptions.Value.CacheDuration);
         return url;
     }
 

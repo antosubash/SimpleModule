@@ -38,7 +38,13 @@ public sealed class SettingsServiceTests : IDisposable
         ]);
 
         _cache = new MemoryCache(new MemoryCacheOptions());
-        _service = new SettingsService(_db, registry, _cache, NullLogger<SettingsService>.Instance);
+        _service = new SettingsService(
+            _db,
+            registry,
+            _cache,
+            Options.Create(new SettingsModuleOptions()),
+            NullLogger<SettingsService>.Instance
+        );
     }
 
     [Fact]

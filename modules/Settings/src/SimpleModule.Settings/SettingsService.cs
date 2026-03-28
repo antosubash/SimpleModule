@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Entities;
@@ -12,10 +13,10 @@ public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
     IMemoryCache cache,
+    IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
 
     public async Task<string?> GetSettingAsync(
         string key,
@@ -36,7 +37,7 @@ public sealed partial class SettingsService(
                 && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
             );
 
-        cache.Set(cacheKey, entity?.Value, CacheDuration);
+        cache.Set(cacheKey, entity?.Value, moduleOptions.Value.CacheDuration);
         return entity?.Value;
     }
 

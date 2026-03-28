@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
@@ -9,14 +10,15 @@ namespace SimpleModule.AuditLogs.Retention;
 
 public sealed partial class AuditRetentionService(
     IServiceScopeFactory scopeFactory,
+    IOptions<AuditLogsModuleOptions> moduleOptions,
     ILogger<AuditRetentionService> logger
 ) : BackgroundService
 {
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(24);
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+
+        var checkInterval = moduleOptions.Value.RetentionCheckInterval;
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -35,7 +37,7 @@ public sealed partial class AuditRetentionService(
                 LogError(logger, ex);
             }
 
-            await Task.Delay(CheckInterval, stoppingToken);
+            await Task.Delay(checkInterval, stoppingToken);
         }
     }
 
@@ -58,7 +60,7 @@ public sealed partial class AuditRetentionService(
             }
         }
 
-        var retentionDays = 90;
+        var retentionDays = moduleOptions.Value.RetentionDays;
         if (settings is not null)
         {
             var days = await settings.GetSettingAsync<int>(

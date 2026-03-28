@@ -28,7 +28,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.Database.EnsureCreated();
 
         _cache = new MemoryCache(new MemoryCacheOptions());
-        _service = new PublicMenuService(_db, _cache);
+        _service = new PublicMenuService(_db, _cache, Options.Create(new SettingsModuleOptions()));
     }
 
     [Fact]
