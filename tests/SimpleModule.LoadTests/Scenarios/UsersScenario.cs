@@ -1,5 +1,7 @@
+using System.Net.Http.Json;
 using NBomber.CSharp;
 using NBomber.Contracts;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.LoadTests.Scenarios;
 
@@ -13,6 +15,12 @@ public static class UsersScenario
             var meResponse = await client.GetAsync("/api/users/me");
             if (!meResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)meResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            // Get user by ID using the ID from /me
+            var currentUser = await meResponse.Content.ReadFromJsonAsync<UserDto>();
+            var getByIdResponse = await client.GetAsync($"/api/users/{currentUser!.Id}");
+            if (!getByIdResponse.IsSuccessStatusCode)
+                return Response.Fail(statusCode: ((int)getByIdResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
             // Get all users
             var getAllResponse = await client.GetAsync("/api/users");

@@ -18,9 +18,24 @@ public static class AdminScenario
                 new KeyValuePair<string, string>("description", "Load test role"),
             ]);
             var roleResponse = await client.PostAsync("/admin/roles/", roleForm);
-            return roleResponse.IsSuccessStatusCode
-                ? Response.Ok(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture))
-                : Response.Fail(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            if (!roleResponse.IsSuccessStatusCode)
+                return Response.Fail(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            // Extract the role ID from the followed redirect URL (/admin/roles/{id}/edit)
+            var requestUri = roleResponse.RequestMessage?.RequestUri?.AbsolutePath ?? string.Empty;
+            var segments = requestUri.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            // segments: ["admin", "roles", "{id}", "edit"]
+            if (segments.Length >= 3)
+            {
+                var roleId = segments[2];
+
+                // Delete the role
+                var deleteResponse = await client.DeleteAsync($"/admin/roles/{roleId}");
+                if (!deleteResponse.IsSuccessStatusCode)
+                    return Response.Fail(statusCode: ((int)deleteResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
+
+            return Response.Ok(statusCode: "200");
         })
         .WithoutWarmUp()
         .WithLoadSimulations(

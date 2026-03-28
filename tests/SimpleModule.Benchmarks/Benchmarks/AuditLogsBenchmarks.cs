@@ -42,4 +42,8 @@ public sealed class AuditLogsBenchmarks : IDisposable
     [Benchmark]
     public async Task<HttpResponseMessage> ExportAuditLogs() =>
         await _client.GetAsync("/api/audit-logs/export");
+
+    [Benchmark]
+    public async Task<HttpResponseMessage> GetAuditLogById() =>
+        await _client.GetAsync("/api/audit-logs/1");
 }

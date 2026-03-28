@@ -39,6 +39,16 @@ public static class OrdersScenario
             if (!getResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)getResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
+            // Update order
+            var updateRequest = new UpdateOrderRequest
+            {
+                UserId = userId,
+                Items = items,
+            };
+            var updateResponse = await client.PutAsJsonAsync($"/api/orders/{order.Id}", updateRequest);
+            if (!updateResponse.IsSuccessStatusCode)
+                return Response.Fail(statusCode: ((int)updateResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+
             // Delete
             var deleteResponse = await client.DeleteAsync($"/api/orders/{order.Id}");
             if (!deleteResponse.IsSuccessStatusCode)

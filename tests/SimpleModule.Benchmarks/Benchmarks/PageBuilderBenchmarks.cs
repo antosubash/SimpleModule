@@ -50,4 +50,16 @@ public sealed class PageBuilderBenchmarks : IDisposable
     [Benchmark]
     public async Task<HttpResponseMessage> GetTrash() =>
         await _client.GetAsync("/api/pagebuilder/trash");
+
+    [Benchmark]
+    public async Task CreateAndDeletePage()
+    {
+        var request = new { title = "Benchmark Page", slug = $"bench-{Guid.NewGuid():N}" };
+        var createResponse = await _client.PostAsJsonAsync("/api/pagebuilder", request);
+        var location = createResponse.Headers.Location?.ToString();
+        if (location is not null)
+        {
+            await _client.DeleteAsync(location);
+        }
+    }
 }

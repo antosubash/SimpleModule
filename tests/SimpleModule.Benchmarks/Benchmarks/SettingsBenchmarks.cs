@@ -1,5 +1,7 @@
+using System.Net.Http.Json;
 using System.Security.Claims;
 using BenchmarkDotNet.Attributes;
+using SimpleModule.Core.Settings;
 using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Benchmarks.Benchmarks;
@@ -49,4 +51,13 @@ public sealed class SettingsBenchmarks : IDisposable
     [Benchmark]
     public async Task<HttpResponseMessage> GetMySettings() =>
         await _client.GetAsync("/api/settings/me");
+
+    [Benchmark]
+    public async Task UpdateAndDeleteSetting()
+    {
+        var key = $"bench-{Guid.NewGuid():N}";
+        var request = new { key, value = "bench-value", scope = SettingScope.Application };
+        await _client.PutAsJsonAsync("/api/settings", request);
+        await _client.DeleteAsync($"/api/settings/{key}?scope={SettingScope.Application}");
+    }
 }
