@@ -83,4 +83,3 @@ export interface AuditStats {
   byAction: Record<string, number>;
   byStatusCode: Record<string, number>;
 }
-

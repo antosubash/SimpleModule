@@ -62,4 +62,3 @@ export interface UserDto {
   emailConfirmed: boolean;
   twoFactorEnabled: boolean;
 }
-
