@@ -18,6 +18,10 @@ public sealed class NewProjectSettings : CommandSettings
     [Description("Show what would be created without writing any files")]
     public bool DryRun { get; set; }
 
+    [CommandOption("--framework-version")]
+    [Description("SimpleModule framework version (auto-detected from nuget.org if omitted)")]
+    public string? FrameworkVersion { get; set; }
+
     public string ResolveName()
     {
         if (string.IsNullOrWhiteSpace(Name))

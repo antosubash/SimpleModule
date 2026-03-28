@@ -9,7 +9,8 @@
     "packages/SimpleModule.UI",
     "template/SimpleModule.Host/ClientApp",
     "tests/e2e",
-    "docs/site"
+    "docs/site",
+    "website"
   ],
   "scripts": {
     "dev": "node tools/dev-orchestrator.mjs",
@@ -23,7 +24,10 @@
     "build": "cross-env VITE_MODE=prod node tools/build-orchestrator.mjs",
     "build:dev": "cross-env VITE_MODE=dev node tools/build-orchestrator.mjs",
     "test:e2e": "npm run test -w tests/e2e",
-    "test:e2e:ui": "npm run test:ui -w tests/e2e"
+    "test:e2e:ui": "npm run test:ui -w tests/e2e",
+    "website:dev": "npm run dev -w website",
+    "website:build": "npm run build -w website",
+    "website:preview": "npm run preview -w website"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",

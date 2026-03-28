@@ -10,11 +10,6 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
     public override int Execute(CommandContext context, NewProjectSettings settings)
     {
         var solution = SolutionContext.Discover();
-        if (solution is null)
-        {
-            AnsiConsole.MarkupLine("[red]No .slnx file found. The 'sm new project' command must be run from inside the SimpleModule framework repository.[/]");
-            return 1;
-        }
 
         var projectName = settings.ResolveName();
         var outputDir = settings.ResolveOutputDir();
@@ -26,23 +21,169 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             return 1;
         }
 
-        var projectTemplates = new ProjectTemplates(solution);
-        var hostTemplates = new HostTemplates(solution);
+        var frameworkVersion = NuGetVersionResolver.ResolveVersion(
+            settings.FrameworkVersion,
+            solution
+        );
+
+        if (settings.DryRun)
+        {
+            var ops = PlanFiles(projectName, rootDir);
+            RenderDryRunTree(projectName, ops, rootDir);
+            return 0;
+        }
+
+        AnsiConsole.Status()
+            .Spinner(Spinner.Known.Dots)
+            .Start($"Creating project '{projectName}'...", ctx =>
+            {
+                ctx.Status("Scaffolding project files...");
+                ScaffoldProject(projectName, rootDir, solution, frameworkVersion);
+            });
+
+        var allOps = PlanFiles(projectName, rootDir);
+        RenderFileTree(projectName, allOps, rootDir);
+
+        AnsiConsole.MarkupLine($"\n[green]Project '{Markup.Escape(projectName)}' created![/]");
+        AnsiConsole.MarkupLine("[dim]Next steps:[/]");
+        AnsiConsole.MarkupLine($"[dim]  cd {Markup.Escape(projectName)}[/]");
+        AnsiConsole.MarkupLine("[dim]  npm install[/]");
+        AnsiConsole.MarkupLine("[dim]  npm run build[/]");
+        AnsiConsole.MarkupLine("[dim]  dotnet build[/]");
+        AnsiConsole.MarkupLine($"[dim]  dotnet run --project src/{Markup.Escape(projectName)}.Host[/]");
+        return 0;
+    }
+
+    public static void ScaffoldProject(
+        string projectName,
+        string rootDir,
+        SolutionContext? solution,
+        string frameworkVersion)
+    {
+        var projectTemplates = new ProjectTemplates(solution, frameworkVersion);
         var moduleTemplates = new ModuleTemplates(solution);
 
         const string moduleName = "Items";
         var singularName = ModuleTemplates.GetSingularName(moduleName);
 
-        // ── Plan all files ────────────────────────────────────────────
-        var ops = new List<(string Path, FileAction Action)>();
-
-        void Plan(string path) => ops.Add((path, FileAction.Create));
-
-        // Root config files
         var hostDir = Path.Combine(rootDir, "src", $"{projectName}.Host");
         var modulesDir = Path.Combine(rootDir, "src", "modules");
         var testsSharedDir = Path.Combine(rootDir, "tests", $"{projectName}.Tests.Shared");
 
+        var contractsDir = Path.Combine(modulesDir, moduleName, "src", $"{moduleName}.Contracts");
+        var moduleDir = Path.Combine(modulesDir, moduleName, "src", moduleName);
+        var eventsDir = Path.Combine(contractsDir, "Events");
+        var endpointsDir = Path.Combine(moduleDir, "Endpoints", moduleName);
+        var moduleTestDir = Path.Combine(modulesDir, moduleName, "tests", $"{moduleName}.Tests");
+
+        // ── Create directories ────────────────────────────────
+        Directory.CreateDirectory(Path.Combine(hostDir, "Components"));
+        Directory.CreateDirectory(Path.Combine(hostDir, "ClientApp"));
+        Directory.CreateDirectory(Path.Combine(hostDir, "Styles"));
+        Directory.CreateDirectory(Path.Combine(hostDir, "Properties"));
+        Directory.CreateDirectory(Path.Combine(hostDir, "wwwroot", "css"));
+        Directory.CreateDirectory(eventsDir);
+        Directory.CreateDirectory(endpointsDir);
+        Directory.CreateDirectory(Path.Combine(moduleDir, "Pages"));
+        Directory.CreateDirectory(Path.Combine(moduleDir, "Views"));
+        Directory.CreateDirectory(Path.Combine(moduleTestDir, "Unit"));
+        Directory.CreateDirectory(Path.Combine(moduleTestDir, "Integration"));
+        Directory.CreateDirectory(testsSharedDir);
+
+        // ── Root config files ─────────────────────────────────
+        File.WriteAllText(Path.Combine(rootDir, $"{projectName}.slnx"), GenerateSlnx(projectName));
+        File.WriteAllText(Path.Combine(rootDir, "Directory.Build.props"), projectTemplates.DirectoryBuildProps());
+        File.WriteAllText(Path.Combine(rootDir, "Directory.Packages.props"), projectTemplates.DirectoryPackagesProps());
+        File.WriteAllText(Path.Combine(rootDir, "global.json"), projectTemplates.GlobalJson());
+        File.WriteAllText(
+            Path.Combine(rootDir, "package.json"),
+            projectTemplates.RootPackageJson(
+                projectName,
+                solution is not null ? Path.Combine(solution.RootPath, "packages") : null
+            )
+        );
+        File.WriteAllText(Path.Combine(rootDir, "biome.json"), projectTemplates.BiomeJson());
+        File.WriteAllText(Path.Combine(rootDir, "tsconfig.json"), projectTemplates.TsconfigJson());
+        var editorConfig = projectTemplates.EditorConfig();
+        if (!string.IsNullOrEmpty(editorConfig))
+        {
+            File.WriteAllText(Path.Combine(rootDir, ".editorconfig"), editorConfig);
+        }
+
+        File.WriteAllText(
+            Path.Combine(rootDir, "nuget.config"),
+            ProjectTemplates.NugetConfig(solution?.RootPath)
+        );
+
+        // ── Host project ──────────────────────────────────────
+        File.WriteAllText(Path.Combine(hostDir, $"{projectName}.Host.csproj"), HostTemplates.HostCsproj(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Program.cs"), HostTemplates.ProgramCs());
+        File.WriteAllText(Path.Combine(hostDir, "Components", "App.razor"), HostTemplates.AppRazor(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Components", "InertiaShell.razor"), HostTemplates.InertiaShellRazor(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Components", "Routes.razor"), HostTemplates.RoutesRazor());
+        File.WriteAllText(Path.Combine(hostDir, "Components", "_Imports.razor"), HostTemplates.ImportsRazor(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), HostTemplates.AppTsx());
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "vite.config.ts"), HostTemplates.ViteConfig());
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"), HostTemplates.ValidatePages());
+        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "package.json"), HostTemplates.ClientAppPackageJson(projectName));
+        File.WriteAllText(Path.Combine(hostDir, "Styles", "app.css"), HostTemplates.AppCss());
+        File.WriteAllText(Path.Combine(hostDir, "wwwroot", "css", "app.css"), MinimalAppCss());
+        File.WriteAllText(Path.Combine(hostDir, "appsettings.json"), HostTemplates.AppSettings());
+        File.WriteAllText(Path.Combine(hostDir, "appsettings.Development.json"), HostTemplates.AppSettingsDevelopment());
+        File.WriteAllText(Path.Combine(hostDir, "Properties", "launchSettings.json"), HostTemplates.LaunchSettings(projectName));
+
+        // ── Home module ───────────────────────────────────────
+        File.WriteAllText(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), moduleTemplates.ContractsCsproj(moduleName));
+        File.WriteAllText(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"), moduleTemplates.ContractsInterface(moduleName, singularName));
+        File.WriteAllText(Path.Combine(contractsDir, $"{singularName}.cs"), moduleTemplates.DtoClass(moduleName, singularName));
+        File.WriteAllText(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"), moduleTemplates.EventClass(moduleName, singularName));
+        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}.csproj"), moduleTemplates.ModuleCsproj(moduleName));
+        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Module.cs"), StarterModuleClass(moduleName, singularName));
+        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Constants.cs"), moduleTemplates.ConstantsClass(moduleName, singularName));
+        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"), moduleTemplates.DbContextClass(moduleName, singularName));
+        File.WriteAllText(Path.Combine(moduleDir, $"{singularName}Service.cs"), moduleTemplates.ServiceClass(moduleName, singularName));
+        File.WriteAllText(Path.Combine(endpointsDir, "GetAllEndpoint.cs"), moduleTemplates.GetAllEndpoint(moduleName, singularName));
+        File.WriteAllText(Path.Combine(moduleDir, "Views", "WelcomeEndpoint.cs"), StarterWelcomeEndpoint(moduleName));
+        File.WriteAllText(Path.Combine(moduleDir, "Pages", "index.ts"), $$"""
+            export const pages: Record<string, any> = {
+              '{{moduleName}}/Welcome': () => import('./Welcome'),
+            };
+            """);
+        File.WriteAllText(Path.Combine(moduleDir, "Pages", "Welcome.tsx"), StarterWelcomePage(projectName));
+        File.WriteAllText(Path.Combine(moduleDir, "vite.config.ts"), StarterViteConfig());
+        File.WriteAllText(Path.Combine(moduleDir, "package.json"), StarterPackageJson(projectName));
+        File.WriteAllText(Path.Combine(moduleTestDir, $"{moduleName}.Tests.csproj"), moduleTemplates.TestCsproj(moduleName));
+        File.WriteAllText(Path.Combine(moduleTestDir, "GlobalUsings.cs"), moduleTemplates.GlobalUsings());
+        File.WriteAllText(Path.Combine(moduleTestDir, "Unit", $"{singularName}ServiceTests.cs"), moduleTemplates.UnitTestSkeleton(moduleName, singularName));
+        File.WriteAllText(Path.Combine(moduleTestDir, "Integration", $"{moduleName}EndpointTests.cs"), moduleTemplates.IntegrationTestSkeleton(moduleName, singularName));
+
+        // ── Tests.Shared ──────────────────────────────────────
+        File.WriteAllText(Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"), projectTemplates.TestsSharedCsproj(projectName));
+
+        // ── Wire up solution ──────────────────────────────────
+        var slnxPath = Path.Combine(rootDir, $"{projectName}.slnx");
+        SlnxManipulator.AddModuleEntries(slnxPath, moduleName);
+
+        var hostCsprojPath = Path.Combine(hostDir, $"{projectName}.Host.csproj");
+        ProjectManipulator.AddProjectReference(
+            hostCsprojPath,
+            $@"..\modules\{moduleName}\src\{moduleName}\{moduleName}.csproj"
+        );
+    }
+
+    private static List<(string Path, FileAction Action)> PlanFiles(string projectName, string rootDir)
+    {
+        var ops = new List<(string Path, FileAction Action)>();
+        void Plan(string path) => ops.Add((path, FileAction.Create));
+
+        var hostDir = Path.Combine(rootDir, "src", $"{projectName}.Host");
+        var modulesDir = Path.Combine(rootDir, "src", "modules");
+        var testsSharedDir = Path.Combine(rootDir, "tests", $"{projectName}.Tests.Shared");
+
+        const string moduleName = "Items";
+        var singularName = ModuleTemplates.GetSingularName(moduleName);
+
+        // Root config files
         Plan(Path.Combine(rootDir, $"{projectName}.slnx"));
         Plan(Path.Combine(rootDir, "Directory.Build.props"));
         Plan(Path.Combine(rootDir, "Directory.Packages.props"));
@@ -65,6 +206,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         Plan(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"));
         Plan(Path.Combine(hostDir, "ClientApp", "package.json"));
         Plan(Path.Combine(hostDir, "Styles", "app.css"));
+        Plan(Path.Combine(hostDir, "wwwroot", "css", "app.css"));
         Plan(Path.Combine(hostDir, "appsettings.json"));
         Plan(Path.Combine(hostDir, "appsettings.Development.json"));
         Plan(Path.Combine(hostDir, "Properties", "launchSettings.json"));
@@ -99,118 +241,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         // Tests.Shared
         Plan(Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"));
 
-        if (settings.DryRun)
-        {
-            RenderDryRunTree(projectName, ops, rootDir);
-            return 0;
-        }
-
-        AnsiConsole.Status()
-            .Spinner(Spinner.Known.Dots)
-            .Start($"Creating project '{projectName}'...", ctx =>
-            {
-                // ── Create directories ────────────────────────────────
-                Directory.CreateDirectory(Path.Combine(hostDir, "Components"));
-                Directory.CreateDirectory(Path.Combine(hostDir, "ClientApp"));
-                Directory.CreateDirectory(Path.Combine(hostDir, "Styles"));
-                Directory.CreateDirectory(Path.Combine(hostDir, "Properties"));
-                Directory.CreateDirectory(Path.Combine(hostDir, "wwwroot", "css"));
-                Directory.CreateDirectory(eventsDir);
-                Directory.CreateDirectory(endpointsDir);
-                Directory.CreateDirectory(Path.Combine(moduleDir, "Pages"));
-                Directory.CreateDirectory(Path.Combine(moduleDir, "Views"));
-                Directory.CreateDirectory(Path.Combine(moduleTestDir, "Unit"));
-                Directory.CreateDirectory(Path.Combine(moduleTestDir, "Integration"));
-                Directory.CreateDirectory(testsSharedDir);
-
-                // ── Root config files ─────────────────────────────────
-                ctx.Status("Writing root configuration files...");
-                File.WriteAllText(Path.Combine(rootDir, $"{projectName}.slnx"), GenerateSlnx(projectName));
-                File.WriteAllText(Path.Combine(rootDir, "Directory.Build.props"), projectTemplates.DirectoryBuildProps());
-                File.WriteAllText(Path.Combine(rootDir, "Directory.Packages.props"), projectTemplates.DirectoryPackagesProps());
-                File.WriteAllText(Path.Combine(rootDir, "global.json"), projectTemplates.GlobalJson());
-                File.WriteAllText(Path.Combine(rootDir, "package.json"), ProjectTemplates.RootPackageJson(projectName, Path.Combine(solution.RootPath, "packages")));
-                File.WriteAllText(Path.Combine(rootDir, "biome.json"), projectTemplates.BiomeJson());
-                File.WriteAllText(Path.Combine(rootDir, "tsconfig.json"), projectTemplates.TsconfigJson());
-                var editorConfig = projectTemplates.EditorConfig();
-                if (!string.IsNullOrEmpty(editorConfig))
-                {
-                    File.WriteAllText(Path.Combine(rootDir, ".editorconfig"), editorConfig);
-                }
-
-                File.WriteAllText(Path.Combine(rootDir, "nuget.config"), ProjectTemplates.NugetConfig(solution.RootPath));
-
-                // ── Host project ──────────────────────────────────────
-                ctx.Status("Scaffolding Host project...");
-                File.WriteAllText(Path.Combine(hostDir, $"{projectName}.Host.csproj"), hostTemplates.HostCsproj(projectName));
-                File.WriteAllText(Path.Combine(hostDir, "Program.cs"), hostTemplates.ProgramCs());
-                File.WriteAllText(Path.Combine(hostDir, "Components", "App.razor"), hostTemplates.AppRazor(projectName));
-                File.WriteAllText(Path.Combine(hostDir, "Components", "InertiaShell.razor"), hostTemplates.InertiaShellRazor(projectName));
-                File.WriteAllText(Path.Combine(hostDir, "Components", "Routes.razor"), HostTemplates.RoutesRazor());
-                File.WriteAllText(Path.Combine(hostDir, "Components", "_Imports.razor"), hostTemplates.ImportsRazor(projectName));
-                File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), hostTemplates.AppTsx());
-                File.WriteAllText(Path.Combine(hostDir, "ClientApp", "vite.config.ts"), hostTemplates.ViteConfig());
-                File.WriteAllText(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"), hostTemplates.ValidatePages());
-                File.WriteAllText(Path.Combine(hostDir, "ClientApp", "package.json"), hostTemplates.ClientAppPackageJson(projectName));
-                File.WriteAllText(Path.Combine(hostDir, "Styles", "app.css"), HostTemplates.AppCss());
-                // Minimal compiled CSS so the Blazor layout looks decent before a full Tailwind build
-                File.WriteAllText(Path.Combine(hostDir, "wwwroot", "css", "app.css"), MinimalAppCss());
-                File.WriteAllText(Path.Combine(hostDir, "appsettings.json"), hostTemplates.AppSettings());
-                File.WriteAllText(Path.Combine(hostDir, "appsettings.Development.json"), hostTemplates.AppSettingsDevelopment());
-                File.WriteAllText(Path.Combine(hostDir, "Properties", "launchSettings.json"), hostTemplates.LaunchSettings(projectName));
-
-                // ── Home module ───────────────────────────────────────
-                ctx.Status("Creating Home starter module...");
-                File.WriteAllText(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), moduleTemplates.ContractsCsproj(moduleName));
-                File.WriteAllText(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"), moduleTemplates.ContractsInterface(moduleName, singularName));
-                File.WriteAllText(Path.Combine(contractsDir, $"{singularName}.cs"), moduleTemplates.DtoClass(moduleName, singularName));
-                File.WriteAllText(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"), moduleTemplates.EventClass(moduleName, singularName));
-                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}.csproj"), moduleTemplates.ModuleCsproj(moduleName));
-                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Module.cs"), StarterModuleClass(moduleName, singularName));
-                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Constants.cs"), moduleTemplates.ConstantsClass(moduleName, singularName));
-                File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"), moduleTemplates.DbContextClass(moduleName, singularName));
-                File.WriteAllText(Path.Combine(moduleDir, $"{singularName}Service.cs"), moduleTemplates.ServiceClass(moduleName, singularName));
-                File.WriteAllText(Path.Combine(endpointsDir, "GetAllEndpoint.cs"), moduleTemplates.GetAllEndpoint(moduleName, singularName));
-                File.WriteAllText(Path.Combine(moduleDir, "Views", "WelcomeEndpoint.cs"), StarterWelcomeEndpoint(moduleName));
-                File.WriteAllText(Path.Combine(moduleDir, "Pages", "index.ts"), $$"""
-                    export const pages: Record<string, any> = {
-                      '{{moduleName}}/Welcome': () => import('./Welcome'),
-                    };
-                    """);
-                File.WriteAllText(Path.Combine(moduleDir, "Pages", "Welcome.tsx"), StarterWelcomePage(projectName));
-                File.WriteAllText(Path.Combine(moduleDir, "vite.config.ts"), StarterViteConfig());
-                File.WriteAllText(Path.Combine(moduleDir, "package.json"), StarterPackageJson(projectName));
-                File.WriteAllText(Path.Combine(moduleTestDir, $"{moduleName}.Tests.csproj"), moduleTemplates.TestCsproj(moduleName));
-                File.WriteAllText(Path.Combine(moduleTestDir, "GlobalUsings.cs"), moduleTemplates.GlobalUsings());
-                File.WriteAllText(Path.Combine(moduleTestDir, "Unit", $"{singularName}ServiceTests.cs"), moduleTemplates.UnitTestSkeleton(moduleName, singularName));
-                File.WriteAllText(Path.Combine(moduleTestDir, "Integration", $"{moduleName}EndpointTests.cs"), moduleTemplates.IntegrationTestSkeleton(moduleName, singularName));
-
-                // ── Tests.Shared ──────────────────────────────────────
-                ctx.Status("Creating Tests.Shared project...");
-                File.WriteAllText(Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"), projectTemplates.TestsSharedCsproj(projectName));
-
-                // ── Wire up solution ──────────────────────────────────
-                ctx.Status("Updating solution references...");
-                var slnxPath = Path.Combine(rootDir, $"{projectName}.slnx");
-                SlnxManipulator.AddModuleEntries(slnxPath, moduleName);
-
-                var hostCsprojPath = Path.Combine(hostDir, $"{projectName}.Host.csproj");
-                ProjectManipulator.AddProjectReference(
-                    hostCsprojPath,
-                    $@"..\modules\{moduleName}\src\{moduleName}\{moduleName}.csproj"
-                );
-            });
-
-        RenderFileTree(projectName, ops, rootDir);
-
-        AnsiConsole.MarkupLine($"\n[green]Project '{Markup.Escape(projectName)}' created![/]");
-        AnsiConsole.MarkupLine("[dim]Next steps:[/]");
-        AnsiConsole.MarkupLine($"[dim]  cd {Markup.Escape(projectName)}[/]");
-        AnsiConsole.MarkupLine("[dim]  npm install[/]");
-        AnsiConsole.MarkupLine("[dim]  npm run build[/]");
-        AnsiConsole.MarkupLine("[dim]  dotnet build[/]");
-        AnsiConsole.MarkupLine($"[dim]  dotnet run --project src/{Markup.Escape(projectName)}.Host[/]");
-        return 0;
+        return ops;
     }
 
     private static string GenerateSlnx(string projectName)
@@ -249,7 +280,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
 
             namespace SimpleModule.{{moduleName}};
 
-            [Module({{moduleName}}Constants.ModuleName, RoutePrefix = {{moduleName}}Constants.RoutePrefix, ViewPrefix = "")]
+            [Module({{moduleName}}Constants.ModuleName, RoutePrefix = {{moduleName}}Constants.RoutePrefix, ViewPrefix = "/")]
             public class {{moduleName}}Module : IModule
             {
                 public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

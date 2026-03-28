@@ -4,17 +4,19 @@ namespace SimpleModule.Cli.Templates;
 
 public sealed class ModuleTemplates
 {
-    private readonly SolutionContext _solution;
+    private readonly SolutionContext? _solution;
     private readonly string? _refModule;
     private readonly string? _refSingular;
     private readonly IReadOnlyList<string> _otherModuleNames;
 
-    public ModuleTemplates(SolutionContext solution)
+    public ModuleTemplates(SolutionContext? solution)
     {
         _solution = solution;
-        _refModule = solution.ExistingModules.Count > 0 ? solution.ExistingModules[0] : null;
+        _refModule = solution is not null && solution.ExistingModules.Count > 0
+            ? solution.ExistingModules[0]
+            : null;
         _refSingular = _refModule is not null ? GetSingularName(_refModule) : null;
-        _otherModuleNames = _refModule is not null
+        _otherModuleNames = _refModule is not null && solution is not null
             ? solution
                 .ExistingModules.Where(m =>
                     !string.Equals(m, _refModule, StringComparison.OrdinalIgnoreCase)
@@ -633,36 +635,7 @@ public sealed class ModuleTemplates
         }
 
         var otherModulePatterns = OtherModuleStripPatterns();
-
-        // Also strip test methods that reference cross-module types
-        var lines = File.ReadAllLines(refPath).ToList();
-
-        // Strip cross-module usings
-        lines.RemoveAll(line =>
-            line.TrimStart().StartsWith("using ", StringComparison.Ordinal)
-            && otherModulePatterns.Any(p => line.Contains(p, StringComparison.Ordinal))
-        );
-
-        // Keep only the first test method (GetAll returns 200), remove others
-        var testCount = 0;
-        lines = TemplateExtractor.RemoveBraceBlocks(
-            lines,
-            line =>
-            {
-                if (line.Contains("[Fact]", StringComparison.Ordinal))
-                {
-                    testCount++;
-                    return testCount > 1;
-                }
-
-                return false;
-            }
-        );
-
-        // Also remove the [Fact] attribute lines for stripped tests
-        // (RemoveBraceBlocks removes from the line AFTER [Fact], so we need to handle this differently)
-        // Actually, let's re-approach: keep only first [Fact] and its method
-        lines = KeepFirstTestMethod(File.ReadAllLines(refPath).ToList(), otherModulePatterns);
+        var lines = KeepFirstTestMethod(File.ReadAllLines(refPath).ToList(), otherModulePatterns);
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
 
@@ -701,7 +674,7 @@ public sealed class ModuleTemplates
 
     private string? RefContractsPath(string relativePath)
     {
-        if (_refModule is null)
+        if (_refModule is null || _solution is null)
         {
             return null;
         }
@@ -712,7 +685,7 @@ public sealed class ModuleTemplates
 
     private string? RefModulePath(string relativePath)
     {
-        if (_refModule is null)
+        if (_refModule is null || _solution is null)
         {
             return null;
         }
@@ -723,7 +696,7 @@ public sealed class ModuleTemplates
 
     private string? RefTestPath(string relativePath)
     {
-        if (_refModule is null)
+        if (_refModule is null || _solution is null)
         {
             return null;
         }
@@ -839,16 +812,6 @@ public sealed class ModuleTemplates
             if (skipping)
             {
                 braceDepth += CountBraces(lines[i]);
-
-                // Once we see the method's closing brace
-                if (braceDepth > 0 && CountBraces(lines[i]) < 0)
-                {
-                    var net = 0;
-                    for (var j = i; j < lines.Count; j++)
-                    {
-                        net += CountBraces(lines[j]);
-                    }
-                }
 
                 if (trimmed.StartsWith('}') && braceDepth <= 0)
                 {
@@ -1002,16 +965,8 @@ public sealed class ModuleTemplates
             {
                 public const string ModuleName = "{{moduleName}}";
                 public const string RoutePrefix = "/api/{{moduleName.ToLowerInvariant()}}";
-
-                public static class Fields
-                {
-                    public const string Name = "Name";
-                }
-
-                public static class ValidationMessages
-                {
-                    public const string NameRequired = "Name is required.";
-                }
+                public const string FieldName = "Name";
+                public const string NameRequired = "Name is required.";
             }
             """;
 
@@ -1033,6 +988,8 @@ public sealed class ModuleTemplates
 
                 protected override void OnModelCreating(ModelBuilder modelBuilder)
                 {
+                    ArgumentNullException.ThrowIfNull(modelBuilder);
+
                     modelBuilder.Entity<{{singularName}}>(entity =>
                     {
                         entity.HasKey(e => e.Id);
@@ -1053,7 +1010,7 @@ public sealed class ModuleTemplates
             public class {{singularName}}Service({{moduleName}}DbContext db) : I{{singularName}}Contracts
             {
                 public async Task<IEnumerable<{{singularName}}>> GetAll{{moduleName}}Async() =>
-                    await db.{{moduleName}}.ToListAsync();
+                    await db.{{moduleName}}.ToListAsync().ConfigureAwait(false);
             }
             """;
 
@@ -1075,7 +1032,7 @@ public sealed class ModuleTemplates
                         "/",
                         async (I{{singularName}}Contracts contracts) =>
                         {
-                            var items = await contracts.GetAll{{moduleName}}Async();
+                            var items = await contracts.GetAll{{moduleName}}Async().ConfigureAwait(false);
                             return TypedResults.Ok(items);
                         }
                     ).AllowAnonymous();
