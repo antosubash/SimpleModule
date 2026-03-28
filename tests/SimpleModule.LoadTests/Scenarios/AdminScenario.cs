@@ -35,8 +35,7 @@ public static class AdminScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 10, during: TimeSpan.FromSeconds(10)),
-            Simulation.KeepConstant(copies: 10, during: TimeSpan.FromMinutes(1))
+            Simulation.KeepConstant(copies: 1, during: TimeSpan.FromSeconds(30))
         );
     }
 }

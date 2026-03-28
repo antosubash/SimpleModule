@@ -12,6 +12,7 @@ public sealed class ServiceAccount : IDisposable
 
     public ServiceAccount()
     {
+        LoadTestWebApplicationFactory.EnsureContentRoot();
         _factory = new LoadTestWebApplicationFactory();
         Client = _factory.CreateServiceAccountClient();
     }

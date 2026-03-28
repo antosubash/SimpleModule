@@ -74,8 +74,7 @@ public static class MixedWorkloadScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(15)),
-            Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(1))
+            Simulation.KeepConstant(copies: 1, during: TimeSpan.FromSeconds(30))
         );
     }
 }

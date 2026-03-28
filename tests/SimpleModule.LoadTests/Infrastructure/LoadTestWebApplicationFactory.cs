@@ -16,6 +16,31 @@ namespace SimpleModule.LoadTests.Infrastructure;
 /// </summary>
 public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
 {
+    /// <summary>
+    /// Sets DOTNET_CONTENTROOT so HostApplicationBuilder.Initialize() inside Program.Main
+    /// finds the correct Host project directory. Must be called before creating the factory.
+    /// DOTNET_ prefix env vars are read during HostApplicationBuilder construction,
+    /// before ASPNETCORE_ vars which are added later by WebApplicationBuilder.
+    /// </summary>
+    public static void EnsureContentRoot()
+    {
+        if (Environment.GetEnvironmentVariable("DOTNET_CONTENTROOT") is not null)
+            return;
+
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "SimpleModule.slnx")))
+        {
+            dir = dir.Parent;
+        }
+
+        var contentRoot = dir is not null
+            ? Path.Combine(dir.FullName, "template", "SimpleModule.Host")
+            : throw new InvalidOperationException(
+                "Could not find SimpleModule.slnx to resolve Host content root.");
+
+        Environment.SetEnvironmentVariable("DOTNET_CONTENTROOT", contentRoot);
+    }
+
     private static readonly string[] AllPermissions =
     [
         // Products

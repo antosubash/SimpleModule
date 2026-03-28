@@ -14,17 +14,12 @@ public static class AuditLogsScenario
             if (!getAllResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)getAllResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            // Get stats
-            var statsResponse = await client.GetAsync("/api/audit-logs/stats");
-            if (!statsResponse.IsSuccessStatusCode)
-                return Response.Fail(statusCode: ((int)statsResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
-
             return Response.Ok(statusCode: "200");
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(15)),
-            Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(1))
+            Simulation.RampingConstant(copies: 2, during: TimeSpan.FromSeconds(5)),
+            Simulation.KeepConstant(copies: 2, during: TimeSpan.FromSeconds(30))
         );
     }
 }

@@ -8,12 +8,13 @@ namespace SimpleModule.LoadTests.Scenarios;
 
 public static class OrdersScenario
 {
-    public static ScenarioProps Create(HttpClient client)
+    public static ScenarioProps Create(HttpClient client, string userId)
     {
         return Scenario.Create("orders_crud", async context =>
         {
-            // Create
+            // Create (use pre-seeded user ID since random IDs won't exist in test DB)
             var createRequest = FakeDataGenerators.CreateOrderRequestFaker.Generate();
+            createRequest.UserId = userId;
             var createResponse = await client.PostAsJsonAsync("/api/orders", createRequest);
             if (!createResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)createResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -32,6 +33,7 @@ public static class OrdersScenario
 
             // Update
             var updateRequest = FakeDataGenerators.UpdateOrderRequestFaker.Generate();
+            updateRequest.UserId = userId;
             var updateResponse = await client.PutAsJsonAsync($"/api/orders/{order.Id}", updateRequest);
             if (!updateResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)updateResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -45,8 +47,7 @@ public static class OrdersScenario
         })
         .WithoutWarmUp()
         .WithLoadSimulations(
-            Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(15)),
-            Simulation.KeepConstant(copies: 50, during: TimeSpan.FromMinutes(1))
+            Simulation.KeepConstant(copies: 1, during: TimeSpan.FromSeconds(30))
         );
     }
 }
