@@ -195,8 +195,9 @@ public sealed class UserAdminService(
         var user = await userManager.FindByIdAsync(id.Value)
             ?? throw new NotFoundException("User", id);
 
-        await userManager.SetLockoutEnabledAsync(user, true);
-        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+        await userManager.UpdateAsync(user);
     }
 
     public async Task UnlockAccountAsync(UserId id)
@@ -204,8 +205,9 @@ public sealed class UserAdminService(
         var user = await userManager.FindByIdAsync(id.Value)
             ?? throw new NotFoundException("User", id);
 
-        await userManager.SetLockoutEndDateAsync(user, null);
-        await userManager.ResetAccessFailedCountAsync(user);
+        user.LockoutEnd = null;
+        user.AccessFailedCount = 0;
+        await userManager.UpdateAsync(user);
     }
 
     public async Task DeactivateAsync(UserId id)
@@ -214,9 +216,9 @@ public sealed class UserAdminService(
             ?? throw new NotFoundException("User", id);
 
         user.DeactivatedAt = DateTimeOffset.UtcNow;
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
         await userManager.UpdateAsync(user);
-        await userManager.SetLockoutEnabledAsync(user, true);
-        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
     }
 
     public async Task ReactivateAsync(UserId id)
@@ -225,9 +227,9 @@ public sealed class UserAdminService(
             ?? throw new NotFoundException("User", id);
 
         user.DeactivatedAt = null;
+        user.LockoutEnd = null;
+        user.AccessFailedCount = 0;
         await userManager.UpdateAsync(user);
-        await userManager.SetLockoutEndDateAsync(user, null);
-        await userManager.ResetAccessFailedCountAsync(user);
     }
 
     public async Task ForceEmailReverificationAsync(UserId id)

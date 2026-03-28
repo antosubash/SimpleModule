@@ -35,6 +35,7 @@ interface UserDetail {
   email: string;
   emailConfirmed: boolean;
   twoFactorEnabled: boolean;
+  roles: string[];
   isLockedOut: boolean;
   isDeactivated: boolean;
   accessFailedCount: number;
@@ -50,7 +51,6 @@ interface Role {
 
 interface Props {
   user: UserDetail;
-  userRoles: string[];
   userPermissions: string[];
   allRoles: Role[];
   permissionsByModule: Record<string, string[]>;
@@ -68,7 +68,6 @@ type ConfirmAction = 'deactivate' | 'reverify' | 'disable2fa' | null;
 
 export default function UsersEdit({
   user,
-  userRoles,
   userPermissions,
   allRoles,
   permissionsByModule,
@@ -231,7 +230,7 @@ export default function UsersEdit({
                         id={`role-${role.id}`}
                         name="roles"
                         value={role.name ?? ''}
-                        defaultChecked={userRoles.includes(role.name ?? '')}
+                        defaultChecked={user.roles.includes(role.name ?? '')}
                       />
                       <Label htmlFor={`role-${role.id}`} className="mb-0">
                         {role.name}

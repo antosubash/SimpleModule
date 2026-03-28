@@ -31,14 +31,15 @@ public class UsersEditEndpoint : IViewEndpoint
                     if (user is null)
                         return TypedResults.NotFound();
 
-                    var allRoles = await roleAdmin.GetAllRolesAsync();
+                    var rolesTask = roleAdmin.GetAllRolesAsync();
+                    var permsTask = permissionContracts.GetPermissionsForUserAsync(
+                        UserId.From(id)
+                    );
+                    await Task.WhenAll(rolesTask, permsTask);
 
-                    // User direct permissions
-                    var userPermissions = (
-                        await permissionContracts.GetPermissionsForUserAsync(UserId.From(id))
-                    ).ToList();
+                    var allRoles = rolesTask.Result;
+                    var userPermissions = permsTask.Result.ToList();
 
-                    // Permission registry grouped by module
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
                         kvp => kvp.Key,
                         kvp => kvp.Value.ToList()
@@ -52,7 +53,6 @@ public class UsersEditEndpoint : IViewEndpoint
                         new
                         {
                             user,
-                            userRoles = user.Roles,
                             userPermissions,
                             allRoles,
                             permissionsByModule,

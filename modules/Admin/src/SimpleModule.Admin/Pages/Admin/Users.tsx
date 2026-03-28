@@ -4,6 +4,11 @@ import {
   Button,
   DataGridPage,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -66,14 +71,6 @@ export default function Users({
     navigate({ search: searchValue });
   }
 
-  function goToPage(p: number) {
-    router.get(
-      '/admin/users',
-      { search: searchValue, page: p, filterStatus, filterRole },
-      { preserveState: true },
-    );
-  }
-
   const filterBar = (
     <div className="flex flex-col sm:flex-row gap-2">
       <form onSubmit={handleSearch} className="flex gap-2 flex-1">
@@ -87,29 +84,37 @@ export default function Users({
           Search
         </Button>
       </form>
-      <select
-        value={filterStatus}
-        onChange={(e) => navigate({ filterStatus: e.target.value })}
-        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+      <Select
+        value={filterStatus || '__all__'}
+        onValueChange={(v) => navigate({ filterStatus: v === '__all__' ? '' : v })}
       >
-        <option value="">All statuses</option>
-        <option value="active">Active</option>
-        <option value="locked">Locked</option>
-        <option value="deactivated">Deactivated</option>
-      </select>
+        <SelectTrigger className="w-[160px]" aria-label="Status filter">
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__all__">All statuses</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="locked">Locked</SelectItem>
+          <SelectItem value="deactivated">Deactivated</SelectItem>
+        </SelectContent>
+      </Select>
       {allRoles.length > 0 && (
-        <select
-          value={filterRole}
-          onChange={(e) => navigate({ filterRole: e.target.value })}
-          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+        <Select
+          value={filterRole || '__all__'}
+          onValueChange={(v) => navigate({ filterRole: v === '__all__' ? '' : v })}
         >
-          <option value="">All roles</option>
-          {allRoles.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[160px]" aria-label="Role filter">
+            <SelectValue placeholder="All roles" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All roles</SelectItem>
+            {allRoles.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
     </div>
   );
@@ -198,7 +203,7 @@ export default function Users({
                   variant="ghost"
                   size="sm"
                   disabled={page <= 1}
-                  onClick={() => goToPage(page - 1)}
+                  onClick={() => navigate({ page: page - 1 })}
                 >
                   Previous
                 </Button>
@@ -206,7 +211,7 @@ export default function Users({
                   variant="ghost"
                   size="sm"
                   disabled={page >= totalPages}
-                  onClick={() => goToPage(page + 1)}
+                  onClick={() => navigate({ page: page + 1 })}
                 >
                   Next
                 </Button>
