@@ -269,6 +269,42 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    private static readonly DiagnosticDescriptor FeatureClassNotSealed = new(
+        id: "SM0045",
+        title: "Feature class is not sealed",
+        messageFormat: "'{0}' implements IModuleFeatures but is not sealed",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor FeatureFieldNamingViolation = new(
+        id: "SM0046",
+        title: "Feature field naming violation",
+        messageFormat: "Feature '{0}' in '{1}' does not follow the 'ModuleName.FeatureName' pattern",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor DuplicateFeatureName = new(
+        id: "SM0047",
+        title: "Duplicate feature name",
+        messageFormat: "Feature name '{0}' is defined in both '{1}' and '{2}'",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    private static readonly DiagnosticDescriptor FeatureFieldNotConstString = new(
+        id: "SM0048",
+        title: "Feature field is not a const string",
+        messageFormat: "Field '{0}' in feature class '{1}' must be a public const string",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -324,6 +360,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 && !module.HasConfigurePermissions
                 && !module.HasConfigureMiddleware
                 && !module.HasConfigureSettings
+                && !module.HasConfigureFeatureFlags
                 && module.Endpoints.Length == 0
                 && module.Views.Length == 0
                 && !moduleNamesWithDbContext.Contains(module.ModuleName))
@@ -723,10 +760,12 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0035: DTO type in contracts with no public properties
-        // Exclude permission classes — they only have const string fields, not properties
+        // Exclude permission and feature classes — they only have const string fields, not properties
         var permissionClassFqns = new HashSet<string>();
         foreach (var perm in data.PermissionClasses)
             permissionClassFqns.Add(perm.FullyQualifiedName);
+        foreach (var feat in data.FeatureClasses)
+            permissionClassFqns.Add(feat.FullyQualifiedName);
 
         foreach (var dto in data.DtoTypes)
         {
@@ -876,6 +915,73 @@ internal sealed class DiagnosticEmitter : IEmitter
                         Strip(kvp.Value[1].FullyQualifiedName)
                     )
                 );
+            }
+        }
+
+        // SM0045/SM0046/SM0047/SM0048: Feature flag diagnostics
+        var featureValueOwners = new Dictionary<string, string>();
+
+        foreach (var feat in data.FeatureClasses)
+        {
+            var featCleanName = Strip(feat.FullyQualifiedName);
+
+            // SM0045: Not sealed
+            if (!feat.IsSealed)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(FeatureClassNotSealed, Location.None, featCleanName)
+                );
+            }
+
+            foreach (var field in feat.Fields)
+            {
+                // SM0048: Not a const string
+                if (!field.IsConstString)
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            FeatureFieldNotConstString,
+                            Location.None,
+                            field.FieldName,
+                            featCleanName
+                        )
+                    );
+                    continue;
+                }
+
+                // SM0046: Naming violation
+                if (!field.Value.Contains("."))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            FeatureFieldNamingViolation,
+                            Location.None,
+                            field.Value,
+                            featCleanName
+                        )
+                    );
+                }
+
+                // SM0047: Duplicate feature name
+                if (featureValueOwners.TryGetValue(field.Value, out var existingOwner))
+                {
+                    if (existingOwner != feat.FullyQualifiedName)
+                    {
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                DuplicateFeatureName,
+                                Location.None,
+                                field.Value,
+                                Strip(existingOwner),
+                                featCleanName
+                            )
+                        );
+                    }
+                }
+                else
+                {
+                    featureValueOwners[field.Value] = feat.FullyQualifiedName;
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 
@@ -16,6 +17,7 @@ public interface IModule
     virtual void ConfigureMenu(IMenuBuilder menus) { }
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
+    virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
 
     /// <summary>
     /// Called once during application startup after all services are registered.

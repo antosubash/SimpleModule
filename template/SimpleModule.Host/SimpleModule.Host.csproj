@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
     <ProjectReference Include="..\..\modules\Marketplace\src\SimpleModule.Marketplace\SimpleModule.Marketplace.csproj" />
     <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
+    <ProjectReference Include="..\..\modules\FeatureFlags\src\SimpleModule.FeatureFlags\SimpleModule.FeatureFlags.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
