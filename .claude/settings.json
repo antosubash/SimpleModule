@@ -1,4 +1,7 @@
 ﻿{
+  "codestyle": {
+    "attribution": false
+  },
   "permissions": {
     "allow": [
       "Bash",
