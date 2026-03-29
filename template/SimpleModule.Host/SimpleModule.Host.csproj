@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
     <ProjectReference Include="..\..\modules\Settings\src\SimpleModule.Settings\SimpleModule.Settings.csproj" />
     <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
+    <ProjectReference Include="..\..\modules\Marketplace\src\SimpleModule.Marketplace\SimpleModule.Marketplace.csproj" />
     <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
