@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.AuditLogs.Pipeline;
+using SimpleModule.Core.Entities;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 
@@ -78,6 +79,7 @@ public sealed class AuditSaveChangesInterceptor(
         var action = entry.State switch
         {
             EntityState.Added => AuditAction.Created,
+            EntityState.Modified when IsSoftDeleteChange(entry) => AuditAction.Deleted,
             EntityState.Modified => AuditAction.Updated,
             EntityState.Deleted => AuditAction.Deleted,
             _ => (AuditAction?)null,
@@ -143,4 +145,8 @@ public sealed class AuditSaveChangesInterceptor(
 
         return changeSet.Count > 0 ? JsonSerializer.Serialize(changeSet) : null;
     }
+
+    private static bool IsSoftDeleteChange(EntityEntry entry) =>
+        entry.Entity is ISoftDelete { IsDeleted: true }
+        && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified;
 }

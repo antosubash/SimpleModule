@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,6 +17,7 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
+using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
 
 namespace SimpleModule.Hosting;
@@ -67,6 +69,11 @@ public static class SimpleModuleHostExtensions
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<InertiaSharedData>();
+
+        // Entity framework interceptors for automatic entity field population
+        builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
+        builder.Services.AddScoped<ISaveChangesInterceptor, DomainEventInterceptor>();
+        builder.Services.AddScoped<ISaveChangesInterceptor, EntityChangeInterceptor>();
 
         // Authentication is configured by modules via their ConfigureServices
         // (e.g., OpenIddict registers SmartAuth policy scheme).
