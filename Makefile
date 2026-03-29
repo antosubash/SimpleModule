@@ -132,6 +132,10 @@ k6-orders: ## Run k6 orders CRUD load test
 k6-pages: ## Run k6 page builder load test
 	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/pages.js
 
+.PHONY: k6-marketplace
+k6-marketplace: ## Run k6 marketplace API load test (anonymous)
+	k6 run $(K6_DIR)/scenarios/marketplace.js
+
 .PHONY: k6-mixed
 k6-mixed: ## Run k6 mixed traffic load test (realistic simulation)
 	k6 run $(K6_DIR)/scenarios/mixed.js
@@ -145,7 +149,7 @@ k6-spike: ## Run k6 spike test (sudden traffic burst)
 	K6_PROFILE=spike k6 run $(K6_DIR)/scenarios/mixed.js
 
 .PHONY: k6-all
-k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-mixed ## Run all k6 load test scenarios
+k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-marketplace k6-mixed ## Run all k6 load test scenarios
 
 # ─── Database ────────────────────────────────────
 

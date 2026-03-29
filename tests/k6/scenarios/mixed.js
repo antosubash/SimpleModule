@@ -41,9 +41,10 @@ export default function (auth) {
 
   // Weighted random selection of actions (read-heavy, matching real-world usage)
   const action = weightedRandom([
-    { weight: 30, fn: () => browseProducts(headers) },
-    { weight: 20, fn: () => browseOrders(headers) },
+    { weight: 25, fn: () => browseProducts(headers) },
+    { weight: 15, fn: () => browseOrders(headers) },
     { weight: 15, fn: () => browsePages(headers) },
+    { weight: 10, fn: () => browseMarketplace() },
     { weight: 10, fn: () => crudProduct(headers) },
     { weight: 10, fn: () => crudOrder(headers, auth.userId, auth.productId) },
     { weight: 5, fn: () => browseAuditLogs(headers) },
@@ -89,6 +90,14 @@ function browsePages(headers) {
     tags: { name: 'browse-pages' },
   });
   checkResponse(res, 'browse-pages');
+}
+
+function browseMarketplace() {
+  // Marketplace endpoints are anonymous (no auth required)
+  const res = http.get(`${config.baseUrl}/api/marketplace?take=5`, {
+    tags: { name: 'browse-marketplace' },
+  });
+  checkResponse(res, 'browse-marketplace');
 }
 
 function browseAuditLogs(headers) {
