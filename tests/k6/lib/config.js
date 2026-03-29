@@ -9,6 +9,11 @@ export const config = {
   tokenEndpoint: '/connect/token',
 };
 
+// TLS options for development (self-signed certs)
+export const tlsOptions = {
+  insecureSkipTLSVerify: true,
+};
+
 // Reusable threshold definitions
 export const defaultThresholds = {
   http_req_duration: ['p(95)<500', 'p(99)<1500'],

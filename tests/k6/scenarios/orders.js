@@ -1,12 +1,13 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles } from '../lib/config.js';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
 import { authenticate, authHeaders } from '../lib/auth.js';
 import { checkResponse, randomString, randomInt } from '../lib/helpers.js';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
 export const options = {
+  ...tlsOptions,
   stages: loadProfiles[profile]?.stages || loadProfiles.smoke.stages,
   thresholds: {
     ...defaultThresholds,
@@ -18,11 +19,26 @@ export const options = {
 };
 
 export function setup() {
-  return authenticate();
+  const auth = authenticate();
+  const headers = authHeaders(auth.accessToken);
+
+  // Get current user ID
+  const userRes = http.get(`${config.baseUrl}/api/users/me`, { headers });
+  const userId = JSON.parse(userRes.body).id;
+
+  // Create a product to use in orders
+  const productRes = http.post(
+    `${config.baseUrl}/api/products`,
+    JSON.stringify({ name: `k6-order-product-${randomString()}`, price: 9.99 }),
+    { headers },
+  );
+  const productId = JSON.parse(productRes.body).id;
+
+  return { accessToken: auth.accessToken, userId, productId };
 }
 
-export default function (auth) {
-  const headers = authHeaders(auth.accessToken);
+export default function (data) {
+  const headers = authHeaders(data.accessToken);
   const baseUrl = `${config.baseUrl}/api/orders`;
 
   // List orders
@@ -34,12 +50,11 @@ export default function (auth) {
 
   // Create an order
   const order = {
-    customerName: `k6-customer-${randomString()}`,
+    userId: data.userId,
     items: [
       {
-        productName: `k6-item-${randomString()}`,
+        productId: data.productId,
         quantity: randomInt(1, 10),
-        unitPrice: randomInt(100, 5000) / 100,
       },
     ],
   };
@@ -65,7 +80,7 @@ export default function (auth) {
       headers,
       tags: { name: 'delete-order' },
     });
-    checkResponse(deleteRes, 'delete-order');
+    checkResponse(deleteRes, 'delete-order', 204);
   }
 
   sleep(1);

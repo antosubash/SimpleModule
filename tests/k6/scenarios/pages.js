@@ -1,12 +1,13 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles } from '../lib/config.js';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
 import { authenticate, authHeaders } from '../lib/auth.js';
 import { checkResponse, randomString } from '../lib/helpers.js';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
 export const options = {
+  ...tlsOptions,
   stages: loadProfiles[profile]?.stages || loadProfiles.smoke.stages,
   thresholds: {
     ...defaultThresholds,
@@ -71,7 +72,7 @@ export default function (auth) {
       headers,
       tags: { name: 'delete-page' },
     });
-    checkResponse(deleteRes, 'delete-page');
+    checkResponse(deleteRes, 'delete-page', 204);
   }
 
   sleep(1);

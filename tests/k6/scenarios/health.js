@@ -1,10 +1,11 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles } from '../lib/config.js';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
 export const options = {
+  ...tlsOptions,
   stages: loadProfiles[profile]?.stages || loadProfiles.smoke.stages,
   thresholds: {
     ...defaultThresholds,

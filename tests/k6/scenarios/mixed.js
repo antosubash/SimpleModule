@@ -1,12 +1,13 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles } from '../lib/config.js';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
 import { authenticate, authHeaders } from '../lib/auth.js';
 import { checkResponse, randomString, randomInt, jitterSleep } from '../lib/helpers.js';
 
 const profile = __ENV.K6_PROFILE || 'load';
 
 export const options = {
+  ...tlsOptions,
   stages: loadProfiles[profile]?.stages || loadProfiles.load.stages,
   thresholds: {
     ...defaultThresholds,
@@ -16,7 +17,22 @@ export const options = {
 };
 
 export function setup() {
-  return authenticate();
+  const auth = authenticate();
+  const headers = authHeaders(auth.accessToken);
+
+  // Get current user ID for order creation
+  const userRes = http.get(`${config.baseUrl}/api/users/me`, { headers });
+  const userId = JSON.parse(userRes.body).id;
+
+  // Create a product to use in orders
+  const productRes = http.post(
+    `${config.baseUrl}/api/products`,
+    JSON.stringify({ name: `k6-mixed-product-${Date.now()}`, price: 9.99 }),
+    { headers },
+  );
+  const productId = JSON.parse(productRes.body).id;
+
+  return { accessToken: auth.accessToken, userId, productId };
 }
 
 // Simulates realistic mixed traffic across all API modules
@@ -29,7 +45,7 @@ export default function (auth) {
     { weight: 20, fn: () => browseOrders(headers) },
     { weight: 15, fn: () => browsePages(headers) },
     { weight: 10, fn: () => crudProduct(headers) },
-    { weight: 10, fn: () => crudOrder(headers) },
+    { weight: 10, fn: () => crudOrder(headers, auth.userId, auth.productId) },
     { weight: 5, fn: () => browseAuditLogs(headers) },
     { weight: 5, fn: () => browseFiles(headers) },
     { weight: 5, fn: () => getCurrentUser(headers) },
@@ -128,18 +144,17 @@ function crudProduct(headers) {
   }
 }
 
-function crudOrder(headers) {
+function crudOrder(headers, userId, productId) {
   const baseUrl = `${config.baseUrl}/api/orders`;
 
   const createRes = http.post(
     baseUrl,
     JSON.stringify({
-      customerName: `k6-mixed-${randomString()}`,
+      userId: userId,
       items: [
         {
-          productName: `item-${randomString()}`,
+          productId: productId,
           quantity: randomInt(1, 5),
-          unitPrice: randomInt(100, 5000) / 100,
         },
       ],
     }),
