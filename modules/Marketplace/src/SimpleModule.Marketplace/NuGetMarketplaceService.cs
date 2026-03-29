@@ -74,41 +74,56 @@ public class NuGetMarketplaceService(
         MarketplaceSearchRequest request
     )
     {
-        var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
-        var tag = options.Value.PackageTag;
-        var query = string.IsNullOrWhiteSpace(request.Query)
-            ? $"tag:{tag}"
-            : $"tag:{tag} {request.Query}";
+        try
+        {
+            var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
+            var tag = options.Value.PackageTag;
+            var query = string.IsNullOrWhiteSpace(request.Query)
+                ? $"tag:{tag}"
+                : $"tag:{tag} {request.Query}";
 
-        var url =
-            $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&skip={request.Skip}&take={request.Take}";
+            var url =
+                $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&skip={request.Skip}&take={request.Take}";
 
-        var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url);
-        if (response is null)
+            var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url);
+            if (response is null)
+            {
+                return new MarketplaceSearchResult();
+            }
+
+            var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
+
+            var packages = response.Data.Select(d => MapToPackage(d, installedIds)).ToList();
+
+            return new MarketplaceSearchResult
+            {
+                TotalHits = response.TotalHits,
+                Packages = packages,
+            };
+        }
+        catch (HttpRequestException)
         {
             return new MarketplaceSearchResult();
         }
-
-        var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
-
-        var packages = response.Data.Select(d => MapToPackage(d, installedIds)).ToList();
-
-        return new MarketplaceSearchResult { TotalHits = response.TotalHits, Packages = packages };
     }
 
     private async Task<MarketplacePackageDetail?> FetchPackageDetailsAsync(string packageId)
     {
-        var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
-        var tag = options.Value.PackageTag;
-        var searchAddress =
-            $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} tag:{tag}&take=1";
-
-        var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(searchAddress);
-        var packageData = searchResponse?.Data.FirstOrDefault();
-        if (packageData is null)
+        try
         {
-            return null;
-        }
+            var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
+            var tag = options.Value.PackageTag;
+            var searchAddress =
+                $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} tag:{tag}&take=1";
+
+            var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(
+                searchAddress
+            );
+            var packageData = searchResponse?.Data.FirstOrDefault();
+            if (packageData is null)
+            {
+                return null;
+            }
 
         var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
         var basePackage = MapToPackage(packageData, installedIds);
@@ -136,6 +151,11 @@ public class NuGetMarketplaceService(
                 .ToList(),
             Dependencies = [],
         };
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
     }
 
     private static MarketplacePackage MapToPackage(
