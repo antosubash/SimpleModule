@@ -1,6 +1,7 @@
 ﻿{
-  "codestyle": {
-    "attribution": false
+  "attribution": {
+    "commit": "",
+    "pr": ""
   },
   "permissions": {
     "allow": [
