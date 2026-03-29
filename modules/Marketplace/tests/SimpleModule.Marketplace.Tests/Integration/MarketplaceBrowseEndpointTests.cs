@@ -6,17 +6,18 @@ namespace SimpleModule.Marketplace.Tests.Integration;
 
 public class MarketplaceBrowseEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
 {
-    private readonly HttpClient _client;
+    private readonly SimpleModuleWebApplicationFactory _factory;
 
     public MarketplaceBrowseEndpointTests(SimpleModuleWebApplicationFactory factory)
     {
-        _client = factory.CreateClient();
+        _factory = factory;
     }
 
     [Fact]
     public async Task Browse_EndpointIsRegistered_DoesNotReturn404()
     {
-        var response = await _client.GetAsync("/marketplace/browse");
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync("/marketplace/browse");
 
         // The endpoint should be registered (not 404/405).
         // It may return 500 if the external NuGet API is unreachable in CI,

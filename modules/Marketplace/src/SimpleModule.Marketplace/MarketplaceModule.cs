@@ -27,6 +27,7 @@ public class MarketplaceModule : IModule
         );
 
         services.AddMemoryCache();
+        services.AddSingleton<InstalledPackageDetector>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)
