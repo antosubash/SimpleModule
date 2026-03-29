@@ -10,7 +10,8 @@ import {
   PageShell,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import type { MarketplacePackage } from './types';
+import type { MarketplacePackage } from '../types';
+import { formatDownloads } from './utils';
 
 const categories = [
   'All',
@@ -37,12 +38,6 @@ interface Props {
   selectedSort: string;
 }
 
-function formatDownloads(count: number): string {
-  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
-  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
-  return count.toString();
-}
-
 export default function Browse({
   packages,
   totalHits,
@@ -54,7 +49,7 @@ export default function Browse({
 
   function navigate(params: Record<string, string>) {
     const current = new URLSearchParams();
-    if (query) current.set('q', query);
+    if (search) current.set('q', search);
     if (selectedCategory !== 'All') current.set('category', selectedCategory);
     if (selectedSort !== 'Relevance') current.set('sort', selectedSort);
 

@@ -15,16 +15,11 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import type { MarketplacePackageDetail } from './types';
+import type { MarketplacePackageDetail } from '../types';
+import { formatDownloads } from './utils';
 
 interface Props {
   package: MarketplacePackageDetail;
-}
-
-function formatDownloads(count: number): string {
-  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
-  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
-  return count.toString();
 }
 
 export default function Detail({ package: pkg }: Props) {

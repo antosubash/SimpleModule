@@ -1,5 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
@@ -14,13 +14,9 @@ public class NuGetMarketplaceService(
     IMemoryCache cache
 ) : IMarketplaceContracts
 {
-    private static readonly JsonSerializerOptions JsonOptions =
-        new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
     public async Task<MarketplaceSearchResult> SearchPackagesAsync(MarketplaceSearchRequest request)
     {
-        var cacheKey =
-            $"Marketplace:Search:{request.Query}:{request.Category}:{request.SortBy}:{request.Skip}:{request.Take}";
+        var cacheKey = $"Marketplace:Search:{request.Query}:{request.Skip}:{request.Take}";
 
         var cached = await cache.GetOrCreateAsync(
             cacheKey,
@@ -33,7 +29,26 @@ public class NuGetMarketplaceService(
             }
         );
 
-        return cached ?? new MarketplaceSearchResult();
+        var result = cached ?? new MarketplaceSearchResult();
+
+        var packages = result.Packages;
+
+        if (request.Category is not null and not MarketplaceCategory.All)
+        {
+            packages = packages.Where(p => p.Category == request.Category).ToList();
+        }
+
+        packages = request.SortBy switch
+        {
+            MarketplaceSortOption.Downloads =>
+            [
+                .. packages.OrderByDescending(p => p.TotalDownloads),
+            ],
+            MarketplaceSortOption.Alphabetical => [.. packages.OrderBy(p => p.Title)],
+            _ => packages,
+        };
+
+        return new MarketplaceSearchResult { TotalHits = packages.Count, Packages = packages };
     }
 
     public async Task<MarketplacePackageDetail?> GetPackageDetailsAsync(string packageId)
@@ -68,7 +83,7 @@ public class NuGetMarketplaceService(
         var url =
             $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&skip={request.Skip}&take={request.Take}";
 
-        var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url, JsonOptions);
+        var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url);
         if (response is null)
         {
             return new MarketplaceSearchResult();
@@ -77,22 +92,6 @@ public class NuGetMarketplaceService(
         var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
 
         var packages = response.Data.Select(d => MapToPackage(d, installedIds)).ToList();
-
-        if (request.Category is not null and not MarketplaceCategory.All)
-        {
-            packages = packages.Where(p => p.Category == request.Category).ToList();
-        }
-
-        packages = request.SortBy switch
-        {
-            MarketplaceSortOption.Downloads =>
-            [
-                .. packages.OrderByDescending(p => p.TotalDownloads),
-            ],
-            MarketplaceSortOption.Alphabetical => [.. packages.OrderBy(p => p.Title)],
-            MarketplaceSortOption.RecentlyUpdated => packages,
-            _ => packages,
-        };
 
         return new MarketplaceSearchResult { TotalHits = response.TotalHits, Packages = packages };
     }
@@ -104,10 +103,7 @@ public class NuGetMarketplaceService(
         var searchAddress =
             $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} tag:{tag}&take=1";
 
-        var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(
-            searchAddress,
-            JsonOptions
-        );
+        var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(searchAddress);
         var packageData = searchResponse?.Data.FirstOrDefault();
         if (packageData is null)
         {
@@ -115,27 +111,27 @@ public class NuGetMarketplaceService(
         }
 
         var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
+        var basePackage = MapToPackage(packageData, installedIds);
 
         return new MarketplacePackageDetail
         {
-            Id = packageData.Id ?? string.Empty,
-            Title = packageData.Title ?? packageData.Id ?? string.Empty,
-            Description = packageData.Description ?? string.Empty,
-            Authors = string.Join(", ", packageData.Authors ?? []),
-            Icon = packageData.IconAddress ?? string.Empty,
-            TotalDownloads = packageData.TotalDownloads,
-            Tags = packageData.Tags ?? [],
-            LatestVersion = packageData.Version ?? string.Empty,
-            ProjectLink = packageData.ProjectAddress ?? string.Empty,
+            Id = basePackage.Id,
+            Title = basePackage.Title,
+            Description = basePackage.Description,
+            Authors = basePackage.Authors,
+            Icon = basePackage.Icon,
+            TotalDownloads = basePackage.TotalDownloads,
+            Tags = basePackage.Tags,
+            LatestVersion = basePackage.LatestVersion,
+            ProjectLink = basePackage.ProjectLink,
+            Category = basePackage.Category,
+            IsInstalled = basePackage.IsInstalled,
             LicenseLink = packageData.LicenseAddress ?? string.Empty,
-            Category = CategoryMapper.MapCategory(packageData.Tags ?? []),
-            IsInstalled = installedIds.Contains(packageData.Id ?? string.Empty),
             Versions = (packageData.Versions ?? [])
                 .Select(v => new MarketplacePackageVersion
                 {
                     Version = v.Version ?? string.Empty,
                     Downloads = v.Downloads,
-                    Published = default,
                 })
                 .ToList(),
             Dependencies = [],
@@ -164,10 +160,7 @@ public class NuGetMarketplaceService(
     }
 }
 
-// NuGet V3 Search API response models — instantiated by JSON deserialization
-[JsonSerializable(typeof(NuGetSearchResponse))]
-internal sealed partial class NuGetJsonContext : JsonSerializerContext;
-
+[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
 internal sealed record NuGetSearchResponse
 {
     [JsonPropertyName("totalHits")]
@@ -177,6 +170,7 @@ internal sealed record NuGetSearchResponse
     public List<NuGetPackageData> Data { get; init; } = [];
 }
 
+[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
 internal sealed record NuGetPackageData
 {
     [JsonPropertyName("id")]
@@ -213,6 +207,7 @@ internal sealed record NuGetPackageData
     public List<NuGetVersionData>? Versions { get; init; }
 }
 
+[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
 internal sealed record NuGetVersionData
 {
     [JsonPropertyName("version")]

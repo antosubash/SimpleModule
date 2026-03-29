@@ -14,18 +14,7 @@ export interface MarketplacePackage {
 }
 
 export interface MarketplacePackageDetail {
-  id: string;
-  title: string;
-  description: string;
-  authors: string;
-  icon: string;
-  totalDownloads: number;
-  tags: string[];
-  latestVersion: string;
-  projectLink: string;
   licenseLink: string;
-  category: any;
-  isInstalled: boolean;
   versions: MarketplacePackageVersion[];
   dependencies: string[];
 }
@@ -33,7 +22,6 @@ export interface MarketplacePackageDetail {
 export interface MarketplacePackageVersion {
   version: string;
   downloads: number;
-  published: string;
 }
 
 export interface MarketplaceSearchResult {
