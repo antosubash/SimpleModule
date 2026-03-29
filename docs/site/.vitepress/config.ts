@@ -113,6 +113,7 @@ export default defineConfig({
           items: [
             { text: 'API Reference', link: '/reference/api' },
             { text: 'Configuration', link: '/reference/configuration' },
+            { text: 'Acknowledgments', link: '/reference/acknowledgments' },
           ],
         },
       ],

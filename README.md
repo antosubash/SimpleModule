@@ -154,3 +154,15 @@ Unit and integration tests use xUnit.v3, FluentAssertions, Bogus, and NSubstitut
 npm run check               # Biome lint + format check + page registry validation
 npm run check:fix           # auto-fix
 ```
+
+## Acknowledgments
+
+SimpleModule is built with many excellent open-source projects. Key dependencies include:
+
+**Backend** — [ASP.NET Core](https://dotnet.microsoft.com/), [Entity Framework Core](https://github.com/dotnet/efcore), [Roslyn](https://github.com/dotnet/roslyn) (source generators), [OpenIddict](https://github.com/openiddict/openiddict-core), [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet), [.NET Aspire](https://github.com/dotnet/aspire), [Npgsql](https://github.com/npgsql/efcore.pg), [Swashbuckle](https://github.com/domaindrivendev/Swashbuckle.AspNetCore), [Vogen](https://github.com/SteveDunn/Vogen), [Spectre.Console](https://github.com/spectreconsole/spectre.console), [Azure SDK for .NET](https://github.com/Azure/azure-sdk-for-net), [AWS SDK for .NET](https://github.com/aws/aws-sdk-net)
+
+**Frontend** — [React](https://github.com/facebook/react), [Inertia.js](https://github.com/inertiajs/inertia), [Vite](https://github.com/vitejs/vite), [Tailwind CSS](https://github.com/tailwindlabs/tailwindcss), [Radix UI](https://github.com/radix-ui/primitives), [TypeScript](https://github.com/microsoft/TypeScript), [Recharts](https://github.com/recharts/recharts), [Puck Editor](https://github.com/measuredco/puck), [Biome](https://github.com/biomejs/biome)
+
+**Testing** — [xUnit.v3](https://github.com/xunit/xunit), [FluentAssertions](https://github.com/fluentassertions/fluentassertions), [NSubstitute](https://github.com/nsubstitute/NSubstitute), [Bogus](https://github.com/bchavez/Bogus), [Playwright](https://github.com/microsoft/playwright), [Faker.js](https://github.com/faker-js/faker)
+
+For a complete list with descriptions and licenses, see [docs/site/reference/acknowledgments.md](docs/site/reference/acknowledgments.md).
