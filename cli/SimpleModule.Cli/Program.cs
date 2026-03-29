@@ -1,4 +1,5 @@
 ﻿using SimpleModule.Cli.Commands.Doctor;
+using SimpleModule.Cli.Commands.Install;
 using SimpleModule.Cli.Commands.New;
 using Spectre.Console.Cli;
 
@@ -24,6 +25,10 @@ app.Configure(config =>
                 .WithDescription("Add a feature to an existing module");
         }
     );
+
+    config
+        .AddCommand<InstallCommand>("install")
+        .WithDescription("Install a SimpleModule package from NuGet");
 
     config
         .AddCommand<DoctorCommand>("doctor")

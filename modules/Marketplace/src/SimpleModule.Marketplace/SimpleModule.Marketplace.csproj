@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\SimpleModule.Marketplace.Contracts\SimpleModule.Marketplace.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Views\*.tsx">
+      <DependentUpon>%(Filename)Endpoint.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+</Project>
