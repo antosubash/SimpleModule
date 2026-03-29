@@ -132,6 +132,26 @@ k6-orders: ## Run k6 orders CRUD load test
 k6-pages: ## Run k6 page builder load test
 	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/pages.js
 
+.PHONY: k6-page-lifecycle
+k6-page-lifecycle: ## Run k6 full page lifecycle test (publish, tags, templates)
+	k6 run $(K6_DIR)/scenarios/page-lifecycle.js
+
+.PHONY: k6-settings
+k6-settings: ## Run k6 settings and menu management load test
+	k6 run $(K6_DIR)/scenarios/settings.js
+
+.PHONY: k6-users
+k6-users: ## Run k6 user management CRUD load test
+	k6 run $(K6_DIR)/scenarios/users.js
+
+.PHONY: k6-audit-logs
+k6-audit-logs: ## Run k6 audit logs query, stats, and export test
+	k6 run $(K6_DIR)/scenarios/audit-logs.js
+
+.PHONY: k6-files
+k6-files: ## Run k6 file upload/download load test
+	k6 run $(K6_DIR)/scenarios/file-storage.js
+
 .PHONY: k6-marketplace
 k6-marketplace: ## Run k6 marketplace API load test (anonymous)
 	k6 run $(K6_DIR)/scenarios/marketplace.js
@@ -139,6 +159,11 @@ k6-marketplace: ## Run k6 marketplace API load test (anonymous)
 .PHONY: k6-mixed
 k6-mixed: ## Run k6 mixed traffic load test (realistic simulation)
 	k6 run $(K6_DIR)/scenarios/mixed.js
+
+.PHONY: k6-hotspots
+k6-hotspots: ## Run k6 hotspot detection (all endpoints, sorted by latency)
+	@mkdir -p $(K6_DIR)/results
+	k6 run $(K6_DIR)/scenarios/hotspots.js
 
 .PHONY: k6-stress
 k6-stress: ## Run k6 stress test (mixed scenario, high load)
@@ -149,7 +174,7 @@ k6-spike: ## Run k6 spike test (sudden traffic burst)
 	K6_PROFILE=spike k6 run $(K6_DIR)/scenarios/mixed.js
 
 .PHONY: k6-all
-k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-marketplace k6-mixed ## Run all k6 load test scenarios
+k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-page-lifecycle k6-settings k6-users k6-audit-logs k6-files k6-marketplace k6-mixed ## Run all k6 load test scenarios
 
 # ─── Database ────────────────────────────────────
 
