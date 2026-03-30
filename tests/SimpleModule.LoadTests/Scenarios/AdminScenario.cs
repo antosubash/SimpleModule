@@ -18,12 +18,14 @@ public static class AdminScenario
                 new KeyValuePair<string, string>("description", "Load test role"),
             ]);
             var roleResponse = await client.PostAsync("/admin/roles/", roleForm);
-            if (!roleResponse.IsSuccessStatusCode)
+            if (!roleResponse.IsSuccessStatusCode && (int)roleResponse.StatusCode is not (301 or 302))
                 return Response.Fail(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            // Extract the role ID from the followed redirect URL (/admin/roles/{id}/edit)
-            var requestUri = roleResponse.RequestMessage?.RequestUri?.AbsolutePath ?? string.Empty;
-            var segments = requestUri.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            // Extract role ID from Location header (302 redirect to /admin/roles/{id}/edit)
+            var locationPath = roleResponse.Headers.Location?.AbsolutePath
+                ?? roleResponse.RequestMessage?.RequestUri?.AbsolutePath
+                ?? string.Empty;
+            var segments = locationPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             // segments: ["admin", "roles", "{id}", "edit"]
             if (segments.Length >= 3)
             {
