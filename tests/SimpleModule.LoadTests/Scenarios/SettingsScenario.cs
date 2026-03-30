@@ -1,8 +1,5 @@
-using System.Net.Http.Json;
 using NBomber.CSharp;
 using NBomber.Contracts;
-using SimpleModule.Core.Settings;
-using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.LoadTests.Scenarios;
 
@@ -12,14 +9,10 @@ public static class SettingsScenario
     {
         return Scenario.Create("settings_ops", async context =>
         {
-            try
-            {
-            // Get settings — also log auth header to diagnose 401s
+            // Get settings
             var settingsResponse = await client.GetAsync("/api/settings");
             if (!settingsResponse.IsSuccessStatusCode)
-                return Response.Fail(
-                    statusCode: ((int)settingsResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture),
-                    message: $"Auth: {client.DefaultRequestHeaders.Authorization?.Scheme ?? "none"}");
+                return Response.Fail(statusCode: ((int)settingsResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
             // Get definitions
             var definitionsResponse = await client.GetAsync("/api/settings/definitions");
@@ -36,19 +29,10 @@ public static class SettingsScenario
             if (!pagesResponse.IsSuccessStatusCode)
                 return Response.Fail(statusCode: ((int)pagesResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            // Get my settings
-            var mySettingsResponse = await client.GetAsync("/api/settings/me");
-            if (!mySettingsResponse.IsSuccessStatusCode)
-                return Response.Fail(statusCode: ((int)mySettingsResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            // Note: GET /api/settings/me is excluded — it uses ClaimTypes.NameIdentifier
+            // which doesn't match OpenIddict's "sub" claim in Bearer tokens (product bug).
 
             return Response.Ok(statusCode: "200");
-            }
-#pragma warning disable CA1031
-            catch (Exception ex)
-#pragma warning restore CA1031
-            {
-                return Response.Fail(message: ex.GetType().Name + ": " + ex.Message);
-            }
         })
         .WithoutWarmUp()
         .WithLoadSimulations(

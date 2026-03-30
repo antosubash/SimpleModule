@@ -1,7 +1,5 @@
-using System.Net.Http.Json;
 using NBomber.CSharp;
 using NBomber.Contracts;
-using SimpleModule.Tests.Shared.Fakes;
 
 namespace SimpleModule.LoadTests.Scenarios;
 
@@ -11,29 +9,30 @@ public static class AdminScenario
     {
         return Scenario.Create("admin_ops", async context =>
         {
-            // Create a role (lightweight Identity operation)
+            // Create a role
             var roleName = $"LT-{Guid.NewGuid():N}"[..20];
             using var roleForm = new FormUrlEncodedContent([
                 new KeyValuePair<string, string>("name", roleName),
                 new KeyValuePair<string, string>("description", "Load test role"),
             ]);
             var roleResponse = await client.PostAsync("/admin/roles/", roleForm);
-            if (!roleResponse.IsSuccessStatusCode && (int)roleResponse.StatusCode is not (301 or 302))
+
+            // Admin endpoints return 302 redirect on success (Blazor SSR pattern).
+            // With AllowAutoRedirect=false, we get the raw 302.
+            if (!IsSuccess(roleResponse))
                 return Response.Fail(statusCode: ((int)roleResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
 
-            // Extract role ID from Location header (302 redirect to /admin/roles/{id}/edit)
-            var locationPath = roleResponse.Headers.Location?.AbsolutePath
-                ?? roleResponse.RequestMessage?.RequestUri?.AbsolutePath
-                ?? string.Empty;
+            // Extract role ID from Location header (/admin/roles/{id}/edit)
+            var locationPath = roleResponse.Headers.Location?.OriginalString ?? string.Empty;
             var segments = locationPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             // segments: ["admin", "roles", "{id}", "edit"]
             if (segments.Length >= 3)
             {
                 var roleId = segments[2];
 
-                // Delete the role
+                // Delete the role (also returns 302 on success)
                 var deleteResponse = await client.DeleteAsync($"/admin/roles/{roleId}");
-                if (!deleteResponse.IsSuccessStatusCode)
+                if (!IsSuccess(deleteResponse))
                     return Response.Fail(statusCode: ((int)deleteResponse.StatusCode).ToString(System.Globalization.CultureInfo.InvariantCulture));
             }
 
@@ -44,5 +43,15 @@ public static class AdminScenario
             Simulation.RampingConstant(copies: 50, during: TimeSpan.FromSeconds(5)),
             Simulation.KeepConstant(copies: 50, during: TimeSpan.FromSeconds(20))
         );
+    }
+
+    /// <summary>
+    /// Admin form endpoints return 302 redirects on success (Blazor SSR pattern).
+    /// Treat 2xx and 3xx as success.
+    /// </summary>
+    private static bool IsSuccess(HttpResponseMessage response)
+    {
+        var code = (int)response.StatusCode;
+        return code is >= 200 and < 400;
     }
 }

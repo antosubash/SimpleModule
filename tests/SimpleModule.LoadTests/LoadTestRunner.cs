@@ -71,7 +71,7 @@ public sealed class LoadTestRunner : IClassFixture<LoadTestWebApplicationFactory
     [Fact]
     public void Users_Crud() => RunScenario(UsersScenario.Create(_client));
 
-    [Fact(Skip = "Returns 401 under NBomber but works for single/concurrent requests — investigating")]
+    [Fact]
     public void Settings_Ops() => RunScenario(SettingsScenario.Create(_client));
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class LoadTestRunner : IClassFixture<LoadTestWebApplicationFactory
     [Fact]
     public void PageBuilder_Crud() => RunScenario(PageBuilderScenario.Create(_client));
 
-    [Fact(Skip = "Admin POST returns 302 redirect — needs redirect-aware scenario")]
+    [Fact]
     public void Admin_Ops() => RunScenario(AdminScenario.Create(_client));
 
     [Fact]
