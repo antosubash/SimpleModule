@@ -13,6 +13,14 @@
     <JsSourceFiles Include="vite.config.ts" Condition="Exists('vite.config.ts')" />
     <JsSourceFiles Include="package.json" />
   </ItemGroup>
+  <!-- Warn when module has JS sources but node_modules is missing -->
+  <Target
+    Name="JsBuildCheck"
+    BeforeTargets="Build"
+    Condition="Exists('package.json') And !Exists('node_modules') And !Exists('$(RepoRoot)node_modules')"
+  >
+    <Warning Text="node_modules not found. Frontend JavaScript will not be compiled. Run 'npm install' in the repository root." />
+  </Target>
   <Target
     Name="JsBuild"
     BeforeTargets="Build"
