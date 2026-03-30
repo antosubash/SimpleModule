@@ -22,6 +22,7 @@ using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
 using SimpleModule.FeatureFlags;
+using SimpleModule.Tenants;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -59,6 +60,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<AuditLogsDbContext>(services);
             ReplaceDbContext<FileStorageDbContext>(services);
             ReplaceDbContext<FeatureFlagsDbContext>(services);
+            ReplaceDbContext<TenantsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
@@ -155,6 +157,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<AuditLogsDbContext>(sp);
         EnsureTablesCreated<FileStorageDbContext>(sp);
         EnsureTablesCreated<FeatureFlagsDbContext>(sp);
+        EnsureTablesCreated<TenantsDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 

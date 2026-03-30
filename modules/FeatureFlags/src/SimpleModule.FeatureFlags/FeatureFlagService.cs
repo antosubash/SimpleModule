@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Entities;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
 using SimpleModule.FeatureFlags.Entities;
@@ -11,16 +13,21 @@ public sealed partial class FeatureFlagService(
     FeatureFlagsDbContext db,
     IFeatureFlagRegistry registry,
     IMemoryCache cache,
-    ILogger<FeatureFlagService> logger
+    ILogger<FeatureFlagService> logger,
+    IServiceProvider serviceProvider
 ) : IFeatureFlagContracts, IFeatureFlagService
 {
+    private readonly Lazy<ITenantContext?> _tenantContext = new(
+        () => serviceProvider.GetService<ITenantContext>()
+    );
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
     private const string AllFlagDataCacheKey = "ff:all-data";
 
     private sealed record FlagData(
         bool IsEnabled,
         Dictionary<string, bool> UserOverrides,
-        Dictionary<string, bool> RoleOverrides
+        Dictionary<string, bool> RoleOverrides,
+        Dictionary<string, bool> TenantOverrides
     );
 
     public async Task<bool> IsEnabledAsync(
@@ -273,23 +280,28 @@ public sealed partial class FeatureFlagService(
     {
         var userOverrides = new Dictionary<string, bool>(StringComparer.Ordinal);
         var roleOverrides = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        var tenantOverrides = new Dictionary<string, bool>(StringComparer.Ordinal);
 
         foreach (var o in overrides)
         {
-            if (o.OverrideType == OverrideType.User)
+            switch (o.OverrideType)
             {
-                userOverrides[o.OverrideValue] = o.IsEnabled;
-            }
-            else
-            {
-                roleOverrides[o.OverrideValue] = o.IsEnabled;
+                case OverrideType.User:
+                    userOverrides[o.OverrideValue] = o.IsEnabled;
+                    break;
+                case OverrideType.Role:
+                    roleOverrides[o.OverrideValue] = o.IsEnabled;
+                    break;
+                case OverrideType.Tenant:
+                    tenantOverrides[o.OverrideValue] = o.IsEnabled;
+                    break;
             }
         }
 
-        return new FlagData(isEnabled, userOverrides, roleOverrides);
+        return new FlagData(isEnabled, userOverrides, roleOverrides, tenantOverrides);
     }
 
-    private static bool ResolveFlagState(
+    private bool ResolveFlagState(
         FlagData data,
         string? userId,
         IEnumerable<string>? roles
@@ -309,6 +321,13 @@ public sealed partial class FeatureFlagService(
                     return roleEnabled;
                 }
             }
+        }
+
+        var currentTenantId = _tenantContext.Value?.TenantId;
+        if (currentTenantId is not null
+            && data.TenantOverrides.TryGetValue(currentTenantId, out var tenantEnabled))
+        {
+            return tenantEnabled;
         }
 
         return data.IsEnabled;

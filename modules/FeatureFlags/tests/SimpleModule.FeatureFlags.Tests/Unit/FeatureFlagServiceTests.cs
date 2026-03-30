@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.FeatureFlags;
@@ -54,7 +55,8 @@ public sealed class FeatureFlagServiceTests : IDisposable
             _db,
             _registry,
             _cache,
-            NullLogger<FeatureFlagService>.Instance
+            NullLogger<FeatureFlagService>.Instance,
+            new ServiceCollection().BuildServiceProvider()
         );
     }
 
@@ -78,7 +80,8 @@ public sealed class FeatureFlagServiceTests : IDisposable
             _db,
             _registry,
             freshCache,
-            NullLogger<FeatureFlagService>.Instance
+            NullLogger<FeatureFlagService>.Instance,
+            new ServiceCollection().BuildServiceProvider()
         );
     }
 

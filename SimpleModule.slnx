@@ -84,6 +84,11 @@
         <Project Path="modules/Marketplace/src/SimpleModule.Marketplace/SimpleModule.Marketplace.csproj" />
         <Project Path="modules/Marketplace/tests/SimpleModule.Marketplace.Tests/SimpleModule.Marketplace.Tests.csproj" />
     </Folder>
+    <Folder Name="/modules/Tenants/">
+        <Project Path="modules/Tenants/src/SimpleModule.Tenants.Contracts/SimpleModule.Tenants.Contracts.csproj" />
+        <Project Path="modules/Tenants/src/SimpleModule.Tenants/SimpleModule.Tenants.csproj" />
+        <Project Path="modules/Tenants/tests/SimpleModule.Tenants.Tests/SimpleModule.Tenants.Tests.csproj" />
+    </Folder>
     <Folder Name="/template/">
         <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
     </Folder>
