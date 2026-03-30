@@ -101,6 +101,9 @@ public class OpenIddictModule : IModule
         // Seed service
         services.AddHostedService<OpenIddictSeedService>();
 
+        // Session management contracts
+        services.AddScoped<IOpenIddictSessionContracts, OpenIddictSessionService>();
+
         // Host-level contributions
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, OpenIddictSwaggerGenSetup>();
         services.AddTransient<IConfigureOptions<SwaggerUIOptions>, OpenIddictSwaggerUISetup>();

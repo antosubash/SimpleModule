@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server;
 using OpenIddict.Server.AspNetCore;
-using SimpleModule.Admin;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.AuditLogs;
 using SimpleModule.Core.Authorization;
@@ -94,7 +93,6 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
             ReplaceWithFileDb<UsersDbContext>(services, connectionString);
             ReplaceWithFileDb<OrdersDbContext>(services, connectionString);
             ReplaceWithFileDb<ProductsDbContext>(services, connectionString);
-            ReplaceWithFileDb<AdminDbContext>(services, connectionString);
             ReplaceWithFileDb<PageBuilderDbContext>(services, connectionString);
             ReplaceWithFileDb<PermissionsDbContext>(services, connectionString);
             ReplaceWithFileDb<SettingsDbContext>(services, connectionString);
@@ -331,7 +329,7 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
         FileStoragePermissions.View, FileStoragePermissions.Upload, FileStoragePermissions.Delete,
         PageBuilderPermissions.View, PageBuilderPermissions.Create,
         PageBuilderPermissions.Update, PageBuilderPermissions.Delete, PageBuilderPermissions.Publish,
-        AdminPermissions.ManageUsers, AdminPermissions.ManageRoles, AdminPermissions.ViewAuditLog,
+        AdminPermissions.ManageUsers, AdminPermissions.ManageRoles,
         OpenIddictPermissions.ManageClients,
         FeatureFlagsPermissions.View, FeatureFlagsPermissions.Manage,
     ];

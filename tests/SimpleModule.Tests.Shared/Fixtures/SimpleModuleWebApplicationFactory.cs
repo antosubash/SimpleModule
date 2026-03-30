@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SimpleModule.Admin;
 using SimpleModule.AuditLogs;
 using SimpleModule.Database;
 using SimpleModule.FileStorage;
@@ -54,7 +53,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<UsersDbContext>(services);
             ReplaceDbContext<OrdersDbContext>(services);
             ReplaceDbContext<ProductsDbContext>(services);
-            ReplaceDbContext<AdminDbContext>(services);
             ReplaceDbContext<PageBuilderDbContext>(services);
             ReplaceDbContext<PermissionsDbContext>(services);
             ReplaceDbContext<SettingsDbContext>(services);
@@ -148,7 +146,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         sp.GetRequiredService<HostDbContext>().Database.EnsureCreated();
         // Some module contexts may need explicit table creation if EnsureCreated
         // returns false (database already has tables from HostDbContext startup).
-        EnsureTablesCreated<AdminDbContext>(sp);
         EnsureTablesCreated<UsersDbContext>(sp);
         EnsureTablesCreated<OrdersDbContext>(sp);
         EnsureTablesCreated<ProductsDbContext>(sp);
