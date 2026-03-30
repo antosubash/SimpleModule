@@ -4,10 +4,13 @@ export interface AdminUserDto {
   displayName: string;
   email: string;
   emailConfirmed: boolean;
+  twoFactorEnabled: boolean;
   roles: string[];
   isLockedOut: boolean;
   isDeactivated: boolean;
+  accessFailedCount: number;
   createdAt: string;
+  lastLoginAt: string;
 }
 
 export interface RoleDto {
