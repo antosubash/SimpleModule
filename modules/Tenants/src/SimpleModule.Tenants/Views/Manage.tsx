@@ -16,23 +16,8 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-
-interface Tenant {
-  id: number;
-  name: string;
-  slug: string;
-  status: number;
-  adminEmail: string | null;
-  editionName: string | null;
-  hosts: { id: number; hostName: string; isActive: boolean }[];
-}
-
-const statusLabels: Record<number, string> = { 0: 'Active', 1: 'Suspended', 2: 'Inactive' };
-const statusColors: Record<number, string> = {
-  0: 'text-green-600',
-  1: 'text-yellow-600',
-  2: 'text-red-600',
-};
+import type { Tenant } from '../types';
+import { statusColors, statusLabels } from './tenantStatus';
 
 export default function Manage({ tenants }: { tenants: Tenant[] }) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);

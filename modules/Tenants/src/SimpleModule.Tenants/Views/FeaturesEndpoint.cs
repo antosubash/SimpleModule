@@ -7,6 +7,7 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.FeatureFlags.Contracts;
 using SimpleModule.Tenants.Contracts;
+using SimpleModule.Tenants.Endpoints.TenantFeatures;
 
 namespace SimpleModule.Tenants.Views;
 
@@ -35,22 +36,8 @@ public class FeaturesEndpoint : IViewEndpoint
                     }
 
                     var flags = (await featureFlags.GetAllFlagsAsync()).ToList();
-                    var tenantIdStr = id.Value.ToString(
-                        System.Globalization.CultureInfo.InvariantCulture
-                    );
-
-                    var overrideTasks = flags
-                        .Where(f => !f.IsDeprecated)
-                        .Select(f => featureFlags.GetOverridesAsync(f.Name));
-                    var allOverrides = await Task.WhenAll(overrideTasks);
-
-                    var tenantOverrides = allOverrides
-                        .SelectMany(o => o)
-                        .Where(o =>
-                            o.OverrideType == OverrideType.Tenant
-                            && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
-                        )
-                        .ToList();
+                    var tenantOverrides = await TenantFeatureHelper.GetOverridesForTenantAsync(
+                        featureFlags, flags, id);
 
                     return Inertia.Render(
                         "Tenants/Features",

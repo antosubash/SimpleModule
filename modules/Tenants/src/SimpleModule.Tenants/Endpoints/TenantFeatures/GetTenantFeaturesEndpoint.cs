@@ -23,22 +23,8 @@ public class GetTenantFeaturesEndpoint : IEndpoint
                     }
 
                     var flags = (await featureFlags.GetAllFlagsAsync()).ToList();
-                    var tenantIdStr = id.Value.ToString(
-                        System.Globalization.CultureInfo.InvariantCulture
-                    );
-
-                    var overrideTasks = flags
-                        .Where(f => !f.IsDeprecated)
-                        .Select(f => featureFlags.GetOverridesAsync(f.Name));
-                    var allOverrides = await Task.WhenAll(overrideTasks);
-
-                    var tenantOverrides = allOverrides
-                        .SelectMany(o => o)
-                        .Where(o =>
-                            o.OverrideType == OverrideType.Tenant
-                            && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
-                        )
-                        .ToList();
+                    var tenantOverrides = await TenantFeatureHelper.GetOverridesForTenantAsync(
+                        featureFlags, flags, id);
 
                     return Results.Ok(new TenantFeaturesResponse(flags, tenantOverrides));
                 }

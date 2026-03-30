@@ -22,15 +22,12 @@ public class SetTenantFeatureEndpoint : IEndpoint
                         return Results.NotFound();
                     }
 
-                    var tenantIdStr = id.Value.ToString(
-                        System.Globalization.CultureInfo.InvariantCulture
-                    );
                     var result = await featureFlags.SetOverrideAsync(
                         flagName,
                         new SetOverrideRequest
                         {
                             OverrideType = OverrideType.Tenant,
-                            OverrideValue = tenantIdStr,
+                            OverrideValue = id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
                             IsEnabled = request.IsEnabled,
                         }
                     );

@@ -22,27 +22,8 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-
-interface TenantHost {
-  id: number;
-  tenantId: number;
-  hostName: string;
-  isActive: boolean;
-}
-
-interface Tenant {
-  id: number;
-  name: string;
-  slug: string;
-  status: number;
-  adminEmail: string | null;
-  editionName: string | null;
-  connectionString: string | null;
-  validUpTo: string | null;
-  hosts: TenantHost[];
-}
-
-const statusLabels: Record<number, string> = { 0: 'Active', 1: 'Suspended', 2: 'Inactive' };
+import type { Tenant } from '../types';
+import { statusLabels } from './tenantStatus';
 
 export default function Edit({ tenant }: { tenant: Tenant }) {
   const [newHost, setNewHost] = useState('');
