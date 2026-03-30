@@ -27,6 +27,7 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<ContractInterfaceInfoRecord> ContractInterfaces,
     ImmutableArray<ContractImplementationRecord> ContractImplementations,
     ImmutableArray<PermissionClassRecord> PermissionClasses,
+    ImmutableArray<FeatureClassRecord> FeatureClasses,
     ImmutableArray<InterceptorInfoRecord> Interceptors,
     ImmutableArray<VogenValueObjectRecord> VogenValueObjects,
     ImmutableArray<ModuleOptionsRecord> ModuleOptions,
@@ -43,6 +44,7 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<ContractInterfaceInfoRecord>.Empty,
         ImmutableArray<ContractImplementationRecord>.Empty,
         ImmutableArray<PermissionClassRecord>.Empty,
+        ImmutableArray<FeatureClassRecord>.Empty,
         ImmutableArray<InterceptorInfoRecord>.Empty,
         ImmutableArray<VogenValueObjectRecord>.Empty,
         ImmutableArray<ModuleOptionsRecord>.Empty,
@@ -60,6 +62,7 @@ internal readonly record struct DiscoveryData(
             && ContractInterfaces.SequenceEqual(other.ContractInterfaces)
             && ContractImplementations.SequenceEqual(other.ContractImplementations)
             && PermissionClasses.SequenceEqual(other.PermissionClasses)
+            && FeatureClasses.SequenceEqual(other.FeatureClasses)
             && Interceptors.SequenceEqual(other.Interceptors)
             && VogenValueObjects.SequenceEqual(other.VogenValueObjects)
             && ModuleOptions.SequenceEqual(other.ModuleOptions)
@@ -78,6 +81,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, ContractInterfaces);
         hash = HashHelper.HashArray(hash, ContractImplementations);
         hash = HashHelper.HashArray(hash, PermissionClasses);
+        hash = HashHelper.HashArray(hash, FeatureClasses);
         hash = HashHelper.HashArray(hash, Interceptors);
         hash = HashHelper.HashArray(hash, VogenValueObjects);
         hash = HashHelper.HashArray(hash, ModuleOptions);
@@ -95,6 +99,7 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigurePermissions,
     bool HasConfigureMiddleware,
     bool HasConfigureSettings,
+    bool HasConfigureFeatureFlags,
     bool HasRazorComponents,
     string RoutePrefix,
     string ViewPrefix,
@@ -112,6 +117,7 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigureMiddleware == other.HasConfigureMiddleware
             && HasConfigurePermissions == other.HasConfigurePermissions
             && HasConfigureSettings == other.HasConfigureSettings
+            && HasConfigureFeatureFlags == other.HasConfigureFeatureFlags
             && HasRazorComponents == other.HasRazorComponents
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
@@ -130,6 +136,7 @@ internal readonly record struct ModuleInfoRecord(
         hash = HashHelper.Combine(hash, HasConfigureMiddleware.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigurePermissions.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureSettings.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureFeatureFlags.GetHashCode());
         hash = HashHelper.Combine(hash, HasRazorComponents.GetHashCode());
         hash = HashHelper.Combine(hash, (RoutePrefix ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, (ViewPrefix ?? "").GetHashCode());
@@ -295,6 +302,36 @@ internal readonly record struct PermissionFieldRecord(
     bool IsConstString
 );
 
+internal readonly record struct FeatureClassRecord(
+    string FullyQualifiedName,
+    string ModuleName,
+    bool IsSealed,
+    ImmutableArray<FeatureFieldRecord> Fields
+)
+{
+    public bool Equals(FeatureClassRecord other) =>
+        FullyQualifiedName == other.FullyQualifiedName
+        && ModuleName == other.ModuleName
+        && IsSealed == other.IsSealed
+        && Fields.SequenceEqual(other.Fields);
+
+    public override int GetHashCode()
+    {
+        var hash = 17;
+        hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
+        hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, IsSealed.GetHashCode());
+        hash = HashHelper.HashArray(hash, Fields);
+        return hash;
+    }
+}
+
+internal readonly record struct FeatureFieldRecord(
+    string FieldName,
+    string Value,
+    bool IsConstString
+);
+
 internal readonly record struct InterceptorInfoRecord(
     string FullyQualifiedName,
     string ModuleName,
@@ -359,6 +396,7 @@ internal sealed class ModuleInfo
     public bool HasConfigurePermissions { get; set; }
     public bool HasConfigureMiddleware { get; set; }
     public bool HasConfigureSettings { get; set; }
+    public bool HasConfigureFeatureFlags { get; set; }
     public bool HasRazorComponents { get; set; }
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
@@ -444,6 +482,21 @@ internal sealed class PermissionClassInfo
 }
 
 internal sealed class PermissionFieldInfo
+{
+    public string FieldName { get; set; } = "";
+    public string Value { get; set; } = "";
+    public bool IsConstString { get; set; }
+}
+
+internal sealed class FeatureClassInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public bool IsSealed { get; set; }
+    public List<FeatureFieldInfo> Fields { get; set; } = new();
+}
+
+internal sealed class FeatureFieldInfo
 {
     public string FieldName { get; set; } = "";
     public string Value { get; set; } = "";

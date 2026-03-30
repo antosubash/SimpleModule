@@ -69,6 +69,11 @@
         <Project Path="modules/FileStorage/src/SimpleModule.FileStorage/SimpleModule.FileStorage.csproj" />
         <Project Path="modules/FileStorage/tests/SimpleModule.FileStorage.Tests/SimpleModule.FileStorage.Tests.csproj" />
     </Folder>
+    <Folder Name="/modules/FeatureFlags/">
+        <Project Path="modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/SimpleModule.FeatureFlags.Contracts.csproj" />
+        <Project Path="modules/FeatureFlags/src/SimpleModule.FeatureFlags/SimpleModule.FeatureFlags.csproj" />
+        <Project Path="modules/FeatureFlags/tests/SimpleModule.FeatureFlags.Tests/SimpleModule.FeatureFlags.Tests.csproj" />
+    </Folder>
     <Folder Name="/modules/AuditLogs/">
         <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/SimpleModule.AuditLogs.Contracts.csproj" />
         <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs/SimpleModule.AuditLogs.csproj" />

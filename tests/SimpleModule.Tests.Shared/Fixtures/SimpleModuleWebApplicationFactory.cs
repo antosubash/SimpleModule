@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,6 +22,7 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
+using SimpleModule.FeatureFlags;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -58,6 +60,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<SettingsDbContext>(services);
             ReplaceDbContext<AuditLogsDbContext>(services);
             ReplaceDbContext<FileStorageDbContext>(services);
+            ReplaceDbContext<FeatureFlagsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
@@ -67,6 +70,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             RemoveHostedService<SimpleModule.Users.Services.UserSeedService>(services);
             RemoveHostedService<SimpleModule.AuditLogs.Pipeline.AuditWriterService>(services);
             RemoveHostedService<SimpleModule.AuditLogs.Retention.AuditRetentionService>(services);
+            RemoveHostedService<SimpleModule.FeatureFlags.FeatureFlagSyncService>(services);
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services
@@ -140,17 +144,41 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
     {
         using var scope = Services.CreateScope();
         var sp = scope.ServiceProvider;
+        // HostDbContext includes all entities with module prefixes — it creates all tables.
         sp.GetRequiredService<HostDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<AdminDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<UsersDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<OrdersDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<ProductsDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<PageBuilderDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<PermissionsDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<SettingsDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<AuditLogsDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<FileStorageDbContext>().Database.EnsureCreated();
-        sp.GetRequiredService<OpenIddictAppDbContext>().Database.EnsureCreated();
+        // Some module contexts may need explicit table creation if EnsureCreated
+        // returns false (database already has tables from HostDbContext startup).
+        EnsureTablesCreated<AdminDbContext>(sp);
+        EnsureTablesCreated<UsersDbContext>(sp);
+        EnsureTablesCreated<OrdersDbContext>(sp);
+        EnsureTablesCreated<ProductsDbContext>(sp);
+        EnsureTablesCreated<PageBuilderDbContext>(sp);
+        EnsureTablesCreated<PermissionsDbContext>(sp);
+        EnsureTablesCreated<SettingsDbContext>(sp);
+        EnsureTablesCreated<AuditLogsDbContext>(sp);
+        EnsureTablesCreated<FileStorageDbContext>(sp);
+        EnsureTablesCreated<FeatureFlagsDbContext>(sp);
+        EnsureTablesCreated<OpenIddictAppDbContext>(sp);
+    }
+
+    private static void EnsureTablesCreated<TContext>(IServiceProvider sp)
+        where TContext : DbContext
+    {
+        var db = sp.GetRequiredService<TContext>();
+        if (!db.Database.EnsureCreated())
+        {
+            // DB already exists but tables for this context may not.
+            // Force table creation via the relational creator.
+            try
+            {
+                db.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>()
+                    ?.CreateTables();
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException)
+            {
+                // Tables already exist — ignore
+            }
+        }
     }
 
     private static void RemoveHostedService<TService>(IServiceCollection services)

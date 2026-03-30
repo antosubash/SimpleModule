@@ -31,3 +31,7 @@ SM0041 | SimpleModule.Generator | Warning | View page name does not match module
 SM0042 | SimpleModule.Generator | Error | Module has view endpoints but no ViewPrefix
 SM0043 | SimpleModule.Generator | Warning | Module does not override any IModule methods
 SM0044 | SimpleModule.Generator | Warning | Multiple IModuleOptions for same module
+SM0045 | SimpleModule.Generator | Error | Feature class is not sealed
+SM0046 | SimpleModule.Generator | Warning | Feature field naming violation
+SM0047 | SimpleModule.Generator | Error | Duplicate feature name
+SM0048 | SimpleModule.Generator | Error | Feature field is not a const string

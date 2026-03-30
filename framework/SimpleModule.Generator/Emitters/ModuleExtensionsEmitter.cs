@@ -140,6 +140,46 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             "        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();"
         );
 
+        sb.AppendLine();
+        sb.AppendLine(
+            "        var featureFlagBuilder = new SimpleModule.Core.FeatureFlags.FeatureFlagRegistryBuilder();"
+        );
+
+        sb.AppendLine();
+        sb.AppendLine("        // Auto-discovered feature classes (IModuleFeatures)");
+        foreach (var feature in data.FeatureClasses)
+        {
+            if (feature.IsSealed)
+            {
+                sb.AppendLine(
+                    $"        featureFlagBuilder.AddFeatures<{feature.FullyQualifiedName}>();"
+                );
+            }
+        }
+
+        // Collect feature flag definitions from modules
+        if (sortedModules.Any(m => m.HasConfigureFeatureFlags))
+        {
+            sb.AppendLine();
+            sb.AppendLine(
+                "        var featureFlagDefinitionBuilder = new SimpleModule.Core.FeatureFlags.FeatureFlagBuilder();"
+            );
+            foreach (var module in sortedModules.Where(m => m.HasConfigureFeatureFlags))
+            {
+                var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
+                sb.AppendLine(
+                    $"        ((global::SimpleModule.Core.IModule){fieldName}).ConfigureFeatureFlags(featureFlagDefinitionBuilder);"
+                );
+            }
+            sb.AppendLine(
+                "        featureFlagBuilder.AddDefinitions(featureFlagDefinitionBuilder.ToList());"
+            );
+        }
+
+        sb.AppendLine(
+            "        services.AddSingleton<global::SimpleModule.Core.FeatureFlags.IFeatureFlagRegistry>(featureFlagBuilder.Build());"
+        );
+
         if (hasDtoTypes)
         {
             sb.AppendLine();

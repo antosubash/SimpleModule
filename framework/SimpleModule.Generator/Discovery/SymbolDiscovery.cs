@@ -345,7 +345,43 @@ internal static class SymbolDiscovery
             }
         }
 
-        // Step 3d: Find ISaveChangesInterceptor implementors in module assemblies
+        // Step 3d: Find IModuleFeatures implementors in module and contracts assemblies
+        var featureClasses = new List<FeatureClassInfo>();
+        var moduleFeaturesSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.FeatureFlags.IModuleFeatures"
+        );
+        if (moduleFeaturesSymbol is not null)
+        {
+            foreach (var module in modules)
+            {
+                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
+                    continue;
+
+                var moduleAssembly = typeSymbol.ContainingAssembly;
+                FindFeatureClasses(
+                    moduleAssembly.GlobalNamespace,
+                    moduleFeaturesSymbol,
+                    module.ModuleName,
+                    featureClasses
+                );
+            }
+
+            // Also scan contracts assemblies for feature classes
+            foreach (var kvp in contractsAssemblySymbols)
+            {
+                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
+                {
+                    FindFeatureClasses(
+                        kvp.Value.GlobalNamespace,
+                        moduleFeaturesSymbol,
+                        moduleName,
+                        featureClasses
+                    );
+                }
+            }
+        }
+
+        // Step 3e: Find ISaveChangesInterceptor implementors in module assemblies
         var interceptors = new List<InterceptorInfo>();
         var saveChangesInterceptorSymbol = compilation.GetTypeByMetadataName(
             "Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor"
@@ -496,6 +532,7 @@ internal static class SymbolDiscovery
                     m.HasConfigurePermissions,
                     m.HasConfigureMiddleware,
                     m.HasConfigureSettings,
+                    m.HasConfigureFeatureFlags,
                     m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
@@ -559,6 +596,19 @@ internal static class SymbolDiscovery
                             f.FieldName,
                             f.Value,
                             f.IsConstString
+                        ))
+                        .ToImmutableArray()
+                ))
+                .ToImmutableArray(),
+            featureClasses
+                .Select(f => new FeatureClassRecord(
+                    f.FullyQualifiedName,
+                    f.ModuleName,
+                    f.IsSealed,
+                    f.Fields.Select(ff => new FeatureFieldRecord(
+                            ff.FieldName,
+                            ff.Value,
+                            ff.IsConstString
                         ))
                         .ToImmutableArray()
                 ))
@@ -650,6 +700,10 @@ internal static class SymbolDiscovery
                                 HasConfigureSettings = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigureSettings"
+                                ),
+                                HasConfigureFeatureFlags = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureFeatureFlags"
                                 ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
@@ -1243,6 +1297,63 @@ internal static class SymbolDiscovery
                     {
                         info.Fields.Add(
                             new PermissionFieldInfo
+                            {
+                                FieldName = field.Name,
+                                Value =
+                                    field.HasConstantValue && field.ConstantValue is string s
+                                        ? s
+                                        : "",
+                                IsConstString =
+                                    field.IsConst
+                                    && field.Type.SpecialType == SpecialType.System_String,
+                            }
+                        );
+                    }
+                }
+
+                results.Add(info);
+            }
+        }
+    }
+
+    private static void FindFeatureClasses(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol moduleFeaturesSymbol,
+        string moduleName,
+        List<FeatureClassInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNs)
+            {
+                FindFeatureClasses(childNs, moduleFeaturesSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && typeSymbol.TypeKind == TypeKind.Class
+                && ImplementsInterface(typeSymbol, moduleFeaturesSymbol)
+            )
+            {
+                var info = new FeatureClassInfo
+                {
+                    FullyQualifiedName = typeSymbol.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    ),
+                    ModuleName = moduleName,
+                    IsSealed = typeSymbol.IsSealed,
+                };
+
+                // Collect public const string fields
+                foreach (var m in typeSymbol.GetMembers())
+                {
+                    if (
+                        m is IFieldSymbol field
+                        && field.DeclaredAccessibility == Accessibility.Public
+                    )
+                    {
+                        info.Fields.Add(
+                            new FeatureFieldInfo
                             {
                                 FieldName = field.Name,
                                 Value =
