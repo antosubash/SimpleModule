@@ -19,29 +19,28 @@ public class GetTenantFeaturesEndpoint : IEndpoint
                     var featureFlags = context.RequestServices.GetService<IFeatureFlagContracts>();
                     if (featureFlags is null)
                     {
-                        return Results.Ok(
-                            new TenantFeaturesResponse([], [])
-                        );
+                        return Results.Ok(new TenantFeaturesResponse([], []));
                     }
 
-                    var flags = await featureFlags.GetAllFlagsAsync();
-                    var allOverrides = new List<FeatureFlagOverride>();
+                    var flags = (await featureFlags.GetAllFlagsAsync()).ToList();
                     var tenantIdStr = id.Value.ToString(
                         System.Globalization.CultureInfo.InvariantCulture
                     );
 
-                    foreach (var flag in flags)
-                    {
-                        var overrides = await featureFlags.GetOverridesAsync(flag.Name);
-                        allOverrides.AddRange(
-                            overrides.Where(o =>
-                                o.OverrideType == OverrideType.Tenant
-                                && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
-                            )
-                        );
-                    }
+                    var overrideTasks = flags
+                        .Where(f => !f.IsDeprecated)
+                        .Select(f => featureFlags.GetOverridesAsync(f.Name));
+                    var allOverrides = await Task.WhenAll(overrideTasks);
 
-                    return Results.Ok(new TenantFeaturesResponse(flags, allOverrides));
+                    var tenantOverrides = allOverrides
+                        .SelectMany(o => o)
+                        .Where(o =>
+                            o.OverrideType == OverrideType.Tenant
+                            && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
+                        )
+                        .ToList();
+
+                    return Results.Ok(new TenantFeaturesResponse(flags, tenantOverrides));
                 }
             )
             .RequirePermission(TenantsPermissions.View);

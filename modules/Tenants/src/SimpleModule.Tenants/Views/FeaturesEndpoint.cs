@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
@@ -16,11 +17,7 @@ public class FeaturesEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/{id}/features",
-                async (
-                    TenantId id,
-                    ITenantContracts contracts,
-                    IFeatureFlagContracts? featureFlags
-                ) =>
+                async (TenantId id, ITenantContracts contracts, HttpContext context) =>
                 {
                     var tenant = await contracts.GetTenantByIdAsync(id);
                     if (tenant is null)
@@ -28,6 +25,7 @@ public class FeaturesEndpoint : IViewEndpoint
                         return Results.NotFound();
                     }
 
+                    var featureFlags = context.RequestServices.GetService<IFeatureFlagContracts>();
                     if (featureFlags is null)
                     {
                         return Inertia.Render(
@@ -40,17 +38,19 @@ public class FeaturesEndpoint : IViewEndpoint
                     var tenantIdStr = id.Value.ToString(
                         System.Globalization.CultureInfo.InvariantCulture
                     );
-                    var tenantOverrides = new List<FeatureFlagOverride>();
-                    foreach (var flag in flags)
-                    {
-                        var overrides = await featureFlags.GetOverridesAsync(flag.Name);
-                        tenantOverrides.AddRange(
-                            overrides.Where(o =>
-                                o.OverrideType == OverrideType.Tenant
-                                && o.OverrideValue == tenantIdStr
-                            )
-                        );
-                    }
+
+                    var overrideTasks = flags
+                        .Where(f => !f.IsDeprecated)
+                        .Select(f => featureFlags.GetOverridesAsync(f.Name));
+                    var allOverrides = await Task.WhenAll(overrideTasks);
+
+                    var tenantOverrides = allOverrides
+                        .SelectMany(o => o)
+                        .Where(o =>
+                            o.OverrideType == OverrideType.Tenant
+                            && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
+                        )
+                        .ToList();
 
                     return Inertia.Render(
                         "Tenants/Features",

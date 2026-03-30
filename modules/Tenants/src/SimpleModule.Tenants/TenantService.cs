@@ -49,16 +49,13 @@ public sealed partial class TenantService(
 
     public async Task<Tenant?> GetTenantByHostNameAsync(string hostName)
     {
-        var host = await db
-            .TenantHosts.AsNoTracking()
-            .FirstOrDefaultAsync(h => h.HostName == hostName && h.IsActive);
+        var entity = await db
+            .Tenants.AsNoTracking()
+            .Include(t => t.Hosts)
+            .Where(t => t.Hosts.Any(h => h.HostName == hostName && h.IsActive))
+            .FirstOrDefaultAsync();
 
-        if (host is null)
-        {
-            return null;
-        }
-
-        return await GetTenantByIdAsync(host.TenantId);
+        return entity is null ? null : MapToDto(entity);
     }
 
     public async Task<Tenant> CreateTenantAsync(CreateTenantRequest request)
@@ -95,7 +92,7 @@ public sealed partial class TenantService(
 
     public async Task<Tenant> UpdateTenantAsync(TenantId id, UpdateTenantRequest request)
     {
-        var entity = await db.Tenants.Include(t => t.Hosts).FirstOrDefaultAsync(t => t.Id == id);
+        var entity = await db.Tenants.FindAsync(id);
         if (entity is null)
         {
             throw new NotFoundException("Tenant", id);
@@ -112,7 +109,7 @@ public sealed partial class TenantService(
         LogTenantUpdated(logger, entity.Id, entity.Name);
         await eventBus.PublishAsync(new TenantUpdatedEvent(entity.Id, entity.Name));
 
-        return MapToDto(entity);
+        return (await GetTenantByIdAsync(id))!;
     }
 
     public async Task DeleteTenantAsync(TenantId id)
@@ -131,7 +128,7 @@ public sealed partial class TenantService(
 
     public async Task<Tenant> ChangeStatusAsync(TenantId id, TenantStatus status)
     {
-        var entity = await db.Tenants.Include(t => t.Hosts).FirstOrDefaultAsync(t => t.Id == id);
+        var entity = await db.Tenants.FindAsync(id);
         if (entity is null)
         {
             throw new NotFoundException("Tenant", id);
@@ -144,7 +141,7 @@ public sealed partial class TenantService(
         LogTenantStatusChanged(logger, id, oldStatus, status);
         await eventBus.PublishAsync(new TenantStatusChangedEvent(id, oldStatus, status));
 
-        return MapToDto(entity);
+        return (await GetTenantByIdAsync(id))!;
     }
 
     public async Task<TenantHost> AddHostAsync(TenantId tenantId, AddTenantHostRequest request)

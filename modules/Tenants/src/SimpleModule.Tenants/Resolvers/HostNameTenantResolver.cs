@@ -9,7 +9,10 @@ public sealed class HostNameTenantResolver(
     IMemoryCache cache
 )
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly MemoryCacheEntryOptions CacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
+    };
 
     public async Task<string?> ResolveAsync(HttpContext context)
     {
@@ -20,25 +23,17 @@ public sealed class HostNameTenantResolver(
         }
 
         var cacheKey = $"tenant:host:{host}";
-        if (cache.TryGetValue(cacheKey, out string? cachedTenantId))
+        return await cache.GetOrCreateAsync(cacheKey, async entry =>
         {
-            return cachedTenantId;
-        }
+            entry.SetOptions(CacheOptions);
 
-        var tenantHost = await db
-            .TenantHosts.AsNoTracking()
-            .Where(h => h.HostName == host && h.IsActive)
-            .Select(h => (int?)h.TenantId.Value)
-            .FirstOrDefaultAsync();
+            var tenantHost = await db
+                .TenantHosts.AsNoTracking()
+                .Where(h => h.HostName == host && h.IsActive)
+                .Select(h => (int?)h.TenantId.Value)
+                .FirstOrDefaultAsync();
 
-        if (tenantHost is null)
-        {
-            cache.Set(cacheKey, (string?)null, CacheDuration);
-            return null;
-        }
-
-        var tenantId = tenantHost.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        cache.Set(cacheKey, tenantId, CacheDuration);
-        return tenantId;
+            return tenantHost?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        });
     }
 }

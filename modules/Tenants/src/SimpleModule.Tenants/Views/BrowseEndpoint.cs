@@ -14,7 +14,18 @@ public class BrowseEndpoint : IViewEndpoint
         app.MapGet(
                 "/browse",
                 async (ITenantContracts contracts) =>
-                    Inertia.Render("Tenants/Browse", new { tenants = await contracts.GetAllTenantsAsync() })
+                {
+                    var tenants = (await contracts.GetAllTenantsAsync())
+                        .Select(t => new
+                        {
+                            t.Id,
+                            t.Name,
+                            t.Slug,
+                            t.Status,
+                            HostCount = t.Hosts.Count,
+                        });
+                    return Inertia.Render("Tenants/Browse", new { tenants });
+                }
             )
             .AllowAnonymous();
     }

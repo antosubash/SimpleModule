@@ -1,13 +1,11 @@
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
 
-interface Tenant {
+interface BrowseTenant {
   id: number;
   name: string;
   slug: string;
   status: number;
-  adminEmail: string | null;
-  editionName: string | null;
-  hosts: { id: number; hostName: string; isActive: boolean }[];
+  hostCount: number;
 }
 
 const statusLabels: Record<number, string> = { 0: 'Active', 1: 'Suspended', 2: 'Inactive' };
@@ -17,7 +15,7 @@ const statusColors: Record<number, string> = {
   2: 'text-red-600',
 };
 
-export default function Browse({ tenants }: { tenants: Tenant[] }) {
+export default function Browse({ tenants }: { tenants: BrowseTenant[] }) {
   return (
     <PageShell title="Tenants" description="Browse all tenants.">
       <div className="space-y-3">
@@ -30,7 +28,7 @@ export default function Browse({ tenants }: { tenants: Tenant[] }) {
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-text-muted text-sm">
-                  {t.hosts.length} host{t.hosts.length !== 1 ? 's' : ''}
+                  {t.hostCount} host{t.hostCount !== 1 ? 's' : ''}
                 </span>
                 <span className={`text-sm font-medium ${statusColors[t.status]}`}>
                   {statusLabels[t.status]}

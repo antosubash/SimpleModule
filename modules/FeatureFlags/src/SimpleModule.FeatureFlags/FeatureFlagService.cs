@@ -17,7 +17,9 @@ public sealed partial class FeatureFlagService(
     IServiceProvider serviceProvider
 ) : IFeatureFlagContracts, IFeatureFlagService
 {
-    private ITenantContext? TenantContext => serviceProvider.GetService<ITenantContext>();
+    private readonly Lazy<ITenantContext?> _tenantContext = new(
+        () => serviceProvider.GetService<ITenantContext>()
+    );
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
     private const string AllFlagDataCacheKey = "ff:all-data";
 
@@ -321,7 +323,7 @@ public sealed partial class FeatureFlagService(
             }
         }
 
-        var currentTenantId = TenantContext?.TenantId;
+        var currentTenantId = _tenantContext.Value?.TenantId;
         if (currentTenantId is not null
             && data.TenantOverrides.TryGetValue(currentTenantId, out var tenantEnabled))
         {

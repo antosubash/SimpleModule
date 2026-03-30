@@ -44,7 +44,6 @@ public sealed partial class TenantResolutionMiddleware(
 
         try
         {
-            // Try hostname → header → claim
             var hostResolver =
                 context.RequestServices.GetRequiredService<HostNameTenantResolver>();
             var tenantId = await hostResolver.ResolveAsync(context);
@@ -76,14 +75,12 @@ public sealed partial class TenantResolutionMiddleware(
             return false;
         }
 
-        // Skip static assets
         if (path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        // Check file extensions
         var lastDot = path.LastIndexOf('.');
         if (lastDot >= 0)
         {
@@ -94,7 +91,6 @@ public sealed partial class TenantResolutionMiddleware(
             }
         }
 
-        // Skip tenant management routes (host-admin, cross-tenant)
         if (path.StartsWith("/api/tenants", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("/tenants", StringComparison.OrdinalIgnoreCase))
         {
