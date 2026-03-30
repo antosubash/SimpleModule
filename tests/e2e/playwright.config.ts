@@ -1,14 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isCI = !!process.env.CI;
+const baseURL = isCI ? 'http://localhost:5000' : 'https://localhost:5001';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [['html'], ...(process.env.CI ? [['github' as const]] : [])],
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 1 : undefined,
+  reporter: [['html'], ...(isCI ? [['github' as const]] : [])],
   use: {
-    baseURL: 'https://localhost:5001',
+    baseURL,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
     screenshot: 'only-on-failure',
@@ -23,7 +26,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
     },
-    ...(process.env.CI
+    ...(isCI
       ? [
           {
             name: 'firefox',
@@ -40,13 +43,13 @@ export default defineConfig({
   ],
   webServer: {
     command: 'dotnet run --project ../../template/SimpleModule.Host',
-    url: 'https://localhost:5001/health/live',
+    url: `${baseURL}/health/live`,
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 120_000,
     env: {
       ...process.env,
-      ASPNETCORE_URLS: 'https://localhost:5001',
+      ASPNETCORE_URLS: baseURL,
       Database__DefaultConnection: 'Data Source=e2e-test.db',
     },
   },
