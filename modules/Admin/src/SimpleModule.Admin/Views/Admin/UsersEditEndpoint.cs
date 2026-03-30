@@ -40,9 +40,9 @@ public class UsersEditEndpoint : IViewEndpoint
                     var sessionsTask = sessionContracts.GetActiveSessionsForUserAsync(id);
                     await Task.WhenAll(rolesTask, permsTask, sessionsTask);
 
-                    var allRoles = rolesTask.Result;
-                    var userPermissions = permsTask.Result.ToList();
-                    var activeSessions = sessionsTask.Result;
+                    var allRoles = await rolesTask;
+                    var userPermissions = (await permsTask).ToList();
+                    var activeSessions = await sessionsTask;
 
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
                         kvp => kvp.Key,

@@ -35,8 +35,8 @@ public class UsersEndpoint : IViewEndpoint
                     var rolesTask = roleAdmin.GetAllRolesAsync();
                     await Task.WhenAll(usersTask, rolesTask);
 
-                    var result = usersTask.Result;
-                    var allRoles = rolesTask.Result;
+                    var result = await usersTask;
+                    var allRoles = await rolesTask;
                     var totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize);
 
                     return Inertia.Render(
