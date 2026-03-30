@@ -1,8 +1,40 @@
-bin/
-obj/
+# Build outputs
+**/bin/
+**/obj/
+**/node_modules/
+
+# Version control
 .git/
-tests/
+.gitignore
+
+# IDE / Editor
 .vs/
 .vscode/
+.idea/
+*.suo
+*.user
+
+# Tests (not needed for Host build)
+tests/
+modules/*/tests/
+
+# Development artifacts
 *.db
+*.db-shm
+*.db-wal
 .worktrees/
+
+# Not needed in production image
+SimpleModule.AppHost/
+cli/
+docs/
+website/
+
+# CI/CD and tooling
+.github/
+.claude/
+
+# Docker (avoid context recursion)
+Dockerfile*
+docker-compose*
+.dockerignore
