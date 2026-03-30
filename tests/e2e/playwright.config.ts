@@ -42,7 +42,9 @@ export default defineConfig({
       : []),
   ],
   webServer: {
-    command: 'dotnet run --project ../../template/SimpleModule.Host',
+    command: isCI
+      ? 'dotnet run --project ../../template/SimpleModule.Host --launch-profile http'
+      : 'dotnet run --project ../../template/SimpleModule.Host',
     url: `${baseURL}/health/live`,
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
