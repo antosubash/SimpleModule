@@ -13,7 +13,7 @@ export class PageBuilderManagePage {
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /pages/i });
+    return this.page.getByRole('heading', { name: 'Pages', exact: true });
   }
 
   get newPageButton() {
