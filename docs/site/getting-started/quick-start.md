@@ -1,4 +1,4 @@
----
+﻿---
 outline: deep
 ---
 
@@ -66,7 +66,7 @@ Open [https://localhost:5001](https://localhost:5001) in your browser. You shoul
 If you prefer to clone the template directly:
 
 ```bash
-git clone https://github.com/anthropics/SimpleModule-template.git MyApp
+git clone https://github.com/antosubash/SimpleModule.git MyApp
 cd MyApp
 dotnet build
 npm install
@@ -180,30 +180,30 @@ public sealed class BrowseProducts : IViewEndpoint
 ### The React Page
 
 ```tsx
-import { Head } from '@inertiajs/react';
+import { Head } from "@inertiajs/react";
 
 interface Props {
-  products: Array<{
-    id: number;
-    name: string;
-    price: number;
-  }>;
+    products: Array<{
+        id: number;
+        name: string;
+        price: number;
+    }>;
 }
 
 export default function Browse({ products }: Props) {
-  return (
-    <>
-      <Head title="Products" />
-      <h1>Products</h1>
-      <ul>
-        {products.map((product) => (
-          <li key={product.id}>
-            {product.name} - ${product.price}
-          </li>
-        ))}
-      </ul>
-    </>
-  );
+    return (
+        <>
+            <Head title="Products" />
+            <h1>Products</h1>
+            <ul>
+                {products.map((product) => (
+                    <li key={product.id}>
+                        {product.name} - ${product.price}
+                    </li>
+                ))}
+            </ul>
+        </>
+    );
 }
 ```
 
@@ -212,7 +212,7 @@ export default function Browse({ products }: Props) {
 ```typescript
 // modules/Products/src/Products/Pages/index.ts
 export const pages: Record<string, any> = {
-  'Products/Browse': () => import('../Views/Browse'),
+    "Products/Browse": () => import("../Views/Browse"),
 };
 ```
 
@@ -281,17 +281,17 @@ During local development with `npm run dev`, the app uses SQLite by default -- n
 
 ## Development Workflow Summary
 
-| Command | What it does |
-|---------|-------------|
-| `npm run dev` | Start backend + all frontend watchers |
-| `npm run build` | Production build (minified, optimized) |
-| `npm run dev:build` | Dev build (unminified, source maps) |
-| `npm run check` | Lint + format check (Biome) |
-| `npm run check:fix` | Auto-fix lint + formatting |
+| Command                  | What it does                                    |
+| ------------------------ | ----------------------------------------------- |
+| `npm run dev`            | Start backend + all frontend watchers           |
+| `npm run build`          | Production build (minified, optimized)          |
+| `npm run dev:build`      | Dev build (unminified, source maps)             |
+| `npm run check`          | Lint + format check (Biome)                     |
+| `npm run check:fix`      | Auto-fix lint + formatting                      |
 | `npm run validate-pages` | Verify all endpoints have page registry entries |
-| `dotnet test` | Run all tests |
-| `dotnet build` | Build the solution |
-| `sm doctor --fix` | Validate and fix project structure |
+| `dotnet test`            | Run all tests                                   |
+| `dotnet build`           | Build the solution                              |
+| `sm doctor --fix`        | Validate and fix project structure              |
 
 ## Next Steps
 
