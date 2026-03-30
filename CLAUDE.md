@@ -70,6 +70,38 @@ dotnet test --filter "FullyQualifiedName~MethodName"   # single test method
 
 Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing. SQLite in-memory for unit tests, PostgreSQL for integration tests in CI.
 
+### Benchmarks (BenchmarkDotNet)
+
+```bash
+dotnet run -c Release --project tests/SimpleModule.Benchmarks          # all benchmarks
+dotnet run -c Release --project tests/SimpleModule.Benchmarks -- --filter "*Products*"  # specific module
+```
+
+Micro-benchmarks for every module: endpoint latency (CRUD operations via in-process TestServer), JSON serialization/deserialization of DTOs. Uses `SimpleModuleWebApplicationFactory` with test auth headers for low-overhead measurement.
+
+### Load Tests (NBomber)
+
+```bash
+dotnet test tests/SimpleModule.LoadTests                               # all 11 scenarios (50 concurrent, ~5 min)
+dotnet test tests/SimpleModule.LoadTests --filter "Products_Crud"      # single scenario
+```
+
+HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant) from OpenIddict. Runs against the full ASP.NET pipeline with file-based SQLite in WAL mode. 11 scenarios covering all modules at 50 concurrent copies:
+
+- **Products, Orders, Users** — full CRUD lifecycle (create → read → update → delete)
+- **Settings** — read operations (settings, definitions, menus, available pages)
+- **AuditLogs, FileStorage** — read operations (list, get by ID, folders)
+- **PageBuilder** — full lifecycle (create → get → update → publish → unpublish → delete + tags/templates)
+- **Admin** — role create/delete (handles 302 Blazor SSR redirects)
+- **FeatureFlags** — get all flags, check flag status
+- **Marketplace** — search and browse (anonymous)
+- **Mixed Realistic** — weighted workload (70% reads, 20% creates, 10% updates)
+
+**Key infrastructure:**
+- `LoadTestWebApplicationFactory` — extends `WebApplicationFactory` with file-based SQLite + WAL, seeds OAuth client/user/permissions, acquires Bearer tokens via `/connect/token`
+- `PasswordGrantTokenHandler` — OpenIddict event handler for ROPC grant type
+- `SqliteBusyTimeoutInterceptor` — sets `PRAGMA busy_timeout=30000` on every EF Core connection
+
 ## Architecture
 
 ### .NET Backend
