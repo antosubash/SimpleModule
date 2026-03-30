@@ -43,7 +43,7 @@ export default defineConfig({
     url: 'https://localhost:5001/health/live',
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
-    timeout: 60_000,
+    timeout: 120_000,
     env: {
       ...process.env,
       ASPNETCORE_URLS: 'https://localhost:5001',
