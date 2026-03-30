@@ -40,7 +40,7 @@ test.describe('FileStorage smoke', () => {
 
     test('browse page redirects to login', async ({ page }) => {
       const response = await page.goto('/files/browse');
-      expect(response?.url()).toContain('/Identity/Account/Login');
+      expect(response?.url()).toContain('/Account/Login');
     });
 
     test('API endpoint returns 302', async ({ request }) => {
