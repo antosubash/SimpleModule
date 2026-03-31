@@ -1,8 +1,8 @@
 <Project>
-  <!-- Tailwind CSS properties -->
+  <!-- Build configuration -->
   <PropertyGroup>
-    <TailwindCli Condition="'$(OS)' == 'Windows_NT'">$(RepoRoot)tools\tailwindcss.exe</TailwindCli>
-    <TailwindCli Condition="'$(OS)' != 'Windows_NT'">$(RepoRoot)tools/tailwindcss</TailwindCli>
+    <TailwindCli Condition="'$(OS)' == 'Windows_NT'">$(RepoRoot)node_modules/.bin/tailwindcss.cmd</TailwindCli>
+    <TailwindCli Condition="'$(OS)' != 'Windows_NT'">$(RepoRoot)node_modules/.bin/tailwindcss</TailwindCli>
     <TailwindInput>$(MSBuildProjectDirectory)/Styles/app.css</TailwindInput>
     <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
     <ViteBuildStamp>$(IntermediateOutputPath)vitebuild.stamp</ViteBuildStamp>
@@ -39,23 +39,23 @@
       SkipUnchangedFiles="true"
     />
   </Target>
+  <!-- Warn when Tailwind input exists but node_modules is missing -->
+  <Target
+    Name="TailwindBuildCheck"
+    BeforeTargets="Build"
+    Condition="Exists('$(TailwindInput)') And !Exists('$(RepoRoot)node_modules')"
+  >
+    <Warning Text="node_modules not found. Tailwind CSS will not be compiled. Run 'npm install' in the repository root." />
+  </Target>
   <!-- Tailwind CSS build (incremental: real output file as Outputs) -->
   <Target
     Name="TailwindBuild"
     BeforeTargets="Build"
-    Condition="Exists('$(TailwindInput)')"
+    Condition="Exists('$(TailwindInput)') And Exists('$(RepoRoot)node_modules')"
     Inputs="@(TailwindSourceFiles)"
     Outputs="$(TailwindOutput)"
   >
-    <Warning
-      Condition="!Exists('$(TailwindCli)')"
-      Text="Tailwind CSS CLI not found at '$(TailwindCli)'. CSS will not be compiled. Run tools/download-tailwind.sh (or .ps1 on Windows) to install it."
-    />
-    <PropertyGroup>
-      <_TailwindAvailable>false</_TailwindAvailable>
-      <_TailwindAvailable Condition="Exists('$(TailwindCli)')">true</_TailwindAvailable>
-    </PropertyGroup>
-    <Exec Condition="'$(_TailwindAvailable)' == 'true'" Command="&quot;$(TailwindCli)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
+    <Exec Command="&quot;$(TailwindCli)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />
   </Target>
   <!-- Warn when ClientApp exists but node_modules is missing -->
   <Target

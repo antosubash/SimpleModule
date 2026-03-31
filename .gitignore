@@ -408,9 +408,6 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 
-# Tailwind CSS standalone CLI
-tools/tailwindcss*
-
 # Playwright
 .playwright-cli/
 .playwright-mcp/
