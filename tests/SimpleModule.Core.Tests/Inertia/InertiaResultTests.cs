@@ -26,7 +26,7 @@ public class InertiaResultTests : IClassFixture<SimpleModuleWebApplicationFactor
 
         var html = await response.Content.ReadAsStringAsync();
         html.Should().Contain("id=\"app\"");
-        html.Should().Contain("<script id=\"inertia-page\" type=\"application/json\">");
+        html.Should().Contain("<script data-page=\"app\" type=\"application/json\">");
         html.Should().Contain("/js/app.js");
     }
 
