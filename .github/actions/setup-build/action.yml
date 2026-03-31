@@ -1,0 +1,35 @@
+name: Setup and Build
+description: Setup .NET + Node.js, restore dependencies in parallel, and build frontend + backend
+
+runs:
+  using: composite
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: nuget-${{ hashFiles('**/*.csproj', 'Directory.Packages.props') }}
+        restore-keys: nuget-
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: '22'
+        cache: 'npm'
+
+    - name: Restore dependencies
+      shell: bash
+      run: npm ci & dotnet restore & wait
+
+    - name: Build frontend
+      shell: bash
+      run: npm run build
+
+    - name: Build .NET
+      shell: bash
+      run: dotnet build --no-restore

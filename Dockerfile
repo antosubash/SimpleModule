@@ -68,21 +68,47 @@ COPY modules/Tenants/src/SimpleModule.Tenants/*.csproj modules/Tenants/src/Simpl
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
 # =============================================================================
-# Stage 3: Frontend build + .NET publish
+# Stage 3: npm restore (cached unless package.json / lockfile changes)
 # =============================================================================
-FROM restore AS build
+FROM restore AS npm-restore
+WORKDIR /src
+
+# Root manifest + lockfile
+COPY package.json package-lock.json ./
+
+# Workspace package.json files (must exist for npm ci with workspaces)
+COPY modules/Admin/src/SimpleModule.Admin/package.json modules/Admin/src/SimpleModule.Admin/
+COPY modules/AuditLogs/src/SimpleModule.AuditLogs/package.json modules/AuditLogs/src/SimpleModule.AuditLogs/
+COPY modules/Dashboard/src/SimpleModule.Dashboard/package.json modules/Dashboard/src/SimpleModule.Dashboard/
+COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags/package.json modules/FeatureFlags/src/SimpleModule.FeatureFlags/
+COPY modules/FileStorage/src/SimpleModule.FileStorage/package.json modules/FileStorage/src/SimpleModule.FileStorage/
+COPY modules/Marketplace/src/SimpleModule.Marketplace/package.json modules/Marketplace/src/SimpleModule.Marketplace/
+COPY modules/OpenIddict/src/SimpleModule.OpenIddict/package.json modules/OpenIddict/src/SimpleModule.OpenIddict/
+COPY modules/Orders/src/SimpleModule.Orders/package.json modules/Orders/src/SimpleModule.Orders/
+COPY modules/PageBuilder/src/SimpleModule.PageBuilder/package.json modules/PageBuilder/src/SimpleModule.PageBuilder/
+COPY modules/Products/src/SimpleModule.Products/package.json modules/Products/src/SimpleModule.Products/
+COPY modules/Settings/src/SimpleModule.Settings/package.json modules/Settings/src/SimpleModule.Settings/
+COPY modules/Tenants/src/SimpleModule.Tenants/package.json modules/Tenants/src/SimpleModule.Tenants/
+COPY modules/Users/src/SimpleModule.Users/package.json modules/Users/src/SimpleModule.Users/
+COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
+COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
+COPY packages/SimpleModule.UI/package.json packages/SimpleModule.UI/
+COPY template/SimpleModule.Host/ClientApp/package.json template/SimpleModule.Host/ClientApp/
+COPY tests/e2e/package.json tests/e2e/
+COPY docs/site/package.json docs/site/
+COPY website/package.json website/
+
+RUN npm ci
+
+# =============================================================================
+# Stage 4: Frontend build + .NET publish
+# =============================================================================
+FROM npm-restore AS build
 WORKDIR /src
 
 COPY . .
 
-# Download Tailwind CSS CLI for Linux
-RUN ARCH=$(uname -m) && \
-    case "$ARCH" in x86_64) ARCH="x64" ;; aarch64|arm64) ARCH="arm64" ;; esac && \
-    curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.3/tailwindcss-linux-${ARCH}" -o tools/tailwindcss && \
-    chmod +x tools/tailwindcss
-
-# Install npm dependencies and build all frontend workspaces
-RUN npm ci
+# Build all frontend workspaces
 RUN npm run build
 
 # Publish the .NET application (MSBuild targets detect existing frontend
@@ -94,7 +120,7 @@ RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
     -p:ErrorOnDuplicatePublishOutputFiles=false
 
 # =============================================================================
-# Stage 4: Runtime (slim image, non-root user)
+# Stage 5: Runtime (slim image, non-root user)
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

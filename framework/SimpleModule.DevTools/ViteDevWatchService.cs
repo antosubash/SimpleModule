@@ -190,14 +190,12 @@ public sealed partial class ViteDevWatchService(
 
     private async Task RunTailwindBuild()
     {
-        var tailwindCli = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? Path.Combine(_repoRoot, "tools", "tailwindcss.exe")
-            : Path.Combine(_repoRoot, "tools", "tailwindcss");
-
         var hostDir = environment.ContentRootPath;
         var inputPath = Path.Combine(hostDir, "Styles", "app.css");
         var outputPath = Path.Combine(hostDir, "wwwroot", "css", "app.css");
 
+        var tailwindBin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "tailwindcss.cmd" : "tailwindcss";
+        var tailwindCli = Path.Combine(_npmBinPath, tailwindBin);
         var command = $"\"{tailwindCli}\" -i \"{inputPath}\" -o \"{outputPath}\"";
 
         await RunBuild("Tailwind", command, hostDir).ConfigureAwait(false);
