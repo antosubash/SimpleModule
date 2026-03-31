@@ -1,6 +1,7 @@
 import { basename, resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
-import { defineConfig, type UserConfig } from 'vite';
+import type { UserConfig } from 'vite';
+import { defineConfig } from 'vite';
 import { defaultVendors } from './vite-plugin-vendor.ts';
 
 /**
@@ -15,7 +16,7 @@ import { defaultVendors } from './vite-plugin-vendor.ts';
  * For non-standard overrides, use Vite's `mergeConfig`:
  * ```ts
  * import { mergeConfig } from 'vite';
- * export default mergeConfig(defineModuleConfig(__dirname), { ... });
+ * export default mergeConfig(defineModuleConfig(import.meta.dirname), { ... });
  * ```
  */
 export function defineModuleConfig(dir: string): UserConfig {
@@ -37,7 +38,7 @@ export function defineModuleConfig(dir: string): UserConfig {
       minify: isDev ? false : 'esbuild',
       outDir: 'wwwroot',
       emptyOutDir: false,
-      rollupOptions: {
+      rolldownOptions: {
         external: defaultVendors.map((v) => v.pkg),
         output: {
           assetFileNames: `${name.toLowerCase()}[extname]`,

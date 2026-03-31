@@ -183,7 +183,7 @@ function HBarCard({
   yAxisWidth = 100,
 }: {
   title: string;
-  data: { name: string; [key: string]: unknown }[];
+  data: readonly { name: string; count?: number; value?: number }[];
   dataKey: string;
   config: ChartConfig;
   fill?: string;

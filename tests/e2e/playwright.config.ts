@@ -9,7 +9,7 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
-  reporter: [['html'], ...(isCI ? [['github' as const]] : [])],
+  reporter: [['html', {}], ...(isCI ? [['github', {}] as const] : [])],
   use: {
     baseURL,
     trace: 'on-first-retry',

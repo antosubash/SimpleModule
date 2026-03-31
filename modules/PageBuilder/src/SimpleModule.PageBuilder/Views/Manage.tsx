@@ -110,7 +110,7 @@ export default function Manage({ pages }: Props) {
                   <TableCell>
                     <div className="flex gap-1.5">
                       <Badge
-                        variant={page.isPublished ? 'success' : 'secondary'}
+                        variant={page.isPublished ? 'success' : 'default'}
                         data-testid="status-badge"
                       >
                         {page.isPublished ? 'Published' : 'Unpublished'}
@@ -123,7 +123,7 @@ export default function Manage({ pages }: Props) {
                       {page.tags.map((tag) => (
                         <Badge
                           key={tag}
-                          variant="outline"
+                          variant="info"
                           className="cursor-pointer hover:line-through"
                           onClick={() => handleRemoveTag(page.id, tag)}
                         >

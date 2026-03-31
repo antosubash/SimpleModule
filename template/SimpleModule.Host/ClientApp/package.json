@@ -3,14 +3,14 @@
   "name": "@simplemodule/app",
   "version": "0.0.0",
   "scripts": {
-    "build": "vite build",
-    "build:dev": "cross-env VITE_MODE=dev vite build",
-    "watch": "cross-env VITE_MODE=dev vite build --watch",
+    "build": "vite build --configLoader runner",
+    "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+    "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch",
     "validate-pages": "node ClientApp/validate-pages.mjs"
   },
   "dependencies": {
-    "@inertiajs/react": "^2.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@inertiajs/react": "^3.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

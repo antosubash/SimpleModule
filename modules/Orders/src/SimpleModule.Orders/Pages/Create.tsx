@@ -62,7 +62,7 @@ export default function Create({ products }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    router.post('/orders', { userId, items });
+    router.post('/orders', { userId, items: items as unknown as string });
   }
 
   return (

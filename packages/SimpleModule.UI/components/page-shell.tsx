@@ -16,7 +16,7 @@ interface BreadcrumbEntry {
 }
 
 interface PageShellProps {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   actions?: React.ReactNode;
   breadcrumbs?: BreadcrumbEntry[];

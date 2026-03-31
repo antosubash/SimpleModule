@@ -13,7 +13,7 @@ export interface MarketplacePackage {
   isInstalled: boolean;
 }
 
-export interface MarketplacePackageDetail {
+export interface MarketplacePackageDetail extends MarketplacePackage {
   licenseLink: string;
   versions: MarketplacePackageVersion[];
   dependencies: string[];

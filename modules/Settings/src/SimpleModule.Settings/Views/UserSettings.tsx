@@ -71,7 +71,7 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
                   <div className="flex items-center gap-2">
                     {s.isOverridden ? (
                       <>
-                        <Badge variant="secondary">Overridden</Badge>
+                        <Badge variant="default">Overridden</Badge>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -81,7 +81,7 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
                         </Button>
                       </>
                     ) : (
-                      <Badge variant="outline">Default</Badge>
+                      <Badge variant="info">Default</Badge>
                     )}
                   </div>
                 </div>

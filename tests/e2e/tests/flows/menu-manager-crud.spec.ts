@@ -12,8 +12,9 @@ function trackCreated(resp: {
   if (resp.url().includes('/api/settings/menus') && resp.request().method() === 'POST') {
     resp
       .json()
-      .then((body: Record<string, unknown>) => {
-        if (body?.id) createdIds.push(body.id as number);
+      .then((body: unknown) => {
+        const data = body as Record<string, unknown> | null;
+        if (data?.id) createdIds.push(data.id as number);
       })
       .catch(() => {});
   }
