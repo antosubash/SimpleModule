@@ -15,6 +15,19 @@ internal static class HashHelper
     }
 }
 
+/// <summary>
+/// Serializable source location for incremental caching.
+/// Unlike <see cref="Microsoft.CodeAnalysis.Location"/>, this record is fully equatable
+/// and does not hold references to syntax trees, making it safe for incremental pipelines.
+/// </summary>
+internal readonly record struct SourceLocationRecord(
+    string FilePath,
+    int StartLine,
+    int StartCharacter,
+    int EndLine,
+    int EndCharacter
+);
+
 #region Equatable data model for incremental caching
 
 internal readonly record struct DiscoveryData(
@@ -104,7 +117,8 @@ internal readonly record struct ModuleInfoRecord(
     string RoutePrefix,
     string ViewPrefix,
     ImmutableArray<EndpointInfoRecord> Endpoints,
-    ImmutableArray<ViewInfoRecord> Views
+    ImmutableArray<ViewInfoRecord> Views,
+    SourceLocationRecord? Location
 )
 {
     public bool Equals(ModuleInfoRecord other)
@@ -122,7 +136,8 @@ internal readonly record struct ModuleInfoRecord(
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
             && Endpoints.SequenceEqual(other.Endpoints)
-            && Views.SequenceEqual(other.Views);
+            && Views.SequenceEqual(other.Views)
+            && Location == other.Location;
     }
 
     public override int GetHashCode()
@@ -142,6 +157,7 @@ internal readonly record struct ModuleInfoRecord(
         hash = HashHelper.Combine(hash, (ViewPrefix ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, Endpoints);
         hash = HashHelper.HashArray(hash, Views);
+        hash = HashHelper.Combine(hash, Location.GetHashCode());
         return hash;
     }
 }
@@ -169,7 +185,7 @@ internal readonly record struct EndpointInfoRecord(
     }
 }
 
-internal readonly record struct ViewInfoRecord(string FullyQualifiedName, string Page);
+internal readonly record struct ViewInfoRecord(string FullyQualifiedName, string Page, SourceLocationRecord? Location);
 
 internal readonly record struct DtoTypeInfoRecord(
     string FullyQualifiedName,
@@ -208,7 +224,8 @@ internal readonly record struct DbContextInfoRecord(
     string IdentityUserTypeFqn,
     string IdentityRoleTypeFqn,
     string IdentityKeyTypeFqn,
-    ImmutableArray<DbSetInfoRecord> DbSets
+    ImmutableArray<DbSetInfoRecord> DbSets,
+    SourceLocationRecord? Location
 )
 {
     public bool Equals(DbContextInfoRecord other)
@@ -219,7 +236,8 @@ internal readonly record struct DbContextInfoRecord(
             && IdentityUserTypeFqn == other.IdentityUserTypeFqn
             && IdentityRoleTypeFqn == other.IdentityRoleTypeFqn
             && IdentityKeyTypeFqn == other.IdentityKeyTypeFqn
-            && DbSets.SequenceEqual(other.DbSets);
+            && DbSets.SequenceEqual(other.DbSets)
+            && Location == other.Location;
     }
 
     public override int GetHashCode()
@@ -232,6 +250,7 @@ internal readonly record struct DbContextInfoRecord(
         hash = HashHelper.Combine(hash, (IdentityRoleTypeFqn ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, (IdentityKeyTypeFqn ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, DbSets);
+        hash = HashHelper.Combine(hash, Location.GetHashCode());
         return hash;
     }
 }
@@ -241,7 +260,8 @@ internal readonly record struct DbSetInfoRecord(string PropertyName, string Enti
 internal readonly record struct EntityConfigInfoRecord(
     string ConfigFqn,
     string EntityFqn,
-    string ModuleName
+    string ModuleName,
+    SourceLocationRecord? Location
 );
 
 internal readonly record struct ModuleDependencyRecord(
@@ -254,13 +274,15 @@ internal readonly record struct IllegalModuleReferenceRecord(
     string ReferencingModuleName,
     string ReferencingAssemblyName,
     string ReferencedModuleName,
-    string ReferencedAssemblyName
+    string ReferencedAssemblyName,
+    SourceLocationRecord? Location
 );
 
 internal readonly record struct ContractInterfaceInfoRecord(
     string ContractsAssemblyName,
     string InterfaceName,
-    int MethodCount
+    int MethodCount,
+    SourceLocationRecord? Location
 );
 
 internal readonly record struct ContractImplementationRecord(
@@ -269,21 +291,24 @@ internal readonly record struct ContractImplementationRecord(
     string ModuleName,
     bool IsPublic,
     bool IsAbstract,
-    bool DependsOnDbContext
+    bool DependsOnDbContext,
+    SourceLocationRecord? Location
 );
 
 internal readonly record struct PermissionClassRecord(
     string FullyQualifiedName,
     string ModuleName,
     bool IsSealed,
-    ImmutableArray<PermissionFieldRecord> Fields
+    ImmutableArray<PermissionFieldRecord> Fields,
+    SourceLocationRecord? Location
 )
 {
     public bool Equals(PermissionClassRecord other) =>
         FullyQualifiedName == other.FullyQualifiedName
         && ModuleName == other.ModuleName
         && IsSealed == other.IsSealed
-        && Fields.SequenceEqual(other.Fields);
+        && Fields.SequenceEqual(other.Fields)
+        && Location == other.Location;
 
     public override int GetHashCode()
     {
@@ -292,6 +317,7 @@ internal readonly record struct PermissionClassRecord(
         hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, IsSealed.GetHashCode());
         hash = HashHelper.HashArray(hash, Fields);
+        hash = HashHelper.Combine(hash, Location.GetHashCode());
         return hash;
     }
 }
@@ -299,21 +325,24 @@ internal readonly record struct PermissionClassRecord(
 internal readonly record struct PermissionFieldRecord(
     string FieldName,
     string Value,
-    bool IsConstString
+    bool IsConstString,
+    SourceLocationRecord? Location
 );
 
 internal readonly record struct FeatureClassRecord(
     string FullyQualifiedName,
     string ModuleName,
     bool IsSealed,
-    ImmutableArray<FeatureFieldRecord> Fields
+    ImmutableArray<FeatureFieldRecord> Fields,
+    SourceLocationRecord? Location
 )
 {
     public bool Equals(FeatureClassRecord other) =>
         FullyQualifiedName == other.FullyQualifiedName
         && ModuleName == other.ModuleName
         && IsSealed == other.IsSealed
-        && Fields.SequenceEqual(other.Fields);
+        && Fields.SequenceEqual(other.Fields)
+        && Location == other.Location;
 
     public override int GetHashCode()
     {
@@ -322,6 +351,7 @@ internal readonly record struct FeatureClassRecord(
         hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, IsSealed.GetHashCode());
         hash = HashHelper.HashArray(hash, Fields);
+        hash = HashHelper.Combine(hash, Location.GetHashCode());
         return hash;
     }
 }
@@ -329,19 +359,22 @@ internal readonly record struct FeatureClassRecord(
 internal readonly record struct FeatureFieldRecord(
     string FieldName,
     string Value,
-    bool IsConstString
+    bool IsConstString,
+    SourceLocationRecord? Location
 );
 
 internal readonly record struct InterceptorInfoRecord(
     string FullyQualifiedName,
     string ModuleName,
-    ImmutableArray<string> ConstructorParamTypeFqns
+    ImmutableArray<string> ConstructorParamTypeFqns,
+    SourceLocationRecord? Location
 )
 {
     public bool Equals(InterceptorInfoRecord other) =>
         FullyQualifiedName == other.FullyQualifiedName
         && ModuleName == other.ModuleName
-        && ConstructorParamTypeFqns.SequenceEqual(other.ConstructorParamTypeFqns);
+        && ConstructorParamTypeFqns.SequenceEqual(other.ConstructorParamTypeFqns)
+        && Location == other.Location;
 
     public override int GetHashCode()
     {
@@ -349,11 +382,16 @@ internal readonly record struct InterceptorInfoRecord(
         hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
         hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, ConstructorParamTypeFqns);
+        hash = HashHelper.Combine(hash, Location.GetHashCode());
         return hash;
     }
 }
 
-internal readonly record struct ModuleOptionsRecord(string FullyQualifiedName, string ModuleName)
+internal readonly record struct ModuleOptionsRecord(
+    string FullyQualifiedName,
+    string ModuleName,
+    SourceLocationRecord? Location
+)
 {
     internal static Dictionary<string, List<ModuleOptionsRecord>> GroupByModule(
         ImmutableArray<ModuleOptionsRecord> options
@@ -399,6 +437,7 @@ internal sealed class ModuleInfo
     public string ViewPrefix { get; set; } = "";
     public List<EndpointInfo> Endpoints { get; set; } = new();
     public List<ViewInfo> Views { get; set; } = new();
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class EndpointInfo
@@ -413,6 +452,7 @@ internal sealed class ViewInfo
     public string FullyQualifiedName { get; set; } = "";
     public string? Page { get; set; }
     public string InferredClassName { get; set; } = "";
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class DtoTypeInfo
@@ -445,6 +485,7 @@ internal sealed class DbContextInfo
     public string IdentityRoleTypeFqn { get; set; } = "";
     public string IdentityKeyTypeFqn { get; set; } = "";
     public List<DbSetInfo> DbSets { get; set; } = new();
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class DbSetInfo
@@ -458,6 +499,7 @@ internal sealed class EntityConfigInfo
     public string ConfigFqn { get; set; } = "";
     public string EntityFqn { get; set; } = "";
     public string ModuleName { get; set; } = "";
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class ContractImplementationInfo
@@ -468,6 +510,7 @@ internal sealed class ContractImplementationInfo
     public bool IsPublic { get; set; }
     public bool IsAbstract { get; set; }
     public bool DependsOnDbContext { get; set; }
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class PermissionClassInfo
@@ -476,6 +519,7 @@ internal sealed class PermissionClassInfo
     public string ModuleName { get; set; } = "";
     public bool IsSealed { get; set; }
     public List<PermissionFieldInfo> Fields { get; set; } = new();
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class PermissionFieldInfo
@@ -483,6 +527,7 @@ internal sealed class PermissionFieldInfo
     public string FieldName { get; set; } = "";
     public string Value { get; set; } = "";
     public bool IsConstString { get; set; }
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class FeatureClassInfo
@@ -491,6 +536,7 @@ internal sealed class FeatureClassInfo
     public string ModuleName { get; set; } = "";
     public bool IsSealed { get; set; }
     public List<FeatureFieldInfo> Fields { get; set; } = new();
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class FeatureFieldInfo
@@ -498,6 +544,7 @@ internal sealed class FeatureFieldInfo
     public string FieldName { get; set; } = "";
     public string Value { get; set; } = "";
     public bool IsConstString { get; set; }
+    public SourceLocationRecord? Location { get; set; }
 }
 
 internal sealed class InterceptorInfo
@@ -505,6 +552,7 @@ internal sealed class InterceptorInfo
     public string FullyQualifiedName { get; set; } = "";
     public string ModuleName { get; set; } = "";
     public List<string> ConstructorParamTypeFqns { get; set; } = new();
+    public SourceLocationRecord? Location { get; set; }
 }
 
 #endregion

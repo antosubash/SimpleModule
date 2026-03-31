@@ -2,13 +2,37 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 
 namespace SimpleModule.Generator;
 
 internal static class SymbolDiscovery
 {
-    internal static DiscoveryData Extract(Compilation compilation)
+    /// <summary>
+    /// Extracts a serializable source location from a symbol, if available.
+    /// Returns null for symbols only available in metadata (compiled DLLs).
+    /// </summary>
+    private static SourceLocationRecord? GetSourceLocation(ISymbol symbol)
+    {
+        foreach (var loc in symbol.Locations)
+        {
+            if (loc.IsInSource)
+            {
+                var span = loc.GetLineSpan();
+                return new SourceLocationRecord(
+                    span.Path,
+                    span.StartLinePosition.Line,
+                    span.StartLinePosition.Character,
+                    span.EndLinePosition.Line,
+                    span.EndLinePosition.Character
+                );
+            }
+        }
+        return null;
+    }
+
+    internal static DiscoveryData Extract(Compilation compilation, CancellationToken cancellationToken)
     {
         var hostAssemblyName = compilation.Assembly.Name;
 
@@ -34,16 +58,18 @@ internal static class SymbolDiscovery
 
         foreach (var reference in compilation.References)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (
                 compilation.GetAssemblyOrModuleSymbol(reference)
                 is not IAssemblySymbol assemblySymbol
             )
                 continue;
 
-            FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules);
+            FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules, cancellationToken);
         }
 
-        FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, modules);
+        FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, modules, cancellationToken);
 
         if (modules.Count == 0)
             return DiscoveryData.Empty;
@@ -68,6 +94,8 @@ internal static class SymbolDiscovery
             );
             foreach (var module in modules)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                     continue;
 
@@ -82,7 +110,8 @@ internal static class SymbolDiscovery
                     endpointInterfaceSymbol,
                     viewEndpointInterfaceSymbol,
                     rawEndpoints,
-                    rawViews
+                    rawViews,
+                    cancellationToken
                 );
 
                 // Match each endpoint/view to the module whose namespace is closest
@@ -119,6 +148,8 @@ internal static class SymbolDiscovery
         var scannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
         foreach (var module in modules)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
                 continue;
 
@@ -129,8 +160,8 @@ internal static class SymbolDiscovery
             // Collect unmatched items from this assembly
             var rawDbContexts = new List<DbContextInfo>();
             var rawEntityConfigs = new List<EntityConfigInfo>();
-            FindDbContextTypes(assembly.GlobalNamespace, "", rawDbContexts);
-            FindEntityConfigTypes(assembly.GlobalNamespace, "", rawEntityConfigs);
+            FindDbContextTypes(assembly.GlobalNamespace, "", rawDbContexts, cancellationToken);
+            FindEntityConfigTypes(assembly.GlobalNamespace, "", rawEntityConfigs, cancellationToken);
 
             // Match each DbContext to the module whose namespace is closest
             foreach (var ctx in rawDbContexts)
@@ -153,17 +184,21 @@ internal static class SymbolDiscovery
         {
             foreach (var reference in compilation.References)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (
                     compilation.GetAssemblyOrModuleSymbol(reference)
                     is not IAssemblySymbol assemblySymbol
                 )
                     continue;
 
-                FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
+                FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes, cancellationToken);
             }
 
-            FindDtoTypes(compilation.Assembly.GlobalNamespace, dtoAttributeSymbol, dtoTypes);
+            FindDtoTypes(compilation.Assembly.GlobalNamespace, dtoAttributeSymbol, dtoTypes, cancellationToken);
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         var componentBaseSymbol = compilation.GetTypeByMetadataName(
             "Microsoft.AspNetCore.Components.ComponentBase"
@@ -175,6 +210,8 @@ internal static class SymbolDiscovery
             );
             foreach (var reference in compilation.References)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
                     continue;
 
@@ -193,6 +230,7 @@ internal static class SymbolDiscovery
         }
 
         // --- Dependency inference ---
+        cancellationToken.ThrowIfCancellationRequested();
 
         // Step 1: Build module assembly map (assembly name → module name)
         var moduleAssemblyMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -259,12 +297,14 @@ internal static class SymbolDiscovery
 
         foreach (var kvp in contractsAssemblySymbols)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             FindConventionDtoTypes(
                 kvp.Value.GlobalNamespace,
                 noDtoAttrSymbol,
                 eventInterfaceSymbol,
                 existingDtoFqns,
-                dtoTypes
+                dtoTypes,
+                cancellationToken
             );
         }
 
@@ -498,7 +538,8 @@ internal static class SymbolDiscovery
                                 thisModuleName,
                                 moduleAssembly.Name,
                                 referencedModuleName,
-                                refName
+                                refName,
+                                module.Location
                             )
                         );
                     }
@@ -542,8 +583,9 @@ internal static class SymbolDiscovery
                             e.AllowAnonymous
                         ))
                         .ToImmutableArray(),
-                    m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page ?? ""))
-                        .ToImmutableArray()
+                    m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page ?? "", v.Location))
+                        .ToImmutableArray(),
+                    m.Location
                 ))
                 .ToImmutableArray(),
             dtoTypes
@@ -568,11 +610,12 @@ internal static class SymbolDiscovery
                     c.IdentityRoleTypeFqn,
                     c.IdentityKeyTypeFqn,
                     c.DbSets.Select(d => new DbSetInfoRecord(d.PropertyName, d.EntityFqn))
-                        .ToImmutableArray()
+                        .ToImmutableArray(),
+                    c.Location
                 ))
                 .ToImmutableArray(),
             entityConfigs
-                .Select(e => new EntityConfigInfoRecord(e.ConfigFqn, e.EntityFqn, e.ModuleName))
+                .Select(e => new EntityConfigInfoRecord(e.ConfigFqn, e.EntityFqn, e.ModuleName, e.Location))
                 .ToImmutableArray(),
             dependencies.ToImmutableArray(),
             illegalReferences.ToImmutableArray(),
@@ -584,7 +627,8 @@ internal static class SymbolDiscovery
                     c.ModuleName,
                     c.IsPublic,
                     c.IsAbstract,
-                    c.DependsOnDbContext
+                    c.DependsOnDbContext,
+                    c.Location
                 ))
                 .ToImmutableArray(),
             permissionClasses
@@ -595,9 +639,11 @@ internal static class SymbolDiscovery
                     p.Fields.Select(f => new PermissionFieldRecord(
                             f.FieldName,
                             f.Value,
-                            f.IsConstString
+                            f.IsConstString,
+                            f.Location
                         ))
-                        .ToImmutableArray()
+                        .ToImmutableArray(),
+                    p.Location
                 ))
                 .ToImmutableArray(),
             featureClasses
@@ -608,16 +654,19 @@ internal static class SymbolDiscovery
                     f.Fields.Select(ff => new FeatureFieldRecord(
                             ff.FieldName,
                             ff.Value,
-                            ff.IsConstString
+                            ff.IsConstString,
+                            ff.Location
                         ))
-                        .ToImmutableArray()
+                        .ToImmutableArray(),
+                    f.Location
                 ))
                 .ToImmutableArray(),
             interceptors
                 .Select(i => new InterceptorInfoRecord(
                     i.FullyQualifiedName,
                     i.ModuleName,
-                    i.ConstructorParamTypeFqns.ToImmutableArray()
+                    i.ConstructorParamTypeFqns.ToImmutableArray(),
+                    i.Location
                 ))
                 .ToImmutableArray(),
             vogenValueObjects.ToImmutableArray(),
@@ -629,14 +678,17 @@ internal static class SymbolDiscovery
     private static void FindModuleTypes(
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol moduleAttributeSymbol,
-        List<ModuleInfo> modules
+        List<ModuleInfo> modules,
+        CancellationToken cancellationToken
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (member is INamespaceSymbol childNamespace)
             {
-                FindModuleTypes(childNamespace, moduleAttributeSymbol, modules);
+                FindModuleTypes(childNamespace, moduleAttributeSymbol, modules, cancellationToken);
             }
             else if (member is INamedTypeSymbol typeSymbol)
             {
@@ -707,6 +759,7 @@ internal static class SymbolDiscovery
                                 ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
+                                Location = GetSourceLocation(typeSymbol),
                             }
                         );
                         break;
@@ -721,11 +774,14 @@ internal static class SymbolDiscovery
         INamedTypeSymbol endpointInterfaceSymbol,
         INamedTypeSymbol? viewEndpointInterfaceSymbol,
         List<EndpointInfo> endpoints,
-        List<ViewInfo> views
+        List<ViewInfo> views,
+        CancellationToken cancellationToken
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (member is INamespaceSymbol childNamespace)
             {
                 FindEndpointTypes(
@@ -733,7 +789,8 @@ internal static class SymbolDiscovery
                     endpointInterfaceSymbol,
                     viewEndpointInterfaceSymbol,
                     endpoints,
-                    views
+                    views,
+                    cancellationToken
                 );
             }
             else if (member is INamedTypeSymbol typeSymbol)
@@ -781,6 +838,7 @@ internal static class SymbolDiscovery
                                 FullyQualifiedName = fqn,
                                 Page = page,
                                 InferredClassName = className,
+                                Location = GetSourceLocation(typeSymbol),
                             }
                         );
                     }
@@ -887,14 +945,17 @@ internal static class SymbolDiscovery
     private static void FindDtoTypes(
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol dtoAttributeSymbol,
-        List<DtoTypeInfo> dtoTypes
+        List<DtoTypeInfo> dtoTypes,
+        CancellationToken cancellationToken
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (member is INamespaceSymbol childNamespace)
             {
-                FindDtoTypes(childNamespace, dtoAttributeSymbol, dtoTypes);
+                FindDtoTypes(childNamespace, dtoAttributeSymbol, dtoTypes, cancellationToken);
             }
             else if (member is INamedTypeSymbol typeSymbol)
             {
@@ -1022,14 +1083,17 @@ internal static class SymbolDiscovery
     private static void FindDbContextTypes(
         INamespaceSymbol namespaceSymbol,
         string moduleName,
-        List<DbContextInfo> dbContexts
+        List<DbContextInfo> dbContexts,
+        CancellationToken cancellationToken
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (member is INamespaceSymbol childNamespace)
             {
-                FindDbContextTypes(childNamespace, moduleName, dbContexts);
+                FindDbContextTypes(childNamespace, moduleName, dbContexts, cancellationToken);
             }
             else if (
                 member is INamedTypeSymbol typeSymbol
@@ -1095,6 +1159,7 @@ internal static class SymbolDiscovery
                     IdentityUserTypeFqn = identityUserFqn,
                     IdentityRoleTypeFqn = identityRoleFqn,
                     IdentityKeyTypeFqn = identityKeyFqn,
+                    Location = GetSourceLocation(typeSymbol),
                 };
 
                 // Collect DbSet<T> properties
@@ -1128,14 +1193,17 @@ internal static class SymbolDiscovery
     private static void FindEntityConfigTypes(
         INamespaceSymbol namespaceSymbol,
         string moduleName,
-        List<EntityConfigInfo> entityConfigs
+        List<EntityConfigInfo> entityConfigs,
+        CancellationToken cancellationToken
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (member is INamespaceSymbol childNamespace)
             {
-                FindEntityConfigTypes(childNamespace, moduleName, entityConfigs);
+                FindEntityConfigTypes(childNamespace, moduleName, entityConfigs, cancellationToken);
             }
             else if (
                 member is INamedTypeSymbol typeSymbol
@@ -1164,6 +1232,7 @@ internal static class SymbolDiscovery
                                 ),
                                 EntityFqn = entityFqn,
                                 ModuleName = moduleName,
+                                Location = GetSourceLocation(typeSymbol),
                             }
                         );
                         break;
@@ -1202,7 +1271,8 @@ internal static class SymbolDiscovery
                     new ContractInterfaceInfoRecord(
                         assemblyName,
                         typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        methodCount
+                        methodCount,
+                        GetSourceLocation(typeSymbol)
                     )
                 );
             }
@@ -1247,6 +1317,7 @@ internal static class SymbolDiscovery
                                 IsPublic = typeSymbol.DeclaredAccessibility == Accessibility.Public,
                                 IsAbstract = typeSymbol.IsAbstract,
                                 DependsOnDbContext = HasDbContextConstructorParam(typeSymbol),
+                                Location = GetSourceLocation(typeSymbol),
                             }
                         );
                     }
@@ -1281,6 +1352,7 @@ internal static class SymbolDiscovery
                     ),
                     ModuleName = moduleName,
                     IsSealed = typeSymbol.IsSealed,
+                    Location = GetSourceLocation(typeSymbol),
                 };
 
                 // Collect public const string fields
@@ -1302,6 +1374,7 @@ internal static class SymbolDiscovery
                                 IsConstString =
                                     field.IsConst
                                     && field.Type.SpecialType == SpecialType.System_String,
+                                Location = GetSourceLocation(field),
                             }
                         );
                     }
@@ -1338,6 +1411,7 @@ internal static class SymbolDiscovery
                     ),
                     ModuleName = moduleName,
                     IsSealed = typeSymbol.IsSealed,
+                    Location = GetSourceLocation(typeSymbol),
                 };
 
                 // Collect public const string fields
@@ -1359,6 +1433,7 @@ internal static class SymbolDiscovery
                                 IsConstString =
                                     field.IsConst
                                     && field.Type.SpecialType == SpecialType.System_String,
+                                Location = GetSourceLocation(field),
                             }
                         );
                     }
@@ -1383,7 +1458,8 @@ internal static class SymbolDiscovery
                 results.Add(
                     new ModuleOptionsRecord(
                         typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        moduleName
+                        moduleName,
+                        GetSourceLocation(typeSymbol)
                     )
                 )
         );
@@ -1445,6 +1521,7 @@ internal static class SymbolDiscovery
                         SymbolDisplayFormat.FullyQualifiedFormat
                     ),
                     ModuleName = moduleName,
+                    Location = GetSourceLocation(typeSymbol),
                 };
 
                 // Extract constructor parameter type FQNs
@@ -1474,11 +1551,14 @@ internal static class SymbolDiscovery
         INamedTypeSymbol? noDtoAttrSymbol,
         INamedTypeSymbol? eventInterfaceSymbol,
         HashSet<string> existingFqns,
-        List<DtoTypeInfo> dtoTypes
+        List<DtoTypeInfo> dtoTypes,
+        CancellationToken cancellationToken
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (member is INamespaceSymbol childNs)
             {
                 FindConventionDtoTypes(
@@ -1486,7 +1566,8 @@ internal static class SymbolDiscovery
                     noDtoAttrSymbol,
                     eventInterfaceSymbol,
                     existingFqns,
-                    dtoTypes
+                    dtoTypes,
+                    cancellationToken
                 );
             }
             else if (
