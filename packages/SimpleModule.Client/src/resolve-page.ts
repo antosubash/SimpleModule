@@ -1,11 +1,10 @@
 const loadedCss = new Set<string>();
 
-function ensureModuleCss(moduleName: string, cacheBuster: string | undefined) {
-  if (loadedCss.has(moduleName)) return;
-  loadedCss.add(moduleName);
+function ensureModuleCss(assemblyName: string, suffix: string) {
+  if (loadedCss.has(assemblyName)) return;
+  loadedCss.add(assemblyName);
 
-  const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
-  const href = `/_content/${moduleName}/${moduleName.toLowerCase()}.css${suffix}`;
+  const href = `/_content/${assemblyName}/${assemblyName.toLowerCase()}.css${suffix}`;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = href;
@@ -23,7 +22,7 @@ export async function resolvePage(name: string) {
     ?.content;
   const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
 
-  ensureModuleCss(moduleName, cacheBuster);
+  ensureModuleCss(assemblyName, suffix);
 
   const mod = await import(
     /* @vite-ignore */

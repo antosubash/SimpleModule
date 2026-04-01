@@ -108,11 +108,17 @@ WORKDIR /src
 
 COPY . .
 
-# Build all frontend workspaces
-RUN npm run build
+# Build frontend: JS bundles then Tailwind CSS.
+# Tailwind must run here so the output exists before dotnet publish
+# evaluates wwwroot/ content — files generated during MSBuild targets
+# are not picked up by the SDK's Content glob evaluation.
+RUN npm run build \
+    && npx @tailwindcss/cli \
+       -i template/SimpleModule.Host/Styles/app.css \
+       -o template/SimpleModule.Host/wwwroot/css/app.css \
+       --minify
 
-# Publish the .NET application (MSBuild targets detect existing frontend
-# outputs and only run TailwindBuild which needs Blazor SSR content)
+# Publish the .NET application
 RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
     -c Release \
     -o /app/publish \
