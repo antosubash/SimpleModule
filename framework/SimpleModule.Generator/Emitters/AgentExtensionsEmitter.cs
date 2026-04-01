@@ -111,30 +111,6 @@ internal sealed class AgentExtensionsEmitter : IEmitter
             "        services.AddSingleton<global::SimpleModule.Agents.IAgentRegistry>(registry);"
         );
 
-        // Agent permissions
-        var agentModules = new HashSet<string>();
-        foreach (var agent in data.AgentDefinitions)
-        {
-            agentModules.Add(agent.ModuleName);
-        }
-
-        if (agentModules.Count > 0)
-        {
-            sb.AppendLine();
-            sb.AppendLine(
-                "        var agentPermissionBuilder = new global::SimpleModule.Core.Authorization.PermissionRegistryBuilder();"
-            );
-
-            foreach (var moduleName in agentModules)
-            {
-                sb.AppendLine(
-                    $"        agentPermissionBuilder.AddPermission(\"Agents.{moduleName}.Execute\");"
-                );
-            }
-
-            sb.AppendLine("        agentPermissionBuilder.AddPermission(\"Agents.Execute\");");
-        }
-
         // Call ConfigureAgents on modules that override it
         var modulesWithAgents = data.Modules.Where(m => m.HasConfigureAgents).ToList();
         if (modulesWithAgents.Count > 0)

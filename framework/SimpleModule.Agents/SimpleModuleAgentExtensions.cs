@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Agents.Guardrails;
@@ -36,5 +37,11 @@ public static class SimpleModuleAgentExtensions
         services.AddScoped<Files.AgentFileService>();
 
         return services;
+    }
+
+    public static WebApplication UseAgentDevTools(this WebApplication app)
+    {
+        DevTools.AgentPlaygroundEndpoints.Map(app);
+        return app;
     }
 }

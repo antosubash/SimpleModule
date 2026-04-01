@@ -129,6 +129,19 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             }
         }
 
+        // Agent permissions
+        foreach (var agent in data.AgentDefinitions)
+        {
+            sb.AppendLine(
+                $"        permissionBuilder.AddPermission(\"Agents.{agent.ModuleName}.Execute\");"
+            );
+        }
+
+        if (data.AgentDefinitions.Length > 0)
+        {
+            sb.AppendLine("        permissionBuilder.AddPermission(\"Agents.Execute\");");
+        }
+
         sb.AppendLine("        var permissionRegistry = permissionBuilder.Build();");
         sb.AppendLine("        services.AddSingleton(permissionRegistry);");
         sb.AppendLine();
