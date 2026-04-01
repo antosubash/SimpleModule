@@ -30,6 +30,16 @@ internal static class SymbolDiscovery
             "SimpleModule.Core.IViewEndpoint"
         );
 
+        var agentDefinitionSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.Agents.IAgentDefinition"
+        );
+        var agentToolProviderSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.Agents.IAgentToolProvider"
+        );
+        var knowledgeSourceSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.Rag.IKnowledgeSource"
+        );
+
         var modules = new List<ModuleInfo>();
 
         foreach (var reference in compilation.References)
@@ -465,6 +475,56 @@ internal static class SymbolDiscovery
             }
         }
 
+        // Step 3g: Find IAgentDefinition, IAgentToolProvider, and IKnowledgeSource implementors
+        var agentDefinitions = new List<AgentDefinitionInfo>();
+        var agentToolProviders = new List<AgentToolProviderInfo>();
+        var knowledgeSources = new List<KnowledgeSourceInfo>();
+
+        if (agentDefinitionSymbol is not null)
+        {
+            ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                    FindAgentDefinitions(
+                        assembly.GlobalNamespace,
+                        agentDefinitionSymbol,
+                        module.ModuleName,
+                        agentDefinitions
+                    )
+            );
+        }
+
+        if (agentToolProviderSymbol is not null)
+        {
+            ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                    FindAgentToolProviders(
+                        assembly.GlobalNamespace,
+                        agentToolProviderSymbol,
+                        module.ModuleName,
+                        agentToolProviders
+                    )
+            );
+        }
+
+        if (knowledgeSourceSymbol is not null)
+        {
+            ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                    FindKnowledgeSources(
+                        assembly.GlobalNamespace,
+                        knowledgeSourceSymbol,
+                        module.ModuleName,
+                        knowledgeSources
+                    )
+            );
+        }
+
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
         var illegalReferences = new List<IllegalModuleReferenceRecord>();
@@ -533,6 +593,7 @@ internal static class SymbolDiscovery
                     m.HasConfigureMiddleware,
                     m.HasConfigureSettings,
                     m.HasConfigureFeatureFlags,
+                    m.HasConfigureAgents,
                     m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
@@ -622,6 +683,15 @@ internal static class SymbolDiscovery
                 .ToImmutableArray(),
             vogenValueObjects.ToImmutableArray(),
             moduleOptionsList.ToImmutableArray(),
+            agentDefinitions
+                .Select(a => new AgentDefinitionRecord(a.FullyQualifiedName, a.ModuleName))
+                .ToImmutableArray(),
+            agentToolProviders
+                .Select(a => new AgentToolProviderRecord(a.FullyQualifiedName, a.ModuleName))
+                .ToImmutableArray(),
+            knowledgeSources
+                .Select(k => new KnowledgeSourceRecord(k.FullyQualifiedName, k.ModuleName))
+                .ToImmutableArray(),
             hostAssemblyName
         );
     }
@@ -705,6 +775,7 @@ internal static class SymbolDiscovery
                                     typeSymbol,
                                     "ConfigureFeatureFlags"
                                 ),
+                                HasConfigureAgents = DeclaresMethod(typeSymbol, "ConfigureAgents"),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
                             }
@@ -1682,5 +1753,104 @@ internal static class SymbolDiscovery
         }
 
         return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+    }
+
+    private static void FindAgentDefinitions(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol interfaceSymbol,
+        string moduleName,
+        List<AgentDefinitionInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                FindAgentDefinitions(childNamespace, interfaceSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && !typeSymbol.IsAbstract
+                && typeSymbol.TypeKind == TypeKind.Class
+                && ImplementsInterface(typeSymbol, interfaceSymbol)
+            )
+            {
+                results.Add(
+                    new AgentDefinitionInfo
+                    {
+                        FullyQualifiedName = typeSymbol.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        ),
+                        ModuleName = moduleName,
+                    }
+                );
+            }
+        }
+    }
+
+    private static void FindAgentToolProviders(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol interfaceSymbol,
+        string moduleName,
+        List<AgentToolProviderInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                FindAgentToolProviders(childNamespace, interfaceSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && !typeSymbol.IsAbstract
+                && typeSymbol.TypeKind == TypeKind.Class
+                && ImplementsInterface(typeSymbol, interfaceSymbol)
+            )
+            {
+                results.Add(
+                    new AgentToolProviderInfo
+                    {
+                        FullyQualifiedName = typeSymbol.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        ),
+                        ModuleName = moduleName,
+                    }
+                );
+            }
+        }
+    }
+
+    private static void FindKnowledgeSources(
+        INamespaceSymbol namespaceSymbol,
+        INamedTypeSymbol interfaceSymbol,
+        string moduleName,
+        List<KnowledgeSourceInfo> results
+    )
+    {
+        foreach (var member in namespaceSymbol.GetMembers())
+        {
+            if (member is INamespaceSymbol childNamespace)
+            {
+                FindKnowledgeSources(childNamespace, interfaceSymbol, moduleName, results);
+            }
+            else if (
+                member is INamedTypeSymbol typeSymbol
+                && !typeSymbol.IsAbstract
+                && typeSymbol.TypeKind == TypeKind.Class
+                && ImplementsInterface(typeSymbol, interfaceSymbol)
+            )
+            {
+                results.Add(
+                    new KnowledgeSourceInfo
+                    {
+                        FullyQualifiedName = typeSymbol.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        ),
+                        ModuleName = moduleName,
+                    }
+                );
+            }
+        }
     }
 }
