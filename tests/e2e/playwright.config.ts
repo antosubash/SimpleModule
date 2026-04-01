@@ -7,8 +7,10 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 2 : 0,
+  retries: 0,
   workers: isCI ? 1 : undefined,
+  timeout: 15_000,
+  expect: { timeout: 3_000 },
   reporter: [['html', {}], ...(isCI ? [['github', {}] as const] : [])],
   use: {
     baseURL,
