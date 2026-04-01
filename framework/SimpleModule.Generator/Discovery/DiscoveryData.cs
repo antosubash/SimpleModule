@@ -532,19 +532,10 @@ internal sealed class InterceptorInfo
     public List<string> ConstructorParamTypeFqns { get; set; } = new();
 }
 
-internal sealed class AgentDefinitionInfo
-{
-    public string FullyQualifiedName { get; set; } = "";
-    public string ModuleName { get; set; } = "";
-}
-
-internal sealed class AgentToolProviderInfo
-{
-    public string FullyQualifiedName { get; set; } = "";
-    public string ModuleName { get; set; } = "";
-}
-
-internal sealed class KnowledgeSourceInfo
+/// <summary>
+/// Shared mutable working type for discovered interface implementors (agents, tool providers, knowledge sources).
+/// </summary>
+internal sealed class DiscoveredTypeInfo
 {
     public string FullyQualifiedName { get; set; } = "";
     public string ModuleName { get; set; } = "";

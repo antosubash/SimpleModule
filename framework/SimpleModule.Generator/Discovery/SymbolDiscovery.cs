@@ -476,9 +476,9 @@ internal static class SymbolDiscovery
         }
 
         // Step 3g: Find IAgentDefinition, IAgentToolProvider, and IKnowledgeSource implementors
-        var agentDefinitions = new List<AgentDefinitionInfo>();
-        var agentToolProviders = new List<AgentToolProviderInfo>();
-        var knowledgeSources = new List<KnowledgeSourceInfo>();
+        var agentDefinitions = new List<DiscoveredTypeInfo>();
+        var agentToolProviders = new List<DiscoveredTypeInfo>();
+        var knowledgeSources = new List<DiscoveredTypeInfo>();
 
         if (agentDefinitionSymbol is not null)
         {
@@ -486,7 +486,7 @@ internal static class SymbolDiscovery
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
-                    FindAgentDefinitions(
+                    FindImplementors(
                         assembly.GlobalNamespace,
                         agentDefinitionSymbol,
                         module.ModuleName,
@@ -501,7 +501,7 @@ internal static class SymbolDiscovery
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
-                    FindAgentToolProviders(
+                    FindImplementors(
                         assembly.GlobalNamespace,
                         agentToolProviderSymbol,
                         module.ModuleName,
@@ -516,7 +516,7 @@ internal static class SymbolDiscovery
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
-                    FindKnowledgeSources(
+                    FindImplementors(
                         assembly.GlobalNamespace,
                         knowledgeSourceSymbol,
                         module.ModuleName,
@@ -1755,18 +1755,18 @@ internal static class SymbolDiscovery
         return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
     }
 
-    private static void FindAgentDefinitions(
+    private static void FindImplementors(
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol interfaceSymbol,
         string moduleName,
-        List<AgentDefinitionInfo> results
+        List<DiscoveredTypeInfo> results
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
             if (member is INamespaceSymbol childNamespace)
             {
-                FindAgentDefinitions(childNamespace, interfaceSymbol, moduleName, results);
+                FindImplementors(childNamespace, interfaceSymbol, moduleName, results);
             }
             else if (
                 member is INamedTypeSymbol typeSymbol
@@ -1776,73 +1776,7 @@ internal static class SymbolDiscovery
             )
             {
                 results.Add(
-                    new AgentDefinitionInfo
-                    {
-                        FullyQualifiedName = typeSymbol.ToDisplayString(
-                            SymbolDisplayFormat.FullyQualifiedFormat
-                        ),
-                        ModuleName = moduleName,
-                    }
-                );
-            }
-        }
-    }
-
-    private static void FindAgentToolProviders(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol interfaceSymbol,
-        string moduleName,
-        List<AgentToolProviderInfo> results
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            if (member is INamespaceSymbol childNamespace)
-            {
-                FindAgentToolProviders(childNamespace, interfaceSymbol, moduleName, results);
-            }
-            else if (
-                member is INamedTypeSymbol typeSymbol
-                && !typeSymbol.IsAbstract
-                && typeSymbol.TypeKind == TypeKind.Class
-                && ImplementsInterface(typeSymbol, interfaceSymbol)
-            )
-            {
-                results.Add(
-                    new AgentToolProviderInfo
-                    {
-                        FullyQualifiedName = typeSymbol.ToDisplayString(
-                            SymbolDisplayFormat.FullyQualifiedFormat
-                        ),
-                        ModuleName = moduleName,
-                    }
-                );
-            }
-        }
-    }
-
-    private static void FindKnowledgeSources(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol interfaceSymbol,
-        string moduleName,
-        List<KnowledgeSourceInfo> results
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            if (member is INamespaceSymbol childNamespace)
-            {
-                FindKnowledgeSources(childNamespace, interfaceSymbol, moduleName, results);
-            }
-            else if (
-                member is INamedTypeSymbol typeSymbol
-                && !typeSymbol.IsAbstract
-                && typeSymbol.TypeKind == TypeKind.Class
-                && ImplementsInterface(typeSymbol, interfaceSymbol)
-            )
-            {
-                results.Add(
-                    new KnowledgeSourceInfo
+                    new DiscoveredTypeInfo
                     {
                         FullyQualifiedName = typeSymbol.ToDisplayString(
                             SymbolDisplayFormat.FullyQualifiedFormat

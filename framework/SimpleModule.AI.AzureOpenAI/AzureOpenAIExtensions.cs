@@ -3,6 +3,7 @@ using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace SimpleModule.AI.AzureOpenAI;
 
@@ -15,20 +16,15 @@ public static class AzureOpenAIExtensions
     {
         services.Configure<AzureOpenAIOptions>(configuration.GetSection("AI:AzureOpenAI"));
 
-        // Share a single AzureOpenAIClient instance across chat and embedding
         services.AddSingleton(sp =>
         {
-            var opts =
-                configuration.GetSection("AI:AzureOpenAI").Get<AzureOpenAIOptions>()
-                ?? new AzureOpenAIOptions();
+            var opts = sp.GetRequiredService<IOptions<AzureOpenAIOptions>>().Value;
             return new AzureOpenAIClient(new Uri(opts.Endpoint), new ApiKeyCredential(opts.ApiKey));
         });
 
         services.AddSingleton<IChatClient>(sp =>
         {
-            var opts =
-                configuration.GetSection("AI:AzureOpenAI").Get<AzureOpenAIOptions>()
-                ?? new AzureOpenAIOptions();
+            var opts = sp.GetRequiredService<IOptions<AzureOpenAIOptions>>().Value;
             return sp.GetRequiredService<AzureOpenAIClient>()
                 .GetChatClient(opts.DeploymentName)
                 .AsIChatClient();
@@ -36,9 +32,7 @@ public static class AzureOpenAIExtensions
 
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
         {
-            var opts =
-                configuration.GetSection("AI:AzureOpenAI").Get<AzureOpenAIOptions>()
-                ?? new AzureOpenAIOptions();
+            var opts = sp.GetRequiredService<IOptions<AzureOpenAIOptions>>().Value;
             return sp.GetRequiredService<AzureOpenAIClient>()
                 .GetEmbeddingClient(opts.EmbeddingDeploymentName)
                 .AsIEmbeddingGenerator();
