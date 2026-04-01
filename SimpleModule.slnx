@@ -20,6 +20,10 @@
     <Project Path="framework/SimpleModule.Rag.VectorStore.InMemory/SimpleModule.Rag.VectorStore.InMemory.csproj" />
     <Project Path="framework/SimpleModule.Agents/SimpleModule.Agents.csproj" />
     <Project Path="framework/SimpleModule.AI.Ollama/SimpleModule.AI.Ollama.csproj" />
+    <Project Path="framework/SimpleModule.AI.AzureOpenAI/SimpleModule.AI.AzureOpenAI.csproj" />
+    <Project Path="framework/SimpleModule.AI.OpenAI/SimpleModule.AI.OpenAI.csproj" />
+    <Project Path="framework/SimpleModule.AI.Anthropic/SimpleModule.AI.Anthropic.csproj" />
+    <Project Path="framework/SimpleModule.Rag.VectorStore.Postgres/SimpleModule.Rag.VectorStore.Postgres.csproj" />
   </Folder>
   <Folder Name="/cli/">
     <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />

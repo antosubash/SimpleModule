@@ -32,6 +32,9 @@ public static class SimpleModuleAgentExtensions
         services.AddSingleton<IAgentGuardrail, PiiRedactionGuardrail>();
         services.AddSingleton<IAgentGuardrail, PromptInjectionGuardrail>();
 
+        // File handling
+        services.AddScoped<Files.AgentFileService>();
+
         return services;
     }
 }

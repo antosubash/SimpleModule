@@ -23,6 +23,9 @@ app.Configure(config =>
             newBranch
                 .AddCommand<NewFeatureCommand>("feature")
                 .WithDescription("Add a feature to an existing module");
+            newBranch
+                .AddCommand<NewAgentCommand>("agent")
+                .WithDescription("Add an AI agent to an existing module");
         }
     );
 

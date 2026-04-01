@@ -55,5 +55,21 @@ public static class AgentEndpoints
                 await httpContext.Response.WriteAsync("data: [DONE]\n\n", ct);
             }
         );
+
+        group
+            .MapPost(
+                "/{name}/chat/structured",
+                async (
+                    string name,
+                    AgentChatRequest request,
+                    AgentChatService service,
+                    CancellationToken ct
+                ) =>
+                {
+                    var response = await service.ChatAsync(name, request, ct);
+                    return Results.Ok(response);
+                }
+            )
+            .WithDescription("Chat with structured JSON output");
     }
 }
