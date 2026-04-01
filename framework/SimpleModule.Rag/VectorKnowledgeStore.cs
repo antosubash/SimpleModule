@@ -71,7 +71,7 @@ public sealed class VectorKnowledgeStore(
         {
             var score = (float)(result.Score ?? 0.0);
             if (score < minScore)
-                continue;
+                break; // Results are descending by score; remaining will also be below threshold
 
             results.Add(
                 new KnowledgeSearchResult(
