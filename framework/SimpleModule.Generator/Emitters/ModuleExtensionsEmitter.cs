@@ -8,6 +8,12 @@ namespace SimpleModule.Generator;
 
 internal sealed class ModuleExtensionsEmitter : IEmitter
 {
+    // Mirror Microsoft.Extensions.DependencyInjection.ServiceLifetime enum values.
+    // The generator reads these as integers from [ContractLifetime] attribute arguments
+    // because it targets netstandard2.0 and cannot reference the enum directly.
+    private const int LifetimeSingleton = 0;
+    private const int LifetimeTransient = 2;
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         var (sortedModules, sortResult) = TopologicalSort.SortModulesWithResult(data);
@@ -100,8 +106,14 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             if (kvp.Value.Count == 1)
             {
                 var impl = kvp.Value[0];
+                var method = impl.Lifetime switch
+                {
+                    LifetimeSingleton => "AddSingleton",
+                    LifetimeTransient => "AddTransient",
+                    _ => "AddScoped",
+                };
                 sb.AppendLine(
-                    $"        services.AddScoped<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
+                    $"        services.{method}<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
                 );
             }
         }

@@ -12,7 +12,7 @@ namespace SimpleModule.Products;
     RoutePrefix = ProductsConstants.RoutePrefix,
     ViewPrefix = "/products"
 )]
-public class ProductsModule : IModule
+public class ProductsModule : IModule, IModuleServices, IModuleMenu
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -78,10 +79,21 @@ internal sealed class HostDbContextEmitter : IEmitter
                 // Same entity type with same property name is fine (deduplicated earlier)
                 if (existing.EntityFqn != entry.EntityFqn)
                 {
+                    // Find the DbContext location for the conflicting module
+                    SourceLocationRecord? dbCtxLoc = null;
+                    foreach (var ctx in data.DbContexts)
+                    {
+                        if (ctx.ModuleName == entry.ModuleName)
+                        {
+                            dbCtxLoc = ctx.Location;
+                            break;
+                        }
+                    }
+
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             DiagnosticEmitter.DuplicateDbSetPropertyName,
-                            Location.None,
+                            LocationHelper.ToLocation(dbCtxLoc),
                             entry.PropertyName,
                             existing.ModuleName,
                             TypeMappingHelpers.StripGlobalPrefix(existing.EntityFqn),

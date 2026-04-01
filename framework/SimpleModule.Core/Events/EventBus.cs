@@ -113,6 +113,23 @@ public sealed partial class EventBus(
     public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
         where T : IEvent
     {
+        var behaviors = serviceProvider.GetServices<IEventPipelineBehavior<T>>();
+
+        // Build the pipeline: behaviors wrap around the handler dispatch
+        Func<Task> dispatch = () => DispatchToHandlers(@event, cancellationToken);
+        foreach (var behavior in behaviors.Reverse())
+        {
+            var next = dispatch;
+            var b = behavior;
+            dispatch = () => b.HandleAsync(@event, next, cancellationToken);
+        }
+
+        await dispatch();
+    }
+
+    private async Task DispatchToHandlers<T>(T @event, CancellationToken cancellationToken)
+        where T : IEvent
+    {
         var handlers = serviceProvider.GetServices<IEventHandler<T>>();
         List<Exception>? exceptions = null;
 

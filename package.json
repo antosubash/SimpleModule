@@ -48,6 +48,6 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,json}": "biome check --write --no-errors-on-unmatched",
-    "*.cs": "dotnet csharpier"
+    "*.cs": "dotnet csharpier format"
   }
 }
