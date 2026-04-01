@@ -7,6 +7,12 @@
       "commands": [
         "sm"
       ]
+    },
+    "csharpier": {
+      "version": "1.2.6",
+      "commands": [
+        "dotnet-csharpier"
+      ]
     }
   }
 }
