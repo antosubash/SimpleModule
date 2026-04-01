@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using SimpleModule.Blazor;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
@@ -43,7 +42,7 @@ public static class SimpleModuleHostExtensions
         builder.Services.AddSingleton(options);
 
         BridgeAspireConnectionString(builder.Configuration);
-        ValidateDatabaseConfiguration(builder.Configuration);
+        options.DatabaseProvider = ValidateDatabaseConfiguration(builder.Configuration);
 
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -108,8 +107,11 @@ public static class SimpleModuleHostExtensions
     /// </summary>
     public static async Task UseSimpleModuleInfrastructure(this WebApplication app)
     {
-        // Database initialization (non-production only)
-        if (!app.Environment.IsProduction())
+        // Database initialization
+        // SQLite (file-based) always needs auto-initialization since the DB file may not exist.
+        // Managed databases (PostgreSQL, SQL Server) skip this in production — apply migrations externally.
+        var smOptions = app.Services.GetRequiredService<SimpleModuleOptions>();
+        if (!app.Environment.IsProduction() || smOptions.DatabaseProvider == DatabaseProvider.Sqlite)
         {
             using var scope = app.Services.CreateScope();
             var infos = scope.ServiceProvider.GetServices<ModuleDbContextInfo>();
@@ -187,7 +189,9 @@ public static class SimpleModuleHostExtensions
         }
     }
 
-    private static void ValidateDatabaseConfiguration(ConfigurationManager configuration)
+    private static DatabaseProvider ValidateDatabaseConfiguration(
+        ConfigurationManager configuration
+    )
     {
         var dbOptions =
             configuration.GetSection(DatabaseConstants.SectionName).Get<DatabaseOptions>()
@@ -202,7 +206,7 @@ public static class SimpleModuleHostExtensions
             );
         }
 
-        _ = DatabaseProviderDetector.Detect(connString, dbOptions.Provider);
+        return DatabaseProviderDetector.Detect(connString, dbOptions.Provider);
     }
 
     private static void UseStaticFileCaching(WebApplication app)

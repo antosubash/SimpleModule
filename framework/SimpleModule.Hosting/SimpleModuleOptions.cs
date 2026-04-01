@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Database;
 
 namespace SimpleModule.Hosting;
 
@@ -14,6 +15,11 @@ public class SimpleModuleOptions
     public bool EnableHealthChecks { get; set; } = true;
 
     public bool EnableDevTools { get; set; } = true;
+
+    /// <summary>
+    /// The detected database provider, set during startup validation.
+    /// </summary>
+    internal DatabaseProvider DatabaseProvider { get; set; }
 
     /// <summary>
     /// Configures options for a module. Called by generated Configure{Module}() extension methods.

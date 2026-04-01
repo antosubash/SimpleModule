@@ -133,6 +133,9 @@ RUN apt-get update \
 
 COPY --from=build --chown=appuser:appgroup /app/publish .
 
+# Writable directory for SQLite database and local storage
+RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
+
 USER appuser
 EXPOSE 8080
 
