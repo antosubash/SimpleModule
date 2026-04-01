@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace SimpleModule.AI.Ollama;
 
@@ -15,15 +16,13 @@ public static class OllamaExtensions
 
         services.AddSingleton<IChatClient>(sp =>
         {
-            var opts =
-                configuration.GetSection("AI:Ollama").Get<OllamaOptions>() ?? new OllamaOptions();
+            var opts = sp.GetRequiredService<IOptions<OllamaOptions>>().Value;
             return new OllamaChatClient(new Uri(opts.Endpoint), opts.Model);
         });
 
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
         {
-            var opts =
-                configuration.GetSection("AI:Ollama").Get<OllamaOptions>() ?? new OllamaOptions();
+            var opts = sp.GetRequiredService<IOptions<OllamaOptions>>().Value;
             return new OllamaEmbeddingGenerator(new Uri(opts.Endpoint), opts.EmbeddingModel);
         });
 
