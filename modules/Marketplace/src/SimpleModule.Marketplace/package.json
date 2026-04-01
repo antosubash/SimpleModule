@@ -7,6 +7,9 @@
     "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
     "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch"
   },
+  "dependencies": {
+    "react-markdown": "^9.0.0"
+  },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
