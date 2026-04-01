@@ -43,7 +43,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     [Fact]
     public async Task EnqueueAsync_CreatesTimeTickerAndProgress()
     {
-        var jobId = await _sut.EnqueueAsync<TestJob>(new TestData("import", 100));
+        var jobId = await _sut.EnqueueAsync<TestJob>(new TestData("import", 100), CancellationToken.None);
 
         jobId.Value.Should().NotBeEmpty();
         await _timeManager.Received(1).AddAsync(Arg.Any<TimeTickerEntity>());
@@ -58,9 +58,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public async Task EnqueueAsync_SerializesPayloadWithJobTypeName()
     {
         TimeTickerEntity? capturedTicker = null;
-        _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
+        _ = _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
 
-        await _sut.EnqueueAsync<TestJob>(new TestData("test", 1));
+        await _sut.EnqueueAsync<TestJob>(new TestData("test", 1), CancellationToken.None);
 
         capturedTicker.Should().NotBeNull();
         capturedTicker!.Function.Should().Be("ModuleJobDispatcher");
@@ -75,9 +75,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public async Task EnqueueAsync_WithNullData_SerializesNullPayloadData()
     {
         TimeTickerEntity? capturedTicker = null;
-        _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
+        _ = _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
 
-        await _sut.EnqueueAsync<TestJob>();
+        await _sut.EnqueueAsync<TestJob>(null, CancellationToken.None);
 
         var payload = JsonSerializer.Deserialize<JobDispatchPayload>(capturedTicker!.Request);
         payload!.SerializedData.Should().BeNull();
@@ -91,9 +91,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var before = DateTime.UtcNow;
         TimeTickerEntity? capturedTicker = null;
-        _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
+        _ = _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
 
-        await _sut.EnqueueAsync<TestJob>();
+        await _sut.EnqueueAsync<TestJob>(null, CancellationToken.None);
 
         capturedTicker!.ExecutionTime.Should().BeOnOrAfter(before);
         capturedTicker.ExecutionTime.Should().BeOnOrBefore(DateTime.UtcNow);
@@ -104,7 +104,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var data = new TestData("import-csv", 500);
 
-        var jobId = await _sut.EnqueueAsync<TestJob>(data);
+        var jobId = await _sut.EnqueueAsync<TestJob>(data, CancellationToken.None);
 
         var progress = await _db.JobProgress.FindAsync(jobId.Value);
         progress!.Data.Should().NotBeNull();
@@ -120,9 +120,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var executeAt = DateTimeOffset.UtcNow.AddHours(2);
         TimeTickerEntity? capturedTicker = null;
-        _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
+        _ = _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
 
-        var jobId = await _sut.ScheduleAsync<TestJob>(executeAt, new TestData("scheduled", 1));
+        var jobId = await _sut.ScheduleAsync<TestJob>(executeAt, new TestData("scheduled", 1), CancellationToken.None);
 
         jobId.Value.Should().NotBeEmpty();
         capturedTicker!.ExecutionTime.Should().BeCloseTo(executeAt.UtcDateTime, TimeSpan.FromSeconds(1));
@@ -136,7 +136,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var executeAt = DateTimeOffset.UtcNow.AddDays(1);
 
-        var jobId = await _sut.ScheduleAsync<TestJob>(executeAt);
+        var jobId = await _sut.ScheduleAsync<TestJob>(executeAt, null, CancellationToken.None);
 
         jobId.Value.Should().NotBeEmpty();
         await _timeManager.Received(1).AddAsync(Arg.Any<TimeTickerEntity>());
@@ -148,9 +148,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public async Task AddRecurringAsync_CreatesCronTicker()
     {
         CronTickerEntity? capturedTicker = null;
-        _cronManager.AddAsync(Arg.Do<CronTickerEntity>(t => capturedTicker = t));
+        _ = _cronManager.AddAsync(Arg.Do<CronTickerEntity>(t => capturedTicker = t));
 
-        var id = await _sut.AddRecurringAsync<TestJob>("cleanup", "0 2 * * *");
+        var id = await _sut.AddRecurringAsync<TestJob>("cleanup", "0 2 * * *", null, CancellationToken.None);
 
         id.Value.Should().NotBeEmpty();
         capturedTicker.Should().NotBeNull();
@@ -164,9 +164,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public async Task AddRecurringAsync_WithData_SerializesPayload()
     {
         CronTickerEntity? capturedTicker = null;
-        _cronManager.AddAsync(Arg.Do<CronTickerEntity>(t => capturedTicker = t));
+        _ = _cronManager.AddAsync(Arg.Do<CronTickerEntity>(t => capturedTicker = t));
 
-        await _sut.AddRecurringAsync<TestJob>("sync", "*/5 * * * *", new TestData("sync", 10));
+        await _sut.AddRecurringAsync<TestJob>("sync", "*/5 * * * *", new TestData("sync", 10), CancellationToken.None);
 
         var payload = JsonSerializer.Deserialize<JobDispatchPayload>(capturedTicker!.Request);
         payload!.SerializedData.Should().NotBeNull();
@@ -179,7 +179,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var id = RecurringJobId.From(Guid.NewGuid());
 
-        await _sut.RemoveRecurringAsync(id);
+        await _sut.RemoveRecurringAsync(id, CancellationToken.None);
 
         await _cronManager.Received(1).DeleteAsync(id.Value);
     }
@@ -191,7 +191,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var id = JobId.From(Guid.NewGuid());
 
-        await _sut.CancelAsync(id);
+        await _sut.CancelAsync(id, CancellationToken.None);
 
         await _timeManager.Received(1).DeleteAsync(id.Value);
     }
@@ -201,7 +201,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     [Fact]
     public async Task GetStatusAsync_NonExistentJob_ReturnsNull()
     {
-        var result = await _sut.GetStatusAsync(JobId.From(Guid.NewGuid()));
+        var result = await _sut.GetStatusAsync(JobId.From(Guid.NewGuid()), CancellationToken.None);
 
         result.Should().BeNull();
     }

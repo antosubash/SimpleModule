@@ -77,7 +77,7 @@ public sealed class JobExecutionBridgeTests
         {
             entries.Add(entry);
         }
-        entries.Should().HaveCountGreaterOrEqualTo(2);
+        entries.Should().HaveCountGreaterThanOrEqualTo(2);
         entries.First().Percentage.Should().Be(0);
         entries.First().Message.Should().Be("Starting");
         entries.Last().Percentage.Should().Be(100);

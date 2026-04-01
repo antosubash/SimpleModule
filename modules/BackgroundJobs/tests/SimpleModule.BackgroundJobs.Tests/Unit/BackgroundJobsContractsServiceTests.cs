@@ -34,7 +34,7 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobsAsync_EmptyDb_ReturnsEmptyResult()
     {
-        var result = await _sut.GetJobsAsync(new JobFilter());
+        var result = await _sut.GetJobsAsync(new JobFilter(), CancellationToken.None);
 
         result.Items.Should().BeEmpty();
         result.TotalCount.Should().Be(0);
@@ -43,7 +43,7 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobsAsync_DefaultFilter_ReturnsPaginatedResults()
     {
-        var result = await _sut.GetJobsAsync(new JobFilter { Page = 1, PageSize = 10 });
+        var result = await _sut.GetJobsAsync(new JobFilter { Page = 1, PageSize = 10 }, CancellationToken.None);
 
         result.Page.Should().Be(1);
         result.PageSize.Should().Be(10);
@@ -54,7 +54,7 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobDetailAsync_NonExistentId_ReturnsNull()
     {
-        var result = await _sut.GetJobDetailAsync(JobId.From(Guid.NewGuid()));
+        var result = await _sut.GetJobDetailAsync(JobId.From(Guid.NewGuid()), CancellationToken.None);
 
         result.Should().BeNull();
     }
@@ -64,7 +64,7 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetRecurringJobsAsync_EmptyDb_ReturnsEmptyList()
     {
-        var result = await _sut.GetRecurringJobsAsync();
+        var result = await _sut.GetRecurringJobsAsync(CancellationToken.None);
 
         result.Should().BeEmpty();
     }
@@ -74,7 +74,7 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task RetryAsync_NonExistentJob_ThrowsInvalidOperation()
     {
-        var act = () => _sut.RetryAsync(JobId.From(Guid.NewGuid()));
+        var act = () => _sut.RetryAsync(JobId.From(Guid.NewGuid()), CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not found*");
     }
