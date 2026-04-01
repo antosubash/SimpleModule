@@ -57,6 +57,18 @@ internal static class SymbolDiscovery
             "SimpleModule.Core.IViewEndpoint"
         );
 
+        // Resolve focused sub-interface symbols for module capability detection
+        var moduleServicesSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IModuleServices"
+        );
+        var moduleMenuSymbol = compilation.GetTypeByMetadataName("SimpleModule.Core.IModuleMenu");
+        var moduleMiddlewareSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IModuleMiddleware"
+        );
+        var moduleSettingsSymbol = compilation.GetTypeByMetadataName(
+            "SimpleModule.Core.IModuleSettings"
+        );
+
         var modules = new List<ModuleInfo>();
 
         foreach (var reference in compilation.References)
@@ -72,6 +84,10 @@ internal static class SymbolDiscovery
             FindModuleTypes(
                 assemblySymbol.GlobalNamespace,
                 moduleAttributeSymbol,
+                moduleServicesSymbol,
+                moduleMenuSymbol,
+                moduleMiddlewareSymbol,
+                moduleSettingsSymbol,
                 modules,
                 cancellationToken
             );
@@ -80,6 +96,10 @@ internal static class SymbolDiscovery
         FindModuleTypes(
             compilation.Assembly.GlobalNamespace,
             moduleAttributeSymbol,
+            moduleServicesSymbol,
+            moduleMenuSymbol,
+            moduleMiddlewareSymbol,
+            moduleSettingsSymbol,
             modules,
             cancellationToken
         );
@@ -716,6 +736,10 @@ internal static class SymbolDiscovery
     private static void FindModuleTypes(
         INamespaceSymbol namespaceSymbol,
         INamedTypeSymbol moduleAttributeSymbol,
+        INamedTypeSymbol? moduleServicesSymbol,
+        INamedTypeSymbol? moduleMenuSymbol,
+        INamedTypeSymbol? moduleMiddlewareSymbol,
+        INamedTypeSymbol? moduleSettingsSymbol,
         List<ModuleInfo> modules,
         CancellationToken cancellationToken
     )
@@ -726,7 +750,16 @@ internal static class SymbolDiscovery
 
             if (member is INamespaceSymbol childNamespace)
             {
-                FindModuleTypes(childNamespace, moduleAttributeSymbol, modules, cancellationToken);
+                FindModuleTypes(
+                    childNamespace,
+                    moduleAttributeSymbol,
+                    moduleServicesSymbol,
+                    moduleMenuSymbol,
+                    moduleMiddlewareSymbol,
+                    moduleSettingsSymbol,
+                    modules,
+                    cancellationToken
+                );
             }
             else if (member is INamedTypeSymbol typeSymbol)
             {
@@ -772,9 +805,9 @@ internal static class SymbolDiscovery
                                 ModuleName = moduleName,
                                 HasConfigureServices =
                                     DeclaresMethod(typeSymbol, "ConfigureServices")
-                                    || ImplementsNamedInterface(
-                                        typeSymbol,
-                                        "SimpleModule.Core.IModuleServices"
+                                    || (
+                                        moduleServicesSymbol is not null
+                                        && ImplementsInterface(typeSymbol, moduleServicesSymbol)
                                     ),
                                 HasConfigureEndpoints = DeclaresMethod(
                                     typeSymbol,
@@ -782,15 +815,15 @@ internal static class SymbolDiscovery
                                 ),
                                 HasConfigureMenu =
                                     DeclaresMethod(typeSymbol, "ConfigureMenu")
-                                    || ImplementsNamedInterface(
-                                        typeSymbol,
-                                        "SimpleModule.Core.IModuleMenu"
+                                    || (
+                                        moduleMenuSymbol is not null
+                                        && ImplementsInterface(typeSymbol, moduleMenuSymbol)
                                     ),
                                 HasConfigureMiddleware =
                                     DeclaresMethod(typeSymbol, "ConfigureMiddleware")
-                                    || ImplementsNamedInterface(
-                                        typeSymbol,
-                                        "SimpleModule.Core.IModuleMiddleware"
+                                    || (
+                                        moduleMiddlewareSymbol is not null
+                                        && ImplementsInterface(typeSymbol, moduleMiddlewareSymbol)
                                     ),
                                 HasConfigurePermissions = DeclaresMethod(
                                     typeSymbol,
@@ -798,9 +831,9 @@ internal static class SymbolDiscovery
                                 ),
                                 HasConfigureSettings =
                                     DeclaresMethod(typeSymbol, "ConfigureSettings")
-                                    || ImplementsNamedInterface(
-                                        typeSymbol,
-                                        "SimpleModule.Core.IModuleSettings"
+                                    || (
+                                        moduleSettingsSymbol is not null
+                                        && ImplementsInterface(typeSymbol, moduleSettingsSymbol)
                                     ),
                                 HasConfigureFeatureFlags = DeclaresMethod(
                                     typeSymbol,
@@ -947,16 +980,6 @@ internal static class SymbolDiscovery
         foreach (var iface in typeSymbol.AllInterfaces)
         {
             if (SymbolEqualityComparer.Default.Equals(iface, interfaceSymbol))
-                return true;
-        }
-        return false;
-    }
-
-    private static bool ImplementsNamedInterface(INamedTypeSymbol typeSymbol, string interfaceFqn)
-    {
-        foreach (var iface in typeSymbol.AllInterfaces)
-        {
-            if (iface.ToDisplayString() == interfaceFqn)
                 return true;
         }
         return false;

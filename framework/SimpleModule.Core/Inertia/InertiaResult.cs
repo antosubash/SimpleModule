@@ -14,7 +14,7 @@ public static class Inertia
 
 internal sealed class InertiaResult : IResult
 {
-    private static JsonSerializerOptions? _cachedOptions;
+    private static volatile JsonSerializerOptions? _cachedOptions;
 
     private readonly string _component;
     private readonly object? _props;

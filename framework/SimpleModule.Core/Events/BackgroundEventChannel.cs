@@ -15,7 +15,7 @@ public sealed partial class BackgroundEventChannel(ILogger<BackgroundEventChanne
             new BoundedChannelOptions(10_000)
             {
                 SingleReader = true,
-                FullMode = BoundedChannelFullMode.Wait,
+                FullMode = BoundedChannelFullMode.DropWrite,
             }
         );
 
@@ -39,7 +39,7 @@ public sealed partial class BackgroundEventChannel(ILogger<BackgroundEventChanne
 
     [LoggerMessage(
         Level = LogLevel.Warning,
-        Message = "Background event '{EventName}' dropped — channel closed"
+        Message = "Background event '{EventName}' dropped — channel full or closed"
     )]
     private static partial void LogEventDropped(ILogger logger, string eventName);
 }

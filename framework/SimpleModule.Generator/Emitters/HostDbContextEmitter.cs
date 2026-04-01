@@ -7,17 +7,6 @@ namespace SimpleModule.Generator;
 
 internal sealed class HostDbContextEmitter : IEmitter
 {
-    private static Location ToLocation(SourceLocationRecord? loc)
-    {
-        if (loc is null)
-            return Location.None;
-
-        var start = new LinePosition(loc.Value.StartLine, loc.Value.StartCharacter);
-        var end = new LinePosition(loc.Value.EndLine, loc.Value.EndCharacter);
-        var span = new LinePositionSpan(start, end);
-        return Location.Create(loc.Value.FilePath, TextSpan.FromBounds(0, 0), span);
-    }
-
 #pragma warning disable CA1308 // Schema names are conventionally lowercase in PostgreSQL/SQL Server
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
@@ -104,7 +93,7 @@ internal sealed class HostDbContextEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             DiagnosticEmitter.DuplicateDbSetPropertyName,
-                            ToLocation(dbCtxLoc),
+                            LocationHelper.ToLocation(dbCtxLoc),
                             entry.PropertyName,
                             existing.ModuleName,
                             TypeMappingHelpers.StripGlobalPrefix(existing.EntityFqn),
