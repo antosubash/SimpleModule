@@ -27,7 +27,8 @@
     "test:e2e:ui": "npm run test:ui -w tests/e2e",
     "website:dev": "npm run dev -w website",
     "website:build": "npm run build -w website",
-    "website:preview": "npm run preview -w website"
+    "website:preview": "npm run preview -w website",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",
@@ -37,10 +38,16 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "cross-env": "^10.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.3"
   },
   "dependencies": {
     "tailwindcss": "^4.2.2"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,css,json}": "biome check --write --no-errors-on-unmatched",
+    "*.cs": "dotnet csharpier"
   }
 }
