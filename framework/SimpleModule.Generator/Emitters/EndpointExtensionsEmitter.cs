@@ -17,6 +17,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Routing;");
         sb.AppendLine("using Microsoft.AspNetCore.Http;");
         sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
+        sb.AppendLine("using SimpleModule.Core.Authorization;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
@@ -45,14 +46,14 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
                 );
                 foreach (var endpoint in module.Endpoints)
                 {
-                    sb.AppendLine($"            new {endpoint.FullyQualifiedName}().Map(group);");
+                    EmitEndpointRegistration(sb, endpoint, "group");
                 }
             }
             else
             {
                 foreach (var endpoint in module.Endpoints)
                 {
-                    sb.AppendLine($"            new {endpoint.FullyQualifiedName}().Map(app);");
+                    EmitEndpointRegistration(sb, endpoint, "app");
                 }
             }
 
@@ -108,5 +109,35 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         sb.AppendLine("}");
 
         context.AddSource("EndpointExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+    }
+
+    /// <summary>
+    /// Emits endpoint registration with authorization enforcement based on discovered attributes.
+    /// If the endpoint has [AllowAnonymous] or [RequirePermission], wraps it in a sub-group
+    /// to apply the policy without changing the IEndpoint.Map() return type (non-breaking).
+    /// </summary>
+    private static void EmitEndpointRegistration(
+        StringBuilder sb,
+        EndpointInfoRecord endpoint,
+        string routeBuilder
+    )
+    {
+        if (endpoint.AllowAnonymous)
+        {
+            sb.AppendLine(
+                $"            {{ var _eg = {routeBuilder}.MapGroup(\"\"); _eg.AllowAnonymous(); new {endpoint.FullyQualifiedName}().Map(_eg); }}"
+            );
+        }
+        else if (endpoint.RequiredPermissions.Length > 0)
+        {
+            var perms = string.Join("\", \"", endpoint.RequiredPermissions);
+            sb.AppendLine(
+                $"            {{ var _eg = {routeBuilder}.MapGroup(\"\"); _eg.RequirePermission(\"{perms}\"); new {endpoint.FullyQualifiedName}().Map(_eg); }}"
+            );
+        }
+        else
+        {
+            sb.AppendLine($"            new {endpoint.FullyQualifiedName}().Map({routeBuilder});");
+        }
     }
 }

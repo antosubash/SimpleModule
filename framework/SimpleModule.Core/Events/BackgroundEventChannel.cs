@@ -11,8 +11,12 @@ namespace SimpleModule.Core.Events;
 public sealed partial class BackgroundEventChannel(ILogger<BackgroundEventChannel> logger)
 {
     private readonly Channel<Func<IServiceProvider, CancellationToken, Task>> _channel =
-        Channel.CreateUnbounded<Func<IServiceProvider, CancellationToken, Task>>(
-            new UnboundedChannelOptions { SingleReader = true }
+        Channel.CreateBounded<Func<IServiceProvider, CancellationToken, Task>>(
+            new BoundedChannelOptions(10_000)
+            {
+                SingleReader = true,
+                FullMode = BoundedChannelFullMode.Wait,
+            }
         );
 
     internal ChannelReader<Func<IServiceProvider, CancellationToken, Task>> Reader =>

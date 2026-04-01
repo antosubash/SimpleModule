@@ -100,8 +100,14 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             if (kvp.Value.Count == 1)
             {
                 var impl = kvp.Value[0];
+                var method = impl.Lifetime switch
+                {
+                    0 => "AddSingleton",
+                    2 => "AddTransient",
+                    _ => "AddScoped",
+                };
                 sb.AppendLine(
-                    $"        services.AddScoped<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
+                    $"        services.{method}<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
                 );
             }
         }

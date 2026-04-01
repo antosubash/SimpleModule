@@ -185,7 +185,11 @@ internal readonly record struct EndpointInfoRecord(
     }
 }
 
-internal readonly record struct ViewInfoRecord(string FullyQualifiedName, string Page, SourceLocationRecord? Location);
+internal readonly record struct ViewInfoRecord(
+    string FullyQualifiedName,
+    string Page,
+    SourceLocationRecord? Location
+);
 
 internal readonly record struct DtoTypeInfoRecord(
     string FullyQualifiedName,
@@ -292,7 +296,8 @@ internal readonly record struct ContractImplementationRecord(
     bool IsPublic,
     bool IsAbstract,
     bool DependsOnDbContext,
-    SourceLocationRecord? Location
+    SourceLocationRecord? Location,
+    int Lifetime
 );
 
 internal readonly record struct PermissionClassRecord(
@@ -511,6 +516,7 @@ internal sealed class ContractImplementationInfo
     public bool IsAbstract { get; set; }
     public bool DependsOnDbContext { get; set; }
     public SourceLocationRecord? Location { get; set; }
+    public int Lifetime { get; set; } = 1; // Default: Scoped (ServiceLifetime.Scoped = 1)
 }
 
 internal sealed class PermissionClassInfo

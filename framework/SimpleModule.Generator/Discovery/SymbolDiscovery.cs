@@ -32,7 +32,10 @@ internal static class SymbolDiscovery
         return null;
     }
 
-    internal static DiscoveryData Extract(Compilation compilation, CancellationToken cancellationToken)
+    internal static DiscoveryData Extract(
+        Compilation compilation,
+        CancellationToken cancellationToken
+    )
     {
         var hostAssemblyName = compilation.Assembly.Name;
 
@@ -66,10 +69,20 @@ internal static class SymbolDiscovery
             )
                 continue;
 
-            FindModuleTypes(assemblySymbol.GlobalNamespace, moduleAttributeSymbol, modules, cancellationToken);
+            FindModuleTypes(
+                assemblySymbol.GlobalNamespace,
+                moduleAttributeSymbol,
+                modules,
+                cancellationToken
+            );
         }
 
-        FindModuleTypes(compilation.Assembly.GlobalNamespace, moduleAttributeSymbol, modules, cancellationToken);
+        FindModuleTypes(
+            compilation.Assembly.GlobalNamespace,
+            moduleAttributeSymbol,
+            modules,
+            cancellationToken
+        );
 
         if (modules.Count == 0)
             return DiscoveryData.Empty;
@@ -161,7 +174,12 @@ internal static class SymbolDiscovery
             var rawDbContexts = new List<DbContextInfo>();
             var rawEntityConfigs = new List<EntityConfigInfo>();
             FindDbContextTypes(assembly.GlobalNamespace, "", rawDbContexts, cancellationToken);
-            FindEntityConfigTypes(assembly.GlobalNamespace, "", rawEntityConfigs, cancellationToken);
+            FindEntityConfigTypes(
+                assembly.GlobalNamespace,
+                "",
+                rawEntityConfigs,
+                cancellationToken
+            );
 
             // Match each DbContext to the module whose namespace is closest
             foreach (var ctx in rawDbContexts)
@@ -192,10 +210,20 @@ internal static class SymbolDiscovery
                 )
                     continue;
 
-                FindDtoTypes(assemblySymbol.GlobalNamespace, dtoAttributeSymbol, dtoTypes, cancellationToken);
+                FindDtoTypes(
+                    assemblySymbol.GlobalNamespace,
+                    dtoAttributeSymbol,
+                    dtoTypes,
+                    cancellationToken
+                );
             }
 
-            FindDtoTypes(compilation.Assembly.GlobalNamespace, dtoAttributeSymbol, dtoTypes, cancellationToken);
+            FindDtoTypes(
+                compilation.Assembly.GlobalNamespace,
+                dtoAttributeSymbol,
+                dtoTypes,
+                cancellationToken
+            );
         }
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -583,7 +611,11 @@ internal static class SymbolDiscovery
                             e.AllowAnonymous
                         ))
                         .ToImmutableArray(),
-                    m.Views.Select(v => new ViewInfoRecord(v.FullyQualifiedName, v.Page ?? "", v.Location))
+                    m.Views.Select(v => new ViewInfoRecord(
+                            v.FullyQualifiedName,
+                            v.Page ?? "",
+                            v.Location
+                        ))
                         .ToImmutableArray(),
                     m.Location
                 ))
@@ -615,7 +647,12 @@ internal static class SymbolDiscovery
                 ))
                 .ToImmutableArray(),
             entityConfigs
-                .Select(e => new EntityConfigInfoRecord(e.ConfigFqn, e.EntityFqn, e.ModuleName, e.Location))
+                .Select(e => new EntityConfigInfoRecord(
+                    e.ConfigFqn,
+                    e.EntityFqn,
+                    e.ModuleName,
+                    e.Location
+                ))
                 .ToImmutableArray(),
             dependencies.ToImmutableArray(),
             illegalReferences.ToImmutableArray(),
@@ -628,7 +665,8 @@ internal static class SymbolDiscovery
                     c.IsPublic,
                     c.IsAbstract,
                     c.DependsOnDbContext,
-                    c.Location
+                    c.Location,
+                    c.Lifetime
                 ))
                 .ToImmutableArray(),
             permissionClasses
@@ -732,27 +770,38 @@ internal static class SymbolDiscovery
                                     SymbolDisplayFormat.FullyQualifiedFormat
                                 ),
                                 ModuleName = moduleName,
-                                HasConfigureServices = DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureServices"
-                                ),
+                                HasConfigureServices =
+                                    DeclaresMethod(typeSymbol, "ConfigureServices")
+                                    || ImplementsNamedInterface(
+                                        typeSymbol,
+                                        "SimpleModule.Core.IModuleServices"
+                                    ),
                                 HasConfigureEndpoints = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigureEndpoints"
                                 ),
-                                HasConfigureMenu = DeclaresMethod(typeSymbol, "ConfigureMenu"),
-                                HasConfigureMiddleware = DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureMiddleware"
-                                ),
+                                HasConfigureMenu =
+                                    DeclaresMethod(typeSymbol, "ConfigureMenu")
+                                    || ImplementsNamedInterface(
+                                        typeSymbol,
+                                        "SimpleModule.Core.IModuleMenu"
+                                    ),
+                                HasConfigureMiddleware =
+                                    DeclaresMethod(typeSymbol, "ConfigureMiddleware")
+                                    || ImplementsNamedInterface(
+                                        typeSymbol,
+                                        "SimpleModule.Core.IModuleMiddleware"
+                                    ),
                                 HasConfigurePermissions = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigurePermissions"
                                 ),
-                                HasConfigureSettings = DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureSettings"
-                                ),
+                                HasConfigureSettings =
+                                    DeclaresMethod(typeSymbol, "ConfigureSettings")
+                                    || ImplementsNamedInterface(
+                                        typeSymbol,
+                                        "SimpleModule.Core.IModuleSettings"
+                                    ),
                                 HasConfigureFeatureFlags = DeclaresMethod(
                                     typeSymbol,
                                     "ConfigureFeatureFlags"
@@ -903,6 +952,16 @@ internal static class SymbolDiscovery
         return false;
     }
 
+    private static bool ImplementsNamedInterface(INamedTypeSymbol typeSymbol, string interfaceFqn)
+    {
+        foreach (var iface in typeSymbol.AllInterfaces)
+        {
+            if (iface.ToDisplayString() == interfaceFqn)
+                return true;
+        }
+        return false;
+    }
+
     private static void ScanModuleAssemblies(
         List<ModuleInfo> modules,
         Dictionary<string, INamedTypeSymbol> moduleSymbols,
@@ -1019,6 +1078,30 @@ internal static class SymbolDiscovery
             current = current.BaseType;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Reads [ContractLifetime(ServiceLifetime.X)] from the type.
+    /// Returns 1 (Scoped) if the attribute is not present.
+    /// ServiceLifetime: Singleton=0, Scoped=1, Transient=2
+    /// </summary>
+    private static int GetContractLifetime(INamedTypeSymbol typeSymbol)
+    {
+        foreach (var attr in typeSymbol.GetAttributes())
+        {
+            var attrName = attr.AttributeClass?.ToDisplayString(
+                SymbolDisplayFormat.FullyQualifiedFormat
+            );
+            if (
+                attrName == "global::SimpleModule.Core.ContractLifetimeAttribute"
+                && attr.ConstructorArguments.Length > 0
+                && attr.ConstructorArguments[0].Value is int lifetime
+            )
+            {
+                return lifetime;
+            }
+        }
+        return 1; // Default: Scoped
     }
 
     private static bool HasDbContextConstructorParam(INamedTypeSymbol typeSymbol)
@@ -1318,6 +1401,7 @@ internal static class SymbolDiscovery
                                 IsAbstract = typeSymbol.IsAbstract,
                                 DependsOnDbContext = HasDbContextConstructorParam(typeSymbol),
                                 Location = GetSourceLocation(typeSymbol),
+                                Lifetime = GetContractLifetime(typeSymbol),
                             }
                         );
                     }

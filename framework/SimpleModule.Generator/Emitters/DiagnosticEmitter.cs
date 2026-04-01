@@ -723,7 +723,11 @@ internal sealed class DiagnosticEmitter : IEmitter
             if (!perm.IsSealed)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(PermissionClassNotSealed, ToLocation(perm.Location), permCleanName)
+                    Diagnostic.Create(
+                        PermissionClassNotSealed,
+                        ToLocation(perm.Location),
+                        permCleanName
+                    )
                 );
             }
 
@@ -968,7 +972,11 @@ internal sealed class DiagnosticEmitter : IEmitter
             if (!feat.IsSealed)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(FeatureClassNotSealed, ToLocation(feat.Location), featCleanName)
+                    Diagnostic.Create(
+                        FeatureClassNotSealed,
+                        ToLocation(feat.Location),
+                        featCleanName
+                    )
                 );
             }
 
