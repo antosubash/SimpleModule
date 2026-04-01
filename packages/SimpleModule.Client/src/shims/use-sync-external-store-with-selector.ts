@@ -1,7 +1,7 @@
 // ESM shim for use-sync-external-store/shim/with-selector
 // React 19 includes useSyncExternalStore natively; this avoids the CJS
 // require('react') call that breaks in Rolldown/Vite 8 library mode.
-import { useMemo, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useRef, useSyncExternalStore } from 'react';
 
 export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
   subscribe: (onStoreChange: () => void) => () => void,
@@ -10,58 +10,27 @@ export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
   selector: (snapshot: Snapshot) => Selection,
   isEqual?: (a: Selection, b: Selection) => boolean,
 ): Selection {
-  const instRef = useRef<{ hasValue: boolean; value: Selection } | null>(null);
-  const inst = instRef.current;
+  const prevRef = useRef<{ snapshot: Snapshot; selection: Selection } | null>(null);
 
-  const getSelection = useMemo(() => {
-    let hasMemo = false;
-    let memoizedSnapshot: Snapshot;
-    let memoizedSelection: Selection;
+  const getSelection = useCallback(() => {
+    const nextSnapshot = getSnapshot();
+    const prev = prevRef.current;
 
-    const memoizedSelector = (nextSnapshot: Snapshot) => {
-      if (!hasMemo) {
-        hasMemo = true;
-        memoizedSnapshot = nextSnapshot;
-        const nextSelection = selector(nextSnapshot);
-        if (isEqual !== undefined && inst !== null && inst.hasValue) {
-          const currentSelection = inst.value;
-          if (isEqual(currentSelection, nextSelection)) {
-            memoizedSelection = currentSelection;
-            return currentSelection;
-          }
-        }
-        memoizedSelection = nextSelection;
-        return nextSelection;
-      }
+    if (prev !== null && Object.is(prev.snapshot, nextSnapshot)) {
+      return prev.selection;
+    }
 
-      const prevSnapshot = memoizedSnapshot;
-      const prevSelection = memoizedSelection;
+    const nextSelection = selector(nextSnapshot);
 
-      if (Object.is(prevSnapshot, nextSnapshot)) {
-        return prevSelection;
-      }
+    if (prev !== null && isEqual?.(prev.selection, nextSelection)) {
+      // Keep the previous reference if isEqual says they match.
+      prevRef.current = { snapshot: nextSnapshot, selection: prev.selection };
+      return prev.selection;
+    }
 
-      const nextSelection = selector(nextSnapshot);
-
-      if (isEqual !== undefined && isEqual(prevSelection, nextSelection)) {
-        memoizedSnapshot = nextSnapshot;
-        return prevSelection;
-      }
-
-      memoizedSnapshot = nextSnapshot;
-      memoizedSelection = nextSelection;
-      return nextSelection;
-    };
-
-    const getSnapshotWithSelector = () => memoizedSelector(getSnapshot());
-    return getSnapshotWithSelector;
+    prevRef.current = { snapshot: nextSnapshot, selection: nextSelection };
+    return nextSelection;
   }, [getSnapshot, selector, isEqual]);
 
-  const value = useSyncExternalStore(subscribe, getSelection);
-
-  useMemo(() => {
-    instRef.current = { hasValue: true, value };
-  }, [value]);
-
-  return value;
+  return useSyncExternalStore(subscribe, getSelection);
 }
