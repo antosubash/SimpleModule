@@ -13,7 +13,14 @@ public static class BackgroundJobsServiceExtensions
     }
 }
 
-public class ModuleJobRegistration(Type jobType)
+public class ModuleJobRegistration
 {
-    public Type JobType { get; } = jobType;
+    public ModuleJobRegistration(Type jobType)
+    {
+        JobType = jobType;
+    }
+
+    public ModuleJobRegistration() { }
+
+    public Type JobType { get; set; } = null!;
 }
