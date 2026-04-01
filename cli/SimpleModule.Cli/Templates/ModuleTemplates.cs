@@ -12,17 +12,19 @@ public sealed class ModuleTemplates
     public ModuleTemplates(SolutionContext? solution)
     {
         _solution = solution;
-        _refModule = solution is not null && solution.ExistingModules.Count > 0
-            ? solution.ExistingModules[0]
-            : null;
+        _refModule =
+            solution is not null && solution.ExistingModules.Count > 0
+                ? solution.ExistingModules[0]
+                : null;
         _refSingular = _refModule is not null ? GetSingularName(_refModule) : null;
-        _otherModuleNames = _refModule is not null && solution is not null
-            ? solution
-                .ExistingModules.Where(m =>
-                    !string.Equals(m, _refModule, StringComparison.OrdinalIgnoreCase)
-                )
-                .ToList()
-            : [];
+        _otherModuleNames =
+            _refModule is not null && solution is not null
+                ? solution
+                    .ExistingModules.Where(m =>
+                        !string.Equals(m, _refModule, StringComparison.OrdinalIgnoreCase)
+                    )
+                    .ToList()
+                : [];
     }
 
     // ── csproj files ─────────────────────────────────────────────────
@@ -743,8 +745,11 @@ public sealed class ModuleTemplates
             }
 
             // Strip Tests.Shared reference (not available as a NuGet package)
-            if (!replaced && line.Contains("Tests.Shared", StringComparison.Ordinal)
-                && line.Contains("<ProjectReference", StringComparison.Ordinal))
+            if (
+                !replaced
+                && line.Contains("Tests.Shared", StringComparison.Ordinal)
+                && line.Contains("<ProjectReference", StringComparison.Ordinal)
+            )
             {
                 replaced = true; // Skip this line entirely
             }

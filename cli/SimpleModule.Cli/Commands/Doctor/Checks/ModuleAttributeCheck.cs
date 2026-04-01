@@ -8,12 +8,18 @@ public sealed class ModuleAttributeCheck : IDoctorCheck
     {
         foreach (var module in solution.ExistingModules)
         {
-            var moduleClassPath = Path.Combine(solution.GetModuleProjectPath(module), $"{module}Module.cs");
+            var moduleClassPath = Path.Combine(
+                solution.GetModuleProjectPath(module),
+                $"{module}Module.cs"
+            );
 
             if (!File.Exists(moduleClassPath))
             {
-                yield return new CheckResult($"{module} [Module] attribute", CheckStatus.Warning,
-                    $"{module}Module.cs not found — skipping attribute check");
+                yield return new CheckResult(
+                    $"{module} [Module] attribute",
+                    CheckStatus.Warning,
+                    $"{module}Module.cs not found — skipping attribute check"
+                );
                 continue;
             }
 
@@ -22,10 +28,18 @@ public sealed class ModuleAttributeCheck : IDoctorCheck
             var hasRoutePrefix = content.Contains("RoutePrefix", StringComparison.Ordinal);
 
             yield return (hasAttribute && hasRoutePrefix)
-                ? new CheckResult($"{module} [Module] attribute", CheckStatus.Pass, "[Module] attribute with RoutePrefix present")
-                : new CheckResult($"{module} [Module] attribute", CheckStatus.Fail,
-                    hasAttribute ? "[Module] attribute present but RoutePrefix is missing"
-                                 : $"{module}Module.cs missing [Module] attribute");
+                ? new CheckResult(
+                    $"{module} [Module] attribute",
+                    CheckStatus.Pass,
+                    "[Module] attribute with RoutePrefix present"
+                )
+                : new CheckResult(
+                    $"{module} [Module] attribute",
+                    CheckStatus.Fail,
+                    hasAttribute
+                        ? "[Module] attribute present but RoutePrefix is missing"
+                        : $"{module}Module.cs missing [Module] attribute"
+                );
         }
     }
 }

@@ -22,7 +22,9 @@ public class DeleteTenantFeatureEndpoint : IEndpoint
                         return Results.NotFound();
                     }
 
-                    var tenantIdStr = id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    var tenantIdStr = id.Value.ToString(
+                        System.Globalization.CultureInfo.InvariantCulture
+                    );
                     var overrides = await featureFlags.GetOverridesAsync(flagName);
                     var tenantOverride = overrides.FirstOrDefault(o =>
                         o.OverrideType == OverrideType.Tenant

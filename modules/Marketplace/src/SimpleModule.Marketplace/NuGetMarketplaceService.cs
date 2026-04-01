@@ -116,41 +116,39 @@ public class NuGetMarketplaceService(
             var searchAddress =
                 $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} tag:{tag}&take=1";
 
-            var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(
-                searchAddress
-            );
+            var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(searchAddress);
             var packageData = searchResponse?.Data.FirstOrDefault();
             if (packageData is null)
             {
                 return null;
             }
 
-        var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
-        var basePackage = MapToPackage(packageData, installedIds);
+            var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
+            var basePackage = MapToPackage(packageData, installedIds);
 
-        return new MarketplacePackageDetail
-        {
-            Id = basePackage.Id,
-            Title = basePackage.Title,
-            Description = basePackage.Description,
-            Authors = basePackage.Authors,
-            Icon = basePackage.Icon,
-            TotalDownloads = basePackage.TotalDownloads,
-            Tags = basePackage.Tags,
-            LatestVersion = basePackage.LatestVersion,
-            ProjectLink = basePackage.ProjectLink,
-            Category = basePackage.Category,
-            IsInstalled = basePackage.IsInstalled,
-            LicenseLink = packageData.LicenseAddress ?? string.Empty,
-            Versions = (packageData.Versions ?? [])
-                .Select(v => new MarketplacePackageVersion
-                {
-                    Version = v.Version ?? string.Empty,
-                    Downloads = v.Downloads,
-                })
-                .ToList(),
-            Dependencies = [],
-        };
+            return new MarketplacePackageDetail
+            {
+                Id = basePackage.Id,
+                Title = basePackage.Title,
+                Description = basePackage.Description,
+                Authors = basePackage.Authors,
+                Icon = basePackage.Icon,
+                TotalDownloads = basePackage.TotalDownloads,
+                Tags = basePackage.Tags,
+                LatestVersion = basePackage.LatestVersion,
+                ProjectLink = basePackage.ProjectLink,
+                Category = basePackage.Category,
+                IsInstalled = basePackage.IsInstalled,
+                LicenseLink = packageData.LicenseAddress ?? string.Empty,
+                Versions = (packageData.Versions ?? [])
+                    .Select(v => new MarketplacePackageVersion
+                    {
+                        Version = v.Version ?? string.Empty,
+                        Downloads = v.Downloads,
+                    })
+                    .ToList(),
+                Dependencies = [],
+            };
         }
         catch (HttpRequestException)
         {
@@ -180,7 +178,11 @@ public class NuGetMarketplaceService(
     }
 }
 
-[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
+[SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Instantiated by JSON deserialization"
+)]
 internal sealed record NuGetSearchResponse
 {
     [JsonPropertyName("totalHits")]
@@ -190,7 +192,11 @@ internal sealed record NuGetSearchResponse
     public List<NuGetPackageData> Data { get; init; } = [];
 }
 
-[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
+[SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Instantiated by JSON deserialization"
+)]
 internal sealed record NuGetPackageData
 {
     [JsonPropertyName("id")]
@@ -227,7 +233,11 @@ internal sealed record NuGetPackageData
     public List<NuGetVersionData>? Versions { get; init; }
 }
 
-[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
+[SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Instantiated by JSON deserialization"
+)]
 internal sealed record NuGetVersionData
 {
     [JsonPropertyName("version")]

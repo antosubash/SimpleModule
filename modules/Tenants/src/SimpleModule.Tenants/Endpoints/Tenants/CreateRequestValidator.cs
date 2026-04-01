@@ -8,16 +8,8 @@ public static partial class CreateRequestValidator
 {
     public static ValidationResult Validate(CreateTenantRequest request) =>
         new ValidationBuilder()
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.Name),
-                "Name",
-                "Tenant name is required."
-            )
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.Slug),
-                "Slug",
-                "Tenant slug is required."
-            )
+            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Tenant name is required.")
+            .AddErrorIf(string.IsNullOrWhiteSpace(request.Slug), "Slug", "Tenant slug is required.")
             .AddErrorIf(
                 !string.IsNullOrWhiteSpace(request.Slug) && !SlugPattern().IsMatch(request.Slug),
                 "Slug",

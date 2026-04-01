@@ -755,8 +755,7 @@ internal static class SymbolDiscovery
                                 SymbolDisplayFormat.FullyQualifiedFormat
                             );
                             if (
-                                attrName
-                                == "global::SimpleModule.Core.ViewPageAttribute"
+                                attrName == "global::SimpleModule.Core.ViewPageAttribute"
                                 && attr.ConstructorArguments.Length > 0
                                 && attr.ConstructorArguments[0].Value is string component
                             )
@@ -774,10 +773,7 @@ internal static class SymbolDiscovery
                                 className.Length - "Endpoint".Length
                             );
                         else if (className.EndsWith("View", StringComparison.Ordinal))
-                            className = className.Substring(
-                                0,
-                                className.Length - "View".Length
-                            );
+                            className = className.Substring(0, className.Length - "View".Length);
 
                         views.Add(
                             new ViewInfo

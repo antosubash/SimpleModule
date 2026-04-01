@@ -14,12 +14,10 @@ public static class AdminScenario
                 {
                     // Create a role
                     var roleName = $"LT-{Guid.NewGuid():N}"[..20];
-                    using var roleForm = new FormUrlEncodedContent(
-                        [
-                            new KeyValuePair<string, string>("name", roleName),
-                            new KeyValuePair<string, string>("description", "Load test role"),
-                        ]
-                    );
+                    using var roleForm = new FormUrlEncodedContent([
+                        new KeyValuePair<string, string>("name", roleName),
+                        new KeyValuePair<string, string>("description", "Load test role"),
+                    ]);
                     var roleResponse = await client.PostAsync("/admin/roles/", roleForm);
 
                     // Admin endpoints return 302 redirect on success (Blazor SSR pattern).

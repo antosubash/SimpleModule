@@ -353,10 +353,7 @@ internal readonly record struct InterceptorInfoRecord(
     }
 }
 
-internal readonly record struct ModuleOptionsRecord(
-    string FullyQualifiedName,
-    string ModuleName
-)
+internal readonly record struct ModuleOptionsRecord(string FullyQualifiedName, string ModuleName)
 {
     internal static Dictionary<string, List<ModuleOptionsRecord>> GroupByModule(
         ImmutableArray<ModuleOptionsRecord> options

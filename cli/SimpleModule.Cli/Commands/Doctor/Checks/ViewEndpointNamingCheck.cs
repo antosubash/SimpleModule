@@ -8,7 +8,11 @@ public sealed class ViewEndpointNamingCheck : IDoctorCheck
     {
         foreach (var module in solution.ExistingModules)
         {
-            var endpointsDir = Path.Combine(solution.GetModuleProjectPath(module), "Endpoints", module);
+            var endpointsDir = Path.Combine(
+                solution.GetModuleProjectPath(module),
+                "Endpoints",
+                module
+            );
             if (!Directory.Exists(endpointsDir))
                 continue;
 
@@ -19,9 +23,16 @@ public sealed class ViewEndpointNamingCheck : IDoctorCheck
                     continue;
 
                 yield return fileName.EndsWith("Endpoint", StringComparison.Ordinal)
-                    ? new CheckResult($"{module}/{fileName}", CheckStatus.Pass, "follows Endpoint naming convention")
-                    : new CheckResult($"{module}/{fileName}", CheckStatus.Warning,
-                        $"'{fileName}' does not end with 'Endpoint' — rename to '{fileName}Endpoint'");
+                    ? new CheckResult(
+                        $"{module}/{fileName}",
+                        CheckStatus.Pass,
+                        "follows Endpoint naming convention"
+                    )
+                    : new CheckResult(
+                        $"{module}/{fileName}",
+                        CheckStatus.Warning,
+                        $"'{fileName}' does not end with 'Endpoint' — rename to '{fileName}Endpoint'"
+                    );
             }
         }
     }

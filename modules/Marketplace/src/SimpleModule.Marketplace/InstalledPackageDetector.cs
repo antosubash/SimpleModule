@@ -31,7 +31,11 @@ public partial class InstalledPackageDetector(
     private HashSet<string> ReadInstalledPackages()
     {
         var contentRoot = environment.ContentRootPath;
-        var csprojFiles = Directory.GetFiles(contentRoot, "*.csproj", SearchOption.TopDirectoryOnly);
+        var csprojFiles = Directory.GetFiles(
+            contentRoot,
+            "*.csproj",
+            SearchOption.TopDirectoryOnly
+        );
 
         var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -40,8 +44,7 @@ public partial class InstalledPackageDetector(
             try
             {
                 var doc = XDocument.Load(csproj);
-                var packageRefs = doc
-                    .Descendants("PackageReference")
+                var packageRefs = doc.Descendants("PackageReference")
                     .Select(e => e.Attribute("Include")?.Value)
                     .Where(v => v is not null);
 
@@ -59,10 +62,7 @@ public partial class InstalledPackageDetector(
         return packages;
     }
 
-    [LoggerMessage(
-        Level = LogLevel.Warning,
-        Message = "Failed to parse csproj file {CsprojPath}"
-    )]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Failed to parse csproj file {CsprojPath}")]
     private static partial void LogCsprojParseError(
         ILogger logger,
         string csprojPath,

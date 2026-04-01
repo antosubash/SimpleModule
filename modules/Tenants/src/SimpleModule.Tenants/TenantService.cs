@@ -83,9 +83,7 @@ public sealed partial class TenantService(
         await db.SaveChangesAsync();
 
         LogTenantCreated(logger, entity.Id, entity.Name);
-        await eventBus.PublishAsync(
-            new TenantCreatedEvent(entity.Id, entity.Name, entity.Slug)
-        );
+        await eventBus.PublishAsync(new TenantCreatedEvent(entity.Id, entity.Name, entity.Slug));
 
         return MapToDto(entity);
     }
@@ -152,11 +150,7 @@ public sealed partial class TenantService(
             throw new NotFoundException("Tenant", tenantId);
         }
 
-        var hostEntity = new TenantHostEntity
-        {
-            TenantId = tenantId,
-            HostName = request.HostName,
-        };
+        var hostEntity = new TenantHostEntity { TenantId = tenantId, HostName = request.HostName };
 
         db.TenantHosts.Add(hostEntity);
         await db.SaveChangesAsync();
@@ -169,8 +163,9 @@ public sealed partial class TenantService(
 
     public async Task RemoveHostAsync(TenantId tenantId, TenantHostId hostId)
     {
-        var host = await db
-            .TenantHosts.FirstOrDefaultAsync(h => h.Id == hostId && h.TenantId == tenantId);
+        var host = await db.TenantHosts.FirstOrDefaultAsync(h =>
+            h.Id == hostId && h.TenantId == tenantId
+        );
         if (host is null)
         {
             throw new NotFoundException("TenantHost", hostId);
@@ -250,19 +245,11 @@ public sealed partial class TenantService(
         Level = LogLevel.Information,
         Message = "Host {HostName} added to tenant {TenantId}"
     )]
-    private static partial void LogHostAdded(
-        ILogger logger,
-        TenantId tenantId,
-        string hostName
-    );
+    private static partial void LogHostAdded(ILogger logger, TenantId tenantId, string hostName);
 
     [LoggerMessage(
         Level = LogLevel.Information,
         Message = "Host {HostName} removed from tenant {TenantId}"
     )]
-    private static partial void LogHostRemoved(
-        ILogger logger,
-        TenantId tenantId,
-        string hostName
-    );
+    private static partial void LogHostRemoved(ILogger logger, TenantId tenantId, string hostName);
 }

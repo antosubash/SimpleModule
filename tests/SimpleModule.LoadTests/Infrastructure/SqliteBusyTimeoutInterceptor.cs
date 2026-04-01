@@ -19,7 +19,8 @@ public sealed class SqliteBusyTimeoutInterceptor : DbConnectionInterceptor
     public override Task ConnectionOpenedAsync(
         DbConnection connection,
         ConnectionEndEventData eventData,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         SetPragmas(connection);
         return Task.CompletedTask;
@@ -28,7 +29,8 @@ public sealed class SqliteBusyTimeoutInterceptor : DbConnectionInterceptor
     private static void SetPragmas(DbConnection connection)
     {
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "PRAGMA busy_timeout=30000; PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
+        cmd.CommandText =
+            "PRAGMA busy_timeout=30000; PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
         cmd.ExecuteNonQuery();
     }
 }

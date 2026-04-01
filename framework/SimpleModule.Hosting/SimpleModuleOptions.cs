@@ -35,7 +35,10 @@ public class SimpleModuleOptions
     /// Registers default options and applies user overrides. Called by generated code.
     /// </summary>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public void ApplyModuleOptions(IServiceCollection services, Action<IServiceCollection> registerDefaults)
+    public void ApplyModuleOptions(
+        IServiceCollection services,
+        Action<IServiceCollection> registerDefaults
+    )
     {
         // Register IOptions<T> defaults for all discovered options classes
         registerDefaults(services);

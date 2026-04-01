@@ -61,8 +61,9 @@ public class ModuleOptionsTests : IClassFixture<SimpleModuleWebApplicationFactor
     public void FileStorageModuleOptions_IsRegistered_WithDefaults()
     {
         using var scope = _factory.Services.CreateScope();
-        var options =
-            scope.ServiceProvider.GetRequiredService<IOptions<FileStorageModuleOptions>>();
+        var options = scope.ServiceProvider.GetRequiredService<
+            IOptions<FileStorageModuleOptions>
+        >();
 
         options.Value.MaxFileSizeMb.Should().Be(50);
         options.Value.AllowedExtensions.Should().Contain(".jpg");
@@ -72,8 +73,9 @@ public class ModuleOptionsTests : IClassFixture<SimpleModuleWebApplicationFactor
     public void PageBuilderModuleOptions_IsRegistered_WithDefaults()
     {
         using var scope = _factory.Services.CreateScope();
-        var options =
-            scope.ServiceProvider.GetRequiredService<IOptions<PageBuilderModuleOptions>>();
+        var options = scope.ServiceProvider.GetRequiredService<
+            IOptions<PageBuilderModuleOptions>
+        >();
 
         options.Value.MaxTitleLength.Should().Be(200);
         options.Value.MaxSlugLength.Should().Be(200);
@@ -150,9 +152,7 @@ public class ModuleOptionsTests : IClassFixture<SimpleModuleWebApplicationFactor
             o.PasswordMinLength = 12;
             o.MaxFailedAccessAttempts = 3;
         });
-        services.Configure<SettingsModuleOptions>(o =>
-            o.CacheDuration = TimeSpan.FromMinutes(5)
-        );
+        services.Configure<SettingsModuleOptions>(o => o.CacheDuration = TimeSpan.FromMinutes(5));
         services.Configure<FileStorageModuleOptions>(o =>
         {
             o.MaxFileSizeMb = 100;
@@ -169,9 +169,7 @@ public class ModuleOptionsTests : IClassFixture<SimpleModuleWebApplicationFactor
         sp.GetRequiredService<IOptions<ProductsModuleOptions>>()
             .Value.DefaultPageSize.Should()
             .Be(25);
-        sp.GetRequiredService<IOptions<ProductsModuleOptions>>()
-            .Value.MaxPageSize.Should()
-            .Be(50);
+        sp.GetRequiredService<IOptions<ProductsModuleOptions>>().Value.MaxPageSize.Should().Be(50);
 
         sp.GetRequiredService<IOptions<AuditLogsModuleOptions>>()
             .Value.WriterBatchSize.Should()
@@ -180,9 +178,7 @@ public class ModuleOptionsTests : IClassFixture<SimpleModuleWebApplicationFactor
             .Value.RetentionDays.Should()
             .Be(30);
 
-        sp.GetRequiredService<IOptions<AdminModuleOptions>>()
-            .Value.UsersPageSize.Should()
-            .Be(50);
+        sp.GetRequiredService<IOptions<AdminModuleOptions>>().Value.UsersPageSize.Should().Be(50);
 
         sp.GetRequiredService<IOptions<OrdersModuleOptions>>()
             .Value.DefaultPageSize.Should()

@@ -19,9 +19,7 @@ public sealed class UsersBenchmarks : IDisposable
     public async Task Setup()
     {
         _factory = new SimpleModuleWebApplicationFactory();
-        _client = _factory.CreateAuthenticatedClient(
-            new Claim(ClaimTypes.Role, "Admin")
-        );
+        _client = _factory.CreateAuthenticatedClient(new Claim(ClaimTypes.Role, "Admin"));
 
         var request = FakeDataGenerators.CreateUserRequestFaker.Generate();
         var response = await _client.PostAsJsonAsync("/api/users", request);
@@ -40,8 +38,7 @@ public sealed class UsersBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public async Task<HttpResponseMessage> GetAllUsers() =>
-        await _client.GetAsync("/api/users");
+    public async Task<HttpResponseMessage> GetAllUsers() => await _client.GetAsync("/api/users");
 
     [Benchmark]
     public async Task<HttpResponseMessage> GetCurrentUser() =>

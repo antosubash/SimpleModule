@@ -6,10 +6,8 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users;
 
-public sealed class UserAdminService(
-    UserManager<ApplicationUser> userManager,
-    UsersDbContext db
-) : IUserAdminContracts
+public sealed class UserAdminService(UserManager<ApplicationUser> userManager, UsersDbContext db)
+    : IUserAdminContracts
 {
     public async Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(
         string? search,
@@ -36,8 +34,7 @@ public sealed class UserAdminService(
         query = filterStatus switch
         {
             "active" => query.Where(u =>
-                u.DeactivatedAt == null
-                && (!u.LockoutEnd.HasValue || u.LockoutEnd <= now)
+                u.DeactivatedAt == null && (!u.LockoutEnd.HasValue || u.LockoutEnd <= now)
             ),
             "locked" => query.Where(u =>
                 u.DeactivatedAt == null && u.LockoutEnd.HasValue && u.LockoutEnd > now
@@ -49,15 +46,15 @@ public sealed class UserAdminService(
         // Role filter
         if (!string.IsNullOrWhiteSpace(filterRole))
         {
-            var roleId = await db.Roles
-                .Where(r => r.Name == filterRole)
+            var roleId = await db
+                .Roles.Where(r => r.Name == filterRole)
                 .Select(r => r.Id)
                 .FirstOrDefaultAsync();
 
             if (roleId is not null)
             {
-                var userIdsInRole = db.UserRoles
-                    .Where(ur => ur.RoleId == roleId)
+                var userIdsInRole = db
+                    .UserRoles.Where(ur => ur.RoleId == roleId)
                     .Select(ur => ur.UserId);
 
                 query = query.Where(u => userIdsInRole.Contains(u.Id));
@@ -81,8 +78,8 @@ public sealed class UserAdminService(
 
         // Batch-load roles for all users in a single query instead of N+1
         var userIds = users.Select(u => u.Id).ToList();
-        var userRoles = await db.UserRoles
-            .Where(ur => userIds.Contains(ur.UserId))
+        var userRoles = await db
+            .UserRoles.Where(ur => userIds.Contains(ur.UserId))
             .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
             .ToListAsync();
 
@@ -143,8 +140,8 @@ public sealed class UserAdminService(
 
     public async Task UpdateUserDetailsAsync(UserId id, UpdateAdminUserRequest request)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.DisplayName = request.DisplayName;
         user.Email = request.Email;
@@ -156,8 +153,8 @@ public sealed class UserAdminService(
 
     public async Task SetUserRolesAsync(UserId id, IEnumerable<string> roles)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         var newRoles = roles.ToHashSet();
         var currentRoles = (await userManager.GetRolesAsync(user)).ToHashSet();
@@ -178,8 +175,8 @@ public sealed class UserAdminService(
 
     public async Task ResetPasswordAsync(UserId id, string newPassword)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         var result = await userManager.ResetPasswordAsync(user, token, newPassword);
@@ -192,8 +189,8 @@ public sealed class UserAdminService(
 
     public async Task LockAccountAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.LockoutEnabled = true;
         user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
@@ -202,8 +199,8 @@ public sealed class UserAdminService(
 
     public async Task UnlockAccountAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.LockoutEnd = null;
         user.AccessFailedCount = 0;
@@ -212,8 +209,8 @@ public sealed class UserAdminService(
 
     public async Task DeactivateAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.DeactivatedAt = DateTimeOffset.UtcNow;
         user.LockoutEnabled = true;
@@ -223,8 +220,8 @@ public sealed class UserAdminService(
 
     public async Task ReactivateAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.DeactivatedAt = null;
         user.LockoutEnd = null;
@@ -234,8 +231,8 @@ public sealed class UserAdminService(
 
     public async Task ForceEmailReverificationAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.EmailConfirmed = false;
         await userManager.UpdateAsync(user);
@@ -243,8 +240,8 @@ public sealed class UserAdminService(
 
     public async Task DisableTwoFactorAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         await userManager.SetTwoFactorEnabledAsync(user, false);
         await userManager.ResetAuthenticatorKeyAsync(user);

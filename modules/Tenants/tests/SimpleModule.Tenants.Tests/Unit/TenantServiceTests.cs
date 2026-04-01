@@ -85,7 +85,9 @@ public sealed class TenantServiceTests : IDisposable
         tenant.Status.Should().Be(TenantStatus.Active);
         tenant.Hosts.Should().HaveCount(1);
         tenant.Hosts[0].HostName.Should().Be("new.localhost");
-        _eventBus.PublishedEvents.Should().ContainSingle(e => e is SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent);
+        _eventBus
+            .PublishedEvents.Should()
+            .ContainSingle(e => e is SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent);
     }
 
     [Fact]
@@ -95,7 +97,9 @@ public sealed class TenantServiceTests : IDisposable
         var updated = await _sut.UpdateTenantAsync(TenantId.From(1), request);
 
         updated.Name.Should().Be("Updated Acme");
-        _eventBus.PublishedEvents.Should().Contain(e => e is SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent);
+        _eventBus
+            .PublishedEvents.Should()
+            .Contain(e => e is SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent);
     }
 
     [Fact]
@@ -125,7 +129,8 @@ public sealed class TenantServiceTests : IDisposable
         var result = await _sut.ChangeStatusAsync(TenantId.From(1), TenantStatus.Suspended);
 
         result.Status.Should().Be(TenantStatus.Suspended);
-        _eventBus.PublishedEvents.Should()
+        _eventBus
+            .PublishedEvents.Should()
             .Contain(e => e is SimpleModule.Tenants.Contracts.Events.TenantStatusChangedEvent);
     }
 

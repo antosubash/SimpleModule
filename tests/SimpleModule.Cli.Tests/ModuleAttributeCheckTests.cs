@@ -16,38 +16,59 @@ public sealed class ModuleAttributeCheckTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
-    private SolutionContext CreateSolutionWithModule(string moduleName, string? moduleClassContent = null)
+    private SolutionContext CreateSolutionWithModule(
+        string moduleName,
+        string? moduleClassContent = null
+    )
     {
         File.WriteAllText(Path.Combine(_tempDir, "Test.slnx"), "<Solution />");
         var moduleDir = Path.Combine(_tempDir, "src", "modules", moduleName, "src", moduleName);
         Directory.CreateDirectory(moduleDir);
         if (moduleClassContent is not null)
-            File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Module.cs"), moduleClassContent);
+            File.WriteAllText(
+                Path.Combine(moduleDir, $"{moduleName}Module.cs"),
+                moduleClassContent
+            );
         return SolutionContext.Discover(_tempDir)!;
     }
 
     [Fact]
     public void Run_Pass_WhenModuleAttributePresentWithRoutePrefix()
     {
-        var solution = CreateSolutionWithModule("Products", """
+        var solution = CreateSolutionWithModule(
+            "Products",
+            """
             [Module("Products", RoutePrefix = "products")]
             public class ProductsModule : IModule { }
-            """);
+            """
+        );
         var results = new ModuleAttributeCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Pass);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Pass
+            );
     }
 
     [Fact]
     public void Run_Fail_WhenModuleClassHasNoModuleAttribute()
     {
-        var solution = CreateSolutionWithModule("Products", """
+        var solution = CreateSolutionWithModule(
+            "Products",
+            """
             public class ProductsModule : IModule { }
-            """);
+            """
+        );
         var results = new ModuleAttributeCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Fail);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Fail
+            );
     }
 
     [Fact]
@@ -55,17 +76,28 @@ public sealed class ModuleAttributeCheckTests : IDisposable
     {
         var solution = CreateSolutionWithModule("Products", moduleClassContent: null);
         var results = new ModuleAttributeCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Warning);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Warning
+            );
     }
 
     [Fact]
     public void Run_Fail_WhenModuleAttributeMissingRoutePrefix()
     {
-        var solution = CreateSolutionWithModule("Products", """
+        var solution = CreateSolutionWithModule(
+            "Products",
+            """
             [Module("Products")]
             public class ProductsModule : IModule { }
-            """);
+            """
+        );
         var results = new ModuleAttributeCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Fail);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products [Module] attribute" && r.Status == CheckStatus.Fail
+            );
     }
 }

@@ -22,18 +22,22 @@ public class ProductsModule : IModule
     public void ConfigureFeatureFlags(IFeatureFlagBuilder builder)
     {
         builder
-            .Add(new FeatureFlagDefinition
-            {
-                Name = ProductsFeatures.BulkImport,
-                Description = "Enable bulk product import via CSV upload",
-                DefaultEnabled = false,
-            })
-            .Add(new FeatureFlagDefinition
-            {
-                Name = ProductsFeatures.AdvancedPricing,
-                Description = "Enable tiered and time-based pricing rules",
-                DefaultEnabled = true,
-            });
+            .Add(
+                new FeatureFlagDefinition
+                {
+                    Name = ProductsFeatures.BulkImport,
+                    Description = "Enable bulk product import via CSV upload",
+                    DefaultEnabled = false,
+                }
+            )
+            .Add(
+                new FeatureFlagDefinition
+                {
+                    Name = ProductsFeatures.AdvancedPricing,
+                    Description = "Enable tiered and time-based pricing rules",
+                    DefaultEnabled = true,
+                }
+            );
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

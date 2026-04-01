@@ -44,8 +44,7 @@ public sealed class OrdersBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public async Task<HttpResponseMessage> GetAllOrders() =>
-        await _client.GetAsync("/api/orders");
+    public async Task<HttpResponseMessage> GetAllOrders() => await _client.GetAsync("/api/orders");
 
     [Benchmark]
     public async Task<HttpResponseMessage> GetOrderById() =>

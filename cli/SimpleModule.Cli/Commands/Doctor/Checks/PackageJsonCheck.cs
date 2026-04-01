@@ -10,11 +10,18 @@ public sealed class PackageJsonCheck : IDoctorCheck
     {
         foreach (var module in solution.ExistingModules)
         {
-            var packageJsonPath = Path.Combine(solution.GetModuleProjectPath(module), "package.json");
+            var packageJsonPath = Path.Combine(
+                solution.GetModuleProjectPath(module),
+                "package.json"
+            );
 
             if (!File.Exists(packageJsonPath))
             {
-                yield return new CheckResult($"{module} package.json", CheckStatus.Warning, "package.json not found");
+                yield return new CheckResult(
+                    $"{module} package.json",
+                    CheckStatus.Warning,
+                    "package.json not found"
+                );
                 continue;
             }
 
@@ -24,7 +31,8 @@ public sealed class PackageJsonCheck : IDoctorCheck
             var missingFromPeerDeps = RequiredPeerDeps
                 .Where(dep =>
                 {
-                    if (peerDepsStart < 0) return true;
+                    if (peerDepsStart < 0)
+                        return true;
                     var searchFrom = peerDepsStart;
                     var idx = content.IndexOf($"\"{dep}\"", searchFrom, StringComparison.Ordinal);
                     return idx < 0;
@@ -33,13 +41,19 @@ public sealed class PackageJsonCheck : IDoctorCheck
 
             if (missingFromPeerDeps.Count == 0)
             {
-                yield return new CheckResult($"{module} package.json", CheckStatus.Pass,
-                    "React and @inertiajs/react declared as peerDependencies");
+                yield return new CheckResult(
+                    $"{module} package.json",
+                    CheckStatus.Pass,
+                    "React and @inertiajs/react declared as peerDependencies"
+                );
             }
             else
             {
-                yield return new CheckResult($"{module} package.json", CheckStatus.Warning,
-                    $"missing from peerDependencies: {string.Join(", ", missingFromPeerDeps)}");
+                yield return new CheckResult(
+                    $"{module} package.json",
+                    CheckStatus.Warning,
+                    $"missing from peerDependencies: {string.Join(", ", missingFromPeerDeps)}"
+                );
             }
         }
     }

@@ -17,9 +17,7 @@ public sealed class AdminBenchmarks : IDisposable
     public void Setup()
     {
         _factory = new SimpleModuleWebApplicationFactory();
-        _client = _factory.CreateAuthenticatedClient(
-            new Claim(ClaimTypes.Role, "Admin")
-        );
+        _client = _factory.CreateAuthenticatedClient(new Claim(ClaimTypes.Role, "Admin"));
 
         _noRedirectClient = _factory.CreateClient(
             new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }

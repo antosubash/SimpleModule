@@ -23,7 +23,8 @@ public static class PasswordGrantTokenHandler
         if (!request.IsPasswordGrantType())
             return;
 
-        var httpContext = context.Transaction.GetHttpRequest()?.HttpContext
+        var httpContext =
+            context.Transaction.GetHttpRequest()?.HttpContext
             ?? throw new InvalidOperationException("HttpContext not available.");
         var sp = httpContext.RequestServices;
 
@@ -38,10 +39,12 @@ public static class PasswordGrantTokenHandler
         var identity = new ClaimsIdentity(
             authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
             nameType: Claims.Name,
-            roleType: Claims.Role);
+            roleType: Claims.Role
+        );
 
         var userId = await userManager.GetUserIdAsync(user);
-        identity.SetClaim(Claims.Subject, userId)
+        identity
+            .SetClaim(Claims.Subject, userId)
             .SetClaim(Claims.Email, await userManager.GetEmailAsync(user) ?? string.Empty)
             .SetClaim(Claims.Name, user.DisplayName);
 
@@ -57,7 +60,8 @@ public static class PasswordGrantTokenHandler
         var roleIdMap = await userContracts.GetRoleIdsByNamesAsync(roles);
         var allPermissions = await permContracts.GetAllPermissionsForUserAsync(
             userIdTyped,
-            roleIdMap.Values.Select(id => RoleId.From(id)));
+            roleIdMap.Values.Select(id => RoleId.From(id))
+        );
 
         foreach (var permission in allPermissions)
         {

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
+using SimpleModule.Orders.Services;
 
 namespace SimpleModule.Orders;
 
@@ -16,6 +17,7 @@ public class OrdersModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<OrdersDbContext>(configuration, OrdersConstants.ModuleName);
+        services.AddHostedService<OrderSeedService>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

@@ -27,9 +27,7 @@ public class FeatureFlagsModule : IModule
         services.AddScoped<IFeatureFlagContracts>(sp =>
             sp.GetRequiredService<FeatureFlagService>()
         );
-        services.AddScoped<IFeatureFlagService>(sp =>
-            sp.GetRequiredService<FeatureFlagService>()
-        );
+        services.AddScoped<IFeatureFlagService>(sp => sp.GetRequiredService<FeatureFlagService>());
         services.AddHostedService<FeatureFlagSyncService>();
     }
 
@@ -52,5 +50,4 @@ public class FeatureFlagsModule : IModule
     {
         app.UseMiddleware<Middleware.FeatureFlagMiddleware>();
     }
-
 }

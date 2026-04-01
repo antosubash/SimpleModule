@@ -78,11 +78,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/roles — Set roles
         group.MapPost(
             "/{id}/roles",
-            async Task<IResult> (
-                string id,
-                HttpContext context,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, HttpContext context, IUserAdminContracts userAdmin) =>
             {
                 var form = await context.Request.ReadFormAsync();
                 var newRoles = form["roles"]
@@ -137,11 +133,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/lock — Lock account
         group.MapPost(
             "/{id}/lock",
-            async Task<IResult> (
-                string id,
-                HttpContext context,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, HttpContext context, IUserAdminContracts userAdmin) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 if (id == adminId)
@@ -158,10 +150,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/unlock — Unlock account
         group.MapPost(
             "/{id}/unlock",
-            async Task<IResult> (
-                string id,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, IUserAdminContracts userAdmin) =>
             {
                 await userAdmin.UnlockAccountAsync(UserId.From(id));
 
@@ -172,10 +161,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/force-reverify — Force email re-verification
         group.MapPost(
             "/{id}/force-reverify",
-            async Task<IResult> (
-                string id,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, IUserAdminContracts userAdmin) =>
             {
                 await userAdmin.ForceEmailReverificationAsync(UserId.From(id));
 
@@ -186,10 +172,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/disable-2fa — Disable two-factor authentication
         group.MapPost(
             "/{id}/disable-2fa",
-            async Task<IResult> (
-                string id,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, IUserAdminContracts userAdmin) =>
             {
                 await userAdmin.DisableTwoFactorAsync(UserId.From(id));
 
@@ -200,11 +183,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/deactivate — Soft-delete (deactivate) user
         group.MapPost(
             "/{id}/deactivate",
-            async Task<IResult> (
-                string id,
-                HttpContext context,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, HttpContext context, IUserAdminContracts userAdmin) =>
             {
                 var adminId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 if (id == adminId)
@@ -221,10 +200,7 @@ public class AdminUsersEndpoint : IEndpoint
         // POST /admin/users/{id}/reactivate — Reactivate user
         group.MapPost(
             "/{id}/reactivate",
-            async Task<IResult> (
-                string id,
-                IUserAdminContracts userAdmin
-            ) =>
+            async Task<IResult> (string id, IUserAdminContracts userAdmin) =>
             {
                 await userAdmin.ReactivateAsync(UserId.From(id));
 

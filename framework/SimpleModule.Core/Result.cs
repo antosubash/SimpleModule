@@ -6,7 +6,11 @@ namespace SimpleModule.Core;
 /// Represents the outcome of an operation that may fail with a structured error.
 /// </summary>
 /// <typeparam name="T">The type of the success value.</typeparam>
-[SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Standard Result<T> pattern requires static factory methods")]
+[SuppressMessage(
+    "Design",
+    "CA1000:Do not declare static members on generic types",
+    Justification = "Standard Result<T> pattern requires static factory methods"
+)]
 public readonly struct Result<T> : IEquatable<Result<T>>
 {
     private readonly T? _value;
@@ -30,13 +34,15 @@ public readonly struct Result<T> : IEquatable<Result<T>>
 
     public bool IsFailure => !IsSuccess;
 
-    public T Value => IsSuccess
-        ? _value!
-        : throw new InvalidOperationException("Cannot access Value on a failed Result.");
+    public T Value =>
+        IsSuccess
+            ? _value!
+            : throw new InvalidOperationException("Cannot access Value on a failed Result.");
 
-    public ResultError Error => !IsSuccess
-        ? _error!
-        : throw new InvalidOperationException("Cannot access Error on a successful Result.");
+    public ResultError Error =>
+        !IsSuccess
+            ? _error!
+            : throw new InvalidOperationException("Cannot access Error on a successful Result.");
 
     public static Result<T> Ok(T value) => new(value);
 
@@ -48,7 +54,11 @@ public readonly struct Result<T> : IEquatable<Result<T>>
     /// <summary>
     /// Creates a <see cref="Result{T}"/> from a value (alternate for implicit operator).
     /// </summary>
-    [SuppressMessage("Design", "CA2225:Operator overloads have named alternates", Justification = "ToResult provided")]
+    [SuppressMessage(
+        "Design",
+        "CA2225:Operator overloads have named alternates",
+        Justification = "ToResult provided"
+    )]
     public static implicit operator Result<T>(T value) => Ok(value);
 
     /// <summary>
@@ -62,7 +72,10 @@ public readonly struct Result<T> : IEquatable<Result<T>>
     public Result<TOut> Map<TOut>(Func<T, TOut> map) =>
         IsSuccess
             ? Result<TOut>.Ok(map(_value!))
-            : Result<TOut>.Fail(Error.Message, Error.ValidationErrors ?? new Dictionary<string, string[]>());
+            : Result<TOut>.Fail(
+                Error.Message,
+                Error.ValidationErrors ?? new Dictionary<string, string[]>()
+            );
 
     /// <summary>
     /// Returns the value if successful, or the provided fallback value.

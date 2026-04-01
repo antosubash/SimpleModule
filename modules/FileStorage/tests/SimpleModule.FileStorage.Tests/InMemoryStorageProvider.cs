@@ -5,7 +5,10 @@ namespace SimpleModule.FileStorage.Tests;
 
 public sealed class InMemoryStorageProvider : IStorageProvider
 {
-    private readonly ConcurrentDictionary<string, (byte[] Data, string ContentType, DateTimeOffset Modified)> _files = new();
+    private readonly ConcurrentDictionary<
+        string,
+        (byte[] Data, string ContentType, DateTimeOffset Modified)
+    > _files = new();
 
     public async Task<StorageResult> SaveAsync(
         string path,

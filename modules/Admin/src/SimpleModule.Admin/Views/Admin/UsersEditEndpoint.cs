@@ -34,9 +34,7 @@ public class UsersEditEndpoint : IViewEndpoint
                         return TypedResults.NotFound();
 
                     var rolesTask = roleAdmin.GetAllRolesAsync();
-                    var permsTask = permissionContracts.GetPermissionsForUserAsync(
-                        UserId.From(id)
-                    );
+                    var permsTask = permissionContracts.GetPermissionsForUserAsync(UserId.From(id));
                     var sessionsTask = sessionContracts.GetActiveSessionsForUserAsync(id);
                     await Task.WhenAll(rolesTask, permsTask, sessionsTask);
 

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.AuditLogs;
 using SimpleModule.Database;
+using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
@@ -21,7 +22,6 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
-using SimpleModule.FeatureFlags;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
 

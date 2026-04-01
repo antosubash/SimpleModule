@@ -32,10 +32,7 @@ public class AdminSessionsEndpoint : IEndpoint
         // DELETE /admin/users/{id}/sessions — Revoke all sessions
         group.MapDelete(
             "/",
-            async Task<IResult> (
-                string id,
-                IOpenIddictSessionContracts sessionContracts
-            ) =>
+            async Task<IResult> (string id, IOpenIddictSessionContracts sessionContracts) =>
             {
                 await sessionContracts.RevokeAllSessionsForUserAsync(id);
 

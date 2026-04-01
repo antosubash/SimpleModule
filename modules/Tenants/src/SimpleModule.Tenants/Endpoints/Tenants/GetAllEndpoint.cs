@@ -10,6 +10,9 @@ namespace SimpleModule.Tenants.Endpoints.Tenants;
 public class GetAllEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/", (ITenantContracts contracts) => CrudEndpoints.GetAll(contracts.GetAllTenantsAsync))
+        app.MapGet(
+                "/",
+                (ITenantContracts contracts) => CrudEndpoints.GetAll(contracts.GetAllTenantsAsync)
+            )
             .RequirePermission(TenantsPermissions.View);
 }

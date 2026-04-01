@@ -16,7 +16,8 @@ public sealed class ContractsIsolationCheckTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
     private SolutionContext CreateSolution(string moduleName, string contractsCsprojContent)
@@ -25,37 +26,54 @@ public sealed class ContractsIsolationCheckTests : IDisposable
         var modulesDir = Path.Combine(_tempDir, "src", "modules");
         var contractsDir = Path.Combine(modulesDir, moduleName, "src", $"{moduleName}.Contracts");
         Directory.CreateDirectory(contractsDir);
-        File.WriteAllText(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), contractsCsprojContent);
+        File.WriteAllText(
+            Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"),
+            contractsCsprojContent
+        );
         return SolutionContext.Discover(_tempDir)!;
     }
 
     [Fact]
     public void Run_Pass_WhenContractsOnlyRefsCore()
     {
-        var solution = CreateSolution("Products", """
+        var solution = CreateSolution(
+            "Products",
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
                 <ProjectReference Include="..\..\..\..\src\SimpleModule.Core\SimpleModule.Core.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
         var results = new ContractsIsolationCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products.Contracts isolation" && r.Status == CheckStatus.Pass);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products.Contracts isolation" && r.Status == CheckStatus.Pass
+            );
     }
 
     [Fact]
     public void Run_Fail_WhenContractsRefsAnotherModuleProject()
     {
-        var solution = CreateSolution("Products", """
+        var solution = CreateSolution(
+            "Products",
+            """
             <Project Sdk="Microsoft.NET.Sdk">
               <ItemGroup>
                 <ProjectReference Include="..\..\..\..\src\SimpleModule.Core\SimpleModule.Core.csproj" />
                 <ProjectReference Include="..\..\..\Orders\src\Orders\Orders.csproj" />
               </ItemGroup>
             </Project>
-            """);
+            """
+        );
         var results = new ContractsIsolationCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products.Contracts isolation" && r.Status == CheckStatus.Fail);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products.Contracts isolation" && r.Status == CheckStatus.Fail
+            );
     }
 
     [Fact]
@@ -66,6 +84,10 @@ public sealed class ContractsIsolationCheckTests : IDisposable
         Directory.CreateDirectory(Path.Combine(modulesDir, "Products"));
         var solution = SolutionContext.Discover(_tempDir)!;
         var results = new ContractsIsolationCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products.Contracts isolation" && r.Status == CheckStatus.Warning);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products.Contracts isolation" && r.Status == CheckStatus.Warning
+            );
     }
 }
