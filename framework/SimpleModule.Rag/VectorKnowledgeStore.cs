@@ -24,6 +24,8 @@ public sealed class VectorKnowledgeStore(
             cancellationToken: cancellationToken
         );
 
+        // Upsert concurrently in batches for better throughput
+        var upsertTasks = new List<Task>(documents.Count);
         for (var i = 0; i < documents.Count; i++)
         {
             var doc = documents[i];
@@ -36,8 +38,10 @@ public sealed class VectorKnowledgeStore(
                 ModuleName = doc.Metadata?.GetValueOrDefault("module"),
                 Embedding = embeddings[i].Vector,
             };
-            await collection.UpsertAsync(record, cancellationToken);
+            upsertTasks.Add(collection.UpsertAsync(record, cancellationToken));
         }
+
+        await Task.WhenAll(upsertTasks);
     }
 
     public async Task<IReadOnlyList<KnowledgeSearchResult>> SearchAsync(
