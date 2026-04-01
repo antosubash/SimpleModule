@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
     <ProjectReference Include="..\..\modules\FeatureFlags\src\SimpleModule.FeatureFlags\SimpleModule.FeatureFlags.csproj" />
     <ProjectReference Include="..\..\modules\Tenants\src\SimpleModule.Tenants\SimpleModule.Tenants.csproj" />
+    <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
