@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
+using SimpleModule.BackgroundJobs;
 using SimpleModule.Database;
 
 namespace BackgroundJobs.Tests.Helpers;
