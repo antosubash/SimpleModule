@@ -41,7 +41,7 @@ interface Props {
 }
 
 function userStatus(user: User) {
-  if (user.isDeactivated) return { label: 'Deactivated', variant: 'secondary' as const };
+  if (user.isDeactivated) return { label: 'Deactivated', variant: 'default' as const };
   if (user.isLockedOut) return { label: 'Locked', variant: 'danger' as const };
   return { label: 'Active', variant: 'success' as const };
 }

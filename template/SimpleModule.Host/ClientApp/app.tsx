@@ -4,12 +4,22 @@ import { createRoot } from 'react-dom/client';
 
 // Handle non-Inertia error responses (404, 500, etc.) by showing a toast
 // instead of the default "must receive a valid Inertia response" error.
-router.on('invalid', (event) => {
+router.on('httpException', (event) => {
   event.preventDefault();
 
   const response = event.detail.response;
-  const body = response.data as { detail?: string; title?: string } | undefined;
-  const message = body?.detail ?? body?.title ?? `Server error (${response.status})`;
+  const body = response.data as { detail?: string; title?: string } | string | undefined;
+  let parsed: { detail?: string; title?: string } | undefined;
+  if (typeof body === 'string') {
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      // non-JSON response body
+    }
+  } else {
+    parsed = body;
+  }
+  const message = parsed?.detail ?? parsed?.title ?? `Server error (${response.status})`;
   showErrorToast(message);
 });
 

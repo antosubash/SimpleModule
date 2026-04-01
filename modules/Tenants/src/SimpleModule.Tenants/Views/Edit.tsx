@@ -119,7 +119,7 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
             {[0, 1, 2].map((s) => (
               <Button
                 key={s}
-                variant={tenant.status === s ? 'default' : 'secondary'}
+                variant={tenant.status === s ? 'primary' : 'secondary'}
                 size="sm"
                 onClick={() => handleStatusChange(s)}
               >

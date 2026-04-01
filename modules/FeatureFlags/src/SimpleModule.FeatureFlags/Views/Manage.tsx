@@ -116,7 +116,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                   <TableCell className="font-mono text-sm">{flag.name}</TableCell>
                   <TableCell className="text-text-muted">{flag.description}</TableCell>
                   <TableCell>
-                    <Badge variant={flag.defaultEnabled ? 'default' : 'secondary'}>
+                    <Badge variant={flag.defaultEnabled ? 'info' : 'default'}>
                       {flag.defaultEnabled ? 'on' : 'off'}
                     </Badge>
                   </TableCell>
@@ -154,7 +154,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                   <TableRow key={flag.name} className="opacity-60">
                     <TableCell className="font-mono text-sm">
                       {flag.name}{' '}
-                      <Badge variant="destructive" className="ml-2">
+                      <Badge variant="danger" className="ml-2">
                         deprecated
                       </Badge>
                     </TableCell>
@@ -197,11 +197,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                     <TableCell className="font-mono text-sm">{o.overrideValue}</TableCell>
                     <TableCell>{o.isEnabled ? 'Yes' : 'No'}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteOverride(o.id)}
-                      >
+                      <Button variant="danger" size="sm" onClick={() => handleDeleteOverride(o.id)}>
                         Delete
                       </Button>
                     </TableCell>

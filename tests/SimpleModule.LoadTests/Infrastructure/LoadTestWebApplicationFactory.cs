@@ -19,6 +19,7 @@ using SimpleModule.FileStorage;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
+using SimpleModule.Tenants;
 using SimpleModule.Orders;
 using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
@@ -99,6 +100,7 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
             ReplaceWithFileDb<AuditLogsDbContext>(services, connectionString);
             ReplaceWithFileDb<FileStorageDbContext>(services, connectionString);
             ReplaceWithFileDb<FeatureFlagsDbContext>(services, connectionString);
+            ReplaceWithFileDb<TenantsDbContext>(services, connectionString);
             ReplaceWithFileDb<OpenIddictAppDbContext>(services, connectionString, useOpenIddict: true);
 
             // Add ROPC (password) grant to OpenIddict for load test token acquisition.

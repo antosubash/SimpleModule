@@ -1,6 +1,7 @@
 import { basename, resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
-import { defineConfig, type UserConfig } from 'vite';
+import type { UserConfig } from 'vite';
+import { defineConfig } from 'vite';
 import { defaultVendors } from './vite-plugin-vendor.ts';
 
 /**
@@ -15,15 +16,38 @@ import { defaultVendors } from './vite-plugin-vendor.ts';
  * For non-standard overrides, use Vite's `mergeConfig`:
  * ```ts
  * import { mergeConfig } from 'vite';
- * export default mergeConfig(defineModuleConfig(__dirname), { ... });
+ * export default mergeConfig(defineModuleConfig(import.meta.dirname), { ... });
  * ```
  */
 export function defineModuleConfig(dir: string): UserConfig {
   const name = basename(dir);
   const isDev = process.env.VITE_MODE !== 'prod';
 
+  const externalPkgs = defaultVendors.map((v) => v.pkg);
+
+  // Alias CJS-only packages that use `require('react')` to ESM shims.
+  // Rolldown (Vite 8) can't convert CJS require() calls for external
+  // packages to ESM imports, which causes runtime errors in the browser.
+  const shimDir = resolve(import.meta.dirname, 'shims');
+
   return defineConfig({
     plugins: [react()],
+    resolve: {
+      alias: [
+        {
+          find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/,
+          replacement: resolve(shimDir, 'use-sync-external-store-with-selector.ts'),
+        },
+        {
+          find: /^use-sync-external-store\/with-selector(\.js)?$/,
+          replacement: resolve(shimDir, 'use-sync-external-store-with-selector.ts'),
+        },
+        {
+          find: /^use-sync-external-store(\/shim)?(\/index(\.js)?)?$/,
+          replacement: resolve(shimDir, 'use-sync-external-store-shim.ts'),
+        },
+      ],
+    },
     define: {
       'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
     },
@@ -37,8 +61,8 @@ export function defineModuleConfig(dir: string): UserConfig {
       minify: isDev ? false : 'esbuild',
       outDir: 'wwwroot',
       emptyOutDir: false,
-      rollupOptions: {
-        external: defaultVendors.map((v) => v.pkg),
+      rolldownOptions: {
+        external: externalPkgs,
         output: {
           assetFileNames: `${name.toLowerCase()}[extname]`,
         },

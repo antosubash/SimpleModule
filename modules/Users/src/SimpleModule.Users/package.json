@@ -3,9 +3,9 @@
   "name": "@simplemodule/users",
   "version": "0.0.0",
   "scripts": {
-    "build": "vite build",
-    "build:dev": "cross-env VITE_MODE=dev vite build",
-    "watch": "cross-env VITE_MODE=dev vite build --watch"
+    "build": "vite build --configLoader runner",
+    "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+    "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch"
   },
   "dependencies": {
     "qrcode": "^1.5.4"

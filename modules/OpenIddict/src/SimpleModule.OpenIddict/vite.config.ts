@@ -1,3 +1,3 @@
 import { defineModuleConfig } from '@simplemodule/client/module';
 
-export default defineModuleConfig(__dirname);
+export default defineModuleConfig(import.meta.dirname);

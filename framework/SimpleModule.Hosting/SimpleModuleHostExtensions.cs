@@ -121,22 +121,7 @@ public static class SimpleModuleHostExtensions
 
                 if (scope.ServiceProvider.GetService(info.DbContextType) is DbContext db)
                 {
-                    // Use MigrateAsync when migrations exist, EnsureCreated otherwise
-                    // (projects scaffolded with sm new project have no migrations initially)
-                    if ((await db.Database.GetPendingMigrationsAsync()).Any()
-                        || (await db.Database.GetAppliedMigrationsAsync()).Any())
-                    {
-                        await db.Database.MigrateAsync();
-                    }
-                    else
-                    {
-                        var logger = scope.ServiceProvider.GetService<ILoggerFactory>()
-                            ?.CreateLogger("SimpleModule.Hosting");
-                        logger?.LogInformation(
-                            "No migrations found — using EnsureCreated to initialize database. " +
-                            "Add migrations for production use.");
-                        await db.Database.EnsureCreatedAsync();
-                    }
+                    await db.Database.MigrateAsync();
                 }
             }
         }

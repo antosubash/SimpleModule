@@ -10,11 +10,11 @@
     "./resolve-page": "./src/resolve-page.ts"
   },
   "peerDependencies": {
-    "@inertiajs/react": "^2.0.0",
+    "@inertiajs/react": "^3.0.0",
     "@simplemodule/ui": "*",
     "esbuild": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "vite": "^6.0.0"
+    "vite": "^8.0.0"
   }
 }

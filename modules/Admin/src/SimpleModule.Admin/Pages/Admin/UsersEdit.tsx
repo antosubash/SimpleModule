@@ -159,7 +159,7 @@ export default function UsersEdit({
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">Edit User</h1>
         {isSelf && <Badge variant="info">You</Badge>}
-        {user.isDeactivated && <Badge variant="secondary">Deactivated</Badge>}
+        {user.isDeactivated && <Badge variant="default">Deactivated</Badge>}
         {user.isLockedOut && !user.isDeactivated && <Badge variant="danger">Locked</Badge>}
       </div>
 
@@ -463,7 +463,7 @@ export default function UsersEdit({
                   {activeSessions.map((session) => (
                     <TableRow key={session.tokenId}>
                       <TableCell>
-                        <Badge variant={session.type === 'refresh_token' ? 'info' : 'secondary'}>
+                        <Badge variant={session.type === 'refresh_token' ? 'info' : 'default'}>
                           {session.type === 'refresh_token' ? 'Refresh' : 'Access'}
                         </Badge>
                       </TableCell>

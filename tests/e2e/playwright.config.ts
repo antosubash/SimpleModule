@@ -7,9 +7,11 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: isCI,
-  retries: isCI ? 2 : 0,
+  retries: 0,
   workers: isCI ? 1 : undefined,
-  reporter: [['html'], ...(isCI ? [['github' as const]] : [])],
+  timeout: 15_000,
+  expect: { timeout: 3_000 },
+  reporter: [['html', {}], ...(isCI ? [['github', {}] as const] : [])],
   use: {
     baseURL,
     trace: 'on-first-retry',
@@ -29,7 +31,7 @@ export default defineConfig({
   ],
   webServer: {
     command: isCI
-      ? 'dotnet run --project ../../template/SimpleModule.Host --launch-profile http'
+      ? 'dotnet run --project ../../template/SimpleModule.Host --launch-profile http --no-build'
       : 'dotnet run --project ../../template/SimpleModule.Host',
     url: `${baseURL}/health/live`,
     reuseExistingServer: true,

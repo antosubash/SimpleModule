@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 
@@ -16,6 +17,23 @@ public class ProductsModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<ProductsDbContext>(configuration, ProductsConstants.ModuleName);
+    }
+
+    public void ConfigureFeatureFlags(IFeatureFlagBuilder builder)
+    {
+        builder
+            .Add(new FeatureFlagDefinition
+            {
+                Name = ProductsFeatures.BulkImport,
+                Description = "Enable bulk product import via CSV upload",
+                DefaultEnabled = false,
+            })
+            .Add(new FeatureFlagDefinition
+            {
+                Name = ProductsFeatures.AdvancedPricing,
+                Description = "Enable tiered and time-based pricing rules",
+                DefaultEnabled = true,
+            });
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

@@ -121,7 +121,7 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
                       </TableCell>
                       <TableCell>
                         <Button
-                          variant={effectiveState ? 'default' : 'secondary'}
+                          variant={effectiveState ? 'primary' : 'secondary'}
                           size="sm"
                           onClick={() => handleToggle(flag.name, effectiveState)}
                         >

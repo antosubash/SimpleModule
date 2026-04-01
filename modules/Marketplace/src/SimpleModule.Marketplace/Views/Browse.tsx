@@ -87,7 +87,7 @@ export default function Browse({
             {categories.map((cat) => (
               <Button
                 key={cat}
-                variant={selectedCategory === cat ? 'default' : 'secondary'}
+                variant={selectedCategory === cat ? 'primary' : 'secondary'}
                 size="sm"
                 onClick={() => navigate({ category: cat })}
               >
@@ -142,7 +142,7 @@ export default function Browse({
               <CardContent>
                 <p className="mb-3 line-clamp-2 text-sm text-text-muted">{pkg.description}</p>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">{pkg.category}</Badge>
+                  <Badge variant="default">{pkg.category}</Badge>
                   {pkg.isInstalled && <Badge variant="default">Installed</Badge>}
                   <span className="ml-auto text-xs text-text-muted">
                     {formatDownloads(pkg.totalDownloads)} downloads

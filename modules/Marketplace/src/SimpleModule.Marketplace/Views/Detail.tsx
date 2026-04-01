@@ -62,8 +62,8 @@ export default function Detail({ package: pkg }: Props) {
                   <CardTitle className="text-xl">{pkg.title}</CardTitle>
                   <p className="mt-1 text-sm text-text-muted">by {pkg.authors}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Badge variant="secondary">{pkg.category}</Badge>
-                    <Badge variant="secondary">v{pkg.latestVersion}</Badge>
+                    <Badge variant="default">{pkg.category}</Badge>
+                    <Badge variant="default">v{pkg.latestVersion}</Badge>
                     {pkg.isInstalled && <Badge variant="default">Installed</Badge>}
                   </div>
                 </div>
@@ -168,8 +168,8 @@ export default function Detail({ package: pkg }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1.5">
-                  {pkg.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
+                  {pkg.tags.map((tag: string) => (
+                    <Badge key={tag} variant="default">
                       {tag}
                     </Badge>
                   ))}

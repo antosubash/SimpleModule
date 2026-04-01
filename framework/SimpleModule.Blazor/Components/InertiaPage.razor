@@ -1,4 +1,5 @@
-<div id="app" data-page="@PageJson"></div>
+<div id="app"></div>
+<script data-page="app" type="application/json">@(new MarkupString(PageJson))</script>
 <script type="module" src="/js/app.js?v=@CacheBuster"></script>
 
 @code {

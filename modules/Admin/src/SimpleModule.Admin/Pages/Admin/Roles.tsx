@@ -103,7 +103,7 @@ export default function Roles({ roles }: Props) {
                     <Badge variant="info">{role.userCount}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{role.permissionCount}</Badge>
+                    <Badge variant="default">{role.permissionCount}</Badge>
                   </TableCell>
                   <TableCell className="text-sm text-text-muted">
                     {new Date(role.createdAt).toLocaleDateString()}

@@ -1,4 +1,5 @@
 import type { Config } from '@puckeditor/core';
+import type React from 'react';
 import { ButtonBlock } from './components/ButtonBlock';
 import { Card } from './components/Card';
 import { Flex } from './components/Flex';
@@ -15,7 +16,7 @@ export const puckConfig: Config = {
     defaultProps: {
       title: '',
     },
-    render: ({ children }) => (
+    render: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="puck-root" style={{ minHeight: '100vh' }}>
         {children}
       </div>
