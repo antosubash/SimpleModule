@@ -184,7 +184,8 @@ public sealed class ProjectTemplates
 
         // Find the last </ItemGroup> and insert before it
         var lastItemGroupClose = cleaned.FindLastIndex(l =>
-            l.TrimStart().StartsWith("</ItemGroup>", StringComparison.Ordinal));
+            l.TrimStart().StartsWith("</ItemGroup>", StringComparison.Ordinal)
+        );
         if (lastItemGroupClose >= 0)
         {
             cleaned.InsertRange(lastItemGroupClose, frameworkPackages);
@@ -360,7 +361,6 @@ public sealed class ProjectTemplates
             dotnet_diagnostic.CA2234.severity = none
             """;
 
-
     public string ApiCsproj(string projectName)
     {
         if (_solution is null)
@@ -527,7 +527,12 @@ public sealed class ProjectTemplates
 
         // Strip module contract references, OpenIddict, Bogus
         var stripPatterns = new List<string> { "modules", "OpenIddict", "Bogus" };
-        var result = TemplateExtractor.TransformCsproj(path, BaseProjectName, projectName, stripPatterns);
+        var result = TemplateExtractor.TransformCsproj(
+            path,
+            BaseProjectName,
+            projectName,
+            stripPatterns
+        );
         // Fix Host path: template\ → src\ (in repo it's under template/, in generated project it's under src/)
         return result.Replace(@"template\", @"src\", StringComparison.Ordinal);
     }

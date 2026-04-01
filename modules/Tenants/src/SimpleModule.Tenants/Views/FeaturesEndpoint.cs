@@ -31,17 +31,30 @@ public class FeaturesEndpoint : IViewEndpoint
                     {
                         return Inertia.Render(
                             "Tenants/Features",
-                            new { tenant, flags = Array.Empty<FeatureFlag>(), tenantOverrides = Array.Empty<FeatureFlagOverride>() }
+                            new
+                            {
+                                tenant,
+                                flags = Array.Empty<FeatureFlag>(),
+                                tenantOverrides = Array.Empty<FeatureFlagOverride>(),
+                            }
                         );
                     }
 
                     var flags = (await featureFlags.GetAllFlagsAsync()).ToList();
                     var tenantOverrides = await TenantFeatureHelper.GetOverridesForTenantAsync(
-                        featureFlags, flags, id);
+                        featureFlags,
+                        flags,
+                        id
+                    );
 
                     return Inertia.Render(
                         "Tenants/Features",
-                        new { tenant, flags, tenantOverrides }
+                        new
+                        {
+                            tenant,
+                            flags,
+                            tenantOverrides,
+                        }
                     );
                 }
             )

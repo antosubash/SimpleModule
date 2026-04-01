@@ -8,9 +8,12 @@ internal static class TenantFeatureHelper
     public static async Task<List<FeatureFlagOverride>> GetOverridesForTenantAsync(
         IFeatureFlagContracts featureFlags,
         IEnumerable<FeatureFlag> flags,
-        TenantId tenantId)
+        TenantId tenantId
+    )
     {
-        var tenantIdStr = tenantId.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var tenantIdStr = tenantId.Value.ToString(
+            System.Globalization.CultureInfo.InvariantCulture
+        );
         var overrideTasks = flags
             .Where(f => !f.IsDeprecated)
             .Select(f => featureFlags.GetOverridesAsync(f.Name));
@@ -19,7 +22,8 @@ internal static class TenantFeatureHelper
             .SelectMany(o => o)
             .Where(o =>
                 o.OverrideType == OverrideType.Tenant
-                && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal))
+                && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
+            )
             .ToList();
     }
 }

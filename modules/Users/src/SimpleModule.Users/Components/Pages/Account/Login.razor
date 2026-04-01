@@ -2,7 +2,8 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager Navigation
-@inject IWebHostEnvironment Environment
+@inject ISettingsContracts SettingsService
+@inject ISettingsDefinitionRegistry SettingsDefinitions
 
 <PageTitle>Log in - SimpleModule</PageTitle>
 
@@ -49,22 +50,22 @@
                 <button id="login-submit" type="submit" class="btn-primary btn-lg w-full">Log in</button>
             </EditForm>
 
-            @if (_externalLogins.Count > 0)
+            @if (_showTestAccounts)
             {
                 <div class="relative my-6">
                     <hr />
-                    <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-3 text-xs text-text-muted">or continue with</span>
+                    <span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-3 text-xs text-text-muted">quick login</span>
                 </div>
-                <form id="external-account" action="/Identity/Account/ExternalLogin" method="post">
-                    <AntiforgeryToken />
-                    <input type="hidden" name="returnUrl" value="@(ReturnUrl ?? "/")" />
-                    <div class="flex gap-2 flex-wrap">
-                        @foreach (var provider in _externalLogins)
-                        {
-                            <button type="submit" class="btn-secondary flex-1" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                        }
-                    </div>
-                </form>
+                <div class="flex gap-2">
+                    <button type="button" class="btn-secondary flex-1 text-sm"
+                            onclick="document.querySelector('[autocomplete=username]').value='admin@@simplemodule.dev';document.querySelector('[type=password]').value='Admin123!';">
+                        Admin
+                    </button>
+                    <button type="button" class="btn-secondary flex-1 text-sm"
+                            onclick="document.querySelector('[autocomplete=username]').value='user@@simplemodule.dev';document.querySelector('[type=password]').value='User123!';">
+                        User
+                    </button>
+                </div>
             }
         </div>
 
@@ -85,22 +86,20 @@
     [CascadingParameter]
     public HttpContext? HttpContext { get; set; }
 
-    private IList<AuthenticationScheme> _externalLogins = [];
+    private bool _showTestAccounts;
     private readonly List<string> _errors = [];
 
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
-        if (Environment.IsDevelopment())
-        {
-            Input.Email = "admin@simplemodule.dev";
-            Input.Password = "Admin123!";
-        }
         if (HttpContext is not null)
         {
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
-        _externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+        var value = await SettingsService.GetSettingAsync(ConfigKeys.ShowTestAccounts, SettingScope.System);
+        value ??= SettingsDefinitions.GetDefinition(ConfigKeys.ShowTestAccounts)?.DefaultValue;
+        _showTestAccounts = value is "true";
     }
 
     private async Task LoginUser()
@@ -142,5 +141,6 @@
 }
 
 @using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Hosting
-@using Microsoft.Extensions.Hosting
+@using SimpleModule.Core.Settings
+@using SimpleModule.Settings.Contracts
+@using SimpleModule.Users.Constants

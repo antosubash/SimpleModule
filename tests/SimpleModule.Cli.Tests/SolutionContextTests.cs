@@ -166,6 +166,17 @@ public sealed class SolutionContextTests : IDisposable
         var ctx = SolutionContext.Discover(_tempDir)!;
         ctx.GetModulePagesIndexPath("Products")
             .Should()
-            .Be(Path.Combine(_tempDir, "src", "modules", "Products", "src", "Products", "Pages", "index.ts"));
+            .Be(
+                Path.Combine(
+                    _tempDir,
+                    "src",
+                    "modules",
+                    "Products",
+                    "src",
+                    "Products",
+                    "Pages",
+                    "index.ts"
+                )
+            );
     }
 }

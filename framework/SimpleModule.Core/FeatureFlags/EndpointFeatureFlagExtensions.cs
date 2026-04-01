@@ -22,18 +22,10 @@ public static class EndpointFeatureFlagExtensions
                     return await next(context);
                 }
 
-                var userId = context.HttpContext.User.FindFirstValue(
-                    ClaimTypes.NameIdentifier
-                );
-                var roles = context
-                    .HttpContext.User.FindAll(ClaimTypes.Role)
-                    .Select(c => c.Value);
+                var userId = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var roles = context.HttpContext.User.FindAll(ClaimTypes.Role).Select(c => c.Value);
 
-                var isEnabled = await featureFlagService.IsEnabledAsync(
-                    featureName,
-                    userId,
-                    roles
-                );
+                var isEnabled = await featureFlagService.IsEnabledAsync(featureName, userId, roles);
 
                 if (!isEnabled)
                 {

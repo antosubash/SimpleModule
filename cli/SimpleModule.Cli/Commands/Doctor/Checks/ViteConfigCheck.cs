@@ -10,12 +10,18 @@ public sealed class ViteConfigCheck : IDoctorCheck
     {
         foreach (var module in solution.ExistingModules)
         {
-            var viteConfigPath = Path.Combine(solution.GetModuleProjectPath(module), "vite.config.ts");
+            var viteConfigPath = Path.Combine(
+                solution.GetModuleProjectPath(module),
+                "vite.config.ts"
+            );
 
             if (!File.Exists(viteConfigPath))
             {
-                yield return new CheckResult($"{module} vite.config.ts", CheckStatus.Warning,
-                    "vite.config.ts not found — module won't build as a library");
+                yield return new CheckResult(
+                    $"{module} vite.config.ts",
+                    CheckStatus.Warning,
+                    "vite.config.ts not found — module won't build as a library"
+                );
                 continue;
             }
 
@@ -27,15 +33,24 @@ public sealed class ViteConfigCheck : IDoctorCheck
 
             if (hasLibMode && missingExternals.Count == 0)
             {
-                yield return new CheckResult($"{module} vite.config.ts", CheckStatus.Pass,
-                    "library mode configured with correct externals");
+                yield return new CheckResult(
+                    $"{module} vite.config.ts",
+                    CheckStatus.Pass,
+                    "library mode configured with correct externals"
+                );
             }
             else
             {
                 var issues = new List<string>();
-                if (!hasLibMode) issues.Add("missing lib mode");
-                if (missingExternals.Count > 0) issues.Add($"missing externals: {string.Join(", ", missingExternals)}");
-                yield return new CheckResult($"{module} vite.config.ts", CheckStatus.Warning, string.Join("; ", issues));
+                if (!hasLibMode)
+                    issues.Add("missing lib mode");
+                if (missingExternals.Count > 0)
+                    issues.Add($"missing externals: {string.Join(", ", missingExternals)}");
+                yield return new CheckResult(
+                    $"{module} vite.config.ts",
+                    CheckStatus.Warning,
+                    string.Join("; ", issues)
+                );
             }
         }
     }

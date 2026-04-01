@@ -24,8 +24,7 @@ public class UpdateEndpoint : IEndpoint
                 ) =>
                 {
                     var flag = await featureFlags.UpdateFlagAsync(name, request);
-                    var userId =
-                        user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
+                    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unknown";
                     await eventBus.PublishAsync(
                         new FeatureFlagToggledEvent(name, request.IsEnabled, userId)
                     );

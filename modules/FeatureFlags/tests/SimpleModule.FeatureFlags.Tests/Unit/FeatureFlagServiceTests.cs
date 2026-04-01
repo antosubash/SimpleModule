@@ -98,13 +98,7 @@ public sealed class FeatureFlagServiceTests : IDisposable
     [Fact]
     public async Task IsEnabledAsync_WithDbRow_ReturnsDbState()
     {
-        _db.FeatureFlags.Add(
-            new FeatureFlagEntity
-            {
-                Name = "Test.FeatureA",
-                IsEnabled = false,
-            }
-        );
+        _db.FeatureFlags.Add(new FeatureFlagEntity { Name = "Test.FeatureA", IsEnabled = false });
         await _db.SaveChangesAsync();
 
         // Use a fresh service to bypass cache
@@ -117,13 +111,7 @@ public sealed class FeatureFlagServiceTests : IDisposable
     [Fact]
     public async Task IsEnabledAsync_WithUserOverride_ReturnsOverride()
     {
-        _db.FeatureFlags.Add(
-            new FeatureFlagEntity
-            {
-                Name = "Test.FeatureB",
-                IsEnabled = false,
-            }
-        );
+        _db.FeatureFlags.Add(new FeatureFlagEntity { Name = "Test.FeatureB", IsEnabled = false });
         _db.FeatureFlagOverrides.Add(
             new FeatureFlagOverrideEntity
             {
@@ -144,13 +132,7 @@ public sealed class FeatureFlagServiceTests : IDisposable
     [Fact]
     public async Task IsEnabledAsync_WithRoleOverride_ReturnsOverride()
     {
-        _db.FeatureFlags.Add(
-            new FeatureFlagEntity
-            {
-                Name = "Test.FeatureB",
-                IsEnabled = false,
-            }
-        );
+        _db.FeatureFlags.Add(new FeatureFlagEntity { Name = "Test.FeatureB", IsEnabled = false });
         _db.FeatureFlagOverrides.Add(
             new FeatureFlagOverrideEntity
             {

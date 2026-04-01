@@ -42,10 +42,7 @@ public sealed class RoleAdminService(
         if (string.IsNullOrEmpty(trimmedName))
         {
             throw new ValidationException(
-                new Dictionary<string, string[]>
-                {
-                    ["Name"] = ["Role name is required."],
-                }
+                new Dictionary<string, string[]> { ["Name"] = ["Role name is required."] }
             );
         }
 
@@ -67,8 +64,7 @@ public sealed class RoleAdminService(
 
     public async Task UpdateRoleAsync(string id, string name, string? description)
     {
-        var role = await roleManager.FindByIdAsync(id)
-            ?? throw new NotFoundException("Role", id);
+        var role = await roleManager.FindByIdAsync(id) ?? throw new NotFoundException("Role", id);
 
         role.Name = name.Trim();
         role.Description = description?.Trim() is { Length: > 0 } d ? d : null;
@@ -77,8 +73,7 @@ public sealed class RoleAdminService(
 
     public async Task DeleteRoleAsync(string id)
     {
-        var role = await roleManager.FindByIdAsync(id)
-            ?? throw new NotFoundException("Role", id);
+        var role = await roleManager.FindByIdAsync(id) ?? throw new NotFoundException("Role", id);
 
         var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
         if (usersInRole.Count > 0)
@@ -96,8 +91,7 @@ public sealed class RoleAdminService(
 
     public async Task<bool> HasUsersInRoleAsync(string id)
     {
-        var role = await roleManager.FindByIdAsync(id)
-            ?? throw new NotFoundException("Role", id);
+        var role = await roleManager.FindByIdAsync(id) ?? throw new NotFoundException("Role", id);
 
         var usersInRole = await userManager.GetUsersInRoleAsync(role.Name!);
         return usersInRole.Count > 0;

@@ -6,7 +6,11 @@ using SimpleModule.Dashboard.Contracts;
 
 namespace SimpleModule.Dashboard;
 
-[Module(DashboardConstants.ModuleName, RoutePrefix = DashboardConstants.RoutePrefix, ViewPrefix = "/")]
+[Module(
+    DashboardConstants.ModuleName,
+    RoutePrefix = DashboardConstants.RoutePrefix,
+    ViewPrefix = "/"
+)]
 public class DashboardModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

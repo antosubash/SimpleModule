@@ -1,8 +1,12 @@
 <Project>
   <!-- Build configuration -->
   <PropertyGroup>
-    <TailwindCli Condition="'$(OS)' == 'Windows_NT'">$(RepoRoot)node_modules/.bin/tailwindcss.cmd</TailwindCli>
-    <TailwindCli Condition="'$(OS)' != 'Windows_NT'">$(RepoRoot)node_modules/.bin/tailwindcss</TailwindCli>
+    <TailwindCli Condition="'$(OS)' == 'Windows_NT'"
+      >$(RepoRoot)node_modules/.bin/tailwindcss.cmd</TailwindCli
+    >
+    <TailwindCli Condition="'$(OS)' != 'Windows_NT'"
+      >$(RepoRoot)node_modules/.bin/tailwindcss</TailwindCli
+    >
     <TailwindInput>$(MSBuildProjectDirectory)/Styles/app.css</TailwindInput>
     <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
     <ViteBuildStamp>$(IntermediateOutputPath)vitebuild.stamp</ViteBuildStamp>
@@ -73,7 +77,10 @@
     Inputs="@(ViteSourceFiles)"
     Outputs="$(ViteBuildStamp)"
   >
-    <Exec Command="npx vite build --configLoader runner" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
+    <Exec
+      Command="npx vite build --configLoader runner"
+      WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp"
+    />
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <Touch Files="$(ViteBuildStamp)" AlwaysCreate="true" />
   </Target>

@@ -15,15 +15,14 @@ public class BrowseEndpoint : IViewEndpoint
                 "/browse",
                 async (ITenantContracts contracts) =>
                 {
-                    var tenants = (await contracts.GetAllTenantsAsync())
-                        .Select(t => new
-                        {
-                            t.Id,
-                            t.Name,
-                            t.Slug,
-                            t.Status,
-                            HostCount = t.Hosts.Count,
-                        });
+                    var tenants = (await contracts.GetAllTenantsAsync()).Select(t => new
+                    {
+                        t.Id,
+                        t.Name,
+                        t.Slug,
+                        t.Status,
+                        HostCount = t.Hosts.Count,
+                    });
                     return Inertia.Render("Tenants/Browse", new { tenants });
                 }
             )

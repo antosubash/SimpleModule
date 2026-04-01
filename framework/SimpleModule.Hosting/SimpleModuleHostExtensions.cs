@@ -111,7 +111,10 @@ public static class SimpleModuleHostExtensions
         // SQLite (file-based) always needs auto-initialization since the DB file may not exist.
         // Managed databases (PostgreSQL, SQL Server) skip this in production — apply migrations externally.
         var smOptions = app.Services.GetRequiredService<SimpleModuleOptions>();
-        if (!app.Environment.IsProduction() || smOptions.DatabaseProvider == DatabaseProvider.Sqlite)
+        if (
+            !app.Environment.IsProduction()
+            || smOptions.DatabaseProvider == DatabaseProvider.Sqlite
+        )
         {
             using var scope = app.Services.CreateScope();
             var infos = scope.ServiceProvider.GetServices<ModuleDbContextInfo>();

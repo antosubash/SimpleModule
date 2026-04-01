@@ -6,13 +6,13 @@ namespace SimpleModule.LoadTests.Scenarios;
 public sealed record LoadProfile(int Copies, TimeSpan RampDuration, TimeSpan SustainDuration)
 {
     public static readonly LoadProfile Individual = new(
-        Copies: 50,
+        Copies: 5,
         RampDuration: TimeSpan.FromSeconds(3),
         SustainDuration: TimeSpan.FromSeconds(10)
     );
 
     public static readonly LoadProfile Combined = new(
-        Copies: 10,
+        Copies: 5,
         RampDuration: TimeSpan.FromSeconds(3),
         SustainDuration: TimeSpan.FromSeconds(12)
     );

@@ -14,7 +14,12 @@ public class SetTenantFeatureEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 "/{id}/features/{flagName}",
-                async (TenantId id, string flagName, SetTenantFeatureRequest request, HttpContext context) =>
+                async (
+                    TenantId id,
+                    string flagName,
+                    SetTenantFeatureRequest request,
+                    HttpContext context
+                ) =>
                 {
                     var featureFlags = context.RequestServices.GetService<IFeatureFlagContracts>();
                     if (featureFlags is null)
@@ -27,7 +32,9 @@ public class SetTenantFeatureEndpoint : IEndpoint
                         new SetOverrideRequest
                         {
                             OverrideType = OverrideType.Tenant,
-                            OverrideValue = id.Value.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                            OverrideValue = id.Value.ToString(
+                                System.Globalization.CultureInfo.InvariantCulture
+                            ),
                             IsEnabled = request.IsEnabled,
                         }
                     );

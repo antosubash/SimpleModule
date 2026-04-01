@@ -7,10 +7,10 @@ using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder;
 
-public sealed partial class PageBuilderService(PageBuilderDbContext db, ILogger<PageBuilderService> logger)
-    : IPageBuilderContracts,
-        IPageBuilderTemplateContracts,
-        IPageBuilderTagContracts
+public sealed partial class PageBuilderService(
+    PageBuilderDbContext db,
+    ILogger<PageBuilderService> logger
+) : IPageBuilderContracts, IPageBuilderTemplateContracts, IPageBuilderTagContracts
 {
     public async Task<IEnumerable<PageSummary>> GetAllPagesAsync() =>
         await db

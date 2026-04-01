@@ -5,7 +5,8 @@
     Modules can override JsBuildCommand for custom build steps (e.g. Users double-build).
   -->
   <PropertyGroup>
-    <JsBuildCommand Condition="'$(JsBuildCommand)' == ''">npx vite build --configLoader runner</JsBuildCommand>
+    <JsBuildCommand Condition="'$(JsBuildCommand)' == ''"
+      >npx vite build --configLoader runner</JsBuildCommand>
     <JsBuildStamp>$(IntermediateOutputPath)jsbuild.stamp</JsBuildStamp>
   </PropertyGroup>
   <ItemGroup Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules'))">

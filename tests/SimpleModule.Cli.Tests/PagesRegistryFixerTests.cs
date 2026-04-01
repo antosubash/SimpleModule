@@ -15,18 +15,22 @@ public sealed class PagesRegistryFixerTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
     [Fact]
     public void AddEntry_AppendsToExistingPagesIndex()
     {
         var indexPath = Path.Combine(_tempDir, "index.ts");
-        File.WriteAllText(indexPath, """
+        File.WriteAllText(
+            indexPath,
+            """
             export const pages: Record<string, any> = {
                 "Products/Browse": () => import("../Views/Browse"),
             };
-            """);
+            """
+        );
         PagesRegistryFixer.AddEntry(indexPath, "Products/Create", "../Views/Create");
         var content = File.ReadAllText(indexPath);
         content.Should().Contain("\"Products/Create\": () => import(\"../Views/Create\")");

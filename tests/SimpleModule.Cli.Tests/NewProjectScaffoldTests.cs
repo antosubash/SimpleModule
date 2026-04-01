@@ -39,10 +39,32 @@ public sealed class NewProjectScaffoldTests : IDisposable
         File.Exists(Path.Combine(rootDir, "Directory.Packages.props")).Should().BeTrue();
         File.Exists(Path.Combine(rootDir, "nuget.config")).Should().BeTrue();
         File.Exists(Path.Combine(rootDir, "global.json")).Should().BeTrue();
-        File.Exists(Path.Combine(rootDir, "src", $"{projectName}.Host", $"{projectName}.Host.csproj")).Should().BeTrue();
-        File.Exists(Path.Combine(rootDir, "src", $"{projectName}.Host", "Program.cs")).Should().BeTrue();
-        File.Exists(Path.Combine(rootDir, "src", "modules", "Items", "src", "Items", "Items.csproj")).Should().BeTrue();
-        File.Exists(Path.Combine(rootDir, "src", "modules", "Items", "src", "Items.Contracts", "Items.Contracts.csproj")).Should().BeTrue();
+        File.Exists(
+                Path.Combine(rootDir, "src", $"{projectName}.Host", $"{projectName}.Host.csproj")
+            )
+            .Should()
+            .BeTrue();
+        File.Exists(Path.Combine(rootDir, "src", $"{projectName}.Host", "Program.cs"))
+            .Should()
+            .BeTrue();
+        File.Exists(
+                Path.Combine(rootDir, "src", "modules", "Items", "src", "Items", "Items.csproj")
+            )
+            .Should()
+            .BeTrue();
+        File.Exists(
+                Path.Combine(
+                    rootDir,
+                    "src",
+                    "modules",
+                    "Items",
+                    "src",
+                    "Items.Contracts",
+                    "Items.Contracts.csproj"
+                )
+            )
+            .Should()
+            .BeTrue();
     }
 
     [Fact]
@@ -90,7 +112,12 @@ public sealed class NewProjectScaffoldTests : IDisposable
         const string projectName = "TestApp";
         var rootDir = Path.Combine(_tempDir, projectName);
 
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution, frameworkVersion: TestVersion);
+        NewProjectCommand.ScaffoldProject(
+            projectName,
+            rootDir,
+            solution,
+            frameworkVersion: TestVersion
+        );
 
         var content = File.ReadAllText(Path.Combine(rootDir, "package.json"));
         content.Should().Contain("file:");
@@ -103,7 +130,12 @@ public sealed class NewProjectScaffoldTests : IDisposable
         const string projectName = "TestApp";
         var rootDir = Path.Combine(_tempDir, projectName);
 
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: frameworkVersion);
+        NewProjectCommand.ScaffoldProject(
+            projectName,
+            rootDir,
+            solution: null,
+            frameworkVersion: frameworkVersion
+        );
 
         var slnxPath = Path.Combine(rootDir, $"{projectName}.slnx");
         var psi = new ProcessStartInfo
@@ -135,7 +167,12 @@ public sealed class NewProjectScaffoldTests : IDisposable
     private (string ProjectName, string RootDir) ScaffoldStandalone(string projectName = "TestApp")
     {
         var rootDir = Path.Combine(_tempDir, projectName);
-        NewProjectCommand.ScaffoldProject(projectName, rootDir, solution: null, frameworkVersion: TestVersion);
+        NewProjectCommand.ScaffoldProject(
+            projectName,
+            rootDir,
+            solution: null,
+            frameworkVersion: TestVersion
+        );
         return (projectName, rootDir);
     }
 }

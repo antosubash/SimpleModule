@@ -110,7 +110,9 @@ public sealed class EntityInterceptorTests
         results.Should().BeEmpty();
 
         // But it should still exist when ignoring query filters
-        var allResults = await fixture.Context.SoftDeleteEntities.IgnoreQueryFilters().ToListAsync();
+        var allResults = await fixture
+            .Context.SoftDeleteEntities.IgnoreQueryFilters()
+            .ToListAsync();
         allResults.Should().HaveCount(1);
     }
 
@@ -203,9 +205,12 @@ public sealed class EntityInterceptorTests
         // Insert tenant-b entity directly via SQL to bypass the interceptor.
         // The table name is from EF Core metadata, not user input.
 #pragma warning disable EF1003 // Test-only raw SQL with no user input
-        var tableName = fixture.Context.Model.FindEntityType(typeof(MultiTenantTestEntity))!.GetTableName();
+        var tableName = fixture
+            .Context.Model.FindEntityType(typeof(MultiTenantTestEntity))!
+            .GetTableName();
         await fixture.Context.Database.ExecuteSqlRawAsync(
-            "INSERT INTO \"" + tableName + "\" (\"Name\", \"TenantId\") VALUES ('B', 'tenant-b')");
+            "INSERT INTO \"" + tableName + "\" (\"Name\", \"TenantId\") VALUES ('B', 'tenant-b')"
+        );
 #pragma warning restore EF1003
 
         // Query should only return tenant-a's entities
@@ -214,11 +219,15 @@ public sealed class EntityInterceptorTests
         results[0].Name.Should().Be("A");
 
         // IgnoreQueryFilters should return all
-        var allResults = await fixture.Context.MultiTenantEntities.IgnoreQueryFilters().ToListAsync();
+        var allResults = await fixture
+            .Context.MultiTenantEntities.IgnoreQueryFilters()
+            .ToListAsync();
         allResults.Should().HaveCount(2);
     }
 
-    private static TestFixture<MultiTenantTestDbContext> CreateMultiTenantFixture(TestTenantContext tenantContext)
+    private static TestFixture<MultiTenantTestDbContext> CreateMultiTenantFixture(
+        TestTenantContext tenantContext
+    )
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -230,7 +239,10 @@ public sealed class EntityInterceptorTests
             .Build();
 
         var services = new ServiceCollection();
-        var httpContextAccessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
+        var httpContextAccessor = new HttpContextAccessor
+        {
+            HttpContext = new DefaultHttpContext(),
+        };
         services.AddSingleton<IHttpContextAccessor>(httpContextAccessor);
         services.AddSingleton<ITenantContext>(tenantContext);
         services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
@@ -262,7 +274,11 @@ public sealed class EntityInterceptorTests
         entity.IsDeleted.Should().BeFalse();
     }
 
-    private static TestFixture CreateFixture(string? userId = null, string? tenantId = null, TestTenantContext? tenantContext = null)
+    private static TestFixture CreateFixture(
+        string? userId = null,
+        string? tenantId = null,
+        TestTenantContext? tenantContext = null
+    )
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -279,17 +295,15 @@ public sealed class EntityInterceptorTests
         if (userId is not null)
         {
             httpContext.User = new ClaimsPrincipal(
-                new ClaimsIdentity(
-                    [new Claim(ClaimTypes.NameIdentifier, userId)],
-                    "TestAuth"
-                )
+                new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "TestAuth")
             );
         }
 
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         services.AddSingleton<IHttpContextAccessor>(httpContextAccessor);
 
-        var effectiveTenantContext = tenantContext ?? (tenantId is not null ? new TestTenantContext(tenantId) : null);
+        var effectiveTenantContext =
+            tenantContext ?? (tenantId is not null ? new TestTenantContext(tenantId) : null);
         if (effectiveTenantContext is not null)
         {
             services.AddSingleton<ITenantContext>(effectiveTenantContext);
@@ -318,8 +332,8 @@ public sealed class EntityInterceptorTests
         }
     }
 
-    private sealed class TestFixture<T>(ServiceProvider provider, T context)
-        : IAsyncDisposable where T : DbContext
+    private sealed class TestFixture<T>(ServiceProvider provider, T context) : IAsyncDisposable
+        where T : DbContext
     {
         public T Context => context;
 

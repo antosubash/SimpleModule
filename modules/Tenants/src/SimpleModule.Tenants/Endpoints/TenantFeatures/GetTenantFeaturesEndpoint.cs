@@ -24,7 +24,10 @@ public class GetTenantFeaturesEndpoint : IEndpoint
 
                     var flags = (await featureFlags.GetAllFlagsAsync()).ToList();
                     var tenantOverrides = await TenantFeatureHelper.GetOverridesForTenantAsync(
-                        featureFlags, flags, id);
+                        featureFlags,
+                        flags,
+                        id
+                    );
 
                     return Results.Ok(new TenantFeaturesResponse(flags, tenantOverrides));
                 }

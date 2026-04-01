@@ -78,7 +78,8 @@ public sealed partial class FileStorageService(
 
     public async Task DeleteFileAsync(FileStorageId id)
     {
-        var file = await db.StoredFiles.FindAsync(id)
+        var file =
+            await db.StoredFiles.FindAsync(id)
             ?? throw new InvalidOperationException($"File with ID {id} not found.");
 
         var storagePath = file.StoragePath;
@@ -149,6 +150,14 @@ public sealed partial class FileStorageService(
     [LoggerMessage(Level = LogLevel.Information, Message = "File deleted: {Id} ({FileName})")]
     private static partial void LogFileDeleted(ILogger logger, FileStorageId id, string fileName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to delete storage for file {Id} at path {Path}. Storage may contain orphaned data")]
-    private static partial void LogStorageDeletionFailed(ILogger logger, FileStorageId id, string path, Exception exception);
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Failed to delete storage for file {Id} at path {Path}. Storage may contain orphaned data"
+    )]
+    private static partial void LogStorageDeletionFailed(
+        ILogger logger,
+        FileStorageId id,
+        string path,
+        Exception exception
+    );
 }

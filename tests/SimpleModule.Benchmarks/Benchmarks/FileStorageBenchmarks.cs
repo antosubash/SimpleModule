@@ -33,8 +33,7 @@ public sealed class FileStorageBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public async Task<HttpResponseMessage> GetAllFiles() =>
-        await _client.GetAsync("/api/files");
+    public async Task<HttpResponseMessage> GetAllFiles() => await _client.GetAsync("/api/files");
 
     [Benchmark]
     public async Task<HttpResponseMessage> ListFolders() =>

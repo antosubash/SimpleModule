@@ -27,17 +27,23 @@ public sealed class EntityInterceptor(
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (eventData.Context is null)
             return base.SavingChangesAsync(eventData, result, cancellationToken);
 
-        var userId = httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = httpContextAccessor.HttpContext?.User?.FindFirstValue(
+            ClaimTypes.NameIdentifier
+        );
         var now = DateTimeOffset.UtcNow;
 
         foreach (var entry in eventData.Context.ChangeTracker.Entries())
         {
-            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+            if (
+                entry.State
+                is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            )
                 continue;
 
             switch (entry.State)

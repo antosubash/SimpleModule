@@ -6,7 +6,11 @@ using SimpleModule.Database;
 
 namespace SimpleModule.PageBuilder;
 
-[Module(PageBuilderConstants.ModuleName, RoutePrefix = PageBuilderConstants.RoutePrefix, ViewPrefix = "/pages")]
+[Module(
+    PageBuilderConstants.ModuleName,
+    RoutePrefix = PageBuilderConstants.RoutePrefix,
+    ViewPrefix = "/pages"
+)]
 public class PageBuilderModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

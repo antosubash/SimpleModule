@@ -16,7 +16,8 @@ public sealed class NewFeatureViewScaffoldingTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
     private SolutionContext CreateSolution()
@@ -52,11 +53,14 @@ public sealed class NewFeatureViewScaffoldingTests : IDisposable
         var pagesDir = Path.Combine(_tempDir, "Pages");
         Directory.CreateDirectory(pagesDir);
         var indexPath = Path.Combine(pagesDir, "index.ts");
-        File.WriteAllText(indexPath, """
+        File.WriteAllText(
+            indexPath,
+            """
             export const pages: Record<string, any> = {
                 "Products/Browse": () => import("../Views/Browse"),
             };
-            """);
+            """
+        );
 
         PagesRegistryFixer.AddEntry(indexPath, "Products/Create", "../Views/Create");
 

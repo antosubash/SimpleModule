@@ -41,7 +41,11 @@ public sealed partial class ModuleLifecycleHostedService(
 
     public Task StoppingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Module stop failures must not prevent other modules from stopping")]
+    [SuppressMessage(
+        "Design",
+        "CA1031:Do not catch general exception types",
+        Justification = "Module stop failures must not prevent other modules from stopping"
+    )]
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         foreach (var module in modules)
@@ -68,12 +72,26 @@ public sealed partial class ModuleLifecycleHostedService(
     [LoggerMessage(Level = LogLevel.Debug, Message = "Module {ModuleName} started")]
     private static partial void LogModuleStarted(ILogger logger, string moduleName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Module {ModuleName} failed during OnStartAsync")]
-    private static partial void LogModuleStartFailed(ILogger logger, string moduleName, Exception exception);
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Module {ModuleName} failed during OnStartAsync"
+    )]
+    private static partial void LogModuleStartFailed(
+        ILogger logger,
+        string moduleName,
+        Exception exception
+    );
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Module {ModuleName} stopped")]
     private static partial void LogModuleStopped(ILogger logger, string moduleName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Module {ModuleName} failed during OnStopAsync")]
-    private static partial void LogModuleStopFailed(ILogger logger, string moduleName, Exception exception);
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Module {ModuleName} failed during OnStopAsync"
+    )]
+    private static partial void LogModuleStopFailed(
+        ILogger logger,
+        string moduleName,
+        Exception exception
+    );
 }

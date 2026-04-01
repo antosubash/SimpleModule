@@ -15,5 +15,6 @@ public static class DatabaseConstants
     /// <summary>Named query filter key for <see cref="Core.Entities.IMultiTenant"/> entities.</summary>
     public const string MultiTenantQueryFilterKey = "SimpleModule:MultiTenant";
 
-    internal const string EntityConventionsAppliedAnnotation = "SimpleModule:EntityConventionsApplied";
+    internal const string EntityConventionsAppliedAnnotation =
+        "SimpleModule:EntityConventionsApplied";
 }

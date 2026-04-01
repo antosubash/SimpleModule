@@ -44,8 +44,7 @@ public sealed partial class TenantResolutionMiddleware(
 
         try
         {
-            var hostResolver =
-                context.RequestServices.GetRequiredService<HostNameTenantResolver>();
+            var hostResolver = context.RequestServices.GetRequiredService<HostNameTenantResolver>();
             var tenantId = await hostResolver.ResolveAsync(context);
             tenantId ??= HeaderTenantResolver.Resolve(context);
             tenantId ??= ClaimTenantResolver.Resolve(context);
@@ -75,8 +74,10 @@ public sealed partial class TenantResolutionMiddleware(
             return false;
         }
 
-        if (path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase))
+        if (
+            path.StartsWith("/_content/", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/js/", StringComparison.OrdinalIgnoreCase)
+        )
         {
             return true;
         }
@@ -91,8 +92,10 @@ public sealed partial class TenantResolutionMiddleware(
             }
         }
 
-        if (path.StartsWith("/api/tenants", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/tenants", StringComparison.OrdinalIgnoreCase))
+        if (
+            path.StartsWith("/api/tenants", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/tenants", StringComparison.OrdinalIgnoreCase)
+        )
         {
             return true;
         }
@@ -104,11 +107,7 @@ public sealed partial class TenantResolutionMiddleware(
         Level = LogLevel.Debug,
         Message = "Tenant {TenantId} resolved for request {Path}"
     )]
-    private static partial void LogTenantResolved(
-        ILogger logger,
-        string tenantId,
-        string? path
-    );
+    private static partial void LogTenantResolved(ILogger logger, string tenantId, string? path);
 
     [LoggerMessage(
         Level = LogLevel.Warning,

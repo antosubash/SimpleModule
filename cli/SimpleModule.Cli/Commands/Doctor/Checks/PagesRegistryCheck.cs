@@ -42,9 +42,16 @@ public sealed partial class PagesRegistryCheck : IDoctorCheck
             foreach (var component in inertiaComponents)
             {
                 yield return registeredKeys.Contains(component)
-                    ? new CheckResult($"Pages -> {component}", CheckStatus.Pass, "registered in Pages/index.ts")
-                    : new CheckResult($"Pages -> {component}", CheckStatus.Fail,
-                        $"'{component}' used in Inertia.Render but missing from Pages/index.ts");
+                    ? new CheckResult(
+                        $"Pages -> {component}",
+                        CheckStatus.Pass,
+                        "registered in Pages/index.ts"
+                    )
+                    : new CheckResult(
+                        $"Pages -> {component}",
+                        CheckStatus.Fail,
+                        $"'{component}' used in Inertia.Render but missing from Pages/index.ts"
+                    );
             }
         }
     }

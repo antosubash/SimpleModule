@@ -17,8 +17,8 @@ public sealed partial class FeatureFlagService(
     IServiceProvider serviceProvider
 ) : IFeatureFlagContracts, IFeatureFlagService
 {
-    private readonly Lazy<ITenantContext?> _tenantContext = new(
-        () => serviceProvider.GetService<ITenantContext>()
+    private readonly Lazy<ITenantContext?> _tenantContext = new(() =>
+        serviceProvider.GetService<ITenantContext>()
     );
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
     private const string AllFlagDataCacheKey = "ff:all-data";
@@ -116,11 +116,7 @@ public sealed partial class FeatureFlagService(
         var entity = await db.FeatureFlags.FirstOrDefaultAsync(f => f.Name == flagName);
         if (entity is null)
         {
-            entity = new FeatureFlagEntity
-            {
-                Name = flagName,
-                IsEnabled = request.IsEnabled,
-            };
+            entity = new FeatureFlagEntity { Name = flagName, IsEnabled = request.IsEnabled };
             db.FeatureFlags.Add(entity);
         }
         else
@@ -261,7 +257,8 @@ public sealed partial class FeatureFlagService(
             .FeatureFlags.AsNoTracking()
             .FirstOrDefaultAsync(f => f.Name == flagName);
 
-        var isEnabled = flag?.IsEnabled ?? registry.GetDefinition(flagName)?.DefaultEnabled ?? false;
+        var isEnabled =
+            flag?.IsEnabled ?? registry.GetDefinition(flagName)?.DefaultEnabled ?? false;
 
         var overrides = await db
             .FeatureFlagOverrides.AsNoTracking()
@@ -273,10 +270,7 @@ public sealed partial class FeatureFlagService(
         return data;
     }
 
-    private static FlagData BuildFlagData(
-        bool isEnabled,
-        List<FeatureFlagOverrideEntity> overrides
-    )
+    private static FlagData BuildFlagData(bool isEnabled, List<FeatureFlagOverrideEntity> overrides)
     {
         var userOverrides = new Dictionary<string, bool>(StringComparer.Ordinal);
         var roleOverrides = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -301,11 +295,7 @@ public sealed partial class FeatureFlagService(
         return new FlagData(isEnabled, userOverrides, roleOverrides, tenantOverrides);
     }
 
-    private bool ResolveFlagState(
-        FlagData data,
-        string? userId,
-        IEnumerable<string>? roles
-    )
+    private bool ResolveFlagState(FlagData data, string? userId, IEnumerable<string>? roles)
     {
         if (userId is not null && data.UserOverrides.TryGetValue(userId, out var userEnabled))
         {
@@ -324,8 +314,10 @@ public sealed partial class FeatureFlagService(
         }
 
         var currentTenantId = _tenantContext.Value?.TenantId;
-        if (currentTenantId is not null
-            && data.TenantOverrides.TryGetValue(currentTenantId, out var tenantEnabled))
+        if (
+            currentTenantId is not null
+            && data.TenantOverrides.TryGetValue(currentTenantId, out var tenantEnabled)
+        )
         {
             return tenantEnabled;
         }
@@ -356,9 +348,5 @@ public sealed partial class FeatureFlagService(
         Level = LogLevel.Information,
         Message = "Feature flag '{FlagName}' toggled to {IsEnabled}"
     )]
-    private static partial void LogFlagToggled(
-        ILogger logger,
-        string flagName,
-        bool isEnabled
-    );
+    private static partial void LogFlagToggled(ILogger logger, string flagName, bool isEnabled);
 }

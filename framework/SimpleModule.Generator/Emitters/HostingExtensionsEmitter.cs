@@ -63,7 +63,9 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         );
         sb.AppendLine();
         sb.AppendLine("        // Register module options (IModuleOptions auto-discovery)");
-        sb.AppendLine("        smOptions?.ApplyModuleOptions(builder.Services, ModuleOptionsExtensions.RegisterModuleOptionsDefaults);");
+        sb.AppendLine(
+            "        smOptions?.ApplyModuleOptions(builder.Services, ModuleOptionsExtensions.RegisterModuleOptionsDefaults);"
+        );
         sb.AppendLine();
         sb.AppendLine("        builder.Services.CollectModuleMenuItems();");
         sb.AppendLine("        builder.Services.CollectModuleSettings();");

@@ -6,7 +6,6 @@ namespace SimpleModule.Database;
 
 public static class ModuleModelBuilderExtensions
 {
-
 #pragma warning disable CA1308 // Schema names are conventionally lowercase in PostgreSQL/SQL Server
     public static void ApplyModuleSchema(
         this ModelBuilder modelBuilder,
@@ -79,12 +78,18 @@ public static class ModuleModelBuilderExtensions
             var parameter = Expression.Parameter(entityType.ClrType, "e");
             var tenantIdProperty = Expression.Property(parameter, nameof(IMultiTenant.TenantId));
             var tenantContextExpr = Expression.Constant(tenantContext);
-            var currentTenantId = Expression.Property(tenantContextExpr, nameof(ITenantContext.TenantId));
+            var currentTenantId = Expression.Property(
+                tenantContextExpr,
+                nameof(ITenantContext.TenantId)
+            );
 
             // Handle null tenant: when no tenant is set, the filter becomes e.TenantId == null
             // which effectively returns no rows (TenantId is non-nullable string).
             var filter = Expression.Lambda(
-                Expression.Equal(tenantIdProperty, Expression.Coalesce(currentTenantId, Expression.Constant(""))),
+                Expression.Equal(
+                    tenantIdProperty,
+                    Expression.Coalesce(currentTenantId, Expression.Constant(""))
+                ),
                 parameter
             );
 
@@ -99,10 +104,16 @@ public static class ModuleModelBuilderExtensions
     /// </summary>
     private static void ApplyEntityConventions(ModelBuilder modelBuilder, DatabaseProvider provider)
     {
-        if (modelBuilder.Model.FindAnnotation(DatabaseConstants.EntityConventionsAppliedAnnotation) is not null)
+        if (
+            modelBuilder.Model.FindAnnotation(DatabaseConstants.EntityConventionsAppliedAnnotation)
+            is not null
+        )
             return;
 
-        modelBuilder.Model.AddAnnotation(DatabaseConstants.EntityConventionsAppliedAnnotation, true);
+        modelBuilder.Model.AddAnnotation(
+            DatabaseConstants.EntityConventionsAppliedAnnotation,
+            true
+        );
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -118,7 +129,9 @@ public static class ModuleModelBuilderExtensions
 
             if (typeof(IHasConcurrencyStamp).IsAssignableFrom(clrType))
             {
-                var concurrencyProp = entityType.FindProperty(nameof(IHasConcurrencyStamp.ConcurrencyStamp));
+                var concurrencyProp = entityType.FindProperty(
+                    nameof(IHasConcurrencyStamp.ConcurrencyStamp)
+                );
                 if (concurrencyProp is not null)
                 {
                     concurrencyProp.IsConcurrencyToken = true;

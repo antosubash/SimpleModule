@@ -354,7 +354,8 @@ internal sealed class DiagnosticEmitter : IEmitter
         );
         foreach (var module in data.Modules)
         {
-            if (!module.HasConfigureServices
+            if (
+                !module.HasConfigureServices
                 && !module.HasConfigureEndpoints
                 && !module.HasConfigureMenu
                 && !module.HasConfigurePermissions
@@ -363,14 +364,11 @@ internal sealed class DiagnosticEmitter : IEmitter
                 && !module.HasConfigureFeatureFlags
                 && module.Endpoints.Length == 0
                 && module.Views.Length == 0
-                && !moduleNamesWithDbContext.Contains(module.ModuleName))
+                && !moduleNamesWithDbContext.Contains(module.ModuleName)
+            )
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        EmptyModuleWarning,
-                        Location.None,
-                        module.ModuleName
-                    )
+                    Diagnostic.Create(EmptyModuleWarning, Location.None, module.ModuleName)
                 );
             }
         }
@@ -806,8 +804,7 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0015: Duplicate view page name across modules
-        var seenPages =
-            new Dictionary<string, (string EndpointFqn, string ModuleName)>();
+        var seenPages = new Dictionary<string, (string EndpointFqn, string ModuleName)>();
         foreach (var module in data.Modules)
         {
             foreach (var view in module.Views)

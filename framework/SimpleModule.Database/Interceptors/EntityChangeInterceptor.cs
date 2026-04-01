@@ -27,7 +27,8 @@ public sealed class EntityChangeInterceptor(
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (eventData.Context is not null)
         {
@@ -35,16 +36,20 @@ public sealed class EntityChangeInterceptor(
 
             foreach (var entry in eventData.Context.ChangeTracker.Entries())
             {
-                if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+                if (
+                    entry.State
+                    is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                )
                     continue;
 
                 var changeType = entry.State switch
                 {
                     EntityState.Added => EntityChangeType.Created,
                     EntityState.Deleted => EntityChangeType.Deleted,
-                    EntityState.Modified when entry.Entity is ISoftDelete { IsDeleted: true }
-                        && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified
-                        => EntityChangeType.Deleted,
+                    EntityState.Modified
+                        when entry.Entity is ISoftDelete { IsDeleted: true }
+                            && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified =>
+                        EntityChangeType.Deleted,
                     _ => EntityChangeType.Updated,
                 };
 
@@ -60,7 +65,8 @@ public sealed class EntityChangeInterceptor(
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData,
         int result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var changes = _capturedChanges;
         _capturedChanges = null;
@@ -78,7 +84,8 @@ public sealed class EntityChangeInterceptor(
 
     public override Task SaveChangesFailedAsync(
         DbContextErrorEventData eventData,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         _capturedChanges = null;
         return base.SaveChangesFailedAsync(eventData, cancellationToken);
@@ -87,7 +94,8 @@ public sealed class EntityChangeInterceptor(
     private async Task DispatchToHandlersAsync(
         object entity,
         EntityChangeType changeType,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var entityType = entity.GetType();
         var metadata = MetadataCache.GetOrAdd(entityType, BuildMetadata);
@@ -109,7 +117,8 @@ public sealed class EntityChangeInterceptor(
                     "Entity change handler {HandlerType} failed for {EntityType} ({ChangeType})",
                     handler?.GetType().Name,
                     entityType.Name,
-                    changeType);
+                    changeType
+                );
             }
         }
     }
@@ -123,10 +132,18 @@ public sealed class EntityChangeInterceptor(
         var entityParam = Expression.Parameter(typeof(object), "entity");
         var changeTypeParam = Expression.Parameter(typeof(EntityChangeType), "changeType");
         var ctor = contextType.GetConstructor([entityType, typeof(EntityChangeType)])!;
-        var newExpr = Expression.New(ctor, Expression.Convert(entityParam, entityType), changeTypeParam);
-        var contextFactory = Expression.Lambda<Func<object, EntityChangeType, object>>(
-            Expression.Convert(newExpr, typeof(object)),
-            entityParam, changeTypeParam).Compile();
+        var newExpr = Expression.New(
+            ctor,
+            Expression.Convert(entityParam, entityType),
+            changeTypeParam
+        );
+        var contextFactory = Expression
+            .Lambda<Func<object, EntityChangeType, object>>(
+                Expression.Convert(newExpr, typeof(object)),
+                entityParam,
+                changeTypeParam
+            )
+            .Compile();
 
         // Compile an invoker delegate: (object handler, object ctx, CancellationToken ct) => ((IEntityChangeHandler<T>)handler).HandleAsync((EntityChangeContext<T>)ctx, ct)
         var handlerParam = Expression.Parameter(typeof(object), "handler");
@@ -137,9 +154,16 @@ public sealed class EntityChangeInterceptor(
             Expression.Convert(handlerParam, handlerType),
             handleMethod,
             Expression.Convert(ctxParam, contextType),
-            ctParam);
-        var invoker = Expression.Lambda<Func<object, object, CancellationToken, Task>>(
-            callExpr, handlerParam, ctxParam, ctParam).Compile();
+            ctParam
+        );
+        var invoker = Expression
+            .Lambda<Func<object, object, CancellationToken, Task>>(
+                callExpr,
+                handlerParam,
+                ctxParam,
+                ctParam
+            )
+            .Compile();
 
         return new HandlerMetadata(handlerType, contextFactory, invoker);
     }
@@ -147,5 +171,6 @@ public sealed class EntityChangeInterceptor(
     private sealed record HandlerMetadata(
         Type HandlerType,
         Func<object, EntityChangeType, object> ContextFactory,
-        Func<object, object, CancellationToken, Task> Invoker);
+        Func<object, object, CancellationToken, Task> Invoker
+    );
 }

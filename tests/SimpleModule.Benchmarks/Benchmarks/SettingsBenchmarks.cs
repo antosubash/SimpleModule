@@ -17,9 +17,7 @@ public sealed class SettingsBenchmarks : IDisposable
     public void Setup()
     {
         _factory = new SimpleModuleWebApplicationFactory();
-        _client = _factory.CreateAuthenticatedClient(
-            new Claim(ClaimTypes.Role, "Admin")
-        );
+        _client = _factory.CreateAuthenticatedClient(new Claim(ClaimTypes.Role, "Admin"));
     }
 
     [GlobalCleanup]
@@ -33,8 +31,7 @@ public sealed class SettingsBenchmarks : IDisposable
     }
 
     [Benchmark]
-    public async Task<HttpResponseMessage> GetSettings() =>
-        await _client.GetAsync("/api/settings");
+    public async Task<HttpResponseMessage> GetSettings() => await _client.GetAsync("/api/settings");
 
     [Benchmark]
     public async Task<HttpResponseMessage> GetDefinitions() =>
@@ -56,7 +53,12 @@ public sealed class SettingsBenchmarks : IDisposable
     public async Task UpdateAndDeleteSetting()
     {
         var key = $"bench-{Guid.NewGuid():N}";
-        var request = new { key, value = "bench-value", scope = SettingScope.Application };
+        var request = new
+        {
+            key,
+            value = "bench-value",
+            scope = SettingScope.Application,
+        };
         await _client.PutAsJsonAsync("/api/settings", request);
         await _client.DeleteAsync($"/api/settings/{key}?scope={SettingScope.Application}");
     }

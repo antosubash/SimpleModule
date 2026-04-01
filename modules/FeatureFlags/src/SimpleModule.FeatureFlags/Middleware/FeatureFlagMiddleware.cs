@@ -27,7 +27,8 @@ public sealed class FeatureFlagMiddleware(RequestDelegate next)
             }
             catch (System.Data.Common.DbException ex)
             {
-                var logger = context.RequestServices.GetService<ILoggerFactory>()
+                var logger = context
+                    .RequestServices.GetService<ILoggerFactory>()
                     ?.CreateLogger<FeatureFlagMiddleware>();
                 logger?.LogWarning(ex, "Failed to load feature flags for shared data");
             }

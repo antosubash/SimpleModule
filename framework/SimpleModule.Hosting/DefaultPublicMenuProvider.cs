@@ -13,6 +13,5 @@ internal sealed class DefaultPublicMenuProvider : IPublicMenuProvider
     public Task<IReadOnlyList<PublicMenuItem>> GetMenuTreeAsync() =>
         Task.FromResult<IReadOnlyList<PublicMenuItem>>(Array.Empty<PublicMenuItem>());
 
-    public Task<string?> GetHomePageUrlAsync() =>
-        Task.FromResult<string?>(null);
+    public Task<string?> GetHomePageUrlAsync() => Task.FromResult<string?>(null);
 }

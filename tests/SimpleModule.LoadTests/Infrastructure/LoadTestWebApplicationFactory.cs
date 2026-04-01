@@ -19,13 +19,13 @@ using SimpleModule.FileStorage;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
-using SimpleModule.Tenants;
 using SimpleModule.Orders;
 using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Products;
 using SimpleModule.Settings;
+using SimpleModule.Tenants;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
@@ -54,7 +54,8 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
         using var connection = new SqliteConnection($"Data Source={_dbPath}");
         connection.Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000;";
+        cmd.CommandText =
+            "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA busy_timeout=5000;";
         cmd.ExecuteNonQuery();
     }
 
@@ -72,7 +73,8 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
         var contentRoot = dir is not null
             ? Path.Combine(dir.FullName, "template", "SimpleModule.Host")
             : throw new InvalidOperationException(
-                "Could not find SimpleModule.slnx to resolve Host content root.");
+                "Could not find SimpleModule.slnx to resolve Host content root."
+            );
 
         Environment.SetEnvironmentVariable("DOTNET_CONTENTROOT", contentRoot);
     }
@@ -101,7 +103,11 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
             ReplaceWithFileDb<FileStorageDbContext>(services, connectionString);
             ReplaceWithFileDb<FeatureFlagsDbContext>(services, connectionString);
             ReplaceWithFileDb<TenantsDbContext>(services, connectionString);
-            ReplaceWithFileDb<OpenIddictAppDbContext>(services, connectionString, useOpenIddict: true);
+            ReplaceWithFileDb<OpenIddictAppDbContext>(
+                services,
+                connectionString,
+                useOpenIddict: true
+            );
 
             // Add ROPC (password) grant to OpenIddict for load test token acquisition.
             services.Configure<OpenIddictServerOptions>(opts =>
@@ -117,13 +123,16 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
             });
 
             // Override the base factory's TestScheme — restore OpenIddict validation as default.
-            var oidcScheme = global::OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-            services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = oidcScheme;
-                    options.DefaultChallengeScheme = oidcScheme;
-                });
+            var oidcScheme = global::OpenIddict
+                .Validation
+                .AspNetCore
+                .OpenIddictValidationAspNetCoreDefaults
+                .AuthenticationScheme;
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = oidcScheme;
+                options.DefaultChallengeScheme = oidcScheme;
+            });
 
             // Override the SmartAuth policy to always forward to OpenIddict validation
             services.PostConfigure<Microsoft.AspNetCore.Authentication.PolicySchemeOptions>(
@@ -131,28 +140,35 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
                 options =>
                 {
                     options.ForwardDefaultSelector = _ => oidcScheme;
-                });
-
+                }
+            );
 
             // Register a custom OpenIddict event handler for password grants
-            services.AddOpenIddict().AddServer(opts =>
-            {
-                opts.AddEventHandler<OpenIddictServerEvents.HandleTokenRequestContext>(builder =>
-                    builder.UseInlineHandler(PasswordGrantTokenHandler.Handle));
-            });
+            services
+                .AddOpenIddict()
+                .AddServer(opts =>
+                {
+                    opts.AddEventHandler<OpenIddictServerEvents.HandleTokenRequestContext>(
+                        builder => builder.UseInlineHandler(PasswordGrantTokenHandler.Handle)
+                    );
+                });
         });
     }
 
     private static void ReplaceWithFileDb<TContext>(
         IServiceCollection services,
         string connectionString,
-        bool useOpenIddict = false)
+        bool useOpenIddict = false
+    )
         where TContext : DbContext
     {
         var toRemove = services
             .Where(d =>
                 d.ServiceType == typeof(DbContextOptions<TContext>)
-                || (d.ServiceType == typeof(DbContextOptions) && d.ImplementationFactory is not null))
+                || (
+                    d.ServiceType == typeof(DbContextOptions) && d.ImplementationFactory is not null
+                )
+            )
             .ToList();
 
         foreach (var descriptor in toRemove)
@@ -163,11 +179,16 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
         services.AddScoped(sp =>
         {
             var optionsBuilder = new DbContextOptionsBuilder<TContext>();
-            optionsBuilder.UseSqlite(connectionString, sqliteOpts =>
-            {
-                sqliteOpts.CommandTimeout(30);
-            });
-            optionsBuilder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
+            optionsBuilder.UseSqlite(
+                connectionString,
+                sqliteOpts =>
+                {
+                    sqliteOpts.CommandTimeout(30);
+                }
+            );
+            optionsBuilder.ConfigureWarnings(w =>
+                w.Ignore(RelationalEventId.PendingModelChangesWarning)
+            );
             optionsBuilder.AddInterceptors(SqliteBusyTimeoutInterceptor.Instance);
             if (useOpenIddict)
             {
@@ -192,33 +213,37 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
         var appManager = sp.GetRequiredService<IOpenIddictApplicationManager>();
         if (await appManager.FindByClientIdAsync(ServiceClientId) is null)
         {
-            await appManager.CreateAsync(new OpenIddictApplicationDescriptor
-            {
-                ClientId = ServiceClientId,
-                ClientSecret = ServiceClientSecret,
-                DisplayName = "Load Test Service Account",
-                ClientType = OpenIddictConstants.ClientTypes.Confidential,
-                Permissions =
+            await appManager.CreateAsync(
+                new OpenIddictApplicationDescriptor
                 {
-                    OpenIddictConstants.Permissions.Endpoints.Token,
-                    OpenIddictConstants.Permissions.GrantTypes.Password,
-                    OpenIddictConstants.Permissions.Scopes.Email,
-                    OpenIddictConstants.Permissions.Scopes.Profile,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + AuthConstants.RolesScope,
-                },
-            });
+                    ClientId = ServiceClientId,
+                    ClientSecret = ServiceClientSecret,
+                    DisplayName = "Load Test Service Account",
+                    ClientType = OpenIddictConstants.ClientTypes.Confidential,
+                    Permissions =
+                    {
+                        OpenIddictConstants.Permissions.Endpoints.Token,
+                        OpenIddictConstants.Permissions.GrantTypes.Password,
+                        OpenIddictConstants.Permissions.Scopes.Email,
+                        OpenIddictConstants.Permissions.Scopes.Profile,
+                        OpenIddictConstants.Permissions.Prefixes.Scope + AuthConstants.RolesScope,
+                    },
+                }
+            );
         }
 
         // 2. Seed the Admin role
         var roleManager = sp.GetRequiredService<RoleManager<ApplicationRole>>();
         if (!await roleManager.RoleExistsAsync("Admin"))
         {
-            await roleManager.CreateAsync(new ApplicationRole
-            {
-                Name = "Admin",
-                Description = "Load test admin role",
-                CreatedAt = DateTime.UtcNow,
-            });
+            await roleManager.CreateAsync(
+                new ApplicationRole
+                {
+                    Name = "Admin",
+                    Description = "Load test admin role",
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
         }
 
         // 3. Seed the test user
@@ -271,18 +296,25 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
         if (!tokenResponse.IsSuccessStatusCode)
         {
             throw new InvalidOperationException(
-                $"Failed to acquire Bearer token: {tokenResponse.StatusCode} - {body}");
+                $"Failed to acquire Bearer token: {tokenResponse.StatusCode} - {body}"
+            );
         }
 
         using var doc = JsonDocument.Parse(body);
-        var accessToken = doc.RootElement.GetProperty("access_token").GetString()
+        var accessToken =
+            doc.RootElement.GetProperty("access_token").GetString()
             ?? throw new InvalidOperationException("Token response missing access_token");
 
-        var client = CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        });
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        var client = CreateClient(
+            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false,
+            }
+        );
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            accessToken
+        );
         return client;
     }
 
@@ -295,7 +327,8 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
 
         using var scope = Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var user = await userManager.FindByEmailAsync(TestUserEmail)
+        var user =
+            await userManager.FindByEmailAsync(TestUserEmail)
             ?? throw new InvalidOperationException("Seeded user not found");
         return user.Id;
     }
@@ -316,23 +349,37 @@ public class LoadTestWebApplicationFactory : SimpleModuleWebApplicationFactory
                 }
             }
 #pragma warning disable CA1031
-            catch { /* Best-effort cleanup */ }
+            catch
+            { /* Best-effort cleanup */
+            }
 #pragma warning restore CA1031
         }
     }
 
     private static readonly string[] AllPermissions =
     [
-        ProductsPermissions.View, ProductsPermissions.Create,
-        ProductsPermissions.Update, ProductsPermissions.Delete,
-        OrdersPermissions.View, OrdersPermissions.Create,
-        OrdersPermissions.Update, OrdersPermissions.Delete,
-        AuditLogsPermissions.View, AuditLogsPermissions.Export,
-        FileStoragePermissions.View, FileStoragePermissions.Upload, FileStoragePermissions.Delete,
-        PageBuilderPermissions.View, PageBuilderPermissions.Create,
-        PageBuilderPermissions.Update, PageBuilderPermissions.Delete, PageBuilderPermissions.Publish,
-        AdminPermissions.ManageUsers, AdminPermissions.ManageRoles,
+        ProductsPermissions.View,
+        ProductsPermissions.Create,
+        ProductsPermissions.Update,
+        ProductsPermissions.Delete,
+        OrdersPermissions.View,
+        OrdersPermissions.Create,
+        OrdersPermissions.Update,
+        OrdersPermissions.Delete,
+        AuditLogsPermissions.View,
+        AuditLogsPermissions.Export,
+        FileStoragePermissions.View,
+        FileStoragePermissions.Upload,
+        FileStoragePermissions.Delete,
+        PageBuilderPermissions.View,
+        PageBuilderPermissions.Create,
+        PageBuilderPermissions.Update,
+        PageBuilderPermissions.Delete,
+        PageBuilderPermissions.Publish,
+        AdminPermissions.ManageUsers,
+        AdminPermissions.ManageRoles,
         OpenIddictPermissions.ManageClients,
-        FeatureFlagsPermissions.View, FeatureFlagsPermissions.Manage,
+        FeatureFlagsPermissions.View,
+        FeatureFlagsPermissions.Manage,
     ];
 }
