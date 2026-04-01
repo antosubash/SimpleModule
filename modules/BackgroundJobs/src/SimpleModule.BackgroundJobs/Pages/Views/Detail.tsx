@@ -53,10 +53,7 @@ export default function Detail({ job }: Props) {
       actions={
         <div className="flex gap-2">
           {job.state === 'Running' && (
-            <Button
-              variant="danger"
-              onClick={() => router.post(`/api/jobs/${job.id}/cancel`)}
-            >
+            <Button variant="danger" onClick={() => router.post(`/api/jobs/${job.id}/cancel`)}>
               Cancel
             </Button>
           )}
