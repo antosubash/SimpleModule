@@ -15,6 +15,11 @@
     <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
     <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />
     <Project Path="framework/SimpleModule.Storage.S3/SimpleModule.Storage.S3.csproj" />
+    <Project Path="framework/SimpleModule.Rag/SimpleModule.Rag.csproj" />
+    <Project Path="framework/SimpleModule.Rag.StructuredRag/SimpleModule.Rag.StructuredRag.csproj" />
+    <Project Path="framework/SimpleModule.Rag.VectorStore.InMemory/SimpleModule.Rag.VectorStore.InMemory.csproj" />
+    <Project Path="framework/SimpleModule.Agents/SimpleModule.Agents.csproj" />
+    <Project Path="framework/SimpleModule.AI.Ollama/SimpleModule.AI.Ollama.csproj" />
   </Folder>
   <Folder Name="/cli/">
     <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />

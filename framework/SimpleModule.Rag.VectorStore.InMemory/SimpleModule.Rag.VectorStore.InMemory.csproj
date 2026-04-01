@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Description>In-memory vector store provider for SimpleModule.Rag. For development and testing only.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.InMemory" />
+    <PackageReference Include="Microsoft.Extensions.VectorData.Abstractions" />
+    <ProjectReference Include="..\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+  </ItemGroup>
+</Project>
