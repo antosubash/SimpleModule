@@ -1,8 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using TickerQ.Utilities.Attributes;
-using TickerQ.Utilities.Models;
+using TickerQ.Utilities.Base;
 
 namespace SimpleModule.BackgroundJobs.Services;
 

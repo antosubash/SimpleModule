@@ -8,7 +8,7 @@ using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
-using TickerQ.EntityFrameworkCore.Enums;
+using TickerQ.EntityFrameworkCore.Customizer;
 using TickerQ.Utilities.Entities;
 
 namespace SimpleModule.BackgroundJobs;

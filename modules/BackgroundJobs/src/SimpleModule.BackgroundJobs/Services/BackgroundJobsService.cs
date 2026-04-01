@@ -5,7 +5,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Entities;
 using TickerQ.Utilities.Entities;
 using TickerQ.Utilities.Enums;
-using TickerQ.Utilities.Interfaces;
+using TickerQ.Utilities.Interfaces.Managers;
 using static SimpleModule.BackgroundJobs.BackgroundJobsConstants;
 
 namespace SimpleModule.BackgroundJobs.Services;

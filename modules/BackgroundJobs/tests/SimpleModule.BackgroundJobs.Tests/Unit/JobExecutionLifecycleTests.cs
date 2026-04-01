@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Services;
-using TickerQ.Utilities.Models;
+using TickerQ.Utilities.Base;
 
 namespace BackgroundJobs.Tests.Unit;
 

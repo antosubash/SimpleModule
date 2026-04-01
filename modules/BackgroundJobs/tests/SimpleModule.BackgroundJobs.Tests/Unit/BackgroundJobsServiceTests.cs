@@ -7,7 +7,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Services;
 using TickerQ.Utilities.Entities;
 using TickerQ.Utilities.Enums;
-using TickerQ.Utilities.Interfaces;
+using TickerQ.Utilities.Interfaces.Managers;
 
 namespace BackgroundJobs.Tests.Unit;
 
