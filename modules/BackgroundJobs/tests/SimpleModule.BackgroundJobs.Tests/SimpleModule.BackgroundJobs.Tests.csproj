@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <NoWarn>$(NoWarn);CA2000</NoWarn>
+    <NoWarn>$(NoWarn);CA1852;CA1859;CA2000;CA2263</NoWarn>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
