@@ -23,8 +23,31 @@ export function defineModuleConfig(dir: string): UserConfig {
   const name = basename(dir);
   const isDev = process.env.VITE_MODE !== 'prod';
 
+  const externalPkgs = defaultVendors.map((v) => v.pkg);
+
+  // Alias CJS-only packages that use `require('react')` to ESM shims.
+  // Rolldown (Vite 8) can't convert CJS require() calls for external
+  // packages to ESM imports, which causes runtime errors in the browser.
+  const shimDir = resolve(import.meta.dirname, 'shims');
+
   return defineConfig({
     plugins: [react()],
+    resolve: {
+      alias: [
+        {
+          find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/,
+          replacement: resolve(shimDir, 'use-sync-external-store-with-selector.ts'),
+        },
+        {
+          find: /^use-sync-external-store\/with-selector(\.js)?$/,
+          replacement: resolve(shimDir, 'use-sync-external-store-with-selector.ts'),
+        },
+        {
+          find: /^use-sync-external-store(\/shim)?(\/index(\.js)?)?$/,
+          replacement: resolve(shimDir, 'use-sync-external-store-shim.ts'),
+        },
+      ],
+    },
     define: {
       'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
     },
@@ -39,7 +62,7 @@ export function defineModuleConfig(dir: string): UserConfig {
       outDir: 'wwwroot',
       emptyOutDir: false,
       rolldownOptions: {
-        external: defaultVendors.map((v) => v.pkg),
+        external: externalPkgs,
         output: {
           assetFileNames: `${name.toLowerCase()}[extname]`,
         },
