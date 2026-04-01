@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -31,6 +31,22 @@ public sealed class FindRepoRootTests : IDisposable
     {
         Directory.CreateDirectory(Path.Combine(_tempDir, ".git"));
         var nested = Path.Combine(_tempDir, "a", "b", "c");
+        Directory.CreateDirectory(nested);
+
+        var result = ViteDevWatchService.FindRepoRoot(nested);
+
+        result.Should().Be(_tempDir);
+    }
+
+    [Fact]
+    public void FindRepoRoot_Returns_Directory_With_Git_File_Worktree()
+    {
+        // In git worktrees, .git is a file (not a directory) containing "gitdir: ..."
+        File.WriteAllText(
+            Path.Combine(_tempDir, ".git"),
+            "gitdir: /some/other/repo/.git/worktrees/branch"
+        );
+        var nested = Path.Combine(_tempDir, "a", "b");
         Directory.CreateDirectory(nested);
 
         var result = ViteDevWatchService.FindRepoRoot(nested);

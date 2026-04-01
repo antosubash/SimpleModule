@@ -73,7 +73,7 @@
     Inputs="@(ViteSourceFiles)"
     Outputs="$(ViteBuildStamp)"
   >
-    <Exec Command="npx vite build" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
+    <Exec Command="npx vite build --configLoader runner" WorkingDirectory="$(MSBuildProjectDirectory)/ClientApp" />
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <Touch Files="$(ViteBuildStamp)" AlwaysCreate="true" />
   </Target>

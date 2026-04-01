@@ -1,7 +1,4 @@
-using System.Data.Common;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,19 +18,6 @@ public sealed partial class FeatureFlagSyncService(
         using var scope = serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<FeatureFlagsDbContext>();
 
-        // Ensure module tables exist. EnsureCreated is a no-op when the database
-        // file already exists (created by the Host DbContext), so we call
-        // CreateTables directly and ignore the error if tables already exist.
-        try
-        {
-            var creator = db.Database.GetService<IRelationalDatabaseCreator>();
-            await creator.CreateTablesAsync(cancellationToken);
-        }
-        catch (DbException)
-        {
-            // Tables already exist — expected in normal operation
-        }
-
         var definitions = registry.GetAllDefinitions();
         var existingFlags = await db.FeatureFlags.ToListAsync(cancellationToken);
         var existingNames = existingFlags.ToDictionary(f => f.Name);
@@ -47,11 +31,7 @@ public sealed partial class FeatureFlagSyncService(
             if (!existingNames.ContainsKey(def.Name))
             {
                 db.FeatureFlags.Add(
-                    new FeatureFlagEntity
-                    {
-                        Name = def.Name,
-                        IsEnabled = def.DefaultEnabled,
-                    }
+                    new FeatureFlagEntity { Name = def.Name, IsEnabled = def.DefaultEnabled }
                 );
                 newCount++;
             }
@@ -81,9 +61,5 @@ public sealed partial class FeatureFlagSyncService(
         Level = LogLevel.Information,
         Message = "Feature flag sync: {NewCount} new, {DeprecatedCount} deprecated"
     )]
-    private static partial void LogSync(
-        ILogger logger,
-        int newCount,
-        int deprecatedCount
-    );
+    private static partial void LogSync(ILogger logger, int newCount, int deprecatedCount);
 }
