@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Hosting;
@@ -194,7 +194,9 @@ public sealed partial class ViteDevWatchService(
         var inputPath = Path.Combine(hostDir, "Styles", "app.css");
         var outputPath = Path.Combine(hostDir, "wwwroot", "css", "app.css");
 
-        var tailwindBin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "tailwindcss.cmd" : "tailwindcss";
+        var tailwindBin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "tailwindcss.cmd"
+            : "tailwindcss";
         var tailwindCli = Path.Combine(_npmBinPath, tailwindBin);
         var command = $"\"{tailwindCli}\" -i \"{inputPath}\" -o \"{outputPath}\"";
 
@@ -328,7 +330,9 @@ public sealed partial class ViteDevWatchService(
         var current = startPath;
         while (current is not null)
         {
-            if (Directory.Exists(Path.Combine(current, ".git")))
+            var gitPath = Path.Combine(current, ".git");
+            // .git is a directory in normal repos, but a file in worktrees
+            if (Directory.Exists(gitPath) || File.Exists(gitPath))
             {
                 return current;
             }
