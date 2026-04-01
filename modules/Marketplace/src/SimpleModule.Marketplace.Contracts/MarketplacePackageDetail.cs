@@ -8,6 +8,7 @@ public class MarketplacePackageDetail : MarketplacePackage
     public string LicenseLink { get; set; } = string.Empty;
     public List<MarketplacePackageVersion> Versions { get; set; } = [];
     public List<string> Dependencies { get; set; } = [];
+    public string Readme { get; set; } = string.Empty;
 }
 
 [Dto]
