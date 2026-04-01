@@ -22,6 +22,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new HostDbContextEmitter(),
         new ValueConverterConventionsEmitter(),
         new DbContextRegistryEmitter(),
+        new AgentExtensionsEmitter(),
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)

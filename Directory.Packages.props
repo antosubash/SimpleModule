@@ -58,6 +58,6 @@
     <PackageVersion Include="Microsoft.Extensions.AI.Ollama" Version="9.7.0-preview.1.25356.2" />
     <!-- RAG / Vector -->
     <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.1.0" />
-    <PackageVersion Include="Microsoft.SemanticKernel.Connectors.InMemory" Version="1.51.0-preview" />
+    <PackageVersion Include="Microsoft.SemanticKernel.Connectors.InMemory" Version="1.74.0-preview" />
   </ItemGroup>
 </Project>
