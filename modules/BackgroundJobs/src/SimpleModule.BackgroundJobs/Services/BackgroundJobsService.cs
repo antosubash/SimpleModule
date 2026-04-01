@@ -135,23 +135,24 @@ public sealed partial class BackgroundJobsService(
             .AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId.Value, ct);
 
-        return new JobStatusDto(
-            Id: jobId,
-            JobType: GetShortTypeName(progress?.JobTypeName),
-            State: MapTickerStatus(ticker.Status),
-            ProgressPercentage: progress?.ProgressPercentage
+        return new JobStatusDto
+        {
+            Id = jobId,
+            JobType = GetShortTypeName(progress?.JobTypeName),
+            State = MapTickerStatus(ticker.Status),
+            ProgressPercentage = progress?.ProgressPercentage
                 ?? (ticker.Status == TickerStatus.Done ? 100 : 0),
-            ProgressMessage: progress?.ProgressMessage,
-            Error: ticker.ExceptionMessage,
-            CreatedAt: AsUtc(ticker.CreatedAt),
-            StartedAt: ticker.ExecutedAt.HasValue
+            ProgressMessage = progress?.ProgressMessage,
+            Error = ticker.ExceptionMessage,
+            CreatedAt = AsUtc(ticker.CreatedAt),
+            StartedAt = ticker.ExecutedAt.HasValue
                 ? AsUtc(ticker.ExecutedAt.Value)
                 : null,
-            CompletedAt: ticker.Status is TickerStatus.Done or TickerStatus.DueDone or TickerStatus.Failed
+            CompletedAt = ticker.Status is TickerStatus.Done or TickerStatus.DueDone or TickerStatus.Failed
                 ? AsUtc(ticker.UpdatedAt)
                 : null,
-            RetryCount: ticker.RetryCount
-        );
+            RetryCount = ticker.RetryCount,
+        };
     }
 
     private async Task CreateJobProgressAsync(

@@ -4,6 +4,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <InvariantGlobalization>false</InvariantGlobalization>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <!-- IModuleJob is a cross-module extension point — no implementation required in BackgroundJobs module -->
+    <NoWarn>$(NoWarn);SM0025</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.Tests.Shared" />
