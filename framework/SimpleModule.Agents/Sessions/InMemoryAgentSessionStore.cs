@@ -39,11 +39,10 @@ public sealed class InMemoryAgentSessionStore : IAgentSessionStore
         lock (messages)
         {
             messages.Add(message);
-        }
-
-        if (_sessions.TryGetValue(sessionId, out var session))
-        {
-            session.LastMessageAt = DateTimeOffset.UtcNow;
+            if (_sessions.TryGetValue(sessionId, out var session))
+            {
+                session.LastMessageAt = DateTimeOffset.UtcNow;
+            }
         }
 
         return Task.CompletedTask;

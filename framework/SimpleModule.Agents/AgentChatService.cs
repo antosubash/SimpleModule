@@ -21,12 +21,65 @@ public sealed class AgentChatService(
         CancellationToken cancellationToken = default
     )
     {
+        using var scope = serviceProvider.CreateScope();
+        var (messages, chatOptions) = await PrepareAgentCallAsync(
+            agentName,
+            request,
+            scope.ServiceProvider,
+            cancellationToken
+        );
+
+        var response = await chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+        var sessionId = request.SessionId ?? Guid.NewGuid().ToString();
+
+        return new AgentChatResponse(response.Text ?? "", sessionId);
+    }
+
+    public async IAsyncEnumerable<string> ChatStreamAsync(
+        string agentName,
+        AgentChatRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        using var scope = serviceProvider.CreateScope();
+        var (messages, chatOptions) = await PrepareAgentCallAsync(
+            agentName,
+            request,
+            scope.ServiceProvider,
+            cancellationToken
+        );
+
+        await foreach (
+            var update in chatClient.GetStreamingResponseAsync(
+                messages,
+                chatOptions,
+                cancellationToken
+            )
+        )
+        {
+            foreach (var content in update.Contents)
+            {
+                if (content is TextContent textContent && textContent.Text is not null)
+                {
+                    yield return textContent.Text;
+                }
+            }
+        }
+    }
+
+    private async Task<(List<ChatMessage> Messages, ChatOptions Options)> PrepareAgentCallAsync(
+        string agentName,
+        AgentChatRequest request,
+        IServiceProvider scopedProvider,
+        CancellationToken cancellationToken
+    )
+    {
         var registration =
             registry.GetByName(agentName)
             ?? throw new InvalidOperationException($"Agent '{agentName}' not found");
 
         var agentDef = (IAgentDefinition)
-            ActivatorUtilities.CreateInstance(serviceProvider, registration.AgentDefinitionType);
+            ActivatorUtilities.CreateInstance(scopedProvider, registration.AgentDefinitionType);
 
         var messages = new List<ChatMessage> { new(ChatRole.System, agentDef.Instructions) };
 
@@ -35,7 +88,7 @@ public sealed class AgentChatService(
         var enableRag = agentDef.EnableRag ?? options.EnableRag;
         if (enableRag)
         {
-            var ragPipeline = serviceProvider.GetService<IRagPipeline>();
+            var ragPipeline = scopedProvider.GetService<IRagPipeline>();
             if (ragPipeline is not null)
             {
                 var ragResult = await ragPipeline.QueryAsync(
@@ -57,11 +110,10 @@ public sealed class AgentChatService(
 
         // Resolve tools from tool providers
         var tools = new List<AITool>();
-        using var scope = serviceProvider.CreateScope();
         foreach (var providerType in registration.ToolProviderTypes)
         {
             var provider = (IAgentToolProvider)
-                ActivatorUtilities.CreateInstance(scope.ServiceProvider, providerType);
+                ActivatorUtilities.CreateInstance(scopedProvider, providerType);
 
             var methods = providerType
                 .GetMethods()
@@ -82,54 +134,6 @@ public sealed class AgentChatService(
             Tools = tools.Count > 0 ? tools : null,
         };
 
-        var response = await chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
-
-        var sessionId = request.SessionId ?? Guid.NewGuid().ToString();
-
-        return new AgentChatResponse(response.Text ?? "", sessionId);
-    }
-
-    public async IAsyncEnumerable<string> ChatStreamAsync(
-        string agentName,
-        AgentChatRequest request,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
-    )
-    {
-        var registration =
-            registry.GetByName(agentName)
-            ?? throw new InvalidOperationException($"Agent '{agentName}' not found");
-
-        var agentDef = (IAgentDefinition)
-            ActivatorUtilities.CreateInstance(serviceProvider, registration.AgentDefinitionType);
-
-        var messages = new List<ChatMessage>
-        {
-            new(ChatRole.System, agentDef.Instructions),
-            new(ChatRole.User, request.Message),
-        };
-
-        var options = agentOptions.Value;
-        var chatOptions = new ChatOptions
-        {
-            MaxOutputTokens = agentDef.MaxTokens ?? options.MaxTokens,
-            Temperature = agentDef.Temperature ?? options.Temperature,
-        };
-
-        await foreach (
-            var update in chatClient.GetStreamingResponseAsync(
-                messages,
-                chatOptions,
-                cancellationToken
-            )
-        )
-        {
-            foreach (var content in update.Contents)
-            {
-                if (content is TextContent textContent && textContent.Text is not null)
-                {
-                    yield return textContent.Text;
-                }
-            }
-        }
+        return (messages, chatOptions);
     }
 }

@@ -118,7 +118,7 @@ internal sealed class AgentExtensionsEmitter : IEmitter
             "        services.AddSingleton<global::SimpleModule.Agents.IAgentRegistry>(registry);"
         );
 
-        // Call ConfigureAgents on modules that override it
+        // Call ConfigureAgents on modules that override it (manual escape hatch)
         var modulesWithAgents = data.Modules.Where(m => m.HasConfigureAgents).ToList();
         if (modulesWithAgents.Count > 0)
         {
@@ -133,6 +133,16 @@ internal sealed class AgentExtensionsEmitter : IEmitter
                     $"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureAgents(agentBuilder);"
                 );
             }
+
+            // Register manually-added agents and tool providers from ConfigureAgents
+            sb.AppendLine("        foreach (var agentType in agentBuilder.AgentTypes)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            services.AddScoped(agentType);");
+            sb.AppendLine("        }");
+            sb.AppendLine("        foreach (var providerType in agentBuilder.ToolProviderTypes)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            services.AddScoped(providerType);");
+            sb.AppendLine("        }");
         }
 
         sb.AppendLine();

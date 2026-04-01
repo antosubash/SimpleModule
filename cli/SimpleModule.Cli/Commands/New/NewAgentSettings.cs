@@ -25,6 +25,11 @@ public sealed class NewAgentSettings : CommandSettings
             Name = AnsiConsole.Ask<string>("Agent name (PascalCase):");
         }
 
+        if (string.IsNullOrWhiteSpace(Name))
+        {
+            throw new InvalidOperationException("Agent name cannot be empty.");
+        }
+
         if (!char.IsUpper(Name[0]))
         {
             throw new InvalidOperationException(
