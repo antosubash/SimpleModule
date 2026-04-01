@@ -187,7 +187,7 @@ public sealed partial class BackgroundJobsService(
         );
     }
 
-    internal static JobState MapTickerStatus(TickerStatus status)
+    public static JobState MapTickerStatus(TickerStatus status)
     {
         return status switch
         {

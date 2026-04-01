@@ -15,7 +15,7 @@ public sealed class JobTypeRegistryTests
 
         var resolved = _sut.Resolve(typeof(TestJob).AssemblyQualifiedName!);
 
-        resolved.Should().Be(typeof(TestJob));
+        resolved.Should().Be<TestJob>();
     }
 
     [Fact]
