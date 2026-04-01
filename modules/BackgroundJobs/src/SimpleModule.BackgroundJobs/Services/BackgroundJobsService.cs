@@ -30,7 +30,9 @@ public sealed partial class BackgroundJobsService(
             Request = JsonSerializer.SerializeToUtf8Bytes(payload),
         };
 
+        #pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
         await timeManager.AddAsync(ticker);
+#pragma warning restore CA2016
 
         await CreateJobProgressAsync(ticker.Id, jobType, data, ct);
 
@@ -55,7 +57,9 @@ public sealed partial class BackgroundJobsService(
             Request = JsonSerializer.SerializeToUtf8Bytes(payload),
         };
 
+        #pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
         await timeManager.AddAsync(ticker);
+#pragma warning restore CA2016
 
         await CreateJobProgressAsync(ticker.Id, jobType, data, ct);
 
@@ -83,7 +87,9 @@ public sealed partial class BackgroundJobsService(
             IsEnabled = true,
         };
 
+        #pragma warning disable CA2016
         await cronManager.AddAsync(ticker);
+#pragma warning restore CA2016
 
         LogRecurringJobAdded(logger, name, cronExpression);
         return RecurringJobId.From(ticker.Id);
@@ -91,7 +97,9 @@ public sealed partial class BackgroundJobsService(
 
     public async Task RemoveRecurringAsync(RecurringJobId id, CancellationToken ct)
     {
+#pragma warning disable CA2016
         await cronManager.DeleteAsync(id.Value);
+#pragma warning restore CA2016
     }
 
     public async Task<bool> ToggleRecurringAsync(RecurringJobId id, CancellationToken ct)
@@ -107,7 +115,9 @@ public sealed partial class BackgroundJobsService(
 
     public async Task CancelAsync(JobId jobId, CancellationToken ct)
     {
+#pragma warning disable CA2016
         await timeManager.DeleteAsync(jobId.Value);
+#pragma warning restore CA2016
     }
 
     public async Task<JobStatusDto?> GetStatusAsync(JobId jobId, CancellationToken ct)
@@ -151,7 +161,7 @@ public sealed partial class BackgroundJobsService(
         CancellationToken ct
     )
     {
-        var moduleName = jobType.Assembly.GetName().Name?.Replace("SimpleModule.", "") ?? UnknownValue;
+        var moduleName = jobType.Assembly.GetName().Name?.Replace("SimpleModule.", "", StringComparison.Ordinal) ?? UnknownValue;
 
         db.JobProgress.Add(
             new JobProgress

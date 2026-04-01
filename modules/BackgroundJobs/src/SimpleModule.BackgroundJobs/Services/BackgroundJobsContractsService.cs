@@ -193,7 +193,9 @@ public sealed class BackgroundJobsContractsService(
             Request = ticker.Request,
         };
 
+#pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
         await timeManager.AddAsync(newTicker);
+#pragma warning restore CA2016
 
         db.JobProgress.Add(
             new Entities.JobProgress

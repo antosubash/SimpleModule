@@ -33,7 +33,7 @@ public static class BackgroundJobsConstants
         }
 
         var assemblyPart = assemblyQualifiedName.Split(',').ElementAtOrDefault(1)?.Trim();
-        return assemblyPart?.Replace("SimpleModule.", "") ?? UnknownValue;
+        return assemblyPart?.Replace("SimpleModule.", "", StringComparison.Ordinal) ?? UnknownValue;
     }
 
     public static DateTimeOffset AsUtc(DateTime dt) =>
