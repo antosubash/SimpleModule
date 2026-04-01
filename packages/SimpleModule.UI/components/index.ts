@@ -1,5 +1,6 @@
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './accordion';
 export { AgentChat } from './agent-chat';
+export { AgentPlayground } from './agent-playground';
 export { AgentSelector } from './agent-selector';
 export { Alert, AlertDescription, AlertTitle, alertVariants } from './alert';
 export { AspectRatio } from './aspect-ratio';
