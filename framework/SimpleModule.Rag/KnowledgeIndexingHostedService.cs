@@ -28,11 +28,11 @@ public sealed partial class KnowledgeIndexingHostedService(
             return;
         }
 
-        var sources = scope.ServiceProvider.GetServices<IKnowledgeSource>();
-        foreach (var source in sources)
-        {
-            await IndexSourceAsync(knowledgeStore, source, cancellationToken);
-        }
+        var sources = scope.ServiceProvider.GetServices<IKnowledgeSource>().ToList();
+        var tasks = sources.Select(source =>
+            IndexSourceAsync(knowledgeStore, source, cancellationToken)
+        );
+        await Task.WhenAll(tasks);
     }
 
     private async Task IndexSourceAsync(

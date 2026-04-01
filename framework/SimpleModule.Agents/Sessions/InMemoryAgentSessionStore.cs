@@ -24,7 +24,7 @@ public sealed class InMemoryAgentSessionStore : IAgentSessionStore
     {
         var session = new AgentSession { AgentName = agentName, UserId = userId };
         _sessions[session.Id] = session;
-        _messages[session.Id] = [];
+        _messages.GetOrAdd(session.Id, _ => []);
         return Task.FromResult(session);
     }
 

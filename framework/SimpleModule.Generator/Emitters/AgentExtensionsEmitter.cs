@@ -85,15 +85,22 @@ internal sealed class AgentExtensionsEmitter : IEmitter
                 ? string.Join(", ", providers.Select(p => $"typeof({p})"))
                 : "";
 
+            // Instantiate once and read both properties from the same instance
+            var varName =
+                "_agent_"
+                + agent.ModuleName
+                + "_"
+                + agent
+                    .FullyQualifiedName.GetHashCode()
+                    .ToString("x8", System.Globalization.CultureInfo.InvariantCulture);
+            sb.AppendLine(
+                $"        var {varName} = (global::SimpleModule.Core.Agents.IAgentDefinition)new {agent.FullyQualifiedName}();"
+            );
             sb.AppendLine(
                 $"        registry.Register(new global::SimpleModule.Agents.AgentRegistration("
             );
-            sb.AppendLine(
-                $"            ((global::SimpleModule.Core.Agents.IAgentDefinition)new {agent.FullyQualifiedName}()).Name,"
-            );
-            sb.AppendLine(
-                $"            ((global::SimpleModule.Core.Agents.IAgentDefinition)new {agent.FullyQualifiedName}()).Description,"
-            );
+            sb.AppendLine($"            {varName}.Name,");
+            sb.AppendLine($"            {varName}.Description,");
             sb.AppendLine($"            \"{agent.ModuleName}\",");
             sb.AppendLine($"            typeof({agent.FullyQualifiedName}),");
 

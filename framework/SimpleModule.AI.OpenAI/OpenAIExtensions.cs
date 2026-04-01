@@ -14,18 +14,26 @@ public static class OpenAIExtensions
     {
         services.Configure<OpenAIOptions>(configuration.GetSection("AI:OpenAI"));
 
+        // Share a single OpenAIClient instance across chat and embedding
+        services.AddSingleton(sp =>
+        {
+            var opts =
+                configuration.GetSection("AI:OpenAI").Get<OpenAIOptions>() ?? new OpenAIOptions();
+            return new OpenAIClient(opts.ApiKey);
+        });
+
         services.AddSingleton<IChatClient>(sp =>
         {
             var opts =
                 configuration.GetSection("AI:OpenAI").Get<OpenAIOptions>() ?? new OpenAIOptions();
-            return new OpenAIClient(opts.ApiKey).GetChatClient(opts.Model).AsIChatClient();
+            return sp.GetRequiredService<OpenAIClient>().GetChatClient(opts.Model).AsIChatClient();
         });
 
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
         {
             var opts =
                 configuration.GetSection("AI:OpenAI").Get<OpenAIOptions>() ?? new OpenAIOptions();
-            return new OpenAIClient(opts.ApiKey)
+            return sp.GetRequiredService<OpenAIClient>()
                 .GetEmbeddingClient(opts.EmbeddingModel)
                 .AsIEmbeddingGenerator();
         });
