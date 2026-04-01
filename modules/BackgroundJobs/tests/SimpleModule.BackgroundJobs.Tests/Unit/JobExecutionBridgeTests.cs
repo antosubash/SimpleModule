@@ -12,7 +12,7 @@ namespace BackgroundJobs.Tests.Unit;
 public sealed class JobExecutionBridgeTests
 {
     private readonly JobTypeRegistry _registry = new();
-    private readonly ProgressChannel _channel = new();
+    private readonly ProgressChannel _channel = new(NullLogger<ProgressChannel>.Instance);
 
     [Fact]
     public async Task ExecuteAsync_WithRegisteredJob_ExecutesJob()

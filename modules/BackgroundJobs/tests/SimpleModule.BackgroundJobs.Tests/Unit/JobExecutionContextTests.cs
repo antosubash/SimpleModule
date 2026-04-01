@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Services;
 
@@ -12,7 +13,7 @@ public sealed class JobExecutionContextTests
     {
         var data = new TestData("hello", 42);
         var payload = new JobDispatchPayload("TestType", JsonSerializer.Serialize(data));
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var result = context.GetData<TestData>();
@@ -25,7 +26,7 @@ public sealed class JobExecutionContextTests
     public void GetData_NullData_Throws()
     {
         var payload = new JobDispatchPayload("TestType", null);
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var act = () => context.GetData<TestData>();
@@ -37,7 +38,7 @@ public sealed class JobExecutionContextTests
     public void GetData_EmptyData_Throws()
     {
         var payload = new JobDispatchPayload("TestType", "");
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var act = () => context.GetData<TestData>();
@@ -50,7 +51,7 @@ public sealed class JobExecutionContextTests
     {
         var data = new ComplexData([1, 2, 3], new Dictionary<string, string> { ["key"] = "value" });
         var payload = new JobDispatchPayload("TestType", JsonSerializer.Serialize(data));
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var result = context.GetData<ComplexData>();
@@ -62,7 +63,7 @@ public sealed class JobExecutionContextTests
     [Fact]
     public void ReportProgress_EnqueuesToChannel()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = JobId.From(Guid.NewGuid());
         var context = new JobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
 
@@ -78,7 +79,7 @@ public sealed class JobExecutionContextTests
     [Fact]
     public void ReportProgress_WithoutMessage_EnqueuesNullMessage()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var context = new JobExecutionContext(
             JobId.From(Guid.NewGuid()),
             new JobDispatchPayload("Test", null),
@@ -95,7 +96,7 @@ public sealed class JobExecutionContextTests
     [Fact]
     public void Log_EnqueuesToChannelWithLogMessage()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = JobId.From(Guid.NewGuid());
         var context = new JobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
 
@@ -114,7 +115,7 @@ public sealed class JobExecutionContextTests
         var context = new JobExecutionContext(
             id,
             new JobDispatchPayload("Test", null),
-            new ProgressChannel()
+            new ProgressChannel(NullLogger<ProgressChannel>.Instance)
         );
 
         context.JobId.Should().Be(id);
@@ -123,7 +124,7 @@ public sealed class JobExecutionContextTests
     [Fact]
     public void ReportProgress_MultipleUpdates_AllEnqueued()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var context = new JobExecutionContext(
             JobId.From(Guid.NewGuid()),
             new JobDispatchPayload("Test", null),

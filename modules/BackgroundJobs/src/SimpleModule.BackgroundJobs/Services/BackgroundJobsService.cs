@@ -14,7 +14,6 @@ public sealed partial class BackgroundJobsService(
     ITimeTickerManager<TimeTickerEntity> timeManager,
     ICronTickerManager<CronTickerEntity> cronManager,
     BackgroundJobsDbContext db,
-    JobTypeRegistry registry,
     ILogger<BackgroundJobsService> logger
 ) : IBackgroundJobs
 {

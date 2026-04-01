@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using SimpleModule.BackgroundJobs.Services;
 
 namespace BackgroundJobs.Tests.Unit;
@@ -8,7 +9,7 @@ public sealed class ProgressChannelTests
     [Fact]
     public async Task Enqueue_WritesToChannel_CanRead()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var entry = new ProgressEntry(Guid.NewGuid(), 50, "Half done", null, DateTimeOffset.UtcNow);
 
         channel.Enqueue(entry);
@@ -25,7 +26,7 @@ public sealed class ProgressChannelTests
     [Fact]
     public void Enqueue_MultipleEntries_AllReadable()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
 
         for (var i = 0; i < 10; i++)
         {
@@ -46,7 +47,7 @@ public sealed class ProgressChannelTests
     [Fact]
     public void Enqueue_PreservesEntryData()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = Guid.NewGuid();
         var timestamp = DateTimeOffset.UtcNow;
         var entry = new ProgressEntry(jobId, 75, "Processing", "Log message", timestamp);
@@ -64,7 +65,7 @@ public sealed class ProgressChannelTests
     [Fact]
     public void TryRead_EmptyChannel_ReturnsFalse()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
 
         channel.Reader.TryRead(out var result).Should().BeFalse();
         result.Should().BeNull();

@@ -26,7 +26,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         // Enqueue BEFORE starting the service
         channel.Enqueue(new ProgressEntry(jobId, 40, "Pre-queued", null, DateTimeOffset.UtcNow));
 
@@ -48,7 +48,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel);
         await service.StartAsync(CancellationToken.None);
 
@@ -65,7 +65,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
     [Fact]
     public async Task Start_EmptyChannel_DoesNotThrow()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel);
 
         var act = async () =>
@@ -88,7 +88,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         // Use a large flush interval so the batch timer won't flush — only the drain on stop
         var service = CreateService(channel, flushIntervalMs: 30_000);
         await service.StartAsync(CancellationToken.None);
@@ -122,7 +122,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         );
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel, flushIntervalMs: 30_000);
         await service.StartAsync(CancellationToken.None);
 
@@ -142,7 +142,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
     [Fact]
     public async Task Stop_ChannelEmpty_CompletesGracefully()
     {
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel);
         await service.StartAsync(CancellationToken.None);
         await Task.Delay(200);
@@ -160,7 +160,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel, flushIntervalMs: 30_000);
         await service.StartAsync(CancellationToken.None);
 
@@ -187,7 +187,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel);
 
         // First run
@@ -219,7 +219,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var service = CreateService(channel);
 
         // First run and stop
@@ -251,7 +251,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
 
         // First run - add log
         var service1 = CreateService(channel);
@@ -282,7 +282,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
 
         for (var cycle = 1; cycle <= 3; cycle++)
         {

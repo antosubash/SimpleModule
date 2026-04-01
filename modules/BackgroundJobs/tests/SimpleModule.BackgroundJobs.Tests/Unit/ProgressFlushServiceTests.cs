@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Entities;
@@ -25,7 +26,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         channel.Enqueue(new ProgressEntry(jobId, 75, "Processing", null, DateTimeOffset.UtcNow));
 
         var service = CreateService(channel, db);
@@ -50,7 +51,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         channel.Enqueue(
             new ProgressEntry(jobId, -1, null, "First log", DateTimeOffset.UtcNow)
         );
@@ -89,7 +90,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         db.JobProgress.Add(progress);
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         // Add 5 more — should cap at 1000
         for (var i = 0; i < 5; i++)
         {
@@ -120,7 +121,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         db.JobProgress.Add(CreateProgress(jobId));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         channel.Enqueue(
             new ProgressEntry(jobId, 25, "Quarter", null, DateTimeOffset.UtcNow.AddMilliseconds(-200))
         );
@@ -149,7 +150,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         var db = _factory.Create();
         var unknownJobId = Guid.NewGuid(); // no corresponding JobProgress row
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         channel.Enqueue(
             new ProgressEntry(unknownJobId, 50, "Orphaned", null, DateTimeOffset.UtcNow)
         );
@@ -174,7 +175,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         db.JobProgress.AddRange(CreateProgress(job1), CreateProgress(job2));
         await db.SaveChangesAsync();
 
-        var channel = new ProgressChannel();
+        var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         channel.Enqueue(new ProgressEntry(job1, 30, "Job 1 progress", null, DateTimeOffset.UtcNow));
         channel.Enqueue(new ProgressEntry(job2, 60, "Job 2 progress", null, DateTimeOffset.UtcNow));
 

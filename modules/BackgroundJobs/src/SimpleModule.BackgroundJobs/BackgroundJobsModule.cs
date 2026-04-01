@@ -41,7 +41,6 @@ public class BackgroundJobsModule : IModule
         // TickerQ
         services.AddTickerQ(options =>
         {
-            options.SetMaxConcurrency(Environment.ProcessorCount);
             options.SetExceptionHandler<JobExceptionHandler>();
             options.AddOperationalStore<TimeTickerEntity, CronTickerEntity>(ef =>
                 ef.UseApplicationDbContext<BackgroundJobsDbContext>(

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace SimpleModule.BackgroundJobs.Services;
 
-public sealed partial class ProgressChannel(ILogger<ProgressChannel>? logger = null)
+public sealed partial class ProgressChannel(ILogger<ProgressChannel> logger)
 {
     private readonly Channel<ProgressEntry> _channel = Channel.CreateUnbounded<ProgressEntry>(
         new UnboundedChannelOptions { SingleReader = true }
@@ -20,5 +20,5 @@ public sealed partial class ProgressChannel(ILogger<ProgressChannel>? logger = n
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Progress entry dropped — channel closed")]
-    private static partial void LogDropped(ILogger? logger);
+    private static partial void LogDropped(ILogger logger);
 }

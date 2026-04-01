@@ -19,7 +19,6 @@ public sealed class BackgroundJobsServiceTests : IDisposable
         Substitute.For<ITimeTickerManager<TimeTickerEntity>>();
     private readonly ICronTickerManager<CronTickerEntity> _cronManager =
         Substitute.For<ICronTickerManager<CronTickerEntity>>();
-    private readonly JobTypeRegistry _registry = new();
     private readonly BackgroundJobsService _sut;
 
     public BackgroundJobsServiceTests()
@@ -29,7 +28,6 @@ public sealed class BackgroundJobsServiceTests : IDisposable
             _timeManager,
             _cronManager,
             _db,
-            _registry,
             NullLogger<BackgroundJobsService>.Instance
         );
     }
