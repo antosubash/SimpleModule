@@ -315,7 +315,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         EmptyModuleName,
-                        Location.None,
+                        LocationHelper.ToLocation(module.Location),
                         Strip(module.FullyQualifiedName)
                     )
                 );
@@ -334,7 +334,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         DuplicateModuleName,
-                        Location.None,
+                        LocationHelper.ToLocation(module.Location),
                         module.ModuleName,
                         Strip(existingFqn),
                         Strip(module.FullyQualifiedName)
@@ -368,7 +368,11 @@ internal sealed class DiagnosticEmitter : IEmitter
             )
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(EmptyModuleWarning, Location.None, module.ModuleName)
+                    Diagnostic.Create(
+                        EmptyModuleWarning,
+                        LocationHelper.ToLocation(module.Location),
+                        module.ModuleName
+                    )
                 );
             }
         }
@@ -393,7 +397,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         MultipleIdentityDbContexts,
-                        Location.None,
+                        LocationHelper.ToLocation(ctx.Location),
                         Strip(firstIdentity.Value.FullyQualifiedName),
                         firstIdentity.Value.ModuleName,
                         Strip(ctx.FullyQualifiedName),
@@ -411,7 +415,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         IdentityDbContextBadTypeArgs,
-                        Location.None,
+                        LocationHelper.ToLocation(ctx.Location),
                         Strip(ctx.FullyQualifiedName),
                         ctx.ModuleName,
                         0
@@ -435,7 +439,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         EntityConfigForMissingEntity,
-                        Location.None,
+                        LocationHelper.ToLocation(config.Location),
                         Strip(config.EntityFqn),
                         Strip(config.ConfigFqn),
                         config.ModuleName
@@ -453,7 +457,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         DuplicateEntityConfiguration,
-                        Location.None,
+                        LocationHelper.ToLocation(config.Location),
                         Strip(config.EntityFqn),
                         existing,
                         Strip(config.ConfigFqn)
@@ -498,10 +502,21 @@ internal sealed class DiagnosticEmitter : IEmitter
             var first = sortResult.Cycle[0];
             var second = sortResult.Cycle.Length > 1 ? sortResult.Cycle[1] : first;
 
+            // Find location of the first module in the cycle
+            SourceLocationRecord? cycleLoc = null;
+            foreach (var module in data.Modules)
+            {
+                if (module.ModuleName == first)
+                {
+                    cycleLoc = module.Location;
+                    break;
+                }
+            }
+
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     CircularModuleDependency,
-                    Location.None,
+                    LocationHelper.ToLocation(cycleLoc),
                     cycleStr,
                     howStr,
                     first,
@@ -516,7 +531,7 @@ internal sealed class DiagnosticEmitter : IEmitter
             context.ReportDiagnostic(
                 Diagnostic.Create(
                     IllegalImplementationReference,
-                    Location.None,
+                    LocationHelper.ToLocation(illegal.Location),
                     illegal.ReferencingModuleName,
                     illegal.ReferencedModuleName,
                     illegal.ReferencedAssemblyName
@@ -533,7 +548,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         ContractInterfaceTooLargeError,
-                        Location.None,
+                        LocationHelper.ToLocation(iface.Location),
                         Strip(iface.InterfaceName),
                         iface.MethodCount,
                         shortName
@@ -546,7 +561,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         ContractInterfaceTooLargeWarning,
-                        Location.None,
+                        LocationHelper.ToLocation(iface.Location),
                         Strip(iface.InterfaceName),
                         iface.MethodCount,
                         shortName
@@ -567,10 +582,21 @@ internal sealed class DiagnosticEmitter : IEmitter
             var key = dep.ModuleName + "|" + dep.ContractsAssemblyName;
             if (!contractsWithInterfaces.Contains(dep.ContractsAssemblyName) && reported.Add(key))
             {
+                // Find the module's location for this diagnostic
+                SourceLocationRecord? depModuleLoc = null;
+                foreach (var module in data.Modules)
+                {
+                    if (module.ModuleName == dep.ModuleName)
+                    {
+                        depModuleLoc = module.Location;
+                        break;
+                    }
+                }
+
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         MissingContractInterfaces,
-                        Location.None,
+                        LocationHelper.ToLocation(depModuleLoc),
                         dep.ModuleName,
                         dep.ContractsAssemblyName
                     )
@@ -600,7 +626,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         ContractImplementationNotPublic,
-                        Location.None,
+                        LocationHelper.ToLocation(impl.Location),
                         Strip(impl.ImplementationFqn),
                         Strip(impl.InterfaceFqn)
                     )
@@ -612,7 +638,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         ContractImplementationIsAbstract,
-                        Location.None,
+                        LocationHelper.ToLocation(impl.Location),
                         Strip(impl.ImplementationFqn),
                         Strip(impl.InterfaceFqn)
                     )
@@ -633,7 +659,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         NoContractImplementation,
-                        Location.None,
+                        LocationHelper.ToLocation(iface.Location),
                         Strip(iface.InterfaceName),
                         moduleName
                     )
@@ -660,7 +686,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         MultipleContractImplementations,
-                        Location.None,
+                        LocationHelper.ToLocation(validImpls[1].Location),
                         Strip(kvp.Key),
                         validImpls[0].ModuleName,
                         string.Join(", ", names)
@@ -681,7 +707,11 @@ internal sealed class DiagnosticEmitter : IEmitter
             if (!perm.IsSealed)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(PermissionClassNotSealed, Location.None, permCleanName)
+                    Diagnostic.Create(
+                        PermissionClassNotSealed,
+                        LocationHelper.ToLocation(perm.Location),
+                        permCleanName
+                    )
                 );
             }
 
@@ -693,7 +723,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             PermissionFieldNotConstString,
-                            Location.None,
+                            LocationHelper.ToLocation(field.Location),
                             permCleanName,
                             field.FieldName
                         )
@@ -713,7 +743,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             PermissionValueBadPattern,
-                            Location.None,
+                            LocationHelper.ToLocation(field.Location),
                             field.Value,
                             permCleanName
                         )
@@ -729,7 +759,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                         context.ReportDiagnostic(
                             Diagnostic.Create(
                                 PermissionValueWrongPrefix,
-                                Location.None,
+                                LocationHelper.ToLocation(field.Location),
                                 field.Value,
                                 perm.ModuleName
                             )
@@ -743,7 +773,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             DuplicatePermissionValue,
-                            Location.None,
+                            LocationHelper.ToLocation(field.Location),
                             field.Value,
                             existingOwner,
                             permCleanName
@@ -814,7 +844,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             DuplicateViewPageName,
-                            Location.None,
+                            LocationHelper.ToLocation(view.Location),
                             view.Page,
                             Strip(existing.EndpointFqn),
                             existing.ModuleName,
@@ -844,7 +874,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             ViewPagePrefixMismatch,
-                            Location.None,
+                            LocationHelper.ToLocation(view.Location),
                             Strip(view.FullyQualifiedName),
                             module.ModuleName,
                             view.Page
@@ -863,7 +893,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         ViewEndpointWithoutViewPrefix,
-                        Location.None,
+                        LocationHelper.ToLocation(module.Location),
                         module.ModuleName,
                         module.Views.Length,
                         module.ModuleName.ToLowerInvariant()
@@ -885,7 +915,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                         context.ReportDiagnostic(
                             Diagnostic.Create(
                                 InterceptorDependsOnDbContext,
-                                Location.None,
+                                LocationHelper.ToLocation(interceptor.Location),
                                 Strip(interceptor.FullyQualifiedName),
                                 interceptor.ModuleName,
                                 Strip(paramFqn)
@@ -906,7 +936,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         MultipleModuleOptions,
-                        Location.None,
+                        LocationHelper.ToLocation(kvp.Value[1].Location),
                         kvp.Key,
                         Strip(kvp.Value[0].FullyQualifiedName),
                         Strip(kvp.Value[1].FullyQualifiedName)
@@ -926,7 +956,11 @@ internal sealed class DiagnosticEmitter : IEmitter
             if (!feat.IsSealed)
             {
                 context.ReportDiagnostic(
-                    Diagnostic.Create(FeatureClassNotSealed, Location.None, featCleanName)
+                    Diagnostic.Create(
+                        FeatureClassNotSealed,
+                        LocationHelper.ToLocation(feat.Location),
+                        featCleanName
+                    )
                 );
             }
 
@@ -938,7 +972,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             FeatureFieldNotConstString,
-                            Location.None,
+                            LocationHelper.ToLocation(field.Location),
                             field.FieldName,
                             featCleanName
                         )
@@ -952,7 +986,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             FeatureFieldNamingViolation,
-                            Location.None,
+                            LocationHelper.ToLocation(field.Location),
                             field.Value,
                             featCleanName
                         )
@@ -967,7 +1001,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                         context.ReportDiagnostic(
                             Diagnostic.Create(
                                 DuplicateFeatureName,
-                                Location.None,
+                                LocationHelper.ToLocation(field.Location),
                                 field.Value,
                                 Strip(existingOwner),
                                 featCleanName
