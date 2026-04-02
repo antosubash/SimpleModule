@@ -1,5 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Services;
 using SimpleModule.Core;
@@ -21,6 +25,8 @@ namespace SimpleModule.BackgroundJobs;
 )]
 public class BackgroundJobsModule : IModule
 {
+    private bool _tickerQRegistered;
+
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<BackgroundJobsDbContext>(
@@ -28,7 +34,6 @@ public class BackgroundJobsModule : IModule
             BackgroundJobsConstants.ModuleName
         );
 
-        // Job type registry — populated from ModuleJobRegistration singletons
         services.AddSingleton(sp =>
         {
             var registry = new JobTypeRegistry();
@@ -47,10 +52,8 @@ public class BackgroundJobsModule : IModule
 
         if (!isTesting)
         {
-            // Ensure BackgroundJobs tables exist before TickerQ starts
-            services.AddHostedService<DatabaseInitializer>();
+            _tickerQRegistered = true;
 
-            // TickerQ — skip in test environment (no real DB for scheduler)
             services.AddTickerQ(options =>
             {
                 options.SetExceptionHandler<JobExceptionHandler>();
@@ -61,24 +64,47 @@ public class BackgroundJobsModule : IModule
                 );
             });
 
-            // Progress tracking
             services.AddSingleton<ProgressChannel>();
             services.AddHostedService<ProgressFlushService>();
         }
         else
         {
-            // In test environment, register stubs — TickerQ managers are not available
             services.AddSingleton<ProgressChannel>();
-            // Register no-op manager stubs that satisfy DI without TickerQ runtime
-            services.AddSingleton(typeof(ITimeTickerManager<TimeTickerEntity>), sp =>
+            services.AddSingleton(typeof(ITimeTickerManager<TimeTickerEntity>), _ =>
                 NoOpTickerManagerFactory.CreateTimeManager());
-            services.AddSingleton(typeof(ICronTickerManager<CronTickerEntity>), sp =>
+            services.AddSingleton(typeof(ICronTickerManager<CronTickerEntity>), _ =>
                 NoOpTickerManagerFactory.CreateCronManager());
         }
 
-        // Services
         services.AddScoped<IBackgroundJobs, BackgroundJobsService>();
         services.AddScoped<IBackgroundJobsContracts, BackgroundJobsContractsService>();
+    }
+
+    public void ConfigureHost(IHost host)
+    {
+        if (!_tickerQRegistered)
+        {
+            return;
+        }
+
+        // Ensure tables exist before TickerQ's hosted services start
+        using var scope = host.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<BackgroundJobsDbContext>();
+        if (!db.Database.EnsureCreated())
+        {
+            try
+            {
+                db.GetService<IRelationalDatabaseCreator>()?.CreateTables();
+            }
+#pragma warning disable CA1031
+            catch
+#pragma warning restore CA1031
+            {
+                // Tables already exist
+            }
+        }
+
+        host.UseTickerQ();
     }
 
     public void ConfigurePermissions(PermissionRegistryBuilder builder)

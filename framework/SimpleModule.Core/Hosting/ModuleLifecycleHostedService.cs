@@ -10,10 +10,18 @@ namespace SimpleModule.Core.Hosting;
 /// </summary>
 public sealed partial class ModuleLifecycleHostedService(
     IEnumerable<IModule> modules,
+    IHost host,
     ILogger<ModuleLifecycleHostedService> logger
 ) : IHostedLifecycleService
 {
-    public Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StartingAsync(CancellationToken cancellationToken)
+    {
+        foreach (var module in modules)
+        {
+            module.ConfigureHost(host);
+        }
+        return Task.CompletedTask;
+    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
