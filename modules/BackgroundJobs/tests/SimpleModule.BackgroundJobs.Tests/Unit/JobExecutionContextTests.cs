@@ -14,7 +14,7 @@ public sealed class JobExecutionContextTests
         var data = new TestData("hello", 42);
         var payload = new JobDispatchPayload("TestType", JsonSerializer.Serialize(data));
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
+        var context = new DefaultJobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var result = context.GetData<TestData>();
 
@@ -27,7 +27,7 @@ public sealed class JobExecutionContextTests
     {
         var payload = new JobDispatchPayload("TestType", null);
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
+        var context = new DefaultJobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var act = () => context.GetData<TestData>();
 
@@ -39,7 +39,7 @@ public sealed class JobExecutionContextTests
     {
         var payload = new JobDispatchPayload("TestType", "");
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
+        var context = new DefaultJobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var act = () => context.GetData<TestData>();
 
@@ -52,7 +52,7 @@ public sealed class JobExecutionContextTests
         var data = new ComplexData([1, 2, 3], new Dictionary<string, string> { ["key"] = "value" });
         var payload = new JobDispatchPayload("TestType", JsonSerializer.Serialize(data));
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        var context = new JobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
+        var context = new DefaultJobExecutionContext(JobId.From(Guid.NewGuid()), payload, channel);
 
         var result = context.GetData<ComplexData>();
 
@@ -65,7 +65,7 @@ public sealed class JobExecutionContextTests
     {
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = JobId.From(Guid.NewGuid());
-        var context = new JobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
+        var context = new DefaultJobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
 
         context.ReportProgress(50, "Half done");
 
@@ -80,7 +80,7 @@ public sealed class JobExecutionContextTests
     public void ReportProgress_WithoutMessage_EnqueuesNullMessage()
     {
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        var context = new JobExecutionContext(
+        var context = new DefaultJobExecutionContext(
             JobId.From(Guid.NewGuid()),
             new JobDispatchPayload("Test", null),
             channel
@@ -98,7 +98,7 @@ public sealed class JobExecutionContextTests
     {
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = JobId.From(Guid.NewGuid());
-        var context = new JobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
+        var context = new DefaultJobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
 
         context.Log("Something happened");
 
@@ -112,7 +112,7 @@ public sealed class JobExecutionContextTests
     public void JobId_ReturnsCorrectId()
     {
         var id = JobId.From(Guid.NewGuid());
-        var context = new JobExecutionContext(
+        var context = new DefaultJobExecutionContext(
             id,
             new JobDispatchPayload("Test", null),
             new ProgressChannel(NullLogger<ProgressChannel>.Instance)
@@ -125,7 +125,7 @@ public sealed class JobExecutionContextTests
     public void ReportProgress_MultipleUpdates_AllEnqueued()
     {
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        var context = new JobExecutionContext(
+        var context = new DefaultJobExecutionContext(
             JobId.From(Guid.NewGuid()),
             new JobDispatchPayload("Test", null),
             channel

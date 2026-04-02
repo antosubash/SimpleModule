@@ -27,7 +27,7 @@ public sealed partial class JobExecutionBridge(
 
         await using var scope = serviceProvider.CreateAsyncScope();
         var job = (IModuleJob)scope.ServiceProvider.GetRequiredService(jobType);
-        var executionContext = new JobExecutionContext(
+        var executionContext = new DefaultJobExecutionContext(
             JobId.From(context.Id),
             context.Request,
             channel
