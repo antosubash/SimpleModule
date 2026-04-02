@@ -1,0 +1,12 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "welcome": "Welcome, {0}!"
+  },
+  "products": {
+    "title": "Products",
+    "create": "Create Product"
+  }
+}
