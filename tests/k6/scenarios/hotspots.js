@@ -367,7 +367,7 @@ export default function (data) {
     `${config.baseUrl}/api/tenants`,
     JSON.stringify({
       name: `k6-hs-${tenantSuffix}`,
-      identifier: `k6hs${tenantSuffix}`,
+      slug: `k6hs${tenantSuffix}`,
     }),
     { headers },
   );
