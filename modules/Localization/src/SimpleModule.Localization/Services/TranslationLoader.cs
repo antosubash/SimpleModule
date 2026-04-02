@@ -1,25 +1,54 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using SimpleModule.Core;
 
 namespace SimpleModule.Localization.Services;
 
 public sealed class TranslationLoader
 {
-    private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> _translations = new();
+    private static readonly Regex EmbeddedLocalePattern = new(@"\.Locales\.([^.]+)\.json$", RegexOptions.Compiled);
+
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _translations = new();
 
     public void Initialize(Assembly[] assemblies)
     {
         foreach (var assembly in assemblies)
         {
-            var assemblyDir = Path.GetDirectoryName(assembly.Location);
-            if (string.IsNullOrEmpty(assemblyDir))
+            var moduleName = GetModuleName(assembly);
+            if (moduleName is null)
             {
                 continue;
             }
 
-            var localesDir = Path.Combine(assemblyDir, "Locales");
-            LoadFromDirectory(localesDir);
+            var resourceNames = assembly.GetManifestResourceNames();
+            foreach (var resourceName in resourceNames)
+            {
+                var match = EmbeddedLocalePattern.Match(resourceName);
+                if (!match.Success)
+                {
+                    continue;
+                }
+
+                var locale = match.Groups[1].Value;
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream is null)
+                {
+                    continue;
+                }
+
+                using var reader = new StreamReader(stream);
+                var json = reader.ReadToEnd();
+                var flatTranslations = FlattenJson(json);
+
+                var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+                var prefix = moduleName.ToLowerInvariant();
+                foreach (var kvp in flatTranslations)
+                {
+                    localeDictionary[$"{prefix}.{kvp.Key}"] = kvp.Value;
+                }
+            }
         }
     }
 
@@ -34,14 +63,23 @@ public sealed class TranslationLoader
         {
             var locale = Path.GetFileNameWithoutExtension(file);
             var json = File.ReadAllText(file);
-            var translations = FlattenJson(json);
-            _translations[locale] = translations;
+            var flatTranslations = FlattenJson(json);
+
+            var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+            foreach (var kvp in flatTranslations)
+            {
+                localeDictionary[kvp.Key] = kvp.Value;
+            }
         }
     }
 
     internal void InitializeFromDictionary(string locale, IReadOnlyDictionary<string, string> translations)
     {
-        _translations[locale] = translations;
+        var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+        foreach (var kvp in translations)
+        {
+            localeDictionary[kvp.Key] = kvp.Value;
+        }
     }
 
     public string? GetTranslation(string key, string locale)
@@ -63,7 +101,7 @@ public sealed class TranslationLoader
     {
         if (_translations.TryGetValue(locale, out var translations))
         {
-            return translations;
+            return new Dictionary<string, string>(translations);
         }
 
         return new Dictionary<string, string>();
@@ -100,5 +138,38 @@ public sealed class TranslationLoader
                 result[prefix] = element.ToString();
                 break;
         }
+    }
+
+    private static string? GetModuleName(Assembly assembly)
+    {
+        try
+        {
+            foreach (var type in assembly.GetTypes())
+            {
+                var attr = type.GetCustomAttribute<ModuleAttribute>();
+                if (attr is not null)
+                {
+                    return attr.Name;
+                }
+            }
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            foreach (var type in ex.Types)
+            {
+                if (type is null)
+                {
+                    continue;
+                }
+
+                var attr = type.GetCustomAttribute<ModuleAttribute>();
+                if (attr is not null)
+                {
+                    return attr.Name;
+                }
+            }
+        }
+
+        return null;
     }
 }

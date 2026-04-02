@@ -23,7 +23,17 @@ public sealed class LocaleResolutionMiddleware(
     {
         var locale = await ResolveLocaleAsync(context);
 
-        var culture = new CultureInfo(locale);
+        CultureInfo culture;
+        try
+        {
+            culture = new CultureInfo(locale);
+        }
+        catch (CultureNotFoundException)
+        {
+            locale = _configuration["Localization:DefaultLocale"] ?? "en";
+            culture = new CultureInfo(locale);
+        }
+
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
 
