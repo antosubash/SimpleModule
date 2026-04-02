@@ -160,6 +160,18 @@ k6-files: ## Run k6 file upload/download load test
 k6-marketplace: ## Run k6 marketplace API load test (anonymous)
 	k6 run $(K6_DIR)/scenarios/marketplace.js
 
+.PHONY: k6-jobs
+k6-jobs: ## Run k6 background jobs load test
+	k6 run $(K6_DIR)/scenarios/background-jobs.js
+
+.PHONY: k6-feature-flags
+k6-feature-flags: ## Run k6 feature flags CRUD load test
+	k6 run $(K6_DIR)/scenarios/feature-flags.js
+
+.PHONY: k6-tenants
+k6-tenants: ## Run k6 tenants CRUD load test
+	k6 run $(K6_DIR)/scenarios/tenants.js
+
 .PHONY: k6-mixed
 k6-mixed: ## Run k6 mixed traffic load test (realistic simulation)
 	k6 run $(K6_DIR)/scenarios/mixed.js
@@ -178,7 +190,7 @@ k6-spike: ## Run k6 spike test (sudden traffic burst)
 	K6_PROFILE=spike k6 run $(K6_DIR)/scenarios/mixed.js
 
 .PHONY: k6-all
-k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-page-lifecycle k6-settings k6-users k6-audit-logs k6-files k6-marketplace k6-mixed ## Run all k6 load test scenarios
+k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-page-lifecycle k6-settings k6-users k6-audit-logs k6-files k6-marketplace k6-jobs k6-feature-flags k6-tenants k6-mixed ## Run all k6 load test scenarios
 
 # ─── Database ────────────────────────────────────
 

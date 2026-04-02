@@ -1,10 +1,10 @@
-import http from 'k6/http';
-import { sleep } from 'k6';
-import { Trend } from 'k6/metrics';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { randomString, randomInt } from '../lib/helpers.js';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.1.0/index.js';
+import { sleep } from 'k6';
+import http from 'k6/http';
+import { Trend } from 'k6/metrics';
+import { authenticate, authHeaders } from '../lib/auth.js';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
+import { randomInt, randomString } from '../lib/helpers.js';
 
 const profile = __ENV.K6_PROFILE || 'load';
 
@@ -61,6 +61,21 @@ const endpoints = {
 
   // Marketplace
   searchMarketplace: new Trend('endpoint_search_marketplace', true),
+
+  // BackgroundJobs
+  listJobs: new Trend('endpoint_list_jobs', true),
+  listRecurring: new Trend('endpoint_list_recurring', true),
+
+  // FeatureFlags
+  listFlags: new Trend('endpoint_list_flags', true),
+  checkFlag: new Trend('endpoint_check_flag', true),
+
+  // Tenants
+  listTenants: new Trend('endpoint_list_tenants', true),
+  createTenant: new Trend('endpoint_create_tenant', true),
+  getTenant: new Trend('endpoint_get_tenant', true),
+  getTenantFeatures: new Trend('endpoint_get_tenant_features', true),
+  deleteTenant: new Trend('endpoint_delete_tenant', true),
 };
 
 export const options = {
@@ -101,6 +116,15 @@ export const options = {
     endpoint_list_files: ['p(95)<500'],
     endpoint_list_folders: ['p(95)<500'],
     endpoint_search_marketplace: ['p(95)<2000'],
+    endpoint_list_jobs: ['p(95)<500'],
+    endpoint_list_recurring: ['p(95)<500'],
+    endpoint_list_flags: ['p(95)<500'],
+    endpoint_check_flag: ['p(95)<300'],
+    endpoint_list_tenants: ['p(95)<500'],
+    endpoint_create_tenant: ['p(95)<500'],
+    endpoint_get_tenant: ['p(95)<500'],
+    endpoint_get_tenant_features: ['p(95)<500'],
+    endpoint_delete_tenant: ['p(95)<500'],
   },
 };
 
@@ -196,7 +220,11 @@ export default function (data) {
     res = http.get(`${config.baseUrl}/api/products/${pid}`, { headers });
     endpoints.getProduct.add(res.timings.duration);
 
-    res = http.put(`${config.baseUrl}/api/products/${pid}`, JSON.stringify({ ...product, name: `k6-upd-${randomString()}` }), { headers });
+    res = http.put(
+      `${config.baseUrl}/api/products/${pid}`,
+      JSON.stringify({ ...product, name: `k6-upd-${randomString()}` }),
+      { headers },
+    );
     endpoints.updateProduct.add(res.timings.duration);
 
     res = http.del(`${config.baseUrl}/api/products/${pid}`, null, { headers });
@@ -207,10 +235,14 @@ export default function (data) {
   res = http.get(`${config.baseUrl}/api/orders`, { headers });
   endpoints.listOrders.add(res.timings.duration);
 
-  res = http.post(`${config.baseUrl}/api/orders`, JSON.stringify({
-    userId: data.userId,
-    items: [{ productId: data.productId, quantity: randomInt(1, 5) }],
-  }), { headers });
+  res = http.post(
+    `${config.baseUrl}/api/orders`,
+    JSON.stringify({
+      userId: data.userId,
+      items: [{ productId: data.productId, quantity: randomInt(1, 5) }],
+    }),
+    { headers },
+  );
   endpoints.createOrder.add(res.timings.duration);
 
   if (res.status === 201) {
@@ -228,7 +260,11 @@ export default function (data) {
   endpoints.listPages.add(res.timings.duration);
 
   const slug = `k6-hs-${randomString(10)}`;
-  res = http.post(`${config.baseUrl}/api/pagebuilder`, JSON.stringify({ title: `K6 ${randomString()}`, slug }), { headers });
+  res = http.post(
+    `${config.baseUrl}/api/pagebuilder`,
+    JSON.stringify({ title: `K6 ${randomString()}`, slug }),
+    { headers },
+  );
   endpoints.createPage.add(res.timings.duration);
 
   if (res.status === 201) {
@@ -237,7 +273,11 @@ export default function (data) {
     res = http.get(`${config.baseUrl}/api/pagebuilder/${pgid}`, { headers });
     endpoints.getPage.add(res.timings.duration);
 
-    res = http.put(`${config.baseUrl}/api/pagebuilder/${pgid}/content`, JSON.stringify({ content: `<p>${randomString(50)}</p>` }), { headers });
+    res = http.put(
+      `${config.baseUrl}/api/pagebuilder/${pgid}/content`,
+      JSON.stringify({ content: `<p>${randomString(50)}</p>` }),
+      { headers },
+    );
     endpoints.updatePageContent.add(res.timings.duration);
 
     res = http.post(`${config.baseUrl}/api/pagebuilder/${pgid}/publish`, null, { headers });
@@ -292,6 +332,59 @@ export default function (data) {
   // --- Marketplace (anonymous) ---
   res = http.get(`${config.baseUrl}/api/marketplace?take=5`);
   endpoints.searchMarketplace.add(res.timings.duration);
+
+  // --- BackgroundJobs ---
+  res = http.get(`${config.baseUrl}/api/jobs`, { headers });
+  endpoints.listJobs.add(res.timings.duration);
+
+  res = http.get(`${config.baseUrl}/api/jobs/recurring`, { headers });
+  endpoints.listRecurring.add(res.timings.duration);
+
+  // --- FeatureFlags ---
+  res = http.get(`${config.baseUrl}/api/feature-flags`, { headers });
+  endpoints.listFlags.add(res.timings.duration);
+
+  // Check a flag if any exist
+  if (res.status === 200) {
+    try {
+      const flags = JSON.parse(res.body);
+      const items = Array.isArray(flags) ? flags : flags.items || [];
+      if (items.length > 0) {
+        res = http.get(`${config.baseUrl}/api/feature-flags/check/${items[0].name}`, { headers });
+        endpoints.checkFlag.add(res.timings.duration);
+      }
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  // --- Tenants CRUD ---
+  res = http.get(`${config.baseUrl}/api/tenants`, { headers });
+  endpoints.listTenants.add(res.timings.duration);
+
+  const tenantSuffix = randomString(8);
+  res = http.post(
+    `${config.baseUrl}/api/tenants`,
+    JSON.stringify({
+      name: `k6-hs-${tenantSuffix}`,
+      identifier: `k6hs${tenantSuffix}`,
+    }),
+    { headers },
+  );
+  endpoints.createTenant.add(res.timings.duration);
+
+  if (res.status === 201) {
+    const tid = JSON.parse(res.body).id;
+
+    res = http.get(`${config.baseUrl}/api/tenants/${tid}`, { headers });
+    endpoints.getTenant.add(res.timings.duration);
+
+    res = http.get(`${config.baseUrl}/api/tenants/${tid}/features`, { headers });
+    endpoints.getTenantFeatures.add(res.timings.duration);
+
+    res = http.del(`${config.baseUrl}/api/tenants/${tid}`, null, { headers });
+    endpoints.deleteTenant.add(res.timings.duration);
+  }
 
   sleep(0.5);
 }
