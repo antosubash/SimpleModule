@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\src\SimpleModule.Localization\SimpleModule.Localization.csproj" />
     <ProjectReference Include="..\..\src\SimpleModule.Localization.Contracts\SimpleModule.Localization.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Settings\src\SimpleModule.Settings.Contracts\SimpleModule.Settings.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Fixtures\Locales\*.json">
