@@ -443,6 +443,13 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 |------------|----------|------|
 | SM0039 | Warning | Interceptor has transitive DbContext dependency (resolve at interception time) |
 
+### Localization
+
+| Diagnostic | Severity | Rule |
+|------------|----------|------|
+| SM0049 | Warning | Module has `IStringLocalizer` injection but no `Locales/en.json` embedded resource |
+| SM0050 | Warning | `Locales/en.json` exists but is not marked as `EmbeddedResource` in `.csproj` |
+
 ---
 
 ## 12. Framework Contributor Guidelines
