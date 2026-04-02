@@ -28,6 +28,17 @@ COPY framework/SimpleModule.Hosting/*.csproj framework/SimpleModule.Hosting/
 COPY framework/SimpleModule.DevTools/*.csproj framework/SimpleModule.DevTools/
 COPY framework/SimpleModule.Storage/*.csproj framework/SimpleModule.Storage/
 COPY framework/SimpleModule.Storage.Local/*.csproj framework/SimpleModule.Storage.Local/
+COPY framework/SimpleModule.Storage.Azure/*.csproj framework/SimpleModule.Storage.Azure/
+COPY framework/SimpleModule.Storage.S3/*.csproj framework/SimpleModule.Storage.S3/
+COPY framework/SimpleModule.Agents/*.csproj framework/SimpleModule.Agents/
+COPY framework/SimpleModule.AI.Anthropic/*.csproj framework/SimpleModule.AI.Anthropic/
+COPY framework/SimpleModule.AI.AzureOpenAI/*.csproj framework/SimpleModule.AI.AzureOpenAI/
+COPY framework/SimpleModule.AI.Ollama/*.csproj framework/SimpleModule.AI.Ollama/
+COPY framework/SimpleModule.AI.OpenAI/*.csproj framework/SimpleModule.AI.OpenAI/
+COPY framework/SimpleModule.Rag/*.csproj framework/SimpleModule.Rag/
+COPY framework/SimpleModule.Rag.StructuredRag/*.csproj framework/SimpleModule.Rag.StructuredRag/
+COPY framework/SimpleModule.Rag.VectorStore.InMemory/*.csproj framework/SimpleModule.Rag.VectorStore.InMemory/
+COPY framework/SimpleModule.Rag.VectorStore.Postgres/*.csproj framework/SimpleModule.Rag.VectorStore.Postgres/
 
 # ServiceDefaults
 COPY SimpleModule.ServiceDefaults/*.csproj SimpleModule.ServiceDefaults/
@@ -64,6 +75,12 @@ COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/*.csproj modul
 COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags/*.csproj modules/FeatureFlags/src/SimpleModule.FeatureFlags/
 COPY modules/Tenants/src/SimpleModule.Tenants.Contracts/*.csproj modules/Tenants/src/SimpleModule.Tenants.Contracts/
 COPY modules/Tenants/src/SimpleModule.Tenants/*.csproj modules/Tenants/src/SimpleModule.Tenants/
+COPY modules/Agents/src/SimpleModule.Agents.Module/*.csproj modules/Agents/src/SimpleModule.Agents.Module/
+COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/
+COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
+COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modules/Localization/src/SimpleModule.Localization.Contracts/
+COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
+COPY modules/Rag/src/SimpleModule.Rag.Module/*.csproj modules/Rag/src/SimpleModule.Rag.Module/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
@@ -90,6 +107,7 @@ COPY modules/Products/src/SimpleModule.Products/package.json modules/Products/sr
 COPY modules/Settings/src/SimpleModule.Settings/package.json modules/Settings/src/SimpleModule.Settings/
 COPY modules/Tenants/src/SimpleModule.Tenants/package.json modules/Tenants/src/SimpleModule.Tenants/
 COPY modules/Users/src/SimpleModule.Users/package.json modules/Users/src/SimpleModule.Users/
+COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
 COPY packages/SimpleModule.UI/package.json packages/SimpleModule.UI/
