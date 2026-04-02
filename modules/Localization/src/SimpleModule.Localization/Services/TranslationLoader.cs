@@ -43,7 +43,7 @@ public sealed class TranslationLoader
                 var flatTranslations = FlattenJson(json);
 
                 var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
-                var prefix = moduleName.ToLowerInvariant();
+                var prefix = moduleName;
                 foreach (var kvp in flatTranslations)
                 {
                     localeDictionary[$"{prefix}.{kvp.Key}"] = kvp.Value;

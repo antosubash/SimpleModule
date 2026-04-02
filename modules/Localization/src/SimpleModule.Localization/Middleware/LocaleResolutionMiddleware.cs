@@ -63,16 +63,25 @@ public sealed class LocaleResolutionMiddleware(
             }
         }
 
-        var acceptLanguage = context.Request.Headers.AcceptLanguage.ToString();
-        if (!string.IsNullOrEmpty(acceptLanguage))
+        var acceptLanguageHeaders = context.Request.GetTypedHeaders().AcceptLanguage;
+        if (acceptLanguageHeaders is { Count: > 0 })
         {
-            var parsed = acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            if (parsed.Length > 0)
+            var supportedLocales = _loader.GetSupportedLocales();
+            foreach (var lang in acceptLanguageHeaders.OrderByDescending(l => l.Quality ?? 1.0))
             {
-                var primary = parsed[0].Split(';', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
-                if (primary.Length >= 2)
+                var tag = lang.Value.ToString();
+
+                // Try exact match first (e.g., "en-US")
+                if (supportedLocales.Contains(tag))
                 {
-                    return primary[..2];
+                    return tag;
+                }
+
+                // Try two-letter prefix (e.g., "en-US" → "en")
+                var twoLetter = tag.Split('-')[0];
+                if (supportedLocales.Contains(twoLetter))
+                {
+                    return twoLetter;
                 }
             }
         }
