@@ -5,7 +5,8 @@
     <InvariantGlobalization>false</InvariantGlobalization>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <!-- IModuleJob is a cross-module extension point — no implementation required in BackgroundJobs module -->
-    <NoWarn>$(NoWarn);SM0025</NoWarn>
+    <!-- IModuleJob/IJobExecutionContext are cross-module extension points -->
+    <NoWarn>$(NoWarn);SM0025;SM0028</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.Tests.Shared" />

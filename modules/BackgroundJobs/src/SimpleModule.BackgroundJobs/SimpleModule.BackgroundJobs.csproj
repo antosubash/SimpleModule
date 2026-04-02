@@ -3,6 +3,9 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="SimpleModule.BackgroundJobs.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Cronos" />
     <PackageReference Include="TickerQ" />

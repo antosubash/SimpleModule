@@ -3,7 +3,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 
 namespace SimpleModule.BackgroundJobs.Services;
 
-public sealed class DefaultJobExecutionContext(
+internal sealed class DefaultJobExecutionContext(
     JobId jobId,
     JobDispatchPayload payload,
     ProgressChannel channel
