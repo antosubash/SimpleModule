@@ -13,75 +13,31 @@ on:
           - minor
           - major
 
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
-
-  pull_request:
-    types: [closed]
-    branches: [main]
-
 concurrency:
   group: release
   cancel-in-progress: false
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  version:
+  release:
     runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
     outputs:
       version: ${{ steps.bump.outputs.version }}
-      skip: ${{ steps.check.outputs.skip }}
     steps:
       - uses: actions/checkout@v6
         with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
           fetch-depth: 0
 
-      - name: Check if release commit
-        id: check
-        run: |
-          # For workflow_run, check the commit that triggered CI (not current HEAD)
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            SHA="${{ github.event.workflow_run.head_sha }}"
-          else
-            SHA="HEAD"
-          fi
-          MSG=$(git log -1 --pretty=%s "$SHA")
-          if [[ "$MSG" == release:* ]]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Skipping: commit $SHA is a release commit"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Determine bump type
-        if: steps.check.outputs.skip != 'true'
-        id: bump-type
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "bump=${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "bump=patch" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Bump version
-        if: steps.check.outputs.skip != 'true'
         id: bump
         run: |
           CURRENT=$(jq -r .version version.json)
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
 
-          BUMP="${{ steps.bump-type.outputs.bump }}"
-          case "$BUMP" in
+          case "${{ inputs.bump }}" in
             major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
             minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
             patch) PATCH=$((PATCH + 1)) ;;
@@ -89,127 +45,74 @@ jobs:
 
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
           jq -n --arg v "$NEW_VERSION" '{"version": $v}' > version.json
-          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Bumped $CURRENT -> $NEW_VERSION ($BUMP)"
 
-      - name: Create release PR
-        if: steps.check.outputs.skip != 'true'
-        id: push
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Bumped $CURRENT -> $NEW_VERSION (${{ inputs.bump }})"
+
+      - name: Commit and push
         run: |
           VERSION="${{ steps.bump.outputs.version }}"
-          BRANCH="release-v${VERSION}"
-
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git checkout -b "$BRANCH"
           git add version.json
           git commit -m "release: v${VERSION} [no ci]"
-          git push origin "$BRANCH"
-
-          gh pr create \
-            --base main \
-            --head "$BRANCH" \
-            --title "release: v${VERSION}" \
-            --body "Automated release v${VERSION}"
-          gh pr merge "$BRANCH" --auto --squash --delete-branch
-
-  publish-nuget:
-    runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.title, 'release: v')
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Extract version
-        id: version
-        run: echo "version=$(jq -r .version version.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Pack
-        run: dotnet pack -c Release -p:Version=${{ steps.version.outputs.version }} --no-restore -o ./nupkgs
-
-      - name: Push to NuGet
-        run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-
-  publish-npm:
-    runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.title, 'release: v')
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Extract version
-        id: version
-        run: echo "version=$(jq -r .version version.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build frontend
-        run: npm run build
-
-      - name: Set version and publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          for pkg in packages/SimpleModule.Client packages/SimpleModule.UI packages/SimpleModule.Theme.Default; do
-            (cd "$pkg" && npm version "$VERSION" --no-git-tag-version && npm publish --access public)
-          done
-
-  github-release:
-    runs-on: ubuntu-latest
-    needs: [publish-nuget, publish-npm]
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      startsWith(github.event.pull_request.title, 'release: v')
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
+          git push origin main
 
       - name: Create tag and GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="$(jq -r .version version.json)"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION="${{ steps.bump.outputs.version }}"
           git tag -a "v${VERSION}" -m "v${VERSION}"
           git push origin "v${VERSION}"
           gh release create "v${VERSION}" \
             --title "v${VERSION}" \
             --generate-notes
+
+  publish-nuget:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: dotnet restore
+      - run: dotnet pack -c Release -p:Version=${{ needs.release.outputs.version }} --no-restore -o ./nupkgs
+      - run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  publish-npm:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Set version and publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION="${{ needs.release.outputs.version }}"
+          for pkg in packages/SimpleModule.Client packages/SimpleModule.UI packages/SimpleModule.Theme.Default; do
+            (cd "$pkg" && npm version "$VERSION" --no-git-tag-version && npm publish --access public)
+          done
