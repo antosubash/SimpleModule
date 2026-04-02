@@ -45,7 +45,7 @@ export default function Edit({ product }: Props) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -60,7 +60,7 @@ export default function Edit({ product }: Props) {
       <h1 className="text-2xl font-bold tracking-tight">Edit Product</h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
@@ -90,7 +90,7 @@ export default function Edit({ product }: Props) {
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-text-muted mb-3">
+          <p className="text-sm text-text-muted mb-2 sm:mb-3">
             Permanently delete this product. This action cannot be undone.
           </p>
           <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>

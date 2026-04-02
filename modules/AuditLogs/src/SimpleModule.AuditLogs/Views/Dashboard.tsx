@@ -103,10 +103,10 @@ function KpiCard({
 }) {
   return (
     <Card className={onClick ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}>
-      <CardContent className="p-5" onClick={onClick}>
+      <CardContent className="p-4 sm:p-5" onClick={onClick}>
         <p className="text-xs font-medium tracking-wide text-text-muted uppercase">{title}</p>
         <p
-          className={`mt-1 text-2xl font-bold tabular-nums ${
+          className={`mt-1 text-xl sm:text-2xl font-bold tabular-nums ${
             accent === 'danger' ? 'text-danger' : 'text-text'
           }`}
         >
@@ -136,8 +136,12 @@ function DonutCard({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-center">
-        <ChartContainer config={config} style={{ height: 220, maxWidth: 300, margin: '0 auto' }}>
+      <CardContent className="flex flex-1 flex-col justify-center p-4 sm:p-6">
+        <ChartContainer
+          config={config}
+          className="min-h-[180px] sm:min-h-[220px]"
+          style={{ maxWidth: 300, margin: '0 auto' }}
+        >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
             <Pie
@@ -194,8 +198,8 @@ function HBarCard({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1">
-        <ChartContainer config={config} style={{ height: 280 }}>
+      <CardContent className="flex-1 p-4 sm:p-6">
+        <ChartContainer config={config} className="min-h-[220px] sm:min-h-[280px]">
           <BarChart
             data={data}
             layout="vertical"
@@ -310,11 +314,11 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
 
   return (
     <PageShell
-      className="space-y-4"
+      className="space-y-4 sm:space-y-6"
       title="Audit Dashboard"
       description="System activity overview and metrics"
       actions={
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
           {/* Quick date presets */}
           {DATE_PRESETS.map((preset) => (
             <Button
@@ -337,7 +341,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           <div className="space-y-1">
             <span className="text-xs font-medium text-text-muted">User</span>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="w-[180px]" aria-label="User">
+              <SelectTrigger className="w-full sm:w-[180px]" aria-label="User">
                 <SelectValue placeholder="All users" />
               </SelectTrigger>
               <SelectContent>
@@ -355,7 +359,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       }
     >
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         <KpiCard
           title="Total Events"
           value={stats.totalEntries.toLocaleString()}
@@ -384,8 +388,8 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Activity Timeline</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={timelineConfig} style={{ height: 250 }}>
+          <CardContent className="p-4 sm:p-6">
+            <ChartContainer config={timelineConfig} className="min-h-[200px] sm:min-h-[250px]">
               <AreaChart data={stats.timeline} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="fillHttp" x1="0" y1="0" x2="0" y2="1">
@@ -442,7 +446,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       )}
 
       {/* Row: Source Pie + Action Bar */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         {sourceData.length > 0 && (
           <DonutCard
             title="By Source"
@@ -457,7 +461,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       </div>
 
       {/* Row: Status Pie + Module Bar */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         {statusData.length > 0 && (
           <DonutCard
             title="Status Codes"
@@ -472,7 +476,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       </div>
 
       {/* Row: Top Users + Top Paths */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         {stats.topUsers.length > 0 && (
           <HBarCard
             title="Top Users"
@@ -501,8 +505,8 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Entity Types</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={entityConfig} style={{ height: 200 }}>
+          <CardContent className="p-4 sm:p-6">
+            <ChartContainer config={entityConfig} className="min-h-[180px] sm:min-h-[200px]">
               <BarChart data={entityData} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
@@ -525,8 +529,8 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Hourly Activity Distribution</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={hourlyConfig} style={{ height: 200 }}>
+          <CardContent className="p-4 sm:p-6">
+            <ChartContainer config={hourlyConfig} className="min-h-[180px] sm:min-h-[200px]">
               <BarChart
                 data={stats.hourlyDistribution}
                 margin={{ top: 0, right: 16, bottom: 0, left: 0 }}

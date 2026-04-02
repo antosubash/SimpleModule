@@ -48,11 +48,11 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
   return (
     <PageShell title="Settings">
       <Tabs defaultValue="system">
-        <TabsList>
+        <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="system">System</TabsTrigger>
           <TabsTrigger value="application">Application</TabsTrigger>
         </TabsList>
-        <TabsContent value="system" className="space-y-4">
+        <TabsContent value="system" className="space-y-4 sm:space-y-6">
           {Object.entries(groupBy(systemDefs)).map(([group, defs]) => (
             <SettingGroup
               key={group}
@@ -63,7 +63,7 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
             />
           ))}
         </TabsContent>
-        <TabsContent value="application" className="space-y-4">
+        <TabsContent value="application" className="space-y-4 sm:space-y-6">
           {Object.entries(groupBy(appDefs)).map(([group, defs]) => (
             <SettingGroup
               key={group}

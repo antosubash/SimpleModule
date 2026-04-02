@@ -10,11 +10,11 @@ export default function GenerateRecoveryCodes() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
         Generate two-factor authentication (2FA) recovery codes
       </h3>
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>Put these codes in a safe place.</AlertTitle>
         <AlertDescription>
           <p>

@@ -84,7 +84,7 @@ export default function Recurring({ jobs }: Props) {
                     {job.lastRunAt ? new Date(job.lastRunAt).toLocaleString() : 'Never'}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleToggle(job.id)}>
                         {job.isEnabled ? 'Disable' : 'Enable'}
                       </Button>

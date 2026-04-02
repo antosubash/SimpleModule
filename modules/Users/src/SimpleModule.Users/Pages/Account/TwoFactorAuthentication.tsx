@@ -33,7 +33,7 @@ export default function TwoFactorAuthentication({
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Two-factor authentication (2FA)</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">Two-factor authentication (2FA)</h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -91,7 +91,7 @@ export default function TwoFactorAuthentication({
             </Alert>
           )}
 
-          <div className="mb-6 space-y-3">
+          <div className="mb-4 sm:mb-6 space-y-3">
             {isMachineRemembered && (
               <form onSubmit={handleForgetBrowser}>
                 <Button type="submit" variant="outline">
@@ -115,11 +115,11 @@ export default function TwoFactorAuthentication({
             </div>
           </div>
 
-          <div className="border-t border-border pt-6" />
+          <div className="border-t border-border pt-4 sm:pt-6" />
         </>
       )}
 
-      <h3 className="text-lg font-semibold mb-4">Authenticator app</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">Authenticator app</h3>
       {!hasAuthenticator ? (
         <Button onClick={() => router.get('/Identity/Account/Manage/EnableAuthenticator')}>
           Add authenticator app

@@ -45,43 +45,45 @@ export default function Manage({ products }: Props) {
         emptyDescription="Get started by creating your first product."
       >
         {(pageData) => (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageData.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="text-text-muted">#{product.id}</TableCell>
-                  <TableCell className="font-medium text-text">{product.name}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.get(`/products/${product.id}/edit`)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="text-text-muted">#{product.id}</TableCell>
+                    <TableCell className="font-medium text-text">{product.name}</TableCell>
+                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/products/${product.id}/edit`)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </DataGridPage>
 

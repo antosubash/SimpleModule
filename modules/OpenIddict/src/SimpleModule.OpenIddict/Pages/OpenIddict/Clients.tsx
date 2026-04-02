@@ -74,7 +74,7 @@ export default function Clients({ clients }: Props) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="ghost"
                         size="sm"

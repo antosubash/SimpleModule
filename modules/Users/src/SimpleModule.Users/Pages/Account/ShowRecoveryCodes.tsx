@@ -9,7 +9,7 @@ interface Props {
 export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Props) {
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Recovery codes</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">Recovery codes</h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -17,7 +17,7 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
         </Alert>
       )}
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>Put these codes in a safe place.</AlertTitle>
         <AlertDescription>
           If you lose your device and don&apos;t have the recovery codes you will lose access to
@@ -25,7 +25,7 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
         </AlertDescription>
       </Alert>
 
-      <div className="grid grid-cols-2 gap-2 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 sm:mb-6">
         {recoveryCodes.map((code) => (
           <code
             key={code}

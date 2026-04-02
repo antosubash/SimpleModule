@@ -32,7 +32,7 @@ export default function ClientsCreate() {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -47,9 +47,9 @@ export default function ClientsCreate() {
       <h1 className="text-2xl font-bold tracking-tight">Create Client</h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
-            <FieldGroup className="space-y-6">
+            <FieldGroup className="space-y-4 sm:space-y-6">
               <Field>
                 <Label htmlFor="clientId">Client ID</Label>
                 <Input id="clientId" name="clientId" required placeholder="my-app-client" />

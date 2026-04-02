@@ -43,7 +43,7 @@ function DashboardView({ displayName }: { displayName: string }) {
       description="Here's your development dashboard"
     >
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         <a href="/Identity/Account/Manage" className="no-underline">
           <Card className="h-full group">
             <CardContent>
@@ -118,7 +118,7 @@ function DashboardView({ displayName }: { displayName: string }) {
         </a>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         <UserInfoPanel />
         <TokenTester />
       </div>
@@ -148,10 +148,12 @@ function InfoRow({
   monospace?: boolean;
 }) {
   return (
-    <div className="flex justify-between items-center py-3 text-sm border-b border-border last:border-b-0">
+    <div className="flex flex-col gap-1 py-3 text-sm border-b border-border last:border-b-0 sm:flex-row sm:justify-between sm:items-center sm:gap-0">
       <span className="text-text-muted text-xs uppercase tracking-wide">{label}</span>
       <span
-        className={monospace ? 'font-mono text-xs text-text-secondary' : 'font-medium text-text'}
+        className={
+          monospace ? 'font-mono text-xs text-text-secondary break-all' : 'font-medium text-text'
+        }
       >
         {value}
       </span>
@@ -367,28 +369,30 @@ function TokenTester() {
         </Button>
         {token && (
           <div>
-            <div className="bg-surface-raised rounded-xl p-3 font-mono text-xs break-all max-h-30 overflow-auto mt-4">
+            <div className="bg-surface-raised rounded-xl p-2.5 sm:p-3 font-mono text-xs break-all max-h-30 overflow-auto mt-4">
               {token}
             </div>
             {claims && (
               <>
                 <h3 className="text-sm font-semibold mt-4 mb-2">Decoded Claims</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Claim</TableHead>
-                      <TableHead>Value</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {claims.map((claim) => (
-                      <TableRow key={claim.key}>
-                        <TableCell>{claim.key}</TableCell>
-                        <TableCell>{claim.value}</TableCell>
+                <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Claim</TableHead>
+                        <TableHead>Value</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {claims.map((claim) => (
+                        <TableRow key={claim.key}>
+                          <TableCell>{claim.key}</TableCell>
+                          <TableCell>{claim.value}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </>
             )}
           </div>
@@ -463,7 +467,7 @@ function ApiTester() {
       </CardHeader>
       <CardContent>
         <h3 className="text-sm font-semibold mb-3">Call Protected Endpoints</h3>
-        <div className="flex gap-2 flex-wrap mb-4">
+        <div className="flex gap-2 flex-wrap mb-4 overflow-x-auto">
           {API_ENDPOINTS.map((url) => (
             <Button key={url} variant="outline" size="sm" onClick={() => callApi(url)}>
               GET {url}
@@ -496,23 +500,23 @@ function ApiTester() {
 
 function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
   return (
-    <Container className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
-      <div className="text-center max-w-lg mx-auto">
+    <Container className="flex items-center justify-center min-h-[calc(100vh-16rem)] px-4">
+      <div className="text-center max-w-lg mx-auto w-full">
         {/* Inline style required: Tailwind gradient utilities cannot reference CSS custom properties */}
         <div
-          className="w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center text-white text-2xl font-bold shadow-lg"
+          className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-lg"
           style={{
             background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))',
           }}
         >
           S
         </div>
-        <h1 className="text-4xl font-extrabold mb-3 tracking-tight">SimpleModule</h1>
-        <p className="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
+        <h1 className="text-3xl sm:text-4xl font-extrabold mb-3 tracking-tight">SimpleModule</h1>
+        <p className="text-text-muted text-sm sm:text-base mb-6 sm:mb-8 max-w-sm mx-auto leading-relaxed">
           Modular monolith framework for .NET with compile&#8209;time module&nbsp;discovery
         </p>
 
-        <div className="flex gap-3 justify-center flex-wrap">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button asChild size="lg">
             <a href="/Identity/Account/Login" className="no-underline">
               Get Started

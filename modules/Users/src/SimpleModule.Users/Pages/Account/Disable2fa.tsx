@@ -10,9 +10,11 @@ export default function Disable2fa() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Disable two-factor authentication (2FA)</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        Disable two-factor authentication (2FA)
+      </h3>
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>This action only disables 2FA.</AlertTitle>
         <AlertDescription>
           Disabling 2FA does not change the keys used in authenticator apps. If you wish to change

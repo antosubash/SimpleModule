@@ -36,7 +36,7 @@ export default function Dashboard({
 }: Props) {
   return (
     <PageShell title="Background Jobs" description="Overview of job processing activity">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Active Jobs</CardTitle>
@@ -88,7 +88,7 @@ export default function Dashboard({
       </div>
 
       {activeJobs.length > 0 && (
-        <Card className="mt-6">
+        <Card className="mt-4 sm:mt-6">
           <CardHeader>
             <CardTitle>Currently Running</CardTitle>
           </CardHeader>
@@ -97,13 +97,13 @@ export default function Dashboard({
               {activeJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="flex items-center justify-between rounded-md border p-3"
+                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border p-3"
                 >
                   <div>
                     <span className="font-medium">{job.jobType}</span>
                     <span className="ml-2 text-sm text-text-muted">{job.progressMessage}</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <Progress value={job.progressPercentage} className="w-24" />
                     <span className="text-sm">{job.progressPercentage}%</span>
                   </div>
@@ -115,7 +115,7 @@ export default function Dashboard({
       )}
 
       {failedJobs.length > 0 && (
-        <Card className="mt-6">
+        <Card className="mt-4 sm:mt-6">
           <CardHeader>
             <CardTitle>Recent Failures</CardTitle>
           </CardHeader>

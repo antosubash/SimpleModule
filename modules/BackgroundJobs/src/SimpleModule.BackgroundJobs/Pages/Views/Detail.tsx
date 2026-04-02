@@ -51,7 +51,7 @@ export default function Detail({ job }: Props) {
       title={job.jobType}
       description={`Module: ${job.moduleName}`}
       actions={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {job.state === 'Running' && (
             <Button variant="danger" onClick={() => router.post(`/api/jobs/${job.id}/cancel`)}>
               Cancel
@@ -66,7 +66,7 @@ export default function Detail({ job }: Props) {
         </div>
       }
     >
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Status</CardTitle>
@@ -114,7 +114,7 @@ export default function Detail({ job }: Props) {
       </div>
 
       {job.error && (
-        <Card className="mt-6 border-red-200">
+        <Card className="mt-4 sm:mt-6 border-red-200">
           <CardHeader>
             <CardTitle className="text-red-600">Error</CardTitle>
           </CardHeader>
@@ -127,14 +127,14 @@ export default function Detail({ job }: Props) {
       )}
 
       {job.logs.length > 0 && (
-        <Card className="mt-6">
+        <Card className="mt-4 sm:mt-6">
           <CardHeader>
             <CardTitle>Logs ({job.logs.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="max-h-96 overflow-auto">
               {job.logs.map((log, i) => (
-                <div key={i} className="flex gap-3 border-b py-1.5 text-sm last:border-0">
+                <div key={i} className="flex gap-2 sm:gap-3 border-b py-1.5 text-sm last:border-0">
                   <span className="shrink-0 text-text-muted">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>

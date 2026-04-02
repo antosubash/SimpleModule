@@ -10,9 +10,9 @@ export default function ResetAuthenticator() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Reset authenticator key</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">Reset authenticator key</h3>
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>
           If you reset your authenticator key your authenticator app will not work until you
           reconfigure it.

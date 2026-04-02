@@ -39,7 +39,7 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Configure authenticator app</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">Configure authenticator app</h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -57,7 +57,7 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
         To use an authenticator app go through the following steps:
       </p>
 
-      <ol className="list-decimal pl-5 space-y-6 text-sm">
+      <ol className="list-decimal pl-5 space-y-4 sm:space-y-6 text-sm">
         <li>
           <p className="text-text-muted">
             Download a two-factor authenticator app like Microsoft Authenticator or Google
@@ -73,7 +73,11 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
             {sharedKey}
           </code>
           {qrCodeUrl && (
-            <img src={qrCodeUrl} alt="QR Code for authenticator app" className="w-48 h-48" />
+            <img
+              src={qrCodeUrl}
+              alt="QR Code for authenticator app"
+              className="w-36 h-36 sm:w-48 sm:h-48"
+            />
           )}
         </li>
         <li>
@@ -81,7 +85,7 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
             Once you have scanned the QR code or input the key above, your two factor authentication
             app will provide you with a unique code. Enter the code in the confirmation box below.
           </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
               <Label htmlFor="code">Verification Code</Label>
               <Input

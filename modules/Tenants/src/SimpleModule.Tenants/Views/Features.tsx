@@ -63,7 +63,7 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
 
   if (flags.length === 0) {
     return (
-      <Container className="space-y-6">
+      <Container className="space-y-4 sm:space-y-6">
         <h1 className="text-2xl font-bold tracking-tight">No Feature Flags Available</h1>
         <p className="text-text-muted">
           The Feature Flags module is not installed or has no flags.
@@ -73,7 +73,7 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -92,54 +92,60 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
       <h1 className="text-2xl font-bold tracking-tight">Feature Flags for {tenant.name}</h1>
 
       <Card>
-        <CardContent className="p-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Flag</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Global</TableHead>
-                <TableHead>Tenant Override</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {flags
-                .filter((f) => !f.isDeprecated)
-                .map((flag) => {
-                  const override = overrideMap.get(flag.name);
-                  const effectiveState = override ? override.isEnabled : flag.isEnabled;
+        <CardContent className="p-4 sm:p-6">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Flag</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Global</TableHead>
+                  <TableHead>Tenant Override</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {flags
+                  .filter((f) => !f.isDeprecated)
+                  .map((flag) => {
+                    const override = overrideMap.get(flag.name);
+                    const effectiveState = override ? override.isEnabled : flag.isEnabled;
 
-                  return (
-                    <TableRow key={flag.name}>
-                      <TableCell className="font-mono text-sm">{flag.name}</TableCell>
-                      <TableCell className="text-text-muted">{flag.description || '-'}</TableCell>
-                      <TableCell>
-                        <span className={flag.isEnabled ? 'text-green-600' : 'text-red-600'}>
-                          {flag.isEnabled ? 'On' : 'Off'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant={effectiveState ? 'primary' : 'secondary'}
-                          size="sm"
-                          onClick={() => handleToggle(flag.name, effectiveState)}
-                        >
-                          {effectiveState ? 'Enabled' : 'Disabled'}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {override && (
-                          <Button variant="ghost" size="sm" onClick={() => handleReset(flag.name)}>
-                            Reset
+                    return (
+                      <TableRow key={flag.name}>
+                        <TableCell className="font-mono text-sm">{flag.name}</TableCell>
+                        <TableCell className="text-text-muted">{flag.description || '-'}</TableCell>
+                        <TableCell>
+                          <span className={flag.isEnabled ? 'text-green-600' : 'text-red-600'}>
+                            {flag.isEnabled ? 'On' : 'Off'}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant={effectiveState ? 'primary' : 'secondary'}
+                            size="sm"
+                            onClick={() => handleToggle(flag.name, effectiveState)}
+                          >
+                            {effectiveState ? 'Enabled' : 'Disabled'}
                           </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
+                        </TableCell>
+                        <TableCell>
+                          {override && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleReset(flag.name)}
+                            >
+                              Reset
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </Container>

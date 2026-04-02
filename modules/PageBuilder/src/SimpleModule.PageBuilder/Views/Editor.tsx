@@ -206,7 +206,7 @@ export default function Editor({ page, templates }: Props) {
             <DialogTitle>Create New Page</DialogTitle>
           </DialogHeader>
           <p className="text-text-muted text-sm">Start from a template or create a blank page.</p>
-          <div className="grid grid-cols-2 gap-3 py-4">
+          <div className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-2">
             <button
               type="button"
               onClick={handleStartBlank}

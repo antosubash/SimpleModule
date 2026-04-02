@@ -81,55 +81,57 @@ export default function Roles({ roles }: Props) {
         filterBar={errorAlert}
       >
         {(pageData) => (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageData.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell className="font-medium">{role.name}</TableCell>
-                  <TableCell className="text-text-secondary">
-                    {role.description || '\u2014'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="info">{role.userCount}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="default">{role.permissionCount}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-text-muted">
-                    {new Date(role.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.get(`/admin/roles/${role.id}/edit`)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => setDeleteTarget({ id: role.id, name: role.name })}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Users</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell className="text-text-secondary">
+                      {role.description || '\u2014'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="info">{role.userCount}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="default">{role.permissionCount}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-text-muted">
+                      {new Date(role.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/admin/roles/${role.id}/edit`)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setDeleteTarget({ id: role.id, name: role.name })}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </DataGridPage>
 
@@ -142,7 +144,7 @@ export default function Roles({ roles }: Props) {
               the role from all users.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>

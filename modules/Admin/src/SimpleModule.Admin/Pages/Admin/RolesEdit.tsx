@@ -61,7 +61,7 @@ export default function RolesEdit({
   tab,
 }: Props) {
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -79,7 +79,7 @@ export default function RolesEdit({
 
       {tab === 'details' && (
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -140,32 +140,34 @@ export default function RolesEdit({
             {users.length === 0 ? (
               <p className="text-sm text-text-muted">No users assigned to this role.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="font-medium">{u.displayName || '\u2014'}</TableCell>
-                      <TableCell className="text-text-muted">{u.email}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.get(`/admin/users/${u.id}/edit`)}
-                        >
-                          Edit
-                        </Button>
-                      </TableCell>
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead />
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell className="font-medium">{u.displayName || '\u2014'}</TableCell>
+                        <TableCell className="text-text-muted">{u.email}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.get(`/admin/users/${u.id}/edit`)}
+                          >
+                            Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

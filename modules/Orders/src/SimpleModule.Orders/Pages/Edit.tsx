@@ -81,7 +81,7 @@ export default function Edit({ order, products }: Props) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -96,7 +96,7 @@ export default function Edit({ order, products }: Props) {
       <h1 className="text-2xl font-bold tracking-tight">Edit Order #{order.id}</h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
@@ -178,7 +178,7 @@ export default function Edit({ order, products }: Props) {
         <CardHeader>
           <CardTitle>Danger Zone</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <p className="text-sm text-text-muted mb-3">
             Permanently delete this order. This action cannot be undone.
           </p>

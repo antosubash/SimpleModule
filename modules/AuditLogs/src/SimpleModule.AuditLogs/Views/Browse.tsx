@@ -165,11 +165,11 @@ export default function Browse({ result, filters }: Props) {
   return (
     <TooltipProvider>
       <PageShell
-        className="space-y-4"
+        className="space-y-4 sm:space-y-6"
         title="Audit Logs"
         description={`${result.totalCount.toLocaleString()} total entries`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="secondary" onClick={() => exportLogs('csv')}>
               Export CSV
             </Button>
@@ -183,7 +183,7 @@ export default function Browse({ result, filters }: Props) {
         <Card>
           <CardContent>
             {/* Quick date presets */}
-            <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <span className="text-xs font-medium text-text-muted">Quick range:</span>
               {DATE_PRESETS.map((preset) => (
                 <Button
@@ -198,7 +198,7 @@ export default function Browse({ result, filters }: Props) {
             </div>
 
             <form onSubmit={applyFilters}>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <div className="space-y-1">
                   <label htmlFor="filter-from" className="text-xs font-medium text-text-muted">
                     From
@@ -308,92 +308,96 @@ export default function Browse({ result, filters }: Props) {
         ) : (
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Module</TableHead>
-                    <TableHead>Path</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Duration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {result.items.map((entry) => (
-                    <TableRow
-                      key={entry.id}
-                      className="cursor-pointer"
-                      onClick={() => router.get(`/audit-logs/${entry.id}`)}
-                    >
-                      <TableCell className="whitespace-nowrap text-sm">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-text-muted">{relativeTime(entry.timestamp)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>{formatTimestamp(entry.timestamp)}</TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={sourceBadgeVariant(entry.source)}>
-                          {SOURCE_LABELS[entry.source] ?? 'Unknown'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {entry.userName || entry.userId || '\u2014'}
-                      </TableCell>
-                      <TableCell>
-                        {entry.action != null ? (
-                          <Badge variant={actionBadgeVariant(entry.action)}>
-                            {ACTION_LABELS[entry.action] ?? 'Unknown'}
-                          </Badge>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">{entry.module || '\u2014'}</TableCell>
-                      <TableCell className="max-w-[200px] text-sm text-text-muted">
-                        {entry.path ? (
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Source</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Module</TableHead>
+                      <TableHead>Path</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Duration</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.items.map((entry) => (
+                      <TableRow
+                        key={entry.id}
+                        className="cursor-pointer"
+                        onClick={() => router.get(`/audit-logs/${entry.id}`)}
+                      >
+                        <TableCell className="whitespace-nowrap text-sm">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="block truncate">{entry.path}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <span className="font-mono text-xs">
-                                {entry.httpMethod && `${entry.httpMethod} `}
-                                {entry.path}
+                              <span className="text-text-muted">
+                                {relativeTime(entry.timestamp)}
                               </span>
-                            </TooltipContent>
+                            </TooltipTrigger>
+                            <TooltipContent>{formatTimestamp(entry.timestamp)}</TooltipContent>
                           </Tooltip>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {entry.statusCode != null ? (
-                          <Badge variant={statusBadgeVariant(entry.statusCode)}>
-                            {entry.statusCode}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={sourceBadgeVariant(entry.source)}>
+                            {SOURCE_LABELS[entry.source] ?? 'Unknown'}
                           </Badge>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-text-muted">
-                        {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {entry.userName || entry.userId || '\u2014'}
+                        </TableCell>
+                        <TableCell>
+                          {entry.action != null ? (
+                            <Badge variant={actionBadgeVariant(entry.action)}>
+                              {ACTION_LABELS[entry.action] ?? 'Unknown'}
+                            </Badge>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">{entry.module || '\u2014'}</TableCell>
+                        <TableCell className="max-w-[200px] text-sm text-text-muted">
+                          {entry.path ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block truncate">{entry.path}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <span className="font-mono text-xs">
+                                  {entry.httpMethod && `${entry.httpMethod} `}
+                                  {entry.path}
+                                </span>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {entry.statusCode != null ? (
+                            <Badge variant={statusBadgeVariant(entry.statusCode)}>
+                              {entry.statusCode}
+                            </Badge>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-text-muted">
+                          {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         )}
 
         {/* Server-side Pagination */}
         {result.totalCount > 0 && (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
             <span className="text-sm text-text-muted">
               Showing {startItem}\u2013{endItem} of {result.totalCount.toLocaleString()} entries
             </span>

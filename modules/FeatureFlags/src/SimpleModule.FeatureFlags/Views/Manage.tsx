@@ -99,63 +99,26 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
   return (
     <PageShell title="Feature Flags" description="Manage feature flags across all modules.">
       <Card>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Default</TableHead>
-                <TableHead>Enabled</TableHead>
-                <TableHead>Overrides</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activeFlags.map((flag) => (
-                <TableRow key={flag.name}>
-                  <TableCell className="font-mono text-sm">{flag.name}</TableCell>
-                  <TableCell className="text-text-muted">{flag.description}</TableCell>
-                  <TableCell>
-                    <Badge variant={flag.defaultEnabled ? 'info' : 'default'}>
-                      {flag.defaultEnabled ? 'on' : 'off'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={flag.isEnabled}
-                      onCheckedChange={(checked) => handleToggle(flag.name, checked)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => loadOverrides(flag.name)}>
-                      Overrides
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {deprecatedFlags.length > 0 && (
-        <Card className="mt-6">
-          <CardContent>
-            <h3 className="text-lg font-semibold mb-4">Deprecated Flags</h3>
+        <CardContent className="p-4 sm:p-6">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Default</TableHead>
                   <TableHead>Enabled</TableHead>
+                  <TableHead>Overrides</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {deprecatedFlags.map((flag) => (
-                  <TableRow key={flag.name} className="opacity-60">
-                    <TableCell className="font-mono text-sm">
-                      {flag.name}{' '}
-                      <Badge variant="danger" className="ml-2">
-                        deprecated
+                {activeFlags.map((flag) => (
+                  <TableRow key={flag.name}>
+                    <TableCell className="font-mono text-sm">{flag.name}</TableCell>
+                    <TableCell className="text-text-muted">{flag.description}</TableCell>
+                    <TableCell>
+                      <Badge variant={flag.defaultEnabled ? 'info' : 'default'}>
+                        {flag.defaultEnabled ? 'on' : 'off'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -164,10 +127,51 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                         onCheckedChange={(checked) => handleToggle(flag.name, checked)}
                       />
                     </TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm" onClick={() => loadOverrides(flag.name)}>
+                        Overrides
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {deprecatedFlags.length > 0 && (
+        <Card className="mt-4 sm:mt-6">
+          <CardContent className="p-4 sm:p-6">
+            <h3 className="text-lg font-semibold mb-4">Deprecated Flags</h3>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Enabled</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {deprecatedFlags.map((flag) => (
+                    <TableRow key={flag.name} className="opacity-60">
+                      <TableCell className="font-mono text-sm">
+                        {flag.name}{' '}
+                        <Badge variant="danger" className="ml-2">
+                          deprecated
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={flag.isEnabled}
+                          onCheckedChange={(checked) => handleToggle(flag.name, checked)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -207,7 +211,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
             </Table>
           )}
 
-          <form onSubmit={handleAddOverride} className="space-y-4 mt-4">
+          <form onSubmit={handleAddOverride} className="space-y-3 sm:space-y-4 mt-4">
             <FieldGroup>
               <Field>
                 <Label htmlFor="overrideType">Type</Label>

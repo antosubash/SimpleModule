@@ -23,9 +23,9 @@ export default function Viewer({ page, isDraft }: Props) {
   }, [page.content]);
 
   return (
-    <Container className="py-8" data-testid="page-content">
+    <Container className="py-4 sm:py-8" data-testid="page-content">
       {isDraft && (
-        <Alert variant="warning" className="mb-6">
+        <Alert variant="warning" className="mb-4 sm:mb-6">
           <AlertDescription>Draft Preview — this version is not published</AlertDescription>
         </Alert>
       )}
