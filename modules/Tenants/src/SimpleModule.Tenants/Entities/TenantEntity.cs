@@ -1,0 +1,16 @@
+using SimpleModule.Core.Entities;
+using SimpleModule.Tenants.Contracts;
+
+namespace SimpleModule.Tenants.Entities;
+
+public sealed class TenantEntity : AuditableEntity<TenantId>
+{
+    public string Name { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public TenantStatus Status { get; set; }
+    public string? AdminEmail { get; set; }
+    public string? EditionName { get; set; }
+    public string? ConnectionString { get; set; }
+    public DateTimeOffset? ValidUpTo { get; set; }
+    public ICollection<TenantHostEntity> Hosts { get; set; } = [];
+}

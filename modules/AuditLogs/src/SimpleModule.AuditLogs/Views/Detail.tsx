@@ -214,7 +214,7 @@ export default function Detail({ entry, correlated }: Props) {
             <CardContent>
               <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <LabeledField label="Method + Path">
-                  <Badge variant="outline" className="mr-2">
+                  <Badge variant="info" className="mr-2">
                     {entry.httpMethod}
                   </Badge>
                   <span className="font-mono text-xs">{entry.path}</span>

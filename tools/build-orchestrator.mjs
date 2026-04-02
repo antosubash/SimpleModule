@@ -39,6 +39,21 @@ function runBuild(workspacePath, workspaceName) {
   });
 }
 
+async function runWithConcurrency(items, concurrency, fn) {
+  const results = [];
+  let index = 0;
+
+  async function worker() {
+    while (index < items.length) {
+      const i = index++;
+      results[i] = await fn(items[i]);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
+
 async function main() {
   try {
     log('startup', `Starting production build (VITE_MODE=${mode})...`);
@@ -46,13 +61,12 @@ async function main() {
     const workspaces = discoverBuildableWorkspaces(rootDir);
     log('startup', `Found ${workspaces.length} workspaces to build`);
 
-    // Build all workspaces in parallel for better performance
-    await Promise.all(
-      workspaces.map((workspace) => {
-        const workspaceName = path.basename(workspace);
-        return runBuild(workspace, workspaceName);
-      })
-    );
+    // Limit concurrency to avoid OOM in memory-constrained environments (e.g. Docker)
+    const concurrency = parseInt(process.env.BUILD_CONCURRENCY, 10) || 4;
+    await runWithConcurrency(workspaces, concurrency, (workspace) => {
+      const workspaceName = path.basename(workspace);
+      return runBuild(workspace, workspaceName);
+    });
 
     log('complete', 'All workspaces built successfully!');
     process.exit(0);

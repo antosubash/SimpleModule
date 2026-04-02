@@ -6,14 +6,15 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users;
 
-public sealed class UserAdminService(
-    UserManager<ApplicationUser> userManager
-) : IUserAdminContracts
+public sealed class UserAdminService(UserManager<ApplicationUser> userManager, UsersDbContext db)
+    : IUserAdminContracts
 {
     public async Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(
         string? search,
         int page,
-        int pageSize
+        int pageSize,
+        string? filterStatus = null,
+        string? filterRole = null
     )
     {
         var query = userManager.Users.AsQueryable();
@@ -28,6 +29,43 @@ public sealed class UserAdminService(
             );
         }
 
+        // Status filter
+        var now = DateTimeOffset.UtcNow;
+        query = filterStatus switch
+        {
+            "active" => query.Where(u =>
+                u.DeactivatedAt == null && (!u.LockoutEnd.HasValue || u.LockoutEnd <= now)
+            ),
+            "locked" => query.Where(u =>
+                u.DeactivatedAt == null && u.LockoutEnd.HasValue && u.LockoutEnd > now
+            ),
+            "deactivated" => query.Where(u => u.DeactivatedAt != null),
+            _ => query,
+        };
+
+        // Role filter
+        if (!string.IsNullOrWhiteSpace(filterRole))
+        {
+            var roleId = await db
+                .Roles.Where(r => r.Name == filterRole)
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            if (roleId is not null)
+            {
+                var userIdsInRole = db
+                    .UserRoles.Where(ur => ur.RoleId == roleId)
+                    .Select(ur => ur.UserId);
+
+                query = query.Where(u => userIdsInRole.Contains(u.Id));
+            }
+            else
+            {
+                // Role doesn't exist — return empty
+                query = query.Where(u => false);
+            }
+        }
+
         var totalCount = await query.CountAsync();
         var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
         page = Math.Clamp(page, 1, Math.Max(1, totalPages));
@@ -38,12 +76,20 @@ public sealed class UserAdminService(
             .Take(pageSize)
             .ToListAsync();
 
-        var items = new List<AdminUserDto>(users.Count);
-        foreach (var user in users)
-        {
-            var roles = await userManager.GetRolesAsync(user);
-            items.Add(MapToAdminDto(user, roles.ToList()));
-        }
+        // Batch-load roles for all users in a single query instead of N+1
+        var userIds = users.Select(u => u.Id).ToList();
+        var userRoles = await db
+            .UserRoles.Where(ur => userIds.Contains(ur.UserId))
+            .Join(db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
+            .ToListAsync();
+
+        var rolesByUserId = userRoles
+            .GroupBy(x => x.UserId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Name!).ToList());
+
+        var items = users
+            .Select(u => MapToAdminDto(u, rolesByUserId.GetValueOrDefault(u.Id, [])))
+            .ToList();
 
         return new PagedResult<AdminUserDto>
         {
@@ -94,8 +140,8 @@ public sealed class UserAdminService(
 
     public async Task UpdateUserDetailsAsync(UserId id, UpdateAdminUserRequest request)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.DisplayName = request.DisplayName;
         user.Email = request.Email;
@@ -107,8 +153,8 @@ public sealed class UserAdminService(
 
     public async Task SetUserRolesAsync(UserId id, IEnumerable<string> roles)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         var newRoles = roles.ToHashSet();
         var currentRoles = (await userManager.GetRolesAsync(user)).ToHashSet();
@@ -129,8 +175,8 @@ public sealed class UserAdminService(
 
     public async Task ResetPasswordAsync(UserId id, string newPassword)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         var result = await userManager.ResetPasswordAsync(user, token, newPassword);
@@ -143,48 +189,50 @@ public sealed class UserAdminService(
 
     public async Task LockAccountAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
-        await userManager.SetLockoutEnabledAsync(user, true);
-        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
+        await userManager.UpdateAsync(user);
     }
 
     public async Task UnlockAccountAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
-        await userManager.SetLockoutEndDateAsync(user, null);
-        await userManager.ResetAccessFailedCountAsync(user);
+        user.LockoutEnd = null;
+        user.AccessFailedCount = 0;
+        await userManager.UpdateAsync(user);
     }
 
     public async Task DeactivateAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.DeactivatedAt = DateTimeOffset.UtcNow;
+        user.LockoutEnabled = true;
+        user.LockoutEnd = DateTimeOffset.UtcNow.AddYears(100);
         await userManager.UpdateAsync(user);
-        await userManager.SetLockoutEnabledAsync(user, true);
-        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
     }
 
     public async Task ReactivateAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.DeactivatedAt = null;
+        user.LockoutEnd = null;
+        user.AccessFailedCount = 0;
         await userManager.UpdateAsync(user);
-        await userManager.SetLockoutEndDateAsync(user, null);
-        await userManager.ResetAccessFailedCountAsync(user);
     }
 
     public async Task ForceEmailReverificationAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         user.EmailConfirmed = false;
         await userManager.UpdateAsync(user);
@@ -192,8 +240,8 @@ public sealed class UserAdminService(
 
     public async Task DisableTwoFactorAsync(UserId id)
     {
-        var user = await userManager.FindByIdAsync(id.Value)
-            ?? throw new NotFoundException("User", id);
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
 
         await userManager.SetTwoFactorEnabledAsync(user, false);
         await userManager.ResetAuthenticatorKeyAsync(user);
@@ -206,9 +254,12 @@ public sealed class UserAdminService(
             DisplayName = user.DisplayName,
             Email = user.Email,
             EmailConfirmed = user.EmailConfirmed,
+            TwoFactorEnabled = user.TwoFactorEnabled,
             Roles = roles,
             IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
             IsDeactivated = user.DeactivatedAt.HasValue,
+            AccessFailedCount = user.AccessFailedCount,
             CreatedAt = user.CreatedAt.ToString("O"),
+            LastLoginAt = user.LastLoginAt?.ToString("O"),
         };
 }

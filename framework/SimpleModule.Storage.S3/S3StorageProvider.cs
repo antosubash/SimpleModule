@@ -56,20 +56,13 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         return new StorageResult(normalized, metadata.ContentLength, contentType);
     }
 
-    public async Task<Stream?> GetAsync(
-        string path,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<Stream?> GetAsync(string path, CancellationToken cancellationToken = default)
     {
         var normalized = StoragePathHelper.Normalize(path);
 
         try
         {
-            var response = await _client.GetObjectAsync(
-                _bucketName,
-                normalized,
-                cancellationToken
-            );
+            var response = await _client.GetObjectAsync(_bucketName, normalized, cancellationToken);
             return response.ResponseStream;
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -78,10 +71,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         }
     }
 
-    public async Task<bool> DeleteAsync(
-        string path,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<bool> DeleteAsync(string path, CancellationToken cancellationToken = default)
     {
         var normalized = StoragePathHelper.Normalize(path);
 
@@ -95,10 +85,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         return true;
     }
 
-    public async Task<bool> ExistsAsync(
-        string path,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<bool> ExistsAsync(string path, CancellationToken cancellationToken = default)
     {
         var normalized = StoragePathHelper.Normalize(path);
 

@@ -27,8 +27,10 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
         // Wildcard match: check all permission claims for wildcard patterns
         foreach (var claim in context.User.Claims)
         {
-            if (claim.Type == "permission"
-                && PermissionMatcher.IsMatch(claim.Value, requirement.Permission))
+            if (
+                claim.Type == "permission"
+                && PermissionMatcher.IsMatch(claim.Value, requirement.Permission)
+            )
             {
                 context.Succeed(requirement);
                 return Task.CompletedTask;

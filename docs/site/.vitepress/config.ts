@@ -113,15 +113,16 @@ export default defineConfig({
           items: [
             { text: 'API Reference', link: '/reference/api' },
             { text: 'Configuration', link: '/reference/configuration' },
+            { text: 'Acknowledgments', link: '/reference/acknowledgments' },
           ],
         },
       ],
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/anthropics/SimpleModule' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/antosubash/SimpleModule' }],
 
     editLink: {
-      pattern: 'https://github.com/anthropics/SimpleModule/edit/main/docs/site/:path',
+      pattern: 'https://github.com/antosubash/SimpleModule/edit/main/docs/site/:path',
       text: 'Edit this page on GitHub',
     },
 

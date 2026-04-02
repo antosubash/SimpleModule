@@ -12,15 +12,18 @@ public sealed class HostTemplates
     /// </summary>
     private static readonly string[] CsprojStripPatterns =
     [
-        "modules",                      // Module ProjectReferences
-        "ServiceDefaults",              // Aspire ServiceDefaults
-        "InternalsVisibleTo",           // Test assembly visibility
-        "NoWarn", "SM0011", "SM0035", "SM0038", // Suppressed analyzer warnings
-        "TODO",                         // Dev comments
-        "EntityFrameworkCore.Design",   // EF migrations tooling
-        "<Import Project",             // MSBuild targets import
-        @"framework\",                 // Framework ProjectReferences (replaced by PackageReferences)
-        "OutputItemType=",             // Multi-line Generator ref attributes
+        "modules", // Module ProjectReferences
+        "ServiceDefaults", // Aspire ServiceDefaults
+        "InternalsVisibleTo", // Test assembly visibility
+        "NoWarn",
+        "SM0011",
+        "SM0035",
+        "SM0038", // Suppressed analyzer warnings
+        "TODO", // Dev comments
+        "EntityFrameworkCore.Design", // EF migrations tooling
+        "<Import Project", // MSBuild targets import
+        @"framework\", // Framework ProjectReferences (replaced by PackageReferences)
+        "OutputItemType=", // Multi-line Generator ref attributes
         "ReferenceOutputAssembly=",
     ];
 
@@ -32,7 +35,9 @@ public sealed class HostTemplates
     /// </summary>
     public static string HostCsproj(string projectName)
     {
-        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.SimpleModule.Host.csproj");
+        var lines = EmbeddedResourceReader.ReadTemplateLines(
+            "Templates.Host.SimpleModule.Host.csproj"
+        );
 
         // Strip lines containing patterns that should not appear in a new project
         lines.RemoveAll(line =>
@@ -44,7 +49,10 @@ public sealed class HostTemplates
         {
             var trimmed = line.TrimStart();
             return trimmed == "/>"
-                || (trimmed.StartsWith("<ProjectReference", StringComparison.Ordinal) && !trimmed.Contains("Include=", StringComparison.Ordinal));
+                || (
+                    trimmed.StartsWith("<ProjectReference", StringComparison.Ordinal)
+                    && !trimmed.Contains("Include=", StringComparison.Ordinal)
+                );
         });
 
         // Remove empty PropertyGroup and ItemGroup elements
@@ -87,6 +95,15 @@ public sealed class HostTemplates
             || line.Contains("MapDefaultEndpoints", StringComparison.Ordinal)
             || line.Contains("Storage.Local", StringComparison.Ordinal)
             || line.Contains("AddLocalStorage", StringComparison.Ordinal)
+            || line.Contains("SimpleModule.Agents", StringComparison.Ordinal)
+            || line.Contains("SimpleModule.AI.", StringComparison.Ordinal)
+            || line.Contains("SimpleModule.Rag", StringComparison.Ordinal)
+            || line.Contains("AddOllamaAI", StringComparison.Ordinal)
+            || line.Contains("AddInMemoryVectorStore", StringComparison.Ordinal)
+            || line.Contains("AddSimpleModuleRag", StringComparison.Ordinal)
+            || line.Contains("AddStructuredRag", StringComparison.Ordinal)
+            || line.Contains("AddSimpleModuleAgents", StringComparison.Ordinal)
+            || line.Contains("AddRagExtraction", StringComparison.Ordinal)
         );
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
@@ -108,7 +125,9 @@ public sealed class HostTemplates
     /// </summary>
     public static string InertiaShellRazor(string projectName)
     {
-        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.InertiaShell.razor");
+        var content = EmbeddedResourceReader.ReadTemplate(
+            "Templates.Host.Components.InertiaShell.razor"
+        );
         return ReplaceProjectName(content, projectName);
     }
 
@@ -118,7 +137,9 @@ public sealed class HostTemplates
     /// </summary>
     public static string RoutesRazor()
     {
-        var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Components.Routes.razor");
+        var lines = EmbeddedResourceReader.ReadTemplateLines(
+            "Templates.Host.Components.Routes.razor"
+        );
         lines.RemoveAll(line => line.Contains("AdditionalAssemblies", StringComparison.Ordinal));
 
         // Fix unclosed Router tag: replace trailing open attribute list with closing >
@@ -141,7 +162,9 @@ public sealed class HostTemplates
     /// </summary>
     public static string ImportsRazor(string projectName)
     {
-        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components._Imports.razor");
+        var content = EmbeddedResourceReader.ReadTemplate(
+            "Templates.Host.Components._Imports.razor"
+        );
         return ReplaceProjectName(content, projectName);
     }
 
@@ -193,11 +216,7 @@ public sealed class HostTemplates
 
         // Replace module source paths for new project structure (template/ → src/)
         var result = string.Join(Environment.NewLine, lines);
-        result = result.Replace(
-            "../../modules/",
-            "../../../modules/",
-            StringComparison.Ordinal
-        );
+        result = result.Replace("../../modules/", "../../../modules/", StringComparison.Ordinal);
 
         return result;
     }
@@ -223,7 +242,9 @@ public sealed class HostTemplates
     /// </summary>
     public static string LaunchSettings(string projectName)
     {
-        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Properties.launchSettings.json");
+        var content = EmbeddedResourceReader.ReadTemplate(
+            "Templates.Host.Properties.launchSettings.json"
+        );
         return ReplaceProjectName(content, projectName);
     }
 
@@ -252,7 +273,11 @@ public sealed class HostTemplates
         for (var i = 0; i < frameworkNames.Length; i++)
         {
             placeholders[i] = (frameworkNames[i], $"%%FW_{i}%%");
-            content = content.Replace(frameworkNames[i], placeholders[i].Placeholder, StringComparison.Ordinal);
+            content = content.Replace(
+                frameworkNames[i],
+                placeholders[i].Placeholder,
+                StringComparison.Ordinal
+            );
         }
 
         // Replace the project name
@@ -261,7 +286,11 @@ public sealed class HostTemplates
         // Restore framework names
         for (var i = 0; i < placeholders.Length; i++)
         {
-            content = content.Replace(placeholders[i].Placeholder, placeholders[i].Original, StringComparison.Ordinal);
+            content = content.Replace(
+                placeholders[i].Placeholder,
+                placeholders[i].Original,
+                StringComparison.Ordinal
+            );
         }
 
         return content;

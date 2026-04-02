@@ -16,10 +16,15 @@ public sealed class PagesRegistryCheckTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
-    private SolutionContext CreateSolution(string moduleName, string[]? csFiles = null, string? pagesIndexContent = null)
+    private SolutionContext CreateSolution(
+        string moduleName,
+        string[]? csFiles = null,
+        string? pagesIndexContent = null
+    )
     {
         File.WriteAllText(Path.Combine(_tempDir, "Test.slnx"), "<Solution />");
         var moduleDir = Path.Combine(_tempDir, "src", "modules", moduleName, "src", moduleName);
@@ -43,43 +48,63 @@ public sealed class PagesRegistryCheckTests : IDisposable
     [Fact]
     public void Run_Pass_WhenAllInertiaCallsHavePageEntry()
     {
-        var solution = CreateSolution("Products",
+        var solution = CreateSolution(
+            "Products",
             csFiles: [@"Inertia.Render(""Products/Browse"", props)"],
             pagesIndexContent: """
-                export const pages: Record<string, any> = {
-                    "Products/Browse": () => import("../Views/Browse"),
-                };
-                """);
+            export const pages: Record<string, any> = {
+                "Products/Browse": () => import("../Views/Browse"),
+            };
+            """
+        );
         var results = new PagesRegistryCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Pages -> Products/Browse" && r.Status == CheckStatus.Pass);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Pages -> Products/Browse" && r.Status == CheckStatus.Pass
+            );
     }
 
     [Fact]
     public void Run_Fail_WhenInertiaCallHasNoPageEntry()
     {
-        var solution = CreateSolution("Products",
+        var solution = CreateSolution(
+            "Products",
             csFiles: [@"Inertia.Render(""Products/Browse"", props)"],
-            pagesIndexContent: "export const pages: Record<string, any> = {};");
+            pagesIndexContent: "export const pages: Record<string, any> = {};"
+        );
         var results = new PagesRegistryCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Pages -> Products/Browse" && r.Status == CheckStatus.Fail);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Pages -> Products/Browse" && r.Status == CheckStatus.Fail
+            );
     }
 
     [Fact]
     public void Run_Fail_WhenPagesIndexTsMissing()
     {
-        var solution = CreateSolution("Products",
+        var solution = CreateSolution(
+            "Products",
             csFiles: [@"Inertia.Render(""Products/Browse"", props)"],
-            pagesIndexContent: null);
+            pagesIndexContent: null
+        );
         var results = new PagesRegistryCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Pages -> Products/Browse" && r.Status == CheckStatus.Fail);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Pages -> Products/Browse" && r.Status == CheckStatus.Fail
+            );
     }
 
     [Fact]
     public void Run_Pass_WhenNoInertiaCallsExist()
     {
-        var solution = CreateSolution("Products",
+        var solution = CreateSolution(
+            "Products",
             csFiles: ["// no inertia calls here"],
-            pagesIndexContent: "export const pages: Record<string, any> = {};");
+            pagesIndexContent: "export const pages: Record<string, any> = {};"
+        );
         var results = new PagesRegistryCheck().Run(solution).ToList();
         results.Should().BeEmpty();
     }

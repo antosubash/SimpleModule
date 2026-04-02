@@ -4,7 +4,13 @@ namespace SimpleModule.Users.Contracts;
 
 public interface IUserAdminContracts
 {
-    Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(string? search, int page, int pageSize);
+    Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(
+        string? search,
+        int page,
+        int pageSize,
+        string? filterStatus = null,
+        string? filterRole = null
+    );
     Task<AdminUserDto?> GetAdminUserByIdAsync(UserId id);
     Task<AdminUserDto> CreateUserWithPasswordAsync(CreateAdminUserRequest request);
     Task UpdateUserDetailsAsync(UserId id, UpdateAdminUserRequest request);

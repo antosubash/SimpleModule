@@ -203,10 +203,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::A.AModule",
@@ -218,10 +221,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 )
             ),
             ImmutableArray<DtoTypeInfoRecord>.Empty,
@@ -232,9 +238,13 @@ public class TopologicalSortTests
             ImmutableArray<ContractInterfaceInfoRecord>.Empty,
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
+            ImmutableArray<FeatureClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
             ImmutableArray<ModuleOptionsRecord>.Empty,
+            ImmutableArray<AgentDefinitionRecord>.Empty,
+            ImmutableArray<AgentToolProviderRecord>.Empty,
+            ImmutableArray<KnowledgeSourceRecord>.Empty,
             "SimpleModule.Host"
         );
 
@@ -261,10 +271,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::B.BModule",
@@ -276,10 +289,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 )
             ),
             ImmutableArray<DtoTypeInfoRecord>.Empty,
@@ -293,9 +309,13 @@ public class TopologicalSortTests
             ImmutableArray<ContractInterfaceInfoRecord>.Empty,
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
+            ImmutableArray<FeatureClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
             ImmutableArray<ModuleOptionsRecord>.Empty,
+            ImmutableArray<AgentDefinitionRecord>.Empty,
+            ImmutableArray<AgentToolProviderRecord>.Empty,
+            ImmutableArray<KnowledgeSourceRecord>.Empty,
             "SimpleModule.Host"
         );
 
@@ -322,10 +342,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::A.AModule",
@@ -337,10 +360,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::B.BModule",
@@ -352,10 +378,13 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 )
             ),
             ImmutableArray<DtoTypeInfoRecord>.Empty,
@@ -366,9 +395,13 @@ public class TopologicalSortTests
             ImmutableArray<ContractInterfaceInfoRecord>.Empty,
             ImmutableArray<ContractImplementationRecord>.Empty,
             ImmutableArray<PermissionClassRecord>.Empty,
+            ImmutableArray<FeatureClassRecord>.Empty,
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
             ImmutableArray<ModuleOptionsRecord>.Empty,
+            ImmutableArray<AgentDefinitionRecord>.Empty,
+            ImmutableArray<AgentToolProviderRecord>.Empty,
+            ImmutableArray<KnowledgeSourceRecord>.Empty,
             "SimpleModule.Host"
         );
 

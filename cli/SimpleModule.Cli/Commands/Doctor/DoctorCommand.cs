@@ -140,15 +140,13 @@ public sealed class DoctorCommand : Command<DoctorSettings>
             {
                 var componentKey = result.Name["Pages -> ".Length..];
                 var slashIndex = componentKey.IndexOf('/', StringComparison.Ordinal);
-                var moduleName = slashIndex >= 0
-                    ? componentKey[..slashIndex]
-                    : componentKey;
-                var featureName = slashIndex >= 0
-                    ? componentKey[(slashIndex + 1)..]
-                    : componentKey;
+                var moduleName = slashIndex >= 0 ? componentKey[..slashIndex] : componentKey;
+                var featureName = slashIndex >= 0 ? componentKey[(slashIndex + 1)..] : componentKey;
                 var indexPath = solution.GetModulePagesIndexPath(moduleName);
                 PagesRegistryFixer.AddEntry(indexPath, componentKey, $"../Views/{featureName}");
-                AnsiConsole.MarkupLine($"[green]  Fixed: added '{componentKey}' to Pages/index.ts[/]");
+                AnsiConsole.MarkupLine(
+                    $"[green]  Fixed: added '{componentKey}' to Pages/index.ts[/]"
+                );
             }
 
             // Fix missing npm workspace entries

@@ -327,39 +327,69 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("OpenIddict_OpenIddictTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SimpleModule.Admin.Entities.AuditLogEntry", b =>
+            modelBuilder.Entity("SimpleModule.Agents.Sessions.AgentMessage", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(100)
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Details")
-                        .HasMaxLength(4000)
+                    b.Property<string>("Content")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PerformedByUserId")
+                    b.Property<string>("Role")
                         .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("UserId")
+                    b.Property<int?>("TokenCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("SessionId", "Timestamp");
+
+                    b.ToTable("Agents_Messages", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Agents.Sessions.AgentSession", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentName")
                         .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("LastMessageAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Timestamp");
+                    b.HasIndex("AgentName");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Admin_AuditLogEntries", (string)null);
+                    b.ToTable("Agents_Sessions", (string)null);
                 });
 
             modelBuilder.Entity("SimpleModule.AuditLogs.Contracts.AuditEntry", b =>
@@ -459,6 +489,85 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("AuditLogs_AuditEntries", (string)null);
                 });
 
+            modelBuilder.Entity("SimpleModule.FeatureFlags.Entities.FeatureFlagEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeprecated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("FeatureFlags_FeatureFlags", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.FeatureFlags.Entities.FeatureFlagOverrideEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FlagName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("OverrideType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OverrideValue")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlagName", "OverrideType", "OverrideValue")
+                        .IsUnique();
+
+                    b.ToTable("FeatureFlags_FeatureFlagOverrides", (string)null);
+                });
+
             modelBuilder.Entity("SimpleModule.FileStorage.Contracts.StoredFile", b =>
                 {
                     b.Property<int>("Id")
@@ -519,43 +628,6 @@ namespace SimpleModule.Host.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Orders_Orders", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 2, 14, 0, 48, 324, DateTimeKind.Utc).AddTicks(4205),
-                            Total = 4205.85m,
-                            UserId = "2"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 9, 10, 43, 3, 902, DateTimeKind.Utc).AddTicks(7351),
-                            Total = 2752.49m,
-                            UserId = "8"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 27, 18, 48, 8, 543, DateTimeKind.Utc).AddTicks(1493),
-                            Total = 192.31m,
-                            UserId = "6"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            CreatedAt = new DateTime(2026, 1, 19, 0, 29, 15, 501, DateTimeKind.Utc).AddTicks(3898),
-                            Total = 3146.31m,
-                            UserId = "2"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CreatedAt = new DateTime(2026, 1, 5, 1, 0, 8, 927, DateTimeKind.Utc).AddTicks(1333),
-                            Total = 4580.92m,
-                            UserId = "10"
-                        });
                 });
 
             modelBuilder.Entity("SimpleModule.Orders.Contracts.OrderItem", b =>
@@ -572,62 +644,6 @@ namespace SimpleModule.Host.Migrations
                     b.HasKey("OrderId", "ProductId");
 
                     b.ToTable("Orders_OrderItems", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            OrderId = 1,
-                            ProductId = 4,
-                            Quantity = 5
-                        },
-                        new
-                        {
-                            OrderId = 1,
-                            ProductId = 5,
-                            Quantity = 1
-                        },
-                        new
-                        {
-                            OrderId = 1,
-                            ProductId = 6,
-                            Quantity = 1
-                        },
-                        new
-                        {
-                            OrderId = 2,
-                            ProductId = 1,
-                            Quantity = 3
-                        },
-                        new
-                        {
-                            OrderId = 3,
-                            ProductId = 4,
-                            Quantity = 2
-                        },
-                        new
-                        {
-                            OrderId = 3,
-                            ProductId = 5,
-                            Quantity = 4
-                        },
-                        new
-                        {
-                            OrderId = 4,
-                            ProductId = 3,
-                            Quantity = 1
-                        },
-                        new
-                        {
-                            OrderId = 5,
-                            ProductId = 9,
-                            Quantity = 3
-                        },
-                        new
-                        {
-                            OrderId = 5,
-                            ProductId = 6,
-                            Quantity = 5
-                        });
                 });
 
             modelBuilder.Entity("SimpleModule.PageBuilder.Contracts.Page", b =>
@@ -794,62 +810,109 @@ namespace SimpleModule.Host.Migrations
                         {
                             Id = 1,
                             Name = "Fantastic Rubber Shoes",
-                            Price = 99168m
+                            Price = 991.68m
                         },
                         new
                         {
                             Id = 2,
                             Name = "Fantastic Rubber Bacon",
-                            Price = 44622m
+                            Price = 446.22m
                         },
                         new
                         {
                             Id = 3,
                             Name = "Fantastic Concrete Bike",
-                            Price = 66012m
+                            Price = 660.12m
                         },
                         new
                         {
                             Id = 4,
                             Name = "Handcrafted Concrete Keyboard",
-                            Price = 63367m
+                            Price = 633.67m
                         },
                         new
                         {
                             Id = 5,
                             Name = "Intelligent Frozen Mouse",
-                            Price = 67430m
+                            Price = 674.30m
                         },
                         new
                         {
                             Id = 6,
                             Name = "Sleek Soft Hat",
-                            Price = 85163m
+                            Price = 851.63m
                         },
                         new
                         {
                             Id = 7,
                             Name = "Practical Fresh Bike",
-                            Price = 41748m
+                            Price = 417.48m
                         },
                         new
                         {
                             Id = 8,
                             Name = "Handmade Steel Ball",
-                            Price = 97556m
+                            Price = 975.56m
                         },
                         new
                         {
                             Id = 9,
                             Name = "Ergonomic Fresh Pants",
-                            Price = 92809m
+                            Price = 928.09m
                         },
                         new
                         {
                             Id = 10,
                             Name = "Licensed Steel Sausages",
-                            Price = 59260m
+                            Price = 592.60m
                         });
+                });
+
+            modelBuilder.Entity("SimpleModule.Rag.StructuredRag.Data.CachedStructuredKnowledge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CollectionName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HitCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceTitle")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StructureType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StructuredContent")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("CollectionName", "DocumentHash", "StructureType")
+                        .IsUnique();
+
+                    b.ToTable("Rag_CachedStructuredKnowledge", (string)null);
                 });
 
             modelBuilder.Entity("SimpleModule.Settings.Entities.PublicMenuItemEntity", b =>
@@ -938,6 +1001,170 @@ namespace SimpleModule.Host.Migrations
                         .IsUnique();
 
                     b.ToTable("Settings_Settings", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Tenants.Entities.TenantEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AdminEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConnectionString")
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EditionName")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ValidUpTo")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Tenants_Tenants", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AdminEmail = "admin@acme.com",
+                            ConcurrencyStamp = "seed-acme",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            EditionName = "Enterprise",
+                            Name = "Acme Corporation",
+                            Slug = "acme",
+                            Status = 0,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AdminEmail = "admin@contoso.com",
+                            ConcurrencyStamp = "seed-contoso",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            EditionName = "Standard",
+                            Name = "Contoso Ltd",
+                            Slug = "contoso",
+                            Status = 0,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 3,
+                            AdminEmail = "admin@suspended.com",
+                            ConcurrencyStamp = "seed-suspended",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Name = "Suspended Corp",
+                            Slug = "suspended-corp",
+                            Status = 1,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("SimpleModule.Tenants.Entities.TenantHostEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HostName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostName")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("Tenants_TenantHosts", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ConcurrencyStamp = "seed-host-1",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HostName = "acme.localhost",
+                            IsActive = true,
+                            TenantId = 1,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ConcurrencyStamp = "seed-host-2",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HostName = "acme.local",
+                            IsActive = true,
+                            TenantId = 1,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ConcurrencyStamp = "seed-host-3",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            HostName = "contoso.localhost",
+                            IsActive = true,
+                            TenantId = 2,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
                 });
 
             modelBuilder.Entity("SimpleModule.Users.Contracts.ApplicationRole", b =>
@@ -1150,6 +1377,17 @@ namespace SimpleModule.Host.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("SimpleModule.Tenants.Entities.TenantHostEntity", b =>
+                {
+                    b.HasOne("SimpleModule.Tenants.Entities.TenantEntity", "Tenant")
+                        .WithMany("Hosts")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
                 {
                     b.Navigation("Authorizations");
@@ -1175,6 +1413,11 @@ namespace SimpleModule.Host.Migrations
             modelBuilder.Entity("SimpleModule.Settings.Entities.PublicMenuItemEntity", b =>
                 {
                     b.Navigation("Children");
+                });
+
+            modelBuilder.Entity("SimpleModule.Tenants.Entities.TenantEntity", b =>
+                {
+                    b.Navigation("Hosts");
                 });
 #pragma warning restore 612, 618
         }

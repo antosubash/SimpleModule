@@ -72,7 +72,7 @@ export default function Edit({ order, products }: Props) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    router.post(`/orders/${order.id}`, { userId, items });
+    router.post(`/orders/${order.id}`, { userId, items: items as unknown as string });
   }
 
   function handleDelete() {

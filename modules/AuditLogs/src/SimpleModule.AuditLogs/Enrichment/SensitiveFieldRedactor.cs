@@ -7,7 +7,10 @@ namespace SimpleModule.AuditLogs.Enrichment;
 public static partial class SensitiveFieldRedactor
 {
     private const string Redacted = "[REDACTED]";
-    private static readonly JsonSerializerOptions s_compactOptions = new() { WriteIndented = false };
+    private static readonly JsonSerializerOptions s_compactOptions = new()
+    {
+        WriteIndented = false,
+    };
 
     [GeneratedRegex(
         @"password|secret|token|key|authorization|credential|ssn|credit.?card|cvv",

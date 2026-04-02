@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Database;
 
 namespace SimpleModule.Hosting;
 
@@ -16,6 +17,11 @@ public class SimpleModuleOptions
     public bool EnableDevTools { get; set; } = true;
 
     /// <summary>
+    /// The detected database provider, set during startup validation.
+    /// </summary>
+    internal DatabaseProvider DatabaseProvider { get; set; }
+
+    /// <summary>
     /// Configures options for a module. Called by generated Configure{Module}() extension methods.
     /// </summary>
     public SimpleModuleOptions ConfigureModule<TOptions>(Action<TOptions> configure)
@@ -29,7 +35,10 @@ public class SimpleModuleOptions
     /// Registers default options and applies user overrides. Called by generated code.
     /// </summary>
     [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-    public void ApplyModuleOptions(IServiceCollection services, Action<IServiceCollection> registerDefaults)
+    public void ApplyModuleOptions(
+        IServiceCollection services,
+        Action<IServiceCollection> registerDefaults
+    )
     {
         // Register IOptions<T> defaults for all discovered options classes
         registerDefaults(services);

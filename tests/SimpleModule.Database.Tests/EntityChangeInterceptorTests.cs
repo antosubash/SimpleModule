@@ -92,7 +92,9 @@ public sealed class EntityChangeInterceptorTests
             services.AddSingleton<IEntityChangeHandler<ChangeTrackedTestEntity>>(handler);
         }
 
-        services.AddSingleton<ILogger<EntityChangeInterceptor>>(NullLogger<EntityChangeInterceptor>.Instance);
+        services.AddSingleton<ILogger<EntityChangeInterceptor>>(
+            NullLogger<EntityChangeInterceptor>.Instance
+        );
         services.AddScoped<ISaveChangesInterceptor, EntityChangeInterceptor>();
         services.AddModuleDbContext<ChangeTrackingTestDbContext>(config, "ChangeTrackingTest");
 
@@ -129,7 +131,8 @@ public sealed class TestChangeHandler : IEntityChangeHandler<ChangeTrackedTestEn
 
     public Task HandleAsync(
         EntityChangeContext<ChangeTrackedTestEntity> context,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         Changes.Add(context);
         return Task.CompletedTask;

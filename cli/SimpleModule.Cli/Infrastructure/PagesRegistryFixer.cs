@@ -7,11 +7,14 @@ public static class PagesRegistryFixer
         if (!File.Exists(indexPath))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(indexPath)!);
-            File.WriteAllText(indexPath, $$"""
+            File.WriteAllText(
+                indexPath,
+                $$"""
                 export const pages: Record<string, any> = {
                     "{{componentKey}}": () => import("{{importPath}}"),
                 };
-                """);
+                """
+            );
             return;
         }
 

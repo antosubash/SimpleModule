@@ -29,6 +29,8 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("using SimpleModule.Core.Menu;");
         sb.AppendLine("using SimpleModule.Database;");
         sb.AppendLine("using SimpleModule.Hosting;");
+        sb.AppendLine("using SimpleModule.Agents;");
+        sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine($"using {data.HostAssemblyName};");
         sb.AppendLine($"using {data.HostAssemblyName}.Components;");
         sb.AppendLine();
@@ -63,10 +65,13 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         );
         sb.AppendLine();
         sb.AppendLine("        // Register module options (IModuleOptions auto-discovery)");
-        sb.AppendLine("        smOptions?.ApplyModuleOptions(builder.Services, ModuleOptionsExtensions.RegisterModuleOptionsDefaults);");
+        sb.AppendLine(
+            "        smOptions?.ApplyModuleOptions(builder.Services, ModuleOptionsExtensions.RegisterModuleOptionsDefaults);"
+        );
         sb.AppendLine();
         sb.AppendLine("        builder.Services.CollectModuleMenuItems();");
         sb.AppendLine("        builder.Services.CollectModuleSettings();");
+        sb.AppendLine("        builder.Services.AddModuleAgents();");
         sb.AppendLine(
             "        builder.Services.AddSingleton<System.Collections.Generic.IReadOnlyList<AvailablePage>>(PageRegistry.Pages);"
         );
@@ -100,10 +105,23 @@ internal sealed class HostingExtensionsEmitter : IEmitter
             }
         }
 
+        var hasLocalizationModule = data.Modules.Any(m => m.ModuleName == "Localization");
+        if (hasLocalizationModule)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        app.InitializeLocalization();");
+        }
+
         sb.AppendLine();
         sb.AppendLine("        // Source-generated component and endpoint mapping");
         sb.AppendLine("        app.MapRazorComponents<App>().AddModuleAssemblies();");
         sb.AppendLine("        app.MapModuleEndpoints();");
+        sb.AppendLine("        app.MapModuleAgentEndpoints();");
+        sb.AppendLine();
+        sb.AppendLine("        if (app.Environment.IsDevelopment())");
+        sb.AppendLine("        {");
+        sb.AppendLine("            app.UseAgentDevTools();");
+        sb.AppendLine("        }");
         sb.AppendLine();
         sb.AppendLine("        return app;");
         sb.AppendLine("    }");

@@ -350,18 +350,18 @@ public sealed class FeatureTemplates
 
     public static string ViewComponent(string moduleName, string featureName) =>
         $$"""
-        type Props = {
-            // TODO: add props from your endpoint's response
-        }
+            type Props = {
+                // TODO: add props from your endpoint's response
+            }
 
-        export default function {{featureName}}({ }: Props) {
-            return (
-                <div>
-                    <h1>{{featureName}}</h1>
-                </div>
-            )
-        }
-        """;
+            export default function {{featureName}}({ }: Props) {
+                return (
+                    <div>
+                        <h1>{{featureName}}</h1>
+                    </div>
+                )
+            }
+            """;
 
     private static string FallbackValidator(
         string moduleName,

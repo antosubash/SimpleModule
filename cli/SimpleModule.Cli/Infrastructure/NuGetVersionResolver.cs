@@ -5,11 +5,15 @@ namespace SimpleModule.Cli.Infrastructure;
 public static class NuGetVersionResolver
 {
     private const string FallbackVersion = "0.0.15";
-    private static readonly Uri NuGetIndexUri =
-        new("https://api.nuget.org/v3-flatcontainer/simplemodule.core/index.json");
+    private static readonly Uri NuGetIndexUri = new(
+        "https://api.nuget.org/v3-flatcontainer/simplemodule.core/index.json"
+    );
 
     // Shared HttpClient avoids socket exhaustion from repeated instantiation.
-    private static readonly HttpClient SharedHttpClient = new() { Timeout = TimeSpan.FromSeconds(5) };
+    private static readonly HttpClient SharedHttpClient = new()
+    {
+        Timeout = TimeSpan.FromSeconds(5),
+    };
 
     /// <summary>
     /// Resolves the SimpleModule framework version to use for a new project.

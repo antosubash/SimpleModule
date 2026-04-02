@@ -5,9 +5,9 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.Admin.Contracts\SimpleModule.Admin.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Permissions\src\SimpleModule.Permissions.Contracts\SimpleModule.Permissions.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\OpenIddict\src\SimpleModule.OpenIddict.Contracts\SimpleModule.OpenIddict.Contracts.csproj" />
   </ItemGroup>
 </Project>

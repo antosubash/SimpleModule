@@ -8,17 +8,17 @@ const isDev = process.env.VITE_MODE !== 'prod';
 export default defineConfig({
   plugins: [
     vendorBuildPlugin({
-      outDir: path.resolve(__dirname, '../wwwroot/js/vendor'),
+      outDir: path.resolve(import.meta.dirname, '../wwwroot/js/vendor'),
     }),
     react(),
   ],
   build: {
     sourcemap: isDev,
     minify: isDev ? false : 'esbuild',
-    outDir: path.resolve(__dirname, '../wwwroot/js'),
+    outDir: path.resolve(import.meta.dirname, '../wwwroot/js'),
     emptyOutDir: false,
-    rollupOptions: {
-      input: path.resolve(__dirname, 'app.tsx'),
+    rolldownOptions: {
+      input: path.resolve(import.meta.dirname, 'app.tsx'),
       external: defaultVendors.map((v) => v.pkg),
       output: {
         entryFileNames: 'app.js',

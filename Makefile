@@ -21,7 +21,11 @@ restore: ## Restore .NET packages
 	dotnet restore
 
 .PHONY: setup
-setup: restore install ## Full project setup (dotnet restore + npm install)
+setup: restore tool-restore install ## Full project setup (dotnet restore + tool restore + npm install)
+
+.PHONY: tool-restore
+tool-restore: ## Restore dotnet local tools (CSharpier, sm CLI)
+	dotnet tool restore
 
 # ─── Build ───────────────────────────────────────
 
@@ -203,7 +207,7 @@ lint-js: ## Run Biome linter on JS/TS
 
 .PHONY: lint-cs
 lint-cs: ## Run CSharpier format check on C#
-	csharpier check .
+	dotnet csharpier check .
 
 .PHONY: format
 format: ## Format JS (Biome) and C# (CSharpier)
@@ -216,17 +220,17 @@ format-js: ## Run Biome formatter (writes changes)
 
 .PHONY: format-cs
 format-cs: ## Run CSharpier formatter (writes changes)
-	csharpier format .
+	dotnet csharpier format .
 
 .PHONY: check
 check: ## Run Biome check + CSharpier check + page validation
 	npm run check
-	csharpier check .
+	dotnet csharpier check .
 
 .PHONY: check-fix
 check-fix: ## Auto-fix Biome + CSharpier formatting issues
 	npm run check:fix
-	csharpier format .
+	dotnet csharpier format .
 
 .PHONY: validate-pages
 validate-pages: ## Validate C# endpoints have matching TS page entries

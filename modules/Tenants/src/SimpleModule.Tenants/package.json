@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "name": "@simplemodule/tenants",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "cross-env VITE_MODE=prod vite build --configLoader runner",
+    "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+    "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

@@ -16,13 +16,26 @@ public sealed class ViewEndpointNamingCheckTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
-    private SolutionContext CreateSolutionWithEndpoints(string moduleName, params string[] endpointFileNames)
+    private SolutionContext CreateSolutionWithEndpoints(
+        string moduleName,
+        params string[] endpointFileNames
+    )
     {
         File.WriteAllText(Path.Combine(_tempDir, "Test.slnx"), "<Solution />");
-        var endpointsDir = Path.Combine(_tempDir, "src", "modules", moduleName, "src", moduleName, "Endpoints", moduleName);
+        var endpointsDir = Path.Combine(
+            _tempDir,
+            "src",
+            "modules",
+            moduleName,
+            "src",
+            moduleName,
+            "Endpoints",
+            moduleName
+        );
         Directory.CreateDirectory(endpointsDir);
         foreach (var name in endpointFileNames)
             File.WriteAllText(Path.Combine(endpointsDir, name), "// stub");
@@ -32,7 +45,11 @@ public sealed class ViewEndpointNamingCheckTests : IDisposable
     [Fact]
     public void Run_Pass_WhenAllEndpointFilesFollowConvention()
     {
-        var solution = CreateSolutionWithEndpoints("Products", "GetAllEndpoint.cs", "CreateEndpoint.cs");
+        var solution = CreateSolutionWithEndpoints(
+            "Products",
+            "GetAllEndpoint.cs",
+            "CreateEndpoint.cs"
+        );
         var results = new ViewEndpointNamingCheck().Run(solution).ToList();
         results.Should().OnlyContain(r => r.Status == CheckStatus.Pass);
     }
@@ -42,7 +59,9 @@ public sealed class ViewEndpointNamingCheckTests : IDisposable
     {
         var solution = CreateSolutionWithEndpoints("Products", "GetProducts.cs");
         var results = new ViewEndpointNamingCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name.Contains("GetProducts") && r.Status == CheckStatus.Warning);
+        results
+            .Should()
+            .ContainSingle(r => r.Name.Contains("GetProducts") && r.Status == CheckStatus.Warning);
     }
 
     [Fact]

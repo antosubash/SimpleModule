@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Description>StructRAG implementation for SimpleModule. Converts retrieved documents into optimal structured formats (tables, graphs, algorithms, catalogues) before reasoning.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <ProjectReference Include="..\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+  </ItemGroup>
+</Project>

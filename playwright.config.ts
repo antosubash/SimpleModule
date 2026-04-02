@@ -10,7 +10,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [['html'], ...(process.env.CI ? [['github' as const]] : [])],
+  reporter: [['html', {}], ...(process.env.CI ? [['github', {}] as const] : [])],
   use: {
     baseURL: 'https://localhost:5001',
     trace: 'on-first-retry',

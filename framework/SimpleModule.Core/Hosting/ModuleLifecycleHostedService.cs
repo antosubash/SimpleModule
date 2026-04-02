@@ -5,15 +5,24 @@ using Microsoft.Extensions.Logging;
 namespace SimpleModule.Core.Hosting;
 
 /// <summary>
-/// Calls <see cref="IModule.OnStartAsync"/> and <see cref="IModule.OnStopAsync"/> lifecycle hooks
-/// on all discovered modules during application startup and shutdown.
+/// Calls lifecycle hooks on all discovered modules during application startup and shutdown.
+/// Supports both <see cref="IModule.OnStartAsync"/>/<see cref="IModule.OnStopAsync"/> (default methods)
+/// and the focused <see cref="IModuleLifecycle"/> interface.
 /// </summary>
 public sealed partial class ModuleLifecycleHostedService(
     IEnumerable<IModule> modules,
+    IHost host,
     ILogger<ModuleLifecycleHostedService> logger
 ) : IHostedLifecycleService
 {
-    public Task StartingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task StartingAsync(CancellationToken cancellationToken)
+    {
+        foreach (var module in modules)
+        {
+            module.ConfigureHost(host);
+        }
+        return Task.CompletedTask;
+    }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -22,7 +31,14 @@ public sealed partial class ModuleLifecycleHostedService(
             var moduleName = module.GetType().Name;
             try
             {
-                await module.OnStartAsync(cancellationToken);
+                if (module is IModuleLifecycle lifecycle)
+                {
+                    await lifecycle.OnStartAsync(cancellationToken);
+                }
+                else
+                {
+                    await module.OnStartAsync(cancellationToken);
+                }
                 LogModuleStarted(logger, moduleName);
             }
             catch (OperationCanceledException)
@@ -41,7 +57,11 @@ public sealed partial class ModuleLifecycleHostedService(
 
     public Task StoppingAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Module stop failures must not prevent other modules from stopping")]
+    [SuppressMessage(
+        "Design",
+        "CA1031:Do not catch general exception types",
+        Justification = "Module stop failures must not prevent other modules from stopping"
+    )]
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         foreach (var module in modules)
@@ -49,7 +69,14 @@ public sealed partial class ModuleLifecycleHostedService(
             var moduleName = module.GetType().Name;
             try
             {
-                await module.OnStopAsync(cancellationToken);
+                if (module is IModuleLifecycle lifecycle)
+                {
+                    await lifecycle.OnStopAsync(cancellationToken);
+                }
+                else
+                {
+                    await module.OnStopAsync(cancellationToken);
+                }
                 LogModuleStopped(logger, moduleName);
             }
             catch (OperationCanceledException)
@@ -68,12 +95,26 @@ public sealed partial class ModuleLifecycleHostedService(
     [LoggerMessage(Level = LogLevel.Debug, Message = "Module {ModuleName} started")]
     private static partial void LogModuleStarted(ILogger logger, string moduleName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Module {ModuleName} failed during OnStartAsync")]
-    private static partial void LogModuleStartFailed(ILogger logger, string moduleName, Exception exception);
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Module {ModuleName} failed during OnStartAsync"
+    )]
+    private static partial void LogModuleStartFailed(
+        ILogger logger,
+        string moduleName,
+        Exception exception
+    );
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Module {ModuleName} stopped")]
     private static partial void LogModuleStopped(ILogger logger, string moduleName);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Module {ModuleName} failed during OnStopAsync")]
-    private static partial void LogModuleStopFailed(ILogger logger, string moduleName, Exception exception);
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Module {ModuleName} failed during OnStopAsync"
+    )]
+    private static partial void LogModuleStopFailed(
+        ILogger logger,
+        string moduleName,
+        Exception exception
+    );
 }

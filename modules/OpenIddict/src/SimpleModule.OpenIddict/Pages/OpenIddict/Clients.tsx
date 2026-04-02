@@ -69,7 +69,7 @@ export default function Clients({ clients }: Props) {
                   <TableCell className="font-mono text-sm">{client.clientId}</TableCell>
                   <TableCell>{client.displayName || '\u2014'}</TableCell>
                   <TableCell>
-                    <Badge variant={client.clientType === 'confidential' ? 'default' : 'secondary'}>
+                    <Badge variant={client.clientType === 'confidential' ? 'default' : 'info'}>
                       {client.clientType || 'public'}
                     </Badge>
                   </TableCell>

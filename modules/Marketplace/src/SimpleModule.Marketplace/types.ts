@@ -17,6 +17,7 @@ export interface MarketplacePackageDetail {
   licenseLink: string;
   versions: MarketplacePackageVersion[];
   dependencies: string[];
+  readme: string;
 }
 
 export interface MarketplacePackageVersion {

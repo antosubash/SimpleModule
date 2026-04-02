@@ -123,7 +123,9 @@ public class AggregateRootTestEntity : IHasDomainEvents
     public string Name { get; set; } = string.Empty;
 
     public IReadOnlyList<IEvent> GetDomainEvents() => _events.AsReadOnly();
+
     public void ClearDomainEvents() => _events.Clear();
+
     public void TriggerSomethingHappened() => _events.Add(new SomethingHappenedEvent());
 }
 

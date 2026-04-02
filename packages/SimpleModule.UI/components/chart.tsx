@@ -136,14 +136,8 @@ const ChartTooltip = RechartsPrimitive.Tooltip;
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<'div'> & {
-      hideLabel?: boolean;
-      hideIndicator?: boolean;
-      indicator?: 'line' | 'dot' | 'dashed';
-      nameKey?: string;
-      labelKey?: string;
-    }
+  // biome-ignore lint/suspicious/noExplicitAny: recharts tooltip/legend types are incompatible with strict TS 6
+  any
 >(
   (
     {
@@ -160,8 +154,28 @@ const ChartTooltipContent = React.forwardRef<
       color,
       nameKey,
       labelKey,
+    }: {
+      active?: boolean;
+      payload?: Array<Record<string, unknown>>;
+      className?: string;
+      indicator?: 'line' | 'dot' | 'dashed';
+      hideLabel?: boolean;
+      hideIndicator?: boolean;
+      label?: string;
+      labelFormatter?: (value: unknown, payload: Array<Record<string, unknown>>) => React.ReactNode;
+      labelClassName?: string;
+      formatter?: (
+        value: unknown,
+        name: unknown,
+        item: Record<string, unknown>,
+        index: number,
+        payload: unknown,
+      ) => React.ReactNode;
+      color?: string;
+      nameKey?: string;
+      labelKey?: string;
     },
-    ref,
+    ref: React.Ref<HTMLDivElement>,
   ) => {
     const { config } = useChart();
 
@@ -199,7 +213,7 @@ const ChartTooltipContent = React.forwardRef<
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.map((item, index) => {
+          {payload.map((item: Record<string, unknown>, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || 'value'}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor =
@@ -207,7 +221,7 @@ const ChartTooltipContent = React.forwardRef<
 
             return (
               <div
-                key={item.dataKey || index}
+                key={String(item.dataKey ?? index)}
                 className={cn(
                   'flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-text-muted',
                   indicator === 'dot' && 'items-center',
@@ -249,11 +263,13 @@ const ChartTooltipContent = React.forwardRef<
                     >
                       <div className="grid gap-1.5">
                         {nestLabel ? tooltipLabel : null}
-                        <span className="text-text-muted">{itemConfig?.label || item.name}</span>
+                        <span className="text-text-muted">
+                          {(itemConfig?.label ?? item.name) as React.ReactNode}
+                        </span>
                       </div>
-                      {item.value !== undefined && (
+                      {item.value !== undefined && item.value !== null && (
                         <span className="font-mono font-medium tabular-nums text-text">
-                          {item.value.toLocaleString()}
+                          {(item.value as number).toLocaleString()}
                         </span>
                       )}
                     </div>
@@ -277,51 +293,65 @@ const ChartLegend = RechartsPrimitive.Legend;
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<'div'> &
-    Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
+  // biome-ignore lint/suspicious/noExplicitAny: recharts tooltip/legend types are incompatible with strict TS 6
+  any
+>(
+  (
+    {
+      className,
+      hideIcon = false,
+      payload,
+      verticalAlign = 'bottom',
+      nameKey,
+    }: {
+      className?: string;
       hideIcon?: boolean;
+      payload?: Array<Record<string, unknown>>;
+      verticalAlign?: 'top' | 'bottom';
       nameKey?: string;
-    }
->(({ className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey }, ref) => {
-  const { config } = useChart();
+    },
+    ref: React.Ref<HTMLDivElement>,
+  ) => {
+    const { config } = useChart();
 
-  if (!payload?.length) return null;
+    if (!payload?.length) return null;
 
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        'flex items-center justify-center gap-4',
-        verticalAlign === 'top' ? 'pb-3' : 'pt-3',
-        className,
-      )}
-    >
-      {payload.map((item) => {
-        const key = `${nameKey || item.dataKey || 'value'}`;
-        const itemConfig = getPayloadConfigFromPayload(config, item, key);
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          'flex items-center justify-center gap-4',
+          verticalAlign === 'top' ? 'pb-3' : 'pt-3',
+          className,
+        )}
+      >
+        {payload.map((item: Record<string, unknown>) => {
+          const key = `${nameKey || item.dataKey || 'value'}`;
+          const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
-        return (
-          <div
-            key={`${key}-${item.value}`}
-            className={cn(
-              'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-text-muted',
-            )}
-          >
-            {itemConfig?.icon && !hideIcon ? (
-              <itemConfig.icon />
-            ) : (
-              <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
-                style={{ backgroundColor: item.color }}
-              />
-            )}
-            {itemConfig?.label}
-          </div>
-        );
-      })}
-    </div>
-  );
-});
+          return (
+            <div
+              key={`${key}-${String(item.value)}`}
+              className={cn(
+                'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-text-muted',
+              )}
+            >
+              {itemConfig?.icon && !hideIcon ? (
+                <itemConfig.icon />
+              ) : (
+                <div
+                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  style={{ backgroundColor: item.color as string }}
+                />
+              )}
+              {itemConfig?.label as React.ReactNode}
+            </div>
+          );
+        })}
+      </div>
+    );
+  },
+);
 ChartLegendContent.displayName = 'ChartLegendContent';
 
 // ---- Helpers ----

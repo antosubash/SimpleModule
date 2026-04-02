@@ -15,9 +15,15 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         var outputDir = settings.ResolveOutputDir();
         var rootDir = Path.Combine(outputDir, projectName);
 
-        if (!settings.DryRun && Directory.Exists(rootDir) && Directory.GetFileSystemEntries(rootDir).Length > 0)
+        if (
+            !settings.DryRun
+            && Directory.Exists(rootDir)
+            && Directory.GetFileSystemEntries(rootDir).Length > 0
+        )
         {
-            AnsiConsole.MarkupLine($"[red]Directory '{Markup.Escape(rootDir)}' already exists and is not empty.[/]");
+            AnsiConsole.MarkupLine(
+                $"[red]Directory '{Markup.Escape(rootDir)}' already exists and is not empty.[/]"
+            );
             return 1;
         }
 
@@ -33,13 +39,17 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             return 0;
         }
 
-        AnsiConsole.Status()
+        AnsiConsole
+            .Status()
             .Spinner(Spinner.Known.Dots)
-            .Start($"Creating project '{projectName}'...", ctx =>
-            {
-                ctx.Status("Scaffolding project files...");
-                ScaffoldProject(projectName, rootDir, solution, frameworkVersion);
-            });
+            .Start(
+                $"Creating project '{projectName}'...",
+                ctx =>
+                {
+                    ctx.Status("Scaffolding project files...");
+                    ScaffoldProject(projectName, rootDir, solution, frameworkVersion);
+                }
+            );
 
         var allOps = PlanFiles(projectName, rootDir);
         RenderFileTree(projectName, allOps, rootDir);
@@ -50,7 +60,9 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         AnsiConsole.MarkupLine("[dim]  npm install[/]");
         AnsiConsole.MarkupLine("[dim]  npm run build[/]");
         AnsiConsole.MarkupLine("[dim]  dotnet build[/]");
-        AnsiConsole.MarkupLine($"[dim]  dotnet run --project src/{Markup.Escape(projectName)}.Host[/]");
+        AnsiConsole.MarkupLine(
+            $"[dim]  dotnet run --project src/{Markup.Escape(projectName)}.Host[/]"
+        );
         return 0;
     }
 
@@ -58,7 +70,8 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         string projectName,
         string rootDir,
         SolutionContext? solution,
-        string frameworkVersion)
+        string frameworkVersion
+    )
     {
         var projectTemplates = new ProjectTemplates(solution, frameworkVersion);
         var moduleTemplates = new ModuleTemplates(solution);
@@ -92,8 +105,14 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
 
         // ── Root config files ─────────────────────────────────
         File.WriteAllText(Path.Combine(rootDir, $"{projectName}.slnx"), GenerateSlnx(projectName));
-        File.WriteAllText(Path.Combine(rootDir, "Directory.Build.props"), projectTemplates.DirectoryBuildProps());
-        File.WriteAllText(Path.Combine(rootDir, "Directory.Packages.props"), projectTemplates.DirectoryPackagesProps());
+        File.WriteAllText(
+            Path.Combine(rootDir, "Directory.Build.props"),
+            projectTemplates.DirectoryBuildProps()
+        );
+        File.WriteAllText(
+            Path.Combine(rootDir, "Directory.Packages.props"),
+            projectTemplates.DirectoryPackagesProps()
+        );
         File.WriteAllText(Path.Combine(rootDir, "global.json"), projectTemplates.GlobalJson());
         File.WriteAllText(
             Path.Combine(rootDir, "package.json"),
@@ -116,49 +135,133 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         );
 
         // ── Host project ──────────────────────────────────────
-        File.WriteAllText(Path.Combine(hostDir, $"{projectName}.Host.csproj"), HostTemplates.HostCsproj(projectName));
+        File.WriteAllText(
+            Path.Combine(hostDir, $"{projectName}.Host.csproj"),
+            HostTemplates.HostCsproj(projectName)
+        );
         File.WriteAllText(Path.Combine(hostDir, "Program.cs"), HostTemplates.ProgramCs());
-        File.WriteAllText(Path.Combine(hostDir, "Components", "App.razor"), HostTemplates.AppRazor(projectName));
-        File.WriteAllText(Path.Combine(hostDir, "Components", "InertiaShell.razor"), HostTemplates.InertiaShellRazor(projectName));
-        File.WriteAllText(Path.Combine(hostDir, "Components", "Routes.razor"), HostTemplates.RoutesRazor());
-        File.WriteAllText(Path.Combine(hostDir, "Components", "_Imports.razor"), HostTemplates.ImportsRazor(projectName));
+        File.WriteAllText(
+            Path.Combine(hostDir, "Components", "App.razor"),
+            HostTemplates.AppRazor(projectName)
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "Components", "InertiaShell.razor"),
+            HostTemplates.InertiaShellRazor(projectName)
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "Components", "Routes.razor"),
+            HostTemplates.RoutesRazor()
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "Components", "_Imports.razor"),
+            HostTemplates.ImportsRazor(projectName)
+        );
         File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), HostTemplates.AppTsx());
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "vite.config.ts"), HostTemplates.ViteConfig());
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"), HostTemplates.ValidatePages());
-        File.WriteAllText(Path.Combine(hostDir, "ClientApp", "package.json"), HostTemplates.ClientAppPackageJson(projectName));
+        File.WriteAllText(
+            Path.Combine(hostDir, "ClientApp", "vite.config.ts"),
+            HostTemplates.ViteConfig()
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"),
+            HostTemplates.ValidatePages()
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "ClientApp", "package.json"),
+            HostTemplates.ClientAppPackageJson(projectName)
+        );
         File.WriteAllText(Path.Combine(hostDir, "Styles", "app.css"), HostTemplates.AppCss());
         File.WriteAllText(Path.Combine(hostDir, "wwwroot", "css", "app.css"), MinimalAppCss());
         File.WriteAllText(Path.Combine(hostDir, "appsettings.json"), HostTemplates.AppSettings());
-        File.WriteAllText(Path.Combine(hostDir, "appsettings.Development.json"), HostTemplates.AppSettingsDevelopment());
-        File.WriteAllText(Path.Combine(hostDir, "Properties", "launchSettings.json"), HostTemplates.LaunchSettings(projectName));
+        File.WriteAllText(
+            Path.Combine(hostDir, "appsettings.Development.json"),
+            HostTemplates.AppSettingsDevelopment()
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "Properties", "launchSettings.json"),
+            HostTemplates.LaunchSettings(projectName)
+        );
 
         // ── Home module ───────────────────────────────────────
-        File.WriteAllText(Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"), moduleTemplates.ContractsCsproj(moduleName));
-        File.WriteAllText(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"), moduleTemplates.ContractsInterface(moduleName, singularName));
-        File.WriteAllText(Path.Combine(contractsDir, $"{singularName}.cs"), moduleTemplates.DtoClass(moduleName, singularName));
-        File.WriteAllText(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"), moduleTemplates.EventClass(moduleName, singularName));
-        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}.csproj"), moduleTemplates.ModuleCsproj(moduleName));
-        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Module.cs"), StarterModuleClass(moduleName, singularName));
-        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}Constants.cs"), moduleTemplates.ConstantsClass(moduleName, singularName));
-        File.WriteAllText(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"), moduleTemplates.DbContextClass(moduleName, singularName));
-        File.WriteAllText(Path.Combine(moduleDir, $"{singularName}Service.cs"), moduleTemplates.ServiceClass(moduleName, singularName));
-        File.WriteAllText(Path.Combine(endpointsDir, "GetAllEndpoint.cs"), moduleTemplates.GetAllEndpoint(moduleName, singularName));
-        File.WriteAllText(Path.Combine(moduleDir, "Views", "WelcomeEndpoint.cs"), StarterWelcomeEndpoint(moduleName));
-        File.WriteAllText(Path.Combine(moduleDir, "Pages", "index.ts"), $$"""
+        File.WriteAllText(
+            Path.Combine(contractsDir, $"{moduleName}.Contracts.csproj"),
+            moduleTemplates.ContractsCsproj(moduleName)
+        );
+        File.WriteAllText(
+            Path.Combine(contractsDir, $"I{singularName}Contracts.cs"),
+            moduleTemplates.ContractsInterface(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(contractsDir, $"{singularName}.cs"),
+            moduleTemplates.DtoClass(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"),
+            moduleTemplates.EventClass(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, $"{moduleName}.csproj"),
+            moduleTemplates.ModuleCsproj(moduleName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, $"{moduleName}Module.cs"),
+            StarterModuleClass(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, $"{moduleName}Constants.cs"),
+            moduleTemplates.ConstantsClass(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, $"{moduleName}DbContext.cs"),
+            moduleTemplates.DbContextClass(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, $"{singularName}Service.cs"),
+            moduleTemplates.ServiceClass(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(endpointsDir, "GetAllEndpoint.cs"),
+            moduleTemplates.GetAllEndpoint(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, "Views", "WelcomeEndpoint.cs"),
+            StarterWelcomeEndpoint(moduleName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, "Pages", "index.ts"),
+            $$"""
             export const pages: Record<string, any> = {
               '{{moduleName}}/Welcome': () => import('./Welcome'),
             };
-            """);
-        File.WriteAllText(Path.Combine(moduleDir, "Pages", "Welcome.tsx"), StarterWelcomePage(projectName));
+            """
+        );
+        File.WriteAllText(
+            Path.Combine(moduleDir, "Pages", "Welcome.tsx"),
+            StarterWelcomePage(projectName)
+        );
         File.WriteAllText(Path.Combine(moduleDir, "vite.config.ts"), StarterViteConfig());
         File.WriteAllText(Path.Combine(moduleDir, "package.json"), StarterPackageJson(projectName));
-        File.WriteAllText(Path.Combine(moduleTestDir, $"{moduleName}.Tests.csproj"), moduleTemplates.TestCsproj(moduleName));
-        File.WriteAllText(Path.Combine(moduleTestDir, "GlobalUsings.cs"), moduleTemplates.GlobalUsings());
-        File.WriteAllText(Path.Combine(moduleTestDir, "Unit", $"{singularName}ServiceTests.cs"), moduleTemplates.UnitTestSkeleton(moduleName, singularName));
-        File.WriteAllText(Path.Combine(moduleTestDir, "Integration", $"{moduleName}EndpointTests.cs"), moduleTemplates.IntegrationTestSkeleton(moduleName, singularName));
+        File.WriteAllText(
+            Path.Combine(moduleTestDir, $"{moduleName}.Tests.csproj"),
+            moduleTemplates.TestCsproj(moduleName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleTestDir, "GlobalUsings.cs"),
+            moduleTemplates.GlobalUsings()
+        );
+        File.WriteAllText(
+            Path.Combine(moduleTestDir, "Unit", $"{singularName}ServiceTests.cs"),
+            moduleTemplates.UnitTestSkeleton(moduleName, singularName)
+        );
+        File.WriteAllText(
+            Path.Combine(moduleTestDir, "Integration", $"{moduleName}EndpointTests.cs"),
+            moduleTemplates.IntegrationTestSkeleton(moduleName, singularName)
+        );
 
         // ── Tests.Shared ──────────────────────────────────────
-        File.WriteAllText(Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"), projectTemplates.TestsSharedCsproj(projectName));
+        File.WriteAllText(
+            Path.Combine(testsSharedDir, $"{projectName}.Tests.Shared.csproj"),
+            projectTemplates.TestsSharedCsproj(projectName)
+        );
 
         // ── Wire up solution ──────────────────────────────────
         var slnxPath = Path.Combine(rootDir, $"{projectName}.slnx");
@@ -171,7 +274,10 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         );
     }
 
-    private static List<(string Path, FileAction Action)> PlanFiles(string projectName, string rootDir)
+    private static List<(string Path, FileAction Action)> PlanFiles(
+        string projectName,
+        string rootDir
+    )
     {
         var ops = new List<(string Path, FileAction Action)>();
         void Plan(string path) => ops.Add((path, FileAction.Create));
@@ -264,7 +370,11 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             """;
     }
 
-    private static void RenderDryRunTree(string projectName, List<(string Path, FileAction Action)> ops, string rootDir)
+    private static void RenderDryRunTree(
+        string projectName,
+        List<(string Path, FileAction Action)> ops,
+        string rootDir
+    )
     {
         AnsiConsole.MarkupLine("[dim]Dry run — no files written[/]\n");
         RenderFileTree(projectName, ops, rootDir, isDryRun: true);
@@ -633,7 +743,8 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         string projectName,
         List<(string Path, FileAction Action)> ops,
         string rootDir,
-        bool isDryRun = false)
+        bool isDryRun = false
+    )
     {
         AnsiConsole.MarkupLine("");
         var tree = new Tree($"[blue]{Markup.Escape(projectName)}/[/]");
@@ -641,11 +752,11 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         foreach (var (path, action) in ops)
         {
             var relativePath = Path.GetRelativePath(rootDir, path).Replace('\\', '/');
-            var label = action == FileAction.Modify
-                ? $"[yellow]{Markup.Escape(relativePath)}[/] [dim]({(isDryRun ? "modify" : "modified")})[/]"
-                : isDryRun
-                    ? $"[green]{Markup.Escape(relativePath)}[/] [dim](create)[/]"
-                    : $"[green]{Markup.Escape(relativePath)}[/]";
+            var label =
+                action == FileAction.Modify
+                    ? $"[yellow]{Markup.Escape(relativePath)}[/] [dim]({(isDryRun ? "modify" : "modified")})[/]"
+                : isDryRun ? $"[green]{Markup.Escape(relativePath)}[/] [dim](create)[/]"
+                : $"[green]{Markup.Escape(relativePath)}[/]";
             tree.AddNode(label);
         }
 

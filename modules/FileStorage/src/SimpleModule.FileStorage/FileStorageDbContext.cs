@@ -23,6 +23,9 @@ public class FileStorageDbContext(
     {
         configurationBuilder
             .Properties<FileStorageId>()
-            .HaveConversion<FileStorageId.EfCoreValueConverter, FileStorageId.EfCoreValueComparer>();
+            .HaveConversion<
+                FileStorageId.EfCoreValueConverter,
+                FileStorageId.EfCoreValueComparer
+            >();
     }
 }

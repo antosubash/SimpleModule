@@ -41,9 +41,6 @@ public sealed partial class BackgroundEventDispatcher(
         }
     }
 
-    [LoggerMessage(
-        Level = LogLevel.Error,
-        Message = "Background event dispatch failed"
-    )]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Background event dispatch failed")]
     private static partial void LogDispatchFailed(ILogger logger, Exception exception);
 }

@@ -1,0 +1,12 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "welcome": "Bienvenido, {0}!"
+  },
+  "products": {
+    "title": "Productos",
+    "create": "Crear Producto"
+  }
+}

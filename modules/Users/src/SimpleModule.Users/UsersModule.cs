@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.Settings;
 using SimpleModule.Database;
+using SimpleModule.Users.Constants;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Services;
 
@@ -27,6 +29,22 @@ public class UsersModule : IModule
 
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
+    }
+
+    public void ConfigureSettings(ISettingsBuilder settings)
+    {
+        settings.Add(
+            new SettingDefinition
+            {
+                Key = ConfigKeys.ShowTestAccounts,
+                DisplayName = "Show Test Accounts",
+                Description = "Show quick-select buttons for test accounts on the login page",
+                Group = "Authentication",
+                Scope = SettingScope.System,
+                DefaultValue = "true",
+                Type = SettingType.Bool,
+            }
+        );
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

@@ -408,9 +408,6 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 
-# Tailwind CSS standalone CLI
-tools/tailwindcss*
-
 # Playwright
 .playwright-cli/
 .playwright-mcp/
@@ -423,6 +420,7 @@ modules/**/wwwroot/*
 
 # Tailwind CSS build output
 template/SimpleModule.Host/wwwroot/*
+!template/SimpleModule.Host/wwwroot/favicon.svg
 
 # Tailwind CSS module scan directory
 template/SimpleModule.Host/Styles/_scan/

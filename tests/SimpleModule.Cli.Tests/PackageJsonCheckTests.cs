@@ -16,10 +16,14 @@ public sealed class PackageJsonCheckTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
-    private SolutionContext CreateSolutionWithPackageJson(string moduleName, string? packageJsonContent)
+    private SolutionContext CreateSolutionWithPackageJson(
+        string moduleName,
+        string? packageJsonContent
+    )
     {
         File.WriteAllText(Path.Combine(_tempDir, "Test.slnx"), "<Solution />");
         var moduleDir = Path.Combine(_tempDir, "src", "modules", moduleName, "src", moduleName);
@@ -32,29 +36,41 @@ public sealed class PackageJsonCheckTests : IDisposable
     [Fact]
     public void Run_Pass_WhenReactAndInertiaAreInPeerDeps()
     {
-        var solution = CreateSolutionWithPackageJson("Products", """
+        var solution = CreateSolutionWithPackageJson(
+            "Products",
+            """
             {
               "peerDependencies": {
                 "react": "^19.0.0",
                 "@inertiajs/react": "^2.0.0"
               }
             }
-            """);
+            """
+        );
         var results = new PackageJsonCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products package.json" && r.Status == CheckStatus.Pass);
+        results
+            .Should()
+            .ContainSingle(r => r.Name == "Products package.json" && r.Status == CheckStatus.Pass);
     }
 
     [Fact]
     public void Run_Warn_WhenReactIsInDependenciesNotPeerDeps()
     {
-        var solution = CreateSolutionWithPackageJson("Products", """
+        var solution = CreateSolutionWithPackageJson(
+            "Products",
+            """
             {
               "dependencies": { "react": "^19.0.0" },
               "peerDependencies": { "@inertiajs/react": "^2.0.0" }
             }
-            """);
+            """
+        );
         var results = new PackageJsonCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products package.json" && r.Status == CheckStatus.Warning);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products package.json" && r.Status == CheckStatus.Warning
+            );
     }
 
     [Fact]
@@ -62,6 +78,10 @@ public sealed class PackageJsonCheckTests : IDisposable
     {
         var solution = CreateSolutionWithPackageJson("Products", packageJsonContent: null);
         var results = new PackageJsonCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "Products package.json" && r.Status == CheckStatus.Warning);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "Products package.json" && r.Status == CheckStatus.Warning
+            );
     }
 }

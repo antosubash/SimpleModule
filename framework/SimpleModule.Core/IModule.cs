@@ -2,7 +2,10 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using SimpleModule.Core.Agents;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 
@@ -16,6 +19,15 @@ public interface IModule
     virtual void ConfigureMenu(IMenuBuilder menus) { }
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
+    virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
+    virtual void ConfigureAgents(IAgentBuilder builder) { }
+
+    /// <summary>
+    /// Called once during application startup after all services are built but before
+    /// hosted services start. Receives the host instance for configuring host-level
+    /// integrations (e.g., TickerQ's UseTickerQ, database initialization).
+    /// </summary>
+    virtual void ConfigureHost(IHost host) { }
 
     /// <summary>
     /// Called once during application startup after all services are registered.

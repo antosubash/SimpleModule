@@ -25,17 +25,25 @@ public sealed class ContractsIsolationCheck : IDoctorCheck
             }
 
             var doc = XDocument.Load(contractsCsproj);
-            var nonCoreRefs = doc.Root!
-                .Descendants("ProjectReference")
+            var nonCoreRefs = doc.Root!.Descendants("ProjectReference")
                 .Select(pr => pr.Attribute("Include")?.Value ?? "")
-                .Where(r => !r.Contains("Core", StringComparison.OrdinalIgnoreCase)
-                         && !r.Contains("Contracts", StringComparison.OrdinalIgnoreCase))
+                .Where(r =>
+                    !r.Contains("Core", StringComparison.OrdinalIgnoreCase)
+                    && !r.Contains("Contracts", StringComparison.OrdinalIgnoreCase)
+                )
                 .ToList();
 
             yield return nonCoreRefs.Count == 0
-                ? new CheckResult($"{module}.Contracts isolation", CheckStatus.Pass, "references Core only")
-                : new CheckResult($"{module}.Contracts isolation", CheckStatus.Fail,
-                    $"references non-Core projects: {string.Join(", ", nonCoreRefs.Select(Path.GetFileNameWithoutExtension))}");
+                ? new CheckResult(
+                    $"{module}.Contracts isolation",
+                    CheckStatus.Pass,
+                    "references Core only"
+                )
+                : new CheckResult(
+                    $"{module}.Contracts isolation",
+                    CheckStatus.Fail,
+                    $"references non-Core projects: {string.Join(", ", nonCoreRefs.Select(Path.GetFileNameWithoutExtension))}"
+                );
         }
     }
 }

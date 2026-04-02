@@ -17,7 +17,6 @@ public sealed partial class SettingsService(
     ILogger<SettingsService> logger
 ) : ISettingsContracts
 {
-
     public async Task<string?> GetSettingAsync(
         string key,
         SettingScope scope,

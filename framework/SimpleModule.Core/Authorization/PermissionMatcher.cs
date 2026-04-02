@@ -24,10 +24,12 @@ public static class PermissionMatcher
             return true;
 
         // Wildcard: claim ends with ".*"
-        if (claim.Length > 2
+        if (
+            claim.Length > 2
             && claim[^1] == '*'
             && claim[^2] == '.'
-            && requirement.StartsWith(claim[..^1], StringComparison.Ordinal))
+            && requirement.StartsWith(claim[..^1], StringComparison.Ordinal)
+        )
         {
             return true;
         }

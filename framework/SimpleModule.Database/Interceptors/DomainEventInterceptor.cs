@@ -13,10 +13,12 @@ namespace SimpleModule.Database.Interceptors;
 /// Events are cleared from entities after dispatch to prevent re-processing.
 /// Registered as scoped — each DbContext gets its own instance, so instance fields are safe.
 /// </summary>
-public sealed class DomainEventInterceptor(IServiceProvider serviceProvider) : SaveChangesInterceptor
+public sealed class DomainEventInterceptor(IServiceProvider serviceProvider)
+    : SaveChangesInterceptor
 {
-    private static readonly MethodInfo PublishAsyncMethod =
-        typeof(IEventBus).GetMethod(nameof(IEventBus.PublishAsync))!;
+    private static readonly MethodInfo PublishAsyncMethod = typeof(IEventBus).GetMethod(
+        nameof(IEventBus.PublishAsync)
+    )!;
     private static readonly ConcurrentDictionary<Type, MethodInfo> PublishMethodCache = new();
 
     private List<IEvent>? _collectedEvents;
@@ -24,7 +26,8 @@ public sealed class DomainEventInterceptor(IServiceProvider serviceProvider) : S
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (eventData.Context is not null)
         {
@@ -49,7 +52,8 @@ public sealed class DomainEventInterceptor(IServiceProvider serviceProvider) : S
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData,
         int result,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var events = _collectedEvents;
         _collectedEvents = null;
@@ -67,7 +71,8 @@ public sealed class DomainEventInterceptor(IServiceProvider serviceProvider) : S
                     // missing all concrete handlers.
                     var concreteMethod = PublishMethodCache.GetOrAdd(
                         domainEvent.GetType(),
-                        static type => PublishAsyncMethod.MakeGenericMethod(type));
+                        static type => PublishAsyncMethod.MakeGenericMethod(type)
+                    );
                     await (Task)concreteMethod.Invoke(eventBus, [domainEvent, cancellationToken])!;
                 }
             }
@@ -78,7 +83,8 @@ public sealed class DomainEventInterceptor(IServiceProvider serviceProvider) : S
 
     public override Task SaveChangesFailedAsync(
         DbContextErrorEventData eventData,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         _collectedEvents = null;
         return base.SaveChangesFailedAsync(eventData, cancellationToken);

@@ -8,6 +8,12 @@ namespace SimpleModule.Generator;
 
 internal sealed class ModuleExtensionsEmitter : IEmitter
 {
+    // Mirror Microsoft.Extensions.DependencyInjection.ServiceLifetime enum values.
+    // The generator reads these as integers from [ContractLifetime] attribute arguments
+    // because it targets netstandard2.0 and cannot reference the enum directly.
+    private const int LifetimeSingleton = 0;
+    private const int LifetimeTransient = 2;
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         var (sortedModules, sortResult) = TopologicalSort.SortModulesWithResult(data);
@@ -100,8 +106,14 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             if (kvp.Value.Count == 1)
             {
                 var impl = kvp.Value[0];
+                var method = impl.Lifetime switch
+                {
+                    LifetimeSingleton => "AddSingleton",
+                    LifetimeTransient => "AddTransient",
+                    _ => "AddScoped",
+                };
                 sb.AppendLine(
-                    $"        services.AddScoped<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
+                    $"        services.{method}<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
                 );
             }
         }
@@ -129,6 +141,19 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             }
         }
 
+        // Agent permissions
+        foreach (var agent in data.AgentDefinitions)
+        {
+            sb.AppendLine(
+                $"        permissionBuilder.AddPermission(\"Agents.{agent.ModuleName}.Execute\");"
+            );
+        }
+
+        if (data.AgentDefinitions.Length > 0)
+        {
+            sb.AppendLine("        permissionBuilder.AddPermission(\"Agents.Execute\");");
+        }
+
         sb.AppendLine("        var permissionRegistry = permissionBuilder.Build();");
         sb.AppendLine("        services.AddSingleton(permissionRegistry);");
         sb.AppendLine();
@@ -138,6 +163,46 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         );
         sb.AppendLine(
             "        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();"
+        );
+
+        sb.AppendLine();
+        sb.AppendLine(
+            "        var featureFlagBuilder = new SimpleModule.Core.FeatureFlags.FeatureFlagRegistryBuilder();"
+        );
+
+        sb.AppendLine();
+        sb.AppendLine("        // Auto-discovered feature classes (IModuleFeatures)");
+        foreach (var feature in data.FeatureClasses)
+        {
+            if (feature.IsSealed)
+            {
+                sb.AppendLine(
+                    $"        featureFlagBuilder.AddFeatures<{feature.FullyQualifiedName}>();"
+                );
+            }
+        }
+
+        // Collect feature flag definitions from modules
+        if (sortedModules.Any(m => m.HasConfigureFeatureFlags))
+        {
+            sb.AppendLine();
+            sb.AppendLine(
+                "        var featureFlagDefinitionBuilder = new SimpleModule.Core.FeatureFlags.FeatureFlagBuilder();"
+            );
+            foreach (var module in sortedModules.Where(m => m.HasConfigureFeatureFlags))
+            {
+                var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
+                sb.AppendLine(
+                    $"        ((global::SimpleModule.Core.IModule){fieldName}).ConfigureFeatureFlags(featureFlagDefinitionBuilder);"
+                );
+            }
+            sb.AppendLine(
+                "        featureFlagBuilder.AddDefinitions(featureFlagDefinitionBuilder.ToList());"
+            );
+        }
+
+        sb.AppendLine(
+            "        services.AddSingleton<global::SimpleModule.Core.FeatureFlags.IFeatureFlagRegistry>(featureFlagBuilder.Build());"
         );
 
         if (hasDtoTypes)

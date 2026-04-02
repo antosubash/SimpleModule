@@ -16,7 +16,8 @@ public sealed class NpmWorkspaceCheckTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir)) Directory.Delete(_tempDir, recursive: true);
+        if (Directory.Exists(_tempDir))
+            Directory.Delete(_tempDir, recursive: true);
     }
 
     private SolutionContext CreateSolution(string moduleName, string? rootPackageJson)
@@ -32,25 +33,39 @@ public sealed class NpmWorkspaceCheckTests : IDisposable
     [Fact]
     public void Run_Pass_WhenModuleCoveredByWorkspaceGlob()
     {
-        var solution = CreateSolution("Products", """
+        var solution = CreateSolution(
+            "Products",
+            """
             {
               "workspaces": ["src/modules/*/src/*"]
             }
-            """);
+            """
+        );
         var results = new NpmWorkspaceCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "NpmWorkspace -> Products" && r.Status == CheckStatus.Pass);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "NpmWorkspace -> Products" && r.Status == CheckStatus.Pass
+            );
     }
 
     [Fact]
     public void Run_Fail_WhenModuleNotInWorkspaces()
     {
-        var solution = CreateSolution("Products", """
+        var solution = CreateSolution(
+            "Products",
+            """
             {
               "workspaces": ["packages/*"]
             }
-            """);
+            """
+        );
         var results = new NpmWorkspaceCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "NpmWorkspace -> Products" && r.Status == CheckStatus.Fail);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "NpmWorkspace -> Products" && r.Status == CheckStatus.Fail
+            );
     }
 
     [Fact]
@@ -58,6 +73,10 @@ public sealed class NpmWorkspaceCheckTests : IDisposable
     {
         var solution = CreateSolution("Products", rootPackageJson: null);
         var results = new NpmWorkspaceCheck().Run(solution).ToList();
-        results.Should().ContainSingle(r => r.Name == "NpmWorkspace -> Products" && r.Status == CheckStatus.Warning);
+        results
+            .Should()
+            .ContainSingle(r =>
+                r.Name == "NpmWorkspace -> Products" && r.Status == CheckStatus.Warning
+            );
     }
 }

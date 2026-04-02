@@ -24,12 +24,8 @@ internal sealed class ModuleOptionsEmitter : IEmitter
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
-        sb.AppendLine(
-            "/// <summary>"
-        );
-        sb.AppendLine(
-            "/// Generated extension methods for configuring module options."
-        );
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Generated extension methods for configuring module options.");
         sb.AppendLine("/// </summary>");
         sb.AppendLine("public static class ModuleOptionsExtensions");
         sb.AppendLine("{");
@@ -67,9 +63,7 @@ internal sealed class ModuleOptionsEmitter : IEmitter
         foreach (var kvp in optionsByModule)
         {
             var opt = kvp.Value[0];
-            sb.AppendLine(
-                $"        services.AddOptions<{opt.FullyQualifiedName}>();"
-            );
+            sb.AppendLine($"        services.AddOptions<{opt.FullyQualifiedName}>();");
         }
 
         sb.AppendLine("    }");

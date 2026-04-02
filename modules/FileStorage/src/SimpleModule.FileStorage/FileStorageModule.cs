@@ -65,7 +65,8 @@ public class FileStorageModule : IModule
             {
                 Key = "FileStorage.AllowedExtensions",
                 DisplayName = "Allowed File Extensions",
-                Description = "Comma-separated list of allowed file extensions (e.g., .jpg,.pdf,.zip).",
+                Description =
+                    "Comma-separated list of allowed file extensions (e.g., .jpg,.pdf,.zip).",
                 Group = "FileStorage",
                 Scope = SettingScope.Application,
                 DefaultValue = ".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip",

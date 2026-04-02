@@ -63,7 +63,12 @@ public sealed class FileStorageServiceTests : IDisposable
     {
         using var stream = new MemoryStream("data"u8.ToArray());
 
-        var result = await _service.UploadFileAsync(stream, "photo.jpg", "image/jpeg", "products/images");
+        var result = await _service.UploadFileAsync(
+            stream,
+            "photo.jpg",
+            "image/jpeg",
+            "products/images"
+        );
 
         result.Folder.Should().Be("products/images");
         result.StoragePath.Should().Be("products/images/photo.jpg");
@@ -184,7 +189,12 @@ public sealed class FileStorageServiceTests : IDisposable
     {
         using var stream = new MemoryStream("data"u8.ToArray());
 
-        var result = await _service.UploadFileAsync(stream, "file.txt", "text/plain", "/docs/reports/");
+        var result = await _service.UploadFileAsync(
+            stream,
+            "file.txt",
+            "text/plain",
+            "/docs/reports/"
+        );
 
         result.Folder.Should().Be("docs/reports");
         result.StoragePath.Should().Be("docs/reports/file.txt");

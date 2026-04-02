@@ -2,14 +2,84 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePage } from '@simplemodule/client/resolve-page';
 import { createRoot } from 'react-dom/client';
 
+// Navigation progress bar — 150ms delay so instant navigations don't flash
+const PROGRESS_DELAY = 150;
+const PROGRESS_FILL_PAUSE = 200;
+const PROGRESS_FADE = 300;
+
+let progressBar: HTMLDivElement | null = null;
+let startTimer: ReturnType<typeof setTimeout> | null = null;
+let fadeTimer: ReturnType<typeof setTimeout> | null = null;
+let resetTimer: ReturnType<typeof setTimeout> | null = null;
+
+function getProgressBar() {
+  if (!progressBar) {
+    progressBar = document.createElement('div');
+    progressBar.style.cssText =
+      'position:fixed;top:0;left:0;height:3px;background:var(--color-primary,#059669);z-index:9999;' +
+      `transition:width ${PROGRESS_FADE}ms ease;pointer-events:none;opacity:0;`;
+    document.body.appendChild(progressBar);
+  }
+  return progressBar;
+}
+
+function clearTimers() {
+  if (startTimer) {
+    clearTimeout(startTimer);
+    startTimer = null;
+  }
+  if (fadeTimer) {
+    clearTimeout(fadeTimer);
+    fadeTimer = null;
+  }
+  if (resetTimer) {
+    clearTimeout(resetTimer);
+    resetTimer = null;
+  }
+}
+
+router.on('start', () => {
+  clearTimers();
+  startTimer = setTimeout(() => {
+    const b = getProgressBar();
+    b.style.width = '0%';
+    b.style.opacity = '1';
+    void b.offsetWidth; // force reflow so transition starts from 0%
+    b.style.width = '80%';
+  }, PROGRESS_DELAY);
+});
+
+router.on('finish', () => {
+  clearTimers();
+  if (progressBar) {
+    progressBar.style.width = '100%';
+    fadeTimer = setTimeout(() => {
+      if (progressBar) progressBar.style.opacity = '0';
+      resetTimer = setTimeout(() => {
+        if (progressBar) progressBar.style.width = '0%';
+      }, PROGRESS_FADE);
+    }, PROGRESS_FILL_PAUSE);
+  }
+});
+
 // Handle non-Inertia error responses (404, 500, etc.) by showing a toast
 // instead of the default "must receive a valid Inertia response" error.
-router.on('invalid', (event) => {
+router.on('httpException', (event) => {
   event.preventDefault();
 
   const response = event.detail.response;
-  const body = response.data as { detail?: string; title?: string } | undefined;
-  const message = body?.detail ?? body?.title ?? `Server error (${response.status})`;
+  const body = response.data as { detail?: string; title?: string } | string | undefined;
+  let parsed: { detail?: string; title?: string } | undefined;
+  if (typeof body === 'string') {
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      // non-JSON response body
+    }
+  } else {
+    parsed = body;
+  }
+  const message = parsed?.detail ?? parsed?.title ?? `Server error (${response.status})`;
   showErrorToast(message);
 });
 

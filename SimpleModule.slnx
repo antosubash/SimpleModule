@@ -1,95 +1,132 @@
 ﻿<Solution>
-    <Configurations>
-        <Platform Name="Any CPU" />
-        <Platform Name="x64" />
-        <Platform Name="x86" />
-    </Configurations>
-    <Folder Name="/framework/">
-        <Project Path="framework/SimpleModule.Core/SimpleModule.Core.csproj" />
-        <Project Path="framework/SimpleModule.Generator/SimpleModule.Generator.csproj" />
-        <Project Path="framework/SimpleModule.Database/SimpleModule.Database.csproj" />
-        <Project Path="framework/SimpleModule.Blazor/SimpleModule.Blazor.csproj" />
-        <Project Path="framework/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
-        <Project Path="framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
-        <Project Path="framework/SimpleModule.Storage/SimpleModule.Storage.csproj" />
-        <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
-        <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />
-        <Project Path="framework/SimpleModule.Storage.S3/SimpleModule.Storage.S3.csproj" />
-    </Folder>
-    <Folder Name="/cli/">
-        <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
-    </Folder>
-    <Folder Name="/modules/" />
-    <Folder Name="/modules/Dashboard/">
-        <Project Path="modules/Dashboard/src/SimpleModule.Dashboard.Contracts/SimpleModule.Dashboard.Contracts.csproj" />
-        <Project Path="modules/Dashboard/src/SimpleModule.Dashboard/SimpleModule.Dashboard.csproj" />
-    </Folder>
-    <Folder Name="/modules/Orders/">
-        <Project Path="modules/Orders/src/SimpleModule.Orders.Contracts/SimpleModule.Orders.Contracts.csproj" />
-        <Project Path="modules/Orders/src/SimpleModule.Orders/SimpleModule.Orders.csproj" />
-        <Project Path="modules/Orders/tests/SimpleModule.Orders.Tests/SimpleModule.Orders.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/Products/">
-        <Project Path="modules/Products/src/SimpleModule.Products.Contracts/SimpleModule.Products.Contracts.csproj" />
-        <Project Path="modules/Products/src/SimpleModule.Products/SimpleModule.Products.csproj" />
-        <Project Path="modules/Products/tests/SimpleModule.Products.Tests/SimpleModule.Products.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/Users/">
-        <Project Path="modules/Users/src/SimpleModule.Users.Contracts/SimpleModule.Users.Contracts.csproj" />
-        <Project Path="modules/Users/src/SimpleModule.Users/SimpleModule.Users.csproj" />
-        <Project Path="modules/Users/tests/SimpleModule.Users.Tests/SimpleModule.Users.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/Permissions/">
-        <Project Path="modules/Permissions/src/SimpleModule.Permissions.Contracts/SimpleModule.Permissions.Contracts.csproj" />
-        <Project Path="modules/Permissions/src/SimpleModule.Permissions/SimpleModule.Permissions.csproj" />
-        <Project Path="modules/Permissions/tests/SimpleModule.Permissions.Tests/SimpleModule.Permissions.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/OpenIddict/">
-        <Project Path="modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/SimpleModule.OpenIddict.Contracts.csproj" />
-        <Project Path="modules/OpenIddict/src/SimpleModule.OpenIddict/SimpleModule.OpenIddict.csproj" />
-        <Project Path="modules/OpenIddict/tests/SimpleModule.OpenIddict.Tests/SimpleModule.OpenIddict.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/Admin/">
-        <Project Path="modules/Admin/src/SimpleModule.Admin.Contracts/SimpleModule.Admin.Contracts.csproj" />
-        <Project Path="modules/Admin/src/SimpleModule.Admin/SimpleModule.Admin.csproj" />
-        <Project Path="modules/Admin/tests/SimpleModule.Admin.Tests/SimpleModule.Admin.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/PageBuilder/">
-        <Project Path="modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/SimpleModule.PageBuilder.Contracts.csproj" />
-        <Project Path="modules/PageBuilder/src/SimpleModule.PageBuilder/SimpleModule.PageBuilder.csproj" />
-        <Project Path="modules/PageBuilder/tests/SimpleModule.PageBuilder.Tests/SimpleModule.PageBuilder.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/Settings/">
-        <Project Path="modules/Settings/src/SimpleModule.Settings.Contracts/SimpleModule.Settings.Contracts.csproj" />
-        <Project Path="modules/Settings/src/SimpleModule.Settings/SimpleModule.Settings.csproj" />
-        <Project Path="modules/Settings/tests/SimpleModule.Settings.Tests/SimpleModule.Settings.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/FileStorage/">
-        <Project Path="modules/FileStorage/src/SimpleModule.FileStorage.Contracts/SimpleModule.FileStorage.Contracts.csproj" />
-        <Project Path="modules/FileStorage/src/SimpleModule.FileStorage/SimpleModule.FileStorage.csproj" />
-        <Project Path="modules/FileStorage/tests/SimpleModule.FileStorage.Tests/SimpleModule.FileStorage.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/AuditLogs/">
-        <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/SimpleModule.AuditLogs.Contracts.csproj" />
-        <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs/SimpleModule.AuditLogs.csproj" />
-        <Project Path="modules/AuditLogs/tests/SimpleModule.AuditLogs.Tests/SimpleModule.AuditLogs.Tests.csproj" />
-    </Folder>
-    <Folder Name="/modules/Marketplace/">
-        <Project Path="modules/Marketplace/src/SimpleModule.Marketplace.Contracts/SimpleModule.Marketplace.Contracts.csproj" />
-        <Project Path="modules/Marketplace/src/SimpleModule.Marketplace/SimpleModule.Marketplace.csproj" />
-        <Project Path="modules/Marketplace/tests/SimpleModule.Marketplace.Tests/SimpleModule.Marketplace.Tests.csproj" />
-    </Folder>
-    <Folder Name="/template/">
-        <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
-    </Folder>
-    <Folder Name="/tests/">
-        <Project Path="tests/SimpleModule.Cli.Tests/SimpleModule.Cli.Tests.csproj" />
-        <Project Path="tests/SimpleModule.Core.Tests/SimpleModule.Core.Tests.csproj" />
-        <Project Path="tests/SimpleModule.Database.Tests/SimpleModule.Database.Tests.csproj" />
-        <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
-        <Project Path="tests/SimpleModule.DevTools.Tests/SimpleModule.DevTools.Tests.csproj" />
-        <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
-    </Folder>
-    <Project Path="SimpleModule.AppHost/SimpleModule.AppHost.csproj" />
-    <Project Path="SimpleModule.ServiceDefaults/SimpleModule.ServiceDefaults.csproj" />
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/framework/">
+    <Project Path="framework/SimpleModule.Core/SimpleModule.Core.csproj" />
+    <Project Path="framework/SimpleModule.Generator/SimpleModule.Generator.csproj" />
+    <Project Path="framework/SimpleModule.Database/SimpleModule.Database.csproj" />
+    <Project Path="framework/SimpleModule.Blazor/SimpleModule.Blazor.csproj" />
+    <Project Path="framework/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
+    <Project Path="framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
+    <Project Path="framework/SimpleModule.Storage/SimpleModule.Storage.csproj" />
+    <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
+    <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />
+    <Project Path="framework/SimpleModule.Storage.S3/SimpleModule.Storage.S3.csproj" />
+    <Project Path="framework/SimpleModule.Rag/SimpleModule.Rag.csproj" />
+    <Project Path="framework/SimpleModule.Rag.StructuredRag/SimpleModule.Rag.StructuredRag.csproj" />
+    <Project Path="framework/SimpleModule.Rag.VectorStore.InMemory/SimpleModule.Rag.VectorStore.InMemory.csproj" />
+    <Project Path="framework/SimpleModule.Agents/SimpleModule.Agents.csproj" />
+    <Project Path="framework/SimpleModule.AI.Ollama/SimpleModule.AI.Ollama.csproj" />
+    <Project Path="framework/SimpleModule.AI.AzureOpenAI/SimpleModule.AI.AzureOpenAI.csproj" />
+    <Project Path="framework/SimpleModule.AI.OpenAI/SimpleModule.AI.OpenAI.csproj" />
+    <Project Path="framework/SimpleModule.AI.Anthropic/SimpleModule.AI.Anthropic.csproj" />
+    <Project Path="framework/SimpleModule.Rag.VectorStore.Postgres/SimpleModule.Rag.VectorStore.Postgres.csproj" />
+  </Folder>
+  <Folder Name="/cli/">
+    <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
+  </Folder>
+  <Folder Name="/modules/" />
+  <Folder Name="/modules/Dashboard/">
+    <Project Path="modules/Dashboard/src/SimpleModule.Dashboard.Contracts/SimpleModule.Dashboard.Contracts.csproj" />
+    <Project Path="modules/Dashboard/src/SimpleModule.Dashboard/SimpleModule.Dashboard.csproj" />
+  </Folder>
+  <Folder Name="/modules/Orders/">
+    <Project Path="modules/Orders/src/SimpleModule.Orders.Contracts/SimpleModule.Orders.Contracts.csproj" />
+    <Project Path="modules/Orders/src/SimpleModule.Orders/SimpleModule.Orders.csproj" />
+    <Project Path="modules/Orders/tests/SimpleModule.Orders.Tests/SimpleModule.Orders.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Products/">
+    <Project Path="modules/Products/src/SimpleModule.Products.Contracts/SimpleModule.Products.Contracts.csproj" />
+    <Project Path="modules/Products/src/SimpleModule.Products/SimpleModule.Products.csproj" />
+    <Project Path="modules/Products/tests/SimpleModule.Products.Tests/SimpleModule.Products.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Users/">
+    <Project Path="modules/Users/src/SimpleModule.Users.Contracts/SimpleModule.Users.Contracts.csproj" />
+    <Project Path="modules/Users/src/SimpleModule.Users/SimpleModule.Users.csproj" />
+    <Project Path="modules/Users/tests/SimpleModule.Users.Tests/SimpleModule.Users.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Permissions/">
+    <Project Path="modules/Permissions/src/SimpleModule.Permissions.Contracts/SimpleModule.Permissions.Contracts.csproj" />
+    <Project Path="modules/Permissions/src/SimpleModule.Permissions/SimpleModule.Permissions.csproj" />
+    <Project Path="modules/Permissions/tests/SimpleModule.Permissions.Tests/SimpleModule.Permissions.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/OpenIddict/">
+    <Project Path="modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/SimpleModule.OpenIddict.Contracts.csproj" />
+    <Project Path="modules/OpenIddict/src/SimpleModule.OpenIddict/SimpleModule.OpenIddict.csproj" />
+    <Project Path="modules/OpenIddict/tests/SimpleModule.OpenIddict.Tests/SimpleModule.OpenIddict.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Admin/">
+    <Project Path="modules/Admin/src/SimpleModule.Admin.Contracts/SimpleModule.Admin.Contracts.csproj" />
+    <Project Path="modules/Admin/src/SimpleModule.Admin/SimpleModule.Admin.csproj" />
+    <Project Path="modules/Admin/tests/SimpleModule.Admin.Tests/SimpleModule.Admin.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/PageBuilder/">
+    <Project Path="modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/SimpleModule.PageBuilder.Contracts.csproj" />
+    <Project Path="modules/PageBuilder/src/SimpleModule.PageBuilder/SimpleModule.PageBuilder.csproj" />
+    <Project Path="modules/PageBuilder/tests/SimpleModule.PageBuilder.Tests/SimpleModule.PageBuilder.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Settings/">
+    <Project Path="modules/Settings/src/SimpleModule.Settings.Contracts/SimpleModule.Settings.Contracts.csproj" />
+    <Project Path="modules/Settings/src/SimpleModule.Settings/SimpleModule.Settings.csproj" />
+    <Project Path="modules/Settings/tests/SimpleModule.Settings.Tests/SimpleModule.Settings.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/FileStorage/">
+    <Project Path="modules/FileStorage/src/SimpleModule.FileStorage.Contracts/SimpleModule.FileStorage.Contracts.csproj" />
+    <Project Path="modules/FileStorage/src/SimpleModule.FileStorage/SimpleModule.FileStorage.csproj" />
+    <Project Path="modules/FileStorage/tests/SimpleModule.FileStorage.Tests/SimpleModule.FileStorage.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/FeatureFlags/">
+    <Project Path="modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/SimpleModule.FeatureFlags.Contracts.csproj" />
+    <Project Path="modules/FeatureFlags/src/SimpleModule.FeatureFlags/SimpleModule.FeatureFlags.csproj" />
+    <Project Path="modules/FeatureFlags/tests/SimpleModule.FeatureFlags.Tests/SimpleModule.FeatureFlags.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/AuditLogs/">
+    <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/SimpleModule.AuditLogs.Contracts.csproj" />
+    <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs/SimpleModule.AuditLogs.csproj" />
+    <Project Path="modules/AuditLogs/tests/SimpleModule.AuditLogs.Tests/SimpleModule.AuditLogs.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Marketplace/">
+    <Project Path="modules/Marketplace/src/SimpleModule.Marketplace.Contracts/SimpleModule.Marketplace.Contracts.csproj" />
+    <Project Path="modules/Marketplace/src/SimpleModule.Marketplace/SimpleModule.Marketplace.csproj" />
+    <Project Path="modules/Marketplace/tests/SimpleModule.Marketplace.Tests/SimpleModule.Marketplace.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Tenants/">
+    <Project Path="modules/Tenants/src/SimpleModule.Tenants.Contracts/SimpleModule.Tenants.Contracts.csproj" />
+    <Project Path="modules/Tenants/src/SimpleModule.Tenants/SimpleModule.Tenants.csproj" />
+    <Project Path="modules/Tenants/tests/SimpleModule.Tenants.Tests/SimpleModule.Tenants.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Rag/">
+    <Project Path="modules/Rag/src/SimpleModule.Rag.Module/SimpleModule.Rag.Module.csproj" />
+  </Folder>
+  <Folder Name="/modules/AgentsPersistence/">
+    <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
+  </Folder>
+  <Folder Name="/modules/BackgroundJobs/">
+    <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/SimpleModule.BackgroundJobs.Contracts.csproj" />
+    <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/SimpleModule.BackgroundJobs.csproj" />
+    <Project Path="modules/BackgroundJobs/tests/SimpleModule.BackgroundJobs.Tests/SimpleModule.BackgroundJobs.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Localization/">
+    <Project Path="modules/Localization/src/SimpleModule.Localization.Contracts/SimpleModule.Localization.Contracts.csproj" />
+    <Project Path="modules/Localization/src/SimpleModule.Localization/SimpleModule.Localization.csproj" />
+    <Project Path="modules/Localization/tests/SimpleModule.Localization.Tests/SimpleModule.Localization.Tests.csproj" />
+  </Folder>
+  <Folder Name="/template/">
+    <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SimpleModule.Cli.Tests/SimpleModule.Cli.Tests.csproj" />
+    <Project Path="tests/SimpleModule.Core.Tests/SimpleModule.Core.Tests.csproj" />
+    <Project Path="tests/SimpleModule.Database.Tests/SimpleModule.Database.Tests.csproj" />
+    <Project Path="tests/SimpleModule.Generator.Tests/SimpleModule.Generator.Tests.csproj" />
+    <Project Path="tests/SimpleModule.DevTools.Tests/SimpleModule.DevTools.Tests.csproj" />
+    <Project Path="tests/SimpleModule.Tests.Shared/SimpleModule.Tests.Shared.csproj" />
+    <Project Path="tests/SimpleModule.Benchmarks/SimpleModule.Benchmarks.csproj" />
+    <Project Path="tests/SimpleModule.LoadTests/SimpleModule.LoadTests.csproj" />
+  </Folder>
+  <Project Path="SimpleModule.AppHost/SimpleModule.AppHost.csproj" />
+  <Project Path="SimpleModule.ServiceDefaults/SimpleModule.ServiceDefaults.csproj" />
 </Solution>

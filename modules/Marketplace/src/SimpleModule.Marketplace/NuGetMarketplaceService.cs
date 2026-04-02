@@ -48,7 +48,7 @@ public class NuGetMarketplaceService(
             _ => packages,
         };
 
-        return new MarketplaceSearchResult { TotalHits = packages.Count, Packages = packages };
+        return new MarketplaceSearchResult { TotalHits = result.TotalHits, Packages = packages };
     }
 
     public async Task<MarketplacePackageDetail?> GetPackageDetailsAsync(string packageId)
@@ -93,11 +93,18 @@ public class NuGetMarketplaceService(
 
             var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
 
-            var packages = response.Data.Select(d => MapToPackage(d, installedIds)).ToList();
+            var filtered = response
+                .Data.Where(d =>
+                    d.Id?.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase) != true
+                )
+                .ToList();
+
+            var contractsRemoved = response.Data.Count - filtered.Count;
+            var packages = filtered.Select(d => MapToPackage(d, installedIds)).ToList();
 
             return new MarketplaceSearchResult
             {
-                TotalHits = response.TotalHits,
+                TotalHits = response.TotalHits - contractsRemoved,
                 Packages = packages,
             };
         }
@@ -116,45 +123,87 @@ public class NuGetMarketplaceService(
             var searchAddress =
                 $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} tag:{tag}&take=1";
 
-            var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(
-                searchAddress
-            );
+            var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(searchAddress);
             var packageData = searchResponse?.Data.FirstOrDefault();
             if (packageData is null)
             {
                 return null;
             }
 
-        var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
-        var basePackage = MapToPackage(packageData, installedIds);
+            var installedIdsTask = installedPackageDetector.GetInstalledPackageIdsAsync();
+            var readmeTask = FetchReadmeAsync(client, packageData.Id, packageData.Version);
+            await Task.WhenAll(installedIdsTask, readmeTask);
 
-        return new MarketplacePackageDetail
-        {
-            Id = basePackage.Id,
-            Title = basePackage.Title,
-            Description = basePackage.Description,
-            Authors = basePackage.Authors,
-            Icon = basePackage.Icon,
-            TotalDownloads = basePackage.TotalDownloads,
-            Tags = basePackage.Tags,
-            LatestVersion = basePackage.LatestVersion,
-            ProjectLink = basePackage.ProjectLink,
-            Category = basePackage.Category,
-            IsInstalled = basePackage.IsInstalled,
-            LicenseLink = packageData.LicenseAddress ?? string.Empty,
-            Versions = (packageData.Versions ?? [])
-                .Select(v => new MarketplacePackageVersion
-                {
-                    Version = v.Version ?? string.Empty,
-                    Downloads = v.Downloads,
-                })
-                .ToList(),
-            Dependencies = [],
-        };
+            var installedIds = await installedIdsTask;
+            var basePackage = MapToPackage(packageData, installedIds);
+            var readme = await readmeTask;
+
+            return new MarketplacePackageDetail
+            {
+                Id = basePackage.Id,
+                Title = basePackage.Title,
+                Description = basePackage.Description,
+                Authors = basePackage.Authors,
+                Icon = basePackage.Icon,
+                TotalDownloads = basePackage.TotalDownloads,
+                Tags = basePackage.Tags,
+                LatestVersion = basePackage.LatestVersion,
+                ProjectLink = basePackage.ProjectLink,
+                Category = basePackage.Category,
+                IsInstalled = basePackage.IsInstalled,
+                LicenseLink = packageData.LicenseAddress ?? string.Empty,
+                Versions = (packageData.Versions ?? [])
+                    .Select(v => new MarketplacePackageVersion
+                    {
+                        Version = v.Version ?? string.Empty,
+                        Downloads = v.Downloads,
+                    })
+                    .ToList(),
+                Dependencies = [],
+                Readme = readme,
+            };
         }
         catch (HttpRequestException)
         {
             return null;
+        }
+    }
+
+    [SuppressMessage(
+        "Globalization",
+        "CA1308:Normalize strings to uppercase",
+        Justification = "NuGet flat container API requires lowercase package IDs"
+    )]
+    private async Task<string> FetchReadmeAsync(
+        HttpClient client,
+        string? packageId,
+        string? version
+    )
+    {
+        if (string.IsNullOrEmpty(packageId) || string.IsNullOrEmpty(version))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            var id = packageId.ToLowerInvariant();
+            var ver = version.ToLowerInvariant();
+            var readmeUri = new Uri(
+                $"{options.Value.NuGetFlatContainerBaseAddress}/{id}/{ver}/readme"
+            );
+            using var response = await client.GetAsync(readmeUri);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return string.Empty;
+            }
+
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (HttpRequestException)
+        {
+            return string.Empty;
         }
     }
 
@@ -180,7 +229,11 @@ public class NuGetMarketplaceService(
     }
 }
 
-[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
+[SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Instantiated by JSON deserialization"
+)]
 internal sealed record NuGetSearchResponse
 {
     [JsonPropertyName("totalHits")]
@@ -190,7 +243,11 @@ internal sealed record NuGetSearchResponse
     public List<NuGetPackageData> Data { get; init; } = [];
 }
 
-[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
+[SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Instantiated by JSON deserialization"
+)]
 internal sealed record NuGetPackageData
 {
     [JsonPropertyName("id")]
@@ -227,7 +284,11 @@ internal sealed record NuGetPackageData
     public List<NuGetVersionData>? Versions { get; init; }
 }
 
-[SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "Instantiated by JSON deserialization")]
+[SuppressMessage(
+    "Performance",
+    "CA1812:Avoid uninstantiated internal classes",
+    Justification = "Instantiated by JSON deserialization"
+)]
 internal sealed record NuGetVersionData
 {
     [JsonPropertyName("version")]

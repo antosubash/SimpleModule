@@ -91,7 +91,7 @@ public class AdminPermissionsTests : IClassFixture<SimpleModuleWebApplicationFac
                 new KeyValuePair<string, string>("name", roleName),
                 new KeyValuePair<string, string>("description", "Test"),
                 new KeyValuePair<string, string>("permissions", "Admin.ManageUsers"),
-                new KeyValuePair<string, string>("permissions", "Admin.ViewAuditLog"),
+                new KeyValuePair<string, string>("permissions", "Admin.ManageRoles"),
             }
         );
 
@@ -107,7 +107,7 @@ public class AdminPermissionsTests : IClassFixture<SimpleModuleWebApplicationFac
         var perms = await permContracts.GetPermissionsForRoleAsync(RoleId.From(role!.Id));
         perms.Should().HaveCount(2);
         perms.Should().Contain("Admin.ManageUsers");
-        perms.Should().Contain("Admin.ViewAuditLog");
+        perms.Should().Contain("Admin.ManageRoles");
     }
 
     [Fact]

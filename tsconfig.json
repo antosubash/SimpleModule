@@ -10,7 +10,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
-  "exclude": ["node_modules", "**/wwwroot/**", "src/SimpleModule.UI/registry/templates"]
+  "exclude": ["node_modules", "**/wwwroot/**", "packages/SimpleModule.UI/registry/templates"]
 }

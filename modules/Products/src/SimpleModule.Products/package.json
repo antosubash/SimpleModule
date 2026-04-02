@@ -3,9 +3,9 @@
   "name": "@simplemodule/products",
   "version": "0.0.0",
   "scripts": {
-    "build": "cross-env VITE_MODE=prod vite build",
-    "build:dev": "cross-env VITE_MODE=dev vite build",
-    "watch": "cross-env VITE_MODE=dev vite build --watch"
+    "build": "cross-env VITE_MODE=prod vite build --configLoader runner",
+    "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+    "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch"
   },
   "peerDependencies": {
     "react": "^19.0.0",

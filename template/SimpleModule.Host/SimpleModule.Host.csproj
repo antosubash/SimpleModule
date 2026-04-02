@@ -4,6 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <InvariantGlobalization>false</InvariantGlobalization>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <!-- IModuleJob is a cross-module extension point — no implementation required in BackgroundJobs module -->
+    <!-- IModuleJob/IJobExecutionContext are cross-module extension points -->
+    <NoWarn>$(NoWarn);SM0025;SM0028</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="SimpleModule.Tests.Shared" />
@@ -30,7 +33,18 @@
     <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
     <ProjectReference Include="..\..\modules\Marketplace\src\SimpleModule.Marketplace\SimpleModule.Marketplace.csproj" />
     <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
+    <ProjectReference Include="..\..\modules\FeatureFlags\src\SimpleModule.FeatureFlags\SimpleModule.FeatureFlags.csproj" />
+    <ProjectReference Include="..\..\modules\Tenants\src\SimpleModule.Tenants\SimpleModule.Tenants.csproj" />
+    <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
+    <ProjectReference Include="..\..\modules\Localization\src\SimpleModule.Localization\SimpleModule.Localization.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Agents\SimpleModule.Agents.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.AI.Ollama\SimpleModule.AI.Ollama.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag.StructuredRag\SimpleModule.Rag.StructuredRag.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag.VectorStore.InMemory\SimpleModule.Rag.VectorStore.InMemory.csproj" />
+    <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
+    <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <Import Project="..\..\framework\SimpleModule.Hosting\build\SimpleModule.Hosting.targets" />

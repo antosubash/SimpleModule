@@ -1,11 +1,11 @@
-{
+﻿{
   "version": 1,
   "isRoot": true,
   "tools": {
-    "simplemodule.cli": {
-      "version": "1.0.0",
+    "csharpier": {
+      "version": "1.2.6",
       "commands": [
-        "sm"
+        "csharpier"
       ]
     }
   }

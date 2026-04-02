@@ -79,10 +79,8 @@ public class OpenIddictModule : IModule
                 }
                 else
                 {
-                    // Development/Testing: use auto-generated development certificates
-                    options
-                        .AddDevelopmentEncryptionCertificate()
-                        .AddDevelopmentSigningCertificate();
+                    // Development/Testing: use ephemeral keys (avoids macOS keychain issues)
+                    options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
                 }
 
                 options.RegisterScopes(
@@ -107,6 +105,9 @@ public class OpenIddictModule : IModule
 
         // Seed service
         services.AddHostedService<OpenIddictSeedService>();
+
+        // Session management contracts
+        services.AddScoped<IOpenIddictSessionContracts, OpenIddictSessionService>();
 
         // Host-level contributions
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, OpenIddictSwaggerGenSetup>();

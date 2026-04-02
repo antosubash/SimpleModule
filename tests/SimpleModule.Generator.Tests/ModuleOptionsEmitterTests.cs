@@ -31,15 +31,9 @@ public class ModuleOptionsEmitterTests
 
         var generated = GetGeneratedSource(result, "ModuleOptionsExtensions.g.cs");
 
-        generated
-            .Should()
-            .Contain("ConfigureProducts(this SimpleModuleOptions options");
-        generated
-            .Should()
-            .Contain("global::TestApp.ProductsModuleOptions");
-        generated
-            .Should()
-            .Contain("options.ConfigureModule(configure)");
+        generated.Should().Contain("ConfigureProducts(this SimpleModuleOptions options");
+        generated.Should().Contain("global::TestApp.ProductsModuleOptions");
+        generated.Should().Contain("options.ConfigureModule(configure)");
     }
 
     [Fact]
@@ -65,12 +59,8 @@ public class ModuleOptionsEmitterTests
 
         var generated = GetGeneratedSource(result, "ModuleOptionsExtensions.g.cs");
 
-        generated
-            .Should()
-            .Contain("RegisterModuleOptionsDefaults");
-        generated
-            .Should()
-            .Contain("services.AddOptions<global::TestApp.ProductsModuleOptions>()");
+        generated.Should().Contain("RegisterModuleOptionsDefaults");
+        generated.Should().Contain("services.AddOptions<global::TestApp.ProductsModuleOptions>()");
     }
 
     [Fact]
@@ -205,9 +195,7 @@ public class ModuleOptionsEmitterTests
 
         var generated = GetGeneratedSource(result, "HostingExtensions.g.cs");
 
-        generated
-            .Should()
-            .Contain("ApplyModuleOptions");
+        generated.Should().Contain("ApplyModuleOptions");
     }
 
     private static string GetGeneratedSource(

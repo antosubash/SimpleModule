@@ -22,14 +22,19 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new HostDbContextEmitter(),
         new ValueConverterConventionsEmitter(),
         new DbContextRegistryEmitter(),
+        new AgentExtensionsEmitter(),
+        new LocalizationExtensionsEmitter(),
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Extract an equatable data model from the compilation so the incremental
         // pipeline can cache results and skip re-generation when nothing changes.
+        // The CancellationToken allows the IDE to cancel stale discovery work
+        // when a new compilation is triggered (e.g., on each keystroke).
         var dataProvider = context.CompilationProvider.Select(
-            static (compilation, _) => SymbolDiscovery.Extract(compilation)
+            static (compilation, cancellationToken) =>
+                SymbolDiscovery.Extract(compilation, cancellationToken)
         );
 
         context.RegisterSourceOutput(

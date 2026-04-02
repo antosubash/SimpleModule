@@ -16,13 +16,27 @@ public class UsersEndpoint : IViewEndpoint
                 "/users",
                 async (
                     IUserAdminContracts userAdmin,
+                    IRoleAdminContracts roleAdmin,
                     IOptions<AdminModuleOptions> options,
                     string? search,
+                    string? filterStatus,
+                    string? filterRole,
                     int page = 1
                 ) =>
                 {
                     var pageSize = options.Value.UsersPageSize;
-                    var result = await userAdmin.GetUsersPagedAsync(search, page, pageSize);
+                    var usersTask = userAdmin.GetUsersPagedAsync(
+                        search,
+                        page,
+                        pageSize,
+                        filterStatus,
+                        filterRole
+                    );
+                    var rolesTask = roleAdmin.GetAllRolesAsync();
+                    await Task.WhenAll(usersTask, rolesTask);
+
+                    var result = await usersTask;
+                    var allRoles = await rolesTask;
                     var totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize);
 
                     return Inertia.Render(
@@ -34,6 +48,9 @@ public class UsersEndpoint : IViewEndpoint
                             page = result.Page,
                             totalPages,
                             totalCount = result.TotalCount,
+                            allRoles = allRoles.Select(r => r.Name).ToList(),
+                            filterStatus = filterStatus ?? "",
+                            filterRole = filterRole ?? "",
                         }
                     );
                 }
