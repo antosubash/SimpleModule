@@ -44,24 +44,46 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Check if release commit
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # For workflow_run, check the commit that triggered CI (not current HEAD)
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            SHA="${{ github.event.workflow_run.head_sha }}"
-          else
-            SHA="HEAD"
-          fi
-          MSG=$(git log -1 --pretty=%s "$SHA")
-          if [[ "$MSG" == release:* ]]; then
+          # Check both the CI-triggering commit and current HEAD of main
+          # (we now checkout latest main, so HEAD may be a release commit
+          # even if the CI-triggering commit wasn't)
+          HEAD_MSG=$(git log -1 --pretty=%s HEAD)
+          if [[ "$HEAD_MSG" == release:* ]]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "Skipping: commit $SHA is a release commit"
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping: HEAD on main is a release commit"
+            exit 0
           fi
+
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            CI_SHA="${{ github.event.workflow_run.head_sha }}"
+            CI_MSG=$(git log -1 --pretty=%s "$CI_SHA" 2>/dev/null || echo "")
+            if [[ "$CI_MSG" == release:* ]]; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "Skipping: CI-triggering commit $CI_SHA is a release commit"
+              exit 0
+            fi
+          fi
+
+          # Also skip if a release PR already exists for the next version
+          CURRENT=$(jq -r .version version.json)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          EXISTING_PR=$(gh pr list --search "release: v${NEXT_VERSION}" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+          if [ -n "$EXISTING_PR" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Skipping: release PR #${EXISTING_PR} already exists for v${NEXT_VERSION}"
+            exit 0
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
 
       - name: Determine bump type
         if: steps.check.outputs.skip != 'true'
@@ -103,6 +125,9 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clean up stale release branch from a previous failed run
+          git push origin --delete "$BRANCH" 2>/dev/null || true
 
           git checkout -b "$BRANCH"
           git add version.json
