@@ -16,7 +16,6 @@ namespace SimpleModule.Localization.Tests.Unit;
 public sealed class LocaleResolutionMiddlewareTests
 {
     private readonly TranslationLoader _loader;
-    private readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
 
     public LocaleResolutionMiddlewareTests()
     {
@@ -38,16 +37,9 @@ public sealed class LocaleResolutionMiddlewareTests
         var context = CreateHttpContext(settings, userId: "user-1");
         string? capturedLocale = null;
 
-        var middleware = new LocaleResolutionMiddleware(
-            _ =>
-            {
-                capturedLocale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                return Task.CompletedTask;
-            },
-            CreateConfiguration(null),
-            _loader,
-            _cache
-        );
+        var middleware = CreateMiddleware(
+            CaptureLocale(v => capturedLocale = v),
+            CreateConfiguration(null));
 
         await middleware.InvokeAsync(context);
 
@@ -66,16 +58,9 @@ public sealed class LocaleResolutionMiddlewareTests
         context.Request.Headers.AcceptLanguage = "es-ES,es;q=0.9,en;q=0.8";
         string? capturedLocale = null;
 
-        var middleware = new LocaleResolutionMiddleware(
-            _ =>
-            {
-                capturedLocale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                return Task.CompletedTask;
-            },
-            CreateConfiguration(null),
-            _loader,
-            _cache
-        );
+        var middleware = CreateMiddleware(
+            CaptureLocale(v => capturedLocale = v),
+            CreateConfiguration(null));
 
         await middleware.InvokeAsync(context);
 
@@ -89,16 +74,9 @@ public sealed class LocaleResolutionMiddlewareTests
         var context = CreateHttpContext(settings);
         string? capturedLocale = null;
 
-        var middleware = new LocaleResolutionMiddleware(
-            _ =>
-            {
-                capturedLocale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                return Task.CompletedTask;
-            },
-            CreateConfiguration("es"),
-            _loader,
-            _cache
-        );
+        var middleware = CreateMiddleware(
+            CaptureLocale(v => capturedLocale = v),
+            CreateConfiguration("es"));
 
         await middleware.InvokeAsync(context);
 
@@ -112,16 +90,9 @@ public sealed class LocaleResolutionMiddlewareTests
         var context = CreateHttpContext(settings);
         string? capturedLocale = null;
 
-        var middleware = new LocaleResolutionMiddleware(
-            _ =>
-            {
-                capturedLocale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                return Task.CompletedTask;
-            },
-            CreateConfiguration(null),
-            _loader,
-            _cache
-        );
+        var middleware = CreateMiddleware(
+            CaptureLocale(v => capturedLocale = v),
+            CreateConfiguration(null));
 
         await middleware.InvokeAsync(context);
 
@@ -129,53 +100,67 @@ public sealed class LocaleResolutionMiddlewareTests
     }
 
     [Fact]
-    public async Task Invoke_CachesResolvedLocaleForAuthenticatedUser()
+    public async Task Invoke_CachesExplicitUserSetting()
     {
         var callCount = 0;
         var settings = new FakeSettingsContracts("es", onGet: () => callCount++);
         var localCache = new MemoryCache(new MemoryCacheOptions());
 
-        var middleware = new LocaleResolutionMiddleware(
+        var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
             CreateConfiguration(null),
-            _loader,
-            localCache
-        );
+            localCache);
 
-        // First request — should call settings
         var context1 = CreateHttpContext(settings, userId: "user-1");
         await middleware.InvokeAsync(context1);
         callCount.Should().Be(1);
 
-        // Second request — should use cache, not call settings again
+        // Second request uses cache — no DB call
         var context2 = CreateHttpContext(settings, userId: "user-1");
         await middleware.InvokeAsync(context2);
-        callCount.Should().Be(1, "locale should be served from cache on second request");
+        callCount.Should().Be(1, "explicit user setting should be served from cache");
     }
 
     [Fact]
-    public async Task Invoke_CachesFallbackLocaleWhenUserHasNoSetting()
+    public async Task Invoke_DoesNotCacheFallbackPerUser()
     {
+        // When a user has no explicit setting, the resolved locale comes from
+        // Accept-Language or default — this should NOT be cached per-user to
+        // avoid cross-browser cache pollution.
         var callCount = 0;
         var settings = new FakeSettingsContracts(null, onGet: () => callCount++);
         var localCache = new MemoryCache(new MemoryCacheOptions());
 
-        var middleware = new LocaleResolutionMiddleware(
+        var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
             CreateConfiguration(null),
-            _loader,
-            localCache
-        );
+            localCache);
 
-        // First request — should call settings, get null, resolve to default
         var context1 = CreateHttpContext(settings, userId: "user-2");
         await middleware.InvokeAsync(context1);
         callCount.Should().Be(1);
 
-        // Second request — should use cache even though user has no setting
+        // Second request — should hit DB again since no explicit setting was cached
         var context2 = CreateHttpContext(settings, userId: "user-2");
         await middleware.InvokeAsync(context2);
-        callCount.Should().Be(1, "fallback locale should also be cached to avoid repeated DB lookups");
+        callCount.Should().Be(2, "fallback should not be cached per-user");
+    }
+
+    private LocaleResolutionMiddleware CreateMiddleware(
+        RequestDelegate next,
+        IConfiguration config,
+        IMemoryCache? cache = null)
+    {
+        return new LocaleResolutionMiddleware(next, config, _loader, cache ?? new MemoryCache(new MemoryCacheOptions()));
+    }
+
+    private static RequestDelegate CaptureLocale(Action<string> setter)
+    {
+        return _ =>
+        {
+            setter(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            return Task.CompletedTask;
+        };
     }
 
     private static DefaultHttpContext CreateHttpContext(
