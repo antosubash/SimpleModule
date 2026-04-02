@@ -13,7 +13,7 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
         CancellationToken cancellationToken = default
     )
     {
-        var entry = await db.CachedStructuredKnowledge.FirstOrDefaultAsync(
+        return await db.CachedStructuredKnowledge.FirstOrDefaultAsync(
             e =>
                 e.CollectionName == collectionName
                 && e.DocumentHash == documentHash
@@ -21,14 +21,6 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
                 && (e.ExpiresAt == null || e.ExpiresAt > DateTimeOffset.UtcNow),
             cancellationToken
         );
-
-        if (entry is not null)
-        {
-            entry.HitCount++;
-            await db.SaveChangesAsync(cancellationToken);
-        }
-
-        return entry;
     }
 
     public async Task<IReadOnlyList<CachedStructuredKnowledge>> GetByCollectionAsync(
@@ -52,6 +44,28 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
         CancellationToken cancellationToken = default
     )
     {
+        await UpsertEntryAsync(entry, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SaveBatchAsync(
+        IReadOnlyList<CachedStructuredKnowledge> entries,
+        CancellationToken cancellationToken = default
+    )
+    {
+        foreach (var entry in entries)
+        {
+            await UpsertEntryAsync(entry, cancellationToken);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task UpsertEntryAsync(
+        CachedStructuredKnowledge entry,
+        CancellationToken cancellationToken
+    )
+    {
         var existing = await db.CachedStructuredKnowledge.FirstOrDefaultAsync(
             e =>
                 e.CollectionName == entry.CollectionName
@@ -71,39 +85,6 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
         {
             db.CachedStructuredKnowledge.Add(entry);
         }
-
-        await db.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task SaveBatchAsync(
-        IReadOnlyList<CachedStructuredKnowledge> entries,
-        CancellationToken cancellationToken = default
-    )
-    {
-        foreach (var entry in entries)
-        {
-            var existing = await db.CachedStructuredKnowledge.FirstOrDefaultAsync(
-                e =>
-                    e.CollectionName == entry.CollectionName
-                    && e.DocumentHash == entry.DocumentHash
-                    && e.StructureType == entry.StructureType,
-                cancellationToken
-            );
-
-            if (existing is not null)
-            {
-                existing.StructuredContent = entry.StructuredContent;
-                existing.CreatedAt = DateTimeOffset.UtcNow;
-                existing.ExpiresAt = entry.ExpiresAt;
-                existing.HitCount = 0;
-            }
-            else
-            {
-                db.CachedStructuredKnowledge.Add(entry);
-            }
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task CleanExpiredAsync(CancellationToken cancellationToken = default)

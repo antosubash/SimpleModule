@@ -29,9 +29,17 @@ public sealed partial class KnowledgeIndexingHostedService(
         }
 
         var sources = scope.ServiceProvider.GetServices<IKnowledgeSource>().ToList();
-        var tasks = sources.Select(source =>
-            IndexSourceAsync(knowledgeStore, source, scope.ServiceProvider, cancellationToken)
-        );
+        var tasks = sources.Select(async source =>
+        {
+            using var sourceScope = serviceProvider.CreateScope();
+            var scopedStore = sourceScope.ServiceProvider.GetRequiredService<IKnowledgeStore>();
+            await IndexSourceAsync(
+                scopedStore,
+                source,
+                sourceScope.ServiceProvider,
+                cancellationToken
+            );
+        });
         await Task.WhenAll(tasks);
     }
 

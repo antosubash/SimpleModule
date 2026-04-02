@@ -11,7 +11,7 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260402085024_AddRagAndAgentsModules")]
+    [Migration("20260402091403_AddRagAndAgentsModules")]
     partial class AddRagAndAgentsModules
     {
         /// <inheritdoc />
