@@ -11,8 +11,8 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260402081522_AddStructuredRagCache")]
-    partial class AddStructuredRagCache
+    [Migration("20260402085024_AddRagAndAgentsModules")]
+    partial class AddRagAndAgentsModules
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -328,6 +328,71 @@ namespace SimpleModule.Host.Migrations
                     b.HasIndex("ApplicationId", "Status", "Subject", "Type");
 
                     b.ToTable("OpenIddict_OpenIddictTokens", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Agents.Sessions.AgentMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TokenCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("SessionId", "Timestamp");
+
+                    b.ToTable("Agents_Messages", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Agents.Sessions.AgentSession", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("LastMessageAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentName");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Agents_Sessions", (string)null);
                 });
 
             modelBuilder.Entity("SimpleModule.AuditLogs.Contracts.AuditEntry", b =>
@@ -850,7 +915,7 @@ namespace SimpleModule.Host.Migrations
                     b.HasIndex("CollectionName", "DocumentHash", "StructureType")
                         .IsUnique();
 
-                    b.ToTable("StructuredRagCache_CachedStructuredKnowledge", (string)null);
+                    b.ToTable("Rag_CachedStructuredKnowledge", (string)null);
                 });
 
             modelBuilder.Entity("SimpleModule.Settings.Entities.PublicMenuItemEntity", b =>

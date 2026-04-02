@@ -3,10 +3,10 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Rag.StructuredRag.Data;
 
-namespace SimpleModule.StructuredRagCache;
+namespace SimpleModule.Rag.Module;
 
-public sealed class StructuredRagCacheDbContext(
-    DbContextOptions<StructuredRagCacheDbContext> options,
+public sealed class RagDbContext(
+    DbContextOptions<RagDbContext> options,
     IOptions<DatabaseOptions> dbOptions
 ) : DbContext(options)
 {
@@ -18,6 +18,6 @@ public sealed class StructuredRagCacheDbContext(
         modelBuilder.ApplyConfiguration(
             new EntityConfigurations.CachedStructuredKnowledgeConfiguration()
         );
-        modelBuilder.ApplyModuleSchema(StructuredRagCacheConstants.ModuleName, dbOptions.Value);
+        modelBuilder.ApplyModuleSchema(RagConstants.ModuleName, dbOptions.Value);
     }
 }

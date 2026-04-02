@@ -4,17 +4,14 @@ using SimpleModule.Core;
 using SimpleModule.Database;
 using SimpleModule.Rag.StructuredRag.Data;
 
-namespace SimpleModule.StructuredRagCache;
+namespace SimpleModule.Rag.Module;
 
-[Module(StructuredRagCacheConstants.ModuleName)]
-public class StructuredRagCacheModule : IModule
+[Module(RagConstants.ModuleName)]
+public class RagModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<StructuredRagCacheDbContext>(
-            configuration,
-            StructuredRagCacheConstants.ModuleName
-        );
+        services.AddModuleDbContext<RagDbContext>(configuration, RagConstants.ModuleName);
         services.AddScoped<IStructuredKnowledgeCache, EfStructuredKnowledgeCache>();
     }
 }

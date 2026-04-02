@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimpleModule.Rag.StructuredRag.Data;
 
-namespace SimpleModule.StructuredRagCache.EntityConfigurations;
+namespace SimpleModule.Rag.Module.EntityConfigurations;
 
 public sealed class CachedStructuredKnowledgeConfiguration
     : IEntityTypeConfiguration<CachedStructuredKnowledge>
