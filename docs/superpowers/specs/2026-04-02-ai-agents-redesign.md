@@ -66,21 +66,23 @@ public interface IAgentChatHook
 ```csharp
 public class AgentChatContext
 {
-    public string AgentName { get; }
     public AgentRegistration Agent { get; }
+    public IAgentDefinition AgentDefinition { get; }      // resolved instance for Instructions, EnableRag, etc.
     public AgentChatRequest Request { get; }
     public ClaimsPrincipal? User { get; }
-    public List<ChatMessage> Messages { get; }           // hooks can add/modify
-    public ChatOptions ChatOptions { get; }               // hooks can modify tools, temperature
-    public AgentChatResponse? Response { get; set; }      // set after LLM call
-    public bool IsRejected { get; set; }                  // guardrails set this to block
+    public List<ChatMessage> Messages { get; }            // hooks can add/modify
+    public ChatOptions ChatOptions { get; }                // hooks can modify tools, temperature
+    public AgentChatResponse? Response { get; set; }       // set after LLM call
+    public bool IsRejected { get; set; }                   // guardrails set this to block
     public string? RejectionReason { get; set; }
-    public Dictionary<string, object> Properties { get; } // cross-hook state
+    public Dictionary<string, object> Properties { get; }  // cross-hook state
     public DateTimeOffset StartedAt { get; }
 }
 ```
 
-### Execution Flow
+The context holds both `AgentRegistration` (metadata from source generator) and the resolved `IAgentDefinition` instance (for `Instructions`, `EnableRag`, `MaxTokens`, `Temperature`). Hooks access agent configuration via `context.AgentDefinition`.
+
+### Execution Flow — Non-Streaming
 
 ```
 ChatAsync(agentName, request):
@@ -93,11 +95,58 @@ ChatAsync(agentName, request):
   6. Return response
 ```
 
-Streaming follows the same pattern — hooks run before/after the stream, not per-chunk.
+### Execution Flow — Streaming
+
+```
+ChatStreamAsync(agentName, request):
+  1. Build AgentChatContext (same as non-streaming)
+  2. Run all hooks.OnBeforeChatAsync() ordered by Order ascending
+     - If context.IsRejected → yield single rejection chunk, return
+  3. Call IChatClient.GetStreamingResponseAsync() → IAsyncEnumerable<StreamingChatCompletionUpdate>
+  4. Yield chunks to caller while accumulating full response text
+  5. After stream is fully consumed: set context.Response with accumulated text
+  6. Run all hooks.OnAfterChatAsync() in reverse Order (descending)
+```
+
+The streaming endpoint wraps this: it yields SSE chunks as they arrive, then after the stream completes, after-hooks run server-side. The caller has already received all chunks — after-hooks are for bookkeeping (session save, telemetry), not for modifying the response. This means `OnAfterChatAsync` for streaming has the full accumulated response available in `context.Response`.
+
+### Error Handling in Hooks
+
+- If a before-hook throws, remaining before-hooks are skipped, the LLM call does not happen, and the exception propagates to the endpoint.
+- After-hooks run in a try/catch per hook — one failing after-hook does not prevent others from running. Failures are logged but do not change the response (the user already has it).
+- `TelemetryHook` uses try/finally internally to ensure `Activity` spans are always closed.
+
+### Hook Base Class
+
+To reduce boilerplate (most hooks only implement one side), provide a base class with no-op defaults:
+
+```csharp
+public abstract class AgentChatHookBase : IAgentChatHook
+{
+    public abstract int Order { get; }
+    public virtual Task OnBeforeChatAsync(AgentChatContext context, CancellationToken ct) => Task.CompletedTask;
+    public virtual Task OnAfterChatAsync(AgentChatContext context, CancellationToken ct) => Task.CompletedTask;
+}
+```
+
+## IAgentChatService Interface
+
+```csharp
+public interface IAgentChatService
+{
+    Task<AgentChatResponse> ChatAsync(
+        string agentName, AgentChatRequest request, ClaimsPrincipal? user, CancellationToken ct);
+
+    IAsyncEnumerable<AgentChatStreamChunk> ChatStreamAsync(
+        string agentName, AgentChatRequest request, ClaimsPrincipal? user, CancellationToken ct);
+}
+
+public record AgentChatStreamChunk(string Text, bool IsComplete);
+```
 
 ## Slim AgentChatService
 
-The refactored orchestrator has one job: run hooks → call LLM.
+The refactored orchestrator has one job: run hooks → call LLM. Registered as **scoped** in DI (per-request lifetime, since it receives `ClaimsPrincipal` and hooks may be scoped).
 
 ```csharp
 public class AgentChatService : IAgentChatService
@@ -111,10 +160,11 @@ public class AgentChatService : IAgentChatService
         string agentName, AgentChatRequest request, ClaimsPrincipal? user, CancellationToken ct)
     {
         var agent = _registry.Get(agentName);
-        var context = new AgentChatContext(agent, request, user);
+        var definition = _serviceProvider.GetRequiredService(agent.AgentDefinitionType) as IAgentDefinition;
+        var context = new AgentChatContext(agent, definition!, request, user);
 
         // System message from agent definition
-        context.Messages.Add(new SystemChatMessage(agent.Instructions));
+        context.Messages.Add(new SystemChatMessage(definition!.Instructions));
         context.Messages.Add(new UserChatMessage(request.Message));
 
         // Build tools from tool providers
@@ -287,7 +337,7 @@ public class RagContextHook : IAgentChatHook
 
     public async Task OnBeforeChatAsync(AgentChatContext context, CancellationToken ct)
     {
-        if (!context.Agent.EnableRag) return;
+        if (context.AgentDefinition.EnableRag != true) return;
 
         var result = await _ragPipeline.QueryAsync(context.Request.Message, ct: ct);
         if (result.Sources.Count > 0)
@@ -324,16 +374,38 @@ Removed entirely — not refactored:
 | `AgentFileService` | Never had endpoints, incomplete feature |
 | `AgentChatRequest.ResponseType` | Never used in any code path |
 | `DevTools/AgentPlaygroundEndpoints` | Moves to Agents module |
-| `IModule.ConfigureAgents()` | Source generator handles discovery |
+| `IModule.ConfigureAgents()` | Replaced by `ConfigureServices` — see migration path below |
+
+### ConfigureAgents Migration Path
+
+`IModule.ConfigureAgents(IAgentBuilder)` is removed. Modules that used this escape hatch for manual agent/tool-provider registration should move that logic to `ConfigureServices`:
+
+```csharp
+// Before (escape hatch):
+public void ConfigureAgents(IAgentBuilder builder)
+{
+    builder.AddAgent<MyCustomAgent>();
+    builder.AddToolProvider<MyToolProvider>();
+}
+
+// After (standard DI):
+public void ConfigureServices(IServiceCollection services, IConfiguration config)
+{
+    services.AddScoped<IAgentDefinition, MyCustomAgent>();
+    services.AddScoped<IAgentToolProvider, MyToolProvider>();
+}
+```
+
+The source generator still auto-discovers agents via `[Module]` attribute scanning. Manual registration via `ConfigureServices` is the escape hatch for agents not discoverable by the generator.
 
 ## Source Generator Changes
 
-`AgentExtensionsEmitter` continues to generate:
+`AgentExtensionsEmitter` needs these changes:
 
-- `AddModuleAgents()` — discovers `IAgentDefinition`, `IAgentToolProvider`, `IKnowledgeSource`
-- `MapModuleAgentEndpoints()` — maps agent REST endpoints
-
-No changes needed to the generator logic itself. The generated code calls into the slimmed-down `SimpleModule.Agents` framework package.
+- **Remove** `ConfigureAgents` detection — stop checking `HasConfigureAgents` and generating calls to it
+- **Keep** auto-discovery of `IAgentDefinition`, `IAgentToolProvider`, `IKnowledgeSource`
+- **Keep** `AddModuleAgents()` and `MapModuleAgentEndpoints()` generation
+- The generated `AddModuleAgents()` calls into the slimmed-down `SimpleModule.Agents` framework package
 
 ## REST Endpoints (unchanged)
 
@@ -344,6 +416,23 @@ Stay in `framework/SimpleModule.Agents/AgentEndpoints.cs`:
 - `POST /api/agents/{name}/chat/stream` — SSE streaming
 
 The structured output endpoint is removed (was never implemented).
+
+## Package Dependency Graph
+
+```
+SimpleModule.Core          (no dependencies — contracts only)
+    ↑
+SimpleModule.AI            (depends on Core, Microsoft.Extensions.AI, provider SDKs)
+    ↑
+SimpleModule.Agents        (depends on Core, Microsoft.Extensions.AI — NOT on SimpleModule.AI)
+    ↑
+SimpleModule.Generator     (depends on Core — netstandard2.0, build-time only)
+
+modules/Agents             (depends on Core, Agents framework)
+modules/Rag                (depends on Core, Agents framework, Microsoft.Extensions.AI, Semantic Kernel vector stores)
+```
+
+`SimpleModule.Agents` depends on `IChatClient` from `Microsoft.Extensions.AI.Abstractions`, not on `SimpleModule.AI`. This means the framework doesn't force a specific provider — any `IChatClient` registration works.
 
 ## Migration Summary
 
