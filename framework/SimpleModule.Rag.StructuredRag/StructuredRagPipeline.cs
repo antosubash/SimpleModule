@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Rag;
 using SimpleModule.Rag.StructuredRag.Data;
-using SimpleModule.Rag.StructuredRag.Preprocessing;
 
 namespace SimpleModule.Rag.StructuredRag;
 
@@ -25,10 +24,11 @@ public sealed class StructuredRagPipeline(
 
         var topK = options?.TopK ?? ragOptions.Value.DefaultTopK;
         var minScore = options?.MinScore ?? ragOptions.Value.MinScore;
+        var collectionName = options?.CollectionName ?? "default";
 
         // Stage 0: Retrieve documents via vector search
         var searchResults = await knowledgeStore.SearchAsync(
-            "default",
+            collectionName,
             query,
             topK,
             minScore,
@@ -59,11 +59,9 @@ public sealed class StructuredRagPipeline(
 
         if (cache is not null && structureType != StructureType.Chunk)
         {
-            var contentHash = LlmKnowledgePreprocessor.ComputeHash(
-                string.Join("\n---\n", documents)
-            );
+            var contentHash = ContentHasher.ComputeHash(documents);
             var cached = await cache.GetAsync(
-                "default",
+                collectionName,
                 contentHash,
                 structureType,
                 cancellationToken

@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Rag;
@@ -42,7 +40,7 @@ public sealed partial class LlmKnowledgePreprocessor(
             cancellationToken.ThrowIfCancellationRequested();
 
             // Check if already cached for this content
-            var contentHash = ComputeHash(string.Join("\n---\n", docContents));
+            var contentHash = ContentHasher.ComputeHash(docContents);
             var existing = await cache.GetAsync(
                 collectionName,
                 contentHash,
@@ -89,12 +87,6 @@ public sealed partial class LlmKnowledgePreprocessor(
                 LogPreprocessingFailed(logger, ex, collectionName, structureType);
             }
         }
-    }
-
-    internal static string ComputeHash(string content)
-    {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(content));
-        return Convert.ToHexString(bytes);
     }
 
     [LoggerMessage(

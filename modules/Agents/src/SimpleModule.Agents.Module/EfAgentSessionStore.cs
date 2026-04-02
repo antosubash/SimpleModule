@@ -49,7 +49,7 @@ public sealed class EfAgentSessionStore(AgentsDbContext db) : IAgentSessionStore
         CancellationToken cancellationToken = default
     )
     {
-        var query = db.Messages.Where(m => m.SessionId == sessionId).OrderBy(m => m.Timestamp);
+        var query = db.Messages.Where(m => m.SessionId == sessionId);
 
         if (maxMessages.HasValue)
         {
@@ -60,6 +60,6 @@ public sealed class EfAgentSessionStore(AgentsDbContext db) : IAgentSessionStore
                 .ToListAsync(cancellationToken);
         }
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.OrderBy(m => m.Timestamp).ToListAsync(cancellationToken);
     }
 }

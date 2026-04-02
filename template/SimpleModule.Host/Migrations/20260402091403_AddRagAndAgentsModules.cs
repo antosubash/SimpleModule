@@ -11,36 +11,51 @@ namespace SimpleModule.Host.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Rename table from old StructuredRagCache module to new Rag module
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_StructuredRagCache_CachedStructuredKnowledge",
-                table: "StructuredRagCache_CachedStructuredKnowledge"
+            migrationBuilder.CreateTable(
+                name: "Rag_CachedStructuredKnowledge",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    CollectionName = table.Column<string>(
+                        type: "TEXT",
+                        maxLength: 256,
+                        nullable: false
+                    ),
+                    DocumentHash = table.Column<string>(
+                        type: "TEXT",
+                        maxLength: 64,
+                        nullable: false
+                    ),
+                    StructureType = table.Column<int>(type: "INTEGER", nullable: false),
+                    StructuredContent = table.Column<string>(type: "TEXT", nullable: false),
+                    SourceTitle = table.Column<string>(
+                        type: "TEXT",
+                        maxLength: 512,
+                        nullable: false
+                    ),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
+                    HitCount = table.Column<int>(type: "INTEGER", nullable: false),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rag_CachedStructuredKnowledge", x => x.Id);
+                }
             );
 
-            migrationBuilder.RenameTable(
-                name: "StructuredRagCache_CachedStructuredKnowledge",
-                newName: "Rag_CachedStructuredKnowledge"
-            );
-
-            migrationBuilder.RenameIndex(
-                name: "IX_StructuredRagCache_CachedStructuredKnowledge_ExpiresAt",
+            migrationBuilder.CreateIndex(
+                name: "IX_Rag_CachedStructuredKnowledge_CollectionName_DocumentHash_StructureType",
                 table: "Rag_CachedStructuredKnowledge",
-                newName: "IX_Rag_CachedStructuredKnowledge_ExpiresAt"
+                columns: new[] { "CollectionName", "DocumentHash", "StructureType" },
+                unique: true
             );
 
-            migrationBuilder.RenameIndex(
-                name: "IX_StructuredRagCache_CachedStructuredKnowledge_CollectionName_DocumentHash_StructureType",
+            migrationBuilder.CreateIndex(
+                name: "IX_Rag_CachedStructuredKnowledge_ExpiresAt",
                 table: "Rag_CachedStructuredKnowledge",
-                newName: "IX_Rag_CachedStructuredKnowledge_CollectionName_DocumentHash_StructureType"
+                column: "ExpiresAt"
             );
 
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_Rag_CachedStructuredKnowledge",
-                table: "Rag_CachedStructuredKnowledge",
-                column: "Id"
-            );
-
-            // Agents module — session and message tables
             migrationBuilder.CreateTable(
                 name: "Agents_Sessions",
                 columns: table => new
@@ -55,6 +70,18 @@ namespace SimpleModule.Host.Migrations
                 {
                     table.PrimaryKey("PK_Agents_Sessions", x => x.Id);
                 }
+            );
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agents_Sessions_AgentName",
+                table: "Agents_Sessions",
+                column: "AgentName"
+            );
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Agents_Sessions_UserId",
+                table: "Agents_Sessions",
+                column: "UserId"
             );
 
             migrationBuilder.CreateTable(
@@ -75,18 +102,6 @@ namespace SimpleModule.Host.Migrations
             );
 
             migrationBuilder.CreateIndex(
-                name: "IX_Agents_Sessions_AgentName",
-                table: "Agents_Sessions",
-                column: "AgentName"
-            );
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Agents_Sessions_UserId",
-                table: "Agents_Sessions",
-                column: "UserId"
-            );
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Agents_Messages_SessionId",
                 table: "Agents_Messages",
                 column: "SessionId"
@@ -104,35 +119,7 @@ namespace SimpleModule.Host.Migrations
         {
             migrationBuilder.DropTable(name: "Agents_Messages");
             migrationBuilder.DropTable(name: "Agents_Sessions");
-
-            // Restore old table name
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_Rag_CachedStructuredKnowledge",
-                table: "Rag_CachedStructuredKnowledge"
-            );
-
-            migrationBuilder.RenameTable(
-                name: "Rag_CachedStructuredKnowledge",
-                newName: "StructuredRagCache_CachedStructuredKnowledge"
-            );
-
-            migrationBuilder.RenameIndex(
-                name: "IX_Rag_CachedStructuredKnowledge_ExpiresAt",
-                table: "StructuredRagCache_CachedStructuredKnowledge",
-                newName: "IX_StructuredRagCache_CachedStructuredKnowledge_ExpiresAt"
-            );
-
-            migrationBuilder.RenameIndex(
-                name: "IX_Rag_CachedStructuredKnowledge_CollectionName_DocumentHash_StructureType",
-                table: "StructuredRagCache_CachedStructuredKnowledge",
-                newName: "IX_StructuredRagCache_CachedStructuredKnowledge_CollectionName_DocumentHash_StructureType"
-            );
-
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_StructuredRagCache_CachedStructuredKnowledge",
-                table: "StructuredRagCache_CachedStructuredKnowledge",
-                column: "Id"
-            );
+            migrationBuilder.DropTable(name: "Rag_CachedStructuredKnowledge");
         }
     }
 }
