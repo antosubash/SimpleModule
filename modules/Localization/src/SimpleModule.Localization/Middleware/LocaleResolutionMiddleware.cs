@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.Inertia;
@@ -14,8 +15,11 @@ namespace SimpleModule.Localization.Middleware;
 public sealed class LocaleResolutionMiddleware(
     RequestDelegate next,
     IConfiguration configuration,
-    TranslationLoader loader)
+    TranslationLoader loader,
+    IMemoryCache cache)
 {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+
     public async Task InvokeAsync(HttpContext context)
     {
         var locale = await ResolveLocaleAsync(context);
@@ -46,20 +50,30 @@ public sealed class LocaleResolutionMiddleware(
 
     private async Task<string> ResolveLocaleAsync(HttpContext context)
     {
+        // Authenticated user — check cached locale, then settings
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId is not null)
         {
+            var cacheKey = $"locale:user:{userId}";
+            if (cache.TryGetValue(cacheKey, out string? cachedLocale) && cachedLocale is not null)
+            {
+                return cachedLocale;
+            }
+
             var settings = context.RequestServices.GetService<ISettingsContracts>();
             if (settings is not null)
             {
-                var userLocale = await settings.GetSettingAsync<string>(LocalizationConstants.UserLanguageSetting, SettingScope.User, userId);
+                var userLocale = await settings.GetSettingAsync<string>(
+                    LocalizationConstants.UserLanguageSetting, SettingScope.User, userId);
                 if (!string.IsNullOrEmpty(userLocale))
                 {
+                    cache.Set(cacheKey, userLocale, CacheDuration);
                     return userLocale;
                 }
             }
         }
 
+        // Accept-Language header
         var acceptLanguageHeaders = context.Request.GetTypedHeaders().AcceptLanguage;
         if (acceptLanguageHeaders is { Count: > 0 })
         {
@@ -81,6 +95,7 @@ public sealed class LocaleResolutionMiddleware(
             }
         }
 
+        // Config default
         var configDefault = configuration["Localization:DefaultLocale"];
         if (!string.IsNullOrEmpty(configDefault))
         {

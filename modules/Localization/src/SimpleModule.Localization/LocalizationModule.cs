@@ -13,6 +13,7 @@ public sealed class LocalizationModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddMemoryCache();
         services.AddSingleton<TranslationLoader>();
         services.AddLocalization();
         services.AddSingleton<IStringLocalizerFactory, JsonStringLocalizerFactory>();

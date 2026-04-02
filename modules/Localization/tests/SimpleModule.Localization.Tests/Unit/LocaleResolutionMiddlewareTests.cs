@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.Inertia;
@@ -15,6 +16,7 @@ namespace SimpleModule.Localization.Tests.Unit;
 public sealed class LocaleResolutionMiddlewareTests
 {
     private readonly TranslationLoader _loader;
+    private readonly IMemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
 
     public LocaleResolutionMiddlewareTests()
     {
@@ -43,7 +45,8 @@ public sealed class LocaleResolutionMiddlewareTests
                 return Task.CompletedTask;
             },
             CreateConfiguration(null),
-            _loader
+            _loader,
+            _cache
         );
 
         await middleware.InvokeAsync(context);
@@ -70,7 +73,8 @@ public sealed class LocaleResolutionMiddlewareTests
                 return Task.CompletedTask;
             },
             CreateConfiguration(null),
-            _loader
+            _loader,
+            _cache
         );
 
         await middleware.InvokeAsync(context);
@@ -92,7 +96,8 @@ public sealed class LocaleResolutionMiddlewareTests
                 return Task.CompletedTask;
             },
             CreateConfiguration("es"),
-            _loader
+            _loader,
+            _cache
         );
 
         await middleware.InvokeAsync(context);
@@ -114,12 +119,38 @@ public sealed class LocaleResolutionMiddlewareTests
                 return Task.CompletedTask;
             },
             CreateConfiguration(null),
-            _loader
+            _loader,
+            _cache
         );
 
         await middleware.InvokeAsync(context);
 
         capturedLocale.Should().Be("en");
+    }
+
+    [Fact]
+    public async Task Invoke_CachesResolvedLocaleForAuthenticatedUser()
+    {
+        var callCount = 0;
+        var settings = new FakeSettingsContracts("es", onGet: () => callCount++);
+        var localCache = new MemoryCache(new MemoryCacheOptions());
+
+        var middleware = new LocaleResolutionMiddleware(
+            _ => Task.CompletedTask,
+            CreateConfiguration(null),
+            _loader,
+            localCache
+        );
+
+        // First request — should call settings
+        var context1 = CreateHttpContext(settings, userId: "user-1");
+        await middleware.InvokeAsync(context1);
+        callCount.Should().Be(1);
+
+        // Second request — should use cache, not call settings again
+        var context2 = CreateHttpContext(settings, userId: "user-1");
+        await middleware.InvokeAsync(context2);
+        callCount.Should().Be(1, "locale should be served from cache on second request");
     }
 
     private static DefaultHttpContext CreateHttpContext(
@@ -159,15 +190,17 @@ public sealed class LocaleResolutionMiddlewareTests
             .Build();
     }
 
-    private sealed class FakeSettingsContracts(string? language) : ISettingsContracts
+    private sealed class FakeSettingsContracts(string? language, Action? onGet = null) : ISettingsContracts
     {
         public Task<string?> GetSettingAsync(string key, SettingScope scope, string? userId = null)
         {
+            onGet?.Invoke();
             return Task.FromResult(language);
         }
 
         public Task<T?> GetSettingAsync<T>(string key, SettingScope scope, string? userId = null)
         {
+            onGet?.Invoke();
             if (typeof(T) == typeof(string))
             {
                 return Task.FromResult((T?)(object?)language);
