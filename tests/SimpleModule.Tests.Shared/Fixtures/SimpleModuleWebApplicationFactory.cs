@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
+using SimpleModule.BackgroundJobs;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
@@ -41,6 +42,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         _connection.Open();
 
         builder.UseEnvironment("Testing");
+        builder.UseSetting("ASPNETCORE_ENVIRONMENT", "Testing");
 
         builder.ConfigureServices(services =>
         {
@@ -65,6 +67,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<TenantsDbContext>(services);
             ReplaceDbContext<RagDbContext>(services);
             ReplaceDbContext<AgentsDbContext>(services);
+            ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
@@ -164,6 +167,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<TenantsDbContext>(sp);
         EnsureTablesCreated<RagDbContext>(sp);
         EnsureTablesCreated<AgentsDbContext>(sp);
+        EnsureTablesCreated<BackgroundJobsDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 

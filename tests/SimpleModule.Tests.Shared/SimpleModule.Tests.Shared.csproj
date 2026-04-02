@@ -29,5 +29,6 @@
     <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs.Contracts\SimpleModule.AuditLogs.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
     <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
+    <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
   </ItemGroup>
 </Project>

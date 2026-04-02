@@ -208,7 +208,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::A.AModule",
@@ -225,7 +226,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 )
             ),
             ImmutableArray<DtoTypeInfoRecord>.Empty,
@@ -274,7 +276,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::B.BModule",
@@ -291,7 +294,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 )
             ),
             ImmutableArray<DtoTypeInfoRecord>.Empty,
@@ -343,7 +347,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::A.AModule",
@@ -360,7 +365,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 ),
                 new ModuleInfoRecord(
                     "global::B.BModule",
@@ -377,7 +383,8 @@ public class TopologicalSortTests
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
-                    ImmutableArray<ViewInfoRecord>.Empty
+                    ImmutableArray<ViewInfoRecord>.Empty,
+                    null
                 )
             ),
             ImmutableArray<DtoTypeInfoRecord>.Empty,

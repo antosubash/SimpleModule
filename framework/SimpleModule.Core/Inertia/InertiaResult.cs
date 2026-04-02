@@ -1,6 +1,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace SimpleModule.Core.Inertia;
 
@@ -12,10 +14,7 @@ public static class Inertia
 
 internal sealed class InertiaResult : IResult
 {
-    private static readonly JsonSerializerOptions _camelCaseOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
+    private static volatile JsonSerializerOptions? _cachedOptions;
 
     private readonly string _component;
     private readonly object? _props;
@@ -28,8 +27,9 @@ internal sealed class InertiaResult : IResult
 
     public async Task ExecuteAsync(HttpContext httpContext)
     {
+        var options = GetSerializerOptions(httpContext);
         var sharedData = httpContext.RequestServices.GetService<InertiaSharedData>();
-        var mergedProps = MergeProps(_props, sharedData);
+        var mergedProps = MergeProps(_props, sharedData, options);
 
         var pageData = new
         {
@@ -44,21 +44,51 @@ internal sealed class InertiaResult : IResult
             httpContext.Response.Headers["X-Inertia"] = "true";
             httpContext.Response.Headers["Vary"] = "X-Inertia";
             httpContext.Response.ContentType = "application/json";
-            // Use the same serializer as the SSR path so Vogen value objects
-            // are consistently unwrapped (WriteAsJsonAsync uses a different
-            // JsonSerializerOptions from DI which may not handle them).
-            var json = JsonSerializer.Serialize(pageData, _camelCaseOptions);
+            var json = JsonSerializer.Serialize(pageData, options);
             await httpContext.Response.WriteAsync(json);
             return;
         }
 
-        var pageJson = JsonSerializer.Serialize(pageData, _camelCaseOptions);
+        var pageJson = JsonSerializer.Serialize(pageData, options);
 
         var renderer = httpContext.RequestServices.GetRequiredService<IInertiaPageRenderer>();
         await renderer.RenderPageAsync(httpContext, pageJson);
     }
 
-    private static object MergeProps(object? props, InertiaSharedData? sharedData)
+    /// <summary>
+    /// Resolves JSON serializer options from DI and merges with camelCase policy.
+    /// Caches the merged options for subsequent requests since the DI options are
+    /// configured once at startup and don't change.
+    /// </summary>
+    private static JsonSerializerOptions GetSerializerOptions(HttpContext httpContext)
+    {
+        if (_cachedOptions is not null)
+            return _cachedOptions;
+
+        var diOptions = httpContext.RequestServices.GetService<IOptions<JsonOptions>>();
+        if (diOptions is not null)
+        {
+            var merged = new JsonSerializerOptions(diOptions.Value.SerializerOptions)
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            };
+            _cachedOptions = merged;
+            return merged;
+        }
+
+        var fallback = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        };
+        _cachedOptions = fallback;
+        return fallback;
+    }
+
+    private static object MergeProps(
+        object? props,
+        InertiaSharedData? sharedData,
+        JsonSerializerOptions options
+    )
     {
         if (sharedData is null || sharedData.All.Count == 0)
         {
@@ -77,7 +107,7 @@ internal sealed class InertiaResult : IResult
         // Use JSON round-trip to merge endpoint props into shared data
         if (props is not null)
         {
-            var json = JsonSerializer.SerializeToElement(props, _camelCaseOptions);
+            var json = JsonSerializer.SerializeToElement(props, options);
             foreach (var property in json.EnumerateObject())
             {
                 result[property.Name] = property.Value;
