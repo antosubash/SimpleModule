@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Description>AI Agent runtime for SimpleModule. Provides agent registration, tool discovery, chat service, and auto-generated REST/SSE endpoints.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+    <ProjectReference Include="..\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+    <ProjectReference Include="..\SimpleModule.Storage\SimpleModule.Storage.csproj" />
+  </ItemGroup>
+</Project>

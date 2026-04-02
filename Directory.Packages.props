@@ -56,5 +56,23 @@
     <PackageVersion Include="TickerQ.EntityFrameworkCore" Version="10.2.5" />
     <!-- CLI -->
     <PackageVersion Include="Spectre.Console.Cli" Version="0.49.1" />
+    <!-- AI / LLM Providers -->
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.4.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="10.4.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI.Ollama" Version="9.7.0-preview.1.25356.2" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.4.1" />
+    <PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageVersion Include="OpenAI" Version="2.9.1" />
+    <PackageVersion Include="Anthropic.SDK" Version="5.10.0" />
+    <!-- RAG / Vector -->
+    <PackageVersion Include="Microsoft.Extensions.VectorData.Abstractions" Version="10.1.0" />
+    <PackageVersion
+      Include="Microsoft.SemanticKernel.Connectors.InMemory"
+      Version="1.74.0-preview"
+    />
+    <PackageVersion
+      Include="Microsoft.SemanticKernel.Connectors.Postgres"
+      Version="1.51.0-preview"
+    />
   </ItemGroup>
 </Project>

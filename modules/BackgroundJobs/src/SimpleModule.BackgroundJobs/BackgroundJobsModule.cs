@@ -11,8 +11,8 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using TickerQ.DependencyInjection;
-using TickerQ.EntityFrameworkCore.DependencyInjection;
 using TickerQ.EntityFrameworkCore.Customizer;
+using TickerQ.EntityFrameworkCore.DependencyInjection;
 using TickerQ.Utilities.Entities;
 using TickerQ.Utilities.Interfaces.Managers;
 
@@ -70,10 +70,14 @@ public class BackgroundJobsModule : IModule
         else
         {
             services.AddSingleton<ProgressChannel>();
-            services.AddSingleton(typeof(ITimeTickerManager<TimeTickerEntity>), _ =>
-                NoOpTickerManagerFactory.CreateTimeManager());
-            services.AddSingleton(typeof(ICronTickerManager<CronTickerEntity>), _ =>
-                NoOpTickerManagerFactory.CreateCronManager());
+            services.AddSingleton(
+                typeof(ITimeTickerManager<TimeTickerEntity>),
+                _ => NoOpTickerManagerFactory.CreateTimeManager()
+            );
+            services.AddSingleton(
+                typeof(ICronTickerManager<CronTickerEntity>),
+                _ => NoOpTickerManagerFactory.CreateCronManager()
+            );
         }
 
         services.AddScoped<IBackgroundJobs, BackgroundJobsService>();

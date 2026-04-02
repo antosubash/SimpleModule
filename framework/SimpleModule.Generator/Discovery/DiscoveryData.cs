@@ -44,6 +44,9 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<InterceptorInfoRecord> Interceptors,
     ImmutableArray<VogenValueObjectRecord> VogenValueObjects,
     ImmutableArray<ModuleOptionsRecord> ModuleOptions,
+    ImmutableArray<AgentDefinitionRecord> AgentDefinitions,
+    ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
+    ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
     string HostAssemblyName
 )
 {
@@ -61,6 +64,9 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<InterceptorInfoRecord>.Empty,
         ImmutableArray<VogenValueObjectRecord>.Empty,
         ImmutableArray<ModuleOptionsRecord>.Empty,
+        ImmutableArray<AgentDefinitionRecord>.Empty,
+        ImmutableArray<AgentToolProviderRecord>.Empty,
+        ImmutableArray<KnowledgeSourceRecord>.Empty,
         ""
     );
 
@@ -79,6 +85,9 @@ internal readonly record struct DiscoveryData(
             && Interceptors.SequenceEqual(other.Interceptors)
             && VogenValueObjects.SequenceEqual(other.VogenValueObjects)
             && ModuleOptions.SequenceEqual(other.ModuleOptions)
+            && AgentDefinitions.SequenceEqual(other.AgentDefinitions)
+            && AgentToolProviders.SequenceEqual(other.AgentToolProviders)
+            && KnowledgeSources.SequenceEqual(other.KnowledgeSources)
             && HostAssemblyName == other.HostAssemblyName;
     }
 
@@ -98,6 +107,9 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, Interceptors);
         hash = HashHelper.HashArray(hash, VogenValueObjects);
         hash = HashHelper.HashArray(hash, ModuleOptions);
+        hash = HashHelper.HashArray(hash, AgentDefinitions);
+        hash = HashHelper.HashArray(hash, AgentToolProviders);
+        hash = HashHelper.HashArray(hash, KnowledgeSources);
         hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
         return hash;
     }
@@ -113,6 +125,7 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigureMiddleware,
     bool HasConfigureSettings,
     bool HasConfigureFeatureFlags,
+    bool HasConfigureAgents,
     bool HasRazorComponents,
     string RoutePrefix,
     string ViewPrefix,
@@ -132,6 +145,7 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigurePermissions == other.HasConfigurePermissions
             && HasConfigureSettings == other.HasConfigureSettings
             && HasConfigureFeatureFlags == other.HasConfigureFeatureFlags
+            && HasConfigureAgents == other.HasConfigureAgents
             && HasRazorComponents == other.HasRazorComponents
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
@@ -152,6 +166,7 @@ internal readonly record struct ModuleInfoRecord(
         hash = HashHelper.Combine(hash, HasConfigurePermissions.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureSettings.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureFeatureFlags.GetHashCode());
+        hash = HashHelper.Combine(hash, HasConfigureAgents.GetHashCode());
         hash = HashHelper.Combine(hash, HasRazorComponents.GetHashCode());
         hash = HashHelper.Combine(hash, (RoutePrefix ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, (ViewPrefix ?? "").GetHashCode());
@@ -422,6 +437,15 @@ internal readonly record struct VogenValueObjectRecord(
     string ComparerFqn
 );
 
+internal readonly record struct AgentDefinitionRecord(string FullyQualifiedName, string ModuleName);
+
+internal readonly record struct AgentToolProviderRecord(
+    string FullyQualifiedName,
+    string ModuleName
+);
+
+internal readonly record struct KnowledgeSourceRecord(string FullyQualifiedName, string ModuleName);
+
 #endregion
 
 #region Mutable working types (used during symbol traversal only)
@@ -437,6 +461,7 @@ internal sealed class ModuleInfo
     public bool HasConfigureMiddleware { get; set; }
     public bool HasConfigureSettings { get; set; }
     public bool HasConfigureFeatureFlags { get; set; }
+    public bool HasConfigureAgents { get; set; }
     public bool HasRazorComponents { get; set; }
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
@@ -559,6 +584,15 @@ internal sealed class InterceptorInfo
     public string ModuleName { get; set; } = "";
     public List<string> ConstructorParamTypeFqns { get; set; } = new();
     public SourceLocationRecord? Location { get; set; }
+}
+
+/// <summary>
+/// Shared mutable working type for discovered interface implementors (agents, tool providers, knowledge sources).
+/// </summary>
+internal sealed class DiscoveredTypeInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public string ModuleName { get; set; } = "";
 }
 
 #endregion

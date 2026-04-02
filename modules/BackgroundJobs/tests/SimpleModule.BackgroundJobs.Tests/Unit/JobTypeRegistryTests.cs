@@ -62,13 +62,17 @@ public sealed class JobTypeRegistryTests
 
     private sealed class TestJob : IModuleJob
     {
-        public Task ExecuteAsync(IJobExecutionContext context, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        public Task ExecuteAsync(
+            IJobExecutionContext context,
+            CancellationToken cancellationToken
+        ) => Task.CompletedTask;
     }
 
     private sealed class AnotherTestJob : IModuleJob
     {
-        public Task ExecuteAsync(IJobExecutionContext context, CancellationToken cancellationToken)
-            => Task.CompletedTask;
+        public Task ExecuteAsync(
+            IJobExecutionContext context,
+            CancellationToken cancellationToken
+        ) => Task.CompletedTask;
     }
 }

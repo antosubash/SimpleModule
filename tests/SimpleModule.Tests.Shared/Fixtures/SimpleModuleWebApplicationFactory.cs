@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
+using SimpleModule.BackgroundJobs;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
@@ -21,8 +23,8 @@ using SimpleModule.Orders;
 using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
+using SimpleModule.Rag.Module;
 using SimpleModule.Settings;
-using SimpleModule.BackgroundJobs;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
 
@@ -63,6 +65,8 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<FileStorageDbContext>(services);
             ReplaceDbContext<FeatureFlagsDbContext>(services);
             ReplaceDbContext<TenantsDbContext>(services);
+            ReplaceDbContext<RagDbContext>(services);
+            ReplaceDbContext<AgentsDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
@@ -161,6 +165,8 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<FileStorageDbContext>(sp);
         EnsureTablesCreated<FeatureFlagsDbContext>(sp);
         EnsureTablesCreated<TenantsDbContext>(sp);
+        EnsureTablesCreated<RagDbContext>(sp);
+        EnsureTablesCreated<AgentsDbContext>(sp);
         EnsureTablesCreated<BackgroundJobsDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }

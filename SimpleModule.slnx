@@ -15,6 +15,15 @@
     <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
     <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />
     <Project Path="framework/SimpleModule.Storage.S3/SimpleModule.Storage.S3.csproj" />
+    <Project Path="framework/SimpleModule.Rag/SimpleModule.Rag.csproj" />
+    <Project Path="framework/SimpleModule.Rag.StructuredRag/SimpleModule.Rag.StructuredRag.csproj" />
+    <Project Path="framework/SimpleModule.Rag.VectorStore.InMemory/SimpleModule.Rag.VectorStore.InMemory.csproj" />
+    <Project Path="framework/SimpleModule.Agents/SimpleModule.Agents.csproj" />
+    <Project Path="framework/SimpleModule.AI.Ollama/SimpleModule.AI.Ollama.csproj" />
+    <Project Path="framework/SimpleModule.AI.AzureOpenAI/SimpleModule.AI.AzureOpenAI.csproj" />
+    <Project Path="framework/SimpleModule.AI.OpenAI/SimpleModule.AI.OpenAI.csproj" />
+    <Project Path="framework/SimpleModule.AI.Anthropic/SimpleModule.AI.Anthropic.csproj" />
+    <Project Path="framework/SimpleModule.Rag.VectorStore.Postgres/SimpleModule.Rag.VectorStore.Postgres.csproj" />
   </Folder>
   <Folder Name="/cli/">
     <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
@@ -88,6 +97,12 @@
     <Project Path="modules/Tenants/src/SimpleModule.Tenants.Contracts/SimpleModule.Tenants.Contracts.csproj" />
     <Project Path="modules/Tenants/src/SimpleModule.Tenants/SimpleModule.Tenants.csproj" />
     <Project Path="modules/Tenants/tests/SimpleModule.Tenants.Tests/SimpleModule.Tenants.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Rag/">
+    <Project Path="modules/Rag/src/SimpleModule.Rag.Module/SimpleModule.Rag.Module.csproj" />
+  </Folder>
+  <Folder Name="/modules/AgentsPersistence/">
+    <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
   </Folder>
   <Folder Name="/modules/BackgroundJobs/">
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/SimpleModule.BackgroundJobs.Contracts.csproj" />

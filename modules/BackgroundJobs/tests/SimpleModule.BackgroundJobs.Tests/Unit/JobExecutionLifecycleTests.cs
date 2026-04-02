@@ -108,13 +108,15 @@ public sealed class JobExecutionLifecycleTests
     [Fact]
     public async Task Start_JobReportsIntermediateProgress()
     {
-        var job = new ProgressReportingJob(async (ctx, ct) =>
-        {
-            ctx.ReportProgress(25, "Step 1");
-            ctx.ReportProgress(50, "Step 2");
-            ctx.ReportProgress(75, "Step 3");
-            await Task.CompletedTask;
-        });
+        var job = new ProgressReportingJob(
+            async (ctx, ct) =>
+            {
+                ctx.ReportProgress(25, "Step 1");
+                ctx.ReportProgress(50, "Step 2");
+                ctx.ReportProgress(75, "Step 3");
+                await Task.CompletedTask;
+            }
+        );
         _registry.Register(typeof(ProgressReportingJob));
 
         var bridge = CreateBridge(job);
@@ -135,13 +137,15 @@ public sealed class JobExecutionLifecycleTests
     [Fact]
     public async Task Start_JobLogs_AllLogsEnqueued()
     {
-        var job = new ProgressReportingJob(async (ctx, ct) =>
-        {
-            ctx.Log("Starting import");
-            ctx.Log("Row 1 processed");
-            ctx.Log("Row 2 processed");
-            await Task.CompletedTask;
-        });
+        var job = new ProgressReportingJob(
+            async (ctx, ct) =>
+            {
+                ctx.Log("Starting import");
+                ctx.Log("Row 1 processed");
+                ctx.Log("Row 2 processed");
+                await Task.CompletedTask;
+            }
+        );
         _registry.Register(typeof(ProgressReportingJob));
 
         var bridge = CreateBridge(job);
@@ -161,12 +165,14 @@ public sealed class JobExecutionLifecycleTests
     public async Task Start_JobWithDataPayload_CanAccessData()
     {
         string? receivedValue = null;
-        var job = new ProgressReportingJob(async (ctx, ct) =>
-        {
-            var data = ctx.GetData<ImportConfig>();
-            receivedValue = data.FilePath;
-            await Task.CompletedTask;
-        });
+        var job = new ProgressReportingJob(
+            async (ctx, ct) =>
+            {
+                var data = ctx.GetData<ImportConfig>();
+                receivedValue = data.FilePath;
+                await Task.CompletedTask;
+            }
+        );
         _registry.Register(typeof(ProgressReportingJob));
 
         var bridge = CreateBridge(job);
@@ -183,17 +189,19 @@ public sealed class JobExecutionLifecycleTests
     public async Task Restart_AfterFailure_NewExecutionStartsFresh()
     {
         var callCount = 0;
-        var job = new ProgressReportingJob(async (ctx, ct) =>
-        {
-            callCount++;
-            if (callCount == 1)
+        var job = new ProgressReportingJob(
+            async (ctx, ct) =>
             {
-                ctx.ReportProgress(30, "Will fail");
-                throw new InvalidOperationException("Transient error");
+                callCount++;
+                if (callCount == 1)
+                {
+                    ctx.ReportProgress(30, "Will fail");
+                    throw new InvalidOperationException("Transient error");
+                }
+                ctx.ReportProgress(50, "Retry succeeding");
+                await Task.CompletedTask;
             }
-            ctx.ReportProgress(50, "Retry succeeding");
-            await Task.CompletedTask;
-        });
+        );
         _registry.Register(typeof(ProgressReportingJob));
 
         var bridge = CreateBridge(job);
@@ -261,11 +269,13 @@ public sealed class JobExecutionLifecycleTests
     [Fact]
     public async Task Restart_ProgressChannelReceivesEntriesFromBothRuns()
     {
-        var job = new ProgressReportingJob(async (ctx, ct) =>
-        {
-            ctx.ReportProgress(50, "Working");
-            await Task.CompletedTask;
-        });
+        var job = new ProgressReportingJob(
+            async (ctx, ct) =>
+            {
+                ctx.ReportProgress(50, "Working");
+                await Task.CompletedTask;
+            }
+        );
         _registry.Register(typeof(ProgressReportingJob));
 
         var bridge = CreateBridge(job);
@@ -282,7 +292,8 @@ public sealed class JobExecutionLifecycleTests
 
         // Both runs should produce identical progress patterns
         run1Entries.Should().HaveCount(run2Entries.Count);
-        run1Entries.Select(e => e.Percentage)
+        run1Entries
+            .Select(e => e.Percentage)
             .Should()
             .BeEquivalentTo(run2Entries.Select(e => e.Percentage));
     }
@@ -304,7 +315,9 @@ public sealed class JobExecutionLifecycleTests
         );
     }
 
-    private static TickerFunctionContext<JobDispatchPayload> CreateContext<TJob>(object? data = null)
+    private static TickerFunctionContext<JobDispatchPayload> CreateContext<TJob>(
+        object? data = null
+    )
         where TJob : IModuleJob
     {
         var payload = new JobDispatchPayload(

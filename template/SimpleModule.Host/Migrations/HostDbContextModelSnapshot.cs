@@ -327,6 +327,71 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("OpenIddict_OpenIddictTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SimpleModule.Agents.Sessions.AgentMessage", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TokenCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("SessionId", "Timestamp");
+
+                    b.ToTable("Agents_Messages", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Agents.Sessions.AgentSession", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("LastMessageAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentName");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Agents_Sessions", (string)null);
+                });
+
             modelBuilder.Entity("SimpleModule.AuditLogs.Contracts.AuditEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -745,62 +810,109 @@ namespace SimpleModule.Host.Migrations
                         {
                             Id = 1,
                             Name = "Fantastic Rubber Shoes",
-                            Price = 99168m
+                            Price = 991.68m
                         },
                         new
                         {
                             Id = 2,
                             Name = "Fantastic Rubber Bacon",
-                            Price = 44622m
+                            Price = 446.22m
                         },
                         new
                         {
                             Id = 3,
                             Name = "Fantastic Concrete Bike",
-                            Price = 66012m
+                            Price = 660.12m
                         },
                         new
                         {
                             Id = 4,
                             Name = "Handcrafted Concrete Keyboard",
-                            Price = 63367m
+                            Price = 633.67m
                         },
                         new
                         {
                             Id = 5,
                             Name = "Intelligent Frozen Mouse",
-                            Price = 67430m
+                            Price = 674.30m
                         },
                         new
                         {
                             Id = 6,
                             Name = "Sleek Soft Hat",
-                            Price = 85163m
+                            Price = 851.63m
                         },
                         new
                         {
                             Id = 7,
                             Name = "Practical Fresh Bike",
-                            Price = 41748m
+                            Price = 417.48m
                         },
                         new
                         {
                             Id = 8,
                             Name = "Handmade Steel Ball",
-                            Price = 97556m
+                            Price = 975.56m
                         },
                         new
                         {
                             Id = 9,
                             Name = "Ergonomic Fresh Pants",
-                            Price = 92809m
+                            Price = 928.09m
                         },
                         new
                         {
                             Id = 10,
                             Name = "Licensed Steel Sausages",
-                            Price = 59260m
+                            Price = 592.60m
                         });
+                });
+
+            modelBuilder.Entity("SimpleModule.Rag.StructuredRag.Data.CachedStructuredKnowledge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CollectionName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HitCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceTitle")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StructureType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StructuredContent")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("CollectionName", "DocumentHash", "StructureType")
+                        .IsUnique();
+
+                    b.ToTable("Rag_CachedStructuredKnowledge", (string)null);
                 });
 
             modelBuilder.Entity("SimpleModule.Settings.Entities.PublicMenuItemEntity", b =>

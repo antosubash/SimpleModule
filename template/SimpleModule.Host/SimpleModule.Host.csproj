@@ -37,6 +37,13 @@
     <ProjectReference Include="..\..\modules\Tenants\src\SimpleModule.Tenants\SimpleModule.Tenants.csproj" />
     <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Agents\SimpleModule.Agents.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.AI.Ollama\SimpleModule.AI.Ollama.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag.StructuredRag\SimpleModule.Rag.StructuredRag.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag.VectorStore.InMemory\SimpleModule.Rag.VectorStore.InMemory.csproj" />
+    <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
+    <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <Import Project="..\..\framework\SimpleModule.Hosting\build\SimpleModule.Hosting.targets" />

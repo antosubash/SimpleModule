@@ -13,13 +13,20 @@ public sealed partial class JobExceptionHandler(ILogger<JobExceptionHandler> log
         return Task.CompletedTask;
     }
 
-    public Task HandleCanceledExceptionAsync(Exception exception, Guid tickerId, TickerType tickerType)
+    public Task HandleCanceledExceptionAsync(
+        Exception exception,
+        Guid tickerId,
+        TickerType tickerType
+    )
     {
         LogJobCancelled(logger, tickerId, exception);
         return Task.CompletedTask;
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Background job {TickerId} ({TickerType}) failed")]
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Background job {TickerId} ({TickerType}) failed"
+    )]
     private static partial void LogJobFailed(
         ILogger logger,
         Guid tickerId,

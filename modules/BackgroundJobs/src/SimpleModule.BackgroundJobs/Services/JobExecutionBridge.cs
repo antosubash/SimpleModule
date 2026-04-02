@@ -18,7 +18,8 @@ public sealed partial class JobExecutionBridge(
         CancellationToken ct
     )
     {
-        var jobType = registry.Resolve(context.Request.JobTypeName)
+        var jobType =
+            registry.Resolve(context.Request.JobTypeName)
             ?? throw new InvalidOperationException(
                 $"Unregistered job type: {context.Request.JobTypeName}"
             );

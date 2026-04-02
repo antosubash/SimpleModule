@@ -36,8 +36,8 @@ public sealed class BackgroundJobsContractsService(
             .ToListAsync(ct);
 
         var tickerIds = tickers.Select(t => t.Id).ToList();
-        var progressMap = await db.JobProgress
-            .AsNoTracking()
+        var progressMap = await db
+            .JobProgress.AsNoTracking()
             .Where(j => tickerIds.Contains(j.Id))
             .ToDictionaryAsync(j => j.Id, ct);
 
@@ -50,11 +50,13 @@ public sealed class BackgroundJobsContractsService(
                     Id = JobId.From(t.Id),
                     JobType = GetShortTypeName(progress?.JobTypeName),
                     State = BackgroundJobsService.MapTickerStatus(t.Status),
-                    ProgressPercentage = progress?.ProgressPercentage
+                    ProgressPercentage =
+                        progress?.ProgressPercentage
                         ?? (t.Status == TickerQ.Utilities.Enums.TickerStatus.Done ? 100 : 0),
                     ProgressMessage = progress?.ProgressMessage,
                     CreatedAt = AsUtc(t.CreatedAt),
-                    CompletedAt = t.Status is TickerQ.Utilities.Enums.TickerStatus.Done
+                    CompletedAt = t.Status
+                        is TickerQ.Utilities.Enums.TickerStatus.Done
                             or TickerQ.Utilities.Enums.TickerStatus.DueDone
                             or TickerQ.Utilities.Enums.TickerStatus.Failed
                         ? AsUtc(t.UpdatedAt)
@@ -74,8 +76,8 @@ public sealed class BackgroundJobsContractsService(
 
     public async Task<JobDetailDto?> GetJobDetailAsync(JobId id, CancellationToken ct)
     {
-        var ticker = await db.TimeTickers
-            .AsNoTracking()
+        var ticker = await db
+            .TimeTickers.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id.Value, ct);
 
         if (ticker is null)
@@ -83,8 +85,8 @@ public sealed class BackgroundJobsContractsService(
             return null;
         }
 
-        var progress = await db.JobProgress
-            .AsNoTracking()
+        var progress = await db
+            .JobProgress.AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == id.Value, ct);
 
         var logs = !string.IsNullOrEmpty(progress?.Logs)
@@ -97,7 +99,8 @@ public sealed class BackgroundJobsContractsService(
             JobType = GetShortTypeName(progress?.JobTypeName),
             ModuleName = progress?.ModuleName ?? UnknownValue,
             State = BackgroundJobsService.MapTickerStatus(ticker.Status),
-            ProgressPercentage = progress?.ProgressPercentage
+            ProgressPercentage =
+                progress?.ProgressPercentage
                 ?? (ticker.Status == TickerQ.Utilities.Enums.TickerStatus.Done ? 100 : 0),
             ProgressMessage = progress?.ProgressMessage,
             Error = ticker.ExceptionMessage,
@@ -105,10 +108,9 @@ public sealed class BackgroundJobsContractsService(
             Logs = logs,
             RetryCount = ticker.RetryCount,
             CreatedAt = AsUtc(ticker.CreatedAt),
-            StartedAt = ticker.ExecutedAt.HasValue
-                ? AsUtc(ticker.ExecutedAt.Value)
-                : null,
-            CompletedAt = ticker.Status is TickerQ.Utilities.Enums.TickerStatus.Done
+            StartedAt = ticker.ExecutedAt.HasValue ? AsUtc(ticker.ExecutedAt.Value) : null,
+            CompletedAt = ticker.Status
+                is TickerQ.Utilities.Enums.TickerStatus.Done
                     or TickerQ.Utilities.Enums.TickerStatus.DueDone
                     or TickerQ.Utilities.Enums.TickerStatus.Failed
                 ? AsUtc(ticker.UpdatedAt)
@@ -118,15 +120,15 @@ public sealed class BackgroundJobsContractsService(
 
     public async Task<IReadOnlyList<RecurringJobDto>> GetRecurringJobsAsync(CancellationToken ct)
     {
-        var cronTickers = await db.CronTickers
-            .AsNoTracking()
+        var cronTickers = await db
+            .CronTickers.AsNoTracking()
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync(ct);
 
         var cronTickerIds = cronTickers.Select(c => c.Id).ToList();
 
-        var lastRunMap = await db.CronTickerOccurrences
-            .AsNoTracking()
+        var lastRunMap = await db
+            .CronTickerOccurrences.AsNoTracking()
             .Where(o => cronTickerIds.Contains(o.CronTickerId) && o.ExecutedAt != null)
             .GroupBy(o => o.CronTickerId)
             .Select(g => new { CronTickerId = g.Key, LastRunAt = g.Max(o => o.ExecutedAt) })
@@ -142,9 +144,10 @@ public sealed class BackgroundJobsContractsService(
                 DateTimeOffset? nextRunAt = null;
                 try
                 {
-                    var format = c.Expression.Split(' ').Length > 5
-                        ? CronFormat.IncludeSeconds
-                        : CronFormat.Standard;
+                    var format =
+                        c.Expression.Split(' ').Length > 5
+                            ? CronFormat.IncludeSeconds
+                            : CronFormat.Standard;
                     var cronExpression = CronExpression.Parse(c.Expression, format);
                     var next = cronExpression.GetNextOccurrence(now, inclusive: false);
                     if (next.HasValue)
@@ -179,11 +182,12 @@ public sealed class BackgroundJobsContractsService(
 
     public async Task RetryAsync(JobId id, CancellationToken ct)
     {
-        var ticker = await db.TimeTickers
-            .FirstOrDefaultAsync(t => t.Id == id.Value, ct)
+        var ticker =
+            await db.TimeTickers.FirstOrDefaultAsync(t => t.Id == id.Value, ct)
             ?? throw new InvalidOperationException($"Job {id} not found.");
 
-        var payload = JsonSerializer.Deserialize<JobDispatchPayload>(ticker.Request)
+        var payload =
+            JsonSerializer.Deserialize<JobDispatchPayload>(ticker.Request)
             ?? throw new InvalidOperationException($"Job {id} has no payload.");
 
         var newTicker = new TimeTickerEntity
@@ -231,9 +235,17 @@ public sealed class BackgroundJobsContractsService(
     {
         return state switch
         {
-            JobState.Pending => [TickerQ.Utilities.Enums.TickerStatus.Idle, TickerQ.Utilities.Enums.TickerStatus.Queued],
+            JobState.Pending =>
+            [
+                TickerQ.Utilities.Enums.TickerStatus.Idle,
+                TickerQ.Utilities.Enums.TickerStatus.Queued,
+            ],
             JobState.Running => [TickerQ.Utilities.Enums.TickerStatus.InProgress],
-            JobState.Completed => [TickerQ.Utilities.Enums.TickerStatus.Done, TickerQ.Utilities.Enums.TickerStatus.DueDone],
+            JobState.Completed =>
+            [
+                TickerQ.Utilities.Enums.TickerStatus.Done,
+                TickerQ.Utilities.Enums.TickerStatus.DueDone,
+            ],
             JobState.Failed => [TickerQ.Utilities.Enums.TickerStatus.Failed],
             JobState.Cancelled => [TickerQ.Utilities.Enums.TickerStatus.Cancelled],
             JobState.Skipped => [TickerQ.Utilities.Enums.TickerStatus.Skipped],

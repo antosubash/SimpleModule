@@ -27,14 +27,26 @@ internal sealed class DefaultJobExecutionContext(
     public void ReportProgress(int percentage, string? message = null)
     {
         channel.Enqueue(
-            new ProgressEntry(jobId.Value, percentage, message, LogMessage: null, DateTimeOffset.UtcNow)
+            new ProgressEntry(
+                jobId.Value,
+                percentage,
+                message,
+                LogMessage: null,
+                DateTimeOffset.UtcNow
+            )
         );
     }
 
     public void Log(string message)
     {
         channel.Enqueue(
-            new ProgressEntry(jobId.Value, Percentage: -1, Message: null, message, DateTimeOffset.UtcNow)
+            new ProgressEntry(
+                jobId.Value,
+                Percentage: -1,
+                Message: null,
+                message,
+                DateTimeOffset.UtcNow
+            )
         );
     }
 }

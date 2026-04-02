@@ -51,12 +51,8 @@ public sealed class ProgressFlushServiceTests : IDisposable
         await db.SaveChangesAsync();
 
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
-        channel.Enqueue(
-            new ProgressEntry(jobId, -1, null, "First log", DateTimeOffset.UtcNow)
-        );
-        channel.Enqueue(
-            new ProgressEntry(jobId, -1, null, "Second log", DateTimeOffset.UtcNow)
-        );
+        channel.Enqueue(new ProgressEntry(jobId, -1, null, "First log", DateTimeOffset.UtcNow));
+        channel.Enqueue(new ProgressEntry(jobId, -1, null, "Second log", DateTimeOffset.UtcNow));
 
         var service = CreateService(channel, db);
 
@@ -82,7 +78,11 @@ public sealed class ProgressFlushServiceTests : IDisposable
         // Pre-seed with 998 log entries
         var existingLogs = Enumerable
             .Range(0, 998)
-            .Select(i => new JobLogEntry { Message = $"Entry {i}", Timestamp = DateTimeOffset.UtcNow })
+            .Select(i => new JobLogEntry
+            {
+                Message = $"Entry {i}",
+                Timestamp = DateTimeOffset.UtcNow,
+            })
             .ToList();
         var progress = CreateProgress(jobId);
         progress.Logs = JsonSerializer.Serialize(existingLogs);
@@ -122,7 +122,13 @@ public sealed class ProgressFlushServiceTests : IDisposable
 
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         channel.Enqueue(
-            new ProgressEntry(jobId, 25, "Quarter", null, DateTimeOffset.UtcNow.AddMilliseconds(-200))
+            new ProgressEntry(
+                jobId,
+                25,
+                "Quarter",
+                null,
+                DateTimeOffset.UtcNow.AddMilliseconds(-200)
+            )
         );
         channel.Enqueue(
             new ProgressEntry(jobId, 50, "Half", null, DateTimeOffset.UtcNow.AddMilliseconds(-100))
@@ -214,7 +220,8 @@ public sealed class ProgressFlushServiceTests : IDisposable
     {
         var services = new ServiceCollection();
         services.AddScoped(_ => _factory.Create());
-        var scopeFactory = services.BuildServiceProvider()
+        var scopeFactory = services
+            .BuildServiceProvider()
             .GetRequiredService<IServiceScopeFactory>();
 
         var options = Options.Create(

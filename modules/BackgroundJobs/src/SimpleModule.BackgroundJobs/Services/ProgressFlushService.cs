@@ -89,8 +89,7 @@ public sealed partial class ProgressFlushService(
             {
                 JobId = g.Key,
                 LatestProgress = g.Where(e => e.Message is not null).MaxBy(e => e.Timestamp),
-                LogEntries = g
-                    .Where(e => e.LogMessage is not null)
+                LogEntries = g.Where(e => e.LogMessage is not null)
                     .Select(e => new JobLogEntry
                     {
                         Message = e.LogMessage!,
@@ -101,8 +100,8 @@ public sealed partial class ProgressFlushService(
             .ToList();
 
         var jobIds = grouped.Select(g => g.JobId).ToList();
-        var existingMap = await db.JobProgress
-            .Where(p => jobIds.Contains(p.Id))
+        var existingMap = await db
+            .JobProgress.Where(p => jobIds.Contains(p.Id))
             .ToDictionaryAsync(p => p.Id, ct);
 
         foreach (var group in grouped)

@@ -204,6 +204,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -213,6 +214,7 @@ public class TopologicalSortTests
                 new ModuleInfoRecord(
                     "global::A.AModule",
                     "ModuleA",
+                    false,
                     false,
                     false,
                     false,
@@ -240,6 +242,9 @@ public class TopologicalSortTests
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
             ImmutableArray<ModuleOptionsRecord>.Empty,
+            ImmutableArray<AgentDefinitionRecord>.Empty,
+            ImmutableArray<AgentToolProviderRecord>.Empty,
+            ImmutableArray<KnowledgeSourceRecord>.Empty,
             "SimpleModule.Host"
         );
 
@@ -267,6 +272,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -276,6 +282,7 @@ public class TopologicalSortTests
                 new ModuleInfoRecord(
                     "global::B.BModule",
                     "ModuleB",
+                    false,
                     false,
                     false,
                     false,
@@ -306,6 +313,9 @@ public class TopologicalSortTests
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
             ImmutableArray<ModuleOptionsRecord>.Empty,
+            ImmutableArray<AgentDefinitionRecord>.Empty,
+            ImmutableArray<AgentToolProviderRecord>.Empty,
+            ImmutableArray<KnowledgeSourceRecord>.Empty,
             "SimpleModule.Host"
         );
 
@@ -333,6 +343,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -350,6 +361,7 @@ public class TopologicalSortTests
                     false,
                     false,
                     false,
+                    false,
                     "",
                     "",
                     ImmutableArray<EndpointInfoRecord>.Empty,
@@ -359,6 +371,7 @@ public class TopologicalSortTests
                 new ModuleInfoRecord(
                     "global::B.BModule",
                     "ModuleB",
+                    false,
                     false,
                     false,
                     false,
@@ -386,6 +399,9 @@ public class TopologicalSortTests
             ImmutableArray<InterceptorInfoRecord>.Empty,
             ImmutableArray<VogenValueObjectRecord>.Empty,
             ImmutableArray<ModuleOptionsRecord>.Empty,
+            ImmutableArray<AgentDefinitionRecord>.Empty,
+            ImmutableArray<AgentToolProviderRecord>.Empty,
+            ImmutableArray<KnowledgeSourceRecord>.Empty,
             "SimpleModule.Host"
         );
 

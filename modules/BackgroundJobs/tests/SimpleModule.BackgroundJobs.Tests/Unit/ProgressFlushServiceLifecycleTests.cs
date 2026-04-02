@@ -115,11 +115,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         var job1 = Guid.NewGuid();
         var job2 = Guid.NewGuid();
         var job3 = Guid.NewGuid();
-        db.JobProgress.AddRange(
-            CreateProgress(job1),
-            CreateProgress(job2),
-            CreateProgress(job3)
-        );
+        db.JobProgress.AddRange(CreateProgress(job1), CreateProgress(job2), CreateProgress(job3));
         await db.SaveChangesAsync();
 
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
@@ -256,14 +252,18 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         // First run - add log
         var service1 = CreateService(channel);
         await service1.StartAsync(CancellationToken.None);
-        channel.Enqueue(new ProgressEntry(jobId, -1, null, "Log from run 1", DateTimeOffset.UtcNow));
+        channel.Enqueue(
+            new ProgressEntry(jobId, -1, null, "Log from run 1", DateTimeOffset.UtcNow)
+        );
         await Task.Delay(1500);
         await service1.StopAsync(CancellationToken.None);
 
         // Second run - add another log
         var service2 = CreateService(channel);
         await service2.StartAsync(CancellationToken.None);
-        channel.Enqueue(new ProgressEntry(jobId, -1, null, "Log from run 2", DateTimeOffset.UtcNow));
+        channel.Enqueue(
+            new ProgressEntry(jobId, -1, null, "Log from run 2", DateTimeOffset.UtcNow)
+        );
         await Task.Delay(1500);
         await service2.StopAsync(CancellationToken.None);
 
@@ -331,7 +331,8 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
     {
         var services = new ServiceCollection();
         services.AddScoped(_ => _factory.Create());
-        var scopeFactory = services.BuildServiceProvider()
+        var scopeFactory = services
+            .BuildServiceProvider()
             .GetRequiredService<IServiceScopeFactory>();
 
         var options = Options.Create(

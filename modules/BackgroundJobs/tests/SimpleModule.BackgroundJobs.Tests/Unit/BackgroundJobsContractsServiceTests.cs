@@ -13,8 +13,9 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
 {
     private readonly TestDbContextFactory _factory = new();
     private readonly BackgroundJobsDbContext _db;
-    private readonly ITimeTickerManager<TimeTickerEntity> _timeManager =
-        Substitute.For<ITimeTickerManager<TimeTickerEntity>>();
+    private readonly ITimeTickerManager<TimeTickerEntity> _timeManager = Substitute.For<
+        ITimeTickerManager<TimeTickerEntity>
+    >();
     private readonly BackgroundJobsContractsService _sut;
 
     public BackgroundJobsContractsServiceTests()
@@ -43,7 +44,10 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobsAsync_DefaultFilter_ReturnsPaginatedResults()
     {
-        var result = await _sut.GetJobsAsync(new JobFilter { Page = 1, PageSize = 10 }, CancellationToken.None);
+        var result = await _sut.GetJobsAsync(
+            new JobFilter { Page = 1, PageSize = 10 },
+            CancellationToken.None
+        );
 
         result.Page.Should().Be(1);
         result.PageSize.Should().Be(10);
@@ -54,7 +58,10 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobDetailAsync_NonExistentId_ReturnsNull()
     {
-        var result = await _sut.GetJobDetailAsync(JobId.From(Guid.NewGuid()), CancellationToken.None);
+        var result = await _sut.GetJobDetailAsync(
+            JobId.From(Guid.NewGuid()),
+            CancellationToken.None
+        );
 
         result.Should().BeNull();
     }
@@ -81,7 +88,11 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
 
     // --- Helper ---
 
-    private static JobProgress CreateProgress(Guid id, string jobType = "TestJob", string module = "Test")
+    private static JobProgress CreateProgress(
+        Guid id,
+        string jobType = "TestJob",
+        string module = "Test"
+    )
     {
         return new JobProgress
         {

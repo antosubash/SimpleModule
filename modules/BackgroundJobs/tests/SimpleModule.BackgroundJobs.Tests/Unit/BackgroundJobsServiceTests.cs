@@ -15,10 +15,12 @@ public sealed class BackgroundJobsServiceTests : IDisposable
 {
     private readonly TestDbContextFactory _factory = new();
     private readonly BackgroundJobsDbContext _db;
-    private readonly ITimeTickerManager<TimeTickerEntity> _timeManager =
-        Substitute.For<ITimeTickerManager<TimeTickerEntity>>();
-    private readonly ICronTickerManager<CronTickerEntity> _cronManager =
-        Substitute.For<ICronTickerManager<CronTickerEntity>>();
+    private readonly ITimeTickerManager<TimeTickerEntity> _timeManager = Substitute.For<
+        ITimeTickerManager<TimeTickerEntity>
+    >();
+    private readonly ICronTickerManager<CronTickerEntity> _cronManager = Substitute.For<
+        ICronTickerManager<CronTickerEntity>
+    >();
     private readonly BackgroundJobsService _sut;
 
     public BackgroundJobsServiceTests()
@@ -43,7 +45,10 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     [Fact]
     public async Task EnqueueAsync_CreatesTimeTickerAndProgress()
     {
-        var jobId = await _sut.EnqueueAsync<TestJob>(new TestData("import", 100), CancellationToken.None);
+        var jobId = await _sut.EnqueueAsync<TestJob>(
+            new TestData("import", 100),
+            CancellationToken.None
+        );
 
         jobId.Value.Should().NotBeEmpty();
         await _timeManager.Received(1).AddAsync(Arg.Any<TimeTickerEntity>());
@@ -122,10 +127,16 @@ public sealed class BackgroundJobsServiceTests : IDisposable
         TimeTickerEntity? capturedTicker = null;
         _ = _timeManager.AddAsync(Arg.Do<TimeTickerEntity>(t => capturedTicker = t));
 
-        var jobId = await _sut.ScheduleAsync<TestJob>(executeAt, new TestData("scheduled", 1), CancellationToken.None);
+        var jobId = await _sut.ScheduleAsync<TestJob>(
+            executeAt,
+            new TestData("scheduled", 1),
+            CancellationToken.None
+        );
 
         jobId.Value.Should().NotBeEmpty();
-        capturedTicker!.ExecutionTime.Should().BeCloseTo(executeAt.UtcDateTime, TimeSpan.FromSeconds(1));
+        capturedTicker!
+            .ExecutionTime.Should()
+            .BeCloseTo(executeAt.UtcDateTime, TimeSpan.FromSeconds(1));
 
         var progress = await _db.JobProgress.FindAsync(jobId.Value);
         progress.Should().NotBeNull();
@@ -150,7 +161,12 @@ public sealed class BackgroundJobsServiceTests : IDisposable
         CronTickerEntity? capturedTicker = null;
         _ = _cronManager.AddAsync(Arg.Do<CronTickerEntity>(t => capturedTicker = t));
 
-        var id = await _sut.AddRecurringAsync<TestJob>("cleanup", "0 2 * * *", null, CancellationToken.None);
+        var id = await _sut.AddRecurringAsync<TestJob>(
+            "cleanup",
+            "0 2 * * *",
+            null,
+            CancellationToken.None
+        );
 
         id.Value.Should().NotBeEmpty();
         capturedTicker.Should().NotBeNull();
@@ -166,7 +182,12 @@ public sealed class BackgroundJobsServiceTests : IDisposable
         CronTickerEntity? capturedTicker = null;
         _ = _cronManager.AddAsync(Arg.Do<CronTickerEntity>(t => capturedTicker = t));
 
-        await _sut.AddRecurringAsync<TestJob>("sync", "*/5 * * * *", new TestData("sync", 10), CancellationToken.None);
+        await _sut.AddRecurringAsync<TestJob>(
+            "sync",
+            "*/5 * * * *",
+            new TestData("sync", 10),
+            CancellationToken.None
+        );
 
         var payload = JsonSerializer.Deserialize<JobDispatchPayload>(capturedTicker!.Request);
         payload!.SerializedData.Should().NotBeNull();

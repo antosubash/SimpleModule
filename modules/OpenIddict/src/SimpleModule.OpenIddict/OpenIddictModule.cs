@@ -73,10 +73,8 @@ public class OpenIddictModule : IModule
                 }
                 else
                 {
-                    // Development/Testing: use auto-generated development certificates
-                    options
-                        .AddDevelopmentEncryptionCertificate()
-                        .AddDevelopmentSigningCertificate();
+                    // Development/Testing: use ephemeral keys (avoids macOS keychain issues)
+                    options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
                 }
 
                 options.RegisterScopes(

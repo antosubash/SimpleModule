@@ -17,8 +17,9 @@ internal static class NoOpTickerManagerFactory
 // DispatchProxy.Create requires public TProxy — CLR constraint
 public class NoOpProxy : DispatchProxy
 {
-    private static readonly MethodInfo FromResultMethod =
-        typeof(Task).GetMethod(nameof(Task.FromResult))!;
+    private static readonly MethodInfo FromResultMethod = typeof(Task).GetMethod(
+        nameof(Task.FromResult)
+    )!;
 
     private static readonly ConcurrentDictionary<Type, MethodInfo> FromResultCache = new();
 
@@ -27,8 +28,10 @@ public class NoOpProxy : DispatchProxy
         var returnType = targetMethod?.ReturnType;
         if (returnType == typeof(Task))
             return Task.CompletedTask;
-        if (returnType is { IsGenericType: true }
-            && returnType.GetGenericTypeDefinition() == typeof(Task<>))
+        if (
+            returnType is { IsGenericType: true }
+            && returnType.GetGenericTypeDefinition() == typeof(Task<>)
+        )
         {
             var resultType = returnType.GetGenericArguments()[0];
             var constructed = FromResultCache.GetOrAdd(

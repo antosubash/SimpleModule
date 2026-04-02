@@ -30,7 +30,7 @@ public sealed partial class BackgroundJobsService(
             Request = JsonSerializer.SerializeToUtf8Bytes(payload),
         };
 
-        #pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
+#pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
         await timeManager.AddAsync(ticker);
 #pragma warning restore CA2016
 
@@ -57,7 +57,7 @@ public sealed partial class BackgroundJobsService(
             Request = JsonSerializer.SerializeToUtf8Bytes(payload),
         };
 
-        #pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
+#pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
         await timeManager.AddAsync(ticker);
 #pragma warning restore CA2016
 
@@ -87,7 +87,7 @@ public sealed partial class BackgroundJobsService(
             IsEnabled = true,
         };
 
-        #pragma warning disable CA2016
+#pragma warning disable CA2016
         await cronManager.AddAsync(ticker);
 #pragma warning restore CA2016
 
@@ -104,8 +104,8 @@ public sealed partial class BackgroundJobsService(
 
     public async Task<bool> ToggleRecurringAsync(RecurringJobId id, CancellationToken ct)
     {
-        var ticker = await db.CronTickers
-            .FirstOrDefaultAsync(c => c.Id == id.Value, ct)
+        var ticker =
+            await db.CronTickers.FirstOrDefaultAsync(c => c.Id == id.Value, ct)
             ?? throw new InvalidOperationException($"Recurring job {id} not found.");
 
         ticker.IsEnabled = !ticker.IsEnabled;
@@ -122,8 +122,8 @@ public sealed partial class BackgroundJobsService(
 
     public async Task<JobStatusDto?> GetStatusAsync(JobId jobId, CancellationToken ct)
     {
-        var ticker = await db.TimeTickers
-            .AsNoTracking()
+        var ticker = await db
+            .TimeTickers.AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == jobId.Value, ct);
 
         if (ticker is null)
@@ -131,8 +131,8 @@ public sealed partial class BackgroundJobsService(
             return null;
         }
 
-        var progress = await db.JobProgress
-            .AsNoTracking()
+        var progress = await db
+            .JobProgress.AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId.Value, ct);
 
         return new JobStatusDto
@@ -140,15 +140,16 @@ public sealed partial class BackgroundJobsService(
             Id = jobId,
             JobType = GetShortTypeName(progress?.JobTypeName),
             State = MapTickerStatus(ticker.Status),
-            ProgressPercentage = progress?.ProgressPercentage
-                ?? (ticker.Status == TickerStatus.Done ? 100 : 0),
+            ProgressPercentage =
+                progress?.ProgressPercentage ?? (ticker.Status == TickerStatus.Done ? 100 : 0),
             ProgressMessage = progress?.ProgressMessage,
             Error = ticker.ExceptionMessage,
             CreatedAt = AsUtc(ticker.CreatedAt),
-            StartedAt = ticker.ExecutedAt.HasValue
-                ? AsUtc(ticker.ExecutedAt.Value)
-                : null,
-            CompletedAt = ticker.Status is TickerStatus.Done or TickerStatus.DueDone or TickerStatus.Failed
+            StartedAt = ticker.ExecutedAt.HasValue ? AsUtc(ticker.ExecutedAt.Value) : null,
+            CompletedAt = ticker.Status
+                is TickerStatus.Done
+                    or TickerStatus.DueDone
+                    or TickerStatus.Failed
                 ? AsUtc(ticker.UpdatedAt)
                 : null,
             RetryCount = ticker.RetryCount,
@@ -162,7 +163,9 @@ public sealed partial class BackgroundJobsService(
         CancellationToken ct
     )
     {
-        var moduleName = jobType.Assembly.GetName().Name?.Replace("SimpleModule.", "", StringComparison.Ordinal) ?? UnknownValue;
+        var moduleName =
+            jobType.Assembly.GetName().Name?.Replace("SimpleModule.", "", StringComparison.Ordinal)
+            ?? UnknownValue;
 
         db.JobProgress.Add(
             new JobProgress

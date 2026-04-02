@@ -65,7 +65,11 @@ public sealed class JobExecutionContextTests
     {
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = JobId.From(Guid.NewGuid());
-        var context = new DefaultJobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
+        var context = new DefaultJobExecutionContext(
+            jobId,
+            new JobDispatchPayload("Test", null),
+            channel
+        );
 
         context.ReportProgress(50, "Half done");
 
@@ -98,7 +102,11 @@ public sealed class JobExecutionContextTests
     {
         var channel = new ProgressChannel(NullLogger<ProgressChannel>.Instance);
         var jobId = JobId.From(Guid.NewGuid());
-        var context = new DefaultJobExecutionContext(jobId, new JobDispatchPayload("Test", null), channel);
+        var context = new DefaultJobExecutionContext(
+            jobId,
+            new JobDispatchPayload("Test", null),
+            channel
+        );
 
         context.Log("Something happened");
 
@@ -144,5 +152,6 @@ public sealed class JobExecutionContextTests
     }
 
     private record TestData(string Name, int Value);
+
     private record ComplexData(List<int> Numbers, Dictionary<string, string> Metadata);
 }

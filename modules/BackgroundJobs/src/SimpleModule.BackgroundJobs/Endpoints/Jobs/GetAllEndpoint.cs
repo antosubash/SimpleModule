@@ -18,9 +18,12 @@ public class GetAllEndpoint : IEndpoint
                     string? jobType,
                     int? page,
                     int? pageSize
-                ) => Results.Ok(
-                    await contracts.GetJobsAsync(JobFilter.FromQuery(state, jobType, page, pageSize))
-                )
+                ) =>
+                    Results.Ok(
+                        await contracts.GetJobsAsync(
+                            JobFilter.FromQuery(state, jobType, page, pageSize)
+                        )
+                    )
             )
             .RequirePermission(BackgroundJobsPermissions.ViewJobs);
 }
