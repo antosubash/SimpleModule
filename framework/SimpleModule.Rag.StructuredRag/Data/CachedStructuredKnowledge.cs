@@ -2,6 +2,11 @@ using SimpleModule.Core.Rag;
 
 namespace SimpleModule.Rag.StructuredRag.Data;
 
+/// <summary>
+/// Cached structured knowledge entry. Stored in a relational database
+/// via the StructuredRagCache module. Framework code uses
+/// <see cref="IStructuredKnowledgeCache"/> to access this data.
+/// </summary>
 public sealed class CachedStructuredKnowledge
 {
     public Guid Id { get; set; } = Guid.NewGuid();

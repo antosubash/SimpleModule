@@ -98,6 +98,9 @@
     <Project Path="modules/Tenants/src/SimpleModule.Tenants/SimpleModule.Tenants.csproj" />
     <Project Path="modules/Tenants/tests/SimpleModule.Tenants.Tests/SimpleModule.Tenants.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/StructuredRagCache/">
+    <Project Path="modules/StructuredRagCache/src/SimpleModule.StructuredRagCache/SimpleModule.StructuredRagCache.csproj" />
+  </Folder>
   <Folder Name="/template/">
     <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
   </Folder>

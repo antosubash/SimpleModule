@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core.Rag;
+using SimpleModule.Rag.StructuredRag.Data;
 
-namespace SimpleModule.Rag.StructuredRag.Data;
+namespace SimpleModule.StructuredRagCache;
 
-public sealed class EfStructuredKnowledgeCache(StructuredRagDbContext db)
+public sealed class EfStructuredKnowledgeCache(StructuredRagCacheDbContext db)
     : IStructuredKnowledgeCache
 {
     public async Task<CachedStructuredKnowledge?> GetAsync(
