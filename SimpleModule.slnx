@@ -109,6 +109,11 @@
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/SimpleModule.BackgroundJobs.csproj" />
     <Project Path="modules/BackgroundJobs/tests/SimpleModule.BackgroundJobs.Tests/SimpleModule.BackgroundJobs.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/Localization/">
+    <Project Path="modules/Localization/src/SimpleModule.Localization.Contracts/SimpleModule.Localization.Contracts.csproj" />
+    <Project Path="modules/Localization/src/SimpleModule.Localization/SimpleModule.Localization.csproj" />
+    <Project Path="modules/Localization/tests/SimpleModule.Localization.Tests/SimpleModule.Localization.Tests.csproj" />
+  </Folder>
   <Folder Name="/template/">
     <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
   </Folder>
