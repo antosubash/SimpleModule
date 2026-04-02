@@ -12,8 +12,23 @@ public class GetAllEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/",
-                async (IBackgroundJobsContracts contracts, [AsParameters] JobFilter filter) =>
-                    Results.Ok(await contracts.GetJobsAsync(filter))
+                async (
+                    IBackgroundJobsContracts contracts,
+                    JobState? state,
+                    string? jobType,
+                    int? page,
+                    int? pageSize
+                ) =>
+                {
+                    var filter = new JobFilter
+                    {
+                        State = state,
+                        JobType = jobType,
+                        Page = page ?? 1,
+                        PageSize = pageSize ?? 20,
+                    };
+                    return Results.Ok(await contracts.GetJobsAsync(filter));
+                }
             )
             .RequirePermission(BackgroundJobsPermissions.ViewJobs);
 }

@@ -10,6 +10,7 @@ using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.DependencyInjection;
 using TickerQ.EntityFrameworkCore.Customizer;
 using TickerQ.Utilities.Entities;
+using TickerQ.Utilities.Interfaces.Managers;
 
 namespace SimpleModule.BackgroundJobs;
 
@@ -38,20 +39,38 @@ public class BackgroundJobsModule : IModule
             return registry;
         });
 
-        // TickerQ
-        services.AddTickerQ(options =>
-        {
-            options.SetExceptionHandler<JobExceptionHandler>();
-            options.AddOperationalStore<TimeTickerEntity, CronTickerEntity>(ef =>
-                ef.UseApplicationDbContext<BackgroundJobsDbContext>(
-                    ConfigurationType.UseModelCustomizer
-                )
-            );
-        });
+        var environment = configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? configuration["Environment"]
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        var isTesting = string.Equals(environment, "Testing", StringComparison.OrdinalIgnoreCase);
 
-        // Progress tracking
-        services.AddSingleton<ProgressChannel>();
-        services.AddHostedService<ProgressFlushService>();
+        if (!isTesting)
+        {
+            // TickerQ — skip in test environment (no real DB for scheduler)
+            services.AddTickerQ(options =>
+            {
+                options.SetExceptionHandler<JobExceptionHandler>();
+                options.AddOperationalStore<TimeTickerEntity, CronTickerEntity>(ef =>
+                    ef.UseApplicationDbContext<BackgroundJobsDbContext>(
+                        ConfigurationType.UseModelCustomizer
+                    )
+                );
+            });
+
+            // Progress tracking
+            services.AddSingleton<ProgressChannel>();
+            services.AddHostedService<ProgressFlushService>();
+        }
+        else
+        {
+            // In test environment, register stubs — TickerQ managers are not available
+            services.AddSingleton<ProgressChannel>();
+            // Register no-op manager stubs that satisfy DI without TickerQ runtime
+            services.AddSingleton(typeof(ITimeTickerManager<TimeTickerEntity>), sp =>
+                NoOpTickerManagerFactory.CreateTimeManager());
+            services.AddSingleton(typeof(ICronTickerManager<CronTickerEntity>), sp =>
+                NoOpTickerManagerFactory.CreateCronManager());
+        }
 
         // Services
         services.AddScoped<IBackgroundJobs, BackgroundJobsService>();

@@ -22,6 +22,7 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
+using SimpleModule.BackgroundJobs;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
 
@@ -61,6 +62,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<FileStorageDbContext>(services);
             ReplaceDbContext<FeatureFlagsDbContext>(services);
             ReplaceDbContext<TenantsDbContext>(services);
+            ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
@@ -96,6 +98,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
                 }
             );
         });
+
     }
 
     private bool _dbInitialized;
@@ -158,6 +161,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<FileStorageDbContext>(sp);
         EnsureTablesCreated<FeatureFlagsDbContext>(sp);
         EnsureTablesCreated<TenantsDbContext>(sp);
+        EnsureTablesCreated<BackgroundJobsDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 
@@ -193,6 +197,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             services.Remove(descriptor);
         }
     }
+
 
     private void ReplaceDbContext<TContext>(IServiceCollection services, bool useOpenIddict = false)
         where TContext : DbContext

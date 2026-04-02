@@ -1,5 +1,6 @@
 using System.Net;
 using FluentAssertions;
+using SimpleModule.BackgroundJobs;
 using SimpleModule.Tests.Shared.Fixtures;
 
 namespace BackgroundJobs.Tests.Integration;
@@ -16,7 +17,7 @@ public class BackgroundJobsViewEndpointTests : IClassFixture<SimpleModuleWebAppl
     [Fact]
     public async Task Dashboard_ReturnsHtmlPage()
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
 
         var response = await client.GetAsync("/admin/jobs");
 
@@ -27,7 +28,7 @@ public class BackgroundJobsViewEndpointTests : IClassFixture<SimpleModuleWebAppl
     [Fact]
     public async Task List_ReturnsHtmlPage()
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
 
         var response = await client.GetAsync("/admin/jobs/list");
 
@@ -38,7 +39,7 @@ public class BackgroundJobsViewEndpointTests : IClassFixture<SimpleModuleWebAppl
     [Fact]
     public async Task Detail_NonExistentId_Returns404()
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
 
         var response = await client.GetAsync($"/admin/jobs/{Guid.NewGuid()}");
 
@@ -48,7 +49,7 @@ public class BackgroundJobsViewEndpointTests : IClassFixture<SimpleModuleWebAppl
     [Fact]
     public async Task Recurring_ReturnsHtmlPage()
     {
-        var client = _factory.CreateClient();
+        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
 
         var response = await client.GetAsync("/admin/jobs/recurring");
 

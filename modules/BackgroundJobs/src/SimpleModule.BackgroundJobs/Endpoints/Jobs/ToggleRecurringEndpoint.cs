@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
@@ -12,10 +13,19 @@ public class ToggleRecurringEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/recurring/{id:guid}/toggle",
-                async (Guid id, IBackgroundJobs jobs) =>
+                async (Guid id, BackgroundJobsDbContext db) =>
                 {
-                    var isEnabled = await jobs.ToggleRecurringAsync(RecurringJobId.From(id));
-                    return Results.Ok(new { IsEnabled = isEnabled });
+                    var ticker = await db.CronTickers
+                        .FirstOrDefaultAsync(c => c.Id == id);
+
+                    if (ticker is null)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    ticker.IsEnabled = !ticker.IsEnabled;
+                    await db.SaveChangesAsync();
+                    return Results.Ok(new { ticker.IsEnabled });
                 }
             )
             .RequirePermission(BackgroundJobsPermissions.ManageJobs);

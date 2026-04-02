@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
@@ -14,8 +13,26 @@ public class ListEndpoint : IViewEndpoint
     {
         app.MapGet(
             "/list",
-            async (IBackgroundJobsContracts contracts, [AsParameters] JobFilter filter) =>
-                Inertia.Render("BackgroundJobs/List", new { jobs = await contracts.GetJobsAsync(filter) })
+            async (
+                IBackgroundJobsContracts contracts,
+                JobState? state,
+                string? jobType,
+                int? page,
+                int? pageSize
+            ) =>
+            {
+                var filter = new JobFilter
+                {
+                    State = state,
+                    JobType = jobType,
+                    Page = page ?? 1,
+                    PageSize = pageSize ?? 20,
+                };
+                return Inertia.Render(
+                    "BackgroundJobs/List",
+                    new { jobs = await contracts.GetJobsAsync(filter) }
+                );
+            }
         );
     }
 }
