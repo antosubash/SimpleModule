@@ -153,6 +153,31 @@ public sealed class LocaleResolutionMiddlewareTests
         callCount.Should().Be(1, "locale should be served from cache on second request");
     }
 
+    [Fact]
+    public async Task Invoke_CachesFallbackLocaleWhenUserHasNoSetting()
+    {
+        var callCount = 0;
+        var settings = new FakeSettingsContracts(null, onGet: () => callCount++);
+        var localCache = new MemoryCache(new MemoryCacheOptions());
+
+        var middleware = new LocaleResolutionMiddleware(
+            _ => Task.CompletedTask,
+            CreateConfiguration(null),
+            _loader,
+            localCache
+        );
+
+        // First request — should call settings, get null, resolve to default
+        var context1 = CreateHttpContext(settings, userId: "user-2");
+        await middleware.InvokeAsync(context1);
+        callCount.Should().Be(1);
+
+        // Second request — should use cache even though user has no setting
+        var context2 = CreateHttpContext(settings, userId: "user-2");
+        await middleware.InvokeAsync(context2);
+        callCount.Should().Be(1, "fallback locale should also be cached to avoid repeated DB lookups");
+    }
+
     private static DefaultHttpContext CreateHttpContext(
         FakeSettingsContracts settings,
         string? userId = null)

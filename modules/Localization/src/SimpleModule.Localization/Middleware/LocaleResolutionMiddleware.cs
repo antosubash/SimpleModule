@@ -24,17 +24,7 @@ public sealed class LocaleResolutionMiddleware(
     {
         var locale = await ResolveLocaleAsync(context);
 
-        CultureInfo culture;
-        try
-        {
-            culture = new CultureInfo(locale);
-        }
-        catch (CultureNotFoundException)
-        {
-            locale = configuration["Localization:DefaultLocale"] ?? LocalizationConstants.DefaultLocale;
-            culture = new CultureInfo(locale);
-        }
-
+        var culture = GetOrCreateCulture(locale);
         CultureInfo.CurrentCulture = culture;
         CultureInfo.CurrentUICulture = culture;
 
@@ -50,7 +40,6 @@ public sealed class LocaleResolutionMiddleware(
 
     private async Task<string> ResolveLocaleAsync(HttpContext context)
     {
-        // Authenticated user — check cached locale, then settings
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (userId is not null)
         {
@@ -60,20 +49,35 @@ public sealed class LocaleResolutionMiddleware(
                 return cachedLocale;
             }
 
-            var settings = context.RequestServices.GetService<ISettingsContracts>();
-            if (settings is not null)
+            // Resolve and cache the result — even if the user has no explicit setting,
+            // cache the resolved fallback so we don't hit the DB again for this user.
+            var resolved = await ResolveAuthenticatedUserLocaleAsync(context, userId);
+            cache.Set(cacheKey, resolved, CacheDuration);
+            return resolved;
+        }
+
+        return ResolveAnonymousLocale(context);
+    }
+
+    private async Task<string> ResolveAuthenticatedUserLocaleAsync(HttpContext context, string userId)
+    {
+        var settings = context.RequestServices.GetService<ISettingsContracts>();
+        if (settings is not null)
+        {
+            var userLocale = await settings.GetSettingAsync<string>(
+                LocalizationConstants.UserLanguageSetting, SettingScope.User, userId);
+            if (!string.IsNullOrEmpty(userLocale))
             {
-                var userLocale = await settings.GetSettingAsync<string>(
-                    LocalizationConstants.UserLanguageSetting, SettingScope.User, userId);
-                if (!string.IsNullOrEmpty(userLocale))
-                {
-                    cache.Set(cacheKey, userLocale, CacheDuration);
-                    return userLocale;
-                }
+                return userLocale;
             }
         }
 
-        // Accept-Language header
+        // User has no explicit setting — fall through to Accept-Language / default
+        return ResolveAnonymousLocale(context);
+    }
+
+    private string ResolveAnonymousLocale(HttpContext context)
+    {
         var acceptLanguageHeaders = context.Request.GetTypedHeaders().AcceptLanguage;
         if (acceptLanguageHeaders is { Count: > 0 })
         {
@@ -95,7 +99,6 @@ public sealed class LocaleResolutionMiddleware(
             }
         }
 
-        // Config default
         var configDefault = configuration["Localization:DefaultLocale"];
         if (!string.IsNullOrEmpty(configDefault))
         {
@@ -103,5 +106,28 @@ public sealed class LocaleResolutionMiddleware(
         }
 
         return LocalizationConstants.DefaultLocale;
+    }
+
+    private CultureInfo GetOrCreateCulture(string locale)
+    {
+        var cultureKey = $"culture:{locale}";
+        if (cache.TryGetValue(cultureKey, out CultureInfo? cached) && cached is not null)
+        {
+            return cached;
+        }
+
+        CultureInfo culture;
+        try
+        {
+            culture = new CultureInfo(locale);
+        }
+        catch (CultureNotFoundException)
+        {
+            culture = new CultureInfo(
+                configuration["Localization:DefaultLocale"] ?? LocalizationConstants.DefaultLocale);
+        }
+
+        cache.Set(cultureKey, culture, TimeSpan.FromHours(1));
+        return culture;
     }
 }
