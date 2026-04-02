@@ -51,7 +51,7 @@ public class InertiaTranslationPropsTests : IClassFixture<SimpleModuleWebApplica
     }
 
     [Fact]
-    public async Task Locale_Respects_AcceptLanguage_Header()
+    public async Task Locale_Falls_Back_To_Default_When_AcceptLanguage_Not_Supported()
     {
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
@@ -64,6 +64,7 @@ public class InertiaTranslationPropsTests : IClassFixture<SimpleModuleWebApplica
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         var props = json.GetProperty("props");
 
-        props.GetProperty("locale").GetString().Should().Be("fr");
+        // "fr" is not a supported locale — should fall back through to "en" from Accept-Language
+        props.GetProperty("locale").GetString().Should().Be("en");
     }
 }

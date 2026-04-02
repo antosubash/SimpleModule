@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
+using SimpleModule.Localization.Contracts;
 using SimpleModule.Localization.Services;
 using SimpleModule.Settings.Contracts;
 
@@ -15,10 +16,6 @@ public sealed class LocaleResolutionMiddleware(
     IConfiguration configuration,
     TranslationLoader loader)
 {
-    private readonly RequestDelegate _next = next;
-    private readonly IConfiguration _configuration = configuration;
-    private readonly TranslationLoader _loader = loader;
-
     public async Task InvokeAsync(HttpContext context)
     {
         var locale = await ResolveLocaleAsync(context);
@@ -30,7 +27,7 @@ public sealed class LocaleResolutionMiddleware(
         }
         catch (CultureNotFoundException)
         {
-            locale = _configuration["Localization:DefaultLocale"] ?? "en";
+            locale = configuration["Localization:DefaultLocale"] ?? LocalizationConstants.DefaultLocale;
             culture = new CultureInfo(locale);
         }
 
@@ -40,11 +37,11 @@ public sealed class LocaleResolutionMiddleware(
         var sharedData = context.RequestServices.GetService<InertiaSharedData>();
         if (sharedData is not null)
         {
-            sharedData.Set("locale", locale);
-            sharedData.Set("translations", _loader.GetAllTranslations(locale));
+            sharedData.Set(LocalizationConstants.LocaleSharedDataKey, locale);
+            sharedData.Set(LocalizationConstants.TranslationsSharedDataKey, loader.GetAllTranslations(locale));
         }
 
-        await _next(context);
+        await next(context);
     }
 
     private async Task<string> ResolveLocaleAsync(HttpContext context)
@@ -55,7 +52,7 @@ public sealed class LocaleResolutionMiddleware(
             var settings = context.RequestServices.GetService<ISettingsContracts>();
             if (settings is not null)
             {
-                var userLocale = await settings.GetSettingAsync<string>("app.language", SettingScope.User, userId);
+                var userLocale = await settings.GetSettingAsync<string>(LocalizationConstants.UserLanguageSetting, SettingScope.User, userId);
                 if (!string.IsNullOrEmpty(userLocale))
                 {
                     return userLocale;
@@ -66,18 +63,16 @@ public sealed class LocaleResolutionMiddleware(
         var acceptLanguageHeaders = context.Request.GetTypedHeaders().AcceptLanguage;
         if (acceptLanguageHeaders is { Count: > 0 })
         {
-            var supportedLocales = _loader.GetSupportedLocales();
+            var supportedLocales = loader.SupportedLocalesSet;
             foreach (var lang in acceptLanguageHeaders.OrderByDescending(l => l.Quality ?? 1.0))
             {
                 var tag = lang.Value.ToString();
 
-                // Try exact match first (e.g., "en-US")
                 if (supportedLocales.Contains(tag))
                 {
                     return tag;
                 }
 
-                // Try two-letter prefix (e.g., "en-US" → "en")
                 var twoLetter = tag.Split('-')[0];
                 if (supportedLocales.Contains(twoLetter))
                 {
@@ -86,12 +81,12 @@ public sealed class LocaleResolutionMiddleware(
             }
         }
 
-        var configDefault = _configuration["Localization:DefaultLocale"];
+        var configDefault = configuration["Localization:DefaultLocale"];
         if (!string.IsNullOrEmpty(configDefault))
         {
             return configDefault;
         }
 
-        return "en";
+        return LocalizationConstants.DefaultLocale;
     }
 }

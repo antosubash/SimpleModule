@@ -2,36 +2,23 @@
 // Generates TypeScript key constants from i18n en.json files.
 // Usage: node tools/generate-i18n-keys.mjs [modules-dir]
 
-import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from 'fs';
-import { resolve, join, basename, dirname } from 'path';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { join } from 'path';
+import { findModuleLocales } from './i18n-utils.mjs';
 
 const modulesDir = process.argv[2] || 'modules';
 let hasErrors = false;
 
 /**
- * Find all en.json files in module Locales directories,
- * skipping *.Contracts projects.
+ * Find all en.json files in module Locales directories.
  */
 function findEnJsonFiles() {
-  const results = [];
-  if (!existsSync(modulesDir)) return results;
-
-  for (const moduleDir of readdirSync(modulesDir)) {
-    const srcDir = join(modulesDir, moduleDir, 'src');
-    if (!existsSync(srcDir) || !statSync(srcDir).isDirectory()) continue;
-
-    for (const project of readdirSync(srcDir)) {
-      if (project.endsWith('.Contracts')) continue;
-
-      const localesDir = join(srcDir, project, 'Locales');
+  return findModuleLocales(modulesDir)
+    .map(({ localesDir, project }) => {
       const enJson = join(localesDir, 'en.json');
-      if (existsSync(enJson)) {
-        results.push({ enJson, localesDir, project });
-      }
-    }
-  }
-
-  return results;
+      return existsSync(enJson) ? { enJson, localesDir, project } : null;
+    })
+    .filter(Boolean);
 }
 
 /**

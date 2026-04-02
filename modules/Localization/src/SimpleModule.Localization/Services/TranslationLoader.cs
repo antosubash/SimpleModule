@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using SimpleModule.Core;
+using SimpleModule.Localization.Contracts;
 
 namespace SimpleModule.Localization.Services;
 
@@ -10,7 +12,11 @@ public sealed class TranslationLoader
 {
     private static readonly Regex EmbeddedLocalePattern = new(@"\.Locales\.([^.]+)\.json$", RegexOptions.Compiled);
 
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _translations = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _mutableTranslations = new();
+
+    private FrozenDictionary<string, FrozenDictionary<string, string>>? _frozenTranslations;
+    private IReadOnlyList<string>? _supportedLocales;
+    private HashSet<string>? _supportedLocalesSet;
 
     public void Initialize(Assembly[] assemblies)
     {
@@ -42,7 +48,7 @@ public sealed class TranslationLoader
                 var json = reader.ReadToEnd();
                 var flatTranslations = FlattenJson(json);
 
-                var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+                var localeDictionary = _mutableTranslations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
                 var prefix = moduleName;
                 foreach (var kvp in flatTranslations)
                 {
@@ -50,6 +56,8 @@ public sealed class TranslationLoader
                 }
             }
         }
+
+        Freeze();
     }
 
     public void LoadFromDirectory(string directory)
@@ -65,33 +73,57 @@ public sealed class TranslationLoader
             var json = File.ReadAllText(file);
             var flatTranslations = FlattenJson(json);
 
-            var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+            var localeDictionary = _mutableTranslations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
             foreach (var kvp in flatTranslations)
             {
                 localeDictionary[kvp.Key] = kvp.Value;
             }
         }
+
+        Freeze();
     }
 
     internal void InitializeFromDictionary(string locale, IReadOnlyDictionary<string, string> translations)
     {
-        var localeDictionary = _translations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+        var localeDictionary = _mutableTranslations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
         foreach (var kvp in translations)
         {
             localeDictionary[kvp.Key] = kvp.Value;
         }
+
+        Freeze();
     }
 
     public string? GetTranslation(string key, string locale)
     {
-        if (_translations.TryGetValue(locale, out var translations) && translations.TryGetValue(key, out var value))
+        var frozen = _frozenTranslations;
+        if (frozen is not null)
         {
-            return value;
+            if (frozen.TryGetValue(locale, out var translations) && translations.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+
+            if (locale != LocalizationConstants.DefaultLocale
+                && frozen.TryGetValue(LocalizationConstants.DefaultLocale, out var fallback)
+                && fallback.TryGetValue(key, out var fallbackValue))
+            {
+                return fallbackValue;
+            }
+
+            return null;
         }
 
-        if (locale != "en" && _translations.TryGetValue("en", out var fallback) && fallback.TryGetValue(key, out var fallbackValue))
+        if (_mutableTranslations.TryGetValue(locale, out var mutableTranslations) && mutableTranslations.TryGetValue(key, out var mutableValue))
         {
-            return fallbackValue;
+            return mutableValue;
+        }
+
+        if (locale != LocalizationConstants.DefaultLocale
+            && _mutableTranslations.TryGetValue(LocalizationConstants.DefaultLocale, out var mutableFallback)
+            && mutableFallback.TryGetValue(key, out var mutableFallbackValue))
+        {
+            return mutableFallbackValue;
         }
 
         return null;
@@ -99,9 +131,17 @@ public sealed class TranslationLoader
 
     public IReadOnlyDictionary<string, string> GetAllTranslations(string locale)
     {
-        if (_translations.TryGetValue(locale, out var translations))
+        var frozen = _frozenTranslations;
+        if (frozen is not null)
         {
-            return new Dictionary<string, string>(translations);
+            return frozen.TryGetValue(locale, out var translations)
+                ? translations
+                : FrozenDictionary<string, string>.Empty;
+        }
+
+        if (_mutableTranslations.TryGetValue(locale, out var mutableTranslations))
+        {
+            return new Dictionary<string, string>(mutableTranslations);
         }
 
         return new Dictionary<string, string>();
@@ -109,7 +149,25 @@ public sealed class TranslationLoader
 
     public IReadOnlyList<string> GetSupportedLocales()
     {
-        return _translations.Keys.OrderBy(k => k).ToList();
+        return _supportedLocales ?? _mutableTranslations.Keys.OrderBy(k => k).ToList();
+    }
+
+    public IReadOnlySet<string> SupportedLocalesSet =>
+        _supportedLocalesSet ?? new HashSet<string>(_mutableTranslations.Keys);
+
+    private void Freeze()
+    {
+        var builder = new Dictionary<string, FrozenDictionary<string, string>>();
+        foreach (var kvp in _mutableTranslations)
+        {
+            builder[kvp.Key] = kvp.Value.ToFrozenDictionary();
+        }
+
+        _frozenTranslations = builder.ToFrozenDictionary();
+
+        var sortedLocales = _mutableTranslations.Keys.OrderBy(k => k).ToList().AsReadOnly();
+        _supportedLocales = sortedLocales;
+        _supportedLocalesSet = new HashSet<string>(sortedLocales, StringComparer.Ordinal);
     }
 
     internal static IReadOnlyDictionary<string, string> FlattenJson(string json)
@@ -140,7 +198,7 @@ public sealed class TranslationLoader
         }
     }
 
-    private static string? GetModuleName(Assembly assembly)
+    internal static string? GetModuleName(Assembly assembly)
     {
         try
         {

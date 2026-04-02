@@ -5,20 +5,12 @@ namespace SimpleModule.Localization.Services;
 
 public sealed class JsonStringLocalizer(string moduleNamespace, TranslationLoader loader) : IStringLocalizer
 {
-    private readonly string _moduleNamespace = moduleNamespace;
-    private readonly TranslationLoader _loader = loader;
-
     public LocalizedString this[string name]
     {
         get
         {
-            var fullKey = $"{_moduleNamespace}.{name}";
-            var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-            var value = _loader.GetTranslation(fullKey, locale);
-
-            return value is not null
-                ? new LocalizedString(name, value, resourceNotFound: false)
-                : new LocalizedString(name, name, resourceNotFound: true);
+            var (value, notFound) = Resolve(name);
+            return new LocalizedString(name, value ?? name, resourceNotFound: notFound);
         }
     }
 
@@ -26,9 +18,7 @@ public sealed class JsonStringLocalizer(string moduleNamespace, TranslationLoade
     {
         get
         {
-            var fullKey = $"{_moduleNamespace}.{name}";
-            var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-            var value = _loader.GetTranslation(fullKey, locale);
+            var (value, notFound) = Resolve(name);
 
             if (value is null)
             {
@@ -50,8 +40,8 @@ public sealed class JsonStringLocalizer(string moduleNamespace, TranslationLoade
     public IEnumerable<LocalizedString> GetAllStrings(bool includeParentCultures)
     {
         var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        var allTranslations = _loader.GetAllTranslations(locale);
-        var prefix = $"{_moduleNamespace}.";
+        var allTranslations = loader.GetAllTranslations(locale);
+        var prefix = $"{moduleNamespace}.";
 
         foreach (var kvp in allTranslations)
         {
@@ -61,5 +51,13 @@ public sealed class JsonStringLocalizer(string moduleNamespace, TranslationLoade
                 yield return new LocalizedString(bareKey, kvp.Value, resourceNotFound: false);
             }
         }
+    }
+
+    private (string? value, bool notFound) Resolve(string name)
+    {
+        var fullKey = $"{moduleNamespace}.{name}";
+        var locale = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+        var value = loader.GetTranslation(fullKey, locale);
+        return (value, value is null);
     }
 }

@@ -9,36 +9,13 @@
 //    - Extra keys: error
 // 3. Leaf/branch key path conflicts: error
 
-import { readdirSync, readFileSync, existsSync, statSync } from 'fs';
+import { readdirSync, readFileSync, existsSync } from 'fs';
 import { join, basename } from 'path';
+import { findModuleLocales } from './i18n-utils.mjs';
 
 const modulesDir = process.argv[2] || 'modules';
 let warnings = 0;
 let errors = 0;
-
-/**
- * Find all Locales directories in modules, skipping *.Contracts projects.
- */
-function findLocalesDirs() {
-  const results = [];
-  if (!existsSync(modulesDir)) return results;
-
-  for (const moduleDir of readdirSync(modulesDir)) {
-    const srcDir = join(modulesDir, moduleDir, 'src');
-    if (!existsSync(srcDir) || !statSync(srcDir).isDirectory()) continue;
-
-    for (const project of readdirSync(srcDir)) {
-      if (project.endsWith('.Contracts')) continue;
-
-      const localesDir = join(srcDir, project, 'Locales');
-      if (existsSync(localesDir) && statSync(localesDir).isDirectory()) {
-        results.push({ localesDir, project });
-      }
-    }
-  }
-
-  return results;
-}
 
 /**
  * Check for leaf/branch key path conflicts in a flat key set.
@@ -77,7 +54,7 @@ function parseJsonFile(filePath) {
 }
 
 // Main
-const localesDirs = findLocalesDirs();
+const localesDirs = findModuleLocales(modulesDir);
 
 if (localesDirs.length === 0) {
   console.log('No Locales directories found. Nothing to validate.');
