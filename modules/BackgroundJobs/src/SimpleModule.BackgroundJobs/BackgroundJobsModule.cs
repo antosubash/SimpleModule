@@ -47,6 +47,9 @@ public class BackgroundJobsModule : IModule
 
         if (!isTesting)
         {
+            // Ensure BackgroundJobs tables exist before TickerQ starts
+            services.AddHostedService<DatabaseInitializer>();
+
             // TickerQ — skip in test environment (no real DB for scheduler)
             services.AddTickerQ(options =>
             {
