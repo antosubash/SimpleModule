@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags;
@@ -21,8 +22,8 @@ using SimpleModule.Orders;
 using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
+using SimpleModule.Rag.Module;
 using SimpleModule.Settings;
-using SimpleModule.StructuredRagCache;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
 
@@ -62,7 +63,8 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<FileStorageDbContext>(services);
             ReplaceDbContext<FeatureFlagsDbContext>(services);
             ReplaceDbContext<TenantsDbContext>(services);
-            ReplaceDbContext<StructuredRagCacheDbContext>(services);
+            ReplaceDbContext<RagDbContext>(services);
+            ReplaceDbContext<AgentsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
@@ -160,6 +162,8 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<FileStorageDbContext>(sp);
         EnsureTablesCreated<FeatureFlagsDbContext>(sp);
         EnsureTablesCreated<TenantsDbContext>(sp);
+        EnsureTablesCreated<RagDbContext>(sp);
+        EnsureTablesCreated<AgentsDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 
