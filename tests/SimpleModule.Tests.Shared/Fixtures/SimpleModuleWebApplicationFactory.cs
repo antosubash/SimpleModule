@@ -22,6 +22,7 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Settings;
+using SimpleModule.StructuredRagCache;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
 
@@ -61,6 +62,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<FileStorageDbContext>(services);
             ReplaceDbContext<FeatureFlagsDbContext>(services);
             ReplaceDbContext<TenantsDbContext>(services);
+            ReplaceDbContext<StructuredRagCacheDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
