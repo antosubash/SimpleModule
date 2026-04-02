@@ -19,20 +19,10 @@ public class ListEndpoint : IViewEndpoint
                 string? jobType,
                 int? page,
                 int? pageSize
-            ) =>
-            {
-                var filter = new JobFilter
-                {
-                    State = state,
-                    JobType = jobType,
-                    Page = page ?? 1,
-                    PageSize = pageSize ?? 20,
-                };
-                return Inertia.Render(
-                    "BackgroundJobs/List",
-                    new { jobs = await contracts.GetJobsAsync(filter) }
-                );
-            }
+            ) => Inertia.Render(
+                "BackgroundJobs/List",
+                new { jobs = await contracts.GetJobsAsync(JobFilter.FromQuery(state, jobType, page, pageSize)) }
+            )
         );
     }
 }

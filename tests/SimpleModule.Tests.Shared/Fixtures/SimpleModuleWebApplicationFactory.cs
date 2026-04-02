@@ -40,6 +40,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         _connection.Open();
 
         builder.UseEnvironment("Testing");
+        builder.UseSetting("ASPNETCORE_ENVIRONMENT", "Testing");
 
         builder.ConfigureServices(services =>
         {
@@ -98,7 +99,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
                 }
             );
         });
-
     }
 
     private bool _dbInitialized;
@@ -197,7 +197,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             services.Remove(descriptor);
         }
     }
-
 
     private void ReplaceDbContext<TContext>(IServiceCollection services, bool useOpenIddict = false)
         where TContext : DbContext

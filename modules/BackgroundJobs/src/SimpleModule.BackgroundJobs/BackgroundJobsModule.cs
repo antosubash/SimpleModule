@@ -39,10 +39,11 @@ public class BackgroundJobsModule : IModule
             return registry;
         });
 
-        var environment = configuration["ASPNETCORE_ENVIRONMENT"]
-            ?? configuration["Environment"]
-            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-        var isTesting = string.Equals(environment, "Testing", StringComparison.OrdinalIgnoreCase);
+        var isTesting = string.Equals(
+            configuration["ASPNETCORE_ENVIRONMENT"],
+            "Testing",
+            StringComparison.OrdinalIgnoreCase
+        );
 
         if (!isTesting)
         {
