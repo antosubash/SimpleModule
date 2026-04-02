@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Rag;
+using SimpleModule.Rag.StructuredRag.Data;
+using SimpleModule.Rag.StructuredRag.Preprocessing;
 
 namespace SimpleModule.Rag.StructuredRag;
 
@@ -9,7 +11,8 @@ public sealed class StructuredRagPipeline(
     IStructureRouter structureRouter,
     IKnowledgeStructurizer knowledgeStructurizer,
     IStructuredKnowledgeUtilizer knowledgeUtilizer,
-    IOptions<RagOptions> ragOptions
+    IOptions<RagOptions> ragOptions,
+    IStructuredKnowledgeCache? cache = null
 ) : IRagPipeline
 {
     public async Task<RagResult> QueryAsync(
@@ -51,13 +54,48 @@ public sealed class StructuredRagPipeline(
             options?.ForceStructure
             ?? await structureRouter.SelectStructureAsync(query, summaries, cancellationToken);
 
-        // Stage 2: Structurize — convert documents to chosen format
-        var structuredKnowledge = await knowledgeStructurizer.StructurizeAsync(
-            structureType,
-            query,
-            documents,
-            cancellationToken
-        );
+        // Stage 2: Structurize — try cache first, then fall back to LLM
+        StructuredKnowledge structuredKnowledge;
+
+        if (cache is not null && structureType != StructureType.Chunk)
+        {
+            var contentHash = LlmKnowledgePreprocessor.ComputeHash(
+                string.Join("\n---\n", documents)
+            );
+            var cached = await cache.GetAsync(
+                "default",
+                contentHash,
+                structureType,
+                cancellationToken
+            );
+
+            if (cached is not null)
+            {
+                structuredKnowledge = new StructuredKnowledge(
+                    structureType,
+                    cached.StructuredContent,
+                    query
+                );
+            }
+            else
+            {
+                structuredKnowledge = await knowledgeStructurizer.StructurizeAsync(
+                    structureType,
+                    query,
+                    documents,
+                    cancellationToken
+                );
+            }
+        }
+        else
+        {
+            structuredKnowledge = await knowledgeStructurizer.StructurizeAsync(
+                structureType,
+                query,
+                documents,
+                cancellationToken
+            );
+        }
 
         // Stage 3: Utilize — reason over structured data to produce answer
         var answer = await knowledgeUtilizer.AnswerAsync(

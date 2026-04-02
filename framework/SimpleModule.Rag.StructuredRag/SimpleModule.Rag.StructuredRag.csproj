@@ -8,5 +8,6 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
     <ProjectReference Include="..\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+    <ProjectReference Include="..\SimpleModule.Database\SimpleModule.Database.csproj" />
   </ItemGroup>
 </Project>

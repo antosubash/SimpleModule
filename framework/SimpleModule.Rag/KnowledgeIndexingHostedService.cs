@@ -30,7 +30,7 @@ public sealed partial class KnowledgeIndexingHostedService(
 
         var sources = scope.ServiceProvider.GetServices<IKnowledgeSource>().ToList();
         var tasks = sources.Select(source =>
-            IndexSourceAsync(knowledgeStore, source, cancellationToken)
+            IndexSourceAsync(knowledgeStore, source, scope.ServiceProvider, cancellationToken)
         );
         await Task.WhenAll(tasks);
     }
@@ -38,6 +38,7 @@ public sealed partial class KnowledgeIndexingHostedService(
     private async Task IndexSourceAsync(
         IKnowledgeStore knowledgeStore,
         IKnowledgeSource source,
+        IServiceProvider scopedProvider,
         CancellationToken cancellationToken
     )
     {
@@ -53,6 +54,18 @@ public sealed partial class KnowledgeIndexingHostedService(
                 documents,
                 cancellationToken
             );
+
+            // Preprocess documents into structured formats if a preprocessor is registered
+            var preprocessor = scopedProvider.GetService<IKnowledgePreprocessor>();
+            if (preprocessor is not null)
+            {
+                LogPreprocessing(logger, documents.Count, source.CollectionName);
+                await preprocessor.PreprocessAsync(
+                    source.CollectionName,
+                    documents,
+                    cancellationToken
+                );
+            }
         }
         catch (OperationCanceledException)
         {
@@ -85,6 +98,12 @@ public sealed partial class KnowledgeIndexingHostedService(
         Message = "Indexing {Count} documents for collection '{CollectionName}'"
     )]
     private static partial void LogIndexing(ILogger logger, int count, string collectionName);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Preprocessing {Count} documents for collection '{CollectionName}'"
+    )]
+    private static partial void LogPreprocessing(ILogger logger, int count, string collectionName);
 
     [LoggerMessage(
         Level = LogLevel.Error,
