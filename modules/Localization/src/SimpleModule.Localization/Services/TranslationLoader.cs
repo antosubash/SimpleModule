@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Reflection;
 using System.Text.Json;
 
 namespace SimpleModule.Localization.Services;
@@ -6,6 +7,21 @@ namespace SimpleModule.Localization.Services;
 public sealed class TranslationLoader
 {
     private readonly ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> _translations = new();
+
+    public void Initialize(Assembly[] assemblies)
+    {
+        foreach (var assembly in assemblies)
+        {
+            var assemblyDir = Path.GetDirectoryName(assembly.Location);
+            if (string.IsNullOrEmpty(assemblyDir))
+            {
+                continue;
+            }
+
+            var localesDir = Path.Combine(assemblyDir, "Locales");
+            LoadFromDirectory(localesDir);
+        }
+    }
 
     public void LoadFromDirectory(string directory)
     {
