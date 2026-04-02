@@ -95,6 +95,15 @@ public sealed class HostTemplates
             || line.Contains("MapDefaultEndpoints", StringComparison.Ordinal)
             || line.Contains("Storage.Local", StringComparison.Ordinal)
             || line.Contains("AddLocalStorage", StringComparison.Ordinal)
+            || line.Contains("SimpleModule.Agents", StringComparison.Ordinal)
+            || line.Contains("SimpleModule.AI.", StringComparison.Ordinal)
+            || line.Contains("SimpleModule.Rag", StringComparison.Ordinal)
+            || line.Contains("AddOllamaAI", StringComparison.Ordinal)
+            || line.Contains("AddInMemoryVectorStore", StringComparison.Ordinal)
+            || line.Contains("AddSimpleModuleRag", StringComparison.Ordinal)
+            || line.Contains("AddStructuredRag", StringComparison.Ordinal)
+            || line.Contains("AddSimpleModuleAgents", StringComparison.Ordinal)
+            || line.Contains("AddRagExtraction", StringComparison.Ordinal)
         );
 
         lines = TemplateExtractor.CollapseBlankLines(lines);
