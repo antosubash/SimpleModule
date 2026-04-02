@@ -19,10 +19,12 @@ public partial class UserSeedService(
         try
         {
             using var scope = serviceProvider.CreateScope();
-            var roleManager =
-                scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-            var userManager =
-                scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<
+                RoleManager<ApplicationRole>
+            >();
+            var userManager = scope.ServiceProvider.GetRequiredService<
+                UserManager<ApplicationUser>
+            >();
 
             await SeedRoleAsync(
                 roleManager,

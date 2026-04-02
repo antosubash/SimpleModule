@@ -29,7 +29,10 @@ public sealed class AgentChatService(
             cancellationToken
         );
 
-        var response = await chatClient.GetResponseAsync(messages, chatOptions, cancellationToken);
+        var client = chatOptions.Tools is { Count: > 0 }
+            ? new FunctionInvokingChatClient(chatClient)
+            : chatClient;
+        var response = await client.GetResponseAsync(messages, chatOptions, cancellationToken);
         var sessionId = request.SessionId ?? Guid.NewGuid().ToString();
 
         return new AgentChatResponse(response.Text ?? "", sessionId);
@@ -49,8 +52,11 @@ public sealed class AgentChatService(
             cancellationToken
         );
 
+        var client = chatOptions.Tools is { Count: > 0 }
+            ? new FunctionInvokingChatClient(chatClient)
+            : chatClient;
         await foreach (
-            var update in chatClient.GetStreamingResponseAsync(
+            var update in client.GetStreamingResponseAsync(
                 messages,
                 chatOptions,
                 cancellationToken
@@ -91,9 +97,13 @@ public sealed class AgentChatService(
             var ragPipeline = scopedProvider.GetService<IRagPipeline>();
             if (ragPipeline is not null)
             {
+                var ragQueryOptions = agentDef.RagCollectionName is not null
+                    ? new RagQueryOptions { CollectionName = agentDef.RagCollectionName }
+                    : null;
                 var ragResult = await ragPipeline.QueryAsync(
                     request.Message,
-                    cancellationToken: cancellationToken
+                    ragQueryOptions,
+                    cancellationToken
                 );
                 if (ragResult.Sources.Count > 0)
                 {

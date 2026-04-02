@@ -93,8 +93,8 @@ public class NuGetMarketplaceService(
 
             var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
 
-            var filtered = response.Data
-                .Where(d =>
+            var filtered = response
+                .Data.Where(d =>
                     d.Id?.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase) != true
                 )
                 .ToList();
@@ -169,7 +169,11 @@ public class NuGetMarketplaceService(
         }
     }
 
-    [SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "NuGet flat container API requires lowercase package IDs")]
+    [SuppressMessage(
+        "Globalization",
+        "CA1308:Normalize strings to uppercase",
+        Justification = "NuGet flat container API requires lowercase package IDs"
+    )]
     private async Task<string> FetchReadmeAsync(
         HttpClient client,
         string? packageId,

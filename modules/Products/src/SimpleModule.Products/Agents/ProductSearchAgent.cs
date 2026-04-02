@@ -13,4 +13,6 @@ public class ProductSearchAgent : IAgentDefinition
             You are a product search assistant. Use the available tools to find and describe products.
             Always provide prices when available. When comparing products, present data clearly.
             """;
+
+    public string? RagCollectionName => "product-knowledge";
 }

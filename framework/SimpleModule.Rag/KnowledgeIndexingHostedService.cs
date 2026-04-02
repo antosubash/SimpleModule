@@ -10,10 +10,13 @@ public sealed partial class KnowledgeIndexingHostedService(
     IServiceProvider serviceProvider,
     IOptions<RagOptions> options,
     ILogger<KnowledgeIndexingHostedService> logger
-) : IHostedService
+) : BackgroundService
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Yield to allow the web server to start accepting requests
+        await Task.Yield();
+
         if (!options.Value.IndexOnStartup)
         {
             LogIndexingDisabled(logger);
@@ -37,7 +40,7 @@ public sealed partial class KnowledgeIndexingHostedService(
                 scopedStore,
                 source,
                 sourceScope.ServiceProvider,
-                cancellationToken
+                stoppingToken
             );
         });
         await Task.WhenAll(tasks);
@@ -86,8 +89,6 @@ public sealed partial class KnowledgeIndexingHostedService(
             LogIndexingFailed(logger, ex, source.CollectionName);
         }
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     [LoggerMessage(
         Level = LogLevel.Information,

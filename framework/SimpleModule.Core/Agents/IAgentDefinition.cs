@@ -22,4 +22,7 @@ public interface IAgentDefinition
 
     /// <summary>Optional RAG override. Returns null to use global default.</summary>
     virtual bool? EnableRag => null;
+
+    /// <summary>Optional RAG collection name. Returns null to use "default".</summary>
+    virtual string? RagCollectionName => null;
 }

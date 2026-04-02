@@ -18,10 +18,10 @@ public static class StructuredRagExtensions
         if (configure is not null)
             services.PostConfigure(configure);
 
-        services.AddSingleton<IStructureRouter, LlmStructureRouter>();
-        services.AddSingleton<IKnowledgeStructurizer, LlmKnowledgeStructurizer>();
-        services.AddSingleton<IStructuredKnowledgeUtilizer, LlmStructuredKnowledgeUtilizer>();
-        services.AddSingleton<IRagPipeline, StructuredRagPipeline>();
+        services.AddScoped<IStructureRouter, LlmStructureRouter>();
+        services.AddScoped<IKnowledgeStructurizer, LlmKnowledgeStructurizer>();
+        services.AddScoped<IStructuredKnowledgeUtilizer, LlmStructuredKnowledgeUtilizer>();
+        services.AddScoped<IRagPipeline, StructuredRagPipeline>();
 
         // Preprocessor (requires IStructuredKnowledgeCache to be registered by the cache module)
         services.AddScoped<IKnowledgePreprocessor, LlmKnowledgePreprocessor>();

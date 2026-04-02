@@ -13,14 +13,17 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
         CancellationToken cancellationToken = default
     )
     {
-        return await db.CachedStructuredKnowledge.FirstOrDefaultAsync(
-            e =>
+        var now = DateTimeOffset.UtcNow;
+        var structureInt = (int)structureType;
+        return await db
+            .CachedStructuredKnowledge.Where(e =>
                 e.CollectionName == collectionName
                 && e.DocumentHash == documentHash
-                && e.StructureType == structureType
-                && (e.ExpiresAt == null || e.ExpiresAt > DateTimeOffset.UtcNow),
-            cancellationToken
-        );
+                && (int)e.StructureType == structureInt
+            )
+            .AsAsyncEnumerable()
+            .Where(e => e.ExpiresAt == null || e.ExpiresAt > now)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<CachedStructuredKnowledge>> GetByCollectionAsync(
@@ -29,14 +32,16 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
         CancellationToken cancellationToken = default
     )
     {
-        return await db
+        var now = DateTimeOffset.UtcNow;
+        var structureInt = (int)structureType;
+        var entries = await db
             .CachedStructuredKnowledge.Where(e =>
-                e.CollectionName == collectionName
-                && e.StructureType == structureType
-                && (e.ExpiresAt == null || e.ExpiresAt > DateTimeOffset.UtcNow)
+                e.CollectionName == collectionName && (int)e.StructureType == structureInt
             )
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync(cancellationToken);
+
+        return entries.Where(e => e.ExpiresAt == null || e.ExpiresAt > now).ToList();
     }
 
     public async Task SaveAsync(
@@ -89,10 +94,9 @@ public sealed class EfStructuredKnowledgeCache(RagDbContext db) : IStructuredKno
 
     public async Task CleanExpiredAsync(CancellationToken cancellationToken = default)
     {
+        var now = DateTimeOffset.UtcNow;
         await db
-            .CachedStructuredKnowledge.Where(e =>
-                e.ExpiresAt != null && e.ExpiresAt <= DateTimeOffset.UtcNow
-            )
+            .CachedStructuredKnowledge.Where(e => e.ExpiresAt != null && e.ExpiresAt <= now)
             .ExecuteDeleteAsync(cancellationToken);
     }
 }

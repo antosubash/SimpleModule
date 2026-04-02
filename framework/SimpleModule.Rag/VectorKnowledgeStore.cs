@@ -54,6 +54,10 @@ public sealed class VectorKnowledgeStore(
     {
         var collection = vectorStore.GetCollection<string, KnowledgeRecord>(collectionName);
 
+        if (!await collection.CollectionExistsAsync(cancellationToken))
+            return [];
+
+
         var queryEmbeddings = await embeddingGenerator.GenerateAsync(
             [query],
             cancellationToken: cancellationToken
