@@ -311,10 +311,11 @@ public sealed class JobExecutionLifecycleTests
             typeof(TJob).AssemblyQualifiedName!,
             data is not null ? JsonSerializer.Serialize(data) : null
         );
-        var context = Substitute.For<TickerFunctionContext<JobDispatchPayload>>();
-        context.Id.Returns(Guid.NewGuid());
-        context.Request.Returns(payload);
-        return context;
+        var baseContext = new TickerFunctionContext();
+        typeof(TickerFunctionContext)
+            .GetProperty(nameof(TickerFunctionContext.Id))!
+            .SetValue(baseContext, Guid.NewGuid());
+        return new TickerFunctionContext<JobDispatchPayload>(baseContext, payload);
     }
 
     private List<ProgressEntry> DrainChannel()
