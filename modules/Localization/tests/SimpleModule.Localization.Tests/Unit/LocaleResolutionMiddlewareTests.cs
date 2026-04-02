@@ -13,9 +13,10 @@ using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Localization.Tests.Unit;
 
-public sealed class LocaleResolutionMiddlewareTests
+public sealed class LocaleResolutionMiddlewareTests : IDisposable
 {
     private readonly TranslationLoader _loader;
+    private readonly MemoryCache _cache = new(new MemoryCacheOptions());
 
     public LocaleResolutionMiddlewareTests()
     {
@@ -39,7 +40,8 @@ public sealed class LocaleResolutionMiddlewareTests
 
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
-            CreateConfiguration(null));
+            CreateConfiguration(null),
+            _cache);
 
         await middleware.InvokeAsync(context);
 
@@ -60,7 +62,8 @@ public sealed class LocaleResolutionMiddlewareTests
 
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
-            CreateConfiguration(null));
+            CreateConfiguration(null),
+            _cache);
 
         await middleware.InvokeAsync(context);
 
@@ -76,7 +79,8 @@ public sealed class LocaleResolutionMiddlewareTests
 
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
-            CreateConfiguration("es"));
+            CreateConfiguration("es"),
+            _cache);
 
         await middleware.InvokeAsync(context);
 
@@ -92,7 +96,8 @@ public sealed class LocaleResolutionMiddlewareTests
 
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
-            CreateConfiguration(null));
+            CreateConfiguration(null),
+            _cache);
 
         await middleware.InvokeAsync(context);
 
@@ -104,7 +109,7 @@ public sealed class LocaleResolutionMiddlewareTests
     {
         var callCount = 0;
         var settings = new FakeSettingsContracts("es", onGet: () => callCount++);
-        var localCache = new MemoryCache(new MemoryCacheOptions());
+        using var localCache = new MemoryCache(new MemoryCacheOptions());
 
         var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
@@ -129,7 +134,7 @@ public sealed class LocaleResolutionMiddlewareTests
         // avoid cross-browser cache pollution.
         var callCount = 0;
         var settings = new FakeSettingsContracts(null, onGet: () => callCount++);
-        var localCache = new MemoryCache(new MemoryCacheOptions());
+        using var localCache = new MemoryCache(new MemoryCacheOptions());
 
         var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
@@ -149,9 +154,9 @@ public sealed class LocaleResolutionMiddlewareTests
     private LocaleResolutionMiddleware CreateMiddleware(
         RequestDelegate next,
         IConfiguration config,
-        IMemoryCache? cache = null)
+        IMemoryCache cache)
     {
-        return new LocaleResolutionMiddleware(next, config, _loader, cache ?? new MemoryCache(new MemoryCacheOptions()));
+        return new LocaleResolutionMiddleware(next, config, _loader, cache);
     }
 
     private static RequestDelegate CaptureLocale(Action<string> setter)
@@ -239,4 +244,6 @@ public sealed class LocaleResolutionMiddlewareTests
             return Task.FromResult<IEnumerable<Setting>>([]);
         }
     }
+
+    public void Dispose() => _cache.Dispose();
 }
