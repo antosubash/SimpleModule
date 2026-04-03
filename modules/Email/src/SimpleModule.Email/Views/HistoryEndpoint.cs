@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
@@ -14,14 +15,16 @@ public class HistoryEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/history",
-                async (IEmailContracts emailContracts) =>
+                async (
+                    [AsParameters] QueryEmailMessagesRequest request,
+                    IEmailContracts emailContracts
+                ) =>
                     Inertia.Render(
                         "Email/History",
                         new
                         {
-                            messages = await emailContracts.QueryMessagesAsync(
-                                new QueryEmailMessagesRequest()
-                            ),
+                            result = await emailContracts.QueryMessagesAsync(request),
+                            filters = request,
                         }
                     )
             )

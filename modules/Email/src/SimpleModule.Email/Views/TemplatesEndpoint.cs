@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
@@ -14,14 +15,16 @@ public class TemplatesEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/templates",
-                async (IEmailContracts emailContracts) =>
+                async (
+                    [AsParameters] QueryEmailTemplatesRequest request,
+                    IEmailContracts emailContracts
+                ) =>
                     Inertia.Render(
                         "Email/Templates",
                         new
                         {
-                            templates = await emailContracts.QueryTemplatesAsync(
-                                new QueryEmailTemplatesRequest()
-                            ),
+                            result = await emailContracts.QueryTemplatesAsync(request),
+                            filters = request,
                         }
                     )
             )
