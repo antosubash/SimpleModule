@@ -1,9 +1,9 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { PageShell, Tabs, TabsContent, TabsList, TabsTrigger } from '@simplemodule/ui';
 import { useMemo, useState } from 'react';
-import type { SettingDefinition } from '../components/SettingField';
-import SettingGroup from '../components/SettingGroup';
-import { SettingsKeys } from '../Locales/keys';
+import type { SettingDefinition } from '@/components/SettingField';
+import SettingGroup from '@/components/SettingGroup';
+import { SettingsKeys } from '@/Locales/keys';
 
 interface StoredSetting {
   key: string;

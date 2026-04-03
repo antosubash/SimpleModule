@@ -11,8 +11,8 @@ import {
   Progress,
 } from '@simplemodule/ui';
 import { useEffect } from 'react';
-import { BackgroundJobsKeys } from '../../Locales/keys';
-import { stateVariant } from '../utils/jobState';
+import { BackgroundJobsKeys } from '@/Locales/keys';
+import { stateVariant } from '@/Pages/utils/jobState';
 
 interface LogEntry {
   message: string;
@@ -143,8 +143,11 @@ export default function Detail({ job }: Props) {
           </CardHeader>
           <CardContent>
             <div className="max-h-96 overflow-auto">
-              {job.logs.map((log, i) => (
-                <div key={i} className="flex gap-2 sm:gap-3 border-b py-1.5 text-sm last:border-0">
+              {job.logs.map((log) => (
+                <div
+                  key={log.timestamp}
+                  className="flex gap-2 sm:gap-3 border-b py-1.5 text-sm last:border-0"
+                >
                   <span className="shrink-0 text-text-muted">
                     {new Date(log.timestamp).toLocaleTimeString()}
                   </span>

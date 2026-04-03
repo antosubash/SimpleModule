@@ -20,7 +20,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import React from 'react';
-import { DashboardKeys } from '../Locales/keys';
+import { DashboardKeys } from '@/Locales/keys';
 
 interface HomeProps {
   isAuthenticated: boolean;

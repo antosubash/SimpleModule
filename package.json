@@ -6,9 +6,11 @@
     "modules/*/src/*",
     "packages/SimpleModule.Client",
     "packages/SimpleModule.Theme.Default",
+    "packages/SimpleModule.TsConfig",
     "packages/SimpleModule.UI",
     "template/SimpleModule.Host/ClientApp",
     "tests/e2e",
+    "tests/k6",
     "docs/site",
     "website"
   ],

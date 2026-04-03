@@ -14,11 +14,13 @@ using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.Core.Security;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
+using SimpleModule.Hosting.RateLimiting;
 
 namespace SimpleModule.Hosting;
 
@@ -188,6 +190,7 @@ public static class SimpleModuleHostExtensions
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseSimpleModuleRateLimiting();
 
         // Module middleware is added by the source-generated UseSimpleModule()
         // via IModule.ConfigureMiddleware() calls.

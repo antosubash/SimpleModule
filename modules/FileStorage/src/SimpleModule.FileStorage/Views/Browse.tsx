@@ -17,8 +17,8 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useRef, useState } from 'react';
-import { FileStorageKeys } from '../Locales/keys';
-import type { StoredFile } from '../types';
+import { FileStorageKeys } from '@/Locales/keys';
+import type { StoredFile } from '@/types';
 
 interface Props {
   files: StoredFile[];

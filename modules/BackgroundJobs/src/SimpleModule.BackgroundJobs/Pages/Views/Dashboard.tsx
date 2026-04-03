@@ -10,7 +10,7 @@ import {
   PageShell,
   Progress,
 } from '@simplemodule/ui';
-import { BackgroundJobsKeys } from '../../Locales/keys';
+import { BackgroundJobsKeys } from '@/Locales/keys';
 
 interface JobSummary {
   id: string;

@@ -2,8 +2,8 @@ import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Badge, Button, Card, CardContent, CardFooter, Input, PageShell } from '@simplemodule/ui';
 import { useState } from 'react';
-import { MarketplaceKeys } from '../Locales/keys';
-import type { MarketplacePackage } from '../types';
+import { MarketplaceKeys } from '@/Locales/keys';
+import type { MarketplacePackage } from '@/types';
 import { categoryLabel, categoryNames, formatDownloads } from './utils';
 
 const PAGE_SIZE = 24;
@@ -131,6 +131,7 @@ export default function Browse({
                         stroke="currentColor"
                         strokeWidth="1.5"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                       </svg>
@@ -155,6 +156,7 @@ export default function Browse({
                     stroke="currentColor"
                     strokeWidth="2"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
@@ -182,6 +184,7 @@ export default function Browse({
               stroke="currentColor"
               strokeWidth="1.5"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>

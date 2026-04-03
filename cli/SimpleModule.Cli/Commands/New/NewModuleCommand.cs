@@ -43,6 +43,7 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         Plan(Path.Combine(contractsDir, $"I{singularName}Contracts.cs"));
         Plan(Path.Combine(contractsDir, $"{singularName}.cs"));
         Plan(Path.Combine(eventsDir, $"{singularName}CreatedEvent.cs"));
+        Plan(Path.Combine(moduleDir, "tsconfig.json"));
         Plan(Path.Combine(moduleDir, $"{moduleName}.csproj"));
         Plan(Path.Combine(moduleDir, $"{moduleName}Module.cs"));
         Plan(Path.Combine(moduleDir, $"{moduleName}Constants.cs"));
@@ -91,6 +92,10 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
                         templates.EventClass(moduleName, singularName)
                     );
 
+                    File.WriteAllText(
+                        Path.Combine(moduleDir, "tsconfig.json"),
+                        ModuleTemplates.TsconfigJson()
+                    );
                     File.WriteAllText(
                         Path.Combine(moduleDir, $"{moduleName}.csproj"),
                         templates.ModuleCsproj(moduleName)

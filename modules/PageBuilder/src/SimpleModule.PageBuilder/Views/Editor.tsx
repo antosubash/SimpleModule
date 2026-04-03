@@ -16,9 +16,9 @@ import {
 } from '@simplemodule/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PageBuilderKeys } from '../Locales/keys';
-import { puckConfig } from '../puck/config';
-import type { Page, PageTemplate } from '../types';
+import { PageBuilderKeys } from '@/Locales/keys';
+import { puckConfig } from '@/puck/config';
+import type { Page, PageTemplate } from '@/types';
 
 interface Props {
   page: Page | null;
