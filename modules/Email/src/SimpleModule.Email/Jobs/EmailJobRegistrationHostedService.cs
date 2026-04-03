@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -6,7 +7,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 namespace SimpleModule.Email.Jobs;
 
 public partial class EmailJobRegistrationHostedService(
-    IBackgroundJobs backgroundJobs,
+    IServiceScopeFactory scopeFactory,
     IOptions<EmailModuleOptions> options,
     ILogger<EmailJobRegistrationHostedService> logger
 ) : IHostedService
@@ -15,6 +16,8 @@ public partial class EmailJobRegistrationHostedService(
     {
         try
         {
+            using var scope = scopeFactory.CreateScope();
+            var backgroundJobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobs>();
             var cron = options.Value.RetryIntervalCron;
             await backgroundJobs.AddRecurringAsync<RetryFailedEmailsJob>(
                 "email-retry-failed",
