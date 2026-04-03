@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.RateLimiting;
 
@@ -12,10 +13,10 @@ public static class RateLimitingSetup
 {
     public static IServiceCollection AddSimpleModuleRateLimiting(
         this IServiceCollection services,
-        RateLimitPolicyRegistry registry
+        IRateLimitPolicyRegistry registry
     )
     {
-        services.AddSingleton<IRateLimitPolicyRegistry>(registry);
+        services.AddSingleton(registry);
 
         services.AddRateLimiter(options =>
         {
@@ -39,7 +40,7 @@ public static class RateLimitingSetup
 
             foreach (var policy in registry.GetPolicies())
             {
-                options.AddPolicy(policy.Name, context => CreatePartition(context, policy));
+                RegisterPolicy(options, policy);
             }
         });
 
@@ -53,49 +54,77 @@ public static class RateLimitingSetup
         return app;
     }
 
-    private static RateLimitPartition<string> CreatePartition(
-        HttpContext context,
-        RateLimitPolicyDefinition policy
-    )
+    private static void RegisterPolicy(RateLimiterOptions options, RateLimitPolicyDefinition policy)
     {
-        var key = ResolvePartitionKey(context, policy.Target);
-
-        return policy.PolicyType switch
+        switch (policy.PolicyType)
         {
-            RateLimitPolicyType.FixedWindow => RateLimitPartition.GetFixedWindowLimiter(
-                key,
-                _ => new FixedWindowRateLimiterOptions
+            case RateLimitPolicyType.FixedWindow:
+            {
+                var limiterOptions = new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = policy.PermitLimit,
                     Window = policy.Window,
                     QueueLimit = policy.QueueLimit,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                }
-            ),
-            RateLimitPolicyType.SlidingWindow => RateLimitPartition.GetSlidingWindowLimiter(
-                key,
-                _ => new SlidingWindowRateLimiterOptions
+                };
+                options.AddPolicy(
+                    policy.Name,
+                    context =>
+                        RateLimitPartition.GetFixedWindowLimiter(
+                            ResolvePartitionKey(context, policy.Target),
+                            _ => limiterOptions
+                        )
+                );
+                break;
+            }
+            case RateLimitPolicyType.SlidingWindow:
+            {
+                var limiterOptions = new SlidingWindowRateLimiterOptions
                 {
                     PermitLimit = policy.PermitLimit,
                     Window = policy.Window,
                     SegmentsPerWindow = policy.SegmentsPerWindow,
                     QueueLimit = policy.QueueLimit,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                }
-            ),
-            RateLimitPolicyType.TokenBucket => RateLimitPartition.GetTokenBucketLimiter(
-                key,
-                _ => new TokenBucketRateLimiterOptions
+                };
+                options.AddPolicy(
+                    policy.Name,
+                    context =>
+                        RateLimitPartition.GetSlidingWindowLimiter(
+                            ResolvePartitionKey(context, policy.Target),
+                            _ => limiterOptions
+                        )
+                );
+                break;
+            }
+            case RateLimitPolicyType.TokenBucket:
+            {
+                var limiterOptions = new TokenBucketRateLimiterOptions
                 {
                     TokenLimit = policy.TokenLimit,
                     TokensPerPeriod = policy.TokensPerPeriod,
                     ReplenishmentPeriod = policy.ReplenishmentPeriod,
                     QueueLimit = policy.QueueLimit,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                }
-            ),
-            _ => RateLimitPartition.GetNoLimiter(key),
-        };
+                };
+                options.AddPolicy(
+                    policy.Name,
+                    context =>
+                        RateLimitPartition.GetTokenBucketLimiter(
+                            ResolvePartitionKey(context, policy.Target),
+                            _ => limiterOptions
+                        )
+                );
+                break;
+            }
+            default:
+                options.AddPolicy(
+                    policy.Name,
+                    context =>
+                        RateLimitPartition.GetNoLimiter(ResolvePartitionKey(context, policy.Target))
+                );
+                break;
+        }
     }
 
     private static string ResolvePartitionKey(HttpContext context, RateLimitTarget target)

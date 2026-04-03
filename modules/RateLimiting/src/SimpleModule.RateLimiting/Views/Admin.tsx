@@ -69,6 +69,7 @@ interface AdminProps {
 
 const policyTypes = ['FixedWindow', 'SlidingWindow', 'TokenBucket'];
 const targets = ['Ip', 'User', 'IpAndUser', 'Global'];
+const API_BASE = '/api/rate-limiting';
 
 function PolicyTypeBadge({ type }: { type: string }) {
   const variant =
@@ -98,7 +99,7 @@ export default function Admin({ rules, activePolicies }: AdminProps) {
   });
 
   const handleCreate = async () => {
-    await fetch('/api/rate-limiting', {
+    await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
@@ -108,15 +109,27 @@ export default function Admin({ rules, activePolicies }: AdminProps) {
   };
 
   const handleDelete = async (id: number) => {
-    await fetch(`/api/rate-limiting/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
     router.reload();
   };
 
   const handleToggle = async (rule: RateLimitRule) => {
-    await fetch(`/api/rate-limiting/${rule.id}`, {
+    await fetch(`${API_BASE}/${rule.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...rule, isEnabled: !rule.isEnabled }),
+      body: JSON.stringify({
+        policyType: rule.policyType,
+        target: rule.target,
+        permitLimit: rule.permitLimit,
+        windowSeconds: rule.windowSeconds,
+        segmentsPerWindow: rule.segmentsPerWindow,
+        tokenLimit: rule.tokenLimit,
+        tokensPerPeriod: rule.tokensPerPeriod,
+        replenishmentPeriodSeconds: rule.replenishmentPeriodSeconds,
+        queueLimit: rule.queueLimit,
+        endpointPattern: rule.endpointPattern,
+        isEnabled: !rule.isEnabled,
+      }),
     });
     router.reload();
   };

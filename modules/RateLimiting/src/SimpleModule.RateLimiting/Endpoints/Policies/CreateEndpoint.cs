@@ -4,7 +4,6 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
 using SimpleModule.Core.Exceptions;
-using SimpleModule.Core.Validation;
 using SimpleModule.RateLimiting.Contracts;
 
 namespace SimpleModule.RateLimiting.Endpoints.Policies;
@@ -16,19 +15,7 @@ public class CreateEndpoint : IEndpoint
                 "/",
                 (CreateRateLimitRuleRequest request, IRateLimitingContracts contracts) =>
                 {
-                    var validation = new ValidationBuilder()
-                        .AddErrorIf(
-                            string.IsNullOrWhiteSpace(request.PolicyName),
-                            "PolicyName",
-                            "Policy name is required."
-                        )
-                        .AddErrorIf(
-                            request.PermitLimit <= 0,
-                            "PermitLimit",
-                            "Permit limit must be greater than zero."
-                        )
-                        .Build();
-
+                    var validation = CreateRequestValidator.Validate(request);
                     if (!validation.IsValid)
                     {
                         throw new ValidationException(validation.Errors);
