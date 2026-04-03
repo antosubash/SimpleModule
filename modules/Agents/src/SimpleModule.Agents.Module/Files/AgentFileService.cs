@@ -1,6 +1,6 @@
 using SimpleModule.Storage;
 
-namespace SimpleModule.Agents.Files;
+namespace SimpleModule.Agents.Module;
 
 public sealed class AgentFileService(IStorageProvider storageProvider)
 {

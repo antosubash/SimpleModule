@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace SimpleModule.Agents.Telemetry;
+namespace SimpleModule.Agents.Module;
 
 public static class AgentActivitySource
 {

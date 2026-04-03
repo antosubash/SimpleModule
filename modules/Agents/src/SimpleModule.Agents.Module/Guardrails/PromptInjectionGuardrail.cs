@@ -1,4 +1,6 @@
-namespace SimpleModule.Agents.Guardrails;
+using SimpleModule.Agents.Guardrails;
+
+namespace SimpleModule.Agents.Module;
 
 public sealed class PromptInjectionGuardrail : IAgentGuardrail
 {

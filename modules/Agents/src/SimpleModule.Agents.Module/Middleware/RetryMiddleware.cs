@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
+using SimpleModule.Agents.Middleware;
 
-namespace SimpleModule.Agents.Middleware;
+namespace SimpleModule.Agents.Module;
 
 public sealed partial class RetryMiddleware(ILogger<RetryMiddleware> logger) : IAgentMiddleware
 {

@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
+using SimpleModule.Agents;
+using SimpleModule.Agents.Middleware;
 
-namespace SimpleModule.Agents.Middleware;
+namespace SimpleModule.Agents.Module;
 
 public sealed class RateLimitingMiddleware(IOptions<AgentOptions> options) : IAgentMiddleware
 {
