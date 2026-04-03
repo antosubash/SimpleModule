@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Agents.Guardrails;
 using SimpleModule.Agents.Middleware;
-using SimpleModule.Agents.Sessions;
 
 namespace SimpleModule.Agents;
 
@@ -20,7 +19,6 @@ public static class SimpleModuleAgentExtensions
             services.PostConfigure(configure);
 
         services.AddScoped<AgentChatService>();
-        services.AddSingleton<IAgentSessionStore, InMemoryAgentSessionStore>();
 
         // Middleware
         services.AddSingleton<LoggingMiddleware>();

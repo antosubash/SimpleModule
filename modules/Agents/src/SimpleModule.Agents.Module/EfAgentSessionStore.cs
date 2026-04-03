@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using SimpleModule.Agents.Sessions;
 
 namespace SimpleModule.Agents.Module;
 

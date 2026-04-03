@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace SimpleModule.Agents.Sessions;
+namespace SimpleModule.Agents.Module;
 
 public sealed class InMemoryAgentSessionStore : IAgentSessionStore
 {

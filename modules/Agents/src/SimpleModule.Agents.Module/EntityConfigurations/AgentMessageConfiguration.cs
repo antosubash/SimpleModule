@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SimpleModule.Agents.Sessions;
 
 namespace SimpleModule.Agents.Module.EntityConfigurations;
 

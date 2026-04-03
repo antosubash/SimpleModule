@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SimpleModule.Agents.Sessions;
 using SimpleModule.Core;
 using SimpleModule.Database;
 

@@ -1,4 +1,4 @@
-namespace SimpleModule.Agents.Sessions;
+namespace SimpleModule.Agents.Module;
 
 public sealed class AgentMessage
 {
