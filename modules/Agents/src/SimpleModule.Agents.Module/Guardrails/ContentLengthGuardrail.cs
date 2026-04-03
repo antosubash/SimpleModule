@@ -7,6 +7,10 @@ public sealed class ContentLengthGuardrail(
     int maxOutputLength = 50_000
 ) : IAgentGuardrail
 {
+    private static readonly Task<GuardrailResult> _allowed = Task.FromResult(
+        GuardrailResult.Allowed()
+    );
+
     public Task<GuardrailResult> ValidateAsync(
         string content,
         GuardrailDirection direction,
@@ -23,6 +27,6 @@ public sealed class ContentLengthGuardrail(
             );
         }
 
-        return Task.FromResult(GuardrailResult.Allowed());
+        return _allowed;
     }
 }

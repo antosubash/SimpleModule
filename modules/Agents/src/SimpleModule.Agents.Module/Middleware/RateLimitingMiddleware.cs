@@ -27,12 +27,6 @@ public sealed class RateLimitingMiddleware(IOptions<AgentOptions> options) : IAg
             }
 
             entry.Add();
-
-            // Remove empty entries to prevent unbounded dictionary growth
-            if (entry.Count == 0)
-            {
-                _entries.TryRemove(key, out _);
-            }
         }
 
         await next(context);
