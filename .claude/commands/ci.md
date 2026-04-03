@@ -18,11 +18,9 @@ Run `dotnet build` from the project root. This compiles all .NET projects includ
 
 Run `dotnet test --no-build` from the project root. This runs all unit and integration tests (excluding load tests which are filtered out in CI).
 
-## Step 5: E2E Smoke Tests (optional)
+## Step 5: E2E Smoke Tests
 
-Ask the user if they want to run Playwright e2e smoke tests, since they require browser binaries and a running app server. If yes:
-1. Run `npx -w tests/e2e playwright install --with-deps` to install browsers
-2. Run `npm run test:smoke -w tests/e2e` to execute smoke tests
+Run `npm run test:smoke -w tests/e2e` to execute Playwright smoke tests. Playwright browsers are already installed.
 
 ## Reporting
 
@@ -34,6 +32,6 @@ After all steps complete (or on first failure), print a summary table:
 | Frontend Build | pass/fail |
 | .NET Build | pass/fail |
 | .NET Tests | pass/fail |
-| E2E Smoke Tests | pass/fail/skipped |
+| E2E Smoke Tests | pass/fail |
 
 If any step fails, show the relevant error output and suggest a fix.
