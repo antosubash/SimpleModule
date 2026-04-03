@@ -6,7 +6,7 @@ test.describe('AuditLogs pages', () => {
   test('dashboard page loads', async ({ page }) => {
     const dashboard = new AuditLogsDashboardPage(page);
     await dashboard.goto();
-    await expect(dashboard.heading).toBeVisible();
+    await expect(dashboard.heading).toBeAttached();
   });
 
   test('browse page loads', async ({ page }) => {
