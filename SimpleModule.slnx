@@ -114,6 +114,11 @@
     <Project Path="modules/Localization/src/SimpleModule.Localization/SimpleModule.Localization.csproj" />
     <Project Path="modules/Localization/tests/SimpleModule.Localization.Tests/SimpleModule.Localization.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/RateLimiting/">
+    <Project Path="modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/SimpleModule.RateLimiting.Contracts.csproj" />
+    <Project Path="modules/RateLimiting/src/SimpleModule.RateLimiting/SimpleModule.RateLimiting.csproj" />
+    <Project Path="modules/RateLimiting/tests/SimpleModule.RateLimiting.Tests/SimpleModule.RateLimiting.Tests.csproj" />
+  </Folder>
   <Folder Name="/modules/Email/">
     <Project Path="modules/Email/src/SimpleModule.Email.Contracts/SimpleModule.Email.Contracts.csproj" />
     <Project Path="modules/Email/src/SimpleModule.Email/SimpleModule.Email.csproj" />

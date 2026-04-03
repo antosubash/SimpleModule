@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\modules\Tenants\src\SimpleModule.Tenants\SimpleModule.Tenants.csproj" />
     <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
     <ProjectReference Include="..\..\modules\Localization\src\SimpleModule.Localization\SimpleModule.Localization.csproj" />
+    <ProjectReference Include="..\..\modules\RateLimiting\src\SimpleModule.RateLimiting\SimpleModule.RateLimiting.csproj" />
     <ProjectReference Include="..\..\modules\Email\src\SimpleModule.Email\SimpleModule.Email.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
     <ProjectReference Include="..\..\framework\SimpleModule.Agents\SimpleModule.Agents.csproj" />

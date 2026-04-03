@@ -1,0 +1,11 @@
+{
+  "Admin.Title": "Rate Limiting",
+  "Admin.Description": "Manage rate limiting policies for API endpoints.",
+  "Admin.CreateButton": "Create Rule",
+  "Admin.EmptyTitle": "No rate limit rules",
+  "Admin.EmptyDescription": "Get started by creating your first rate limit rule.",
+  "Admin.DeleteButton": "Delete",
+  "Admin.DeleteDialog.Title": "Delete Rate Limit Rule",
+  "Admin.DeleteDialog.Confirm": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+  "Admin.CancelButton": "Cancel"
+}

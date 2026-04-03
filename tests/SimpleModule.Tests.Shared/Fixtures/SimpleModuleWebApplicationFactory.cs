@@ -25,6 +25,7 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Rag.Module;
+using SimpleModule.RateLimiting;
 using SimpleModule.Settings;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
@@ -69,6 +70,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<RagDbContext>(services);
             ReplaceDbContext<AgentsDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
+            ReplaceDbContext<RateLimitingDbContext>(services);
             ReplaceDbContext<EmailDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
@@ -170,6 +172,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<RagDbContext>(sp);
         EnsureTablesCreated<AgentsDbContext>(sp);
         EnsureTablesCreated<BackgroundJobsDbContext>(sp);
+        EnsureTablesCreated<RateLimitingDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 

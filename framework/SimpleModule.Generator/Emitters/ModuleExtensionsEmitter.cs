@@ -205,6 +205,21 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             "        services.AddSingleton<global::SimpleModule.Core.FeatureFlags.IFeatureFlagRegistry>(featureFlagBuilder.Build());"
         );
 
+        // Collect rate limit policy definitions from modules
+        sb.AppendLine(
+            "        var rateLimitRegistry = new SimpleModule.Core.RateLimiting.RateLimitPolicyRegistry();"
+        );
+        foreach (var module in sortedModules.Where(m => m.HasConfigureRateLimits))
+        {
+            var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
+            sb.AppendLine(
+                $"        ((global::SimpleModule.Core.IModule){fieldName}).ConfigureRateLimits(rateLimitRegistry);"
+            );
+        }
+        sb.AppendLine(
+            "        SimpleModule.Hosting.RateLimiting.RateLimitingSetup.AddSimpleModuleRateLimiting(services, rateLimitRegistry);"
+        );
+
         if (hasDtoTypes)
         {
             sb.AppendLine();
