@@ -49,16 +49,14 @@ export default function TwoFactorAuthentication({
             <Alert variant="danger" className="mb-4">
               <AlertTitle>{t(UsersKeys.TwoFactor.NoRecoveryCodesTitle)}</AlertTitle>
               <AlertDescription>
-                {t(UsersKeys.TwoFactor.NoRecoveryCodesDescription, {
-                  generateLink: (
-                    <a
-                      href="/Identity/Account/Manage/GenerateRecoveryCodes"
-                      className="font-medium underline"
-                    >
-                      {t(UsersKeys.TwoFactor.NoRecoveryCodesLinkText)}
-                    </a>
-                  ),
-                })}
+                {t(UsersKeys.TwoFactor.NoRecoveryCodesDescription)}{' '}
+                <a
+                  href="/Identity/Account/Manage/GenerateRecoveryCodes"
+                  className="font-medium underline"
+                >
+                  {t(UsersKeys.TwoFactor.NoRecoveryCodesLinkText)}
+                </a>{' '}
+                {t(UsersKeys.TwoFactor.NoRecoveryCodesDescriptionSuffix)}
               </AlertDescription>
             </Alert>
           )}
@@ -67,16 +65,14 @@ export default function TwoFactorAuthentication({
             <Alert variant="danger" className="mb-4">
               <AlertTitle>{t(UsersKeys.TwoFactor.OneRecoveryCodeTitle)}</AlertTitle>
               <AlertDescription>
-                {t(UsersKeys.TwoFactor.OneRecoveryCodeDescription, {
-                  generateLink: (
-                    <a
-                      href="/Identity/Account/Manage/GenerateRecoveryCodes"
-                      className="font-medium underline"
-                    >
-                      {t(UsersKeys.TwoFactor.OneRecoveryCodeLinkText)}
-                    </a>
-                  ),
-                })}
+                {t(UsersKeys.TwoFactor.OneRecoveryCodeDescription)}{' '}
+                <a
+                  href="/Identity/Account/Manage/GenerateRecoveryCodes"
+                  className="font-medium underline"
+                >
+                  {t(UsersKeys.TwoFactor.OneRecoveryCodeLinkText)}
+                </a>
+                .
               </AlertDescription>
             </Alert>
           )}
@@ -84,19 +80,17 @@ export default function TwoFactorAuthentication({
           {recoveryCodesLeft >= 2 && recoveryCodesLeft <= 3 && (
             <Alert variant="warning" className="mb-4">
               <AlertTitle>
-                {t(UsersKeys.TwoFactor.FewRecoveryCodesTitle, { count: recoveryCodesLeft })}
+                {t(UsersKeys.TwoFactor.FewRecoveryCodesTitle, { count: String(recoveryCodesLeft) })}
               </AlertTitle>
               <AlertDescription>
-                {t(UsersKeys.TwoFactor.FewRecoveryCodesDescription, {
-                  generateLink: (
-                    <a
-                      href="/Identity/Account/Manage/GenerateRecoveryCodes"
-                      className="font-medium underline"
-                    >
-                      {t(UsersKeys.TwoFactor.FewRecoveryCodesLinkText)}
-                    </a>
-                  ),
-                })}
+                {t(UsersKeys.TwoFactor.FewRecoveryCodesDescription)}{' '}
+                <a
+                  href="/Identity/Account/Manage/GenerateRecoveryCodes"
+                  className="font-medium underline"
+                >
+                  {t(UsersKeys.TwoFactor.FewRecoveryCodesLinkText)}
+                </a>
+                .
               </AlertDescription>
             </Alert>
           )}

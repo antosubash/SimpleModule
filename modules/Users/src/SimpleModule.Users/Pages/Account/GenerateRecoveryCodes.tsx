@@ -21,8 +21,7 @@ export default function GenerateRecoveryCodes() {
         <AlertDescription>
           <p>{t(UsersKeys.GenerateRecoveryCodes.WarningDescription1)}</p>
           <p className="mt-2">
-            Generating new recovery codes does not change the keys used in authenticator apps. If
-            you wish to change the key used in an authenticator app you should{' '}
+            {t(UsersKeys.GenerateRecoveryCodes.WarningDescription2)}{' '}
             <a href="/Identity/Account/Manage/ResetAuthenticator" className="font-medium underline">
               {t(UsersKeys.GenerateRecoveryCodes.ResetKeysLinkText)}
             </a>

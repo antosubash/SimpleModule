@@ -19,16 +19,11 @@ export default function Disable2fa() {
       <Alert variant="warning" className="mb-6">
         <AlertTitle>{t(UsersKeys.Disable2fa.WarningTitle)}</AlertTitle>
         <AlertDescription>
-          {t(UsersKeys.Disable2fa.WarningDescription, {
-            resetLink: (
-              <a
-                href="/Identity/Account/Manage/ResetAuthenticator"
-                className="font-medium underline"
-              >
-                {t(UsersKeys.Disable2fa.ResetKeysLinkText)}
-              </a>
-            ),
-          })}
+          {t(UsersKeys.Disable2fa.WarningDescription)}{' '}
+          <a href="/Identity/Account/Manage/ResetAuthenticator" className="font-medium underline">
+            {t(UsersKeys.Disable2fa.ResetKeysLinkText)}
+          </a>
+          .
         </AlertDescription>
       </Alert>
 

@@ -138,7 +138,7 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
                       <TableCell>
                         {override && (
                           <Button variant="ghost" size="sm" onClick={() => handleReset(flag.name)}>
-                            Reset
+                            {t(TenantsKeys.Features.ResetButton)}
                           </Button>
                         )}
                       </TableCell>

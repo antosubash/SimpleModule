@@ -52,6 +52,7 @@ export const UsersKeys = {
     FewRecoveryCodesTitle: 'TwoFactor.FewRecoveryCodesTitle',
     ForgetBrowser: 'TwoFactor.ForgetBrowser',
     NoRecoveryCodesDescription: 'TwoFactor.NoRecoveryCodesDescription',
+    NoRecoveryCodesDescriptionSuffix: 'TwoFactor.NoRecoveryCodesDescriptionSuffix',
     NoRecoveryCodesLinkText: 'TwoFactor.NoRecoveryCodesLinkText',
     NoRecoveryCodesTitle: 'TwoFactor.NoRecoveryCodesTitle',
     OneRecoveryCodeDescription: 'TwoFactor.OneRecoveryCodeDescription',
