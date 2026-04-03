@@ -9,6 +9,7 @@
     "packages/SimpleModule.UI",
     "template/SimpleModule.Host/ClientApp",
     "tests/e2e",
+    "tests/k6",
     "docs/site",
     "website"
   ],

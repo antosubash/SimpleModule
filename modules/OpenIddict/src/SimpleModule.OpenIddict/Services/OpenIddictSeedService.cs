@@ -79,6 +79,14 @@ public partial class OpenIddictSeedService(
             Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange },
         };
 
+        // Allow password grant in Development for load testing (k6, etc.)
+        if (configuration.GetValue<bool>("OpenIddict:AllowPasswordGrant"))
+        {
+            descriptor.Permissions.Add(
+                OpenIddictConstants.Permissions.GrantTypes.Password
+            );
+        }
+
         // Allow additional redirect URIs from configuration
         var additionalRedirects = configuration
             .GetSection(ConfigKeys.OpenIddictAdditionalRedirectUris)
