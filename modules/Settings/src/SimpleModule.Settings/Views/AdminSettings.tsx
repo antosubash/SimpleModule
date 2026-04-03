@@ -1,7 +1,9 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { PageShell, Tabs, TabsContent, TabsList, TabsTrigger } from '@simplemodule/ui';
 import { useMemo, useState } from 'react';
 import type { SettingDefinition } from '../components/SettingField';
 import SettingGroup from '../components/SettingGroup';
+import { SettingsKeys } from '../Locales/keys';
 
 interface StoredSetting {
   key: string;
@@ -15,6 +17,7 @@ interface AdminSettingsProps {
 }
 
 export default function AdminSettings({ definitions, settings }: AdminSettingsProps) {
+  const { t } = useTranslation('Settings');
   const [settingsMap, setSettingsMap] = useState<Record<string, string | null>>(() => {
     const map: Record<string, string | null> = {};
     for (const s of settings) {
@@ -46,11 +49,13 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
   };
 
   return (
-    <PageShell title="Settings">
+    <PageShell title={t(SettingsKeys.AdminSettings.Title)}>
       <Tabs defaultValue="system">
         <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="system">System</TabsTrigger>
-          <TabsTrigger value="application">Application</TabsTrigger>
+          <TabsTrigger value="system">{t(SettingsKeys.AdminSettings.TabSystem)}</TabsTrigger>
+          <TabsTrigger value="application">
+            {t(SettingsKeys.AdminSettings.TabApplication)}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="system" className="space-y-4 sm:space-y-6">
           {Object.entries(groupBy(systemDefs)).map(([group, defs]) => (

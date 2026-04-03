@@ -1,0 +1,17 @@
+{
+  "Browse.BreadcrumbRoot": "Files",
+  "Browse.UploadButton": "Upload File",
+  "Browse.EmptyTitle": "No files yet",
+  "Browse.EmptyDescription": "Upload a file to get started.",
+  "Browse.ColName": "Name",
+  "Browse.ColSize": "Size",
+  "Browse.ColType": "Type",
+  "Browse.ColDate": "Date",
+  "Browse.FolderType": "Folder",
+  "Browse.DownloadButton": "Download",
+  "Browse.DeleteButton": "Delete",
+  "Browse.DeleteDialog.Title": "Delete File",
+  "Browse.DeleteDialog.Description": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+  "Browse.DeleteDialog.CancelButton": "Cancel",
+  "Browse.DeleteDialog.ConfirmButton": "Delete"
+}

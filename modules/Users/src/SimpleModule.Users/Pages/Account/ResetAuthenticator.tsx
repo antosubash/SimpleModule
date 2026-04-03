@@ -1,8 +1,12 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, AlertTitle, Button } from '@simplemodule/ui';
+import { UsersKeys } from '../../Locales/keys';
 import ManageLayout from './ManageLayout';
 
 export default function ResetAuthenticator() {
+  const { t } = useTranslation('Users');
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     router.post('/Identity/Account/Manage/ResetAuthenticator');
@@ -10,22 +14,18 @@ export default function ResetAuthenticator() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-3 sm:mb-4">Reset authenticator key</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        {t(UsersKeys.ResetAuthenticator.Title)}
+      </h3>
 
       <Alert variant="warning" className="mb-4 sm:mb-6">
-        <AlertTitle>
-          If you reset your authenticator key your authenticator app will not work until you
-          reconfigure it.
-        </AlertTitle>
-        <AlertDescription>
-          This process disables 2FA until you verify your authenticator app. If you do not complete
-          your authenticator app configuration you may lose access to your account.
-        </AlertDescription>
+        <AlertTitle>{t(UsersKeys.ResetAuthenticator.WarningTitle)}</AlertTitle>
+        <AlertDescription>{t(UsersKeys.ResetAuthenticator.WarningDescription)}</AlertDescription>
       </Alert>
 
       <form onSubmit={handleSubmit}>
         <Button type="submit" variant="danger">
-          Reset authenticator key
+          {t(UsersKeys.ResetAuthenticator.ResetButton)}
         </Button>
       </form>
     </ManageLayout>

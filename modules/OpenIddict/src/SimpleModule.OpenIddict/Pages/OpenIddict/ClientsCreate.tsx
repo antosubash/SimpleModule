@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,8 +23,10 @@ import {
   SelectValue,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { OpenIddictKeys } from '../../Locales/keys';
 
 export default function ClientsCreate() {
+  const { t } = useTranslation('OpenIddict');
   const [clientType, setClientType] = useState('public');
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -36,55 +39,76 @@ export default function ClientsCreate() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/openiddict/clients">Clients</BreadcrumbLink>
+            <BreadcrumbLink href="/openiddict/clients">
+              {t(OpenIddictKeys.ClientsCreate.Breadcrumb)}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Create Client</BreadcrumbPage>
+            <BreadcrumbPage>{t(OpenIddictKeys.ClientsCreate.BreadcrumbPage)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Create Client</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t(OpenIddictKeys.ClientsCreate.Title)}</h1>
 
       <Card>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup className="space-y-4 sm:space-y-6">
               <Field>
-                <Label htmlFor="clientId">Client ID</Label>
-                <Input id="clientId" name="clientId" required placeholder="my-app-client" />
+                <Label htmlFor="clientId">{t(OpenIddictKeys.ClientsCreate.ClientIdLabel)}</Label>
+                <Input
+                  id="clientId"
+                  name="clientId"
+                  required
+                  placeholder={t(OpenIddictKeys.ClientsCreate.ClientIdPlaceholder)}
+                />
               </Field>
               <Field>
-                <Label htmlFor="displayName">Display Name</Label>
-                <Input id="displayName" name="displayName" placeholder="My Application" />
+                <Label htmlFor="displayName">
+                  {t(OpenIddictKeys.ClientsCreate.DisplayNameLabel)}
+                </Label>
+                <Input
+                  id="displayName"
+                  name="displayName"
+                  placeholder={t(OpenIddictKeys.ClientsCreate.DisplayNamePlaceholder)}
+                />
               </Field>
               <Field>
-                <Label htmlFor="clientType">Client Type</Label>
+                <Label htmlFor="clientType">
+                  {t(OpenIddictKeys.ClientsCreate.ClientTypeLabel)}
+                </Label>
                 <Select value={clientType} onValueChange={setClientType} name="clientType">
                   <SelectTrigger id="clientType">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="confidential">Confidential</SelectItem>
+                    <SelectItem value="public">
+                      {t(OpenIddictKeys.ClientsCreate.ClientTypePublic)}
+                    </SelectItem>
+                    <SelectItem value="confidential">
+                      {t(OpenIddictKeys.ClientsCreate.ClientTypeConfidential)}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
               {clientType === 'confidential' && (
                 <Field>
-                  <Label htmlFor="clientSecret">Client Secret</Label>
+                  <Label htmlFor="clientSecret">
+                    {t(OpenIddictKeys.ClientsCreate.ClientSecretLabel)}
+                  </Label>
                   <Input
                     id="clientSecret"
                     name="clientSecret"
                     type="password"
-                    placeholder="Enter a strong secret"
+                    placeholder={t(OpenIddictKeys.ClientsCreate.ClientSecretPlaceholder)}
                   />
                   <FieldDescription>
-                    Required for confidential clients. Store this securely.
+                    {t(OpenIddictKeys.ClientsCreate.ClientSecretDescription)}
                   </FieldDescription>
                 </Field>
               )}
-              <Button type="submit">Create Client</Button>
+              <Button type="submit">{t(OpenIddictKeys.ClientsCreate.SubmitButton)}</Button>
             </FieldGroup>
           </form>
         </CardContent>

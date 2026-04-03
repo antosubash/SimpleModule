@@ -1,9 +1,15 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
+import { ProductsKeys } from '../Locales/keys';
 import type { Product } from '../types';
 
 export default function Browse({ products }: { products: Product[] }) {
+  const { t } = useTranslation('Products');
   return (
-    <PageShell title="Products" description="Browse the product catalog.">
+    <PageShell
+      title={t(ProductsKeys.Browse.Title)}
+      description={t(ProductsKeys.Browse.Description)}
+    >
       <div className="space-y-2 sm:space-y-3">
         {products.map((p) => (
           <Card key={p.id} data-testid="product-card">

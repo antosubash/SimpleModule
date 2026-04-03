@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { OrdersKeys } from '../Locales/keys';
 import type { OrderItem } from '../types';
 
 interface Product {
@@ -34,6 +36,7 @@ interface Props {
 }
 
 export default function Create({ products }: Props) {
+  const { t } = useTranslation('Orders');
   const [userId, setUserId] = useState('');
   const [items, setItems] = useState<OrderItem[]>([
     { productId: products[0]?.id ?? 0, quantity: 1 },
@@ -70,36 +73,36 @@ export default function Create({ products }: Props) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/orders">Orders</BreadcrumbLink>
+            <BreadcrumbLink href="/orders">{t(OrdersKeys.List.Title)}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Create Order</BreadcrumbPage>
+            <BreadcrumbPage>{t(OrdersKeys.Create.Breadcrumb)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Create Order</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t(OrdersKeys.Create.Title)}</h1>
 
       <Card>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Label htmlFor="userId">User ID</Label>
+                <Label htmlFor="userId">{t(OrdersKeys.Create.UserIdLabel)}</Label>
                 <Input
                   id="userId"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
                   required
-                  placeholder="Enter user ID"
+                  placeholder={t(OrdersKeys.Create.UserIdPlaceholder)}
                 />
               </Field>
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <Label>Items</Label>
+                  <Label>{t(OrdersKeys.Create.ItemsLabel)}</Label>
                   <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-                    + Add Item
+                    {t(OrdersKeys.Create.AddItemButton)}
                   </Button>
                 </div>
                 <div className="space-y-2">
@@ -129,7 +132,10 @@ export default function Create({ products }: Props) {
                         }
                         min="1"
                         className="w-20"
-                        aria-label={`Quantity for item ${index + 1}`}
+                        aria-label={t(OrdersKeys.Create.QuantityLabel).replace(
+                          '{index}',
+                          String(index + 1),
+                        )}
                       />
                       {items.length > 1 && (
                         <Button
@@ -137,7 +143,10 @@ export default function Create({ products }: Props) {
                           variant="ghost"
                           size="sm"
                           onClick={() => removeItem(index)}
-                          aria-label={`Remove item ${index + 1}`}
+                          aria-label={t(OrdersKeys.Create.RemoveButton).replace(
+                            '{index}',
+                            String(index + 1),
+                          )}
                         >
                           &times;
                         </Button>
@@ -149,12 +158,12 @@ export default function Create({ products }: Props) {
 
               <div className="pt-2 border-t border-border" data-testid="estimated-total">
                 <div className="flex justify-between items-center text-lg font-semibold">
-                  <span>Estimated Total</span>
+                  <span>{t(OrdersKeys.Create.TotalLabel)}</span>
                   <span>${getTotal().toFixed(2)}</span>
                 </div>
               </div>
 
-              <Button type="submit">Create Order</Button>
+              <Button type="submit">{t(OrdersKeys.Create.SubmitButton)}</Button>
             </FieldGroup>
           </form>
         </CardContent>

@@ -1,3 +1,4 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -10,6 +11,7 @@ import {
 import { useState } from 'react';
 import type { SettingDefinition } from '../components/SettingField';
 import SettingField from '../components/SettingField';
+import { SettingsKeys } from '../Locales/keys';
 
 interface UserSettingView {
   definition: SettingDefinition;
@@ -22,6 +24,7 @@ interface UserSettingsProps {
 }
 
 export default function UserSettings({ settings: initial }: UserSettingsProps) {
+  const { t } = useTranslation('Settings');
   const [settings, setSettings] = useState(initial);
 
   const handleSave = async (key: string, value: string) => {
@@ -55,7 +58,7 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
 
   return (
     <Container className="space-y-4 sm:space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">My Settings</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t(SettingsKeys.UserSettings.Title)}</h1>
       {Object.entries(groups).map(([group, items]) => (
         <Card key={group} data-testid="setting-card">
           <CardHeader className="p-4 sm:p-6">
@@ -71,17 +74,19 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
                   <div className="flex items-center gap-2">
                     {s.isOverridden ? (
                       <>
-                        <Badge variant="default">Overridden</Badge>
+                        <Badge variant="default">
+                          {t(SettingsKeys.UserSettings.BadgeOverridden)}
+                        </Badge>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleReset(s.definition.key)}
                         >
-                          Reset
+                          {t(SettingsKeys.UserSettings.ResetButton)}
                         </Button>
                       </>
                     ) : (
-                      <Badge variant="info">Default</Badge>
+                      <Badge variant="info">{t(SettingsKeys.UserSettings.BadgeDefault)}</Badge>
                     )}
                   </div>
                 </div>

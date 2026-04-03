@@ -38,6 +38,33 @@ function clearTimers() {
   }
 }
 
+// Intercept plain <a> clicks from the Blazor layout (sidebar, nav, dropdowns) and
+// route them through Inertia so the page swap is SPA-style — no full reload.
+const nonInertiaPathPrefixes = ['/Identity/', '/swagger', '/health', '/connect/'];
+
+document.addEventListener('click', (event) => {
+  const link = (event.target as Element).closest?.('a');
+  if (!link?.href) return;
+
+  // Respect modifier keys (new tab), target attrs, downloads
+  if (event.defaultPrevented) return;
+  if (event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  if (link.target && link.target !== '_self') return;
+  if (link.hasAttribute('download')) return;
+  if (link.dataset.inertia === 'false') return;
+
+  // Only same-origin
+  if (link.origin !== window.location.origin) return;
+
+  // Skip non-Inertia server routes (Identity, Swagger, health checks, OAuth)
+  const path = link.pathname;
+  if (nonInertiaPathPrefixes.some((prefix) => path.startsWith(prefix))) return;
+
+  event.preventDefault();
+  router.visit(link.href);
+});
+
 router.on('start', () => {
   clearTimers();
   startTimer = setTimeout(() => {

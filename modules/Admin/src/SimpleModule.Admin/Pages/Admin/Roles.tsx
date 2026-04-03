@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { AdminKeys } from '../../Locales/keys';
 
 interface Role {
   id: string;
@@ -32,6 +34,7 @@ interface Props {
 }
 
 export default function Roles({ roles }: Props) {
+  const { t } = useTranslation('Admin');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     name: string;
@@ -43,7 +46,7 @@ export default function Roles({ roles }: Props) {
     router.delete(`/admin/roles/${deleteTarget.id}`, {
       onError: () => {
         setDeleteTarget(null);
-        setDeleteError('Cannot delete role with assigned users.');
+        setDeleteError(t(AdminKeys.Roles.DeleteError));
       },
       onSuccess: () => setDeleteTarget(null),
     });
@@ -74,9 +77,13 @@ export default function Roles({ roles }: Props) {
   return (
     <>
       <DataGridPage
-        title="Roles"
-        description="Manage application roles and permissions."
-        actions={<Button onClick={() => router.get('/admin/roles/create')}>Create Role</Button>}
+        title={t(AdminKeys.Roles.Title)}
+        description={t(AdminKeys.Roles.Description)}
+        actions={
+          <Button onClick={() => router.get('/admin/roles/create')}>
+            {t(AdminKeys.Roles.CreateButton)}
+          </Button>
+        }
         data={roles}
         filterBar={errorAlert}
       >
@@ -85,11 +92,11 @@ export default function Roles({ roles }: Props) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Users</TableHead>
-                  <TableHead>Permissions</TableHead>
-                  <TableHead>Created</TableHead>
+                  <TableHead>{t(AdminKeys.Roles.ColName)}</TableHead>
+                  <TableHead>{t(AdminKeys.Roles.ColDescription)}</TableHead>
+                  <TableHead>{t(AdminKeys.Roles.ColUsers)}</TableHead>
+                  <TableHead>{t(AdminKeys.Roles.ColPermissions)}</TableHead>
+                  <TableHead>{t(AdminKeys.Roles.ColCreated)}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -116,14 +123,14 @@ export default function Roles({ roles }: Props) {
                           size="sm"
                           onClick={() => router.get(`/admin/roles/${role.id}/edit`)}
                         >
-                          Edit
+                          {t(AdminKeys.Roles.EditButton)}
                         </Button>
                         <Button
                           variant="danger"
                           size="sm"
                           onClick={() => setDeleteTarget({ id: role.id, name: role.name })}
                         >
-                          Delete
+                          {t(AdminKeys.Roles.DeleteButton)}
                         </Button>
                       </div>
                     </TableCell>
@@ -138,18 +145,17 @@ export default function Roles({ roles }: Props) {
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Role</DialogTitle>
+            <DialogTitle>{t(AdminKeys.Roles.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This will remove
-              the role from all users.
+              {t(AdminKeys.Roles.DeleteDialog.Confirm, { name: deleteTarget?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t(AdminKeys.Roles.DeleteDialog.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(AdminKeys.Roles.DeleteDialog.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

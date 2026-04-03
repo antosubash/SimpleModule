@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,6 +28,7 @@ import {
   TabsTrigger,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { OpenIddictKeys } from '../../Locales/keys';
 
 interface ClientDetail {
   id: string;
@@ -43,51 +45,52 @@ interface Props {
   tab: string;
 }
 
-const tabs = [
-  { id: 'details', label: 'Details' },
-  { id: 'uris', label: 'URIs' },
-  { id: 'permissions', label: 'Permissions' },
+const tabIds = [
+  { id: 'details', key: 'TabDetails' as const },
+  { id: 'uris', key: 'TabUris' as const },
+  { id: 'permissions', key: 'TabPermissions' as const },
 ];
 
-const permissionGroups = [
+const permissionGroupDefs = [
   {
-    label: 'Endpoints',
+    key: 'Endpoints' as const,
     permissions: [
-      { value: 'ept:authorization', label: 'Authorization' },
-      { value: 'ept:token', label: 'Token' },
-      { value: 'ept:end_session', label: 'End Session' },
-      { value: 'ept:revocation', label: 'Revocation' },
-      { value: 'ept:introspection', label: 'Introspection' },
+      { value: 'ept:authorization', key: 'Authorization' as const },
+      { value: 'ept:token', key: 'Token' as const },
+      { value: 'ept:end_session', key: 'EndSession' as const },
+      { value: 'ept:revocation', key: 'Revocation' as const },
+      { value: 'ept:introspection', key: 'Introspection' as const },
     ],
   },
   {
-    label: 'Grant Types',
+    key: 'GrantTypes' as const,
     permissions: [
-      { value: 'gt:authorization_code', label: 'Authorization Code' },
-      { value: 'gt:refresh_token', label: 'Refresh Token' },
-      { value: 'gt:client_credentials', label: 'Client Credentials' },
-      { value: 'gt:implicit', label: 'Implicit' },
+      { value: 'gt:authorization_code', key: 'AuthorizationCode' as const },
+      { value: 'gt:refresh_token', key: 'RefreshToken' as const },
+      { value: 'gt:client_credentials', key: 'ClientCredentials' as const },
+      { value: 'gt:implicit', key: 'Implicit' as const },
     ],
   },
   {
-    label: 'Response Types',
+    key: 'ResponseTypes' as const,
     permissions: [
-      { value: 'rst:code', label: 'Code' },
-      { value: 'rst:token', label: 'Token' },
+      { value: 'rst:code', key: 'Code' as const },
+      { value: 'rst:token', key: 'TokenResponse' as const },
     ],
   },
   {
-    label: 'Scopes',
+    key: 'Scopes' as const,
     permissions: [
-      { value: 'scp:openid', label: 'OpenID' },
-      { value: 'scp:profile', label: 'Profile' },
-      { value: 'scp:email', label: 'Email' },
-      { value: 'scp:roles', label: 'Roles' },
+      { value: 'scp:openid', key: 'OpenID' as const },
+      { value: 'scp:profile', key: 'Profile' as const },
+      { value: 'scp:email', key: 'Email' as const },
+      { value: 'scp:roles', key: 'Roles' as const },
     ],
   },
 ];
 
 function UriList({ label, name, values }: { label: string; name: string; values: string[] }) {
+  const { t } = useTranslation('OpenIddict');
   const [uris, setUris] = useState(values.length > 0 ? values : ['']);
 
   function addUri() {
@@ -115,16 +118,16 @@ function UriList({ label, name, values }: { label: string; name: string; values:
               name={name}
               value={uri}
               onChange={(e) => updateUri(index, e.target.value)}
-              placeholder="https://..."
+              placeholder={t(OpenIddictKeys.ClientsEdit.UriPlaceholder)}
             />
             <Button type="button" variant="danger" size="sm" onClick={() => removeUri(index)}>
-              Remove
+              {t(OpenIddictKeys.ClientsEdit.UriRemoveButton)}
             </Button>
           </div>
         ))}
       </div>
       <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={addUri}>
-        + Add URI
+        {t(OpenIddictKeys.ClientsEdit.UriAddButton)}
       </Button>
     </Field>
   );
@@ -137,6 +140,7 @@ export default function ClientsEdit({
   permissions,
   tab,
 }: Props) {
+  const { t } = useTranslation('OpenIddict');
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set(permissions));
 
   function togglePermission(perm: string) {
@@ -156,15 +160,17 @@ export default function ClientsEdit({
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/openiddict/clients">Clients</BreadcrumbLink>
+            <BreadcrumbLink href="/openiddict/clients">
+              {t(OpenIddictKeys.ClientsEdit.Breadcrumb)}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Edit Client</BreadcrumbPage>
+            <BreadcrumbPage>{t(OpenIddictKeys.ClientsEdit.BreadcrumbPage)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Edit Client</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t(OpenIddictKeys.ClientsEdit.Title)}</h1>
 
       <Tabs
         value={tab}
@@ -178,9 +184,9 @@ export default function ClientsEdit({
         className="mb-6"
       >
         <TabsList>
-          {tabs.map((t) => (
-            <TabsTrigger key={t.id} value={t.id}>
-              {t.label}
+          {tabIds.map((tabDef) => (
+            <TabsTrigger key={tabDef.id} value={tabDef.id}>
+              {t(OpenIddictKeys.ClientsEdit[tabDef.key])}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -197,7 +203,9 @@ export default function ClientsEdit({
             >
               <FieldGroup>
                 <Field>
-                  <Label htmlFor="displayName">Display Name</Label>
+                  <Label htmlFor="displayName">
+                    {t(OpenIddictKeys.ClientsEdit.DisplayNameLabel)}
+                  </Label>
                   <Input
                     id="displayName"
                     name="displayName"
@@ -205,18 +213,24 @@ export default function ClientsEdit({
                   />
                 </Field>
                 <Field>
-                  <Label htmlFor="clientType">Client Type</Label>
+                  <Label htmlFor="clientType">
+                    {t(OpenIddictKeys.ClientsEdit.ClientTypeLabel)}
+                  </Label>
                   <Select defaultValue={client.clientType ?? 'public'} name="clientType">
                     <SelectTrigger id="clientType">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="confidential">Confidential</SelectItem>
+                      <SelectItem value="public">
+                        {t(OpenIddictKeys.ClientsEdit.ClientTypePublic)}
+                      </SelectItem>
+                      <SelectItem value="confidential">
+                        {t(OpenIddictKeys.ClientsEdit.ClientTypeConfidential)}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit">{t(OpenIddictKeys.ClientsEdit.SaveChangesButton)}</Button>
               </FieldGroup>
             </form>
           </CardContent>
@@ -226,7 +240,7 @@ export default function ClientsEdit({
       {tab === 'uris' && (
         <Card>
           <CardHeader>
-            <CardTitle>Redirect URIs</CardTitle>
+            <CardTitle>{t(OpenIddictKeys.ClientsEdit.RedirectUrisTitle)}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <form
@@ -236,13 +250,17 @@ export default function ClientsEdit({
               }}
             >
               <FieldGroup className="space-y-4 sm:space-y-6">
-                <UriList label="Redirect URIs" name="redirectUris" values={redirectUris} />
                 <UriList
-                  label="Post-Logout Redirect URIs"
+                  label={t(OpenIddictKeys.ClientsEdit.RedirectUrisLabel)}
+                  name="redirectUris"
+                  values={redirectUris}
+                />
+                <UriList
+                  label={t(OpenIddictKeys.ClientsEdit.PostLogoutUrisLabel)}
                   name="postLogoutUris"
                   values={postLogoutUris}
                 />
-                <Button type="submit">Save URIs</Button>
+                <Button type="submit">{t(OpenIddictKeys.ClientsEdit.SaveUrisButton)}</Button>
               </FieldGroup>
             </form>
           </CardContent>
@@ -252,7 +270,7 @@ export default function ClientsEdit({
       {tab === 'permissions' && (
         <Card>
           <CardHeader>
-            <CardTitle>Permissions</CardTitle>
+            <CardTitle>{t(OpenIddictKeys.ClientsEdit.PermissionsTitle)}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <form
@@ -265,9 +283,11 @@ export default function ClientsEdit({
               }}
             >
               <div className="space-y-4 sm:space-y-6">
-                {permissionGroups.map((group) => (
-                  <div key={group.label}>
-                    <h3 className="text-sm font-semibold mb-2">{group.label}</h3>
+                {permissionGroupDefs.map((group) => (
+                  <div key={group.key}>
+                    <h3 className="text-sm font-semibold mb-2">
+                      {t(OpenIddictKeys.ClientsEdit.PermGroup[group.key])}
+                    </h3>
                     <div className="space-y-2">
                       {group.permissions.map((perm) => (
                         <div key={perm.value} className="flex items-center gap-2">
@@ -279,7 +299,7 @@ export default function ClientsEdit({
                             onCheckedChange={() => togglePermission(perm.value)}
                           />
                           <Label htmlFor={perm.value} className="text-sm font-normal">
-                            {perm.label}{' '}
+                            {t(OpenIddictKeys.ClientsEdit.Perm[perm.key])}{' '}
                             <span className="text-text-muted font-mono text-xs">
                               ({perm.value})
                             </span>
@@ -291,7 +311,7 @@ export default function ClientsEdit({
                 ))}
               </div>
               <Button type="submit" className="mt-4">
-                Save Permissions
+                {t(OpenIddictKeys.ClientsEdit.SavePermissionsButton)}
               </Button>
             </form>
           </CardContent>

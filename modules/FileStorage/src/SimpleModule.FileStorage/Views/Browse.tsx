@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
   DataGridPage,
@@ -16,6 +17,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useRef, useState } from 'react';
+import { FileStorageKeys } from '../Locales/keys';
 import type { StoredFile } from '../types';
 
 interface Props {
@@ -45,8 +47,11 @@ function folderName(path: string): string {
   return parts[parts.length - 1];
 }
 
-function breadcrumbs(folder: string | null): { label: string; path: string | null }[] {
-  const crumbs: { label: string; path: string | null }[] = [{ label: 'Files', path: null }];
+function breadcrumbs(
+  folder: string | null,
+  rootLabel: string,
+): { label: string; path: string | null }[] {
+  const crumbs: { label: string; path: string | null }[] = [{ label: rootLabel, path: null }];
   if (!folder) return crumbs;
   const parts = folder.split('/');
   for (let i = 0; i < parts.length; i++) {
@@ -59,6 +64,7 @@ function breadcrumbs(folder: string | null): { label: string; path: string | nul
 }
 
 export default function Browse({ files, folders, currentFolder, parentFolder }: Props) {
+  const { t } = useTranslation('FileStorage');
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,7 +93,7 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
     }
   }
 
-  const crumbs = breadcrumbs(currentFolder);
+  const crumbs = breadcrumbs(currentFolder, t(FileStorageKeys.Browse.BreadcrumbRoot));
   const hasContent = folders.length > 0 || files.length > 0;
 
   return (
@@ -119,21 +125,23 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
         actions={
           <>
             <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
-            <Button onClick={() => fileInputRef.current?.click()}>Upload File</Button>
+            <Button onClick={() => fileInputRef.current?.click()}>
+              {t(FileStorageKeys.Browse.UploadButton)}
+            </Button>
           </>
         }
         data={hasContent ? files : []}
-        emptyTitle="No files yet"
-        emptyDescription="Upload a file to get started."
+        emptyTitle={t(FileStorageKeys.Browse.EmptyTitle)}
+        emptyDescription={t(FileStorageKeys.Browse.EmptyDescription)}
       >
         {() => (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>{t(FileStorageKeys.Browse.ColName)}</TableHead>
+                <TableHead>{t(FileStorageKeys.Browse.ColSize)}</TableHead>
+                <TableHead>{t(FileStorageKeys.Browse.ColType)}</TableHead>
+                <TableHead>{t(FileStorageKeys.Browse.ColDate)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -161,7 +169,9 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
                     {folderName(f)}
                   </TableCell>
                   <TableCell className="text-text-muted">&mdash;</TableCell>
-                  <TableCell className="text-text-muted">Folder</TableCell>
+                  <TableCell className="text-text-muted">
+                    {t(FileStorageKeys.Browse.FolderType)}
+                  </TableCell>
                   <TableCell className="text-text-muted">&mdash;</TableCell>
                   <TableCell />
                 </TableRow>
@@ -179,14 +189,14 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
                         size="sm"
                         onClick={() => window.open(`/api/files/${file.id}/download`, '_blank')}
                       >
-                        Download
+                        {t(FileStorageKeys.Browse.DownloadButton)}
                       </Button>
                       <Button
                         variant="danger"
                         size="sm"
                         onClick={() => setDeleteTarget({ id: file.id, name: file.fileName })}
                       >
-                        Delete
+                        {t(FileStorageKeys.Browse.DeleteButton)}
                       </Button>
                     </div>
                   </TableCell>
@@ -200,18 +210,19 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete File</DialogTitle>
+            <DialogTitle>{t(FileStorageKeys.Browse.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This action cannot
-              be undone.
+              {t(FileStorageKeys.Browse.DeleteDialog.Description, {
+                name: deleteTarget?.name ?? '',
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t(FileStorageKeys.Browse.DeleteDialog.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(FileStorageKeys.Browse.DeleteDialog.ConfirmButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

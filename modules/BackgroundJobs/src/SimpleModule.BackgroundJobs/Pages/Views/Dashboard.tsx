@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -9,6 +10,7 @@ import {
   PageShell,
   Progress,
 } from '@simplemodule/ui';
+import { BackgroundJobsKeys } from '../../Locales/keys';
 
 interface JobSummary {
   id: string;
@@ -34,12 +36,17 @@ export default function Dashboard({
   failedCount,
   recurringCount,
 }: Props) {
+  const { t } = useTranslation('BackgroundJobs');
+
   return (
-    <PageShell title="Background Jobs" description="Overview of job processing activity">
+    <PageShell
+      title={t(BackgroundJobsKeys.Dashboard.Title)}
+      description={t(BackgroundJobsKeys.Dashboard.Description)}
+    >
       <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Active Jobs</CardTitle>
+            <CardTitle>{t(BackgroundJobsKeys.Dashboard.ActiveJobs)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{activeCount}</div>
@@ -49,13 +56,13 @@ export default function Dashboard({
               className="mt-2"
               onClick={() => router.get('/admin/jobs/list?state=Running')}
             >
-              View all
+              {t(BackgroundJobsKeys.Dashboard.ViewAll)}
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Failed Jobs</CardTitle>
+            <CardTitle>{t(BackgroundJobsKeys.Dashboard.FailedJobs)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-500">{failedCount}</div>
@@ -65,13 +72,13 @@ export default function Dashboard({
               className="mt-2"
               onClick={() => router.get('/admin/jobs/list?state=Failed')}
             >
-              View all
+              {t(BackgroundJobsKeys.Dashboard.ViewAll)}
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Recurring Jobs</CardTitle>
+            <CardTitle>{t(BackgroundJobsKeys.Dashboard.RecurringJobs)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{recurringCount}</div>
@@ -81,7 +88,7 @@ export default function Dashboard({
               className="mt-2"
               onClick={() => router.get('/admin/jobs/recurring')}
             >
-              Manage
+              {t(BackgroundJobsKeys.Dashboard.Manage)}
             </Button>
           </CardContent>
         </Card>
@@ -90,7 +97,7 @@ export default function Dashboard({
       {activeJobs.length > 0 && (
         <Card className="mt-4 sm:mt-6">
           <CardHeader>
-            <CardTitle>Currently Running</CardTitle>
+            <CardTitle>{t(BackgroundJobsKeys.Dashboard.CurrentlyRunning)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -117,7 +124,7 @@ export default function Dashboard({
       {failedJobs.length > 0 && (
         <Card className="mt-4 sm:mt-6">
           <CardHeader>
-            <CardTitle>Recent Failures</CardTitle>
+            <CardTitle>{t(BackgroundJobsKeys.Dashboard.RecentFailures)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -129,7 +136,7 @@ export default function Dashboard({
                   onClick={() => router.get(`/admin/jobs/${job.id}`)}
                 >
                   <span className="font-medium">{job.jobType}</span>
-                  <Badge variant="danger">Failed</Badge>
+                  <Badge variant="danger">{t(BackgroundJobsKeys.Dashboard.BadgeFailed)}</Badge>
                 </button>
               ))}
             </div>

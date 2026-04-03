@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { Puck, usePuck } from '@puckeditor/core';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
   Card,
@@ -15,6 +16,7 @@ import {
 } from '@simplemodule/ui';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { PageBuilderKeys } from '../Locales/keys';
 import { puckConfig } from '../puck/config';
 import type { Page, PageTemplate } from '../types';
 
@@ -24,6 +26,7 @@ interface Props {
 }
 
 function HeaderActions({ page }: { page: Page | null }) {
+  const { t } = useTranslation('PageBuilder');
   const { appState } = usePuck();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -80,22 +83,28 @@ function HeaderActions({ page }: { page: Page | null }) {
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setShowSaveTemplate(true)}>
-        Save as Template
+        {t(PageBuilderKeys.Editor.SaveAsTemplate)}
       </Button>
       <Button variant="outline" size="sm" onClick={handleSaveDraft} disabled={saving}>
-        {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Draft'}
+        {saving
+          ? t(PageBuilderKeys.Editor.Saving)
+          : saved
+            ? t(PageBuilderKeys.Editor.Saved)
+            : t(PageBuilderKeys.Editor.SaveDraft)}
       </Button>
       <Dialog open={showSaveTemplate} onOpenChange={setShowSaveTemplate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Save as Template</DialogTitle>
+            <DialogTitle>{t(PageBuilderKeys.Editor.SaveTemplateDialog.Title)}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <Field>
-              <Label htmlFor="template-name">Template name</Label>
+              <Label htmlFor="template-name">
+                {t(PageBuilderKeys.Editor.SaveTemplateDialog.NameLabel)}
+              </Label>
               <Input
                 id="template-name"
-                placeholder="e.g. Landing Page"
+                placeholder={t(PageBuilderKeys.Editor.SaveTemplateDialog.NamePlaceholder)}
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 onKeyDown={(e) => {
@@ -107,9 +116,11 @@ function HeaderActions({ page }: { page: Page | null }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSaveTemplate(false)}>
-              Cancel
+              {t(PageBuilderKeys.Editor.SaveTemplateDialog.Cancel)}
             </Button>
-            <Button onClick={handleSaveAsTemplate}>Save</Button>
+            <Button onClick={handleSaveAsTemplate}>
+              {t(PageBuilderKeys.Editor.SaveTemplateDialog.Save)}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -118,6 +129,7 @@ function HeaderActions({ page }: { page: Page | null }) {
 }
 
 export default function Editor({ page, templates }: Props) {
+  const { t } = useTranslation('PageBuilder');
   const [showTemplatePicker, setShowTemplatePicker] = useState(!page && !!templates?.length);
 
   // Hide the Blazor shell (sidebar + toggle) so the editor has full screen
@@ -203,9 +215,11 @@ export default function Editor({ page, templates }: Props) {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Create New Page</DialogTitle>
+            <DialogTitle>{t(PageBuilderKeys.Editor.TemplatePicker.Title)}</DialogTitle>
           </DialogHeader>
-          <p className="text-text-muted text-sm">Start from a template or create a blank page.</p>
+          <p className="text-text-muted text-sm">
+            {t(PageBuilderKeys.Editor.TemplatePicker.Subtitle)}
+          </p>
           <div className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-2">
             <button
               type="button"
@@ -213,7 +227,7 @@ export default function Editor({ page, templates }: Props) {
               className="p-6 border-2 border-dashed border-border rounded-lg cursor-pointer bg-transparent text-center text-text-muted text-sm hover:border-primary/50 transition-colors"
             >
               <div className="text-3xl mb-2">+</div>
-              Blank Page
+              {t(PageBuilderKeys.Editor.TemplatePicker.BlankPage)}
             </button>
             {templates?.map((t) => (
               <Card
@@ -242,7 +256,7 @@ export default function Editor({ page, templates }: Props) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => router.visit('/pages/manage')}>
-              Cancel
+              {t(PageBuilderKeys.Editor.TemplatePicker.Cancel)}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -277,7 +291,7 @@ export default function Editor({ page, templates }: Props) {
                 >
                   <path d="M15 19l-7-7 7-7" />
                 </svg>
-                Back to Pages
+                {t(PageBuilderKeys.Editor.BackToPages)}
               </Button>
               <HeaderActions page={page} />
               {children}
