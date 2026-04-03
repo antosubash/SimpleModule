@@ -139,7 +139,9 @@ export default function Dashboard({ stats }: Props) {
       {/* Top Errors Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">{t(EmailKeys.Dashboard.TopErrors)}</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            {t(EmailKeys.Dashboard.TopErrorsTitle)}
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {stats.topErrors.length === 0 ? (

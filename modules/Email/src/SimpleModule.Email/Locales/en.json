@@ -87,10 +87,10 @@
   "Dashboard.Last24Hours": "Last 24 hours",
   "Dashboard.FailureRate": "Failure Rate (7d)",
   "Dashboard.DailyVolume": "Daily Volume (30d)",
-  "Dashboard.TopErrors": "Top Errors",
-  "Dashboard.TopErrors.ErrorMessage": "Error",
-  "Dashboard.TopErrors.Count": "Count",
-  "Dashboard.TopErrors.Empty": "No errors recorded.",
+  "Dashboard.TopErrorsTitle": "Top Errors",
+  "Dashboard.TopErrorsErrorMessage": "Error",
+  "Dashboard.TopErrorsCount": "Count",
+  "Dashboard.TopErrorsEmpty": "No errors recorded.",
   "Dashboard.Sent": "Sent",
   "Dashboard.Failed": "Failed"
 }
