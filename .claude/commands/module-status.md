@@ -6,10 +6,12 @@ Print a health snapshot of a SimpleModule module. No builds required — reads a
 
 If no argument was supplied, ask: "Which module would you like to inspect? (e.g., Products, Orders, Users)"
 
-Use the provided name as `{Name}` throughout. Derive paths:
-- `IMPL = modules/{Name}/src/SimpleModule.{Name}`
-- `CONTRACTS = modules/{Name}/src/SimpleModule.{Name}.Contracts`
-- `TESTS = modules/{Name}/tests/SimpleModule.{Name}.Tests`
+Use the provided name as `{Name}` throughout. Construct the paths:
+- `CONTRACTS = modules/{Name}/src/SimpleModule.{Name}.Contracts/`
+- `IMPL = modules/{Name}/src/SimpleModule.{Name}/`
+- `TESTS = modules/{Name}/tests/SimpleModule.{Name}.Tests/`
+
+First, verify that IMPL exists by checking if `{Name}Module.cs` or any `.csproj` is present at that path. If not, note: "Note: The implementation directory may use a non-standard name. Check `modules/{Name}/src/` to find the correct directory name and adjust paths accordingly."
 
 ---
 
@@ -28,7 +30,7 @@ Check whether `modules/{Name}/src/SimpleModule.{Name}/EntityConfigurations/` exi
 Grep for `: IEvent` in `modules/{Name}/src/SimpleModule.{Name}.Contracts/` (all `.cs` files). Extract the `record` name from each match. List them; if none, show `0`.
 
 **Services**
-Grep for `class.*I{Name}Contracts` in `modules/{Name}/src/SimpleModule.{Name}/` (all `.cs` files). List each class name found.
+Grep for `class\s+\w+\s*:\s*I\w+Contracts` in `modules/{Name}/src/SimpleModule.{Name}/` (all `.cs` files). List each class name found. If no matches found, show "none detected".
 
 ---
 
@@ -74,8 +76,8 @@ For each entry, check whether the file or directory exists and assign a status s
 
 | File | Required | Status |
 |------|----------|--------|
-| `{Name}Constants.cs` in Contracts | Yes | ✅ if exists, ❌ if not |
-| `I{Name}Contracts.cs` in Contracts | Yes | ✅ if exists, ❌ if not |
+| `*Constants.cs` anywhere under `modules/{Name}/src/` | Yes | ✅ if at least one found (list filenames), ❌ if none |
+| `I*Contracts.cs` in CONTRACTS | Yes | ✅ if at least one found (list filenames), ❌ if none |
 | `{Name}Module.cs` in IMPL | Yes | ✅ if exists, ❌ if not |
 | `Pages/index.ts` in IMPL | If view endpoints exist | ✅/❌ or N/A |
 | `vite.config.ts` in IMPL | If view endpoints exist | ✅/❌ or N/A |
@@ -117,8 +119,8 @@ Print exactly this structure (fill in real values):
 ### Required Files
 | File | Required | Status |
 |------|----------|--------|
-| {Name}Constants.cs | Yes | ✅/❌ |
-| I{Name}Contracts.cs | Yes | ✅/❌ |
+| *Constants.cs (any, under src/) | Yes | ✅ [filename(s)] / ❌ |
+| I*Contracts.cs (any, in Contracts/) | Yes | ✅ [filename(s)] / ❌ |
 | {Name}Module.cs | Yes | ✅/❌ |
 | Pages/index.ts | If view endpoints | ✅/❌/N/A |
 | vite.config.ts | If view endpoints | ✅/❌/N/A |
