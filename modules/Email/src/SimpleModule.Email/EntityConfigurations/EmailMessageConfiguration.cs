@@ -18,6 +18,7 @@ public class EmailMessageConfiguration : IEntityTypeConfiguration<EmailMessage>
         builder.Property(e => e.ErrorMessage).HasMaxLength(2000);
         builder.Property(e => e.TemplateSlug).HasMaxLength(200);
         builder.Property(e => e.Provider).HasMaxLength(100);
+        builder.Property(e => e.ReplyTo).HasMaxLength(500);
         builder.Property(e => e.Status).HasConversion<string>().HasMaxLength(50);
 
         builder.HasIndex(e => e.Status);

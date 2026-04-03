@@ -14,6 +14,7 @@ public class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailTemplate
         builder.Property(e => e.Slug).IsRequired().HasMaxLength(200);
         builder.Property(e => e.Subject).IsRequired().HasMaxLength(500);
         builder.Property(e => e.Body).IsRequired();
+        builder.Property(e => e.DefaultReplyTo).HasMaxLength(500);
 
         builder.HasIndex(e => e.Slug).IsUnique();
     }

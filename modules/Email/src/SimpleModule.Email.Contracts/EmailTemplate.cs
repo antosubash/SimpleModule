@@ -11,6 +11,7 @@ public class EmailTemplate
     public string Subject { get; set; } = string.Empty;
     public string Body { get; set; } = string.Empty;
     public bool IsHtml { get; set; } = true;
+    public string? DefaultReplyTo { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
