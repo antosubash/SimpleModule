@@ -11,8 +11,8 @@ import {
   Progress,
 } from '@simplemodule/ui';
 import { useEffect } from 'react';
-import { BackgroundJobsKeys } from '../../Locales/keys';
-import { stateVariant } from '../utils/jobState';
+import { BackgroundJobsKeys } from '@/Locales/keys';
+import { stateVariant } from '@/Pages/utils/jobState';
 
 interface LogEntry {
   message: string;

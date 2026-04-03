@@ -31,8 +31,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { AuditLogsKeys } from '../Locales/keys';
-import type { DashboardStats, NamedCount } from '../types';
+import { AuditLogsKeys } from '@/Locales/keys';
+import type { DashboardStats, NamedCount } from '@/types';
 
 interface Props {
   stats: DashboardStats;

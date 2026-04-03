@@ -24,8 +24,8 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { PageBuilderKeys } from '../Locales/keys';
-import type { PageSummary } from '../types';
+import { PageBuilderKeys } from '@/Locales/keys';
+import type { PageSummary } from '@/types';
 
 interface Props {
   pages: PageSummary[];

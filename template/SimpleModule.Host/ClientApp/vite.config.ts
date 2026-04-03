@@ -12,6 +12,11 @@ export default defineConfig({
     }),
     react(),
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname),
+    },
+  },
   build: {
     sourcemap: isDev,
     minify: isDev ? false : 'esbuild',

@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { OpenIddictKeys } from '../../Locales/keys';
+import { OpenIddictKeys } from '@/Locales/keys';
 
 export default function ClientsCreate() {
   const { t } = useTranslation('OpenIddict');

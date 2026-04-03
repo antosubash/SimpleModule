@@ -1,6 +1,6 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, AlertTitle, Button } from '@simplemodule/ui';
-import { UsersKeys } from '../../Locales/keys';
+import { UsersKeys } from '@/Locales/keys';
 import ManageLayout from './ManageLayout';
 
 interface Props {

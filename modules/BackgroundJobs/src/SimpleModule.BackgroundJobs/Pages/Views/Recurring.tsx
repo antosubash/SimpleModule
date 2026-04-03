@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { BackgroundJobsKeys } from '../../Locales/keys';
+import { BackgroundJobsKeys } from '@/Locales/keys';
 
 interface RecurringJob {
   id: string;

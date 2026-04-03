@@ -35,6 +35,10 @@ export function defineModuleConfig(dir: string): UserConfig {
     resolve: {
       alias: [
         {
+          find: '@',
+          replacement: dir,
+        },
+        {
           find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/,
           replacement: resolve(shimDir, 'use-sync-external-store-with-selector.ts'),
         },
