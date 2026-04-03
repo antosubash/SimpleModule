@@ -3,6 +3,17 @@
 @inject IMenuRegistry MenuRegistry
 
 <div class="app-layout">
+    <!-- Mobile header -->
+    <div class="app-mobile-header">
+        <button id="app-mobile-hamburger" onclick="openMobileSidebar()" aria-expanded="false" aria-label="Open navigation" class="p-1 -ml-1 text-text-muted hover:text-text">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <a href="/" class="flex items-center gap-2 no-underline font-bold text-text" style="font-family:'Sora',sans-serif;">
+            <span class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold" style="background:linear-gradient(135deg,var(--color-primary),var(--color-accent));">S</span>
+            <span class="text-sm">SimpleModule</span>
+        </a>
+    </div>
+
     <aside class="app-sidebar" id="app-sidebar">
         <div class="flex flex-col h-full">
             <!-- Logo -->
@@ -78,6 +89,9 @@
             </div>
         </div>
     </aside>
+
+    <!-- Mobile backdrop -->
+    <div class="app-sidebar-backdrop" id="app-sidebar-backdrop" aria-hidden="true"></div>
 
     <!-- Sidebar collapse toggle -->
     <button class="app-sidebar-toggle" id="app-sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
