@@ -115,79 +115,80 @@ test-all: test test-e2e ## Run all .NET and e2e tests
 # ─── Load Testing (k6) ──────────────────────────
 
 K6_DIR := tests/k6
+K6 := k6 run --compatibility-mode=experimental_enhanced
 
 .PHONY: k6-smoke
 k6-smoke: ## Run k6 smoke test (health endpoints)
-	k6 run $(K6_DIR)/scenarios/health.js
+	$(K6) $(K6_DIR)/scenarios/health.ts
 
 .PHONY: k6-auth
 k6-auth: ## Run k6 auth load test
-	k6 run $(K6_DIR)/scenarios/auth.js
+	$(K6) $(K6_DIR)/scenarios/auth.ts
 
 .PHONY: k6-products
 k6-products: ## Run k6 products CRUD load test
-	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/products.js
+	K6_PROFILE=load $(K6) $(K6_DIR)/scenarios/products.ts
 
 .PHONY: k6-orders
 k6-orders: ## Run k6 orders CRUD load test
-	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/orders.js
+	K6_PROFILE=load $(K6) $(K6_DIR)/scenarios/orders.ts
 
 .PHONY: k6-pages
 k6-pages: ## Run k6 page builder load test
-	K6_PROFILE=load k6 run $(K6_DIR)/scenarios/pages.js
+	K6_PROFILE=load $(K6) $(K6_DIR)/scenarios/pages.ts
 
 .PHONY: k6-page-lifecycle
 k6-page-lifecycle: ## Run k6 full page lifecycle test (publish, tags, templates)
-	k6 run $(K6_DIR)/scenarios/page-lifecycle.js
+	$(K6) $(K6_DIR)/scenarios/page-lifecycle.ts
 
 .PHONY: k6-settings
 k6-settings: ## Run k6 settings and menu management load test
-	k6 run $(K6_DIR)/scenarios/settings.js
+	$(K6) $(K6_DIR)/scenarios/settings.ts
 
 .PHONY: k6-users
 k6-users: ## Run k6 user management CRUD load test
-	k6 run $(K6_DIR)/scenarios/users.js
+	$(K6) $(K6_DIR)/scenarios/users.ts
 
 .PHONY: k6-audit-logs
 k6-audit-logs: ## Run k6 audit logs query, stats, and export test
-	k6 run $(K6_DIR)/scenarios/audit-logs.js
+	$(K6) $(K6_DIR)/scenarios/audit-logs.ts
 
 .PHONY: k6-files
 k6-files: ## Run k6 file upload/download load test
-	k6 run $(K6_DIR)/scenarios/file-storage.js
+	$(K6) $(K6_DIR)/scenarios/file-storage.ts
 
 .PHONY: k6-marketplace
 k6-marketplace: ## Run k6 marketplace API load test (anonymous)
-	k6 run $(K6_DIR)/scenarios/marketplace.js
+	$(K6) $(K6_DIR)/scenarios/marketplace.ts
 
 .PHONY: k6-jobs
 k6-jobs: ## Run k6 background jobs load test
-	k6 run $(K6_DIR)/scenarios/background-jobs.js
+	$(K6) $(K6_DIR)/scenarios/background-jobs.ts
 
 .PHONY: k6-feature-flags
 k6-feature-flags: ## Run k6 feature flags CRUD load test
-	k6 run $(K6_DIR)/scenarios/feature-flags.js
+	$(K6) $(K6_DIR)/scenarios/feature-flags.ts
 
 .PHONY: k6-tenants
 k6-tenants: ## Run k6 tenants CRUD load test
-	k6 run $(K6_DIR)/scenarios/tenants.js
+	$(K6) $(K6_DIR)/scenarios/tenants.ts
 
 .PHONY: k6-mixed
 k6-mixed: ## Run k6 mixed traffic load test (realistic simulation)
-	k6 run $(K6_DIR)/scenarios/mixed.js
+	$(K6) $(K6_DIR)/scenarios/mixed.ts
 
 .PHONY: k6-hotspots
 k6-hotspots: ## Run k6 hotspot detection (all endpoints, sorted by latency)
 	@mkdir -p $(K6_DIR)/results
-	k6 run $(K6_DIR)/scenarios/hotspots.js
+	$(K6) $(K6_DIR)/scenarios/hotspots.ts
 
 .PHONY: k6-stress
 k6-stress: ## Run k6 stress test (mixed scenario, high load)
-	K6_PROFILE=stress k6 run $(K6_DIR)/scenarios/mixed.js
+	K6_PROFILE=stress $(K6) $(K6_DIR)/scenarios/mixed.ts
 
 .PHONY: k6-spike
 k6-spike: ## Run k6 spike test (sudden traffic burst)
-	K6_PROFILE=spike k6 run $(K6_DIR)/scenarios/mixed.js
+	K6_PROFILE=spike $(K6) $(K6_DIR)/scenarios/mixed.ts
 
 .PHONY: k6-all
 k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-page-lifecycle k6-settings k6-users k6-audit-logs k6-files k6-marketplace k6-jobs k6-feature-flags k6-tenants k6-mixed ## Run all k6 load test scenarios

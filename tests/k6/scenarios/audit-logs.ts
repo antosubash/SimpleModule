@@ -1,8 +1,8 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse } from '../lib/helpers.js';
+import http from 'k6/http';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -20,33 +20,27 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/audit-logs`;
 
-  // Query audit logs (default pagination)
-  const queryRes = http.get(baseUrl, {
-    headers,
-    tags: { name: 'query-logs' },
-  });
+  const queryRes = http.get(baseUrl, { headers, tags: { name: 'query-logs' } });
   checkResponse(queryRes, 'query-logs');
 
-  // Query with filters (by module, sorted)
   const filteredRes = http.get(`${baseUrl}?module=Products&pageSize=10&sortDescending=true`, {
     headers,
     tags: { name: 'query-logs-filtered' },
   });
   checkResponse(filteredRes, 'query-logs-filtered');
 
-  // Get specific log entry (if available)
   if (queryRes.status === 200) {
     try {
-      const result = JSON.parse(queryRes.body);
-      if (result.items && result.items.length > 0) {
+      const result = JSON.parse(queryRes.body as string);
+      if (result.items?.length > 0) {
         const entryId = result.items[0].id;
         const getRes = http.get(`${baseUrl}/${entryId}`, {
           headers,
@@ -59,7 +53,6 @@ export default function (auth) {
     }
   }
 
-  // Audit stats (last 24 hours)
   const now = new Date().toISOString();
   const yesterday = new Date(Date.now() - 86400000).toISOString();
   const statsRes = http.get(`${baseUrl}/stats?from=${yesterday}&to=${now}`, {
@@ -68,14 +61,12 @@ export default function (auth) {
   });
   checkResponse(statsRes, 'audit-stats');
 
-  // Export as CSV
   const csvRes = http.get(`${baseUrl}/export?format=csv&pageSize=10`, {
     headers,
     tags: { name: 'export-csv' },
   });
   checkResponse(csvRes, 'export-csv');
 
-  // Export as JSON
   const jsonRes = http.get(`${baseUrl}/export?format=json&pageSize=10`, {
     headers,
     tags: { name: 'export-json' },

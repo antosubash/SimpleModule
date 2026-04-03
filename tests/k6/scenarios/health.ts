@@ -1,6 +1,6 @@
-import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
+import http from 'k6/http';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -15,16 +15,14 @@ export const options = {
 };
 
 export default function () {
-  // Health check endpoint
   const healthRes = http.get(`${config.baseUrl}/health`, {
     tags: { name: 'health' },
   });
   check(healthRes, {
     'health: status 200': (r) => r.status === 200,
-    'health: is healthy': (r) => r.body && r.body.includes('Healthy'),
+    'health: is healthy': (r) => typeof r.body === 'string' && r.body.includes('Healthy'),
   });
 
-  // Liveness check endpoint
   const aliveRes = http.get(`${config.baseUrl}/alive`, {
     tags: { name: 'alive' },
   });

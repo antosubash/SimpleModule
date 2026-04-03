@@ -1,13 +1,16 @@
-import { check, group } from 'k6';
-import { Trend, Rate, Counter } from 'k6/metrics';
+import { check } from 'k6';
+import type { RefinedResponse, ResponseType } from 'k6/http';
+import { Counter, Rate, Trend } from 'k6/metrics';
 
-// Custom metrics
 export const apiDuration = new Trend('api_duration', true);
 export const apiErrors = new Rate('api_errors');
 export const apiRequests = new Counter('api_requests');
 
-// Check a response and track custom metrics
-export function checkResponse(res, name, expectedStatus = 200) {
+export function checkResponse(
+  res: RefinedResponse<ResponseType>,
+  name: string,
+  expectedStatus = 200,
+): boolean {
   apiRequests.add(1);
   apiDuration.add(res.timings.duration);
 
@@ -23,8 +26,7 @@ export function checkResponse(res, name, expectedStatus = 200) {
   return passed;
 }
 
-// Generate a random string for unique test data
-export function randomString(length = 8) {
+export function randomString(length = 8): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -33,13 +35,10 @@ export function randomString(length = 8) {
   return result;
 }
 
-// Generate a random integer between min (inclusive) and max (exclusive)
-export function randomInt(min, max) {
+export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-// Sleep with random jitter to avoid thundering herd
-export function jitterSleep(baseSec, jitterSec = 1) {
-  const duration = baseSec + Math.random() * jitterSec;
-  return duration;
+export function jitterSleep(baseSec: number, jitterSec = 1): number {
+  return baseSec + Math.random() * jitterSec;
 }

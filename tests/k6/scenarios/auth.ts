@@ -1,7 +1,7 @@
-import http from 'k6/http';
 import { check, sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
+import http from 'k6/http';
+import { authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -16,10 +16,8 @@ export const options = {
 };
 
 export default function () {
-  // Test: obtain access token via password grant
   const auth = authenticate();
 
-  // Test: call authenticated API endpoint with token
   const userRes = http.get(`${config.baseUrl}/api/users/me`, {
     headers: authHeaders(auth.accessToken),
     tags: { name: 'current-user' },
@@ -28,7 +26,7 @@ export default function () {
     'current-user: status 200': (r) => r.status === 200,
     'current-user: has email': (r) => {
       try {
-        return JSON.parse(r.body).email !== undefined;
+        return JSON.parse(r.body as string).email !== undefined;
       } catch {
         return false;
       }

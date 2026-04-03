@@ -1,8 +1,8 @@
 import { sleep } from 'k6';
 import http from 'k6/http';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { checkResponse, randomString } from '../lib/helpers.js';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -20,46 +20,39 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/feature-flags`;
 
-  // --- List all feature flags ---
-  const listRes = http.get(baseUrl, {
-    headers,
-    tags: { name: 'list-flags' },
-  });
+  const listRes = http.get(baseUrl, { headers, tags: { name: 'list-flags' } });
   checkResponse(listRes, 'list-flags');
 
-  // Find a flag to work with
-  let flagName = null;
+  let flagName: string | null = null;
   let originalEnabled = true;
   if (listRes.status === 200) {
     try {
-      const flags = JSON.parse(listRes.body);
+      const flags = JSON.parse(listRes.body as string);
       const items = Array.isArray(flags) ? flags : flags.items || flags.data || [];
       if (items.length > 0) {
         flagName = items[0].name;
         originalEnabled = items[0].isEnabled;
       }
-    } catch (_) {
+    } catch {
       // ignore
     }
   }
 
   if (flagName) {
-    // --- Check flag status ---
     const checkRes = http.get(`${baseUrl}/check/${flagName}`, {
       headers,
       tags: { name: 'check-flag' },
     });
     checkResponse(checkRes, 'check-flag');
 
-    // --- Toggle flag (and restore) ---
     const updateRes = http.put(
       `${baseUrl}/${flagName}`,
       JSON.stringify({ isEnabled: !originalEnabled }),
@@ -67,24 +60,21 @@ export default function (auth) {
     );
     checkResponse(updateRes, 'update-flag');
 
-    // Restore original state
     http.put(`${baseUrl}/${flagName}`, JSON.stringify({ isEnabled: originalEnabled }), {
       headers,
       tags: { name: 'update-flag' },
     });
 
-    // --- Get overrides ---
     const overridesRes = http.get(`${baseUrl}/${flagName}/overrides`, {
       headers,
       tags: { name: 'get-overrides' },
     });
     checkResponse(overridesRes, 'get-overrides');
 
-    // --- Create and delete an override ---
     const overrideRes = http.post(
       `${baseUrl}/${flagName}/overrides`,
       JSON.stringify({
-        overrideType: 0, // 0=User, 1=Role, 2=Tenant
+        overrideType: 0,
         overrideValue: `k6-test-${randomString(6)}`,
         isEnabled: true,
       }),
@@ -94,14 +84,14 @@ export default function (auth) {
 
     if (overrideRes.status === 201) {
       try {
-        const override = JSON.parse(overrideRes.body);
+        const override = JSON.parse(overrideRes.body as string);
         const overrideId = override.id;
         const delRes = http.del(`${baseUrl}/overrides/${overrideId}`, null, {
           headers,
           tags: { name: 'delete-override' },
         });
         checkResponse(delRes, 'delete-override', 204);
-      } catch (_) {
+      } catch {
         // ignore
       }
     }

@@ -1,7 +1,14 @@
-// k6 load testing configuration
-// Override via environment variables: K6_BASE_URL, K6_USERNAME, K6_PASSWORD, K6_CLIENT_ID
+import type { Options } from 'k6/options';
 
-export const config = {
+interface AppConfig {
+  baseUrl: string;
+  clientId: string;
+  username: string;
+  password: string;
+  tokenEndpoint: string;
+}
+
+export const config: AppConfig = {
   baseUrl: __ENV.K6_BASE_URL || 'https://localhost:5001',
   clientId: __ENV.K6_CLIENT_ID || 'simplemodule-client',
   username: __ENV.K6_USERNAME || 'admin@simplemodule.dev',
@@ -9,19 +16,25 @@ export const config = {
   tokenEndpoint: '/connect/token',
 };
 
-// TLS options for development (self-signed certs)
-export const tlsOptions = {
+export const tlsOptions: Pick<Options, 'insecureSkipTLSVerify'> = {
   insecureSkipTLSVerify: true,
 };
 
-// Reusable threshold definitions
-export const defaultThresholds = {
+export const defaultThresholds: Options['thresholds'] = {
   http_req_duration: ['p(95)<500', 'p(99)<1500'],
   http_req_failed: ['rate<0.01'],
 };
 
-// Standard load profiles
-export const loadProfiles = {
+interface LoadStage {
+  duration: string;
+  target: number;
+}
+
+interface LoadProfile {
+  stages: LoadStage[];
+}
+
+export const loadProfiles: Record<string, LoadProfile> = {
   smoke: {
     stages: [
       { duration: '30s', target: 1 },

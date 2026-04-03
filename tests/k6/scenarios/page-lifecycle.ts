@@ -1,12 +1,11 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse, randomString } from '../lib/helpers.js';
+import http from 'k6/http';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
-// Tests the full page lifecycle: create -> edit -> tag -> publish -> unpublish -> trash -> restore -> permanent delete
 export const options = {
   ...tlsOptions,
   stages: loadProfiles[profile]?.stages || loadProfiles.smoke.stages,
@@ -30,17 +29,14 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/pagebuilder`;
 
-  // --- Full Page Lifecycle ---
-
-  // Create page
   const slug = `k6-lifecycle-${randomString(8)}`;
   const createRes = http.post(
     baseUrl,
@@ -50,10 +46,9 @@ export default function (auth) {
   checkResponse(createRes, 'create-page', 201);
 
   if (createRes.status === 201) {
-    const page = JSON.parse(createRes.body);
+    const page = JSON.parse(createRes.body as string);
     const pageId = page.id;
 
-    // Update page metadata
     const updateRes = http.put(
       `${baseUrl}/${pageId}`,
       JSON.stringify({
@@ -67,7 +62,6 @@ export default function (auth) {
     );
     checkResponse(updateRes, 'update-page', 204);
 
-    // Update content
     const contentRes = http.put(
       `${baseUrl}/${pageId}/content`,
       JSON.stringify({ content: `<h1>Load Test</h1><p>${randomString(100)}</p>` }),
@@ -75,42 +69,33 @@ export default function (auth) {
     );
     checkResponse(contentRes, 'update-content');
 
-    // Publish
     const publishRes = http.post(`${baseUrl}/${pageId}/publish`, null, {
       headers,
       tags: { name: 'publish-page' },
     });
     checkResponse(publishRes, 'publish-page');
 
-    // Unpublish
     const unpublishRes = http.post(`${baseUrl}/${pageId}/unpublish`, null, {
       headers,
       tags: { name: 'unpublish-page' },
     });
     checkResponse(unpublishRes, 'unpublish-page');
 
-    // Soft delete (trash)
     const deleteRes = http.del(`${baseUrl}/${pageId}`, null, {
       headers,
       tags: { name: 'delete-page' },
     });
     checkResponse(deleteRes, 'delete-page', 204);
 
-    // List trash
-    const trashRes = http.get(`${baseUrl}/trash`, {
-      headers,
-      tags: { name: 'list-trash' },
-    });
+    const trashRes = http.get(`${baseUrl}/trash`, { headers, tags: { name: 'list-trash' } });
     checkResponse(trashRes, 'list-trash');
 
-    // Restore from trash
     const restoreRes = http.post(`${baseUrl}/${pageId}/restore`, null, {
       headers,
       tags: { name: 'restore-page' },
     });
     checkResponse(restoreRes, 'restore-page');
 
-    // Permanent delete
     const permDeleteRes = http.del(`${baseUrl}/${pageId}/permanent`, null, {
       headers,
       tags: { name: 'permanent-delete' },
@@ -118,15 +103,9 @@ export default function (auth) {
     checkResponse(permDeleteRes, 'permanent-delete', 204);
   }
 
-  // --- Tags ---
-
-  const tagsRes = http.get(`${baseUrl}/tags`, {
-    headers,
-    tags: { name: 'list-tags' },
-  });
+  const tagsRes = http.get(`${baseUrl}/tags`, { headers, tags: { name: 'list-tags' } });
   checkResponse(tagsRes, 'list-tags');
 
-  // Create another page for tag testing
   const tagSlug = `k6-tag-${randomString(8)}`;
   const tagPageRes = http.post(
     baseUrl,
@@ -135,9 +114,8 @@ export default function (auth) {
   );
 
   if (tagPageRes.status === 201) {
-    const tagPageId = JSON.parse(tagPageRes.body).id;
+    const tagPageId = JSON.parse(tagPageRes.body as string).id;
 
-    // Add tag
     const addTagRes = http.post(
       `${baseUrl}/${tagPageId}/tags`,
       JSON.stringify({ name: `k6-tag-${randomString(4)}` }),
@@ -145,14 +123,15 @@ export default function (auth) {
     );
     checkResponse(addTagRes, 'add-tag', 204);
 
-    // Get updated tags to find tagId
     const updatedTags = http.get(`${baseUrl}/tags`, { headers });
     if (updatedTags.status === 200) {
       try {
-        const allTags = JSON.parse(updatedTags.body);
-        const ourTag = allTags.find((t) => t.name && t.name.startsWith('k6-tag-'));
+        const allTags = JSON.parse(updatedTags.body as string) as Array<{
+          id: number;
+          name: string;
+        }>;
+        const ourTag = allTags.find((t) => t.name?.startsWith('k6-tag-'));
         if (ourTag) {
-          // Remove tag
           const removeTagRes = http.del(`${baseUrl}/${tagPageId}/tags/${ourTag.id}`, null, {
             headers,
             tags: { name: 'remove-tag' },
@@ -164,11 +143,8 @@ export default function (auth) {
       }
     }
 
-    // Cleanup
     http.del(`${baseUrl}/${tagPageId}/permanent`, null, { headers });
   }
-
-  // --- Templates ---
 
   const templatesRes = http.get(`${baseUrl}/templates`, {
     headers,
@@ -176,19 +152,15 @@ export default function (auth) {
   });
   checkResponse(templatesRes, 'list-templates');
 
-  // Create template
   const createTemplateRes = http.post(
     `${baseUrl}/templates`,
-    JSON.stringify({
-      name: `k6-template-${randomString(8)}`,
-      content: '{"blocks":[]}',
-    }),
+    JSON.stringify({ name: `k6-template-${randomString(8)}`, content: '{"blocks":[]}' }),
     { headers, tags: { name: 'create-template' } },
   );
   checkResponse(createTemplateRes, 'create-template', 201);
 
   if (createTemplateRes.status === 201) {
-    const templateId = JSON.parse(createTemplateRes.body).id;
+    const templateId = JSON.parse(createTemplateRes.body as string).id;
     const delTemplateRes = http.del(`${baseUrl}/templates/${templateId}`, null, {
       headers,
       tags: { name: 'delete-template' },

@@ -1,8 +1,8 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse, randomString } from '../lib/helpers.js';
+import http from 'k6/http';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -20,29 +20,20 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/users`;
 
-  // List users
-  const listRes = http.get(baseUrl, {
-    headers,
-    tags: { name: 'list-users' },
-  });
+  const listRes = http.get(baseUrl, { headers, tags: { name: 'list-users' } });
   checkResponse(listRes, 'list-users');
 
-  // Get current user
-  const meRes = http.get(`${baseUrl}/me`, {
-    headers,
-    tags: { name: 'get-current-user' },
-  });
+  const meRes = http.get(`${baseUrl}/me`, { headers, tags: { name: 'get-current-user' } });
   checkResponse(meRes, 'get-current-user');
 
-  // Create user
   const email = `k6-${randomString(8)}@test.dev`;
   const createRes = http.post(
     baseUrl,
@@ -56,27 +47,18 @@ export default function (auth) {
   checkResponse(createRes, 'create-user', 201);
 
   if (createRes.status === 201) {
-    const userId = JSON.parse(createRes.body).id;
+    const userId = JSON.parse(createRes.body as string).id;
 
-    // Get user by ID
-    const getRes = http.get(`${baseUrl}/${userId}`, {
-      headers,
-      tags: { name: 'get-user' },
-    });
+    const getRes = http.get(`${baseUrl}/${userId}`, { headers, tags: { name: 'get-user' } });
     checkResponse(getRes, 'get-user');
 
-    // Update user
     const updateRes = http.put(
       `${baseUrl}/${userId}`,
-      JSON.stringify({
-        email,
-        displayName: `K6 Updated ${randomString(4)}`,
-      }),
+      JSON.stringify({ email, displayName: `K6 Updated ${randomString(4)}` }),
       { headers, tags: { name: 'update-user' } },
     );
     checkResponse(updateRes, 'update-user');
 
-    // Delete user (cleanup)
     const deleteRes = http.del(`${baseUrl}/${userId}`, null, {
       headers,
       tags: { name: 'delete-user' },

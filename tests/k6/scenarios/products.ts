@@ -1,8 +1,8 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse, randomString, randomInt } from '../lib/helpers.js';
+import http from 'k6/http';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomInt, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -19,25 +19,23 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/products`;
 
-  // List products
   const listRes = http.get(baseUrl, {
     headers,
     tags: { name: 'list-products' },
   });
   checkResponse(listRes, 'list-products');
 
-  // Create a product
   const product = {
     name: `k6-product-${randomString()}`,
-    description: `Load test product created by k6`,
+    description: 'Load test product created by k6',
     price: randomInt(100, 10000) / 100,
   };
   const createRes = http.post(baseUrl, JSON.stringify(product), {
@@ -47,17 +45,15 @@ export default function (auth) {
   checkResponse(createRes, 'create-product', 201);
 
   if (createRes.status === 201) {
-    const created = JSON.parse(createRes.body);
+    const created = JSON.parse(createRes.body as string);
     const productId = created.id;
 
-    // Get single product
     const getRes = http.get(`${baseUrl}/${productId}`, {
       headers,
       tags: { name: 'get-product' },
     });
     checkResponse(getRes, 'get-product');
 
-    // Update product
     const updateRes = http.put(
       `${baseUrl}/${productId}`,
       JSON.stringify({
@@ -69,7 +65,6 @@ export default function (auth) {
     );
     checkResponse(updateRes, 'update-product');
 
-    // Delete product (cleanup)
     const deleteRes = http.del(`${baseUrl}/${productId}`, null, {
       headers,
       tags: { name: 'delete-product' },

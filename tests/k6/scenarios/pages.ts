@@ -1,8 +1,8 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse, randomString } from '../lib/helpers.js';
+import http from 'k6/http';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -19,45 +19,32 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/pagebuilder`;
 
-  // List pages
-  const listRes = http.get(baseUrl, {
-    headers,
-    tags: { name: 'list-pages' },
-  });
+  const listRes = http.get(baseUrl, { headers, tags: { name: 'list-pages' } });
   checkResponse(listRes, 'list-pages');
 
-  // Create a page
   const slug = `k6-page-${randomString()}`;
-  const page = {
-    title: `K6 Test Page ${randomString()}`,
-    slug,
-  };
-  const createRes = http.post(baseUrl, JSON.stringify(page), {
-    headers,
-    tags: { name: 'create-page' },
-  });
+  const createRes = http.post(
+    baseUrl,
+    JSON.stringify({ title: `K6 Test Page ${randomString()}`, slug }),
+    { headers, tags: { name: 'create-page' } },
+  );
   checkResponse(createRes, 'create-page', 201);
 
   if (createRes.status === 201) {
-    const created = JSON.parse(createRes.body);
+    const created = JSON.parse(createRes.body as string);
     const pageId = created.id;
 
-    // Get single page
-    const getRes = http.get(`${baseUrl}/${pageId}`, {
-      headers,
-      tags: { name: 'get-page' },
-    });
+    const getRes = http.get(`${baseUrl}/${pageId}`, { headers, tags: { name: 'get-page' } });
     checkResponse(getRes, 'get-page');
 
-    // Update page content
     const updateContentRes = http.put(
       `${baseUrl}/${pageId}/content`,
       JSON.stringify({
@@ -67,7 +54,6 @@ export default function (auth) {
     );
     checkResponse(updateContentRes, 'update-page-content');
 
-    // Delete page (cleanup)
     const deleteRes = http.del(`${baseUrl}/${pageId}`, null, {
       headers,
       tags: { name: 'delete-page' },

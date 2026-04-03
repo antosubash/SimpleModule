@@ -1,10 +1,14 @@
-import http from 'k6/http';
 import { check, fail } from 'k6';
-import { config } from './config.js';
+import http from 'k6/http';
+import { config } from './config.ts';
 
-// Authenticate via OAuth2 password grant and return access token.
-// Requires OpenIddict:AllowPasswordGrant=true (enabled in Development).
-export function authenticate(username, password) {
+export interface AuthResult {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export function authenticate(username?: string, password?: string): AuthResult {
   const res = http.post(
     `${config.baseUrl}${config.tokenEndpoint}`,
     {
@@ -24,7 +28,7 @@ export function authenticate(username, password) {
     'auth: status 200': (r) => r.status === 200,
     'auth: has access_token': (r) => {
       try {
-        return JSON.parse(r.body).access_token !== undefined;
+        return JSON.parse(r.body as string).access_token !== undefined;
       } catch {
         return false;
       }
@@ -35,7 +39,7 @@ export function authenticate(username, password) {
     fail(`Authentication failed: ${res.status} ${res.body}`);
   }
 
-  const body = JSON.parse(res.body);
+  const body = JSON.parse(res.body as string);
   return {
     accessToken: body.access_token,
     refreshToken: body.refresh_token,
@@ -43,8 +47,7 @@ export function authenticate(username, password) {
   };
 }
 
-// Return standard auth headers for API requests
-export function authHeaders(token) {
+export function authHeaders(token: string): Record<string, string> {
   return {
     Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',

@@ -1,8 +1,8 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse, randomString } from '../lib/helpers.js';
+import http from 'k6/http';
+import { type AuthResult, authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -20,57 +20,44 @@ export const options = {
   },
 };
 
-export function setup() {
+export function setup(): AuthResult {
   return authenticate();
 }
 
-export default function (auth) {
+export default function (auth: AuthResult) {
   const headers = authHeaders(auth.accessToken);
   const baseUrl = `${config.baseUrl}/api/files`;
 
-  // List files
-  const listRes = http.get(baseUrl, {
-    headers,
-    tags: { name: 'list-files' },
-  });
+  const listRes = http.get(baseUrl, { headers, tags: { name: 'list-files' } });
   checkResponse(listRes, 'list-files');
 
-  // List folders
-  const foldersRes = http.get(`${baseUrl}/folders`, {
-    headers,
-    tags: { name: 'list-folders' },
-  });
+  const foldersRes = http.get(`${baseUrl}/folders`, { headers, tags: { name: 'list-folders' } });
   checkResponse(foldersRes, 'list-folders');
 
-  // Upload a small test file
   const fileContent = `k6 load test file content - ${randomString(32)}`;
   const fileName = `k6-test-${randomString(8)}.txt`;
-  const uploadRes = http.post(baseUrl, {
-    file: http.file(fileContent, fileName, 'text/plain'),
-  }, {
-    headers: { Authorization: `Bearer ${auth.accessToken}` },
-    tags: { name: 'upload-file' },
-  });
+  const uploadRes = http.post(
+    baseUrl,
+    { file: http.file(fileContent, fileName, 'text/plain') },
+    {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      tags: { name: 'upload-file' },
+    },
+  );
   checkResponse(uploadRes, 'upload-file', 201);
 
   if (uploadRes.status === 201) {
-    const fileId = JSON.parse(uploadRes.body).id;
+    const fileId = JSON.parse(uploadRes.body as string).id;
 
-    // Get file metadata
-    const getRes = http.get(`${baseUrl}/${fileId}`, {
-      headers,
-      tags: { name: 'get-file' },
-    });
+    const getRes = http.get(`${baseUrl}/${fileId}`, { headers, tags: { name: 'get-file' } });
     checkResponse(getRes, 'get-file');
 
-    // Download file
     const downloadRes = http.get(`${baseUrl}/${fileId}/download`, {
       headers,
       tags: { name: 'download-file' },
     });
     checkResponse(downloadRes, 'download-file');
 
-    // Delete file (cleanup)
     const deleteRes = http.del(`${baseUrl}/${fileId}`, null, {
       headers,
       tags: { name: 'delete-file' },

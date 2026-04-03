@@ -1,8 +1,8 @@
-import http from 'k6/http';
 import { sleep } from 'k6';
-import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.js';
-import { authenticate, authHeaders } from '../lib/auth.js';
-import { checkResponse, randomString, randomInt } from '../lib/helpers.js';
+import http from 'k6/http';
+import { authenticate, authHeaders } from '../lib/auth.ts';
+import { config, defaultThresholds, loadProfiles, tlsOptions } from '../lib/config.ts';
+import { checkResponse, randomInt, randomString } from '../lib/helpers.ts';
 
 const profile = __ENV.K6_PROFILE || 'smoke';
 
@@ -18,45 +18,42 @@ export const options = {
   },
 };
 
-export function setup() {
+interface SetupData {
+  accessToken: string;
+  userId: string;
+  productId: number;
+}
+
+export function setup(): SetupData {
   const auth = authenticate();
   const headers = authHeaders(auth.accessToken);
 
-  // Get current user ID
   const userRes = http.get(`${config.baseUrl}/api/users/me`, { headers });
-  const userId = JSON.parse(userRes.body).id;
+  const userId = JSON.parse(userRes.body as string).id;
 
-  // Create a product to use in orders
   const productRes = http.post(
     `${config.baseUrl}/api/products`,
     JSON.stringify({ name: `k6-order-product-${randomString()}`, price: 9.99 }),
     { headers },
   );
-  const productId = JSON.parse(productRes.body).id;
+  const productId = JSON.parse(productRes.body as string).id;
 
   return { accessToken: auth.accessToken, userId, productId };
 }
 
-export default function (data) {
+export default function (data: SetupData) {
   const headers = authHeaders(data.accessToken);
   const baseUrl = `${config.baseUrl}/api/orders`;
 
-  // List orders
   const listRes = http.get(baseUrl, {
     headers,
     tags: { name: 'list-orders' },
   });
   checkResponse(listRes, 'list-orders');
 
-  // Create an order
   const order = {
     userId: data.userId,
-    items: [
-      {
-        productId: data.productId,
-        quantity: randomInt(1, 10),
-      },
-    ],
+    items: [{ productId: data.productId, quantity: randomInt(1, 10) }],
   };
   const createRes = http.post(baseUrl, JSON.stringify(order), {
     headers,
@@ -65,17 +62,15 @@ export default function (data) {
   checkResponse(createRes, 'create-order', 201);
 
   if (createRes.status === 201) {
-    const created = JSON.parse(createRes.body);
+    const created = JSON.parse(createRes.body as string);
     const orderId = created.id;
 
-    // Get single order
     const getRes = http.get(`${baseUrl}/${orderId}`, {
       headers,
       tags: { name: 'get-order' },
     });
     checkResponse(getRes, 'get-order');
 
-    // Delete order (cleanup)
     const deleteRes = http.del(`${baseUrl}/${orderId}`, null, {
       headers,
       tags: { name: 'delete-order' },
