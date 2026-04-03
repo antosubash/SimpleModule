@@ -55,6 +55,15 @@ export default defineConfig({
             { text: 'Inertia.js Integration', link: '/guide/inertia' },
           ],
         },
+        {
+          text: 'Infrastructure',
+          items: [
+            { text: 'Background Jobs', link: '/guide/background-jobs' },
+            { text: 'File Storage', link: '/guide/file-storage' },
+            { text: 'Localization', link: '/guide/localization' },
+            { text: 'AI Agents & RAG', link: '/guide/ai-agents' },
+          ],
+        },
       ],
 
       '/frontend/': [

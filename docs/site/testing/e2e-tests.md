@@ -271,6 +271,23 @@ pages/
     viewer.page.ts
   openiddict/
     clients.page.ts
+  admin/
+    roles.page.ts
+    users.page.ts
+  audit-logs/
+    browse.page.ts
+    dashboard.page.ts
+  background-jobs/
+    dashboard.page.ts
+    list.page.ts
+    recurring.page.ts
+  marketplace/
+    browse.page.ts
+  tenants/
+    list.page.ts
+  users/
+    list.page.ts
+    profile.page.ts
 ```
 
 ## CI Integration

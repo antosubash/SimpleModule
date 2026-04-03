@@ -32,5 +32,14 @@ features:
     - icon: 🗄️
       title: Multi-Provider Database
       details: SQLite for development, PostgreSQL or SQL Server for production. Schema isolation per module with automatic table prefix or schema management.
+    - icon: 🤖
+      title: AI Agents & RAG
+      details: Build AI-powered features with multi-provider LLM support (Claude, OpenAI, Ollama), tool calling, and retrieval-augmented generation with vector search.
+    - icon: 📁
+      title: File Storage & Background Jobs
+      details: Pluggable file storage (local, S3, Azure), background job scheduling with CRON support, real-time progress tracking, and admin dashboards.
+    - icon: 🌐
+      title: Localization
+      details: Built-in i18n with embedded JSON locale files, automatic locale resolution, and a React useTranslation() hook. Supports parameter interpolation and fallback chains.
 ---
 

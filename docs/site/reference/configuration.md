@@ -200,6 +200,182 @@ ASP.NET loads configuration from multiple sources. Later sources override earlie
 
 For the `Development` environment, the effective configuration merges `appsettings.json` with `appsettings.Development.json`, with the Development file winning on conflicts.
 
+## AI Provider Configuration
+
+SimpleModule supports multiple AI providers. Configure one in `appsettings.json`:
+
+### Anthropic (Claude)
+
+```json
+{
+  "AI": {
+    "Anthropic": {
+      "ApiKey": "sk-ant-...",
+      "Model": "claude-sonnet-4-20250514"
+    }
+  }
+}
+```
+
+### OpenAI
+
+```json
+{
+  "AI": {
+    "OpenAI": {
+      "ApiKey": "sk-...",
+      "Model": "gpt-4o"
+    }
+  }
+}
+```
+
+### Azure OpenAI
+
+```json
+{
+  "AI": {
+    "AzureOpenAI": {
+      "Endpoint": "https://your-resource.openai.azure.com",
+      "DeploymentName": "gpt-4o",
+      "ApiKey": "your-key"
+    }
+  }
+}
+```
+
+### Ollama (Local)
+
+```json
+{
+  "AI": {
+    "Ollama": {
+      "BaseUrl": "http://localhost:11434",
+      "Model": "llama3"
+    }
+  }
+}
+```
+
+::: tip
+Use environment variables for API keys in production: `AI__Anthropic__ApiKey`, `AI__OpenAI__ApiKey`, etc.
+:::
+
+## Agent Configuration
+
+The agent runtime is configured under the `Agents` section:
+
+```json
+{
+  "Agents": {
+    "Enabled": true,
+    "MaxTokens": 4096,
+    "Temperature": 0.7,
+    "EnableRag": true,
+    "EnableStreaming": true,
+    "SessionTimeout": "00:30:00",
+    "RateLimit": {
+      "RequestsPerMinute": 60,
+      "TokensPerMinute": 100000
+    }
+  }
+}
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Agents:Enabled` | `true` | Global kill switch for AI agents |
+| `Agents:MaxTokens` | `4096` | Default max tokens per response |
+| `Agents:Temperature` | `0.7` | Default sampling temperature |
+| `Agents:EnableRag` | `true` | Enable RAG context injection |
+| `Agents:EnableStreaming` | `true` | Allow SSE streaming responses |
+| `Agents:SessionTimeout` | `00:30:00` | Session inactivity timeout |
+| `Agents:RateLimit:RequestsPerMinute` | `60` | Per-user request rate limit |
+| `Agents:RateLimit:TokensPerMinute` | `100000` | Per-user token rate limit |
+
+## RAG Configuration
+
+```json
+{
+  "Rag": {
+    "DefaultTopK": 5,
+    "MinScore": 0.7,
+    "EmbeddingDimension": 1536,
+    "IndexOnStartup": true
+  }
+}
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Rag:DefaultTopK` | `5` | Number of results per query |
+| `Rag:MinScore` | `0.7` | Minimum similarity score threshold |
+| `Rag:EmbeddingDimension` | `1536` | Vector embedding dimension |
+| `Rag:IndexOnStartup` | `true` | Index knowledge base on application start |
+
+## File Storage Configuration
+
+### Local Storage
+
+```json
+{
+  "Storage": {
+    "Provider": "Local",
+    "Local": {
+      "BasePath": "./storage"
+    }
+  }
+}
+```
+
+### AWS S3
+
+```json
+{
+  "Storage": {
+    "Provider": "S3",
+    "S3": {
+      "BucketName": "my-bucket",
+      "AccessKey": "your-access-key",
+      "SecretKey": "your-secret-key",
+      "Region": "us-east-1",
+      "ServiceUrl": "",
+      "ForcePathStyle": false
+    }
+  }
+}
+```
+
+### Azure Blob Storage
+
+```json
+{
+  "Storage": {
+    "Provider": "Azure",
+    "Azure": {
+      "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=...",
+      "ContainerName": "files"
+    }
+  }
+}
+```
+
+::: warning
+Never commit storage credentials to source control. Use environment variables: `Storage__S3__AccessKey`, `Storage__Azure__ConnectionString`, etc.
+:::
+
+## Localization Configuration
+
+```json
+{
+  "Localization": {
+    "DefaultLocale": "en"
+  }
+}
+```
+
+The default locale is used when no user setting or Accept-Language header matches a supported locale.
+
 ## Next Steps
 
 - [API Reference](/reference/api) -- complete interface and type documentation
