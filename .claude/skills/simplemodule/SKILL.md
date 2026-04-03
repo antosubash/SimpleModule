@@ -179,10 +179,10 @@ When adding a new module, ensure:
 |---------|-------|-----|
 | Module not discovered at build | Missing `[Module]` attribute or wrong project not referenced in Host | Add `[Module]` to module class; add `<ProjectReference>` to Host `.csproj` |
 | Page navigates but shows blank | Missing `Pages/index.ts` entry | Add `'Module/Page': () => import('../Views/Page')` to Pages/index.ts |
-| SM0001 diagnostic | Module class is `sealed` or not `public` | Make class `public` and remove `sealed` |
-| SM0010/SM0020 diagnostic | Endpoint class visibility wrong | Check Constitution — endpoint visibility must match what the generator expects |
-| SM0030 diagnostic | `[Dto]` type in implementation assembly | Move `[Dto]` type to the `.Contracts` project |
-| SM0040 diagnostic | Direct impl→impl project reference | Reference only the `.Contracts` project; inject `I{Name}Contracts` interface |
+| SM0011 diagnostic | Direct impl→impl project reference | Reference only the `.Contracts` project; inject `I{Name}Contracts` interface |
+| SM0014 diagnostic | No public interfaces in Contracts assembly | Add `I{Name}Contracts` to the Contracts project |
+| SM0025 diagnostic | No implementation for contract interface | Create `{Name}ContractsService` implementing `I{Name}Contracts` and register in `ConfigureServices` |
+| SM0041/SM0042 diagnostic | View endpoint misconfigured | Ensure `Inertia.Render` name is prefixed with module name; add `ViewPrefix` to `[Module]` attribute |
 | `TreatWarningsAsErrors` build failure | Nullable, unused variable, or analyzer warning | Fix the warning; suppress in `.editorconfig` only if genuinely intentional |
 | Event handler never called | Handler not registered in DI | Add `services.AddScoped<IEventHandler<MyEvent>, MyHandler>()` in `ConfigureServices` |
 | Cross-module data wrong | Injecting impl class directly | Always inject `I{Name}Contracts` interface, never the concrete service class |
@@ -248,7 +248,7 @@ public void ConfigureSettings(ISettingsBuilder builder)
 Read a setting in a service:
 
 ```csharp
-var max = await _settings.GetAsync<int>("Orders.MaxItemsPerOrder", ct);
+var max = await _settings.GetSettingAsync<int>("Orders.MaxItemsPerOrder", SettingScope.Application);
 ```
 
 **Scopes:** `System` = application-wide (e.g., feature flags), `Application` = per tenant/deployment, `User` = per authenticated user.
@@ -259,12 +259,20 @@ The source generator enforces these rules at build time. Run `/debug-module {Nam
 
 | Code | Rule | Common cause |
 |------|------|-------------|
-| SM0001 | Module class must be `public` and not `sealed` | Added `sealed` by reflex |
-| SM0010 | `IEndpoint` impl class rule | Check Constitution for required visibility |
-| SM0020 | `IViewEndpoint` impl class rule | Check Constitution for required visibility |
-| SM0030 | `[Dto]` types must live in the Contracts assembly | Created DTO in impl project |
-| SM0040 | No impl→impl project references allowed | Took a shortcut and referenced another module's impl |
-| SM0044 | `Inertia.Render` component has no `Pages/index.ts` entry | Forgot to register the page |
+| SM0001 | No duplicate DbSet property names across modules | Two modules declare a DbSet with the same property name |
+| SM0007 | No duplicate entity configurations | Registered the same `IEntityTypeConfiguration<T>` twice |
+| SM0010 | No circular module dependencies | Contract projects reference each other in a cycle |
+| SM0011 | No direct module-to-module implementation references | Took a shortcut referencing another module's impl project |
+| SM0014 | Contracts assembly has no public interfaces | Forgot to add `I{Name}Contracts` to the Contracts project |
+| SM0015 | No duplicate view page names | Two `IViewEndpoint`s return the same Inertia component name |
+| SM0025 | No implementation found for contract interface | Forgot to create the `{Name}ContractsService` class |
+| SM0032 | Permission class must be `sealed` | Permissions class is not sealed |
+| SM0040 | No duplicate module names | Two modules share the same `[Module]` name string |
+| SM0041 | View page name must be prefixed with module name | Inertia component name doesn't start with the module name |
+| SM0042 | `ViewPrefix` required when module has view endpoints | Module has `IViewEndpoint`s but no `ViewPrefix` on `[Module]` |
+| SM0043 | Module must override at least one `IModule` method | Empty or placeholder module class |
+
+For the full list of diagnostics, see `docs/CONSTITUTION.md`.
 
 ## Key Constraints
 
