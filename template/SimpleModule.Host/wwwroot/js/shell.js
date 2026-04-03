@@ -52,6 +52,7 @@ document.addEventListener('click', (e) => {
     if (hamburger) {
       hamburger.setAttribute('aria-expanded', 'false');
       hamburger.setAttribute('aria-label', 'Open navigation');
+      hamburger.focus();
     }
     document.body.style.overflow = '';
   }

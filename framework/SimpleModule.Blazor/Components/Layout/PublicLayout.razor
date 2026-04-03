@@ -82,7 +82,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
             <DarkModeToggle />
-            <a href="/Identity/Account/Login" class="btn-ghost btn-sm no-underline">Log in</a>
+            <a href="/Identity/Account/Login" class="btn-ghost btn-sm no-underline hidden md:inline-flex">Log in</a>
             <a href="/Identity/Account/Register" class="btn-primary btn-sm no-underline hidden md:inline-flex">Sign up</a>
         </div>
     </div>
@@ -175,24 +175,31 @@
 
 <script suppress-error="BL9992">
 (function() {
+    if (window.__publicOverlayInit) return;
+    window.__publicOverlayInit = true;
+
     var overlay = document.getElementById('public-overlay');
     var toggle = document.getElementById('public-menu-toggle');
     if (!overlay) return;
+
+    var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled])';
 
     window.togglePublicOverlay = function() {
         var isOpen = overlay.classList.contains('open');
         if (isOpen) {
             overlay.classList.remove('open');
             overlay.setAttribute('aria-hidden', 'true');
-            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.focus();
+            }
             document.body.style.overflow = '';
         } else {
             overlay.classList.add('open');
             overlay.setAttribute('aria-hidden', 'false');
             if (toggle) toggle.setAttribute('aria-expanded', 'true');
             document.body.style.overflow = 'hidden';
-            // Focus trap
-            var focusable = overlay.querySelectorAll('a[href], button, input');
+            var focusable = overlay.querySelectorAll(FOCUSABLE);
             if (focusable.length) focusable[0].focus();
         }
     };
@@ -207,7 +214,7 @@
     // Focus trap
     overlay.addEventListener('keydown', function(e) {
         if (e.key !== 'Tab') return;
-        var focusable = overlay.querySelectorAll('a[href], button:not([disabled])');
+        var focusable = overlay.querySelectorAll(FOCUSABLE);
         if (!focusable.length) return;
         var first = focusable[0];
         var last = focusable[focusable.length - 1];
