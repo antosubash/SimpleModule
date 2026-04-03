@@ -61,7 +61,7 @@ public sealed partial class ViteDevWatchService(
                 moduleDir,
                 FrontendExtensions,
                 ShouldIgnoreModulePath,
-                () => RunBuild(moduleName, "npx vite build", moduleDir)
+                () => RunBuild(moduleName, "npx vite build --configLoader runner", moduleDir)
             );
             LogWatchingModule(logger, moduleName, moduleDir);
         }
@@ -74,7 +74,7 @@ public sealed partial class ViteDevWatchService(
                 clientAppDir,
                 FrontendExtensions,
                 ShouldIgnoreClientAppPath,
-                () => RunBuild("ClientApp", "npx vite build", clientAppDir)
+                () => RunBuild("ClientApp", "npx vite build --configLoader runner", clientAppDir)
             );
             LogWatchingClientApp(logger, clientAppDir);
         }
