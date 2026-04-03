@@ -7,7 +7,9 @@ description: >
   understanding the project architecture. Triggers on: "add module", "new module",
   "add feature", "create endpoint", "module architecture", "how does SimpleModule work",
   "event bus", "permissions", "menu", "settings", "database context", "contracts",
-  "IModule", "IEndpoint", "IViewEndpoint", "Inertia", "CrudEndpoints".
+  "IModule", "IEndpoint", "IViewEndpoint", "Inertia", "CrudEndpoints",
+  "debug module", "review module", "module status", "SM00", "source generator diagnostic",
+  "module not found", "page 404", "event bus", "settings", "IEventBus", "SettingDefinition".
 ---
 
 # SimpleModule Framework Guide
@@ -170,6 +172,99 @@ When adding a new module, ensure:
 6. Every `IViewEndpoint` with `Inertia.Render()` has a matching entry in `Pages/index.ts`
 7. Run `dotnet build` to verify source generator picks up the module
 8. Run `npm run validate-pages` to verify page registry matches endpoints
+
+## Common Pitfalls
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Module not discovered at build | Missing `[Module]` attribute or wrong project not referenced in Host | Add `[Module]` to module class; add `<ProjectReference>` to Host `.csproj` |
+| Page navigates but shows blank | Missing `Pages/index.ts` entry | Add `'Module/Page': () => import('../Views/Page')` to Pages/index.ts |
+| SM0001 diagnostic | Module class is `sealed` or not `public` | Make class `public` and remove `sealed` |
+| SM0010/SM0020 diagnostic | Endpoint class visibility wrong | Check Constitution — endpoint visibility must match what the generator expects |
+| SM0030 diagnostic | `[Dto]` type in implementation assembly | Move `[Dto]` type to the `.Contracts` project |
+| SM0040 diagnostic | Direct impl→impl project reference | Reference only the `.Contracts` project; inject `I{Name}Contracts` interface |
+| `TreatWarningsAsErrors` build failure | Nullable, unused variable, or analyzer warning | Fix the warning; suppress in `.editorconfig` only if genuinely intentional |
+| Event handler never called | Handler not registered in DI | Add `services.AddScoped<IEventHandler<MyEvent>, MyHandler>()` in `ConfigureServices` |
+| Cross-module data wrong | Injecting impl class directly | Always inject `I{Name}Contracts` interface, never the concrete service class |
+
+## Events Pattern
+
+Define events in the **Contracts** assembly as `record` types:
+
+```csharp
+// In SimpleModule.{Name}.Contracts
+public record OrderPlaced(OrderId OrderId, decimal Total) : IEvent;
+```
+
+Publish from a service:
+
+```csharp
+// Awaits all handlers before returning
+await _eventBus.PublishAsync(new OrderPlaced(order.Id, order.Total), ct);
+
+// Fire-and-forget (background task, not awaited)
+_eventBus.PublishInBackground(new OrderPlaced(order.Id, order.Total));
+```
+
+Handle in any module:
+
+```csharp
+public sealed class SendConfirmationEmailHandler : IEventHandler<OrderPlaced>
+{
+    public async Task HandleAsync(OrderPlaced evt, CancellationToken ct)
+    {
+        // use evt.OrderId, evt.Total
+    }
+}
+```
+
+Register in `ConfigureServices`:
+
+```csharp
+services.AddScoped<IEventHandler<OrderPlaced>, SendConfirmationEmailHandler>();
+```
+
+**Semantics:** Handlers run sequentially. A failing handler throws `AggregateException`. Write handlers to be idempotent.
+
+## Settings Pattern
+
+Register setting definitions in `ConfigureSettings` on the module class:
+
+```csharp
+public void ConfigureSettings(ISettingsBuilder builder)
+{
+    builder.AddDefinition(new SettingDefinition
+    {
+        Key = "Orders.MaxItemsPerOrder",
+        DisplayName = "Max Items Per Order",
+        Group = "Orders",
+        Scope = SettingScope.Application,   // System | Application | User
+        Type = SettingType.Number,          // Text | Number | Bool | Json
+        DefaultValue = "50",
+    });
+}
+```
+
+Read a setting in a service:
+
+```csharp
+var max = await _settings.GetAsync<int>("Orders.MaxItemsPerOrder", ct);
+```
+
+**Scopes:** `System` = application-wide (e.g., feature flags), `Application` = per tenant/deployment, `User` = per authenticated user.
+
+## Constitution Diagnostics (SM00xx)
+
+The source generator enforces these rules at build time. Run `/debug-module {Name}` to check all at once.
+
+| Code | Rule | Common cause |
+|------|------|-------------|
+| SM0001 | Module class must be `public` and not `sealed` | Added `sealed` by reflex |
+| SM0010 | `IEndpoint` impl class rule | Check Constitution for required visibility |
+| SM0020 | `IViewEndpoint` impl class rule | Check Constitution for required visibility |
+| SM0030 | `[Dto]` types must live in the Contracts assembly | Created DTO in impl project |
+| SM0040 | No impl→impl project references allowed | Took a shortcut and referenced another module's impl |
+| SM0044 | `Inertia.Render` component has no `Pages/index.ts` entry | Forgot to register the page |
 
 ## Key Constraints
 
