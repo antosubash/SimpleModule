@@ -3,4 +3,5 @@ export const pages: Record<string, unknown> = {
   'Email/CreateTemplate': () => import('../Views/CreateTemplate'),
   'Email/EditTemplate': () => import('../Views/EditTemplate'),
   'Email/History': () => import('../Views/History'),
+  'Email/Dashboard': () => import('../Views/Dashboard'),
 };

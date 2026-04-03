@@ -21,6 +21,9 @@ export const EmailKeys = {
     Yes: 'Templates.Yes',
     No: 'Templates.No',
     FilterSearch: 'Templates.FilterSearch',
+    Showing: 'Templates.Showing',
+    Previous: 'Templates.Previous',
+    Next: 'Templates.Next',
   },
   CreateTemplate: {
     Title: 'CreateTemplate.Title',
@@ -81,6 +84,9 @@ export const EmailKeys = {
     Of: 'History.Of',
     Previous: 'History.Previous',
     Next: 'History.Next',
+    FilterApply: 'History.FilterApply',
+    FilterClear: 'History.FilterClear',
+    EmptyWithFilters: 'History.EmptyWithFilters',
   },
   Dashboard: {
     Title: 'Dashboard.Title',
