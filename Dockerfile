@@ -81,6 +81,10 @@ COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/*.csproj modules/Bac
 COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modules/Localization/src/SimpleModule.Localization.Contracts/
 COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
 COPY modules/Rag/src/SimpleModule.Rag.Module/*.csproj modules/Rag/src/SimpleModule.Rag.Module/
+COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/SimpleModule.Email.Contracts/
+COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/
+COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
+COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
@@ -108,6 +112,8 @@ COPY modules/Settings/src/SimpleModule.Settings/package.json modules/Settings/sr
 COPY modules/Tenants/src/SimpleModule.Tenants/package.json modules/Tenants/src/SimpleModule.Tenants/
 COPY modules/Users/src/SimpleModule.Users/package.json modules/Users/src/SimpleModule.Users/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
+COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleModule.Email/
+COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
 COPY packages/SimpleModule.UI/package.json packages/SimpleModule.UI/
