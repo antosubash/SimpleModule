@@ -60,6 +60,9 @@ public partial class SendEmailJob(
                     is InvalidOperationException
                         or System.Net.Sockets.SocketException
                         or IOException
+                        or MailKit.Net.Smtp.SmtpCommandException
+                        or MailKit.Security.AuthenticationException
+                        or MailKit.Security.SslHandshakeException
             )
         {
             message.Status = EmailStatus.Failed;

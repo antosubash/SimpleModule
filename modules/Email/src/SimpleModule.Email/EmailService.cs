@@ -122,9 +122,9 @@ public partial class EmailService(
             "Status" => request.SortDescending
                 ? query.OrderByDescending(m => m.Status)
                 : query.OrderBy(m => m.Status),
-            _ => request.SortDescending
-                ? query.OrderByDescending(m => m.Id)
-                : query.OrderBy(m => m.Id),
+            "CreatedAt" or _ => request.SortDescending
+                ? query.OrderByDescending(m => m.CreatedAt)
+                : query.OrderBy(m => m.CreatedAt),
         };
 
         var page = Math.Max(1, request.Page);
@@ -273,24 +273,13 @@ public partial class EmailService(
 
         var allMessages = db.EmailMessages.AsNoTracking();
 
+        // Query 1: all-time status counts
         var statusCounts = await allMessages
             .GroupBy(m => m.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync();
 
-        var sent24h = await allMessages.CountAsync(m =>
-            m.Status == EmailStatus.Sent && m.CreatedAt >= last24Hours
-        );
-        var failed24h = await allMessages.CountAsync(m =>
-            m.Status == EmailStatus.Failed && m.CreatedAt >= last24Hours
-        );
-
-        var failed7d = await allMessages.CountAsync(m =>
-            m.Status == EmailStatus.Failed && m.CreatedAt >= last7Days
-        );
-        var total7d = await allMessages.CountAsync(m => m.CreatedAt >= last7Days);
-        var failureRate = total7d > 0 ? (double)failed7d / total7d * 100 : 0;
-
+        // Query 2: top error messages
         var topErrors = await allMessages
             .Where(m => m.Status == EmailStatus.Failed && m.ErrorMessage != null)
             .GroupBy(m => m.ErrorMessage!)
@@ -299,11 +288,25 @@ public partial class EmailService(
             .Select(g => new ErrorSummary { ErrorMessage = g.Key, Count = g.Count() })
             .ToListAsync();
 
+        // Query 3: recent messages for time-windowed stats and daily volume
         // SQLite doesn't support Date grouping via EF Core; use client-side evaluation
         var recentMessages = await allMessages
             .Where(m => m.CreatedAt >= last30Days)
             .Select(m => new { m.CreatedAt, m.Status })
             .ToListAsync();
+
+        // Derive 24h and 7d counts from the in-memory list
+        var sent24h = recentMessages.Count(m =>
+            m.Status == EmailStatus.Sent && m.CreatedAt >= last24Hours
+        );
+        var failed24h = recentMessages.Count(m =>
+            m.Status == EmailStatus.Failed && m.CreatedAt >= last24Hours
+        );
+        var failed7d = recentMessages.Count(m =>
+            m.Status == EmailStatus.Failed && m.CreatedAt >= last7Days
+        );
+        var total7d = recentMessages.Count(m => m.CreatedAt >= last7Days);
+        var failureRate = total7d > 0 ? (double)failed7d / total7d * 100 : 0;
 
         var dailyVolume = recentMessages
             .GroupBy(m => m.CreatedAt.Date)

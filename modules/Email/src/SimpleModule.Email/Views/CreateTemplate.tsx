@@ -1,10 +1,6 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
@@ -19,8 +15,11 @@ import {
   Textarea,
 } from '@simplemodule/ui';
 import type { FormEvent } from 'react';
+import { EmailKeys } from '../Locales/keys';
 
 export default function CreateTemplate() {
+  const { t } = useTranslation('Email');
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -29,63 +28,66 @@ export default function CreateTemplate() {
   };
 
   return (
-    <PageShell title="Create Template" description="Create a new email template.">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/email/templates">Templates</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>Create</BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+    <PageShell
+      title={t(EmailKeys.CreateTemplate.Title)}
+      description={t(EmailKeys.CreateTemplate.Description)}
+      breadcrumbs={[
+        { label: t(EmailKeys.CreateTemplate.BreadcrumbTemplates), href: '/email/templates' },
+        { label: t(EmailKeys.CreateTemplate.Breadcrumb) },
+      ]}
+    >
       <Card>
         <CardHeader>
-          <CardTitle>New Email Template</CardTitle>
+          <CardTitle>{t(EmailKeys.CreateTemplate.CardTitle)}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t(EmailKeys.CreateTemplate.NameLabel)}</Label>
                 <Input id="name" name="Name" required />
               </Field>
               <Field>
-                <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" name="Slug" required placeholder="e.g. welcome-email" />
+                <Label htmlFor="slug">{t(EmailKeys.CreateTemplate.SlugLabel)}</Label>
+                <Input
+                  id="slug"
+                  name="Slug"
+                  required
+                  placeholder={t(EmailKeys.CreateTemplate.SlugPlaceholder)}
+                />
               </Field>
               <Field>
-                <Label htmlFor="subject">Subject</Label>
+                <Label htmlFor="subject">{t(EmailKeys.CreateTemplate.SubjectLabel)}</Label>
                 <Input
                   id="subject"
                   name="Subject"
                   required
-                  placeholder="Use {{variable}} for placeholders"
+                  placeholder={t(EmailKeys.CreateTemplate.SubjectPlaceholder)}
                 />
               </Field>
               <Field>
-                <Label htmlFor="body">Body</Label>
+                <Label htmlFor="body">{t(EmailKeys.CreateTemplate.BodyLabel)}</Label>
                 <Textarea
                   id="body"
                   name="Body"
                   required
                   rows={10}
-                  placeholder="Email body content. Use {{variable}} for placeholders."
+                  placeholder={t(EmailKeys.CreateTemplate.BodyPlaceholder)}
                 />
               </Field>
               <Field className="flex items-center gap-2">
                 <Checkbox id="isHtml" name="IsHtml" defaultChecked />
-                <Label htmlFor="isHtml">HTML Email</Label>
+                <Label htmlFor="isHtml">{t(EmailKeys.CreateTemplate.IsHtmlLabel)}</Label>
               </Field>
             </FieldGroup>
             <div className="mt-4 flex gap-2">
-              <Button type="submit">Create Template</Button>
+              <Button type="submit">{t(EmailKeys.CreateTemplate.SubmitButton)}</Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.visit('/email/templates')}
               >
-                Cancel
+                {t(EmailKeys.CreateTemplate.CancelButton)}
               </Button>
             </div>
           </form>

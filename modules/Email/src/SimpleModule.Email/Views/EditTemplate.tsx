@@ -1,10 +1,6 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
@@ -25,9 +21,11 @@ import {
   Textarea,
 } from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
+import { EmailKeys } from '../Locales/keys';
 import type { EmailTemplate } from '../types';
 
 export default function EditTemplate({ template }: { template: EmailTemplate }) {
+  const { t } = useTranslation('Email');
   const [showDelete, setShowDelete] = useState(false);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -38,85 +36,82 @@ export default function EditTemplate({ template }: { template: EmailTemplate }) 
   };
 
   return (
-    <PageShell title="Edit Template" description={`Editing template: ${template.name}`}>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/email/templates">Templates</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>Edit</BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+    <PageShell
+      title={t(EmailKeys.EditTemplate.Title)}
+      description={t(EmailKeys.EditTemplate.Description, { name: template.name })}
+      breadcrumbs={[
+        { label: t(EmailKeys.EditTemplate.BreadcrumbTemplates), href: '/email/templates' },
+        { label: t(EmailKeys.EditTemplate.Breadcrumb) },
+      ]}
+    >
       <Card>
         <CardHeader>
-          <CardTitle>Edit Email Template</CardTitle>
+          <CardTitle>{t(EmailKeys.EditTemplate.CardTitle)}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t(EmailKeys.EditTemplate.NameLabel)}</Label>
                 <Input id="name" name="Name" required defaultValue={template.name} />
               </Field>
               <Field>
-                <Label htmlFor="subject">Subject</Label>
+                <Label htmlFor="subject">{t(EmailKeys.EditTemplate.SubjectLabel)}</Label>
                 <Input id="subject" name="Subject" required defaultValue={template.subject} />
               </Field>
               <Field>
-                <Label htmlFor="body">Body</Label>
+                <Label htmlFor="body">{t(EmailKeys.EditTemplate.BodyLabel)}</Label>
                 <Textarea id="body" name="Body" required rows={10} defaultValue={template.body} />
               </Field>
               <Field className="flex items-center gap-2">
                 <Checkbox id="isHtml" name="IsHtml" defaultChecked={template.isHtml} />
-                <Label htmlFor="isHtml">HTML Email</Label>
+                <Label htmlFor="isHtml">{t(EmailKeys.EditTemplate.IsHtmlLabel)}</Label>
               </Field>
             </FieldGroup>
             <div className="mt-4 flex gap-2">
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit">{t(EmailKeys.EditTemplate.SaveChanges)}</Button>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => router.visit('/email/templates')}
               >
-                Cancel
+                {t(EmailKeys.EditTemplate.CancelButton)}
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
-      <Card className="mt-6 border-destructive">
+      <Card className="mt-6 border-danger">
         <CardHeader>
-          <CardTitle>Danger Zone</CardTitle>
+          <CardTitle>{t(EmailKeys.EditTemplate.DangerZone)}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" onClick={() => setShowDelete(true)}>
-            Delete Template
+          <Button variant="danger" onClick={() => setShowDelete(true)}>
+            {t(EmailKeys.EditTemplate.DeleteTemplate)}
           </Button>
         </CardContent>
       </Card>
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Template</DialogTitle>
+            <DialogTitle>{t(EmailKeys.EditTemplate.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{template.name}&quot;? This action cannot be
-              undone.
+              {t(EmailKeys.EditTemplate.DeleteDialog.Confirm, { name: template.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDelete(false)}>
-              Cancel
+            <Button variant="secondary" onClick={() => setShowDelete(false)}>
+              {t(EmailKeys.EditTemplate.DeleteDialog.CancelButton)}
             </Button>
             <Button
-              variant="destructive"
+              variant="danger"
               onClick={() =>
                 router.delete(`/email/templates/${template.id}`, {
                   onSuccess: () => setShowDelete(false),
                 })
               }
             >
-              Delete
+              {t(EmailKeys.EditTemplate.DeleteDialog.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

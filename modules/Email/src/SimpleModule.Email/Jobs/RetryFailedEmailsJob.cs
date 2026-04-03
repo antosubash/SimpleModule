@@ -37,8 +37,12 @@ public partial class RetryFailedEmailsJob(
             message.RetryCount++;
             message.Status = EmailStatus.Retrying;
             message.ErrorMessage = null;
-            await db.SaveChangesAsync(cancellationToken);
+        }
 
+        await db.SaveChangesAsync(cancellationToken);
+
+        foreach (var message in failedMessages)
+        {
             LogRetryAttempt(logger, message.Id, message.To, message.RetryCount);
             eventBus.PublishInBackground(
                 new EmailRetryAttemptEvent(message.Id, message.To, message.RetryCount)

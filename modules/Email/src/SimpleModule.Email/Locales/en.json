@@ -74,6 +74,8 @@
   "History.EmptyWithFilters": "No emails match the current filters.",
   "Templates.FilterSearch": "Search templates...",
   "Templates.Showing": "Showing",
+  "Templates.Of": "of",
+  "Templates.FilterApply": "Search",
   "Templates.Previous": "Previous",
   "Templates.Next": "Next",
   "Dashboard.Title": "Email Dashboard",

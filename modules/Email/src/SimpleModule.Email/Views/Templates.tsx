@@ -120,7 +120,7 @@ export default function Templates({ result, filters }: Props) {
                 onChange={(e) => setSearch(e.target.value)}
                 className="max-w-sm"
               />
-              <Button type="submit">{t(EmailKeys.History.FilterApply)}</Button>
+              <Button type="submit">{t(EmailKeys.Templates.FilterApply)}</Button>
             </form>
           </CardContent>
         </Card>
@@ -187,7 +187,7 @@ export default function Templates({ result, filters }: Props) {
         {result.totalCount > 0 && (
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
             <span className="text-sm text-text-muted">
-              {t(EmailKeys.Templates.Showing)} {startItem}-{endItem} {t(EmailKeys.History.Of)}{' '}
+              {t(EmailKeys.Templates.Showing)} {startItem}-{endItem} {t(EmailKeys.Templates.Of)}{' '}
               {result.totalCount.toLocaleString()}
             </span>
             {totalPages > 1 && (
