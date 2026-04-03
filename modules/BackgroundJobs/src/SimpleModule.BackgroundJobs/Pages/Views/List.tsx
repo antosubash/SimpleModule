@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   DataGridPage,
@@ -10,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { BackgroundJobsKeys } from '../../Locales/keys';
 import { stateVariant } from '../utils/jobState';
 
 interface JobSummary {
@@ -34,23 +36,25 @@ interface Props {
 }
 
 export default function List({ jobs }: Props) {
+  const { t } = useTranslation('BackgroundJobs');
+
   return (
     <DataGridPage
-      title="All Jobs"
-      description={`${jobs.totalCount} total jobs`}
+      title={t(BackgroundJobsKeys.List.Title)}
+      description={t(BackgroundJobsKeys.List.TotalCount, { count: jobs.totalCount })}
       data={jobs.items}
-      emptyTitle="No jobs found"
-      emptyDescription="No background jobs have been executed yet."
+      emptyTitle={t(BackgroundJobsKeys.List.EmptyTitle)}
+      emptyDescription={t(BackgroundJobsKeys.List.EmptyDescription)}
     >
       {(pageData) => (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Job Type</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Completed</TableHead>
+              <TableHead>{t(BackgroundJobsKeys.List.ColJobType)}</TableHead>
+              <TableHead>{t(BackgroundJobsKeys.List.ColState)}</TableHead>
+              <TableHead>{t(BackgroundJobsKeys.List.ColProgress)}</TableHead>
+              <TableHead>{t(BackgroundJobsKeys.List.ColCreated)}</TableHead>
+              <TableHead>{t(BackgroundJobsKeys.List.ColCompleted)}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

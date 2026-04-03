@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -23,6 +24,7 @@ import {
   TooltipTrigger,
 } from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
+import { AuditLogsKeys } from '../Locales/keys';
 import type { AuditEntry, AuditQueryRequest } from '../types';
 import {
   ACTION_LABELS,
@@ -97,6 +99,7 @@ function ChevronRight() {
 }
 
 export default function Browse({ result, filters }: Props) {
+  const { t } = useTranslation('AuditLogs');
   const [from, setFrom] = useState(filters.from ? String(filters.from) : '');
   const [to, setTo] = useState(filters.to ? String(filters.to) : '');
   const [source, setSource] = useState(filters.source != null ? String(filters.source) : '__all__');
@@ -166,15 +169,17 @@ export default function Browse({ result, filters }: Props) {
     <TooltipProvider>
       <PageShell
         className="space-y-4"
-        title="Audit Logs"
-        description={`${result.totalCount.toLocaleString()} total entries`}
+        title={t(AuditLogsKeys.Browse.Title)}
+        description={t(AuditLogsKeys.Browse.TotalEntries, {
+          count: result.totalCount.toLocaleString(),
+        })}
         actions={
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => exportLogs('csv')}>
-              Export CSV
+              {t(AuditLogsKeys.Browse.ExportCsv)}
             </Button>
             <Button variant="secondary" onClick={() => exportLogs('json')}>
-              Export JSON
+              {t(AuditLogsKeys.Browse.ExportJson)}
             </Button>
           </div>
         }
@@ -184,7 +189,9 @@ export default function Browse({ result, filters }: Props) {
           <CardContent>
             {/* Quick date presets */}
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-text-muted">Quick range:</span>
+              <span className="text-xs font-medium text-text-muted">
+                {t(AuditLogsKeys.Browse.QuickRange)}
+              </span>
               {DATE_PRESETS.map((preset) => (
                 <Button
                   key={preset.hours}
@@ -201,7 +208,7 @@ export default function Browse({ result, filters }: Props) {
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <div className="space-y-1">
                   <label htmlFor="filter-from" className="text-xs font-medium text-text-muted">
-                    From
+                    {t(AuditLogsKeys.Browse.FilterFrom)}
                   </label>
                   <Input
                     id="filter-from"
@@ -212,7 +219,7 @@ export default function Browse({ result, filters }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="filter-to" className="text-xs font-medium text-text-muted">
-                    To
+                    {t(AuditLogsKeys.Browse.FilterTo)}
                   </label>
                   <Input
                     id="filter-to"
@@ -222,13 +229,17 @@ export default function Browse({ result, filters }: Props) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-text-muted">Source</span>
+                  <span className="text-xs font-medium text-text-muted">
+                    {t(AuditLogsKeys.Browse.FilterSource)}
+                  </span>
                   <Select value={source} onValueChange={setSource}>
-                    <SelectTrigger aria-label="Source">
-                      <SelectValue placeholder="All sources" />
+                    <SelectTrigger aria-label={t(AuditLogsKeys.Browse.FilterSource)}>
+                      <SelectValue placeholder={t(AuditLogsKeys.Browse.FilterSourcePlaceholder)} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__all__">All sources</SelectItem>
+                      <SelectItem value="__all__">
+                        {t(AuditLogsKeys.Browse.FilterSourceAll)}
+                      </SelectItem>
                       {Object.entries(SOURCE_LABELS).map(([k, v]) => (
                         <SelectItem key={k} value={k}>
                           {v}
@@ -238,13 +249,17 @@ export default function Browse({ result, filters }: Props) {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-text-muted">Action</span>
+                  <span className="text-xs font-medium text-text-muted">
+                    {t(AuditLogsKeys.Browse.FilterAction)}
+                  </span>
                   <Select value={action} onValueChange={setAction}>
-                    <SelectTrigger aria-label="Action">
-                      <SelectValue placeholder="All actions" />
+                    <SelectTrigger aria-label={t(AuditLogsKeys.Browse.FilterAction)}>
+                      <SelectValue placeholder={t(AuditLogsKeys.Browse.FilterActionPlaceholder)} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__all__">All actions</SelectItem>
+                      <SelectItem value="__all__">
+                        {t(AuditLogsKeys.Browse.FilterActionAll)}
+                      </SelectItem>
                       {Object.entries(ACTION_LABELS).map(([k, v]) => (
                         <SelectItem key={k} value={k}>
                           {v}
@@ -255,31 +270,31 @@ export default function Browse({ result, filters }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="filter-module" className="text-xs font-medium text-text-muted">
-                    Module
+                    {t(AuditLogsKeys.Browse.FilterModule)}
                   </label>
                   <Input
                     id="filter-module"
-                    placeholder="e.g. Products"
+                    placeholder={t(AuditLogsKeys.Browse.FilterModulePlaceholder)}
                     value={module}
                     onChange={(e) => setModule(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="filter-search" className="text-xs font-medium text-text-muted">
-                    Search
+                    {t(AuditLogsKeys.Browse.FilterSearch)}
                   </label>
                   <Input
                     id="filter-search"
-                    placeholder="User, path, entity..."
+                    placeholder={t(AuditLogsKeys.Browse.FilterSearchPlaceholder)}
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                   />
                 </div>
                 <div className="flex items-end gap-2">
-                  <Button type="submit">Apply</Button>
+                  <Button type="submit">{t(AuditLogsKeys.Browse.FilterApply)}</Button>
                   {hasActiveFilters && (
                     <Button variant="ghost" onClick={clearFilters}>
-                      Clear
+                      {t(AuditLogsKeys.Browse.FilterClear)}
                     </Button>
                   )}
                 </div>
@@ -292,15 +307,15 @@ export default function Browse({ result, filters }: Props) {
         {result.items.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-lg font-medium text-text">No audit logs found</p>
+              <p className="text-lg font-medium text-text">{t(AuditLogsKeys.Browse.EmptyTitle)}</p>
               <p className="mt-1 text-sm text-text-muted">
                 {hasActiveFilters
-                  ? 'Try adjusting your filters or selecting a different date range.'
-                  : 'Audit entries will appear here as activity occurs.'}
+                  ? t(AuditLogsKeys.Browse.EmptyWithFilters)
+                  : t(AuditLogsKeys.Browse.EmptyNoFilters)}
               </p>
               {hasActiveFilters && (
                 <Button variant="secondary" className="mt-4" onClick={clearFilters}>
-                  Clear filters
+                  {t(AuditLogsKeys.Browse.ClearFilters)}
                 </Button>
               )}
             </CardContent>
@@ -311,14 +326,14 @@ export default function Browse({ result, filters }: Props) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Module</TableHead>
-                    <TableHead>Path</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Duration</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColTime)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColSource)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColUser)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColAction)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColModule)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColPath)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColStatus)}</TableHead>
+                    <TableHead>{t(AuditLogsKeys.Browse.ColDuration)}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -395,7 +410,11 @@ export default function Browse({ result, filters }: Props) {
         {result.totalCount > 0 && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-text-muted">
-              Showing {startItem}\u2013{endItem} of {result.totalCount.toLocaleString()} entries
+              {t(AuditLogsKeys.Browse.Showing, {
+                start: startItem,
+                end: endItem,
+                total: result.totalCount.toLocaleString(),
+              })}
             </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1">

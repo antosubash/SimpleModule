@@ -1,4 +1,6 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, AlertTitle, Button } from '@simplemodule/ui';
+import { UsersKeys } from '../../Locales/keys';
 import ManageLayout from './ManageLayout';
 
 interface Props {
@@ -7,9 +9,11 @@ interface Props {
 }
 
 export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Props) {
+  const { t } = useTranslation('Users');
+
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Recovery codes</h3>
+      <h3 className="text-lg font-semibold mb-4">{t(UsersKeys.ShowRecoveryCodes.Title)}</h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -18,11 +22,8 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
       )}
 
       <Alert variant="warning" className="mb-6">
-        <AlertTitle>Put these codes in a safe place.</AlertTitle>
-        <AlertDescription>
-          If you lose your device and don&apos;t have the recovery codes you will lose access to
-          your account.
-        </AlertDescription>
+        <AlertTitle>{t(UsersKeys.ShowRecoveryCodes.WarningTitle)}</AlertTitle>
+        <AlertDescription>{t(UsersKeys.ShowRecoveryCodes.WarningDescription)}</AlertDescription>
       </Alert>
 
       <div className="grid grid-cols-2 gap-2 mb-6">
@@ -42,7 +43,7 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
           window.location.href = '/Identity/Account/Manage/TwoFactorAuthentication';
         }}
       >
-        Back to two-factor authentication
+        {t(UsersKeys.ShowRecoveryCodes.BackButton)}
       </Button>
     </ManageLayout>
   );

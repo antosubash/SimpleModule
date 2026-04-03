@@ -1,16 +1,12 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Badge, Button, Card, CardContent, CardFooter, Input, PageShell } from '@simplemodule/ui';
 import { useState } from 'react';
+import { MarketplaceKeys } from '../Locales/keys';
 import type { MarketplacePackage } from '../types';
 import { categoryLabel, categoryNames, formatDownloads } from './utils';
 
 const PAGE_SIZE = 24;
-
-const sortOptions = [
-  { value: 'Relevance', label: 'Relevance' },
-  { value: 'Downloads', label: 'Most Downloads' },
-  { value: 'Alphabetical', label: 'A-Z' },
-];
 
 interface Props {
   packages: MarketplacePackage[];
@@ -31,7 +27,14 @@ export default function Browse({
   skip,
   hasMore,
 }: Props) {
+  const { t } = useTranslation('Marketplace');
   const [search, setSearch] = useState(query);
+
+  const sortOptions = [
+    { value: 'Relevance', label: t(MarketplaceKeys.Browse.SortRelevance) },
+    { value: 'Downloads', label: t(MarketplaceKeys.Browse.SortDownloads) },
+    { value: 'Alphabetical', label: t(MarketplaceKeys.Browse.SortAlphabetical) },
+  ];
 
   function buildParams(overrides: Record<string, string> = {}) {
     const params = new URLSearchParams();
@@ -65,16 +68,19 @@ export default function Browse({
   }
 
   return (
-    <PageShell title="Module Marketplace" description={`${totalHits} modules available`}>
+    <PageShell
+      title={t(MarketplaceKeys.Browse.Title)}
+      description={t(MarketplaceKeys.Browse.Description, { totalHits: String(totalHits) })}
+    >
       <div className="space-y-6">
         <form onSubmit={handleSearch} className="flex gap-3">
           <Input
-            placeholder="Search modules..."
+            placeholder={t(MarketplaceKeys.Browse.SearchPlaceholder)}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit">Search</Button>
+          <Button type="submit">{t(MarketplaceKeys.Browse.SearchButton)}</Button>
         </form>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -139,7 +145,9 @@ export default function Browse({
               </CardContent>
               <CardFooter className="flex items-center gap-2 text-xs">
                 <Badge variant="default">{categoryLabel(pkg.category)}</Badge>
-                {pkg.isInstalled && <Badge variant="success">Installed</Badge>}
+                {pkg.isInstalled && (
+                  <Badge variant="success">{t(MarketplaceKeys.Browse.BadgeInstalled)}</Badge>
+                )}
                 <span className="ml-auto flex items-center gap-1 text-text-muted">
                   <svg
                     className="h-3.5 w-3.5"
@@ -161,7 +169,7 @@ export default function Browse({
         {hasMore && (
           <div className="flex justify-center pt-4">
             <Button variant="secondary" onClick={handleLoadMore}>
-              Load more modules
+              {t(MarketplaceKeys.Browse.LoadMore)}
             </Button>
           </div>
         )}
@@ -177,15 +185,15 @@ export default function Browse({
             >
               <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <p className="text-lg font-medium">No modules found</p>
-            <p className="mt-1 text-sm">Try adjusting your search or filters.</p>
+            <p className="text-lg font-medium">{t(MarketplaceKeys.Browse.EmptyTitle)}</p>
+            <p className="mt-1 text-sm">{t(MarketplaceKeys.Browse.EmptyBody)}</p>
             {(query || selectedCategory !== 'All') && (
               <Button
                 variant="secondary"
                 className="mt-4"
                 onClick={() => router.get('/marketplace/browse')}
               >
-                Clear filters
+                {t(MarketplaceKeys.Browse.ClearFilters)}
               </Button>
             )}
           </div>

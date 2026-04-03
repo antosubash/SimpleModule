@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -23,6 +24,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { PageBuilderKeys } from '../Locales/keys';
 import type { PageSummary } from '../types';
 
 interface Props {
@@ -30,6 +32,7 @@ interface Props {
 }
 
 export default function Manage({ pages }: Props) {
+  const { t } = useTranslation('PageBuilder');
   const [tagInputs, setTagInputs] = useState<Record<number, string>>({});
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
@@ -78,15 +81,19 @@ export default function Manage({ pages }: Props) {
   return (
     <>
       <DataGridPage
-        title="Pages"
-        description="Manage content pages"
-        actions={<Button onClick={() => router.get('/pages/new')}>New Page</Button>}
+        title={t(PageBuilderKeys.Manage.Title)}
+        description={t(PageBuilderKeys.Manage.Description)}
+        actions={
+          <Button onClick={() => router.get('/pages/new')}>
+            {t(PageBuilderKeys.Manage.NewPage)}
+          </Button>
+        }
         data={pages}
-        emptyTitle="No pages yet"
-        emptyDescription="Get started by creating your first content page."
+        emptyTitle={t(PageBuilderKeys.Manage.EmptyTitle)}
+        emptyDescription={t(PageBuilderKeys.Manage.EmptyDescription)}
         emptyAction={
           <Button size="sm" onClick={() => router.get('/pages/new')}>
-            New Page
+            {t(PageBuilderKeys.Manage.NewPage)}
           </Button>
         }
       >
@@ -94,11 +101,11 @@ export default function Manage({ pages }: Props) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Tags</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead>{t(PageBuilderKeys.Manage.Table.Title)}</TableHead>
+                <TableHead>{t(PageBuilderKeys.Manage.Table.Slug)}</TableHead>
+                <TableHead>{t(PageBuilderKeys.Manage.Table.Status)}</TableHead>
+                <TableHead>{t(PageBuilderKeys.Manage.Table.Tags)}</TableHead>
+                <TableHead>{t(PageBuilderKeys.Manage.Table.Updated)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -113,9 +120,13 @@ export default function Manage({ pages }: Props) {
                         variant={page.isPublished ? 'success' : 'default'}
                         data-testid="status-badge"
                       >
-                        {page.isPublished ? 'Published' : 'Unpublished'}
+                        {page.isPublished
+                          ? t(PageBuilderKeys.Manage.Status.Published)
+                          : t(PageBuilderKeys.Manage.Status.Unpublished)}
                       </Badge>
-                      {page.hasDraft && <Badge variant="warning">Draft</Badge>}
+                      {page.hasDraft && (
+                        <Badge variant="warning">{t(PageBuilderKeys.Manage.Status.Draft)}</Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -138,13 +149,15 @@ export default function Manage({ pages }: Props) {
                         }}
                       >
                         <Input
-                          placeholder="add tag"
+                          placeholder={t(PageBuilderKeys.Manage.Tag.AddPlaceholder)}
                           className="h-6 w-20 text-xs px-1.5"
                           value={tagInputs[page.id] ?? ''}
                           onChange={(e) =>
                             setTagInputs((prev) => ({ ...prev, [page.id]: e.target.value }))
                           }
-                          aria-label={`Add tag to ${page.title}`}
+                          aria-label={t(PageBuilderKeys.Manage.Tag.AddAriaLabel, {
+                            title: page.title,
+                          })}
                         />
                       </form>
                     </div>
@@ -155,7 +168,13 @@ export default function Manage({ pages }: Props) {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" aria-label={`Actions for ${page.title}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label={t(PageBuilderKeys.Manage.Actions.AriaLabel, {
+                            title: page.title,
+                          })}
+                        >
                           <svg
                             width="16"
                             height="16"
@@ -169,39 +188,43 @@ export default function Manage({ pages }: Props) {
                             <circle cx="12" cy="12" r="1" />
                             <circle cx="12" cy="19" r="1" />
                           </svg>
-                          <span className="sr-only">Actions</span>
+                          <span className="sr-only">
+                            {t(PageBuilderKeys.Manage.Actions.SrOnly)}
+                          </span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => router.get(`/pages/${page.id}/edit`)}>
-                          Edit
+                          {t(PageBuilderKeys.Manage.Actions.Edit)}
                         </DropdownMenuItem>
                         {page.isPublished && (
                           <DropdownMenuItem
                             onClick={() => window.open(`/pages/view/${page.slug}`, '_blank')}
                           >
-                            View Page
+                            {t(PageBuilderKeys.Manage.Actions.ViewPage)}
                           </DropdownMenuItem>
                         )}
                         {page.hasDraft && (
                           <DropdownMenuItem
                             onClick={() => window.open(`/pages/view/${page.slug}/draft`, '_blank')}
                           >
-                            Preview Draft
+                            {t(PageBuilderKeys.Manage.Actions.PreviewDraft)}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => handleTogglePublish(page.id, page.isPublished)}
                         >
-                          {page.isPublished ? 'Unpublish' : 'Publish'}
+                          {page.isPublished
+                            ? t(PageBuilderKeys.Manage.Actions.Unpublish)
+                            : t(PageBuilderKeys.Manage.Actions.Publish)}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-danger"
                           onClick={() => setDeleteTarget({ id: page.id, title: page.title })}
                         >
-                          Delete
+                          {t(PageBuilderKeys.Manage.Actions.Delete)}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -216,18 +239,19 @@ export default function Manage({ pages }: Props) {
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Page</DialogTitle>
+            <DialogTitle>{t(PageBuilderKeys.Manage.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.title}&rdquo;? This page will be
-              permanently removed.
+              {t(PageBuilderKeys.Manage.DeleteDialog.Description, {
+                title: deleteTarget?.title ?? '',
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t(PageBuilderKeys.Manage.DeleteDialog.Cancel)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(PageBuilderKeys.Manage.DeleteDialog.Confirm)}
             </Button>
           </DialogFooter>
         </DialogContent>
