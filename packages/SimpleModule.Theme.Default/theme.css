@@ -338,6 +338,38 @@
     @apply min-w-[600px] sm:min-w-0;
   }
 
+  /* --- Scrollbar hide (for horizontal tab bars) --- */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* --- Manage account tab bar --- */
+  .manage-tab {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm whitespace-nowrap text-text-muted no-underline transition-colors duration-150 border-b-2 border-transparent shrink-0;
+  }
+  .manage-tab:hover {
+    @apply text-text;
+  }
+  .manage-tab-active {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm whitespace-nowrap text-primary no-underline font-semibold border-b-2 border-primary shrink-0;
+  }
+
+  /* --- Public layout mobile overlay --- */
+  .public-overlay {
+    @apply fixed inset-0 z-50 bg-surface;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .public-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   /* --- Nav Link --- */
   .nav-link-active,
   .nav-link-inactive {
@@ -580,8 +612,9 @@
     pointer-events: auto;
   }
   .app-sidebar-toggle {
-    @apply fixed bottom-4 z-50 w-7 h-7 rounded-full bg-surface border border-border flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised cursor-pointer transition-all duration-200;
+    @apply fixed bottom-4 z-50 w-7 h-7 rounded-full bg-surface border border-border items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised cursor-pointer transition-all duration-200;
     left: 1rem;
+    display: none;
   }
   /* Mobile top bar toggle */
   .app-mobile-header {
@@ -603,12 +636,16 @@
       display: none;
     }
     .app-sidebar-toggle {
+      display: flex;
       left: 15rem;
     }
     .app-sidebar-collapsed ~ .app-sidebar-toggle {
       left: 3rem;
     }
     .app-mobile-header {
+      display: none;
+    }
+    .public-overlay {
       display: none;
     }
   }
@@ -702,5 +739,15 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-text-muted;
+  }
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar,
+  .app-sidebar-backdrop,
+  .app-sidebar-toggle,
+  .public-overlay {
+    transition: none !important;
   }
 }
