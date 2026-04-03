@@ -11,8 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
-import { BackgroundJobsKeys } from '../../Locales/keys';
-import { stateVariant } from '../utils/jobState';
+import { BackgroundJobsKeys } from '@/Locales/keys';
+import { stateVariant } from '@/Pages/utils/jobState';
 
 interface JobSummary {
   id: string;

@@ -1,7 +1,7 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
-import { ProductsKeys } from '../Locales/keys';
-import type { Product } from '../types';
+import { ProductsKeys } from '@/Locales/keys';
+import type { Product } from '@/types';
 
 export default function Browse({ products }: { products: Product[] }) {
   const { t } = useTranslation('Products');

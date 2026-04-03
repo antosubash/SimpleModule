@@ -9,9 +9,9 @@ import {
   Container,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import type { SettingDefinition } from '../components/SettingField';
-import SettingField from '../components/SettingField';
-import { SettingsKeys } from '../Locales/keys';
+import type { SettingDefinition } from '@/components/SettingField';
+import SettingField from '@/components/SettingField';
+import { SettingsKeys } from '@/Locales/keys';
 
 interface UserSettingView {
   definition: SettingDefinition;

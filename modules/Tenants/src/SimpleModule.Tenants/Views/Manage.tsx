@@ -17,8 +17,8 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { TenantsKeys } from '../Locales/keys';
-import type { Tenant } from '../types';
+import { TenantsKeys } from '@/Locales/keys';
+import type { Tenant } from '@/types';
 import { statusColors, statusLabels } from './tenantStatus';
 
 export default function Manage({ tenants }: { tenants: Tenant[] }) {

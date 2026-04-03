@@ -16,7 +16,7 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
-import { TenantsKeys } from '../Locales/keys';
+import { TenantsKeys } from '@/Locales/keys';
 
 export default function Create() {
   const { t } = useTranslation('Tenants');

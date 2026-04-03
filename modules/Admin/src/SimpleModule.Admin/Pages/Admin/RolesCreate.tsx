@@ -16,8 +16,8 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
-import { AdminKeys } from '../../Locales/keys';
-import { PermissionGroups } from '../components/PermissionGroups';
+import { AdminKeys } from '@/Locales/keys';
+import { PermissionGroups } from '@/Pages/components/PermissionGroups';
 
 interface Props {
   permissionsByModule: Record<string, string[]>;

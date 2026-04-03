@@ -18,7 +18,7 @@ import {
   Label,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { AdminKeys } from '../../Locales/keys';
+import { AdminKeys } from '@/Locales/keys';
 
 interface Role {
   id: string;
