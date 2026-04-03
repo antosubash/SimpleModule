@@ -192,6 +192,9 @@ k6-spike: ## Run k6 spike test (sudden traffic burst)
 .PHONY: k6-all
 k6-all: k6-smoke k6-auth k6-products k6-orders k6-pages k6-page-lifecycle k6-settings k6-users k6-audit-logs k6-files k6-marketplace k6-jobs k6-feature-flags k6-tenants k6-mixed ## Run all k6 load test scenarios
 
+.PHONY: load
+load: k6-all ## Alias: run all k6 load tests
+
 # ─── Database ────────────────────────────────────
 
 .PHONY: db-reset
