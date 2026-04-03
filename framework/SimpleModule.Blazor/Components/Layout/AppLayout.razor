@@ -25,10 +25,10 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+            <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1" id="app-sidebar-nav">
                 @foreach (var item in SidebarItems)
                 {
-                    <a href="@item.Url" class="@SidebarLinkClass(item.Url)">
+                    <a href="@item.Url" class="@SidebarLinkClass(item.Url)" data-nav-url="@item.Url" onclick="if(window.closeMobileSidebar)closeMobileSidebar()">
                         <span class="sidebar-icon">@((MarkupString)item.Icon)</span>
                         <span class="sidebar-label">@item.Label</span>
                     </a>
@@ -55,7 +55,7 @@
                                         <div id="sg-@menuGroup.GroupId" class="space-y-0.5 mt-0.5">
                                             @foreach (var item in menuGroup.Items)
                                             {
-                                                <a href="@item.Url" class="@SidebarLinkClass(item.Url)">
+                                                <a href="@item.Url" class="@SidebarLinkClass(item.Url)" data-nav-url="@item.Url" onclick="if(window.closeMobileSidebar)closeMobileSidebar()">
                                                     <span class="sidebar-icon">@((MarkupString)item.Icon)</span>
                                                     <span class="sidebar-label">@item.Label</span>
                                                 </a>
@@ -67,7 +67,7 @@
                                 {
                                     @foreach (var item in menuGroup.Items)
                                     {
-                                        <a href="@item.Url" class="@SidebarLinkClass(item.Url)">
+                                        <a href="@item.Url" class="@SidebarLinkClass(item.Url)" data-nav-url="@item.Url" onclick="if(window.closeMobileSidebar)closeMobileSidebar()">
                                             <span class="sidebar-icon">@((MarkupString)item.Icon)</span>
                                             <span class="sidebar-label">@item.Label</span>
                                         </a>
@@ -118,6 +118,36 @@
             sb.classList.toggle('app-sidebar-collapsed');
             localStorage.setItem(key, sb.classList.contains('app-sidebar-collapsed'));
         };
+    })();
+
+    // Update active nav link after enhanced navigation
+    (function() {
+        var activeClass = 'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-primary bg-primary-subtle no-underline transition-all duration-150';
+        var inactiveClass = 'flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary no-underline hover:bg-surface-raised hover:text-text transition-all duration-150';
+
+        function updateActiveLink() {
+            var path = window.location.pathname;
+            var links = document.querySelectorAll('#app-sidebar [data-nav-url]');
+            for (var i = 0; i < links.length; i++) {
+                var url = links[i].getAttribute('data-nav-url');
+                var isActive = url === '/'
+                    ? path === '/'
+                    : path.toLowerCase().indexOf(url.toLowerCase()) === 0;
+                links[i].className = isActive ? activeClass : inactiveClass;
+            }
+        }
+
+        // Detect Inertia navigations by observing URL changes
+        var lastUrl = window.location.pathname;
+        var observer = new MutationObserver(function() {
+            if (window.location.pathname !== lastUrl) {
+                lastUrl = window.location.pathname;
+                updateActiveLink();
+            }
+        });
+        observer.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
+        // Also run on popstate (browser back/forward)
+        window.addEventListener('popstate', function() { setTimeout(updateActiveLink, 0); });
     })();
 
     // Admin nav collapse
