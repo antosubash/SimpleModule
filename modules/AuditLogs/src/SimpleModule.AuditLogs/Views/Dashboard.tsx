@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
   Card,
@@ -30,6 +31,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { AuditLogsKeys } from '../Locales/keys';
 import type { DashboardStats, NamedCount } from '../types';
 
 interface Props {
@@ -103,10 +105,10 @@ function KpiCard({
 }) {
   return (
     <Card className={onClick ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}>
-      <CardContent className="p-5" onClick={onClick}>
+      <CardContent className="p-4 sm:p-5" onClick={onClick}>
         <p className="text-xs font-medium tracking-wide text-text-muted uppercase">{title}</p>
         <p
-          className={`mt-1 text-2xl font-bold tabular-nums ${
+          className={`mt-1 text-xl sm:text-2xl font-bold tabular-nums ${
             accent === 'danger' ? 'text-danger' : 'text-text'
           }`}
         >
@@ -136,8 +138,12 @@ function DonutCard({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-center">
-        <ChartContainer config={config} style={{ height: 220, maxWidth: 300, margin: '0 auto' }}>
+      <CardContent className="flex flex-1 flex-col justify-center p-4 sm:p-6">
+        <ChartContainer
+          config={config}
+          className="min-h-[180px] sm:min-h-[220px]"
+          style={{ maxWidth: 300, margin: '0 auto' }}
+        >
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
             <Pie
@@ -194,8 +200,8 @@ function HBarCard({
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1">
-        <ChartContainer config={config} style={{ height: 280 }}>
+      <CardContent className="flex-1 p-4 sm:p-6">
+        <ChartContainer config={config} className="min-h-[220px] sm:min-h-[280px]">
           <BarChart
             data={data}
             layout="vertical"
@@ -228,6 +234,7 @@ function HBarCard({
 // ---- Main Dashboard ----
 
 export default function Dashboard({ stats, from, to, userId, users }: Props) {
+  const { t } = useTranslation('AuditLogs');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(new Date(from));
   const [dateTo, setDateTo] = useState<Date | undefined>(new Date(to));
   const [selectedUser, setSelectedUser] = useState(userId || '__all__');
@@ -310,11 +317,11 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
 
   return (
     <PageShell
-      className="space-y-4"
-      title="Audit Dashboard"
-      description="System activity overview and metrics"
+      className="space-y-4 sm:space-y-6"
+      title={t(AuditLogsKeys.Dashboard.Title)}
+      description={t(AuditLogsKeys.Dashboard.Description)}
       actions={
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
           {/* Quick date presets */}
           {DATE_PRESETS.map((preset) => (
             <Button
@@ -327,21 +334,38 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
             </Button>
           ))}
           <div className="space-y-1">
-            <span className="text-xs font-medium text-text-muted">From</span>
-            <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Start date" />
+            <span className="text-xs font-medium text-text-muted">
+              {t(AuditLogsKeys.Dashboard.FilterFrom)}
+            </span>
+            <DatePicker
+              value={dateFrom}
+              onChange={setDateFrom}
+              placeholder={t(AuditLogsKeys.Dashboard.FilterFromPlaceholder)}
+            />
           </div>
           <div className="space-y-1">
-            <span className="text-xs font-medium text-text-muted">To</span>
-            <DatePicker value={dateTo} onChange={setDateTo} placeholder="End date" />
+            <span className="text-xs font-medium text-text-muted">
+              {t(AuditLogsKeys.Dashboard.FilterTo)}
+            </span>
+            <DatePicker
+              value={dateTo}
+              onChange={setDateTo}
+              placeholder={t(AuditLogsKeys.Dashboard.FilterToPlaceholder)}
+            />
           </div>
           <div className="space-y-1">
-            <span className="text-xs font-medium text-text-muted">User</span>
+            <span className="text-xs font-medium text-text-muted">
+              {t(AuditLogsKeys.Dashboard.FilterUser)}
+            </span>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="w-[180px]" aria-label="User">
-                <SelectValue placeholder="All users" />
+              <SelectTrigger
+                className="w-full sm:w-[180px]"
+                aria-label={t(AuditLogsKeys.Dashboard.FilterUser)}
+              >
+                <SelectValue placeholder={t(AuditLogsKeys.Dashboard.FilterUserAll)} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__all__">All users</SelectItem>
+                <SelectItem value="__all__">{t(AuditLogsKeys.Dashboard.FilterUserAll)}</SelectItem>
                 {users.map((u) => (
                   <SelectItem key={u.name} value={u.name}>
                     {u.name}
@@ -350,30 +374,33 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={applyFilters}>Apply</Button>
+          <Button onClick={applyFilters}>{t(AuditLogsKeys.Dashboard.FilterApply)}</Button>
         </div>
       }
     >
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         <KpiCard
-          title="Total Events"
+          title={t(AuditLogsKeys.Dashboard.KpiTotalEvents)}
           value={stats.totalEntries.toLocaleString()}
           subtitle={`${formatDate(from)} \u2014 ${formatDate(to)}`}
           onClick={() => browseWithFilter({})}
         />
-        <KpiCard title="Unique Users" value={stats.uniqueUsers.toLocaleString()} />
         <KpiCard
-          title="Avg Response"
+          title={t(AuditLogsKeys.Dashboard.KpiUniqueUsers)}
+          value={stats.uniqueUsers.toLocaleString()}
+        />
+        <KpiCard
+          title={t(AuditLogsKeys.Dashboard.KpiAvgResponse)}
           value={stats.averageDurationMs > 0 ? `${stats.averageDurationMs}ms` : '\u2014'}
-          subtitle="HTTP requests"
+          subtitle={t(AuditLogsKeys.Dashboard.KpiHttpRequests)}
           onClick={() => browseWithFilter({ source: '0' })}
         />
         <KpiCard
-          title="Error Rate"
+          title={t(AuditLogsKeys.Dashboard.KpiErrorRate)}
           value={stats.errorRate > 0 ? `${stats.errorRate}%` : '0%'}
           accent={stats.errorRate > 5 ? 'danger' : 'default'}
-          subtitle="4xx + 5xx responses"
+          subtitle={t(AuditLogsKeys.Dashboard.KpiErrorRateSubtitle)}
           onClick={() => browseWithFilter({})}
         />
       </div>
@@ -382,10 +409,12 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       {stats.timeline.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Activity Timeline</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t(AuditLogsKeys.Dashboard.ActivityTimeline)}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={timelineConfig} style={{ height: 250 }}>
+          <CardContent className="p-4 sm:p-6">
+            <ChartContainer config={timelineConfig} className="min-h-[200px] sm:min-h-[250px]">
               <AreaChart data={stats.timeline} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="fillHttp" x1="0" y1="0" x2="0" y2="1">
@@ -442,40 +471,50 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       )}
 
       {/* Row: Source Pie + Action Bar */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         {sourceData.length > 0 && (
           <DonutCard
-            title="By Source"
+            title={t(AuditLogsKeys.Dashboard.BySource)}
             data={sourceData}
             colors={SOURCE_COLORS}
             config={sourceConfig}
           />
         )}
         {actionData.length > 0 && (
-          <HBarCard title="By Action" data={actionData} dataKey="value" config={actionConfig} />
+          <HBarCard
+            title={t(AuditLogsKeys.Dashboard.ByAction)}
+            data={actionData}
+            dataKey="value"
+            config={actionConfig}
+          />
         )}
       </div>
 
       {/* Row: Status Pie + Module Bar */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         {statusData.length > 0 && (
           <DonutCard
-            title="Status Codes"
+            title={t(AuditLogsKeys.Dashboard.StatusCodes)}
             data={statusData}
             colors={STATUS_COLORS}
             config={statusConfig}
           />
         )}
         {moduleData.length > 0 && (
-          <HBarCard title="By Module" data={moduleData} dataKey="value" config={moduleConfig} />
+          <HBarCard
+            title={t(AuditLogsKeys.Dashboard.ByModule)}
+            data={moduleData}
+            dataKey="value"
+            config={moduleConfig}
+          />
         )}
       </div>
 
       {/* Row: Top Users + Top Paths */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
         {stats.topUsers.length > 0 && (
           <HBarCard
-            title="Top Users"
+            title={t(AuditLogsKeys.Dashboard.TopUsers)}
             data={stats.topUsers}
             dataKey="count"
             config={topUsersConfig}
@@ -485,7 +524,7 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
         )}
         {stats.topPaths.length > 0 && (
           <HBarCard
-            title="Top Paths"
+            title={t(AuditLogsKeys.Dashboard.TopPaths)}
             data={stats.topPaths}
             dataKey="count"
             config={topPathsConfig}
@@ -499,10 +538,12 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       {entityData.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Entity Types</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t(AuditLogsKeys.Dashboard.EntityTypes)}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={entityConfig} style={{ height: 200 }}>
+          <CardContent className="p-4 sm:p-6">
+            <ChartContainer config={entityConfig} className="min-h-[180px] sm:min-h-[200px]">
               <BarChart data={entityData} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
@@ -523,10 +564,12 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       {stats.hourlyDistribution.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Hourly Activity Distribution</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t(AuditLogsKeys.Dashboard.HourlyDistribution)}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={hourlyConfig} style={{ height: 200 }}>
+          <CardContent className="p-4 sm:p-6">
+            <ChartContainer config={hourlyConfig} className="min-h-[180px] sm:min-h-[200px]">
               <BarChart
                 data={stats.hourlyDistribution}
                 margin={{ top: 0, right: 16, bottom: 0, left: 0 }}

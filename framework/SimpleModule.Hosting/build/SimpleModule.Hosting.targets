@@ -12,12 +12,14 @@
     <ViteBuildStamp>$(IntermediateOutputPath)vitebuild.stamp</ViteBuildStamp>
     <ExtractDtoStamp>$(IntermediateOutputPath)extractdto.stamp</ExtractDtoStamp>
   </PropertyGroup>
-  <!-- Incremental Tailwind: track CSS source files -->
+  <!-- Incremental Tailwind: track CSS source files + theme + Razor layouts -->
   <ItemGroup Condition="Exists('$(TailwindInput)')">
     <TailwindSourceFiles
       Include="$(MSBuildProjectDirectory)/Styles/**/*.css"
       Exclude="$(MSBuildProjectDirectory)/Styles/_scan/**"
     />
+    <TailwindSourceFiles Include="$(RepoRoot)packages/SimpleModule.Theme.Default/theme.css" />
+    <TailwindSourceFiles Include="$(RepoRoot)framework/SimpleModule.Blazor/Components/**/*.razor" />
   </ItemGroup>
   <!-- Incremental Vite: track ClientApp source files -->
   <ItemGroup Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(RepoRoot)node_modules'))">

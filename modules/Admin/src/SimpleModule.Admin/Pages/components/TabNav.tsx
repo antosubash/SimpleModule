@@ -17,15 +17,17 @@ export function TabNav({ tabs, activeTab, baseUrl }: TabNavProps) {
     <Tabs
       value={activeTab}
       onValueChange={(value) => router.get(baseUrl, { tab: value }, { preserveState: true })}
-      className="mb-6"
+      className="mb-4 sm:mb-6"
     >
-      <TabsList>
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.id} value={tab.id}>
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <TabsList>
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </div>
     </Tabs>
   );
 }

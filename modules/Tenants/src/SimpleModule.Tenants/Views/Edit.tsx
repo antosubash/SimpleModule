@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,10 +23,12 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { TenantsKeys } from '../Locales/keys';
 import type { Tenant } from '../types';
 import { statusLabels } from './tenantStatus';
 
 export default function Edit({ tenant }: { tenant: Tenant }) {
+  const { t } = useTranslation('Tenants');
   const [newHost, setNewHost] = useState('');
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -53,35 +56,35 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tenants/manage">Tenants</BreadcrumbLink>
+            <BreadcrumbLink href="/tenants/manage">{t(TenantsKeys.Manage.Title)}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Edit {tenant.name}</BreadcrumbPage>
+            <BreadcrumbPage>{t(TenantsKeys.Edit.Breadcrumb, { name: tenant.name })}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Edit Tenant</h1>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Edit.Title)}</h1>
         <Button variant="ghost" onClick={() => router.get(`/tenants/${tenant.id}/features`)}>
-          Manage Features
+          {t(TenantsKeys.Edit.ManageFeaturesButton)}
         </Button>
       </div>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t(TenantsKeys.Edit.NameLabel)}</Label>
                 <Input id="name" name="name" required defaultValue={tenant.name} />
               </Field>
               <Field>
-                <Label htmlFor="adminEmail">Admin Email</Label>
+                <Label htmlFor="adminEmail">{t(TenantsKeys.Edit.AdminEmailLabel)}</Label>
                 <Input
                   id="adminEmail"
                   name="adminEmail"
@@ -90,7 +93,7 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
                 />
               </Field>
               <Field>
-                <Label htmlFor="editionName">Edition</Label>
+                <Label htmlFor="editionName">{t(TenantsKeys.Edit.EditionLabel)}</Label>
                 <Input
                   id="editionName"
                   name="editionName"
@@ -98,7 +101,7 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
                 />
               </Field>
               <Field>
-                <Label htmlFor="validUpTo">Valid Until</Label>
+                <Label htmlFor="validUpTo">{t(TenantsKeys.Edit.ValidUntilLabel)}</Label>
                 <Input
                   id="validUpTo"
                   name="validUpTo"
@@ -106,16 +109,16 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
                   defaultValue={tenant.validUpTo?.split('T')[0] ?? ''}
                 />
               </Field>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit">{t(TenantsKeys.Edit.SaveButton)}</Button>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Status</h2>
-          <div className="flex gap-2">
+        <CardContent className="p-4 sm:p-6">
+          <h2 className="text-lg font-semibold mb-4">{t(TenantsKeys.Edit.StatusSection)}</h2>
+          <div className="flex flex-wrap gap-2">
             {[0, 1, 2].map((s) => (
               <Button
                 key={s}
@@ -131,39 +134,49 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
       </Card>
 
       <Card>
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Hosts</h2>
+        <CardContent className="p-4 sm:p-6">
+          <h2 className="text-lg font-semibold mb-4">{t(TenantsKeys.Edit.HostsSection)}</h2>
           {tenant.hosts.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Host Name</TableHead>
-                  <TableHead>Active</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tenant.hosts.map((host) => (
-                  <TableRow key={host.id}>
-                    <TableCell className="font-mono text-sm">{host.hostName}</TableCell>
-                    <TableCell>{host.isActive ? 'Yes' : 'No'}</TableCell>
-                    <TableCell>
-                      <Button variant="danger" size="sm" onClick={() => handleRemoveHost(host.id)}>
-                        Remove
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t(TenantsKeys.Edit.ColHostName)}</TableHead>
+                    <TableHead>{t(TenantsKeys.Edit.ColActive)}</TableHead>
+                    <TableHead />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {tenant.hosts.map((host) => (
+                    <TableRow key={host.id}>
+                      <TableCell className="font-mono text-sm">{host.hostName}</TableCell>
+                      <TableCell>
+                        {host.isActive
+                          ? t(TenantsKeys.Edit.ActiveYes)
+                          : t(TenantsKeys.Edit.ActiveNo)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleRemoveHost(host.id)}
+                        >
+                          {t(TenantsKeys.Edit.RemoveHostButton)}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-col gap-2 sm:flex-row mt-4">
             <Input
-              placeholder="new-host.example.com"
+              placeholder={t(TenantsKeys.Edit.NewHostPlaceholder)}
               value={newHost}
               onChange={(e) => setNewHost(e.target.value)}
             />
-            <Button onClick={handleAddHost}>Add Host</Button>
+            <Button onClick={handleAddHost}>{t(TenantsKeys.Edit.AddHostButton)}</Button>
           </div>
         </CardContent>
       </Card>

@@ -1,8 +1,12 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, AlertTitle, Button } from '@simplemodule/ui';
+import { UsersKeys } from '../../Locales/keys';
 import ManageLayout from './ManageLayout';
 
 export default function GenerateRecoveryCodes() {
+  const { t } = useTranslation('Users');
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     router.post('/Identity/Account/Manage/GenerateRecoveryCodes');
@@ -10,22 +14,18 @@ export default function GenerateRecoveryCodes() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">
-        Generate two-factor authentication (2FA) recovery codes
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        {t(UsersKeys.GenerateRecoveryCodes.Title)}
       </h3>
 
-      <Alert variant="warning" className="mb-6">
-        <AlertTitle>Put these codes in a safe place.</AlertTitle>
+      <Alert variant="warning" className="mb-4 sm:mb-6">
+        <AlertTitle>{t(UsersKeys.GenerateRecoveryCodes.WarningTitle)}</AlertTitle>
         <AlertDescription>
-          <p>
-            If you lose your device and don&apos;t have the recovery codes you will lose access to
-            your account.
-          </p>
+          <p>{t(UsersKeys.GenerateRecoveryCodes.WarningDescription1)}</p>
           <p className="mt-2">
-            Generating new recovery codes does not change the keys used in authenticator apps. If
-            you wish to change the key used in an authenticator app you should{' '}
+            {t(UsersKeys.GenerateRecoveryCodes.WarningDescription2)}{' '}
             <a href="/Identity/Account/Manage/ResetAuthenticator" className="font-medium underline">
-              reset your authenticator keys
+              {t(UsersKeys.GenerateRecoveryCodes.ResetKeysLinkText)}
             </a>
             .
           </p>
@@ -34,7 +34,7 @@ export default function GenerateRecoveryCodes() {
 
       <form onSubmit={handleSubmit}>
         <Button type="submit" variant="danger">
-          Generate Recovery Codes
+          {t(UsersKeys.GenerateRecoveryCodes.GenerateButton)}
         </Button>
       </form>
     </ManageLayout>

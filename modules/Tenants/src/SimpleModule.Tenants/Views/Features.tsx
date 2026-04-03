@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { TenantsKeys } from '../Locales/keys';
 
 interface FeatureFlag {
   name: string;
@@ -47,6 +49,7 @@ interface Props {
 }
 
 export default function Features({ tenant, flags, tenantOverrides }: Props) {
+  const { t } = useTranslation('Tenants');
   const overrideMap = new Map(tenantOverrides.map((o) => [o.flagName, o]));
 
   function handleToggle(flagName: string, currentlyEnabled: boolean) {
@@ -63,21 +66,19 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
 
   if (flags.length === 0) {
     return (
-      <Container className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">No Feature Flags Available</h1>
-        <p className="text-text-muted">
-          The Feature Flags module is not installed or has no flags.
-        </p>
+      <Container className="space-y-4 sm:space-y-6">
+        <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Features.EmptyTitle)}</h1>
+        <p className="text-text-muted">{t(TenantsKeys.Features.EmptyDescription)}</p>
       </Container>
     );
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tenants/manage">Tenants</BreadcrumbLink>
+            <BreadcrumbLink href="/tenants/manage">{t(TenantsKeys.Manage.Title)}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -85,61 +86,73 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Feature Flags</BreadcrumbPage>
+            <BreadcrumbPage>{t(TenantsKeys.Features.Breadcrumb)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Feature Flags for {tenant.name}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">
+        {t(TenantsKeys.Features.Title, { name: tenant.name })}
+      </h1>
 
       <Card>
-        <CardContent className="p-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Flag</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Global</TableHead>
-                <TableHead>Tenant Override</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {flags
-                .filter((f) => !f.isDeprecated)
-                .map((flag) => {
-                  const override = overrideMap.get(flag.name);
-                  const effectiveState = override ? override.isEnabled : flag.isEnabled;
+        <CardContent className="p-4 sm:p-6">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t(TenantsKeys.Features.ColFlag)}</TableHead>
+                  <TableHead>{t(TenantsKeys.Features.ColDescription)}</TableHead>
+                  <TableHead>{t(TenantsKeys.Features.ColGlobal)}</TableHead>
+                  <TableHead>{t(TenantsKeys.Features.ColTenantOverride)}</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {flags
+                  .filter((f) => !f.isDeprecated)
+                  .map((flag) => {
+                    const override = overrideMap.get(flag.name);
+                    const effectiveState = override ? override.isEnabled : flag.isEnabled;
 
-                  return (
-                    <TableRow key={flag.name}>
-                      <TableCell className="font-mono text-sm">{flag.name}</TableCell>
-                      <TableCell className="text-text-muted">{flag.description || '-'}</TableCell>
-                      <TableCell>
-                        <span className={flag.isEnabled ? 'text-green-600' : 'text-red-600'}>
-                          {flag.isEnabled ? 'On' : 'Off'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant={effectiveState ? 'primary' : 'secondary'}
-                          size="sm"
-                          onClick={() => handleToggle(flag.name, effectiveState)}
-                        >
-                          {effectiveState ? 'Enabled' : 'Disabled'}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {override && (
-                          <Button variant="ghost" size="sm" onClick={() => handleReset(flag.name)}>
-                            Reset
+                    return (
+                      <TableRow key={flag.name}>
+                        <TableCell className="font-mono text-sm">{flag.name}</TableCell>
+                        <TableCell className="text-text-muted">{flag.description || '-'}</TableCell>
+                        <TableCell>
+                          <span className={flag.isEnabled ? 'text-green-600' : 'text-red-600'}>
+                            {flag.isEnabled
+                              ? t(TenantsKeys.Features.On)
+                              : t(TenantsKeys.Features.Off)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant={effectiveState ? 'primary' : 'secondary'}
+                            size="sm"
+                            onClick={() => handleToggle(flag.name, effectiveState)}
+                          >
+                            {effectiveState
+                              ? t(TenantsKeys.Features.Enabled)
+                              : t(TenantsKeys.Features.Disabled)}
                           </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
+                        </TableCell>
+                        <TableCell>
+                          {override && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleReset(flag.name)}
+                            >
+                              {t(TenantsKeys.Features.ResetButton)}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </Container>

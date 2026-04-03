@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { OrdersKeys } from '../Locales/keys';
 import type { Order } from '../types';
 
 interface Props {
@@ -24,6 +26,7 @@ interface Props {
 }
 
 export default function List({ orders }: Props) {
+  const { t } = useTranslation('Orders');
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   function handleDelete() {
@@ -35,22 +38,26 @@ export default function List({ orders }: Props) {
   return (
     <>
       <DataGridPage
-        title="Orders"
-        description={`${orders.length} total orders`}
-        actions={<Button onClick={() => router.get('/orders/create')}>Create Order</Button>}
+        title={t(OrdersKeys.List.Title)}
+        description={t(OrdersKeys.List.Description).replace('{count}', String(orders.length))}
+        actions={
+          <Button onClick={() => router.get('/orders/create')}>
+            {t(OrdersKeys.List.CreateButton)}
+          </Button>
+        }
         data={orders}
-        emptyTitle="No orders yet"
-        emptyDescription="Get started by creating your first order."
+        emptyTitle={t(OrdersKeys.List.EmptyTitle)}
+        emptyDescription={t(OrdersKeys.List.EmptyDescription)}
       >
         {(pageData) => (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>User</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>{t(OrdersKeys.List.ColId)}</TableHead>
+                <TableHead>{t(OrdersKeys.List.ColUser)}</TableHead>
+                <TableHead>{t(OrdersKeys.List.ColItems)}</TableHead>
+                <TableHead>{t(OrdersKeys.List.ColTotal)}</TableHead>
+                <TableHead>{t(OrdersKeys.List.ColCreated)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -69,16 +76,16 @@ export default function List({ orders }: Props) {
                     {new Date(order.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => router.get(`/orders/${order.id}/edit`)}
                       >
-                        Edit
+                        {t(OrdersKeys.List.EditButton)}
                       </Button>
                       <Button variant="danger" size="sm" onClick={() => setDeleteId(order.id)}>
-                        Delete
+                        {t(OrdersKeys.List.DeleteButton)}
                       </Button>
                     </div>
                   </TableCell>
@@ -92,17 +99,17 @@ export default function List({ orders }: Props) {
       <Dialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Order</DialogTitle>
+            <DialogTitle>{t(OrdersKeys.List.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete order #{deleteId}? This action cannot be undone.
+              {t(OrdersKeys.List.DeleteDialog.Confirm).replace('{id}', String(deleteId))}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteId(null)}>
-              Cancel
+              {t(OrdersKeys.List.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(OrdersKeys.List.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

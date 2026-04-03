@@ -81,6 +81,45 @@ CI runs tests against two database providers:
 
 The `SimpleModuleWebApplicationFactory` automatically uses SQLite in-memory with a shared connection kept open for the lifetime of the test run.
 
+## Benchmarks (BenchmarkDotNet)
+
+Micro-benchmarks measure endpoint latency and JSON serialization performance for every module:
+
+```bash
+# Run all benchmarks
+dotnet run -c Release --project tests/SimpleModule.Benchmarks
+
+# Run benchmarks for a specific module
+dotnet run -c Release --project tests/SimpleModule.Benchmarks -- --filter "*Products*"
+```
+
+Benchmarks use `SimpleModuleWebApplicationFactory` with test auth headers for low-overhead measurement of CRUD operations via an in-process TestServer.
+
+## Load Tests (NBomber)
+
+HTTP load tests using real OAuth Bearer tokens acquired via password grant from OpenIddict:
+
+```bash
+# Run all 11 scenarios (50 concurrent users, ~5 min)
+dotnet test tests/SimpleModule.LoadTests
+
+# Run a single scenario
+dotnet test tests/SimpleModule.LoadTests --filter "Products_Crud"
+```
+
+Scenarios cover all modules at 50 concurrent copies:
+
+- **CRUD lifecycle** -- Products, Orders, Users, PageBuilder (create, read, update, delete)
+- **Read operations** -- Settings, AuditLogs, FileStorage, FeatureFlags
+- **Admin operations** -- role create/delete (handles 302 Blazor SSR redirects)
+- **Anonymous** -- Marketplace search and browse
+- **Mixed Realistic** -- weighted workload (70% reads, 20% creates, 10% updates)
+
+Key infrastructure:
+- `LoadTestWebApplicationFactory` with file-based SQLite + WAL mode
+- `PasswordGrantTokenHandler` for OpenIddict ROPC grant
+- `SqliteBusyTimeoutInterceptor` for concurrent access
+
 ## Next Steps
 
 - [Unit tests](./unit-tests) -- testing services, validators, and event handlers in isolation

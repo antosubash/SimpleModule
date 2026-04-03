@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,6 +25,7 @@ import {
   Label,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { ProductsKeys } from '../Locales/keys';
 import type { Product } from '../types';
 
 interface Props {
@@ -31,6 +33,7 @@ interface Props {
 }
 
 export default function Edit({ product }: Props) {
+  const { t } = useTranslation('Products');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -45,7 +48,7 @@ export default function Edit({ product }: Props) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -53,22 +56,22 @@ export default function Edit({ product }: Props) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Edit Product</BreadcrumbPage>
+            <BreadcrumbPage>{t(ProductsKeys.Edit.Breadcrumb)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Edit Product</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t(ProductsKeys.Edit.Title)}</h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">{t(ProductsKeys.Edit.NameLabel)}</Label>
                 <Input id="name" name="name" defaultValue={product.name} required />
               </Field>
               <Field>
-                <Label htmlFor="price">Price</Label>
+                <Label htmlFor="price">{t(ProductsKeys.Edit.PriceLabel)}</Label>
                 <Input
                   id="price"
                   name="price"
@@ -79,7 +82,7 @@ export default function Edit({ product }: Props) {
                   step={0.01}
                 />
               </Field>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit">{t(ProductsKeys.Edit.SaveButton)}</Button>
             </FieldGroup>
           </form>
         </CardContent>
@@ -87,14 +90,14 @@ export default function Edit({ product }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Danger Zone</CardTitle>
+          <CardTitle>{t(ProductsKeys.Edit.DangerZone)}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-text-muted mb-3">
-            Permanently delete this product. This action cannot be undone.
+          <p className="text-sm text-text-muted mb-2 sm:mb-3">
+            {t(ProductsKeys.Edit.DeleteWarning)}
           </p>
           <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>
-            Delete Product
+            {t(ProductsKeys.Edit.DeleteButton)}
           </Button>
         </CardContent>
       </Card>
@@ -102,18 +105,17 @@ export default function Edit({ product }: Props) {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
+            <DialogTitle>{t(ProductsKeys.Edit.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{product.name}&rdquo;? This action cannot be
-              undone.
+              {t(ProductsKeys.Edit.DeleteDialog.Confirm, { name: product.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>
-              Cancel
+              {t(ProductsKeys.Edit.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(ProductsKeys.Edit.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

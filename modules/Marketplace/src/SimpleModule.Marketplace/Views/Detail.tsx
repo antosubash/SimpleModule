@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -15,6 +16,7 @@ import {
 } from '@simplemodule/ui';
 import { useState } from 'react';
 import Markdown from 'react-markdown';
+import { MarketplaceKeys } from '../Locales/keys';
 import type { MarketplacePackageDetail } from '../types';
 import { categoryLabel, formatDownloads } from './utils';
 
@@ -23,6 +25,7 @@ interface Props {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const { t } = useTranslation('Marketplace');
   const [copied, setCopied] = useState(false);
 
   function handleCopy() {
@@ -33,7 +36,7 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <Button variant="ghost" size="sm" onClick={handleCopy}>
-      {copied ? 'Copied!' : 'Copy'}
+      {copied ? t(MarketplaceKeys.Detail.CopiedButton) : t(MarketplaceKeys.Detail.CopyButton)}
     </Button>
   );
 }
@@ -82,25 +85,26 @@ const icons = {
 };
 
 export default function Detail({ package: pkg }: Props) {
+  const { t } = useTranslation('Marketplace');
   const smCommand = `sm install ${pkg.id}`;
   const dotnetCommand = `dotnet add package ${pkg.id}`;
 
   const infoItems = [
     {
       icon: icons.download,
-      label: 'Downloads',
+      label: t(MarketplaceKeys.Detail.DownloadsLabel),
       value: <span className="font-medium text-text">{formatDownloads(pkg.totalDownloads)}</span>,
     },
     {
       icon: icons.tag,
-      label: 'Version',
+      label: t(MarketplaceKeys.Detail.VersionLabel),
       value: <span className="font-mono text-text">{pkg.latestVersion}</span>,
     },
     ...(pkg.projectLink
       ? [
           {
             icon: icons.externalLink,
-            label: 'Project',
+            label: t(MarketplaceKeys.Detail.ProjectLabel),
             value: (
               <a
                 href={pkg.projectLink}
@@ -108,7 +112,7 @@ export default function Detail({ package: pkg }: Props) {
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                View
+                {t(MarketplaceKeys.Detail.ProjectView)}
               </a>
             ),
           },
@@ -118,7 +122,7 @@ export default function Detail({ package: pkg }: Props) {
       ? [
           {
             icon: icons.document,
-            label: 'License',
+            label: t(MarketplaceKeys.Detail.LicenseLabel),
             value: (
               <a
                 href={pkg.licenseLink}
@@ -126,7 +130,7 @@ export default function Detail({ package: pkg }: Props) {
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                View
+                {t(MarketplaceKeys.Detail.LicenseView)}
               </a>
             ),
           },
@@ -138,13 +142,16 @@ export default function Detail({ package: pkg }: Props) {
     <PageShell
       title={pkg.title}
       description={pkg.description}
-      breadcrumbs={[{ label: 'Marketplace', href: '/marketplace/browse' }, { label: pkg.title }]}
+      breadcrumbs={[
+        { label: t(MarketplaceKeys.Detail.BreadcrumbMarketplace), href: '/marketplace/browse' },
+        { label: pkg.title },
+      ]}
     >
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-3">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-5">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:gap-5">
                 {pkg.icon ? (
                   <img src={pkg.icon} alt="" className="h-20 w-20 rounded-xl" />
                 ) : (
@@ -175,14 +182,17 @@ export default function Detail({ package: pkg }: Props) {
                       >
                         <path d={icons.download} />
                       </svg>
-                      {formatDownloads(pkg.totalDownloads)} downloads
+                      {formatDownloads(pkg.totalDownloads)}{' '}
+                      {t(MarketplaceKeys.Detail.DownloadsSuffix)}
                     </span>
                     <Separator orientation="vertical" className="h-4" />
                     <span className="font-mono">v{pkg.latestVersion}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Badge variant="default">{categoryLabel(pkg.category)}</Badge>
-                    {pkg.isInstalled && <Badge variant="success">Installed</Badge>}
+                    {pkg.isInstalled && (
+                      <Badge variant="success">{t(MarketplaceKeys.Detail.BadgeInstalled)}</Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -191,8 +201,10 @@ export default function Detail({ package: pkg }: Props) {
               <div className="mt-5">
                 <Tabs defaultValue="sm">
                   <TabsList>
-                    <TabsTrigger value="sm">SM CLI</TabsTrigger>
-                    <TabsTrigger value="dotnet">.NET CLI</TabsTrigger>
+                    <TabsTrigger value="sm">{t(MarketplaceKeys.Detail.TabSmCli)}</TabsTrigger>
+                    <TabsTrigger value="dotnet">
+                      {t(MarketplaceKeys.Detail.TabDotnetCli)}
+                    </TabsTrigger>
                   </TabsList>
                   <TabsContent value="sm">
                     <CommandBlock command={smCommand} />
@@ -216,10 +228,10 @@ export default function Detail({ package: pkg }: Props) {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Package Info</CardTitle>
+              <CardTitle>{t(MarketplaceKeys.Detail.PackageInfoTitle)}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               {infoItems.map((item, i) => (
@@ -236,7 +248,7 @@ export default function Detail({ package: pkg }: Props) {
           {pkg.versions.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Recent Versions</CardTitle>
+                <CardTitle>{t(MarketplaceKeys.Detail.RecentVersionsTitle)}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 {pkg.versions
@@ -246,7 +258,7 @@ export default function Detail({ package: pkg }: Props) {
                     <div key={v.version} className="flex items-center justify-between">
                       <span className="font-mono text-text">{v.version}</span>
                       <span className="text-text-muted">
-                        {formatDownloads(v.downloads)} downloads
+                        {formatDownloads(v.downloads)} {t(MarketplaceKeys.Detail.DownloadsSuffix)}
                       </span>
                     </div>
                   ))}
@@ -257,7 +269,7 @@ export default function Detail({ package: pkg }: Props) {
           {pkg.tags.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Tags</CardTitle>
+                <CardTitle>{t(MarketplaceKeys.Detail.TagsTitle)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-1.5">
@@ -276,7 +288,7 @@ export default function Detail({ package: pkg }: Props) {
             className="w-full"
             onClick={() => router.get('/marketplace/browse')}
           >
-            Back to Marketplace
+            {t(MarketplaceKeys.Detail.BackToMarketplace)}
           </Button>
         </div>
       </div>

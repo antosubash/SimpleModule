@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
   DataGridPage,
@@ -16,10 +17,12 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { TenantsKeys } from '../Locales/keys';
 import type { Tenant } from '../types';
 import { statusColors, statusLabels } from './tenantStatus';
 
 export default function Manage({ tenants }: { tenants: Tenant[] }) {
+  const { t } = useTranslation('Tenants');
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   function handleDelete() {
@@ -31,23 +34,27 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
   return (
     <>
       <DataGridPage
-        title="Manage Tenants"
-        description={`${tenants.length} total tenants`}
-        actions={<Button onClick={() => router.get('/tenants/create')}>Create Tenant</Button>}
+        title={t(TenantsKeys.Manage.Title)}
+        description={t(TenantsKeys.Manage.Description, { count: tenants.length })}
+        actions={
+          <Button onClick={() => router.get('/tenants/create')}>
+            {t(TenantsKeys.Manage.CreateButton)}
+          </Button>
+        }
         data={tenants}
-        emptyTitle="No tenants yet"
-        emptyDescription="Get started by creating your first tenant."
+        emptyTitle={t(TenantsKeys.Manage.EmptyTitle)}
+        emptyDescription={t(TenantsKeys.Manage.EmptyDescription)}
       >
         {(pageData) => (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Hosts</TableHead>
-                <TableHead>Edition</TableHead>
+                <TableHead>{t(TenantsKeys.Manage.ColId)}</TableHead>
+                <TableHead>{t(TenantsKeys.Manage.ColName)}</TableHead>
+                <TableHead>{t(TenantsKeys.Manage.ColSlug)}</TableHead>
+                <TableHead>{t(TenantsKeys.Manage.ColStatus)}</TableHead>
+                <TableHead>{t(TenantsKeys.Manage.ColHosts)}</TableHead>
+                <TableHead>{t(TenantsKeys.Manage.ColEdition)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -65,27 +72,27 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
                   <TableCell className="text-text-muted">{tenant.hosts.length}</TableCell>
                   <TableCell className="text-text-muted">{tenant.editionName ?? '-'}</TableCell>
                   <TableCell>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => router.get(`/tenants/${tenant.id}/edit`)}
                       >
-                        Edit
+                        {t(TenantsKeys.Manage.EditButton)}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => router.get(`/tenants/${tenant.id}/features`)}
                       >
-                        Features
+                        {t(TenantsKeys.Manage.FeaturesButton)}
                       </Button>
                       <Button
                         variant="danger"
                         size="sm"
                         onClick={() => setDeleteTarget({ id: tenant.id, name: tenant.name })}
                       >
-                        Delete
+                        {t(TenantsKeys.Manage.DeleteButton)}
                       </Button>
                     </div>
                   </TableCell>
@@ -99,18 +106,17 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Tenant</DialogTitle>
+            <DialogTitle>{t(TenantsKeys.Manage.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This action cannot
-              be undone.
+              {t(TenantsKeys.Manage.DeleteDialog.Confirm, { name: deleteTarget?.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t(TenantsKeys.Manage.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(TenantsKeys.Manage.DeleteDialog.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

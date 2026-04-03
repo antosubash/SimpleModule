@@ -35,7 +35,7 @@ function PageShell({
   size,
 }: PageShellProps) {
   return (
-    <Container className={className ?? 'space-y-6'} size={size}>
+    <Container className={className ?? 'space-y-4 sm:space-y-6'} size={size}>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <Breadcrumb>
           <BreadcrumbList>

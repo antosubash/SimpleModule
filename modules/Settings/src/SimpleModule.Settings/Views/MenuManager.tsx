@@ -1,3 +1,4 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -15,6 +16,7 @@ import {
 import { useCallback, useState } from 'react';
 import MenuItemEditor from '../components/MenuItemEditor';
 import MenuTree from '../components/MenuTree';
+import { SettingsKeys } from '../Locales/keys';
 
 interface MenuItemDto {
   id: number;
@@ -69,6 +71,7 @@ function countItems(items: MenuItemDto[]): number {
 }
 
 export default function MenuManager({ menus: initial, availablePages }: MenuManagerProps) {
+  const { t } = useTranslation('Settings');
   const [menus, setMenus] = useState(initial);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -149,16 +152,23 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
   return (
     <TooltipProvider>
       <PageShell
-        title="Menu Manager"
-        description="Configure the public navigation menu. Add, reorder, and organize menu items."
-        breadcrumbs={[{ label: 'Settings', href: '/admin/settings' }, { label: 'Menu Manager' }]}
+        title={t(SettingsKeys.MenuManager.Title)}
+        description={t(SettingsKeys.MenuManager.Description)}
+        breadcrumbs={[
+          { label: t(SettingsKeys.MenuManager.BreadcrumbSettings), href: '/admin/settings' },
+          { label: t(SettingsKeys.MenuManager.BreadcrumbMenuManager) },
+        ]}
       >
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_3fr]">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-[2fr_3fr]">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-6">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-base">Menu Tree</CardTitle>
-                {totalItems > 0 && <Badge>{totalItems} items</Badge>}
+                <CardTitle className="text-base">
+                  {t(SettingsKeys.MenuManager.CardTreeTitle)}
+                </CardTitle>
+                {totalItems > 0 && (
+                  <Badge>{t(SettingsKeys.MenuManager.ItemsCount, { count: totalItems })}</Badge>
+                )}
               </div>
               <div className="flex gap-1.5">
                 <Tooltip>
@@ -179,10 +189,10 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
                       >
                         <path d="M12 5v14m-7-7h14" />
                       </svg>
-                      Add
+                      {t(SettingsKeys.MenuManager.AddButton)}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Add a new top-level menu item</TooltipContent>
+                  <TooltipContent>{t(SettingsKeys.MenuManager.AddTooltip)}</TooltipContent>
                 </Tooltip>
                 {selectedItem && selectedDepth < 2 && (
                   <Tooltip>
@@ -203,11 +213,11 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
                         >
                           <path d="M12 5v14m-7-7h14" />
                         </svg>
-                        Child
+                        {t(SettingsKeys.MenuManager.AddChildButton)}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Add a child item under &ldquo;{selectedItem.label}&rdquo;
+                      {t(SettingsKeys.MenuManager.AddChildTooltip, { label: selectedItem.label })}
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -226,9 +236,11 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
                   >
                     <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                   </svg>
-                  <p className="text-sm font-medium text-text-secondary">No menu items yet</p>
+                  <p className="text-sm font-medium text-text-secondary">
+                    {t(SettingsKeys.MenuManager.EmptyTitle)}
+                  </p>
                   <p className="mt-1 text-xs text-text-secondary">
-                    Click &ldquo;Add&rdquo; to create your first menu item.
+                    {t(SettingsKeys.MenuManager.EmptyDescription)}
                   </p>
                 </div>
               ) : (
@@ -247,12 +259,14 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base">
-                {selectedItem ? `Edit: ${selectedItem.label}` : 'Item Editor'}
+                {selectedItem
+                  ? t(SettingsKeys.MenuManager.EditorEditTitle, { label: selectedItem.label })
+                  : t(SettingsKeys.MenuManager.EditorTitle)}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {selectedItem ? (
                 <MenuItemEditor
                   key={selectedItem.id}
@@ -273,9 +287,11 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
                   >
                     <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                   </svg>
-                  <p className="text-sm font-medium text-text-secondary">No item selected</p>
+                  <p className="text-sm font-medium text-text-secondary">
+                    {t(SettingsKeys.MenuManager.NoItemSelectedTitle)}
+                  </p>
                   <p className="mt-1 text-xs text-text-secondary">
-                    Select a menu item from the tree to edit its properties.
+                    {t(SettingsKeys.MenuManager.NoItemSelectedDescription)}
                   </p>
                 </div>
               )}

@@ -1,6 +1,8 @@
 import { Render } from '@puckeditor/core/rsc';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, Container } from '@simplemodule/ui';
 import { useMemo } from 'react';
+import { PageBuilderKeys } from '../Locales/keys';
 import { puckConfig } from '../puck/config';
 import type { Page } from '../types';
 
@@ -10,6 +12,7 @@ interface Props {
 }
 
 export default function Viewer({ page, isDraft }: Props) {
+  const { t } = useTranslation('PageBuilder');
   const data = useMemo(() => {
     try {
       const parsed = JSON.parse(page.content);
@@ -23,10 +26,10 @@ export default function Viewer({ page, isDraft }: Props) {
   }, [page.content]);
 
   return (
-    <Container className="py-8" data-testid="page-content">
+    <Container className="py-4 sm:py-8" data-testid="page-content">
       {isDraft && (
-        <Alert variant="warning" className="mb-6">
-          <AlertDescription>Draft Preview — this version is not published</AlertDescription>
+        <Alert variant="warning" className="mb-4 sm:mb-6">
+          <AlertDescription>{t(PageBuilderKeys.Viewer.DraftBanner)}</AlertDescription>
         </Alert>
       )}
       <Render config={puckConfig} data={data} />

@@ -5,16 +5,32 @@ interface SidebarContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
   toggle: () => void;
+  isMobile: boolean;
 }
 
 const SidebarContext = React.createContext<SidebarContextValue>({
   open: true,
   setOpen: () => {},
   toggle: () => {},
+  isMobile: false,
 });
 
 function useSidebar() {
   return React.useContext(SidebarContext);
+}
+
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = React.useState(
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false,
+  );
+  React.useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [breakpoint]);
+  return isMobile;
 }
 
 interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -23,11 +39,18 @@ interface SidebarProviderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SidebarProvider = React.forwardRef<HTMLDivElement, SidebarProviderProps>(
   ({ defaultOpen = true, className, children, ...props }, ref) => {
-    const [open, setOpen] = React.useState(defaultOpen);
+    const isMobile = useIsMobile();
+    const [open, setOpen] = React.useState(isMobile ? false : defaultOpen);
     const toggle = React.useCallback(() => setOpen((prev) => !prev), []);
 
+    // Close sidebar when switching to mobile
+    React.useEffect(() => {
+      if (isMobile) setOpen(false);
+      else setOpen(defaultOpen);
+    }, [isMobile, defaultOpen]);
+
     return (
-      <SidebarContext.Provider value={{ open, setOpen, toggle }}>
+      <SidebarContext.Provider value={{ open, setOpen, toggle, isMobile }}>
         <div ref={ref} className={cn('flex min-h-screen', className)} {...props}>
           {children}
         </div>
@@ -39,14 +62,16 @@ SidebarProvider.displayName = 'SidebarProvider';
 
 const Sidebar = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
   ({ className, children, ...props }, ref) => {
-    const { open } = useSidebar();
+    const { open, isMobile } = useSidebar();
     return (
       <aside
         ref={ref}
         data-state={open ? 'open' : 'closed'}
         className={cn(
           'flex h-screen flex-col border-r border-border bg-surface transition-all duration-300',
-          open ? 'w-64' : 'w-16',
+          isMobile ? 'fixed inset-y-0 left-0 z-40 w-64' : open ? 'w-64' : 'w-16',
+          isMobile && !open && '-translate-x-full',
+          isMobile && open && 'translate-x-0',
           className,
         )}
         {...props}
@@ -57,6 +82,21 @@ const Sidebar = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>
   },
 );
 Sidebar.displayName = 'Sidebar';
+
+function SidebarBackdrop() {
+  const { open, setOpen, isMobile } = useSidebar();
+  if (!isMobile) return null;
+  return (
+    <div
+      className={cn(
+        'fixed inset-0 z-30 bg-black/50 transition-opacity duration-300',
+        open ? 'opacity-100' : 'pointer-events-none opacity-0',
+      )}
+      onClick={() => setOpen(false)}
+      aria-hidden="true"
+    />
+  );
+}
 
 const SidebarHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
@@ -180,6 +220,7 @@ SidebarTrigger.displayName = 'SidebarTrigger';
 
 export {
   Sidebar,
+  SidebarBackdrop,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,

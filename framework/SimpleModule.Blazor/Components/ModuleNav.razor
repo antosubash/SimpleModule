@@ -1,7 +1,7 @@
 @using SimpleModule.Core.Menu
 @inject IMenuRegistry MenuRegistry
 
-<div class="hidden sm:flex items-center gap-1">
+<div class="hidden md:flex items-center gap-1">
     @if (IsAuthenticated)
     {
         @if (AuthenticatedPrefix is not null)
