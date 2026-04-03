@@ -6,6 +6,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Email.Contracts;
+using SimpleModule.Email.Validators;
 
 namespace SimpleModule.Email.Views;
 
@@ -21,16 +22,19 @@ public class CreateTemplateEndpoint : IViewEndpoint
                 "/templates",
                 async ([AsParameters] CreateTemplateForm form, IEmailContracts emailContracts) =>
                 {
-                    await emailContracts.CreateTemplateAsync(
-                        new CreateEmailTemplateRequest
-                        {
-                            Name = form.Name,
-                            Slug = form.Slug,
-                            Subject = form.Subject,
-                            Body = form.Body,
-                            IsHtml = form.IsHtml,
-                        }
-                    );
+                    var request = new CreateEmailTemplateRequest
+                    {
+                        Name = form.Name,
+                        Slug = form.Slug,
+                        Subject = form.Subject,
+                        Body = form.Body,
+                        IsHtml = form.IsHtml,
+                    };
+                    var validation = CreateEmailTemplateRequestValidator.Validate(request);
+                    if (!validation.IsValid)
+                        throw new Core.Exceptions.ValidationException(validation.Errors);
+
+                    await emailContracts.CreateTemplateAsync(request);
                     return Results.Redirect("/email/templates");
                 }
             )

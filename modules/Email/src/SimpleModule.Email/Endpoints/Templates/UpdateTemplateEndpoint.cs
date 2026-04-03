@@ -4,6 +4,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
 using SimpleModule.Email.Contracts;
+using SimpleModule.Email.Validators;
 
 namespace SimpleModule.Email.Endpoints.Templates;
 
@@ -13,9 +14,15 @@ public class UpdateTemplateEndpoint : IEndpoint
         app.MapPut(
                 "/templates/{id}",
                 (int id, UpdateEmailTemplateRequest request, IEmailContracts emailContracts) =>
-                    CrudEndpoints.Update(() =>
+                {
+                    var validation = UpdateEmailTemplateRequestValidator.Validate(request);
+                    if (!validation.IsValid)
+                        throw new Core.Exceptions.ValidationException(validation.Errors);
+
+                    return CrudEndpoints.Update(() =>
                         emailContracts.UpdateTemplateAsync(EmailTemplateId.From(id), request)
-                    )
+                    );
+                }
             )
             .RequirePermission(EmailPermissions.ManageTemplates);
 }

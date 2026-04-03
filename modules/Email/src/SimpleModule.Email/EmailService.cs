@@ -232,6 +232,14 @@ public partial class EmailService(
 
     public async Task<EmailTemplate> CreateTemplateAsync(CreateEmailTemplateRequest request)
     {
+        var slugExists = await db.EmailTemplates.AnyAsync(t => t.Slug == request.Slug);
+        if (slugExists)
+        {
+            throw new Core.Exceptions.ConflictException(
+                $"A template with slug '{request.Slug}' already exists."
+            );
+        }
+
         var template = new EmailTemplate
         {
             Name = request.Name,
@@ -246,6 +254,9 @@ public partial class EmailService(
         await db.SaveChangesAsync();
 
         LogTemplateCreated(logger, template.Id, template.Name);
+        eventBus.PublishInBackground(
+            new EmailTemplateCreatedEvent(template.Id, template.Name, template.Slug)
+        );
 
         return template;
     }
@@ -259,6 +270,18 @@ public partial class EmailService(
             await db.EmailTemplates.FindAsync(id)
             ?? throw new Core.Exceptions.NotFoundException("EmailTemplate", id);
 
+        var changedFields = new List<string>();
+        if (template.Name != request.Name)
+            changedFields.Add("Name");
+        if (template.Subject != request.Subject)
+            changedFields.Add("Subject");
+        if (template.Body != request.Body)
+            changedFields.Add("Body");
+        if (template.IsHtml != request.IsHtml)
+            changedFields.Add("IsHtml");
+        if (template.DefaultReplyTo != request.DefaultReplyTo)
+            changedFields.Add("DefaultReplyTo");
+
         template.Name = request.Name;
         template.Subject = request.Subject;
         template.Body = request.Body;
@@ -268,6 +291,9 @@ public partial class EmailService(
         await db.SaveChangesAsync();
 
         LogTemplateUpdated(logger, template.Id, template.Name);
+        eventBus.PublishInBackground(
+            new EmailTemplateUpdatedEvent(template.Id, template.Name, changedFields)
+        );
 
         return template;
     }
@@ -278,10 +304,12 @@ public partial class EmailService(
             await db.EmailTemplates.FindAsync(id)
             ?? throw new Core.Exceptions.NotFoundException("EmailTemplate", id);
 
+        var templateName = template.Name;
         db.EmailTemplates.Remove(template);
         await db.SaveChangesAsync();
 
         LogTemplateDeleted(logger, id);
+        eventBus.PublishInBackground(new EmailTemplateDeletedEvent(id, templateName));
     }
 
     public async Task<EmailStats> GetEmailStatsAsync()
