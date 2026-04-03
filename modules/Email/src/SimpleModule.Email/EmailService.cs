@@ -76,7 +76,7 @@ public partial class EmailService(
         var renderedSubject = EmailTemplateRenderer.Render(
             template.Subject,
             variables,
-            template.IsHtml
+            isHtml: false
         );
         var renderedBody = EmailTemplateRenderer.Render(template.Body, variables, template.IsHtml);
 
@@ -197,6 +197,7 @@ public partial class EmailService(
             Subject = request.Subject,
             Body = request.Body,
             IsHtml = request.IsHtml,
+            DefaultReplyTo = request.DefaultReplyTo,
             CreatedAt = DateTime.UtcNow,
         };
 
@@ -236,6 +237,7 @@ public partial class EmailService(
         template.Subject = request.Subject;
         template.Body = request.Body;
         template.IsHtml = request.IsHtml;
+        template.DefaultReplyTo = request.DefaultReplyTo;
         template.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
