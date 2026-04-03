@@ -717,12 +717,15 @@
    Table Styling (in base layer so utilities can override)
    ============================================================ */
 @layer base {
+  /* biome-ignore lint/style/noDescendingSpecificity: base layer table styles in @layer are intentional */
   table {
     @apply w-full text-sm;
   }
+  /* biome-ignore lint/style/noDescendingSpecificity: base layer table styles require element+element selectors */
   table th {
     @apply text-left text-xs font-semibold text-text-muted uppercase tracking-wider pb-3;
   }
+  /* biome-ignore lint/style/noDescendingSpecificity: base layer table styles require element+element selectors */
   table td {
     @apply py-2.5 border-t border-border text-text-secondary;
   }
@@ -749,6 +752,7 @@
   .app-sidebar-backdrop,
   .app-sidebar-toggle,
   .public-overlay {
+    /* biome-ignore lint/complexity/noImportantStyles: !important required to override inline transition styles for reduced-motion accessibility */
     transition: none !important;
   }
 }

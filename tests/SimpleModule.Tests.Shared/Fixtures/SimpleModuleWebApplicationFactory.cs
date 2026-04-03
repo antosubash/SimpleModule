@@ -14,6 +14,7 @@ using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
 using SimpleModule.BackgroundJobs;
 using SimpleModule.Database;
+using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
@@ -70,6 +71,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<AgentsDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<RateLimitingDbContext>(services);
+            ReplaceDbContext<EmailDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
