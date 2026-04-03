@@ -4,6 +4,8 @@ If no module name was supplied as an argument, ask: "Which module would you like
 
 Work through all 7 checks below **in order**. For each check, mark it ✅ pass / ❌ fail / ⚠️ warning, then apply the described fix before moving to the next check. Do not skip checks even if earlier ones fail.
 
+**Status marker meanings:** ✅ = passes all requirements · ❌ = fails, fix required · ⚠️ = exists and will work, but has a non-critical configuration difference (e.g., SM00xx warnings but no errors, or a file exists but a setting differs from the expected default).
+
 Replace `{Name}` with the module name throughout.
 
 ---
@@ -41,10 +43,10 @@ Read `modules/{Name}/src/SimpleModule.{Name}/SimpleModule.{Name}.csproj`.
 
 Verify:
 - The file exists.
-- `Sdk="Microsoft.NET.Sdk.Razor"`.
+- `Sdk="Microsoft.NET.Sdk"` (must NOT be `Microsoft.NET.Sdk.Razor` or `Microsoft.NET.Sdk.Web`).
 - Contains `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 
-Fix if failing: Set `Sdk="Microsoft.NET.Sdk.Razor"` and add the `<FrameworkReference>` element inside an `<ItemGroup>` if it is missing.
+Fix if failing: Set `Sdk="Microsoft.NET.Sdk"` if it is wrong. If `<FrameworkReference Include="Microsoft.AspNetCore.App" />` is missing, add it inside an `<ItemGroup>`.
 
 ---
 
@@ -53,7 +55,7 @@ Fix if failing: Set `Sdk="Microsoft.NET.Sdk.Razor"` and add the `<FrameworkRefer
 Read `template/SimpleModule.Host/SimpleModule.Host.csproj`.
 
 Verify:
-- A `<ProjectReference>` to `..\..\..\..\modules\{Name}\src\SimpleModule.{Name}\SimpleModule.{Name}.csproj` (or equivalent relative path) exists.
+- A `<ProjectReference>` whose path contains `modules\{Name}\src\SimpleModule.{Name}\SimpleModule.{Name}.csproj` (use a substring match to tolerate slash style differences). The correct relative path from the host project is `..\..\modules\{Name}\src\SimpleModule.{Name}\SimpleModule.{Name}.csproj`.
 
 Fix if failing: Add the `<ProjectReference>` inside an `<ItemGroup>` in the host `.csproj`.
 
@@ -67,7 +69,7 @@ Verify:
 - The contracts `.csproj` path appears: `modules/{Name}/src/SimpleModule.{Name}.Contracts/SimpleModule.{Name}.Contracts.csproj`
 - The implementation `.csproj` path appears: `modules/{Name}/src/SimpleModule.{Name}/SimpleModule.{Name}.csproj`
 
-Fix if failing: Add a `<Folder Name="/modules/{Name}/">` block with `<Project>` entries for both paths.
+Fix if failing: Locate the existing `<Folder Name="/modules/">` element in `SimpleModule.slnx` and add a new child `<Folder Name="/modules/{Name}/">` block inside it with `<Project>` entries for both the contracts and implementation `.csproj` files.
 
 ---
 
@@ -103,8 +105,10 @@ npm run validate-pages
 If it exits with an error, identify each missing entry and show the exact line to add to `modules/{Name}/src/SimpleModule.{Name}/Pages/index.ts`:
 
 ```typescript
-"  \"{Name}/{ViewName}\": () => import(\"../Views/{ViewName}\"),"
+'{Name}/{ViewName}': () => import('../Views/{ViewName}'),
 ```
+
+Derive `{ViewName}` from the component name reported missing by `npm run validate-pages` (e.g., if it reports `Products/Browse`, the ViewName is `Browse`).
 
 Add the missing entries to the `pages` record in `Pages/index.ts`, then re-run `npm run validate-pages` to confirm it passes.
 
