@@ -119,13 +119,14 @@ function showErrorToast(message: string) {
     <div class="flex items-start gap-3">
       <div class="flex-1">
         <p class="text-sm font-semibold">Error</p>
-        <p class="text-sm opacity-90">${message.replace(/[<>"'&]/g, (c) => `&#${c.charCodeAt(0)};`)}</p>
+        <p class="text-sm opacity-90"></p>
       </div>
       <button class="rounded-lg p-1 text-danger-text/60 hover:text-danger-text" aria-label="Close">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </button>
     </div>
   `;
+  container.querySelector('p.opacity-90')!.textContent = message;
   container.querySelector('button')?.addEventListener('click', () => container.remove());
   document.body.appendChild(container);
   setTimeout(() => container.remove(), 8000);

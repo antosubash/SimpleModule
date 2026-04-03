@@ -31,23 +31,24 @@ public sealed class InstallCommand : Command<InstallSettings>
             $"Installing [green]{Markup.Escape(settings.PackageId)}[/] into [blue]{Markup.Escape(Path.GetFileName(hostCsproj))}[/]..."
         );
 
-        var args = $"add \"{hostCsproj}\" package {settings.PackageId}";
+        var psi = new ProcessStartInfo
+        {
+            FileName = "dotnet",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        psi.ArgumentList.Add("add");
+        psi.ArgumentList.Add(hostCsproj);
+        psi.ArgumentList.Add("package");
+        psi.ArgumentList.Add(settings.PackageId);
         if (!string.IsNullOrWhiteSpace(settings.Version))
         {
-            args += $" --version {settings.Version}";
+            psi.ArgumentList.Add("--version");
+            psi.ArgumentList.Add(settings.Version);
         }
 
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = args,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-            },
-        };
+        using var process = new Process { StartInfo = psi };
 
         process.Start();
         var outputTask = process.StandardOutput.ReadToEndAsync();

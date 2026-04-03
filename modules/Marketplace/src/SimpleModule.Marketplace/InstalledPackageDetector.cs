@@ -43,7 +43,13 @@ public partial class InstalledPackageDetector(
         {
             try
             {
-                var doc = XDocument.Load(csproj);
+                var xmlSettings = new XmlReaderSettings
+                {
+                    DtdProcessing = DtdProcessing.Prohibit,
+                    XmlResolver = null,
+                };
+                using var xmlReader = XmlReader.Create(csproj, xmlSettings);
+                var doc = XDocument.Load(xmlReader);
                 var packageRefs = doc.Descendants("PackageReference")
                     .Select(e => e.Attribute("Include")?.Value)
                     .Where(v => v is not null);
