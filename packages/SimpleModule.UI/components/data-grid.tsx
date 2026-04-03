@@ -66,10 +66,10 @@ function DataGrid<T>({
 
   return (
     <div className={cn('space-y-4', className)}>
-      {children(pageData)}
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">{children(pageData)}</div>
 
       {data.length > 0 && (
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm text-text-muted">
             <span>
               Showing {startIndex + 1}–{endIndex} of {data.length}
@@ -90,7 +90,7 @@ function DataGrid<T>({
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-x-auto">
               <Button
                 variant="ghost"
                 size="sm"

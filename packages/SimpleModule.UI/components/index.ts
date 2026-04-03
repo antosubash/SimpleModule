@@ -102,6 +102,7 @@ export {
 } from './sheet';
 export {
   Sidebar,
+  SidebarBackdrop,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,

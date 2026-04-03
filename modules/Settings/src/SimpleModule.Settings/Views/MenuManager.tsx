@@ -159,9 +159,9 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
           { label: t(SettingsKeys.MenuManager.BreadcrumbMenuManager) },
         ]}
       >
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[2fr_3fr]">
+        <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-[2fr_3fr]">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-6">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">
                   {t(SettingsKeys.MenuManager.CardTreeTitle)}
@@ -259,14 +259,14 @@ export default function MenuManager({ menus: initial, availablePages }: MenuMana
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <CardTitle className="text-base">
                 {selectedItem
                   ? t(SettingsKeys.MenuManager.EditorEditTitle, { label: selectedItem.label })
                   : t(SettingsKeys.MenuManager.EditorTitle)}
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               {selectedItem ? (
                 <MenuItemEditor
                   key={selectedItem.id}

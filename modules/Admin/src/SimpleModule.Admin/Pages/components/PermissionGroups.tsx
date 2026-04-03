@@ -46,12 +46,12 @@ export function PermissionGroups({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {modules.map(([moduleName, permissions]) => {
         const allSelected = permissions.every((p) => selectedPerms.has(p));
 
         return (
-          <div key={moduleName} className="border border-border rounded-lg p-4">
+          <div key={moduleName} className="border border-border rounded-lg p-3 sm:p-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-medium text-sm">{moduleName}</h4>
               <div className="flex items-center gap-1.5">

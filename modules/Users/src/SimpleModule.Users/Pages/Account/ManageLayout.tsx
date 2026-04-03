@@ -52,7 +52,7 @@ function NavLink({
   return (
     <a
       href={href}
-      className={`flex items-center gap-3 ${active ? 'nav-link-active' : 'nav-link-inactive'}`}
+      className={`flex items-center gap-2 sm:gap-3 whitespace-nowrap ${active ? 'nav-link-active' : 'nav-link-inactive'}`}
     >
       <svg
         className="w-4 h-4 shrink-0"
@@ -76,11 +76,11 @@ export default function ManageLayout({ activePage, children }: ManageLayoutProps
       description="Manage your profile, security, and preferences"
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Account Settings' }]}
     >
-      <div className="flex flex-col sm:flex-row gap-6">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
         <aside className="sm:w-56 shrink-0">
           <Card className="sm:sticky sm:top-20">
-            <CardContent className="p-3">
-              <nav className="space-y-1">
+            <CardContent className="p-2 sm:p-3">
+              <nav className="flex sm:flex-col gap-1 overflow-x-auto sm:overflow-x-visible">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.page}
@@ -97,7 +97,7 @@ export default function ManageLayout({ activePage, children }: ManageLayoutProps
         </aside>
         <div className="flex-1 min-w-0">
           <Card>
-            <CardContent className="p-6 sm:p-8">{children}</CardContent>
+            <CardContent className="p-4 sm:p-6 md:p-8">{children}</CardContent>
           </Card>
         </div>
       </div>

@@ -156,7 +156,7 @@ export default function ClientsEdit({
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -194,7 +194,7 @@ export default function ClientsEdit({
 
       {tab === 'details' && (
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -242,14 +242,14 @@ export default function ClientsEdit({
           <CardHeader>
             <CardTitle>{t(OpenIddictKeys.ClientsEdit.RedirectUrisTitle)}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 router.post(`/openiddict/clients/${client.id}/uris`, new FormData(e.currentTarget));
               }}
             >
-              <FieldGroup className="space-y-6">
+              <FieldGroup className="space-y-4 sm:space-y-6">
                 <UriList
                   label={t(OpenIddictKeys.ClientsEdit.RedirectUrisLabel)}
                   name="redirectUris"
@@ -272,7 +272,7 @@ export default function ClientsEdit({
           <CardHeader>
             <CardTitle>{t(OpenIddictKeys.ClientsEdit.PermissionsTitle)}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -282,7 +282,7 @@ export default function ClientsEdit({
                 );
               }}
             >
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {permissionGroupDefs.map((group) => (
                   <div key={group.key}>
                     <h3 className="text-sm font-semibold mb-2">

@@ -14,9 +14,11 @@ export default function ResetAuthenticator() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">{t(UsersKeys.ResetAuthenticator.Title)}</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        {t(UsersKeys.ResetAuthenticator.Title)}
+      </h3>
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>{t(UsersKeys.ResetAuthenticator.WarningTitle)}</AlertTitle>
         <AlertDescription>{t(UsersKeys.ResetAuthenticator.WarningDescription)}</AlertDescription>
       </Alert>

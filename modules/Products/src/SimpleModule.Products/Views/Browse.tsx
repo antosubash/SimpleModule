@@ -10,7 +10,7 @@ export default function Browse({ products }: { products: Product[] }) {
       title={t(ProductsKeys.Browse.Title)}
       description={t(ProductsKeys.Browse.Description)}
     >
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {products.map((p) => (
           <Card key={p.id} data-testid="product-card">
             <CardContent className="flex justify-between items-center">

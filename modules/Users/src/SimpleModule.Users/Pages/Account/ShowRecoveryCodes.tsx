@@ -13,7 +13,7 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">{t(UsersKeys.ShowRecoveryCodes.Title)}</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">{t(UsersKeys.ShowRecoveryCodes.Title)}</h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -21,12 +21,12 @@ export default function ShowRecoveryCodes({ recoveryCodes, statusMessage }: Prop
         </Alert>
       )}
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>{t(UsersKeys.ShowRecoveryCodes.WarningTitle)}</AlertTitle>
         <AlertDescription>{t(UsersKeys.ShowRecoveryCodes.WarningDescription)}</AlertDescription>
       </Alert>
 
-      <div className="grid grid-cols-2 gap-2 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 sm:mb-6">
         {recoveryCodes.map((code) => (
           <code
             key={code}

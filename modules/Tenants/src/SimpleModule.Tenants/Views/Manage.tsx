@@ -72,7 +72,7 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
                   <TableCell className="text-text-muted">{tenant.hosts.length}</TableCell>
                   <TableCell className="text-text-muted">{tenant.editionName ?? '-'}</TableCell>
                   <TableCell>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="ghost"
                         size="sm"

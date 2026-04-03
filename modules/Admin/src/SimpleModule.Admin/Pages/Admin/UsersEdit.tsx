@@ -146,7 +146,7 @@ export default function UsersEdit({
   const dialogConfig = confirmAction ? confirmDialogConfig[confirmAction] : null;
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -160,7 +160,7 @@ export default function UsersEdit({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <h1 className="text-2xl font-bold tracking-tight">{t(AdminKeys.UsersEdit.Title)}</h1>
         {isSelf && <Badge variant="info">{t(AdminKeys.UsersEdit.BadgeYou)}</Badge>}
         {user.isDeactivated && (
@@ -481,54 +481,56 @@ export default function UsersEdit({
             {activeSessions.length === 0 ? (
               <p className="text-sm text-text-muted">{t(AdminKeys.UsersEdit.NoActiveSessions)}</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t(AdminKeys.UsersEdit.ColType)}</TableHead>
-                    <TableHead>{t(AdminKeys.UsersEdit.ColApplication)}</TableHead>
-                    <TableHead>{t(AdminKeys.UsersEdit.ColCreated)}</TableHead>
-                    <TableHead>{t(AdminKeys.UsersEdit.ColExpires)}</TableHead>
-                    <TableHead />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeSessions.map((session) => (
-                    <TableRow key={session.tokenId}>
-                      <TableCell>
-                        <Badge variant={session.type === 'refresh_token' ? 'info' : 'default'}>
-                          {session.type === 'refresh_token'
-                            ? t(AdminKeys.UsersEdit.SessionTypeRefresh)
-                            : t(AdminKeys.UsersEdit.SessionTypeAccess)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {session.applicationName || '\u2014'}
-                      </TableCell>
-                      <TableCell className="text-sm text-text-muted">
-                        {session.creationDate
-                          ? new Date(session.creationDate).toLocaleString()
-                          : '\u2014'}
-                      </TableCell>
-                      <TableCell className="text-sm text-text-muted">
-                        {session.expirationDate
-                          ? new Date(session.expirationDate).toLocaleString()
-                          : t(AdminKeys.UsersEdit.SessionExpiresNever)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() =>
-                            router.delete(`/admin/users/${user.id}/sessions/${session.tokenId}`)
-                          }
-                        >
-                          {t(AdminKeys.UsersEdit.RevokeButton)}
-                        </Button>
-                      </TableCell>
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t(AdminKeys.UsersEdit.ColType)}</TableHead>
+                      <TableHead>{t(AdminKeys.UsersEdit.ColApplication)}</TableHead>
+                      <TableHead>{t(AdminKeys.UsersEdit.ColCreated)}</TableHead>
+                      <TableHead>{t(AdminKeys.UsersEdit.ColExpires)}</TableHead>
+                      <TableHead />
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {activeSessions.map((session) => (
+                      <TableRow key={session.tokenId}>
+                        <TableCell>
+                          <Badge variant={session.type === 'refresh_token' ? 'info' : 'default'}>
+                            {session.type === 'refresh_token'
+                              ? t(AdminKeys.UsersEdit.SessionTypeRefresh)
+                              : t(AdminKeys.UsersEdit.SessionTypeAccess)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {session.applicationName || '\u2014'}
+                        </TableCell>
+                        <TableCell className="text-sm text-text-muted">
+                          {session.creationDate
+                            ? new Date(session.creationDate).toLocaleString()
+                            : '\u2014'}
+                        </TableCell>
+                        <TableCell className="text-sm text-text-muted">
+                          {session.expirationDate
+                            ? new Date(session.expirationDate).toLocaleString()
+                            : t(AdminKeys.UsersEdit.SessionExpiresNever)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() =>
+                              router.delete(`/admin/users/${user.id}/sessions/${session.tokenId}`)
+                            }
+                          >
+                            {t(AdminKeys.UsersEdit.RevokeButton)}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -543,7 +545,7 @@ export default function UsersEdit({
             <DialogTitle>{dialogConfig?.title}</DialogTitle>
             <DialogDescription>{dialogConfig?.description}</DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="flex flex-wrap gap-2">
             <Button variant="secondary" onClick={() => setConfirmAction(null)}>
               {t(AdminKeys.UsersEdit.CancelButton)}
             </Button>

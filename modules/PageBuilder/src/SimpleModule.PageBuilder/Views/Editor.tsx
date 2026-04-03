@@ -220,7 +220,7 @@ export default function Editor({ page, templates }: Props) {
           <p className="text-text-muted text-sm">
             {t(PageBuilderKeys.Editor.TemplatePicker.Subtitle)}
           </p>
-          <div className="grid grid-cols-2 gap-3 py-4">
+          <div className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-2">
             <button
               type="button"
               onClick={handleStartBlank}

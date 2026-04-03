@@ -19,12 +19,12 @@ export default function Browse({ tenants }: { tenants: BrowseTenant[] }) {
       <div className="space-y-3">
         {tenants.map((tenant) => (
           <Card key={tenant.id} data-testid="tenant-card">
-            <CardContent className="flex justify-between items-center">
+            <CardContent className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
               <div>
                 <span className="font-medium">{tenant.name}</span>
                 <span className="text-text-muted ml-2">({tenant.slug})</span>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <span className="text-text-muted text-sm">
                   {tenant.hostCount}{' '}
                   {t(

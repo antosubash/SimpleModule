@@ -77,7 +77,7 @@ export default function Users({
   }
 
   const filterBar = (
-    <div className="flex flex-col sm:flex-row gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
       <form onSubmit={handleSearch} className="flex gap-2 flex-1">
         <Input
           value={searchValue}
@@ -93,7 +93,7 @@ export default function Users({
         value={filterStatus || '__all__'}
         onValueChange={(v) => navigate({ filterStatus: v === '__all__' ? '' : v })}
       >
-        <SelectTrigger className="w-[160px]" aria-label="Status filter">
+        <SelectTrigger className="w-full sm:w-[160px]" aria-label="Status filter">
           <SelectValue placeholder={t(AdminKeys.Users.AllStatuses)} />
         </SelectTrigger>
         <SelectContent>
@@ -108,7 +108,7 @@ export default function Users({
           value={filterRole || '__all__'}
           onValueChange={(v) => navigate({ filterRole: v === '__all__' ? '' : v })}
         >
-          <SelectTrigger className="w-[160px]" aria-label="Role filter">
+          <SelectTrigger className="w-full sm:w-[160px]" aria-label="Role filter">
             <SelectValue placeholder={t(AdminKeys.Users.AllRoles)} />
           </SelectTrigger>
           <SelectContent>
@@ -149,63 +149,65 @@ export default function Users({
     >
       {(pageData) => (
         <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t(AdminKeys.Users.ColName)}</TableHead>
-                <TableHead>{t(AdminKeys.Users.ColEmail)}</TableHead>
-                <TableHead>{t(AdminKeys.Users.ColRoles)}</TableHead>
-                <TableHead>{t(AdminKeys.Users.ColStatus)}</TableHead>
-                <TableHead>{t(AdminKeys.Users.ColCreated)}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageData.map((user) => {
-                const status = userStatus(user);
-                return (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.displayName || '\u2014'}</TableCell>
-                    <TableCell className="text-text-secondary">
-                      {user.email}
-                      {!user.emailConfirmed && (
-                        <Badge variant="warning" className="ml-2">
-                          {t(AdminKeys.Users.Unverified)}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {user.roles.map((role) => (
-                          <Badge key={role} variant="info">
-                            {role}
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t(AdminKeys.Users.ColName)}</TableHead>
+                  <TableHead>{t(AdminKeys.Users.ColEmail)}</TableHead>
+                  <TableHead>{t(AdminKeys.Users.ColRoles)}</TableHead>
+                  <TableHead>{t(AdminKeys.Users.ColStatus)}</TableHead>
+                  <TableHead>{t(AdminKeys.Users.ColCreated)}</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((user) => {
+                  const status = userStatus(user);
+                  return (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.displayName || '\u2014'}</TableCell>
+                      <TableCell className="text-text-secondary">
+                        {user.email}
+                        {!user.emailConfirmed && (
+                          <Badge variant="warning" className="ml-2">
+                            {t(AdminKeys.Users.Unverified)}
                           </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-text-muted">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.get(`/admin/users/${user.id}/edit`)}
-                      >
-                        {t(AdminKeys.Users.EditButton)}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1 flex-wrap">
+                          {user.roles.map((role) => (
+                            <Badge key={role} variant="info">
+                              {role}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={status.variant}>{status.label}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-text-muted">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/admin/users/${user.id}/edit`)}
+                        >
+                          {t(AdminKeys.Users.EditButton)}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4">
+            <div className="flex items-center justify-between pt-3 sm:pt-4">
               <span className="text-sm text-text-muted">
                 {t(AdminKeys.Users.Pagination, {
                   page: String(page),

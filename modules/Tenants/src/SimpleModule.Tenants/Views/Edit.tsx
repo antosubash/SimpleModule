@@ -56,7 +56,7 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -68,7 +68,7 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Edit.Title)}</h1>
         <Button variant="ghost" onClick={() => router.get(`/tenants/${tenant.id}/features`)}>
           {t(TenantsKeys.Edit.ManageFeaturesButton)}
@@ -76,7 +76,7 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
       </div>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
@@ -116,9 +116,9 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
       </Card>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4">{t(TenantsKeys.Edit.StatusSection)}</h2>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {[0, 1, 2].map((s) => (
               <Button
                 key={s}
@@ -134,35 +134,43 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
       </Card>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <h2 className="text-lg font-semibold mb-4">{t(TenantsKeys.Edit.HostsSection)}</h2>
           {tenant.hosts.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t(TenantsKeys.Edit.ColHostName)}</TableHead>
-                  <TableHead>{t(TenantsKeys.Edit.ColActive)}</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tenant.hosts.map((host) => (
-                  <TableRow key={host.id}>
-                    <TableCell className="font-mono text-sm">{host.hostName}</TableCell>
-                    <TableCell>
-                      {host.isActive ? t(TenantsKeys.Edit.ActiveYes) : t(TenantsKeys.Edit.ActiveNo)}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="danger" size="sm" onClick={() => handleRemoveHost(host.id)}>
-                        {t(TenantsKeys.Edit.RemoveHostButton)}
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t(TenantsKeys.Edit.ColHostName)}</TableHead>
+                    <TableHead>{t(TenantsKeys.Edit.ColActive)}</TableHead>
+                    <TableHead />
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {tenant.hosts.map((host) => (
+                    <TableRow key={host.id}>
+                      <TableCell className="font-mono text-sm">{host.hostName}</TableCell>
+                      <TableCell>
+                        {host.isActive
+                          ? t(TenantsKeys.Edit.ActiveYes)
+                          : t(TenantsKeys.Edit.ActiveNo)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleRemoveHost(host.id)}
+                        >
+                          {t(TenantsKeys.Edit.RemoveHostButton)}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-col gap-2 sm:flex-row mt-4">
             <Input
               placeholder={t(TenantsKeys.Edit.NewHostPlaceholder)}
               value={newHost}

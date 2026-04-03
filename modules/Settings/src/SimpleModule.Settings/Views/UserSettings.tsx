@@ -57,17 +57,17 @@ export default function UserSettings({ settings: initial }: UserSettingsProps) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t(SettingsKeys.UserSettings.Title)}</h1>
       {Object.entries(groups).map(([group, items]) => (
         <Card key={group} data-testid="setting-card">
-          <CardHeader>
+          <CardHeader className="p-4 sm:p-6">
             <CardTitle>{group}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
             {items.map((s) => (
               <div key={s.definition.key} className="space-y-1">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <label htmlFor={s.definition.key} className="text-sm font-medium">
                     {s.definition.displayName}
                   </label>

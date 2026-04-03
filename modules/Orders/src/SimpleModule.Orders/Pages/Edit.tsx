@@ -84,7 +84,7 @@ export default function Edit({ order, products }: Props) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -101,7 +101,7 @@ export default function Edit({ order, products }: Props) {
       </h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
@@ -189,7 +189,7 @@ export default function Edit({ order, products }: Props) {
         <CardHeader>
           <CardTitle>{t(OrdersKeys.Edit.DangerZone)}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <p className="text-sm text-text-muted mb-3">{t(OrdersKeys.Edit.DangerZoneDescription)}</p>
           <Button variant="danger" onClick={() => setShowDeleteDialog(true)}>
             {t(OrdersKeys.Edit.DeleteButton)}

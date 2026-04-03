@@ -52,43 +52,45 @@ export default function Manage({ products }: Props) {
         emptyDescription={t(ProductsKeys.Manage.EmptyDescription)}
       >
         {(pageData) => (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t(ProductsKeys.Manage.ColId)}</TableHead>
-                <TableHead>{t(ProductsKeys.Manage.ColName)}</TableHead>
-                <TableHead>{t(ProductsKeys.Manage.ColPrice)}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageData.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="text-text-muted">#{product.id}</TableCell>
-                  <TableCell className="font-medium text-text">{product.name}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.get(`/products/${product.id}/edit`)}
-                      >
-                        {t(ProductsKeys.Manage.EditButton)}
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
-                      >
-                        {t(ProductsKeys.Manage.DeleteButton)}
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t(ProductsKeys.Manage.ColId)}</TableHead>
+                  <TableHead>{t(ProductsKeys.Manage.ColName)}</TableHead>
+                  <TableHead>{t(ProductsKeys.Manage.ColPrice)}</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="text-text-muted">#{product.id}</TableCell>
+                    <TableCell className="font-medium text-text">{product.name}</TableCell>
+                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/products/${product.id}/edit`)}
+                        >
+                          {t(ProductsKeys.Manage.EditButton)}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
+                        >
+                          {t(ProductsKeys.Manage.DeleteButton)}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </DataGridPage>
 

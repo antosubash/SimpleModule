@@ -172,6 +172,7 @@ export default function Detail({ entry, correlated }: Props) {
   return (
     <TooltipProvider>
       <PageShell
+        className="space-y-4 sm:space-y-6"
         title={t(AuditLogsKeys.Detail.Title, { id: entry.id })}
         actions={
           <Button variant="secondary" onClick={() => router.get('/audit-logs/browse')}>
@@ -189,7 +190,7 @@ export default function Detail({ entry, correlated }: Props) {
             <CardTitle>{t(AuditLogsKeys.Detail.OverviewTitle)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               <LabeledField label={t(AuditLogsKeys.Detail.FieldTimestamp)}>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -233,7 +234,7 @@ export default function Detail({ entry, correlated }: Props) {
               <CardTitle>{t(AuditLogsKeys.Detail.HttpDetailsTitle)}</CardTitle>
             </CardHeader>
             <CardContent>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                 <LabeledField label={t(AuditLogsKeys.Detail.FieldMethodPath)}>
                   <Badge variant="info" className="mr-2">
                     {entry.httpMethod}
@@ -259,7 +260,7 @@ export default function Detail({ entry, correlated }: Props) {
                   <p className="mb-1 text-sm text-text-muted">
                     {t(AuditLogsKeys.Detail.RequestBody)}
                   </p>
-                  <pre className="overflow-auto rounded-md bg-surface-secondary p-3 text-xs">
+                  <pre className="overflow-auto rounded-md bg-surface-secondary p-2 sm:p-3 text-xs">
                     {formatJson(entry.requestBody)}
                   </pre>
                 </div>
@@ -275,7 +276,7 @@ export default function Detail({ entry, correlated }: Props) {
               <CardTitle>{t(AuditLogsKeys.Detail.DomainDetailsTitle)}</CardTitle>
             </CardHeader>
             <CardContent>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                 <LabeledField label={t(AuditLogsKeys.Detail.FieldModule)}>
                   {entry.module}
                 </LabeledField>
@@ -305,55 +306,57 @@ export default function Detail({ entry, correlated }: Props) {
             <CardHeader>
               <CardTitle>{t(AuditLogsKeys.Detail.ChangesTitle)}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColField)}</TableHead>
-                    {isUpdate ? (
-                      <>
-                        <TableHead>{t(AuditLogsKeys.Detail.ColOldValue)}</TableHead>
-                        <TableHead>{t(AuditLogsKeys.Detail.ColNewValue)}</TableHead>
-                      </>
-                    ) : (
-                      <TableHead>{t(AuditLogsKeys.Detail.ColValue)}</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {changes.map((change) => (
-                    <TableRow key={change.field}>
-                      <TableCell className="font-medium">{change.field}</TableCell>
+            <CardContent className="p-4 sm:p-6">
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColField)}</TableHead>
                       {isUpdate ? (
                         <>
-                          <TableCell>
-                            {change.old != null ? (
-                              <span className="inline-block rounded bg-danger/10 px-1.5 py-0.5 font-mono text-xs text-danger">
-                                {String(change.old)}
-                              </span>
-                            ) : (
-                              <span className="text-text-muted">\u2014</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {change.new != null ? (
-                              <span className="inline-block rounded bg-success/10 px-1.5 py-0.5 font-mono text-xs text-success">
-                                {String(change.new)}
-                              </span>
-                            ) : (
-                              <span className="text-text-muted">\u2014</span>
-                            )}
-                          </TableCell>
+                          <TableHead>{t(AuditLogsKeys.Detail.ColOldValue)}</TableHead>
+                          <TableHead>{t(AuditLogsKeys.Detail.ColNewValue)}</TableHead>
                         </>
                       ) : (
-                        <TableCell className="font-mono text-xs">
-                          {change.value != null ? String(change.value) : '\u2014'}
-                        </TableCell>
+                        <TableHead>{t(AuditLogsKeys.Detail.ColValue)}</TableHead>
                       )}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {changes.map((change) => (
+                      <TableRow key={change.field}>
+                        <TableCell className="font-medium">{change.field}</TableCell>
+                        {isUpdate ? (
+                          <>
+                            <TableCell>
+                              {change.old != null ? (
+                                <span className="inline-block rounded bg-danger/10 px-1.5 py-0.5 font-mono text-xs text-danger">
+                                  {String(change.old)}
+                                </span>
+                              ) : (
+                                <span className="text-text-muted">\u2014</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {change.new != null ? (
+                                <span className="inline-block rounded bg-success/10 px-1.5 py-0.5 font-mono text-xs text-success">
+                                  {String(change.new)}
+                                </span>
+                              ) : (
+                                <span className="text-text-muted">\u2014</span>
+                              )}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <TableCell className="font-mono text-xs">
+                            {change.value != null ? String(change.value) : '\u2014'}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -364,8 +367,8 @@ export default function Detail({ entry, correlated }: Props) {
             <CardHeader>
               <CardTitle>{t(AuditLogsKeys.Detail.MetadataTitle)}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <pre className="overflow-auto rounded-md bg-surface-secondary p-3 text-xs">
+            <CardContent className="p-4 sm:p-6">
+              <pre className="overflow-auto rounded-md bg-surface-secondary p-2 sm:p-3 text-xs">
                 {formatJson(entry.metadata)}
               </pre>
             </CardContent>
@@ -383,54 +386,56 @@ export default function Detail({ entry, correlated }: Props) {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColId)}</TableHead>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColTime)}</TableHead>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColSource)}</TableHead>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColAction)}</TableHead>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColModule)}</TableHead>
-                    <TableHead>{t(AuditLogsKeys.Detail.ColPath)}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {correlated.map((e) => (
-                    <TableRow
-                      key={e.id}
-                      className={`cursor-pointer ${e.id === entry.id ? 'bg-primary/5' : ''}`}
-                      onClick={() => router.get(`/audit-logs/${e.id}`)}
-                    >
-                      <TableCell className="text-text-muted">#{e.id}</TableCell>
-                      <TableCell className="text-sm">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>{relativeTime(e.timestamp)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>{formatTimestamp(e.timestamp)}</TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={sourceBadgeVariant(e.source)}>
-                          {SOURCE_LABELS[e.source] ?? 'Unknown'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {e.action != null ? (
-                          <Badge variant={actionBadgeVariant(e.action)}>
-                            {ACTION_LABELS[e.action] ?? `Unknown (${e.action})`}
-                          </Badge>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">{e.module || '\u2014'}</TableCell>
-                      <TableCell className="font-mono text-xs">{e.path || '\u2014'}</TableCell>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColId)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColTime)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColSource)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColAction)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColModule)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Detail.ColPath)}</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {correlated.map((e) => (
+                      <TableRow
+                        key={e.id}
+                        className={`cursor-pointer ${e.id === entry.id ? 'bg-primary/5' : ''}`}
+                        onClick={() => router.get(`/audit-logs/${e.id}`)}
+                      >
+                        <TableCell className="text-text-muted">#{e.id}</TableCell>
+                        <TableCell className="text-sm">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>{relativeTime(e.timestamp)}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>{formatTimestamp(e.timestamp)}</TooltipContent>
+                          </Tooltip>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={sourceBadgeVariant(e.source)}>
+                            {SOURCE_LABELS[e.source] ?? 'Unknown'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {e.action != null ? (
+                            <Badge variant={actionBadgeVariant(e.action)}>
+                              {ACTION_LABELS[e.action] ?? `Unknown (${e.action})`}
+                            </Badge>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">{e.module || '\u2014'}</TableCell>
+                        <TableCell className="font-mono text-xs">{e.path || '\u2014'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         )}

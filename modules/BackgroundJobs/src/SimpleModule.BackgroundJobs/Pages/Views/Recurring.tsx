@@ -91,7 +91,7 @@ export default function Recurring({ jobs }: Props) {
                       : t(BackgroundJobsKeys.Recurring.Never)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleToggle(job.id)}>
                         {job.isEnabled
                           ? t(BackgroundJobsKeys.Recurring.ActionDisable)

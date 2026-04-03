@@ -42,7 +42,9 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">{t(UsersKeys.EnableAuthenticator.Title)}</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        {t(UsersKeys.EnableAuthenticator.Title)}
+      </h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -58,7 +60,7 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
 
       <p className="text-sm text-text-muted mb-4">{t(UsersKeys.EnableAuthenticator.Intro)}</p>
 
-      <ol className="list-decimal pl-5 space-y-6 text-sm">
+      <ol className="list-decimal pl-5 space-y-4 sm:space-y-6 text-sm">
         <li>
           <p className="text-text-muted">{t(UsersKeys.EnableAuthenticator.Step1)}</p>
         </li>
@@ -71,13 +73,13 @@ export default function EnableAuthenticator({ sharedKey, authenticatorUri }: Pro
             <img
               src={qrCodeUrl}
               alt={t(UsersKeys.EnableAuthenticator.QrCodeAlt)}
-              className="w-48 h-48"
+              className="w-36 h-36 sm:w-48 sm:h-48"
             />
           )}
         </li>
         <li>
           <p className="mb-4">{t(UsersKeys.EnableAuthenticator.Step3)}</p>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
               <Label htmlFor="code">{t(UsersKeys.EnableAuthenticator.VerificationCodeLabel)}</Label>
               <Input

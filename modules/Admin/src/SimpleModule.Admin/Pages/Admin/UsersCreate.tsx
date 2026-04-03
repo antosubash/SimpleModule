@@ -50,7 +50,7 @@ export default function UsersCreate({ allRoles }: Props) {
   }
 
   return (
-    <Container className="space-y-6">
+    <Container className="space-y-4 sm:space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -67,7 +67,7 @@ export default function UsersCreate({ allRoles }: Props) {
       <h1 className="text-2xl font-bold tracking-tight">{t(AdminKeys.UsersCreate.Title)}</h1>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               {formError && (

@@ -72,8 +72,8 @@ export default function Browse({
       title={t(MarketplaceKeys.Browse.Title)}
       description={t(MarketplaceKeys.Browse.Description, { totalHits: String(totalHits) })}
     >
-      <div className="space-y-6">
-        <form onSubmit={handleSearch} className="flex gap-3">
+      <div className="space-y-4 sm:space-y-6">
+        <form onSubmit={handleSearch} className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <Input
             placeholder={t(MarketplaceKeys.Browse.SearchPlaceholder)}
             value={search}
@@ -83,8 +83,8 @@ export default function Browse({
           <Button type="submit">{t(MarketplaceKeys.Browse.SearchButton)}</Button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex flex-wrap gap-2 overflow-x-auto">
             {categoryNames.map((cat) => (
               <Button
                 key={cat}

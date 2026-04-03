@@ -14,9 +14,11 @@ export default function GenerateRecoveryCodes() {
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">{t(UsersKeys.GenerateRecoveryCodes.Title)}</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        {t(UsersKeys.GenerateRecoveryCodes.Title)}
+      </h3>
 
-      <Alert variant="warning" className="mb-6">
+      <Alert variant="warning" className="mb-4 sm:mb-6">
         <AlertTitle>{t(UsersKeys.GenerateRecoveryCodes.WarningTitle)}</AlertTitle>
         <AlertDescription>
           <p>{t(UsersKeys.GenerateRecoveryCodes.WarningDescription1)}</p>

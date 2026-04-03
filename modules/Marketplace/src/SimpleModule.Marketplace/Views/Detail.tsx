@@ -147,11 +147,11 @@ export default function Detail({ package: pkg }: Props) {
         { label: pkg.title },
       ]}
     >
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-3">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-5">
+            <CardContent className="pt-4 sm:pt-6">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:gap-5">
                 {pkg.icon ? (
                   <img src={pkg.icon} alt="" className="h-20 w-20 rounded-xl" />
                 ) : (
@@ -228,7 +228,7 @@ export default function Detail({ package: pkg }: Props) {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>{t(MarketplaceKeys.Detail.PackageInfoTitle)}</CardTitle>
