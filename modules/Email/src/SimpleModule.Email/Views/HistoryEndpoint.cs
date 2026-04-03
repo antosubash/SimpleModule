@@ -17,7 +17,12 @@ public class HistoryEndpoint : IViewEndpoint
                 async (IEmailContracts emailContracts) =>
                     Inertia.Render(
                         "Email/History",
-                        new { messages = await emailContracts.GetAllMessagesAsync() }
+                        new
+                        {
+                            messages = await emailContracts.QueryMessagesAsync(
+                                new QueryEmailMessagesRequest()
+                            ),
+                        }
                     )
             )
             .RequirePermission(EmailPermissions.ViewHistory);

@@ -17,7 +17,12 @@ public class TemplatesEndpoint : IViewEndpoint
                 async (IEmailContracts emailContracts) =>
                     Inertia.Render(
                         "Email/Templates",
-                        new { templates = await emailContracts.GetAllTemplatesAsync() }
+                        new
+                        {
+                            templates = await emailContracts.QueryTemplatesAsync(
+                                new QueryEmailTemplatesRequest()
+                            ),
+                        }
                     )
             )
             .RequirePermission(EmailPermissions.ViewTemplates);

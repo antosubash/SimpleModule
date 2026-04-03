@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
-using SimpleModule.Core.Endpoints;
 using SimpleModule.Email.Contracts;
 
 namespace SimpleModule.Email.Endpoints.Templates;
@@ -12,8 +12,10 @@ public class GetAllTemplatesEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/templates",
-                (IEmailContracts emailContracts) =>
-                    CrudEndpoints.GetAll(emailContracts.GetAllTemplatesAsync)
+                (
+                    [AsParameters] QueryEmailTemplatesRequest request,
+                    IEmailContracts emailContracts
+                ) => emailContracts.QueryTemplatesAsync(request)
             )
             .RequirePermission(EmailPermissions.ViewTemplates);
 }

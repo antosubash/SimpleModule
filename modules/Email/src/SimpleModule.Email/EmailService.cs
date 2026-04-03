@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core;
 using SimpleModule.Core.Events;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
@@ -25,6 +26,7 @@ public partial class EmailService(
             To = request.To,
             Cc = request.Cc,
             Bcc = request.Bcc,
+            ReplyTo = request.ReplyTo,
             Subject = request.Subject,
             Body = request.Body,
             IsHtml = request.IsHtml,
@@ -38,19 +40,19 @@ public partial class EmailService(
 
         try
         {
-            message.Status = EmailStatus.Sending;
-            await db.SaveChangesAsync();
-
-            await emailProvider.SendAsync(
+            var envelope = new EmailEnvelope(
                 opts.DefaultFromAddress,
                 opts.DefaultFromName,
                 request.To,
                 request.Cc,
                 request.Bcc,
+                request.ReplyTo,
                 request.Subject,
                 request.Body,
                 request.IsHtml
             );
+
+            await emailProvider.SendAsync(envelope);
 
             message.Status = EmailStatus.Sent;
             message.SentAt = DateTime.UtcNow;
@@ -117,14 +119,15 @@ public partial class EmailService(
         );
     }
 
-    public async Task<IEnumerable<EmailMessage>> GetAllMessagesAsync() =>
-        await db.EmailMessages.AsNoTracking().OrderByDescending(e => e.CreatedAt).ToListAsync();
+    public Task<PagedResult<EmailMessage>> QueryMessagesAsync(QueryEmailMessagesRequest request) =>
+        throw new NotImplementedException();
 
     public async Task<EmailMessage?> GetMessageByIdAsync(EmailMessageId id) =>
         await db.EmailMessages.FindAsync(id);
 
-    public async Task<IEnumerable<EmailTemplate>> GetAllTemplatesAsync() =>
-        await db.EmailTemplates.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
+    public Task<PagedResult<EmailTemplate>> QueryTemplatesAsync(
+        QueryEmailTemplatesRequest request
+    ) => throw new NotImplementedException();
 
     public async Task<EmailTemplate?> GetTemplateByIdAsync(EmailTemplateId id) =>
         await db.EmailTemplates.FindAsync(id);
@@ -185,6 +188,8 @@ public partial class EmailService(
 
         LogTemplateDeleted(logger, id);
     }
+
+    public Task<EmailStats> GetEmailStatsAsync() => throw new NotImplementedException();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Email {MessageId} sent to {To}")]
     private static partial void LogEmailSent(ILogger logger, EmailMessageId messageId, string to);

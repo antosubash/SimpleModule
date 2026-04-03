@@ -84,7 +84,7 @@ public sealed class EmailServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllMessagesAsync_ReturnsAllMessages()
+    public async Task SendEmailAsync_PersistsMessages()
     {
         await _sut.SendEmailAsync(
             new SendEmailRequest
@@ -103,7 +103,7 @@ public sealed class EmailServiceTests : IDisposable
             }
         );
 
-        var messages = await _sut.GetAllMessagesAsync();
+        var messages = await _db.EmailMessages.AsNoTracking().ToListAsync();
 
         messages.Should().HaveCount(2);
     }
@@ -147,7 +147,7 @@ public sealed class EmailServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllTemplatesAsync_ReturnsAllTemplates()
+    public async Task CreateTemplateAsync_PersistsTemplates()
     {
         await _sut.CreateTemplateAsync(
             new CreateEmailTemplateRequest
@@ -168,7 +168,7 @@ public sealed class EmailServiceTests : IDisposable
             }
         );
 
-        var templates = await _sut.GetAllTemplatesAsync();
+        var templates = await _db.EmailTemplates.AsNoTracking().ToListAsync();
 
         templates.Should().HaveCount(2);
     }

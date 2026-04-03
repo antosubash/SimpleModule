@@ -13,19 +13,12 @@ public partial class SmtpEmailProvider(
     public string Name => "SMTP";
 
     public async Task SendAsync(
-        string from,
-        string fromName,
-        string to,
-        string? cc,
-        string? bcc,
-        string subject,
-        string body,
-        bool isHtml,
+        EmailEnvelope envelope,
         CancellationToken cancellationToken = default
     )
     {
         var smtp = options.Value.Smtp;
-        using var message = CreateMessage(from, fromName, to, cc, bcc, subject, body, isHtml);
+        using var message = CreateMessage(envelope);
 
         using var client = new SmtpClient();
         await client.ConnectAsync(smtp.Host, smtp.Port, smtp.UseSsl, cancellationToken);
@@ -38,36 +31,26 @@ public partial class SmtpEmailProvider(
         await client.SendAsync(message, cancellationToken);
         await client.DisconnectAsync(true, cancellationToken);
 
-        LogEmailSent(logger, to, subject);
+        LogEmailSent(logger, envelope.To, envelope.Subject);
     }
 
-    private static MimeMessage CreateMessage(
-        string from,
-        string fromName,
-        string to,
-        string? cc,
-        string? bcc,
-        string subject,
-        string body,
-        bool isHtml
-    )
+    private static MimeMessage CreateMessage(EmailEnvelope envelope)
     {
         var message = new MimeMessage();
-        message.From.Add(new MailboxAddress(fromName, from));
-        message.To.Add(MailboxAddress.Parse(to));
+        message.From.Add(new MailboxAddress(envelope.FromName, envelope.From));
+        message.To.Add(MailboxAddress.Parse(envelope.To));
 
-        if (!string.IsNullOrWhiteSpace(cc))
-        {
-            message.Cc.Add(MailboxAddress.Parse(cc));
-        }
+        if (!string.IsNullOrWhiteSpace(envelope.Cc))
+            message.Cc.Add(MailboxAddress.Parse(envelope.Cc));
 
-        if (!string.IsNullOrWhiteSpace(bcc))
-        {
-            message.Bcc.Add(MailboxAddress.Parse(bcc));
-        }
+        if (!string.IsNullOrWhiteSpace(envelope.Bcc))
+            message.Bcc.Add(MailboxAddress.Parse(envelope.Bcc));
 
-        message.Subject = subject;
-        message.Body = new TextPart(isHtml ? "html" : "plain") { Text = body };
+        if (!string.IsNullOrWhiteSpace(envelope.ReplyTo))
+            message.ReplyTo.Add(MailboxAddress.Parse(envelope.ReplyTo));
+
+        message.Subject = envelope.Subject;
+        message.Body = new TextPart(envelope.IsHtml ? "html" : "plain") { Text = envelope.Body };
 
         return message;
     }

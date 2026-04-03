@@ -6,19 +6,9 @@ public partial class LogEmailProvider(ILogger<LogEmailProvider> logger) : IEmail
 {
     public string Name => "Log";
 
-    public Task SendAsync(
-        string from,
-        string fromName,
-        string to,
-        string? cc,
-        string? bcc,
-        string subject,
-        string body,
-        bool isHtml,
-        CancellationToken cancellationToken = default
-    )
+    public Task SendAsync(EmailEnvelope envelope, CancellationToken cancellationToken = default)
     {
-        LogEmail(logger, from, to, subject, body);
+        LogEmail(logger, envelope.From, envelope.To, envelope.Subject, envelope.Body);
         return Task.CompletedTask;
     }
 
