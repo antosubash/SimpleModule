@@ -19,5 +19,6 @@
     <ProjectReference Include="..\..\src\SimpleModule.Email\SimpleModule.Email.csproj" />
     <ProjectReference Include="..\..\src\SimpleModule.Email.Contracts\SimpleModule.Email.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\tests\SimpleModule.Tests.Shared\SimpleModule.Tests.Shared.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs.Contracts\SimpleModule.BackgroundJobs.Contracts.csproj" />
   </ItemGroup>
 </Project>

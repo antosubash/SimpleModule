@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Events;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
+using SimpleModule.Email.Jobs;
 using SimpleModule.Email.Providers;
 using SimpleModule.Email.Services;
 
@@ -13,14 +14,13 @@ namespace SimpleModule.Email;
 public partial class EmailService(
     EmailDbContext db,
     IEmailProvider emailProvider,
-    IOptions<EmailModuleOptions> options,
     IEventBus eventBus,
+    IBackgroundJobs backgroundJobs,
     ILogger<EmailService> logger
 ) : IEmailContracts
 {
     public async Task<EmailMessage> SendEmailAsync(SendEmailRequest request)
     {
-        var opts = options.Value;
         var message = new EmailMessage
         {
             To = request.To,
@@ -38,61 +38,11 @@ public partial class EmailService(
         db.EmailMessages.Add(message);
         await db.SaveChangesAsync();
 
-        try
-        {
-            var envelope = new EmailEnvelope(
-                opts.DefaultFromAddress,
-                opts.DefaultFromName,
-                request.To,
-                request.Cc,
-                request.Bcc,
-                request.ReplyTo,
-                request.Subject,
-                request.Body,
-                request.IsHtml
-            );
+        await backgroundJobs.EnqueueAsync<SendEmailJob>(new SendEmailJobData(message.Id));
 
-            await emailProvider.SendAsync(envelope);
-
-            message.Status = EmailStatus.Sent;
-            message.SentAt = DateTime.UtcNow;
-            await db.SaveChangesAsync();
-
-            LogEmailSent(logger, message.Id, request.To);
-            eventBus.PublishInBackground(
-                new EmailSentEvent(message.Id, request.To, request.Subject)
-            );
-        }
-        catch (InvalidOperationException ex)
-        {
-            await HandleSendFailure(message, request, ex);
-        }
-        catch (System.Net.Sockets.SocketException ex)
-        {
-            await HandleSendFailure(message, request, ex);
-        }
-        catch (IOException ex)
-        {
-            await HandleSendFailure(message, request, ex);
-        }
+        LogEmailQueued(logger, message.Id, request.To);
 
         return message;
-    }
-
-    private async Task HandleSendFailure(
-        EmailMessage message,
-        SendEmailRequest request,
-        Exception ex
-    )
-    {
-        message.Status = EmailStatus.Failed;
-        message.ErrorMessage = ex.Message;
-        await db.SaveChangesAsync();
-
-        LogEmailFailed(logger, message.Id, request.To, ex);
-        eventBus.PublishInBackground(
-            new EmailFailedEvent(message.Id, request.To, request.Subject, ex.Message)
-        );
     }
 
     public async Task<EmailMessage> SendTemplatedEmailAsync(
@@ -381,16 +331,8 @@ public partial class EmailService(
         };
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Email {MessageId} sent to {To}")]
-    private static partial void LogEmailSent(ILogger logger, EmailMessageId messageId, string to);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Email {MessageId} failed to send to {To}")]
-    private static partial void LogEmailFailed(
-        ILogger logger,
-        EmailMessageId messageId,
-        string to,
-        Exception ex
-    );
+    [LoggerMessage(Level = LogLevel.Information, Message = "Email {MessageId} queued for {To}")]
+    private static partial void LogEmailQueued(ILogger logger, EmailMessageId messageId, string to);
 
     [LoggerMessage(
         Level = LogLevel.Information,

@@ -7,6 +7,7 @@ public class EmailModuleOptions
     public string DefaultFromAddress { get; set; } = "noreply@localhost";
     public string DefaultFromName { get; set; } = "SimpleModule";
     public int MaxRetryCount { get; set; } = 3;
+    public string RetryIntervalCron { get; set; } = "*/5 * * * *";
 }
 
 public class SmtpOptions

@@ -2,9 +2,11 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core.Events;
 using SimpleModule.Database;
 using SimpleModule.Email.Contracts;
+using SimpleModule.Email.Jobs;
 using SimpleModule.Email.Providers;
 
 namespace SimpleModule.Email.Tests.Unit;
@@ -14,6 +16,7 @@ public sealed class EmailServiceTests : IDisposable
     private readonly EmailDbContext _db;
     private readonly EmailService _sut;
     private readonly TestEventBus _eventBus = new();
+    private readonly TestBackgroundJobs _backgroundJobs = new();
 
     public EmailServiceTests()
     {
@@ -33,14 +36,13 @@ public sealed class EmailServiceTests : IDisposable
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
 
-        var emailOptions = Options.Create(new EmailModuleOptions());
         var provider = new LogEmailProvider(NullLogger<LogEmailProvider>.Instance);
 
         _sut = new EmailService(
             _db,
             provider,
-            emailOptions,
             _eventBus,
+            _backgroundJobs,
             NullLogger<EmailService>.Instance
         );
     }
@@ -63,13 +65,13 @@ public sealed class EmailServiceTests : IDisposable
         result.Should().NotBeNull();
         result.To.Should().Be("test@example.com");
         result.Subject.Should().Be("Test Subject");
-        result.Status.Should().Be(EmailStatus.Sent);
-        result.SentAt.Should().NotBeNull();
+        result.Status.Should().Be(EmailStatus.Queued);
+        result.SentAt.Should().BeNull();
         result.Id.Value.Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public async Task SendEmailAsync_PublishesEmailSentEvent()
+    public async Task SendEmailAsync_EnqueuesBackgroundJob()
     {
         var request = new SendEmailRequest
         {
@@ -80,7 +82,8 @@ public sealed class EmailServiceTests : IDisposable
 
         await _sut.SendEmailAsync(request);
 
-        _eventBus.PublishedEvents.Should().ContainSingle();
+        _backgroundJobs.EnqueuedJobs.Should().ContainSingle();
+        _backgroundJobs.EnqueuedJobs[0].JobType.Should().Be<SendEmailJob>();
     }
 
     [Fact]
@@ -275,7 +278,7 @@ public sealed class EmailServiceTests : IDisposable
         result.Subject.Should().Be("Welcome John");
         result.Body.Should().Contain("Hello John");
         result.Body.Should().Contain("welcome to SimpleModule!");
-        result.Status.Should().Be(EmailStatus.Sent);
+        result.Status.Should().Be(EmailStatus.Queued);
     }
 
     [Fact]
@@ -453,6 +456,44 @@ public sealed class EmailServiceTests : IDisposable
         stats.FailedLast24Hours.Should().Be(1);
         stats.TopErrors.Should().HaveCount(1);
         stats.TopErrors[0].ErrorMessage.Should().Be("Timeout");
+    }
+
+    private sealed class TestBackgroundJobs : IBackgroundJobs
+    {
+        public List<(Type JobType, object? Data)> EnqueuedJobs { get; } = [];
+
+        public Task<JobId> EnqueueAsync<TJob>(object? data = null, CancellationToken ct = default)
+            where TJob : IModuleJob
+        {
+            EnqueuedJobs.Add((typeof(TJob), data));
+            return Task.FromResult(JobId.From(Guid.NewGuid()));
+        }
+
+        public Task<JobId> ScheduleAsync<TJob>(
+            DateTimeOffset executeAt,
+            object? data = null,
+            CancellationToken ct = default
+        )
+            where TJob : IModuleJob => Task.FromResult(JobId.From(Guid.NewGuid()));
+
+        public Task<RecurringJobId> AddRecurringAsync<TJob>(
+            string name,
+            string cronExpression,
+            object? data = null,
+            CancellationToken ct = default
+        )
+            where TJob : IModuleJob => Task.FromResult(RecurringJobId.From(Guid.NewGuid()));
+
+        public Task RemoveRecurringAsync(RecurringJobId id, CancellationToken ct = default) =>
+            Task.CompletedTask;
+
+        public Task<bool> ToggleRecurringAsync(RecurringJobId id, CancellationToken ct = default) =>
+            Task.FromResult(true);
+
+        public Task CancelAsync(JobId jobId, CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<JobStatusDto?> GetStatusAsync(JobId jobId, CancellationToken ct = default) =>
+            Task.FromResult<JobStatusDto?>(null);
     }
 
     private sealed class TestEventBus : IEventBus
