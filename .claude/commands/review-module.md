@@ -44,7 +44,7 @@ For each source file found:
 
 1. **One class per file** — if a file contains more than one `class` definition, flag it.
 2. **Class name matches file name** — e.g., `CreateEndpoint.cs` must contain `class CreateEndpoint`. Flag mismatches.
-3. **internal sealed** — endpoint and view classes must be declared `internal sealed`. Flag any that are `public`, `private`, missing `sealed`, or missing `internal`.
+3. **public class** — endpoint and view classes must be declared `public class`. Flag any that are `internal`, `private`, or `sealed`.
 4. **File-scoped namespaces** — check for `namespace Foo {` (brace-style). Must be `namespace Foo;` (file-scoped). Flag any brace-style namespace declarations.
 5. **Private field naming** — grep for `private` field declarations. Fields must use `_camelCase` prefix. Flag any private field that does not start with `_`.
 
@@ -99,16 +99,19 @@ Note: integration tests using `SimpleModuleWebApplicationFactory` with `CreateAu
 
 ## Area 7 — Permissions: Sealed class with const strings
 
-Grep for `IModulePermissions` in `modules/{Name}/src/SimpleModule.{Name}.Contracts/`.
+Grep for `IModulePermissions` in `modules/{Name}/src/` (covers both the implementation assembly and the `.Contracts` assembly).
 
 For the permissions class found:
 
 1. **Sealed** — the class must be `sealed`. Flag if not.
 2. **Naming pattern** — all `const string` values must follow the `"Module.Action"` format (e.g., `"Products.Create"`, `"Products.Delete"`). Flag any permission string that does not match this pattern.
 
-Grep for `AddPermissions<` or `builder.AddPermissions` in `modules/{Name}/src/SimpleModule.{Name}/{Name}Module.cs`.
+If a permissions class implementing `IModulePermissions` was found above, grep for `AddPermissions<` or `builder.AddPermissions` in `modules/{Name}/src/SimpleModule.{Name}/{Name}Module.cs`.
 
-3. **ConfigurePermissions registration** — `ConfigurePermissions` must call `builder.AddPermissions<{Name}Permissions>()`. Flag if the call is absent or uses the wrong type.
+3. **ConfigurePermissions registration** — This check is conditional:
+   - If a permissions class implementing `IModulePermissions` exists **and** `builder.AddPermissions<{Name}Permissions>()` is absent from `{Name}Module.cs`: flag it as a violation.
+   - If no permissions class exists and no `AddPermissions` call exists: mark Area 7 as N/A.
+   - If both exist and the type matches: OK.
 
 ---
 
