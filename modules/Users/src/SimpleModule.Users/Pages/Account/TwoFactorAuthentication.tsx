@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, AlertTitle, Button } from '@simplemodule/ui';
+import { UsersKeys } from '../../Locales/keys';
 import ManageLayout from './ManageLayout';
 
 interface Props {
@@ -9,21 +11,21 @@ interface Props {
   recoveryCodesLeft: number;
 }
 
-const statusMessages: Record<string, string> = {
-  'browser-forgotten':
-    'The current browser has been forgotten. When you login again from this browser you will be prompted for your 2FA code.',
-  '2fa-disabled':
-    '2FA has been disabled. You can reenable 2FA when you setup an authenticator app.',
-  'authenticator-verified': 'Your authenticator app has been verified.',
-};
-
 export default function TwoFactorAuthentication({
   hasAuthenticator,
   is2faEnabled,
   isMachineRemembered,
   recoveryCodesLeft,
 }: Props) {
+  const { t } = useTranslation('Users');
   const status = new URLSearchParams(window.location.search).get('status');
+
+  const statusMessages: Record<string, string> = {
+    'browser-forgotten': t(UsersKeys.TwoFactor.Status.BrowserForgotten),
+    '2fa-disabled': t(UsersKeys.TwoFactor.Status['2faDisabled']),
+    'authenticator-verified': t(UsersKeys.TwoFactor.Status.AuthenticatorVerified),
+  };
+
   const statusMessage = status ? statusMessages[status] : null;
 
   function handleForgetBrowser(e: React.FormEvent<HTMLFormElement>) {
@@ -33,7 +35,7 @@ export default function TwoFactorAuthentication({
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">
-      <h3 className="text-lg font-semibold mb-4">Two-factor authentication (2FA)</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">{t(UsersKeys.TwoFactor.Title)}</h3>
 
       {statusMessage && (
         <Alert variant="success" className="mb-4">
@@ -45,30 +47,30 @@ export default function TwoFactorAuthentication({
         <>
           {recoveryCodesLeft === 0 && (
             <Alert variant="danger" className="mb-4">
-              <AlertTitle>You have no recovery codes left.</AlertTitle>
+              <AlertTitle>{t(UsersKeys.TwoFactor.NoRecoveryCodesTitle)}</AlertTitle>
               <AlertDescription>
-                You must{' '}
+                {t(UsersKeys.TwoFactor.NoRecoveryCodesDescription)}{' '}
                 <a
                   href="/Identity/Account/Manage/GenerateRecoveryCodes"
                   className="font-medium underline"
                 >
-                  generate a new set of recovery codes
+                  {t(UsersKeys.TwoFactor.NoRecoveryCodesLinkText)}
                 </a>{' '}
-                before you can log in with a recovery code.
+                {t(UsersKeys.TwoFactor.NoRecoveryCodesDescriptionSuffix)}
               </AlertDescription>
             </Alert>
           )}
 
           {recoveryCodesLeft === 1 && (
             <Alert variant="danger" className="mb-4">
-              <AlertTitle>You have 1 recovery code left.</AlertTitle>
+              <AlertTitle>{t(UsersKeys.TwoFactor.OneRecoveryCodeTitle)}</AlertTitle>
               <AlertDescription>
-                You can{' '}
+                {t(UsersKeys.TwoFactor.OneRecoveryCodeDescription)}{' '}
                 <a
                   href="/Identity/Account/Manage/GenerateRecoveryCodes"
                   className="font-medium underline"
                 >
-                  generate a new set of recovery codes
+                  {t(UsersKeys.TwoFactor.OneRecoveryCodeLinkText)}
                 </a>
                 .
               </AlertDescription>
@@ -77,25 +79,27 @@ export default function TwoFactorAuthentication({
 
           {recoveryCodesLeft >= 2 && recoveryCodesLeft <= 3 && (
             <Alert variant="warning" className="mb-4">
-              <AlertTitle>You have {recoveryCodesLeft} recovery codes left.</AlertTitle>
+              <AlertTitle>
+                {t(UsersKeys.TwoFactor.FewRecoveryCodesTitle, { count: String(recoveryCodesLeft) })}
+              </AlertTitle>
               <AlertDescription>
-                You should{' '}
+                {t(UsersKeys.TwoFactor.FewRecoveryCodesDescription)}{' '}
                 <a
                   href="/Identity/Account/Manage/GenerateRecoveryCodes"
                   className="font-medium underline"
                 >
-                  generate a new set of recovery codes
+                  {t(UsersKeys.TwoFactor.FewRecoveryCodesLinkText)}
                 </a>
                 .
               </AlertDescription>
             </Alert>
           )}
 
-          <div className="mb-6 space-y-3">
+          <div className="mb-4 sm:mb-6 space-y-3">
             {isMachineRemembered && (
               <form onSubmit={handleForgetBrowser}>
                 <Button type="submit" variant="outline">
-                  Forget this browser
+                  {t(UsersKeys.TwoFactor.ForgetBrowser)}
                 </Button>
               </form>
             )}
@@ -104,36 +108,38 @@ export default function TwoFactorAuthentication({
                 variant="outline"
                 onClick={() => router.get('/Identity/Account/Manage/Disable2fa')}
               >
-                Disable 2FA
+                {t(UsersKeys.TwoFactor.Disable2fa)}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => router.get('/Identity/Account/Manage/GenerateRecoveryCodes')}
               >
-                Reset recovery codes
+                {t(UsersKeys.TwoFactor.ResetRecoveryCodes)}
               </Button>
             </div>
           </div>
 
-          <div className="border-t border-border pt-6" />
+          <div className="border-t border-border pt-4 sm:pt-6" />
         </>
       )}
 
-      <h3 className="text-lg font-semibold mb-4">Authenticator app</h3>
+      <h3 className="text-lg font-semibold mb-3 sm:mb-4">
+        {t(UsersKeys.TwoFactor.AuthenticatorAppTitle)}
+      </h3>
       {!hasAuthenticator ? (
         <Button onClick={() => router.get('/Identity/Account/Manage/EnableAuthenticator')}>
-          Add authenticator app
+          {t(UsersKeys.TwoFactor.AddAuthenticatorApp)}
         </Button>
       ) : (
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => router.get('/Identity/Account/Manage/EnableAuthenticator')}>
-            Set up authenticator app
+            {t(UsersKeys.TwoFactor.SetUpAuthenticatorApp)}
           </Button>
           <Button
             variant="outline"
             onClick={() => router.get('/Identity/Account/Manage/ResetAuthenticator')}
           >
-            Reset authenticator app
+            {t(UsersKeys.TwoFactor.ResetAuthenticatorApp)}
           </Button>
         </div>
       )}

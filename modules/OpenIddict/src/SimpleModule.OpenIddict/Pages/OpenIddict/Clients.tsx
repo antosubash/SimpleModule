@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { OpenIddictKeys } from '../../Locales/keys';
 
 interface Client {
   id: string;
@@ -30,6 +32,7 @@ interface Props {
 }
 
 export default function Clients({ clients }: Props) {
+  const { t } = useTranslation('OpenIddict');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: string;
     clientId: string;
@@ -44,22 +47,28 @@ export default function Clients({ clients }: Props) {
   return (
     <>
       <DataGridPage
-        title="Clients"
-        description={`${clients.length} registered ${clients.length === 1 ? 'client' : 'clients'}`}
+        title={t(OpenIddictKeys.Clients.Title)}
+        description={
+          clients.length === 1
+            ? t(OpenIddictKeys.Clients.Description.Singular, { count: String(clients.length) })
+            : t(OpenIddictKeys.Clients.Description.Plural, { count: String(clients.length) })
+        }
         actions={
-          <Button onClick={() => router.get('/openiddict/clients/create')}>Create Client</Button>
+          <Button onClick={() => router.get('/openiddict/clients/create')}>
+            {t(OpenIddictKeys.Clients.CreateButton)}
+          </Button>
         }
         data={clients}
-        emptyTitle="No clients yet"
-        emptyDescription="Get started by registering your first OpenID Connect client."
+        emptyTitle={t(OpenIddictKeys.Clients.EmptyTitle)}
+        emptyDescription={t(OpenIddictKeys.Clients.EmptyDescription)}
       >
         {(pageData) => (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Client ID</TableHead>
-                <TableHead>Display Name</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>{t(OpenIddictKeys.Clients.ColClientId)}</TableHead>
+                <TableHead>{t(OpenIddictKeys.Clients.ColDisplayName)}</TableHead>
+                <TableHead>{t(OpenIddictKeys.Clients.ColType)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -74,13 +83,13 @@ export default function Clients({ clients }: Props) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => router.get(`/openiddict/clients/${client.id}/edit`)}
                       >
-                        Edit
+                        {t(OpenIddictKeys.Clients.EditButton)}
                       </Button>
                       <Button
                         variant="danger"
@@ -89,7 +98,7 @@ export default function Clients({ clients }: Props) {
                           setDeleteTarget({ id: client.id, clientId: client.clientId })
                         }
                       >
-                        Delete
+                        {t(OpenIddictKeys.Clients.DeleteButton)}
                       </Button>
                     </div>
                   </TableCell>
@@ -103,18 +112,19 @@ export default function Clients({ clients }: Props) {
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Client</DialogTitle>
+            <DialogTitle>{t(OpenIddictKeys.Clients.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.clientId}&rdquo;? This OAuth
-              client will be permanently removed.
+              {t(OpenIddictKeys.Clients.DeleteDialog.Description, {
+                clientId: deleteTarget?.clientId ?? '',
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t(OpenIddictKeys.Clients.DeleteDialog.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(OpenIddictKeys.Clients.DeleteDialog.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

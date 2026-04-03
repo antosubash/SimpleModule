@@ -12,10 +12,10 @@ interface SettingGroupProps {
 export default function SettingGroup({ group, definitions, values, onSave }: SettingGroupProps) {
   return (
     <Card data-testid="setting-card">
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <CardTitle>{group}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
         {definitions.map((def) => (
           <div key={def.key}>
             <label htmlFor={def.key} className="text-sm font-medium">

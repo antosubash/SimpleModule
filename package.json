@@ -32,7 +32,7 @@
     "website:dev": "npm run dev -w website",
     "website:build": "npm run build -w website",
     "website:preview": "npm run preview -w website",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.10",

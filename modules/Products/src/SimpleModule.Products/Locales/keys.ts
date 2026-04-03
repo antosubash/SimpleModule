@@ -28,10 +28,14 @@ export const ProductsKeys = {
   },
   Manage: {
     CancelButton: 'Manage.CancelButton',
+    ColId: 'Manage.ColId',
+    ColName: 'Manage.ColName',
+    ColPrice: 'Manage.ColPrice',
     CreateButton: 'Manage.CreateButton',
     DeleteButton: 'Manage.DeleteButton',
     DeleteDialog: {
       Confirm: 'Manage.DeleteDialog.Confirm',
+      DeleteButton: 'Manage.DeleteDialog.DeleteButton',
       Title: 'Manage.DeleteDialog.Title',
     },
     EditButton: 'Manage.EditButton',

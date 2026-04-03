@@ -1,5 +1,7 @@
 import { Link } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
+import { PageBuilderKeys } from '../Locales/keys';
 import type { PageSummary } from '../types';
 
 interface Props {
@@ -7,8 +9,9 @@ interface Props {
 }
 
 export default function PagesList({ pages }: Props) {
+  const { t } = useTranslation('PageBuilder');
   return (
-    <PageShell title="Pages">
+    <PageShell title={t(PageBuilderKeys.PagesList.Title)}>
       {pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <svg
@@ -25,9 +28,11 @@ export default function PagesList({ pages }: Props) {
               d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"
             />
           </svg>
-          <h3 className="text-sm font-medium text-foreground">No published pages yet</h3>
+          <h3 className="text-sm font-medium text-foreground">
+            {t(PageBuilderKeys.PagesList.EmptyHeading)}
+          </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Published pages will appear here for visitors to read.
+            {t(PageBuilderKeys.PagesList.EmptyDescription)}
           </p>
         </div>
       ) : (

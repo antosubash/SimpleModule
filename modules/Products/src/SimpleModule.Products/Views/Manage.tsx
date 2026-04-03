@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
   DataGridPage,
@@ -16,6 +17,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { ProductsKeys } from '../Locales/keys';
 import type { Product } from '../types';
 
 interface Props {
@@ -23,6 +25,7 @@ interface Props {
 }
 
 export default function Manage({ products }: Props) {
+  const { t } = useTranslation('Products');
   const [deleteTarget, setDeleteTarget] = useState<{
     id: number;
     name: string;
@@ -37,69 +40,74 @@ export default function Manage({ products }: Props) {
   return (
     <>
       <DataGridPage
-        title="Manage Products"
+        title={t(ProductsKeys.Manage.Title)}
         description={`${products.length} total products`}
-        actions={<Button onClick={() => router.get('/products/create')}>Create Product</Button>}
+        actions={
+          <Button onClick={() => router.get('/products/create')}>
+            {t(ProductsKeys.Manage.CreateButton)}
+          </Button>
+        }
         data={products}
-        emptyTitle="No products yet"
-        emptyDescription="Get started by creating your first product."
+        emptyTitle={t(ProductsKeys.Manage.EmptyTitle)}
+        emptyDescription={t(ProductsKeys.Manage.EmptyDescription)}
       >
         {(pageData) => (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageData.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="text-text-muted">#{product.id}</TableCell>
-                  <TableCell className="font-medium text-text">{product.name}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.get(`/products/${product.id}/edit`)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t(ProductsKeys.Manage.ColId)}</TableHead>
+                  <TableHead>{t(ProductsKeys.Manage.ColName)}</TableHead>
+                  <TableHead>{t(ProductsKeys.Manage.ColPrice)}</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {pageData.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="text-text-muted">#{product.id}</TableCell>
+                    <TableCell className="font-medium text-text">{product.name}</TableCell>
+                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.get(`/products/${product.id}/edit`)}
+                        >
+                          {t(ProductsKeys.Manage.EditButton)}
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
+                        >
+                          {t(ProductsKeys.Manage.DeleteButton)}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </DataGridPage>
 
       <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
+            <DialogTitle>{t(ProductsKeys.Manage.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{deleteTarget?.name}&rdquo;? This action cannot
-              be undone.
+              {t(ProductsKeys.Manage.DeleteDialog.Confirm, { name: deleteTarget?.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-              Cancel
+              {t(ProductsKeys.Manage.CancelButton)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(ProductsKeys.Manage.DeleteDialog.DeleteButton)}
             </Button>
           </DialogFooter>
         </DialogContent>

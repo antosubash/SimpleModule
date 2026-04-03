@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -23,6 +24,7 @@ import {
   TooltipTrigger,
 } from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
+import { AuditLogsKeys } from '../Locales/keys';
 import type { AuditEntry, AuditQueryRequest } from '../types';
 import {
   ACTION_LABELS,
@@ -97,6 +99,7 @@ function ChevronRight() {
 }
 
 export default function Browse({ result, filters }: Props) {
+  const { t } = useTranslation('AuditLogs');
   const [from, setFrom] = useState(filters.from ? String(filters.from) : '');
   const [to, setTo] = useState(filters.to ? String(filters.to) : '');
   const [source, setSource] = useState(filters.source != null ? String(filters.source) : '__all__');
@@ -165,16 +168,18 @@ export default function Browse({ result, filters }: Props) {
   return (
     <TooltipProvider>
       <PageShell
-        className="space-y-4"
-        title="Audit Logs"
-        description={`${result.totalCount.toLocaleString()} total entries`}
+        className="space-y-4 sm:space-y-6"
+        title={t(AuditLogsKeys.Browse.Title)}
+        description={t(AuditLogsKeys.Browse.TotalEntries, {
+          count: result.totalCount.toLocaleString(),
+        })}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="secondary" onClick={() => exportLogs('csv')}>
-              Export CSV
+              {t(AuditLogsKeys.Browse.ExportCsv)}
             </Button>
             <Button variant="secondary" onClick={() => exportLogs('json')}>
-              Export JSON
+              {t(AuditLogsKeys.Browse.ExportJson)}
             </Button>
           </div>
         }
@@ -183,8 +188,10 @@ export default function Browse({ result, filters }: Props) {
         <Card>
           <CardContent>
             {/* Quick date presets */}
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-medium text-text-muted">Quick range:</span>
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              <span className="text-xs font-medium text-text-muted">
+                {t(AuditLogsKeys.Browse.QuickRange)}
+              </span>
               {DATE_PRESETS.map((preset) => (
                 <Button
                   key={preset.hours}
@@ -198,10 +205,10 @@ export default function Browse({ result, filters }: Props) {
             </div>
 
             <form onSubmit={applyFilters}>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <div className="space-y-1">
                   <label htmlFor="filter-from" className="text-xs font-medium text-text-muted">
-                    From
+                    {t(AuditLogsKeys.Browse.FilterFrom)}
                   </label>
                   <Input
                     id="filter-from"
@@ -212,7 +219,7 @@ export default function Browse({ result, filters }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="filter-to" className="text-xs font-medium text-text-muted">
-                    To
+                    {t(AuditLogsKeys.Browse.FilterTo)}
                   </label>
                   <Input
                     id="filter-to"
@@ -222,13 +229,17 @@ export default function Browse({ result, filters }: Props) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-text-muted">Source</span>
+                  <span className="text-xs font-medium text-text-muted">
+                    {t(AuditLogsKeys.Browse.FilterSource)}
+                  </span>
                   <Select value={source} onValueChange={setSource}>
-                    <SelectTrigger aria-label="Source">
-                      <SelectValue placeholder="All sources" />
+                    <SelectTrigger aria-label={t(AuditLogsKeys.Browse.FilterSource)}>
+                      <SelectValue placeholder={t(AuditLogsKeys.Browse.FilterSourcePlaceholder)} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__all__">All sources</SelectItem>
+                      <SelectItem value="__all__">
+                        {t(AuditLogsKeys.Browse.FilterSourceAll)}
+                      </SelectItem>
                       {Object.entries(SOURCE_LABELS).map(([k, v]) => (
                         <SelectItem key={k} value={k}>
                           {v}
@@ -238,13 +249,17 @@ export default function Browse({ result, filters }: Props) {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-medium text-text-muted">Action</span>
+                  <span className="text-xs font-medium text-text-muted">
+                    {t(AuditLogsKeys.Browse.FilterAction)}
+                  </span>
                   <Select value={action} onValueChange={setAction}>
-                    <SelectTrigger aria-label="Action">
-                      <SelectValue placeholder="All actions" />
+                    <SelectTrigger aria-label={t(AuditLogsKeys.Browse.FilterAction)}>
+                      <SelectValue placeholder={t(AuditLogsKeys.Browse.FilterActionPlaceholder)} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__all__">All actions</SelectItem>
+                      <SelectItem value="__all__">
+                        {t(AuditLogsKeys.Browse.FilterActionAll)}
+                      </SelectItem>
                       {Object.entries(ACTION_LABELS).map(([k, v]) => (
                         <SelectItem key={k} value={k}>
                           {v}
@@ -255,31 +270,31 @@ export default function Browse({ result, filters }: Props) {
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="filter-module" className="text-xs font-medium text-text-muted">
-                    Module
+                    {t(AuditLogsKeys.Browse.FilterModule)}
                   </label>
                   <Input
                     id="filter-module"
-                    placeholder="e.g. Products"
+                    placeholder={t(AuditLogsKeys.Browse.FilterModulePlaceholder)}
                     value={module}
                     onChange={(e) => setModule(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="filter-search" className="text-xs font-medium text-text-muted">
-                    Search
+                    {t(AuditLogsKeys.Browse.FilterSearch)}
                   </label>
                   <Input
                     id="filter-search"
-                    placeholder="User, path, entity..."
+                    placeholder={t(AuditLogsKeys.Browse.FilterSearchPlaceholder)}
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                   />
                 </div>
                 <div className="flex items-end gap-2">
-                  <Button type="submit">Apply</Button>
+                  <Button type="submit">{t(AuditLogsKeys.Browse.FilterApply)}</Button>
                   {hasActiveFilters && (
                     <Button variant="ghost" onClick={clearFilters}>
-                      Clear
+                      {t(AuditLogsKeys.Browse.FilterClear)}
                     </Button>
                   )}
                 </div>
@@ -292,15 +307,15 @@ export default function Browse({ result, filters }: Props) {
         {result.items.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-lg font-medium text-text">No audit logs found</p>
+              <p className="text-lg font-medium text-text">{t(AuditLogsKeys.Browse.EmptyTitle)}</p>
               <p className="mt-1 text-sm text-text-muted">
                 {hasActiveFilters
-                  ? 'Try adjusting your filters or selecting a different date range.'
-                  : 'Audit entries will appear here as activity occurs.'}
+                  ? t(AuditLogsKeys.Browse.EmptyWithFilters)
+                  : t(AuditLogsKeys.Browse.EmptyNoFilters)}
               </p>
               {hasActiveFilters && (
                 <Button variant="secondary" className="mt-4" onClick={clearFilters}>
-                  Clear filters
+                  {t(AuditLogsKeys.Browse.ClearFilters)}
                 </Button>
               )}
             </CardContent>
@@ -308,94 +323,102 @@ export default function Browse({ result, filters }: Props) {
         ) : (
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Module</TableHead>
-                    <TableHead>Path</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Duration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {result.items.map((entry) => (
-                    <TableRow
-                      key={entry.id}
-                      className="cursor-pointer"
-                      onClick={() => router.get(`/audit-logs/${entry.id}`)}
-                    >
-                      <TableCell className="whitespace-nowrap text-sm">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-text-muted">{relativeTime(entry.timestamp)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>{formatTimestamp(entry.timestamp)}</TooltipContent>
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={sourceBadgeVariant(entry.source)}>
-                          {SOURCE_LABELS[entry.source] ?? 'Unknown'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {entry.userName || entry.userId || '\u2014'}
-                      </TableCell>
-                      <TableCell>
-                        {entry.action != null ? (
-                          <Badge variant={actionBadgeVariant(entry.action)}>
-                            {ACTION_LABELS[entry.action] ?? 'Unknown'}
-                          </Badge>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm">{entry.module || '\u2014'}</TableCell>
-                      <TableCell className="max-w-[200px] text-sm text-text-muted">
-                        {entry.path ? (
+              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColTime)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColSource)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColUser)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColAction)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColModule)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColPath)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColStatus)}</TableHead>
+                      <TableHead>{t(AuditLogsKeys.Browse.ColDuration)}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.items.map((entry) => (
+                      <TableRow
+                        key={entry.id}
+                        className="cursor-pointer"
+                        onClick={() => router.get(`/audit-logs/${entry.id}`)}
+                      >
+                        <TableCell className="whitespace-nowrap text-sm">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="block truncate">{entry.path}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <span className="font-mono text-xs">
-                                {entry.httpMethod && `${entry.httpMethod} `}
-                                {entry.path}
+                              <span className="text-text-muted">
+                                {relativeTime(entry.timestamp)}
                               </span>
-                            </TooltipContent>
+                            </TooltipTrigger>
+                            <TooltipContent>{formatTimestamp(entry.timestamp)}</TooltipContent>
                           </Tooltip>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {entry.statusCode != null ? (
-                          <Badge variant={statusBadgeVariant(entry.statusCode)}>
-                            {entry.statusCode}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={sourceBadgeVariant(entry.source)}>
+                            {SOURCE_LABELS[entry.source] ?? 'Unknown'}
                           </Badge>
-                        ) : (
-                          '\u2014'
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-text-muted">
-                        {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {entry.userName || entry.userId || '\u2014'}
+                        </TableCell>
+                        <TableCell>
+                          {entry.action != null ? (
+                            <Badge variant={actionBadgeVariant(entry.action)}>
+                              {ACTION_LABELS[entry.action] ?? 'Unknown'}
+                            </Badge>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">{entry.module || '\u2014'}</TableCell>
+                        <TableCell className="max-w-[200px] text-sm text-text-muted">
+                          {entry.path ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="block truncate">{entry.path}</span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <span className="font-mono text-xs">
+                                  {entry.httpMethod && `${entry.httpMethod} `}
+                                  {entry.path}
+                                </span>
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {entry.statusCode != null ? (
+                            <Badge variant={statusBadgeVariant(entry.statusCode)}>
+                              {entry.statusCode}
+                            </Badge>
+                          ) : (
+                            '\u2014'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-text-muted">
+                          {entry.durationMs != null ? `${entry.durationMs}ms` : '\u2014'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         )}
 
         {/* Server-side Pagination */}
         {result.totalCount > 0 && (
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
             <span className="text-sm text-text-muted">
-              Showing {startItem}\u2013{endItem} of {result.totalCount.toLocaleString()} entries
+              {t(AuditLogsKeys.Browse.Showing, {
+                start: startItem,
+                end: endItem,
+                total: result.totalCount.toLocaleString(),
+              })}
             </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1">

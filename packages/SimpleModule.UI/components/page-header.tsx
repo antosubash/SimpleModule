@@ -11,12 +11,15 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
   ({ className, title, description, actions, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('flex items-start justify-between gap-4 mb-6', className)}
+      className={cn(
+        'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 mb-6',
+        className,
+      )}
       {...props}
     >
-      <div>
+      <div className="min-w-0">
         <h1
-          className="text-2xl font-extrabold tracking-tight"
+          className="text-xl sm:text-2xl font-extrabold tracking-tight"
           style={{ fontFamily: "'Sora', sans-serif" }}
         >
           <span className="gradient-text">{title}</span>

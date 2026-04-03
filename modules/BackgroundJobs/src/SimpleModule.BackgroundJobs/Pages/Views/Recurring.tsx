@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { BackgroundJobsKeys } from '../../Locales/keys';
 
 interface RecurringJob {
   id: string;
@@ -34,6 +36,7 @@ interface Props {
 }
 
 export default function Recurring({ jobs }: Props) {
+  const { t } = useTranslation('BackgroundJobs');
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   function handleToggle(id: string) {
@@ -49,20 +52,20 @@ export default function Recurring({ jobs }: Props) {
   return (
     <>
       <DataGridPage
-        title="Recurring Jobs"
-        description={`${jobs.length} recurring jobs configured`}
+        title={t(BackgroundJobsKeys.Recurring.Title)}
+        description={t(BackgroundJobsKeys.Recurring.Description, { count: jobs.length })}
         data={jobs}
-        emptyTitle="No recurring jobs"
-        emptyDescription="No recurring background jobs have been configured yet."
+        emptyTitle={t(BackgroundJobsKeys.Recurring.EmptyTitle)}
+        emptyDescription={t(BackgroundJobsKeys.Recurring.EmptyDescription)}
       >
         {(pageData) => (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Schedule</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Run</TableHead>
+                <TableHead>{t(BackgroundJobsKeys.Recurring.ColName)}</TableHead>
+                <TableHead>{t(BackgroundJobsKeys.Recurring.ColSchedule)}</TableHead>
+                <TableHead>{t(BackgroundJobsKeys.Recurring.ColStatus)}</TableHead>
+                <TableHead>{t(BackgroundJobsKeys.Recurring.ColLastRun)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -77,19 +80,25 @@ export default function Recurring({ jobs }: Props) {
                   </TableCell>
                   <TableCell>
                     <Badge variant={job.isEnabled ? 'success' : 'default'}>
-                      {job.isEnabled ? 'Enabled' : 'Disabled'}
+                      {job.isEnabled
+                        ? t(BackgroundJobsKeys.Recurring.Enabled)
+                        : t(BackgroundJobsKeys.Recurring.Disabled)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-text-muted">
-                    {job.lastRunAt ? new Date(job.lastRunAt).toLocaleString() : 'Never'}
+                    {job.lastRunAt
+                      ? new Date(job.lastRunAt).toLocaleString()
+                      : t(BackgroundJobsKeys.Recurring.Never)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleToggle(job.id)}>
-                        {job.isEnabled ? 'Disable' : 'Enable'}
+                        {job.isEnabled
+                          ? t(BackgroundJobsKeys.Recurring.ActionDisable)
+                          : t(BackgroundJobsKeys.Recurring.ActionEnable)}
                       </Button>
                       <Button variant="danger" size="sm" onClick={() => setDeleteId(job.id)}>
-                        Delete
+                        {t(BackgroundJobsKeys.Recurring.ActionDelete)}
                       </Button>
                     </div>
                   </TableCell>
@@ -103,17 +112,17 @@ export default function Recurring({ jobs }: Props) {
       <Dialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Recurring Job</DialogTitle>
+            <DialogTitle>{t(BackgroundJobsKeys.Recurring.DeleteDialogTitle)}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this recurring job? This action cannot be undone.
+              {t(BackgroundJobsKeys.Recurring.DeleteDialogDescription)}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteId(null)}>
-              Cancel
+              {t(BackgroundJobsKeys.Recurring.DeleteDialogCancel)}
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete
+              {t(BackgroundJobsKeys.Recurring.DeleteDialogConfirm)}
             </Button>
           </DialogFooter>
         </DialogContent>

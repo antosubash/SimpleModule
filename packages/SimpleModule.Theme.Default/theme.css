@@ -132,13 +132,13 @@
   }
 
   h1 {
-    @apply text-2xl;
+    @apply text-xl sm:text-2xl;
   }
   h2 {
-    @apply text-xl;
+    @apply text-lg sm:text-xl;
   }
   h3 {
-    @apply text-lg;
+    @apply text-base sm:text-lg;
   }
 
   label {
@@ -149,7 +149,7 @@
   input[type="password"],
   input[type="text"],
   input[type="tel"] {
-    @apply w-full px-4 py-3 bg-surface border border-border rounded-xl text-sm text-text transition-all duration-200 placeholder-text-muted;
+    @apply w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-surface border border-border rounded-xl text-sm text-text transition-all duration-200 placeholder-text-muted;
   }
 
   input[type="email"]:focus,
@@ -324,10 +324,50 @@
 
   /* --- Card --- */
   .card {
-    @apply bg-surface border border-border rounded-2xl p-5 transition-all duration-200;
+    @apply bg-surface border border-border rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-200;
   }
   .card:hover {
     @apply border-border-strong;
+  }
+
+  /* --- Mobile table scroll wrapper --- */
+  .table-responsive {
+    @apply -mx-4 sm:mx-0 overflow-x-auto;
+  }
+  .table-responsive > table {
+    @apply min-w-[600px] sm:min-w-0;
+  }
+
+  /* --- Scrollbar hide (for horizontal tab bars) --- */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* --- Manage account tab bar --- */
+  .manage-tab {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm whitespace-nowrap text-text-muted no-underline transition-colors duration-150 border-b-2 border-transparent shrink-0;
+  }
+  .manage-tab:hover {
+    @apply text-text;
+  }
+  .manage-tab-active {
+    @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm whitespace-nowrap text-primary no-underline font-semibold border-b-2 border-primary shrink-0;
+  }
+
+  /* --- Public layout mobile overlay --- */
+  .public-overlay {
+    @apply fixed inset-0 z-50 bg-surface;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .public-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
   }
 
   /* --- Nav Link --- */
@@ -506,13 +546,13 @@
 
   /* --- Dashboard Cards --- */
   .dash-card {
-    @apply bg-surface border border-border rounded-2xl p-5 transition-all duration-200;
+    @apply bg-surface border border-border rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-200;
   }
   .dash-card:hover {
     @apply border-border-strong shadow-md;
   }
   .dash-stat {
-    @apply text-2xl font-bold tracking-tight;
+    @apply text-xl sm:text-2xl font-bold tracking-tight;
     font-family: "Sora", system-ui, sans-serif;
   }
   .dash-label {
@@ -527,17 +567,25 @@
   /* --- App Layout (Sidebar) --- */
   .app-layout {
     display: flex;
+    flex-direction: column;
     min-height: 100vh;
   }
   .app-sidebar {
-    width: 16rem;
     @apply bg-surface border-r border-border shrink-0;
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
     z-index: 40;
-    transition: width 0.2s ease;
+    transition:
+      width 0.2s ease,
+      transform 0.25s ease;
+    /* Mobile: hidden off-screen by default */
+    width: 16rem;
+    transform: translateX(-100%);
+  }
+  .app-sidebar.app-sidebar-open {
+    transform: translateX(0);
   }
   .app-sidebar.app-sidebar-collapsed {
     width: 4rem;
@@ -550,18 +598,57 @@
   }
   .app-content {
     flex: 1;
-    margin-left: 16rem;
+    margin-left: 0;
     transition: margin-left 0.2s ease;
   }
-  .app-sidebar-collapsed ~ .app-content {
-    margin-left: 4rem;
+  /* Mobile overlay backdrop */
+  .app-sidebar-backdrop {
+    @apply fixed inset-0 bg-black/50 z-30;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .app-sidebar-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
   .app-sidebar-toggle {
-    @apply fixed bottom-4 z-50 w-7 h-7 rounded-full bg-surface border border-border flex items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised cursor-pointer transition-all duration-200;
-    left: 15rem;
+    @apply fixed bottom-4 z-50 w-7 h-7 rounded-full bg-surface border border-border items-center justify-center text-text-muted hover:text-text hover:bg-surface-raised cursor-pointer transition-all duration-200;
+    left: 1rem;
+    display: none;
   }
-  .app-sidebar-collapsed ~ .app-sidebar-toggle {
-    left: 3rem;
+  /* Mobile top bar toggle */
+  .app-mobile-header {
+    @apply sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-surface px-4 py-3;
+  }
+
+  /* ---- Desktop (md+): sidebar always visible, content offset ---- */
+  @media (min-width: 768px) {
+    .app-sidebar {
+      transform: translateX(0);
+    }
+    .app-content {
+      margin-left: 16rem;
+    }
+    .app-sidebar-collapsed ~ .app-content {
+      margin-left: 4rem;
+    }
+    .app-sidebar-backdrop {
+      display: none;
+    }
+    .app-sidebar-toggle {
+      display: flex;
+      left: 15rem;
+    }
+    .app-sidebar-collapsed ~ .app-sidebar-toggle {
+      left: 3rem;
+    }
+    .app-mobile-header {
+      display: none;
+    }
+    .public-overlay {
+      display: none;
+    }
   }
   /* --- Markdown Content --- */
   .markdown-content h1 {
@@ -653,5 +740,15 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-text-muted;
+  }
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar,
+  .app-sidebar-backdrop,
+  .app-sidebar-toggle,
+  .public-overlay {
+    transition: none !important;
   }
 }
