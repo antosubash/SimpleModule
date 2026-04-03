@@ -105,8 +105,30 @@ public partial class EmailService(
             await db.EmailTemplates.FirstOrDefaultAsync(t => t.Slug == templateSlug)
             ?? throw new Core.Exceptions.NotFoundException("EmailTemplate", templateSlug);
 
-        var renderedSubject = EmailTemplateRenderer.Render(template.Subject, variables);
-        var renderedBody = EmailTemplateRenderer.Render(template.Body, variables);
+        var subjectVars = EmailTemplateRenderer.ExtractVariables(template.Subject);
+        var bodyVars = EmailTemplateRenderer.ExtractVariables(template.Body);
+        var allRequired = subjectVars.Union(bodyVars).ToHashSet();
+        var missing = allRequired.Except(variables.Keys).ToList();
+
+        if (missing.Count > 0)
+        {
+            throw new Core.Exceptions.ValidationException(
+                new Dictionary<string, string[]>
+                {
+                    ["variables"] =
+                    [
+                        $"Template '{templateSlug}' requires variables: {string.Join(", ", missing)}",
+                    ],
+                }
+            );
+        }
+
+        var renderedSubject = EmailTemplateRenderer.Render(
+            template.Subject,
+            variables,
+            template.IsHtml
+        );
+        var renderedBody = EmailTemplateRenderer.Render(template.Body, variables, template.IsHtml);
 
         return await SendEmailAsync(
             new SendEmailRequest
@@ -115,6 +137,7 @@ public partial class EmailService(
                 Subject = renderedSubject,
                 Body = renderedBody,
                 IsHtml = template.IsHtml,
+                ReplyTo = template.DefaultReplyTo,
             }
         );
     }
