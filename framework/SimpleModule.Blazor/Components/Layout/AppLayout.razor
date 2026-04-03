@@ -1,6 +1,8 @@
 ﻿@using SimpleModule.Core.Menu
+@using SimpleModule.Core.Security
 @inherits LayoutComponentBase
 @inject IMenuRegistry MenuRegistry
+@inject ICspNonce CspNonce
 
 <div class="app-layout">
     <!-- Mobile header -->
@@ -106,7 +108,7 @@
 </div>
 
 <script suppress-error="BL9992" src="/js/shell.js?v=@CacheBuster"></script>
-<script suppress-error="BL9992">
+<script suppress-error="BL9992" nonce="@CspNonce.Value">
     // Sidebar collapse
     (function() {
         var sb = document.getElementById('app-sidebar');
