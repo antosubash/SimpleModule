@@ -7,6 +7,7 @@ using SimpleModule.Core.Agents;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.Core.Settings;
 
 namespace SimpleModule.Core;
@@ -21,6 +22,7 @@ public interface IModule
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
     virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
     virtual void ConfigureAgents(IAgentBuilder builder) { }
+    virtual void ConfigureRateLimits(IRateLimitBuilder builder) { }
 
     /// <summary>
     /// Called once during application startup after all services are built but before

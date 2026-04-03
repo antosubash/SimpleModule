@@ -683,6 +683,7 @@ internal static class SymbolDiscovery
                     m.HasConfigureSettings,
                     m.HasConfigureFeatureFlags,
                     m.HasConfigureAgents,
+                    m.HasConfigureRateLimits,
                     m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
@@ -910,6 +911,10 @@ internal static class SymbolDiscovery
                                     "ConfigureFeatureFlags"
                                 ),
                                 HasConfigureAgents = DeclaresMethod(typeSymbol, "ConfigureAgents"),
+                                HasConfigureRateLimits = DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureRateLimits"
+                                ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
                                 Location = GetSourceLocation(typeSymbol),

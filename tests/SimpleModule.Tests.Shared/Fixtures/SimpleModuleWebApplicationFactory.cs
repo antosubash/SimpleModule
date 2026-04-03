@@ -24,6 +24,7 @@ using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
 using SimpleModule.Products;
 using SimpleModule.Rag.Module;
+using SimpleModule.RateLimiting;
 using SimpleModule.Settings;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
@@ -68,6 +69,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<RagDbContext>(services);
             ReplaceDbContext<AgentsDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
+            ReplaceDbContext<RateLimitingDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
