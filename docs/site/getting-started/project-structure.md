@@ -10,32 +10,60 @@ A SimpleModule solution follows a consistent directory layout that separates the
 
 ```
 MyApp/
-├── framework/               # Core framework packages
+├── framework/                    # Core framework packages
 │   ├── SimpleModule.Core/
 │   ├── SimpleModule.Generator/
 │   ├── SimpleModule.Database/
 │   ├── SimpleModule.Blazor/
 │   ├── SimpleModule.Hosting/
-│   └── SimpleModule.DevTools/
-├── modules/                 # Your feature modules
-│   ├── Products/
+│   ├── SimpleModule.DevTools/
+│   ├── SimpleModule.Agents/       # AI agent runtime and registry
+│   ├── SimpleModule.AI.Anthropic/ # Claude API provider
+│   ├── SimpleModule.AI.OpenAI/    # OpenAI API provider
+│   ├── SimpleModule.AI.AzureOpenAI/ # Azure OpenAI provider
+│   ├── SimpleModule.AI.Ollama/    # Ollama local model provider
+│   ├── SimpleModule.Rag/          # RAG pipeline and knowledge store
+│   ├── SimpleModule.Rag.StructuredRag/      # Structured RAG pipeline
+│   ├── SimpleModule.Rag.VectorStore.InMemory/ # In-memory vector store (dev)
+│   ├── SimpleModule.Rag.VectorStore.Postgres/ # PostgreSQL vector store
+│   ├── SimpleModule.Storage/      # Storage provider abstraction
+│   ├── SimpleModule.Storage.Local/ # Local filesystem storage
+│   ├── SimpleModule.Storage.S3/    # AWS S3 storage
+│   └── SimpleModule.Storage.Azure/ # Azure Blob storage
+├── modules/                      # Your feature modules
+│   ├── Admin/
+│   ├── Agents/
+│   ├── AuditLogs/
+│   ├── BackgroundJobs/
+│   ├── Dashboard/
+│   ├── FeatureFlags/
+│   ├── FileStorage/
+│   ├── Localization/
+│   ├── Marketplace/
+│   ├── OpenIddict/
 │   ├── Orders/
-│   └── Settings/
-├── packages/                # Frontend npm packages
+│   ├── PageBuilder/
+│   ├── Permissions/
+│   ├── Products/
+│   ├── Rag/
+│   ├── Settings/
+│   ├── Tenants/
+│   └── Users/
+├── packages/                     # Frontend npm packages
 │   ├── SimpleModule.Client/
 │   ├── SimpleModule.UI/
 │   └── SimpleModule.Theme.Default/
 ├── template/
-│   └── SimpleModule.Host/   # The host application
+│   └── SimpleModule.Host/        # The host application
 │       ├── ClientApp/
 │       ├── Program.cs
 │       └── wwwroot/
 ├── cli/
-│   └── SimpleModule.Cli/    # The sm CLI tool
-├── tests/                   # Framework-level test projects
-├── SimpleModule.slnx        # Solution file
-├── package.json             # Root npm workspace config
-└── Directory.Build.props    # Shared MSBuild properties
+│   └── SimpleModule.Cli/         # The sm CLI tool
+├── tests/                        # Framework-level test projects
+├── SimpleModule.slnx             # Solution file
+├── package.json                  # Root npm workspace config
+└── Directory.Build.props         # Shared MSBuild properties
 ```
 
 ## Framework Projects
@@ -97,6 +125,35 @@ Module registration infrastructure. Provides the runtime plumbing that the gener
 ### SimpleModule.DevTools
 
 Development utilities including hot reload support, diagnostic middleware, and developer experience tooling that is excluded from production builds.
+
+### SimpleModule.Agents
+
+AI agent runtime and orchestration. Provides `IAgentRegistry` for agent discovery, `AgentChatService` for chat (streaming and non-streaming), `IAgentToolProvider` with `[AgentTool]` attribute for tool discovery, and middleware for rate limiting, token tracking, and guardrails (PII redaction, prompt injection detection).
+
+### SimpleModule.AI.*
+
+AI provider integrations implementing `IChatClient` from Microsoft.Extensions.AI:
+
+- **SimpleModule.AI.Anthropic** -- Claude API via the Anthropic SDK
+- **SimpleModule.AI.OpenAI** -- OpenAI API
+- **SimpleModule.AI.AzureOpenAI** -- Azure OpenAI Service
+- **SimpleModule.AI.Ollama** -- Ollama for local model inference
+
+### SimpleModule.Rag
+
+Retrieval-augmented generation pipeline. Defines `IRagPipeline` for querying a knowledge base and `IKnowledgeStore` for indexing documents. Includes `KnowledgeIndexingHostedService` for background indexing with deduplication.
+
+- **SimpleModule.Rag.StructuredRag** -- Structured RAG implementation (table, graph, algorithm, catalogue, chunk formats)
+- **SimpleModule.Rag.VectorStore.InMemory** -- In-memory vector store for development and testing
+- **SimpleModule.Rag.VectorStore.Postgres** -- PostgreSQL-backed vector store for production
+
+### SimpleModule.Storage
+
+File storage abstraction with `IStorageProvider` interface (save, get, delete, exists, list). Three provider implementations:
+
+- **SimpleModule.Storage.Local** -- local filesystem storage
+- **SimpleModule.Storage.S3** -- AWS S3 and S3-compatible services
+- **SimpleModule.Storage.Azure** -- Azure Blob Storage
 
 ## Module Structure
 

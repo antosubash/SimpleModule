@@ -100,6 +100,32 @@ sm new feature Products/Browse  # add a feature to an existing module
 sm doctor --fix              # validate project structure, auto-fix issues
 ```
 
+### AI Agents & RAG
+
+Build AI-powered features with built-in support for multiple LLM providers, tool calling, and retrieval-augmented generation:
+
+- **Multi-provider AI** -- Anthropic (Claude), OpenAI, Azure OpenAI, and Ollama behind a unified `IChatClient` interface
+- **Agent runtime** -- define agents with custom instructions, tools, and guardrails. Supports streaming (SSE) responses
+- **Tool discovery** -- mark methods with `[AgentTool]` for automatic tool registration
+- **RAG pipeline** -- index documents into a vector store and inject relevant context into agent conversations
+- **Built-in safety** -- rate limiting, token tracking, PII redaction, and prompt injection detection
+
+### File Storage
+
+A pluggable file storage abstraction with providers for local filesystem, AWS S3, and Azure Blob Storage. The FileStorage module adds HTTP upload/download endpoints, folder browsing, and a database-backed file registry.
+
+### Background Jobs
+
+Schedule and monitor long-running tasks with the BackgroundJobs module:
+
+- Immediate, delayed, and CRON-based recurring job scheduling
+- Real-time progress reporting and structured logging
+- Admin dashboard with job monitoring, retry, and cancellation
+
+### Localization
+
+Built-in multi-language support with embedded JSON locale files, automatic locale resolution (user settings, Accept-Language header), and a React `useTranslation()` hook for frontend integration.
+
 ### Multi-Provider Database
 
 SimpleModule supports multiple database providers with automatic schema isolation:
@@ -169,8 +195,12 @@ You don't write registration code, startup configuration, or reflection-based di
 | Build tooling | Vite, Tailwind CSS 4 |
 | Source generation | Roslyn incremental generators |
 | Component library | Radix UI |
-| Testing | xUnit.v3, FluentAssertions, Bogus |
+| AI | Anthropic, OpenAI, Azure OpenAI, Ollama via Microsoft.Extensions.AI |
+| RAG | Vector search with PostgreSQL or in-memory stores |
+| Testing | xUnit.v3, FluentAssertions, Bogus, Playwright, BenchmarkDotNet, NBomber |
 | Database | SQLite, PostgreSQL, SQL Server via EF Core |
+| File storage | Local, AWS S3, Azure Blob Storage |
+| Job scheduling | TickerQ with CRON support |
 | CLI | System.CommandLine |
 
 ## Next Steps
