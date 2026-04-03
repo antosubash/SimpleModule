@@ -1,0 +1,31 @@
+export const SettingsKeys = {
+  AdminSettings: {
+    TabApplication: 'AdminSettings.TabApplication',
+    TabSystem: 'AdminSettings.TabSystem',
+    Title: 'AdminSettings.Title',
+  },
+  MenuManager: {
+    AddButton: 'MenuManager.AddButton',
+    AddChildButton: 'MenuManager.AddChildButton',
+    AddChildTooltip: 'MenuManager.AddChildTooltip',
+    AddTooltip: 'MenuManager.AddTooltip',
+    BreadcrumbMenuManager: 'MenuManager.BreadcrumbMenuManager',
+    BreadcrumbSettings: 'MenuManager.BreadcrumbSettings',
+    CardTreeTitle: 'MenuManager.CardTreeTitle',
+    Description: 'MenuManager.Description',
+    EditorEditTitle: 'MenuManager.EditorEditTitle',
+    EditorTitle: 'MenuManager.EditorTitle',
+    EmptyDescription: 'MenuManager.EmptyDescription',
+    EmptyTitle: 'MenuManager.EmptyTitle',
+    ItemsCount: 'MenuManager.ItemsCount',
+    NoItemSelectedDescription: 'MenuManager.NoItemSelectedDescription',
+    NoItemSelectedTitle: 'MenuManager.NoItemSelectedTitle',
+    Title: 'MenuManager.Title',
+  },
+  UserSettings: {
+    BadgeDefault: 'UserSettings.BadgeDefault',
+    BadgeOverridden: 'UserSettings.BadgeOverridden',
+    ResetButton: 'UserSettings.ResetButton',
+    Title: 'UserSettings.Title',
+  },
+} as const;

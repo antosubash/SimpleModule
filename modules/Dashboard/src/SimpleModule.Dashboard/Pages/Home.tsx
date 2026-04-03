@@ -1,3 +1,4 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Alert,
   AlertDescription,
@@ -19,6 +20,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import React from 'react';
+import { DashboardKeys } from '../Locales/keys';
 
 interface HomeProps {
   isAuthenticated: boolean;
@@ -37,10 +39,11 @@ export default function Home({ isAuthenticated, displayName, isDevelopment }: Ho
 // --- Dashboard View ---
 
 function DashboardView({ displayName }: { displayName: string }) {
+  const { t } = useTranslation('Dashboard');
   return (
     <PageShell
-      title={`Welcome back, ${displayName}`}
-      description="Here's your development dashboard"
+      title={t(DashboardKeys.Home.DashboardTitle, { displayName })}
+      description={t(DashboardKeys.Home.DashboardDescription)}
     >
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -61,10 +64,12 @@ function DashboardView({ displayName }: { displayName: string }) {
                   </svg>
                 </span>
                 <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-                  Account
+                  {t(DashboardKeys.Home.AccountCardTitle)}
                 </span>
               </div>
-              <p className="text-xs text-text-muted">Manage your profile and security settings</p>
+              <p className="text-xs text-text-muted">
+                {t(DashboardKeys.Home.AccountCardDescription)}
+              </p>
             </CardContent>
           </Card>
         </a>
@@ -85,10 +90,12 @@ function DashboardView({ displayName }: { displayName: string }) {
                   </svg>
                 </span>
                 <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-                  API Docs
+                  {t(DashboardKeys.Home.ApiDocsCardTitle)}
                 </span>
               </div>
-              <p className="text-xs text-text-muted">Explore endpoints and test requests</p>
+              <p className="text-xs text-text-muted">
+                {t(DashboardKeys.Home.ApiDocsCardDescription)}
+              </p>
             </CardContent>
           </Card>
         </a>
@@ -109,10 +116,12 @@ function DashboardView({ displayName }: { displayName: string }) {
                   </svg>
                 </span>
                 <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-                  Health
+                  {t(DashboardKeys.Home.HealthCardTitle)}
                 </span>
               </div>
-              <p className="text-xs text-text-muted">Check system status and diagnostics</p>
+              <p className="text-xs text-text-muted">
+                {t(DashboardKeys.Home.HealthCardDescription)}
+              </p>
             </CardContent>
           </Card>
         </a>
@@ -160,6 +169,7 @@ function InfoRow({
 }
 
 function UserInfoPanel() {
+  const { t } = useTranslation('Dashboard');
   const [userInfo, setUserInfo] = React.useState<UserInfo | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -190,22 +200,32 @@ function UserInfoPanel() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Info</CardTitle>
+        <CardTitle>{t(DashboardKeys.Home.UserInfoTitle)}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading && (
           <div className="text-text-muted text-sm flex items-center gap-2">
-            Loading user info
+            {t(DashboardKeys.Home.UserInfoLoading)}
             <Spinner size="sm" />
           </div>
         )}
-        {error && <span className="text-danger text-sm">Failed to load: {error}</span>}
+        {error && (
+          <span className="text-danger text-sm">
+            {t(DashboardKeys.Home.UserInfoError, { error })}
+          </span>
+        )}
         {userInfo && (
           <>
-            <InfoRow label="Name" value={userInfo.displayName || userInfo.name || '-'} />
-            <InfoRow label="Email" value={userInfo.email || '-'} />
             <InfoRow
-              label="ID"
+              label={t(DashboardKeys.Home.UserInfoLabelName)}
+              value={userInfo.displayName || userInfo.name || '-'}
+            />
+            <InfoRow
+              label={t(DashboardKeys.Home.UserInfoLabelEmail)}
+              value={userInfo.email || '-'}
+            />
+            <InfoRow
+              label={t(DashboardKeys.Home.UserInfoLabelId)}
               value={
                 typeof userInfo.id === 'object' && userInfo.id
                   ? userInfo.id.value
@@ -215,7 +235,7 @@ function UserInfoPanel() {
             />
             {userInfo.roles && (
               <InfoRow
-                label="Roles"
+                label={t(DashboardKeys.Home.UserInfoLabelRoles)}
                 value={Array.isArray(userInfo.roles) ? userInfo.roles.join(', ') : userInfo.roles}
               />
             )}
@@ -271,6 +291,7 @@ function decodeToken(token: string): DecodedClaim[] | null {
 }
 
 function TokenTester() {
+  const { t } = useTranslation('Dashboard');
   const [token, setToken] = React.useState<string | null>(null);
   const [authorizing, setAuthorizing] = React.useState(false);
 
@@ -344,25 +365,21 @@ function TokenTester() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Token Tester</CardTitle>
+        <CardTitle>{t(DashboardKeys.Home.TokenTesterTitle)}</CardTitle>
       </CardHeader>
       <CardContent>
-        <h3 className="text-sm font-semibold mb-1">OAuth2 Authorization Code + PKCE</h3>
+        <h3 className="text-sm font-semibold mb-1">{t(DashboardKeys.Home.TokenTesterSubtitle)}</h3>
         <p className="text-xs text-text-muted mb-4">
-          Obtain an access token using the{' '}
-          <code className="bg-surface-raised px-1.5 py-0.5 rounded text-xs font-mono">
-            simplemodule-client
-          </code>{' '}
-          application.
+          {t(DashboardKeys.Home.TokenTesterDescription, { clientId: 'simplemodule-client' })}
         </p>
         <Button size="sm" disabled={authorizing} onClick={startOAuthFlow}>
           {authorizing ? (
             <>
-              Authorizing
+              {t(DashboardKeys.Home.TokenTesterAuthorizing)}
               <Spinner size="sm" />
             </>
           ) : (
-            'Get Access Token'
+            t(DashboardKeys.Home.TokenTesterGetToken)
           )}
         </Button>
         {token && (
@@ -372,12 +389,14 @@ function TokenTester() {
             </div>
             {claims && (
               <>
-                <h3 className="text-sm font-semibold mt-4 mb-2">Decoded Claims</h3>
+                <h3 className="text-sm font-semibold mt-4 mb-2">
+                  {t(DashboardKeys.Home.TokenTesterDecodedClaims)}
+                </h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Claim</TableHead>
-                      <TableHead>Value</TableHead>
+                      <TableHead>{t(DashboardKeys.Home.TokenTesterColClaim)}</TableHead>
+                      <TableHead>{t(DashboardKeys.Home.TokenTesterColValue)}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -403,6 +422,7 @@ function TokenTester() {
 const API_ENDPOINTS = ['/api/users/me', '/api/users', '/api/products', '/api/orders'];
 
 function ApiTester() {
+  const { t } = useTranslation('Dashboard');
   const [status, setStatus] = React.useState<{
     loading: boolean;
     ok?: boolean;
@@ -411,7 +431,7 @@ function ApiTester() {
     url?: string;
     error?: string;
   } | null>(null);
-  const [response, setResponse] = React.useState('Click an endpoint above to make a request.');
+  const [response, setResponse] = React.useState(t(DashboardKeys.Home.ApiTesterDefaultResponse));
 
   const getAccessToken = (): string | null => {
     const codeBlocks = document.querySelectorAll('.font-mono.text-xs.break-all');
@@ -459,10 +479,10 @@ function ApiTester() {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle>API Tester</CardTitle>
+        <CardTitle>{t(DashboardKeys.Home.ApiTesterTitle)}</CardTitle>
       </CardHeader>
       <CardContent>
-        <h3 className="text-sm font-semibold mb-3">Call Protected Endpoints</h3>
+        <h3 className="text-sm font-semibold mb-3">{t(DashboardKeys.Home.ApiTesterSubtitle)}</h3>
         <div className="flex gap-2 flex-wrap mb-4">
           {API_ENDPOINTS.map((url) => (
             <Button key={url} variant="outline" size="sm" onClick={() => callApi(url)}>
@@ -495,6 +515,7 @@ function ApiTester() {
 // --- Landing View ---
 
 function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
+  const { t } = useTranslation('Dashboard');
   return (
     <Container className="flex items-center justify-center min-h-[calc(100vh-16rem)]">
       <div className="text-center max-w-lg mx-auto">
@@ -507,27 +528,29 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
         >
           S
         </div>
-        <h1 className="text-4xl font-extrabold mb-3 tracking-tight">SimpleModule</h1>
+        <h1 className="text-4xl font-extrabold mb-3 tracking-tight">
+          {t(DashboardKeys.Home.LandingTitle)}
+        </h1>
         <p className="text-text-muted text-base mb-8 max-w-sm mx-auto leading-relaxed">
-          Modular monolith framework for .NET with compile&#8209;time module&nbsp;discovery
+          {t(DashboardKeys.Home.LandingDescription)}
         </p>
 
         <div className="flex gap-3 justify-center flex-wrap">
           <Button asChild size="lg">
             <a href="/Identity/Account/Login" className="no-underline">
-              Get Started
+              {t(DashboardKeys.Home.LandingGetStarted)}
             </a>
           </Button>
           <Button asChild variant="secondary" size="lg">
             <a href="/Identity/Account/Register" className="no-underline">
-              Create Account
+              {t(DashboardKeys.Home.LandingCreateAccount)}
             </a>
           </Button>
         </div>
 
         {isDevelopment && (
           <Alert variant="warning" className="mt-6 text-left text-xs">
-            <AlertTitle>Quick Start (Development Only)</AlertTitle>
+            <AlertTitle>{t(DashboardKeys.Home.LandingQuickStartTitle)}</AlertTitle>
             <AlertDescription>
               Email:{' '}
               <code className="bg-warning-bg px-1.5 py-0.5 rounded text-xs font-mono font-medium">
@@ -546,14 +569,14 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
             href="/swagger"
             className="text-text-muted no-underline hover:text-primary transition-colors"
           >
-            API Docs
+            {t(DashboardKeys.Home.LandingApiDocs)}
           </a>
           <span className="text-border">&middot;</span>
           <a
             href="/health/live"
             className="text-text-muted no-underline hover:text-primary transition-colors"
           >
-            Health Check
+            {t(DashboardKeys.Home.LandingHealthCheck)}
           </a>
         </div>
       </div>

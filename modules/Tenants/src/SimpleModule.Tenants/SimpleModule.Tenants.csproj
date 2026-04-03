@@ -10,6 +10,9 @@
     <ProjectReference Include="..\..\..\..\modules\FeatureFlags\src\SimpleModule.FeatureFlags.Contracts\SimpleModule.FeatureFlags.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Locales/*.json" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="Views\*.tsx">
       <DependentUpon>%(Filename)Endpoint.cs</DependentUpon>
     </None>

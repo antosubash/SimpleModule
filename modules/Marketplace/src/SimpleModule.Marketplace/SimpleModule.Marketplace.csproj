@@ -12,4 +12,7 @@
       <DependentUpon>%(Filename)Endpoint.cs</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Locales\*.json" />
+  </ItemGroup>
 </Project>

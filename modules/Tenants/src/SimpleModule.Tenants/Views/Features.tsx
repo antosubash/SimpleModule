@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,6 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { TenantsKeys } from '../Locales/keys';
 
 interface FeatureFlag {
   name: string;
@@ -47,6 +49,7 @@ interface Props {
 }
 
 export default function Features({ tenant, flags, tenantOverrides }: Props) {
+  const { t } = useTranslation('Tenants');
   const overrideMap = new Map(tenantOverrides.map((o) => [o.flagName, o]));
 
   function handleToggle(flagName: string, currentlyEnabled: boolean) {
@@ -64,10 +67,8 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
   if (flags.length === 0) {
     return (
       <Container className="space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">No Feature Flags Available</h1>
-        <p className="text-text-muted">
-          The Feature Flags module is not installed or has no flags.
-        </p>
+        <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Features.EmptyTitle)}</h1>
+        <p className="text-text-muted">{t(TenantsKeys.Features.EmptyDescription)}</p>
       </Container>
     );
   }
@@ -77,7 +78,7 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tenants/manage">Tenants</BreadcrumbLink>
+            <BreadcrumbLink href="/tenants/manage">{t(TenantsKeys.Manage.Title)}</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -85,21 +86,23 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Feature Flags</BreadcrumbPage>
+            <BreadcrumbPage>{t(TenantsKeys.Features.Breadcrumb)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Feature Flags for {tenant.name}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">
+        {t(TenantsKeys.Features.Title, { name: tenant.name })}
+      </h1>
 
       <Card>
         <CardContent className="p-6">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Flag</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Global</TableHead>
-                <TableHead>Tenant Override</TableHead>
+                <TableHead>{t(TenantsKeys.Features.ColFlag)}</TableHead>
+                <TableHead>{t(TenantsKeys.Features.ColDescription)}</TableHead>
+                <TableHead>{t(TenantsKeys.Features.ColGlobal)}</TableHead>
+                <TableHead>{t(TenantsKeys.Features.ColTenantOverride)}</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -116,7 +119,9 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
                       <TableCell className="text-text-muted">{flag.description || '-'}</TableCell>
                       <TableCell>
                         <span className={flag.isEnabled ? 'text-green-600' : 'text-red-600'}>
-                          {flag.isEnabled ? 'On' : 'Off'}
+                          {flag.isEnabled
+                            ? t(TenantsKeys.Features.On)
+                            : t(TenantsKeys.Features.Off)}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -125,7 +130,9 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
                           size="sm"
                           onClick={() => handleToggle(flag.name, effectiveState)}
                         >
-                          {effectiveState ? 'Enabled' : 'Disabled'}
+                          {effectiveState
+                            ? t(TenantsKeys.Features.Enabled)
+                            : t(TenantsKeys.Features.Disabled)}
                         </Button>
                       </TableCell>
                       <TableCell>

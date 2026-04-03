@@ -15,4 +15,7 @@
     <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Permissions\src\SimpleModule.Permissions.Contracts\SimpleModule.Permissions.Contracts.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Locales\*.json" />
+  </ItemGroup>
 </Project>

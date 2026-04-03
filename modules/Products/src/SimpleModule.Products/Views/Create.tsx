@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,8 +16,10 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
+import { ProductsKeys } from '../Locales/keys';
 
 export default function Create() {
+  const { t } = useTranslation('Products');
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -32,22 +35,27 @@ export default function Create() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>Create Product</BreadcrumbPage>
+            <BreadcrumbPage>{t(ProductsKeys.Create.Breadcrumb)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">Create Product</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t(ProductsKeys.Create.Title)}</h1>
 
       <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" required placeholder="Product name" />
+                <Label htmlFor="name">{t(ProductsKeys.Create.NameLabel)}</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  required
+                  placeholder={t(ProductsKeys.Create.NamePlaceholder)}
+                />
               </Field>
               <Field>
-                <Label htmlFor="price">Price</Label>
+                <Label htmlFor="price">{t(ProductsKeys.Create.PriceLabel)}</Label>
                 <Input
                   id="price"
                   name="price"
@@ -58,7 +66,7 @@ export default function Create() {
                   placeholder="0.00"
                 />
               </Field>
-              <Button type="submit">Create</Button>
+              <Button type="submit">{t(ProductsKeys.Create.SubmitButton)}</Button>
             </FieldGroup>
           </form>
         </CardContent>

@@ -1,3 +1,4 @@
+import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
   Button,
@@ -7,7 +8,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   Field,
   FieldGroup,
   Input,
@@ -28,6 +28,7 @@ import {
 } from '@simplemodule/ui';
 import { useState } from 'react';
 import { OVERRIDE_TYPE_ROLE, OVERRIDE_TYPE_USER } from '../constants';
+import { FeatureFlagsKeys } from '../Locales/keys';
 import type { FeatureFlag, FeatureFlagOverride } from '../types';
 
 interface ManageProps {
@@ -35,6 +36,7 @@ interface ManageProps {
 }
 
 export default function Manage({ flags: initialFlags }: ManageProps) {
+  const { t } = useTranslation('FeatureFlags');
   const [flags, setFlags] = useState(initialFlags);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [overrides, setOverrides] = useState<FeatureFlagOverride[]>([]);
@@ -97,17 +99,20 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
   const deprecatedFlags = flags.filter((f) => f.isDeprecated);
 
   return (
-    <PageShell title="Feature Flags" description="Manage feature flags across all modules.">
+    <PageShell
+      title={t(FeatureFlagsKeys.Manage.Title)}
+      description={t(FeatureFlagsKeys.Manage.Description)}
+    >
       <Card>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Default</TableHead>
-                <TableHead>Enabled</TableHead>
-                <TableHead>Overrides</TableHead>
+                <TableHead>{t(FeatureFlagsKeys.Manage.ColName)}</TableHead>
+                <TableHead>{t(FeatureFlagsKeys.Manage.ColDescription)}</TableHead>
+                <TableHead>{t(FeatureFlagsKeys.Manage.ColDefault)}</TableHead>
+                <TableHead>{t(FeatureFlagsKeys.Manage.ColEnabled)}</TableHead>
+                <TableHead>{t(FeatureFlagsKeys.Manage.ColOverrides)}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -117,7 +122,9 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                   <TableCell className="text-text-muted">{flag.description}</TableCell>
                   <TableCell>
                     <Badge variant={flag.defaultEnabled ? 'info' : 'default'}>
-                      {flag.defaultEnabled ? 'on' : 'off'}
+                      {flag.defaultEnabled
+                        ? t(FeatureFlagsKeys.Manage.DefaultOn)
+                        : t(FeatureFlagsKeys.Manage.DefaultOff)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -128,7 +135,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                   </TableCell>
                   <TableCell>
                     <Button variant="outline" size="sm" onClick={() => loadOverrides(flag.name)}>
-                      Overrides
+                      {t(FeatureFlagsKeys.Manage.OverridesButton)}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -141,12 +148,14 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
       {deprecatedFlags.length > 0 && (
         <Card className="mt-6">
           <CardContent>
-            <h3 className="text-lg font-semibold mb-4">Deprecated Flags</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {t(FeatureFlagsKeys.Manage.DeprecatedTitle)}
+            </h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Enabled</TableHead>
+                  <TableHead>{t(FeatureFlagsKeys.Manage.DeprecatedColName)}</TableHead>
+                  <TableHead>{t(FeatureFlagsKeys.Manage.DeprecatedColEnabled)}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -155,7 +164,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                     <TableCell className="font-mono text-sm">
                       {flag.name}{' '}
                       <Badge variant="danger" className="ml-2">
-                        deprecated
+                        {t(FeatureFlagsKeys.Manage.DeprecatedBadge)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -175,16 +184,18 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
       <Dialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Overrides for {selectedFlag}</DialogTitle>
+            <DialogTitle>
+              {t(FeatureFlagsKeys.Manage.OverrideDialog.Title, { flagName: selectedFlag ?? '' })}
+            </DialogTitle>
           </DialogHeader>
 
           {overrides.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Enabled</TableHead>
+                  <TableHead>{t(FeatureFlagsKeys.Manage.OverrideDialog.ColType)}</TableHead>
+                  <TableHead>{t(FeatureFlagsKeys.Manage.OverrideDialog.ColValue)}</TableHead>
+                  <TableHead>{t(FeatureFlagsKeys.Manage.OverrideDialog.ColEnabled)}</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -192,13 +203,21 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                 {overrides.map((o) => (
                   <TableRow key={o.id}>
                     <TableCell>
-                      <Badge>{o.overrideType === OVERRIDE_TYPE_USER ? 'User' : 'Role'}</Badge>
+                      <Badge>
+                        {o.overrideType === OVERRIDE_TYPE_USER
+                          ? t(FeatureFlagsKeys.Manage.OverrideDialog.TypeUser)
+                          : t(FeatureFlagsKeys.Manage.OverrideDialog.TypeRole)}
+                      </Badge>
                     </TableCell>
                     <TableCell className="font-mono text-sm">{o.overrideValue}</TableCell>
-                    <TableCell>{o.isEnabled ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>
+                      {o.isEnabled
+                        ? t(FeatureFlagsKeys.Manage.OverrideDialog.EnabledYes)
+                        : t(FeatureFlagsKeys.Manage.OverrideDialog.EnabledNo)}
+                    </TableCell>
                     <TableCell>
                       <Button variant="danger" size="sm" onClick={() => handleDeleteOverride(o.id)}>
-                        Delete
+                        {t(FeatureFlagsKeys.Manage.OverrideDialog.DeleteButton)}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -210,27 +229,37 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
           <form onSubmit={handleAddOverride} className="space-y-4 mt-4">
             <FieldGroup>
               <Field>
-                <Label htmlFor="overrideType">Type</Label>
+                <Label htmlFor="overrideType">
+                  {t(FeatureFlagsKeys.Manage.OverrideDialog.TypeLabel)}
+                </Label>
                 <Select defaultValue={String(OVERRIDE_TYPE_USER)} name="overrideType">
                   <SelectTrigger id="overrideType">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={String(OVERRIDE_TYPE_USER)}>User</SelectItem>
-                    <SelectItem value={String(OVERRIDE_TYPE_ROLE)}>Role</SelectItem>
+                    <SelectItem value={String(OVERRIDE_TYPE_USER)}>
+                      {t(FeatureFlagsKeys.Manage.OverrideDialog.TypeUser)}
+                    </SelectItem>
+                    <SelectItem value={String(OVERRIDE_TYPE_ROLE)}>
+                      {t(FeatureFlagsKeys.Manage.OverrideDialog.TypeRole)}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
               <Field>
-                <Label htmlFor="overrideValue">Value (User ID or Role Name)</Label>
+                <Label htmlFor="overrideValue">
+                  {t(FeatureFlagsKeys.Manage.OverrideDialog.ValueLabel)}
+                </Label>
                 <Input id="overrideValue" name="overrideValue" required />
               </Field>
               <Field className="flex items-center gap-2">
-                <Label htmlFor="isEnabled">Enabled</Label>
+                <Label htmlFor="isEnabled">
+                  {t(FeatureFlagsKeys.Manage.OverrideDialog.EnabledLabel)}
+                </Label>
                 <input type="checkbox" id="isEnabled" name="isEnabled" defaultChecked />
               </Field>
             </FieldGroup>
-            <Button type="submit">Add Override</Button>
+            <Button type="submit">{t(FeatureFlagsKeys.Manage.OverrideDialog.AddButton)}</Button>
           </form>
         </DialogContent>
       </Dialog>
