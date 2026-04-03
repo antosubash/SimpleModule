@@ -1,4 +1,7 @@
-<script>
+@using SimpleModule.Core.Security
+@inject ICspNonce CspNonce
+
+<script nonce="@CspNonce.Value">
     function applyTheme() {
         var stored = localStorage.getItem('theme');
         var shouldBeDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);

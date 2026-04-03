@@ -1,6 +1,8 @@
 ﻿@using SimpleModule.Core.Menu
+@using SimpleModule.Core.Security
 @inherits LayoutComponentBase
 @inject IPublicMenuProvider? PublicMenuProvider
+@inject ICspNonce CspNonce
 
 <nav class="sticky top-0 z-50 border-b border-border bg-surface-overlay" style="backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);">
     <div class="max-w-7xl mx-auto flex items-center px-6 py-3">
@@ -173,7 +175,7 @@
     }
 }
 
-<script suppress-error="BL9992">
+<script suppress-error="BL9992" nonce="@CspNonce.Value">
 (function() {
     if (window.__publicOverlayInit) return;
     window.__publicOverlayInit = true;
