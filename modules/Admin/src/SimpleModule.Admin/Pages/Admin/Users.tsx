@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
-import { AdminKeys } from '../../Locales/keys';
+import { AdminKeys } from '@/Locales/keys';
 
 interface User {
   id: string;

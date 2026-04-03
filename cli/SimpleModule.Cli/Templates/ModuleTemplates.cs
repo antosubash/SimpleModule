@@ -850,6 +850,20 @@ public sealed class ModuleTemplates
         return count;
     }
 
+    // ── Frontend config ─────────────────────────────────────────────
+
+    public static string TsconfigJson() =>
+        """
+            {
+              "extends": "@simplemodule/tsconfig/base",
+              "compilerOptions": {
+                "paths": {
+                  "@/*": ["./*"]
+                }
+              }
+            }
+            """;
+
     // ── Fallback templates (when no reference module exists) ────────
 
     private static string FallbackContractsCsproj() =>

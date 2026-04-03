@@ -90,7 +90,7 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
             PagesRegistryFixer.AddEntry(
                 indexPath,
                 $"{moduleName}/{featureName}",
-                $"../Views/{featureName}"
+                $"@/Views/{featureName}"
             );
             AnsiConsole.MarkupLine($"[green]  ~ Pages/index.ts[/]");
         }

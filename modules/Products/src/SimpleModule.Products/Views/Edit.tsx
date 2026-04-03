@@ -25,8 +25,8 @@ import {
   Label,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { ProductsKeys } from '../Locales/keys';
-import type { Product } from '../types';
+import { ProductsKeys } from '@/Locales/keys';
+import type { Product } from '@/types';
 
 interface Props {
   product: Product;

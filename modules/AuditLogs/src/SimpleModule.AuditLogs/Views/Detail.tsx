@@ -20,8 +20,8 @@ import {
   TooltipTrigger,
 } from '@simplemodule/ui';
 import { useEffect, useState } from 'react';
-import { AuditLogsKeys } from '../Locales/keys';
-import type { AuditEntry } from '../types';
+import { AuditLogsKeys } from '@/Locales/keys';
+import type { AuditEntry } from '@/types';
 import {
   ACTION_LABELS,
   actionBadgeVariant,
@@ -30,7 +30,7 @@ import {
   SOURCE_LABELS,
   sourceBadgeVariant,
   statusBadgeVariant,
-} from '../utils/audit-utils';
+} from '@/utils/audit-utils';
 
 interface Props {
   entry: AuditEntry;

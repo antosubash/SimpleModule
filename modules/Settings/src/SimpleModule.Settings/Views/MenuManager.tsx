@@ -14,9 +14,9 @@ import {
   TooltipTrigger,
 } from '@simplemodule/ui';
 import { useCallback, useState } from 'react';
-import MenuItemEditor from '../components/MenuItemEditor';
-import MenuTree from '../components/MenuTree';
-import { SettingsKeys } from '../Locales/keys';
+import MenuItemEditor from '@/components/MenuItemEditor';
+import MenuTree from '@/components/MenuTree';
+import { SettingsKeys } from '@/Locales/keys';
 
 interface MenuItemDto {
   id: number;

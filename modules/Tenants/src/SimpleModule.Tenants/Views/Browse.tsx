@@ -1,6 +1,6 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
-import { TenantsKeys } from '../Locales/keys';
+import { TenantsKeys } from '@/Locales/keys';
 import { statusColors, statusLabels } from './tenantStatus';
 
 interface BrowseTenant {

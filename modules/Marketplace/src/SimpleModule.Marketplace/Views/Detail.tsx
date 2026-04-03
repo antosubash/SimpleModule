@@ -16,8 +16,8 @@ import {
 } from '@simplemodule/ui';
 import { useState } from 'react';
 import Markdown from 'react-markdown';
-import { MarketplaceKeys } from '../Locales/keys';
-import type { MarketplacePackageDetail } from '../types';
+import { MarketplaceKeys } from '@/Locales/keys';
+import type { MarketplacePackageDetail } from '@/types';
 import { categoryLabel, formatDownloads } from './utils';
 
 interface Props {

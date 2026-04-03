@@ -27,9 +27,9 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { OVERRIDE_TYPE_ROLE, OVERRIDE_TYPE_USER } from '../constants';
-import { FeatureFlagsKeys } from '../Locales/keys';
-import type { FeatureFlag, FeatureFlagOverride } from '../types';
+import { OVERRIDE_TYPE_ROLE, OVERRIDE_TYPE_USER } from '@/constants';
+import { FeatureFlagsKeys } from '@/Locales/keys';
+import type { FeatureFlag, FeatureFlagOverride } from '@/types';
 
 interface ManageProps {
   flags: FeatureFlag[];

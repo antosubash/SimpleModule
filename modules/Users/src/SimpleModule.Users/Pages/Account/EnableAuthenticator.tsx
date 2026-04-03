@@ -3,7 +3,7 @@ import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, Button, Input, Label } from '@simplemodule/ui';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
-import { UsersKeys } from '../../Locales/keys';
+import { UsersKeys } from '@/Locales/keys';
 import ManageLayout from './ManageLayout';
 
 interface Props {

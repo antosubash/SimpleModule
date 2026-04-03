@@ -18,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
-import { TenantsKeys } from '../Locales/keys';
+import { TenantsKeys } from '@/Locales/keys';
 
 interface FeatureFlag {
   name: string;

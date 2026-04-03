@@ -22,8 +22,8 @@ import {
   SelectValue,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { OrdersKeys } from '../Locales/keys';
-import type { OrderItem } from '../types';
+import { OrdersKeys } from '@/Locales/keys';
+import type { OrderItem } from '@/types';
 
 interface Product {
   id: number;

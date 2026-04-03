@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { OpenIddictKeys } from '../../Locales/keys';
+import { OpenIddictKeys } from '@/Locales/keys';
 
 interface Client {
   id: string;

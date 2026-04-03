@@ -18,8 +18,8 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
-import { OrdersKeys } from '../Locales/keys';
-import type { Order } from '../types';
+import { OrdersKeys } from '@/Locales/keys';
+import type { Order } from '@/types';
 
 interface Props {
   orders: Order[];

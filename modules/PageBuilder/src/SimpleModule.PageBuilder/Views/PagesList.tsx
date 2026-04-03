@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
-import { PageBuilderKeys } from '../Locales/keys';
-import type { PageSummary } from '../types';
+import { PageBuilderKeys } from '@/Locales/keys';
+import type { PageSummary } from '@/types';
 
 interface Props {
   pages: PageSummary[];

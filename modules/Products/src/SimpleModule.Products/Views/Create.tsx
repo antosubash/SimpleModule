@@ -16,7 +16,7 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
-import { ProductsKeys } from '../Locales/keys';
+import { ProductsKeys } from '@/Locales/keys';
 
 export default function Create() {
   const { t } = useTranslation('Products');

@@ -24,8 +24,8 @@ import {
   TooltipTrigger,
 } from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
-import { AuditLogsKeys } from '../Locales/keys';
-import type { AuditEntry, AuditQueryRequest } from '../types';
+import { AuditLogsKeys } from '@/Locales/keys';
+import type { AuditEntry, AuditQueryRequest } from '@/types';
 import {
   ACTION_LABELS,
   actionBadgeVariant,
@@ -34,7 +34,7 @@ import {
   SOURCE_LABELS,
   sourceBadgeVariant,
   statusBadgeVariant,
-} from '../utils/audit-utils';
+} from '@/utils/audit-utils';
 
 interface PagedResult<T> {
   items: T[];

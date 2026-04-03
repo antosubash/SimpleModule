@@ -2,8 +2,8 @@ import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Badge, Button, Card, CardContent, CardFooter, Input, PageShell } from '@simplemodule/ui';
 import { useState } from 'react';
-import { MarketplaceKeys } from '../Locales/keys';
-import type { MarketplacePackage } from '../types';
+import { MarketplaceKeys } from '@/Locales/keys';
+import type { MarketplacePackage } from '@/types';
 import { categoryLabel, categoryNames, formatDownloads } from './utils';
 
 const PAGE_SIZE = 24;
