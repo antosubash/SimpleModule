@@ -1,9 +1,0 @@
-<div id="app"></div>
-<script data-page="app" type="application/json">@(new MarkupString(PageJson))</script>
-<script type="module" src="/js/app.js?v=@CacheBuster"></script>
-
-@code {
-    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-
-    [Parameter] public string PageJson { get; set; } = "";
-}

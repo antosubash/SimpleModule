@@ -15,7 +15,7 @@ public class TwoFactorAuthenticationEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/TwoFactorAuthentication",
+                "/Manage/TwoFactorAuthentication",
                 async (
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,

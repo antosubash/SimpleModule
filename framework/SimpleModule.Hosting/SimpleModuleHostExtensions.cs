@@ -73,6 +73,7 @@ public static class SimpleModuleHostExtensions
         // Register a baseline so the middleware pipeline works even without an auth module.
         builder.Services.AddAuthentication();
         builder.Services.AddAuthorization();
+        builder.Services.AddAntiforgery();
 
         // Register default IPublicMenuProvider if no module provides one
         builder.Services.TryAddScoped<IPublicMenuProvider, DefaultPublicMenuProvider>();

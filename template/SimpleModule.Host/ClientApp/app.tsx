@@ -39,8 +39,8 @@ function clearTimers() {
   }
 }
 
-// Intercept plain <a> clicks from the Blazor layout (sidebar, nav, dropdowns) and
-// route them through Inertia so the page swap is SPA-style — no full reload.
+// Intercept plain <a> clicks and route them through Inertia so the page swap
+// is SPA-style — no full reload.
 const nonInertiaPathPrefixes = ['/swagger', '/health', '/connect/'];
 
 document.addEventListener('click', (event) => {

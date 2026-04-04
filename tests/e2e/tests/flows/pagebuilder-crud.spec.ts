@@ -72,7 +72,7 @@ test.describe
       await manage.goto();
       await manage.showAllRows();
       await manage.clickActionBySlug(pageSlug, /publish/i);
-      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
 
       // API: verify the page is now published
       const apiAfter = await request.get(`/api/pagebuilder/${pageId}`);
@@ -124,7 +124,7 @@ test.describe
       await manage.goto();
       await manage.showAllRows();
       await manage.clickActionBySlug(pageSlug, /unpublish/i);
-      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
 
       // API: verify the page is unpublished
       const apiAfter = await request.get(`/api/pagebuilder/${pageId}`);

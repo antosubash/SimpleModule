@@ -22,7 +22,7 @@ public class EnableAuthenticatorEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/EnableAuthenticator",
+                "/Manage/EnableAuthenticator",
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

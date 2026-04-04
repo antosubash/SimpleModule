@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
@@ -13,89 +14,85 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Views.Account;
 
-public class LoginEndpoint : IEndpoint
+[ViewPage("Users/Account/Login")]
+public class LoginEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/Identity/Account/Login")
-            .WithTags(UsersConstants.ModuleName)
-            .ExcludeFromDescription();
-
-        group
-            .MapGet(
-                "",
+        app.MapGet(
+                "/Login",
                 async (
                     HttpContext context,
-                    [FromQuery] string? returnUrl,
-                    ISettingsContracts settings,
-                    ISettingsDefinitionRegistry settingsDefinitions
+                    ISettingsContracts settingsService,
+                    ISettingsDefinitionRegistry settingsDefinitions,
+                    [FromQuery] string? returnUrl
                 ) =>
                 {
                     await context.SignOutAsync(IdentityConstants.ExternalScheme);
 
-                    var value = await settings.GetSettingAsync(
+                    var showTestAccounts = await settingsService.GetSettingAsync(
                         ConfigKeys.ShowTestAccounts,
                         SettingScope.System
                     );
-                    value ??= settingsDefinitions
+                    showTestAccounts ??= settingsDefinitions
                         .GetDefinition(ConfigKeys.ShowTestAccounts)
                         ?.DefaultValue;
-                    var showTestAccounts = value is "true";
-
-                    return Inertia.Render(
-                        "Users/Account/Login",
-                        new { returnUrl, showTestAccounts }
-                    );
-                }
-            )
-            .AllowAnonymous();
-
-        group
-            .MapPost(
-                "",
-                async (
-                    [FromForm] string email,
-                    [FromForm] string password,
-                    [FromForm] bool rememberMe,
-                    [FromQuery] string? returnUrl,
-                    SignInManager<ApplicationUser> signInManager,
-                    ISettingsContracts settings,
-                    ISettingsDefinitionRegistry settingsDefinitions
-                ) =>
-                {
-                    var result = await signInManager.PasswordSignInAsync(
-                        email,
-                        password,
-                        rememberMe,
-                        lockoutOnFailure: false
-                    );
-
-                    if (result.Succeeded)
-                        return TypedResults.Redirect(returnUrl ?? "/") as IResult;
-
-                    if (result.RequiresTwoFactor)
-                        return TypedResults.Redirect(
-                            $"/Identity/Account/LoginWith2fa?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}&rememberMe={rememberMe}"
-                        );
-
-                    if (result.IsLockedOut)
-                        return TypedResults.Redirect("/Identity/Account/Lockout");
-
-                    var value = await settings.GetSettingAsync(
-                        ConfigKeys.ShowTestAccounts,
-                        SettingScope.System
-                    );
-                    value ??= settingsDefinitions
-                        .GetDefinition(ConfigKeys.ShowTestAccounts)
-                        ?.DefaultValue;
-                    var showTestAccounts = value is "true";
 
                     return Inertia.Render(
                         "Users/Account/Login",
                         new
                         {
-                            returnUrl,
-                            showTestAccounts,
+                            returnUrl = returnUrl ?? "/",
+                            showTestAccounts = showTestAccounts == "true",
+                        }
+                    );
+                }
+            )
+            .AllowAnonymous();
+
+        app.MapPost(
+                "/Login",
+                async (
+                    [FromForm] string email,
+                    [FromForm] string password,
+                    [FromForm] bool? rememberMe,
+                    [FromQuery] string? returnUrl,
+                    SignInManager<ApplicationUser> signInManager,
+                    ILogger<UsersModule> logger
+                ) =>
+                {
+                    var result = await signInManager.PasswordSignInAsync(
+                        email,
+                        password,
+                        rememberMe ?? false,
+                        lockoutOnFailure: false
+                    );
+
+                    if (result.Succeeded)
+                    {
+                        logger.LogInformation("User logged in.");
+                        return TypedResults.Redirect(returnUrl ?? "/");
+                    }
+
+                    if (result.RequiresTwoFactor)
+                    {
+                        return TypedResults.Redirect(
+                            $"/Identity/Account/LoginWith2fa?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}&rememberMe={rememberMe}"
+                        );
+                    }
+
+                    if (result.IsLockedOut)
+                    {
+                        logger.LogWarning("User account locked out.");
+                        return TypedResults.Redirect("/Identity/Account/Lockout");
+                    }
+
+                    return Inertia.Render(
+                        "Users/Account/Login",
+                        new
+                        {
+                            returnUrl = returnUrl ?? "/",
+                            showTestAccounts = false,
                             errors = new { email = "Invalid login attempt." },
                         }
                     );
