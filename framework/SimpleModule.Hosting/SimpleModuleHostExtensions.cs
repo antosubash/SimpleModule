@@ -19,6 +19,7 @@ using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
+using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
 
 namespace SimpleModule.Hosting;
@@ -160,6 +161,7 @@ public static class SimpleModuleHostExtensions
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseSimpleModuleRateLimiting();
+        app.UseMiddleware<InertiaLayoutDataMiddleware>();
 
         // Module middleware is added by the source-generated UseSimpleModule()
         // via IModule.ConfigureMiddleware() calls.
