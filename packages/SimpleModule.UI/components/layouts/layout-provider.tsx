@@ -23,7 +23,11 @@ function AutoLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function resolveLayout(page: any) {
+interface PageModule {
+  default: { layout?: (content: React.ReactNode) => React.ReactNode };
+}
+
+export function resolveLayout(page: PageModule) {
   if (page.default?.layout) return page;
   page.default.layout = (pageContent: React.ReactNode) => <AutoLayout>{pageContent}</AutoLayout>;
   return page;

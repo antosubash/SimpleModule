@@ -113,10 +113,10 @@ function AdminSection({
       </button>
       {open && (
         <div className="space-y-1 mt-1">
-          {groups.map((menuGroup, idx) =>
+          {groups.map((menuGroup) =>
             menuGroup.group !== null ? (
               <AdminGroup
-                key={`${menuGroup.groupId}-${idx}`}
+                key={menuGroup.groupId}
                 group={menuGroup}
                 pathname={pathname}
                 onLinkClick={onLinkClick}
