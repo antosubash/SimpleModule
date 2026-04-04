@@ -16,7 +16,7 @@ public class NuGetMarketplaceService(
 {
     public async Task<MarketplaceSearchResult> SearchPackagesAsync(MarketplaceSearchRequest request)
     {
-        var cacheKey = $"Marketplace:Search:{request.Query}:{request.Skip}:{request.Take}";
+        var cacheKey = $"Marketplace:Search:{request.Query}";
 
         var cached = await cache.GetOrCreateAsync(
             cacheKey,
@@ -25,7 +25,7 @@ public class NuGetMarketplaceService(
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
                     options.Value.SearchCacheDurationMinutes
                 );
-                return await FetchSearchResultsAsync(request);
+                return await FetchAllPackagesAsync(request.Query);
             }
         );
 
@@ -48,7 +48,10 @@ public class NuGetMarketplaceService(
             _ => packages,
         };
 
-        return new MarketplaceSearchResult { TotalHits = result.TotalHits, Packages = packages };
+        var totalHits = packages.Count;
+        packages = packages.Skip(request.Skip).Take(request.Take).ToList();
+
+        return new MarketplaceSearchResult { TotalHits = totalHits, Packages = packages };
     }
 
     public async Task<MarketplacePackageDetail?> GetPackageDetailsAsync(string packageId)
@@ -70,31 +73,26 @@ public class NuGetMarketplaceService(
     public Task<HashSet<string>> GetInstalledPackageIdsAsync() =>
         installedPackageDetector.GetInstalledPackageIdsAsync();
 
-    private async Task<MarketplaceSearchResult> FetchSearchResultsAsync(
-        MarketplaceSearchRequest request
-    )
+    private async Task<MarketplaceSearchResult> FetchAllPackagesAsync(string? searchQuery)
     {
         try
         {
             var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
             var verifiedAuthors = options.Value.VerifiedAuthors;
 
-            // Query NuGet per verified author and merge results
-            var tasks = verifiedAuthors.Select(author =>
-                FetchPackagesForOwnerAsync(client, author, request)
+            var installedIdsTask = installedPackageDetector.GetInstalledPackageIdsAsync();
+            var nugetTasks = verifiedAuthors.Select(author =>
+                FetchPackagesForOwnerAsync(client, author, searchQuery)
             );
-            var results = await Task.WhenAll(tasks);
+            var results = await Task.WhenAll(nugetTasks);
+            var installedIds = await installedIdsTask;
 
-            var allPackages = results
+            var packages = results
                 .SelectMany(r => r)
                 .DistinctBy(d => d.Id, StringComparer.OrdinalIgnoreCase)
                 .Where(d =>
                     d.Id?.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase) != true
                 )
-                .ToList();
-
-            var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
-            var packages = allPackages
                 .Select(d => MapToPackage(d, installedIds, verifiedAuthors))
                 .ToList();
 
@@ -109,15 +107,15 @@ public class NuGetMarketplaceService(
     private async Task<List<NuGetPackageData>> FetchPackagesForOwnerAsync(
         HttpClient client,
         string owner,
-        MarketplaceSearchRequest request
+        string? searchQuery
     )
     {
-        var query = string.IsNullOrWhiteSpace(request.Query)
+        var query = string.IsNullOrWhiteSpace(searchQuery)
             ? $"owner:{owner}"
-            : $"owner:{owner} {request.Query}";
+            : $"owner:{owner} {searchQuery}";
 
         var url =
-            $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&skip={request.Skip}&take={request.Take}";
+            $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&take=100";
 
         var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url);
         return response?.Data ?? [];
@@ -130,22 +128,17 @@ public class NuGetMarketplaceService(
             var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
             var verifiedAuthors = options.Value.VerifiedAuthors;
 
-            // Try each verified author to find the package
-            NuGetPackageData? packageData = null;
-            foreach (var author in verifiedAuthors)
+            var authorTasks = verifiedAuthors.Select(author =>
             {
-                var searchAddress =
-                    $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} owner:{author}&take=1";
-
-                var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(
-                    searchAddress
-                );
-                packageData = searchResponse?.Data.FirstOrDefault();
-                if (packageData is not null)
-                {
-                    break;
-                }
-            }
+                var query = $"packageid:{packageId} owner:{author}";
+                var url =
+                    $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&take=1";
+                return client.GetFromJsonAsync<NuGetSearchResponse>(url);
+            });
+            var responses = await Task.WhenAll(authorTasks);
+            var packageData = responses
+                .Select(r => r?.Data.FirstOrDefault())
+                .FirstOrDefault(d => d is not null);
 
             if (packageData is null)
             {
