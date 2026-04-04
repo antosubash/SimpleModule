@@ -28,10 +28,16 @@ public class InertiaTranslationPropsTests : IClassFixture<SimpleModuleWebApplica
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         var props = json.GetProperty("props");
 
-        props.TryGetProperty("locale", out var locale).Should().BeTrue("Inertia response should contain locale shared prop");
+        props
+            .TryGetProperty("locale", out var locale)
+            .Should()
+            .BeTrue("Inertia response should contain locale shared prop");
         locale.GetString().Should().NotBeNullOrEmpty();
 
-        props.TryGetProperty("translations", out _).Should().BeTrue("Inertia response should contain translations shared prop");
+        props
+            .TryGetProperty("translations", out _)
+            .Should()
+            .BeTrue("Inertia response should contain translations shared prop");
     }
 
     [Fact]

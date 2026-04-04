@@ -13,6 +13,7 @@ export function DarkModeToggle() {
       aria-label="Toggle theme"
     >
       <svg
+        aria-hidden="true"
         className="w-4 h-4"
         fill="none"
         stroke="currentColor"

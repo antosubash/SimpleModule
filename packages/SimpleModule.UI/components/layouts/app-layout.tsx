@@ -101,6 +101,7 @@ function AdminSection({
       >
         <span className="sidebar-label">Admin</span>
         <svg
+          aria-hidden="true"
           className={`w-3 h-3 transition-transform duration-200 ml-auto sidebar-label ${!open ? '-rotate-90' : ''}`}
           fill="none"
           stroke="currentColor"
@@ -112,10 +113,10 @@ function AdminSection({
       </button>
       {open && (
         <div className="space-y-1 mt-1">
-          {groups.map((menuGroup) =>
+          {groups.map((menuGroup, idx) =>
             menuGroup.group !== null ? (
               <AdminGroup
-                key={menuGroup.groupId}
+                key={`${menuGroup.groupId}-${idx}`}
                 group={menuGroup}
                 pathname={pathname}
                 onLinkClick={onLinkClick}
@@ -152,6 +153,7 @@ function AdminGroup({
       >
         <span className="sidebar-label">{group.group}</span>
         <svg
+          aria-hidden="true"
           className={`w-3 h-3 transition-transform duration-200 ml-auto sidebar-label ${!open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
@@ -208,6 +210,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           className="p-1 -ml-1 text-text-muted hover:text-text"
         >
           <svg
+            aria-hidden="true"
             className="w-6 h-6"
             fill="none"
             stroke="currentColor"
@@ -235,9 +238,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       <aside
-        className={`app-sidebar ${collapsed ? 'app-sidebar-collapsed' : ''} ${mobileOpen ? 'open' : ''}`}
+        className={`app-sidebar ${collapsed ? 'app-sidebar-collapsed' : ''} ${mobileOpen ? 'app-sidebar-open' : ''}`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-visible">
           {/* Logo */}
           <div className="px-4 py-4 border-b border-border">
             <Link
@@ -273,7 +276,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Footer: Dark Mode + User */}
-          <div className="px-3 py-3 border-t border-border space-y-2">
+          <div className="px-3 py-3 border-t border-border space-y-2 overflow-visible">
             <div className="flex items-center gap-2 px-3">
               <DarkModeToggle />
               <span className="text-xs text-text-muted sidebar-label">Toggle theme</span>
@@ -289,16 +292,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Mobile backdrop */}
-      {mobileOpen && (
-        <div
-          className="app-sidebar-backdrop"
-          aria-hidden="true"
-          onClick={closeMobile}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') closeMobile();
-          }}
-        />
-      )}
+      <div
+        className={`app-sidebar-backdrop ${mobileOpen ? 'visible' : ''}`}
+        aria-hidden="true"
+        onClick={closeMobile}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') closeMobile();
+        }}
+      />
 
       {/* Sidebar collapse toggle */}
       <button
@@ -308,6 +309,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         title="Toggle sidebar"
       >
         <svg
+          aria-hidden="true"
           className="w-4 h-4"
           fill="none"
           stroke="currentColor"

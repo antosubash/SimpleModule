@@ -80,12 +80,7 @@ public class TokenEndpoint : IEndpoint
             identity.AddClaim("permission", permission);
         }
 
-        identity.SetScopes(
-            Scopes.OpenId,
-            Scopes.Profile,
-            Scopes.Email,
-            AuthConstants.RolesScope
-        );
+        identity.SetScopes(Scopes.OpenId, Scopes.Profile, Scopes.Email, AuthConstants.RolesScope);
 
         foreach (var claim in identity.Claims)
         {

@@ -36,12 +36,7 @@ public sealed partial class KnowledgeIndexingHostedService(
         {
             using var sourceScope = serviceProvider.CreateScope();
             var scopedStore = sourceScope.ServiceProvider.GetRequiredService<IKnowledgeStore>();
-            await IndexSourceAsync(
-                scopedStore,
-                source,
-                sourceScope.ServiceProvider,
-                stoppingToken
-            );
+            await IndexSourceAsync(scopedStore, source, sourceScope.ServiceProvider, stoppingToken);
         });
         await Task.WhenAll(tasks);
     }

@@ -66,6 +66,7 @@ export function UserDropdown({ displayName, userInitial, items, csrfToken }: Use
           {displayName}
         </span>
         <svg
+          aria-hidden="true"
           className={`sidebar-label w-4 h-4 text-text-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
@@ -76,7 +77,7 @@ export function UserDropdown({ displayName, userInitial, items, csrfToken }: Use
         </svg>
       </button>
       {open && (
-        <div className="user-dropdown">
+        <div className="user-dropdown open">
           <div className="user-dropdown-header">
             <div className="text-sm font-semibold text-text truncate">{displayName}</div>
           </div>
@@ -92,6 +93,7 @@ export function UserDropdown({ displayName, userInitial, items, csrfToken }: Use
                 style={{ fontFamily: 'inherit', fontSize: 'inherit' }}
               >
                 <svg
+                  aria-hidden="true"
                   className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"

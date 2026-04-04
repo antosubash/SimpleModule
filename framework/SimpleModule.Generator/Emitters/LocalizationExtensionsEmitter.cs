@@ -35,9 +35,7 @@ internal sealed class LocalizationExtensionsEmitter : IEmitter
 
         foreach (var module in data.Modules)
         {
-            sb.AppendLine(
-                $"            typeof({module.FullyQualifiedName}).Assembly,"
-            );
+            sb.AppendLine($"            typeof({module.FullyQualifiedName}).Assembly,");
         }
 
         sb.AppendLine("        };");
@@ -45,6 +43,9 @@ internal sealed class LocalizationExtensionsEmitter : IEmitter
         sb.AppendLine("    }");
         sb.AppendLine("}");
 
-        context.AddSource("LocalizationExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        context.AddSource(
+            "LocalizationExtensions.g.cs",
+            SourceText.From(sb.ToString(), Encoding.UTF8)
+        );
     }
 }

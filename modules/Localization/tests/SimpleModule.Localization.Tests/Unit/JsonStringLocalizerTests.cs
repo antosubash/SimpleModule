@@ -12,18 +12,24 @@ public sealed class JsonStringLocalizerTests
     public JsonStringLocalizerTests()
     {
         _loader = new TranslationLoader();
-        _loader.InitializeFromDictionary("en", new Dictionary<string, string>
-        {
-            ["products.title"] = "Products",
-            ["products.create"] = "Create Product",
-            ["products.welcome"] = "Welcome, {0}!",
-        });
-        _loader.InitializeFromDictionary("es", new Dictionary<string, string>
-        {
-            ["products.title"] = "Productos",
-            ["products.create"] = "Crear Producto",
-            ["products.welcome"] = "Bienvenido, {0}!",
-        });
+        _loader.InitializeFromDictionary(
+            "en",
+            new Dictionary<string, string>
+            {
+                ["products.title"] = "Products",
+                ["products.create"] = "Create Product",
+                ["products.welcome"] = "Welcome, {0}!",
+            }
+        );
+        _loader.InitializeFromDictionary(
+            "es",
+            new Dictionary<string, string>
+            {
+                ["products.title"] = "Productos",
+                ["products.create"] = "Crear Producto",
+                ["products.welcome"] = "Bienvenido, {0}!",
+            }
+        );
 
         _localizer = new JsonStringLocalizer("products", _loader);
     }

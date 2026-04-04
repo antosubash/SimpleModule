@@ -3,50 +3,73 @@ import * as React from 'react';
 import { DarkModeToggle } from './dark-mode-toggle';
 import type { PublicMenuItem, SharedProps } from './types';
 
+function MenuLink({
+  item,
+  className,
+  onClick,
+  children,
+}: {
+  item: PublicMenuItem;
+  className: string;
+  onClick?: () => void;
+  children: React.ReactNode;
+}) {
+  if (item.openInNewTab) {
+    return (
+      <a
+        href={item.url}
+        className={className}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onClick}
+      >
+        {children}
+      </a>
+    );
+  }
+  return (
+    <Link href={item.url} className={className} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
+
 function DesktopDropdown({ item }: { item: PublicMenuItem }) {
   return (
     <div className="relative group">
-      <a
-        href={item.url}
+      <MenuLink
+        item={item}
         className={`text-sm text-text-muted no-underline hover:text-primary transition-colors cursor-pointer ${item.cssClass}`}
-        target={item.openInNewTab ? '_blank' : undefined}
-        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
       >
         {item.label}
-      </a>
+      </MenuLink>
       <div className="absolute hidden group-hover:block top-full left-0 mt-1 py-1 bg-surface-overlay border border-border rounded-lg shadow-lg min-w-[160px] z-50">
         {item.children.map((child) =>
           child.children.length === 0 ? (
-            <a
+            <MenuLink
               key={child.url}
-              href={child.url}
+              item={child}
               className="block px-4 py-2 text-sm text-text-muted hover:text-primary hover:bg-surface-hover"
-              target={child.openInNewTab ? '_blank' : undefined}
-              rel={child.openInNewTab ? 'noopener noreferrer' : undefined}
             >
               {child.label}
-            </a>
+            </MenuLink>
           ) : (
             <div key={child.url} className="relative group/sub">
-              <a
-                href={child.url}
+              <MenuLink
+                item={child}
                 className="block px-4 py-2 text-sm text-text-muted hover:text-primary hover:bg-surface-hover"
-                target={child.openInNewTab ? '_blank' : undefined}
-                rel={child.openInNewTab ? 'noopener noreferrer' : undefined}
               >
                 {child.label}
-              </a>
+              </MenuLink>
               <div className="absolute hidden group-hover/sub:block top-0 left-full ml-0.5 py-1 bg-surface-overlay border border-border rounded-lg shadow-lg min-w-[160px] z-50">
                 {child.children.map((grandchild) => (
-                  <a
+                  <MenuLink
                     key={grandchild.url}
-                    href={grandchild.url}
+                    item={grandchild}
                     className="block px-4 py-2 text-sm text-text-muted hover:text-primary hover:bg-surface-hover"
-                    target={grandchild.openInNewTab ? '_blank' : undefined}
-                    rel={grandchild.openInNewTab ? 'noopener noreferrer' : undefined}
                   >
                     {grandchild.label}
-                  </a>
+                  </MenuLink>
                 ))}
               </div>
             </div>
@@ -62,38 +85,17 @@ function DesktopMenu({ items }: { items: PublicMenuItem[] }) {
     <div className="hidden md:flex items-center gap-1">
       {items.map((item) =>
         item.children.length === 0 ? (
-          <a
+          <MenuLink
             key={item.url}
-            href={item.url}
+            item={item}
             className={`text-sm text-text-muted no-underline hover:text-primary transition-colors ${item.cssClass}`}
-            target={item.openInNewTab ? '_blank' : undefined}
-            rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
           >
             {item.label}
-          </a>
+          </MenuLink>
         ) : (
           <DesktopDropdown key={item.url} item={item} />
         ),
       )}
-    </div>
-  );
-}
-
-function FallbackDesktopMenu() {
-  return (
-    <div className="hidden md:flex items-center gap-1">
-      <a
-        href="/marketplace"
-        className="text-sm text-text-muted no-underline hover:text-primary transition-colors"
-      >
-        Marketplace
-      </a>
-      <a
-        href="/swagger"
-        className="text-sm text-text-muted no-underline hover:text-primary transition-colors"
-      >
-        API Docs
-      </a>
     </div>
   );
 }
@@ -103,15 +105,13 @@ function MobileOverlayItem({ item, onClose }: { item: PublicMenuItem; onClose: (
 
   if (item.children.length === 0) {
     return (
-      <a
-        href={item.url}
+      <MenuLink
+        item={item}
         className={`block py-3 text-lg text-text no-underline border-b border-border/50 ${item.cssClass}`}
-        target={item.openInNewTab ? '_blank' : undefined}
-        rel={item.openInNewTab ? 'noopener noreferrer' : undefined}
         onClick={onClose}
       >
         {item.label}
-      </a>
+      </MenuLink>
     );
   }
 
@@ -124,6 +124,7 @@ function MobileOverlayItem({ item, onClose }: { item: PublicMenuItem; onClose: (
       >
         {item.label}
         <svg
+          aria-hidden="true"
           className={`w-5 h-5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
@@ -136,16 +137,14 @@ function MobileOverlayItem({ item, onClose }: { item: PublicMenuItem; onClose: (
       {open && (
         <div className="pl-4 pb-2 space-y-1">
           {item.children.map((child) => (
-            <a
+            <MenuLink
               key={child.url}
-              href={child.url}
+              item={child}
               className="block py-2.5 text-base text-text-secondary no-underline"
-              target={child.openInNewTab ? '_blank' : undefined}
-              rel={child.openInNewTab ? 'noopener noreferrer' : undefined}
               onClick={onClose}
             >
               {child.label}
-            </a>
+            </MenuLink>
           ))}
         </div>
       )}
@@ -158,7 +157,7 @@ function MobileOverlay({
   isOpen,
   onClose,
 }: {
-  items: PublicMenuItem[] | null;
+  items: PublicMenuItem[];
   isOpen: boolean;
   onClose: () => void;
 }) {
@@ -248,6 +247,7 @@ function MobileOverlay({
             aria-label="Close menu"
           >
             <svg
+              aria-hidden="true"
               className="w-6 h-6"
               fill="none"
               stroke="currentColor"
@@ -261,33 +261,9 @@ function MobileOverlay({
 
         {/* Overlay nav items */}
         <nav className="flex-1 overflow-y-auto px-6 py-6 space-y-1">
-          {items && items.length > 0 ? (
-            items.map((item) => <MobileOverlayItem key={item.url} item={item} onClose={onClose} />)
-          ) : (
-            <>
-              <a
-                href="/"
-                className="block py-3 text-lg text-text no-underline border-b border-border/50"
-                onClick={onClose}
-              >
-                Home
-              </a>
-              <a
-                href="/marketplace"
-                className="block py-3 text-lg text-text no-underline border-b border-border/50"
-                onClick={onClose}
-              >
-                Marketplace
-              </a>
-              <a
-                href="/swagger"
-                className="block py-3 text-lg text-text no-underline border-b border-border/50"
-                onClick={onClose}
-              >
-                API Docs
-              </a>
-            </>
-          )}
+          {items?.map((item) => (
+            <MobileOverlayItem key={item.url} item={item} onClose={onClose} />
+          ))}
         </nav>
 
         {/* Overlay footer */}
@@ -312,11 +288,9 @@ function MobileOverlay({
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { props } = usePage<SharedProps>();
-  const { publicMenu } = props;
+  const { publicMenu = [] } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const closeMobile = React.useCallback(() => setMobileOpen(false), []);
-
-  const hasMenu = publicMenu && publicMenu.length > 0;
 
   return (
     <>
@@ -344,7 +318,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               </span>
               <span className="text-base">SimpleModule</span>
             </Link>
-            {hasMenu ? <DesktopMenu items={publicMenu} /> : <FallbackDesktopMenu />}
+            <DesktopMenu items={publicMenu} />
           </div>
           <div className="ml-auto flex items-center gap-3">
             <button
@@ -355,6 +329,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               aria-label="Open menu"
             >
               <svg
+                aria-hidden="true"
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
