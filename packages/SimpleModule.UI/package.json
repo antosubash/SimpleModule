@@ -6,7 +6,8 @@
   "exports": {
     ".": "./components/index.ts",
     "./lib/utils": "./lib/utils.ts",
-    "./hooks": "./hooks/use-feature-flag.ts"
+    "./hooks": "./hooks/use-feature-flag.ts",
+    "./layouts": "./components/layouts/index.ts"
   },
   "peerDependencies": {
     "react": "^19.0.0",
