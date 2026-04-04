@@ -77,32 +77,28 @@ public class NuGetMarketplaceService(
         try
         {
             var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
-            var tag = options.Value.PackageTag;
-            var query = string.IsNullOrWhiteSpace(request.Query)
-                ? $"tag:{tag}"
-                : $"tag:{tag} {request.Query}";
+            var verifiedAuthors = options.Value.VerifiedAuthors;
 
-            var url =
-                $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&skip={request.Skip}&take={request.Take}";
+            // Query NuGet per verified author and merge results
+            var tasks = verifiedAuthors.Select(author =>
+                FetchPackagesForOwnerAsync(client, author, request)
+            );
+            var results = await Task.WhenAll(tasks);
 
-            var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url);
-            if (response is null)
-            {
-                return new MarketplaceSearchResult();
-            }
+            var allPackages = results
+                .SelectMany(r => r)
+                .DistinctBy(d => d.Id, StringComparer.OrdinalIgnoreCase)
+                .Where(d =>
+                    d.Id?.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase) != true
+                )
+                .ToList();
 
             var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
+            var packages = allPackages
+                .Select(d => MapToPackage(d, installedIds, verifiedAuthors))
+                .ToList();
 
-            var filtered = response.Data.Where(d => IsModulePackage(d.Id)).ToList();
-
-            var contractsRemoved = response.Data.Count - filtered.Count;
-            var packages = filtered.Select(d => MapToPackage(d, installedIds)).ToList();
-
-            return new MarketplaceSearchResult
-            {
-                TotalHits = response.TotalHits - contractsRemoved,
-                Packages = packages,
-            };
+            return new MarketplaceSearchResult { TotalHits = packages.Count, Packages = packages };
         }
         catch (HttpRequestException)
         {
@@ -110,17 +106,47 @@ public class NuGetMarketplaceService(
         }
     }
 
+    private async Task<List<NuGetPackageData>> FetchPackagesForOwnerAsync(
+        HttpClient client,
+        string owner,
+        MarketplaceSearchRequest request
+    )
+    {
+        var query = string.IsNullOrWhiteSpace(request.Query)
+            ? $"owner:{owner}"
+            : $"owner:{owner} {request.Query}";
+
+        var url =
+            $"{options.Value.NuGetSearchBaseAddress}?q={Uri.EscapeDataString(query)}&skip={request.Skip}&take={request.Take}";
+
+        var response = await client.GetFromJsonAsync<NuGetSearchResponse>(url);
+        return response?.Data ?? [];
+    }
+
     private async Task<MarketplacePackageDetail?> FetchPackageDetailsAsync(string packageId)
     {
         try
         {
             var client = httpClientFactory.CreateClient(MarketplaceConstants.ModuleName);
-            var tag = options.Value.PackageTag;
-            var searchAddress =
-                $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} tag:{tag}&take=1";
+            var verifiedAuthors = options.Value.VerifiedAuthors;
 
-            var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(searchAddress);
-            var packageData = searchResponse?.Data.FirstOrDefault();
+            // Try each verified author to find the package
+            NuGetPackageData? packageData = null;
+            foreach (var author in verifiedAuthors)
+            {
+                var searchAddress =
+                    $"{options.Value.NuGetSearchBaseAddress}?q=packageid:{Uri.EscapeDataString(packageId)} owner:{author}&take=1";
+
+                var searchResponse = await client.GetFromJsonAsync<NuGetSearchResponse>(
+                    searchAddress
+                );
+                packageData = searchResponse?.Data.FirstOrDefault();
+                if (packageData is not null)
+                {
+                    break;
+                }
+            }
+
             if (packageData is null)
             {
                 return null;
@@ -131,7 +157,7 @@ public class NuGetMarketplaceService(
             await Task.WhenAll(installedIdsTask, readmeTask);
 
             var installedIds = await installedIdsTask;
-            var basePackage = MapToPackage(packageData, installedIds);
+            var basePackage = MapToPackage(packageData, installedIds, verifiedAuthors);
             var readme = await readmeTask;
 
             return new MarketplacePackageDetail
@@ -147,6 +173,7 @@ public class NuGetMarketplaceService(
                 ProjectLink = basePackage.ProjectLink,
                 Category = basePackage.Category,
                 IsInstalled = basePackage.IsInstalled,
+                IsVerified = basePackage.IsVerified,
                 LicenseLink = packageData.LicenseAddress ?? string.Empty,
                 Versions = (packageData.Versions ?? [])
                     .Select(v => new MarketplacePackageVersion
@@ -203,50 +230,23 @@ public class NuGetMarketplaceService(
         }
     }
 
-    private static bool IsModulePackage(string? packageId)
-    {
-        if (string.IsNullOrEmpty(packageId))
-        {
-            return false;
-        }
-
-        // Exclude contract packages (e.g. SimpleModule.Products.Contracts)
-        if (packageId.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        // Exclude known framework packages
-        return !FrameworkPackagePrefixes.Exists(prefix =>
-            packageId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-        );
-    }
-
-    private static readonly List<string> FrameworkPackagePrefixes =
-    [
-        "SimpleModule.Core",
-        "SimpleModule.Generator",
-        "SimpleModule.Database",
-        "SimpleModule.Blazor",
-        "SimpleModule.Hosting",
-        "SimpleModule.DevTools",
-        "SimpleModule.Storage",
-        "SimpleModule.AI.",
-        "SimpleModule.Rag.VectorStore",
-        "SimpleModule.Rag.StructuredRag",
-    ];
-
     private static MarketplacePackage MapToPackage(
         NuGetPackageData data,
-        HashSet<string> installedIds
+        HashSet<string> installedIds,
+        List<string> verifiedAuthors
     )
     {
+        var authors = data.Authors ?? [];
+        var isVerified = authors.Exists(a =>
+            verifiedAuthors.Contains(a, StringComparer.OrdinalIgnoreCase)
+        );
+
         return new MarketplacePackage
         {
             Id = data.Id ?? string.Empty,
             Title = data.Title ?? data.Id ?? string.Empty,
             Description = data.Description ?? string.Empty,
-            Authors = string.Join(", ", data.Authors ?? []),
+            Authors = string.Join(", ", authors),
             Icon = data.IconAddress ?? string.Empty,
             TotalDownloads = data.TotalDownloads,
             Tags = data.Tags ?? [],
@@ -254,6 +254,7 @@ public class NuGetMarketplaceService(
             ProjectLink = data.ProjectAddress ?? string.Empty,
             Category = CategoryMapper.MapCategory(data.Tags ?? []),
             IsInstalled = installedIds.Contains(data.Id ?? string.Empty),
+            IsVerified = isVerified,
         };
     }
 }

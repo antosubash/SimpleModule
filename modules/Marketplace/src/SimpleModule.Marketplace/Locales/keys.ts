@@ -1,6 +1,7 @@
 export const MarketplaceKeys = {
   Browse: {
     BadgeInstalled: 'Browse.BadgeInstalled',
+    BadgeVerified: 'Browse.BadgeVerified',
     ClearFilters: 'Browse.ClearFilters',
     Description: 'Browse.Description',
     EmptyBody: 'Browse.EmptyBody',
@@ -16,6 +17,7 @@ export const MarketplaceKeys = {
   Detail: {
     BackToMarketplace: 'Detail.BackToMarketplace',
     BadgeInstalled: 'Detail.BadgeInstalled',
+    BadgeVerified: 'Detail.BadgeVerified',
     BreadcrumbMarketplace: 'Detail.BreadcrumbMarketplace',
     CopiedButton: 'Detail.CopiedButton',
     CopyButton: 'Detail.CopyButton',
