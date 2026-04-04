@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>Dashboard module for SimpleModule. Provides a home landing page with aggregated data and insights.</Description>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Locales/*.json" />

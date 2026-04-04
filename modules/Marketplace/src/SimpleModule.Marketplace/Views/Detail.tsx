@@ -18,7 +18,7 @@ import { useState } from 'react';
 import Markdown from 'react-markdown';
 import { MarketplaceKeys } from '@/Locales/keys';
 import type { MarketplacePackageDetail } from '@/types';
-import { categoryLabel, formatDownloads } from './utils';
+import { categoryLabel, formatDownloads, verifiedBadgePath } from './utils';
 
 interface Props {
   package: MarketplacePackageDetail;
@@ -172,7 +172,19 @@ export default function Detail({ package: pkg }: Props) {
                 <div className="flex-1">
                   <h1 className="text-2xl font-bold text-text">{pkg.title}</h1>
                   <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-text-muted">
-                    <span>{pkg.authors}</span>
+                    <span className="flex items-center gap-1">
+                      {pkg.authors}
+                      {pkg.isVerified && (
+                        <svg
+                          className="h-4 w-4 text-primary"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-label={t(MarketplaceKeys.Detail.BadgeVerified)}
+                        >
+                          <path d={verifiedBadgePath} />
+                        </svg>
+                      )}
+                    </span>
                     <Separator orientation="vertical" className="h-4" />
                     <span className="flex items-center gap-1">
                       <svg

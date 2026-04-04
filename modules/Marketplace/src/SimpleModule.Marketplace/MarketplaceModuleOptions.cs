@@ -9,7 +9,7 @@ public class MarketplaceModuleOptions : IModuleOptions
         "https://api.nuget.org/v3/registration5-gz-semver2";
     public string NuGetFlatContainerBaseAddress { get; set; } =
         "https://api.nuget.org/v3-flatcontainer";
-    public string PackageTag { get; set; } = "simplemodule";
+    public List<string> VerifiedAuthors { get; set; } = ["antosubash"];
     public int SearchCacheDurationMinutes { get; set; } = 5;
     public int DetailCacheDurationMinutes { get; set; } = 10;
 }

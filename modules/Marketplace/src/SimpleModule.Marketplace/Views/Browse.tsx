@@ -4,7 +4,7 @@ import { Badge, Button, Card, CardContent, CardFooter, Input, PageShell } from '
 import { useState } from 'react';
 import { MarketplaceKeys } from '@/Locales/keys';
 import type { MarketplacePackage } from '@/types';
-import { categoryLabel, categoryNames, formatDownloads } from './utils';
+import { categoryLabel, categoryNames, formatDownloads, verifiedBadgePath } from './utils';
 
 const PAGE_SIZE = 24;
 
@@ -139,7 +139,19 @@ export default function Browse({
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-base font-semibold text-text">{pkg.title}</h3>
-                    <p className="text-xs text-text-muted">{pkg.authors}</p>
+                    <p className="flex items-center gap-1 text-xs text-text-muted">
+                      <span className="truncate">{pkg.authors}</span>
+                      {pkg.isVerified && (
+                        <svg
+                          className="h-3.5 w-3.5 shrink-0 text-primary"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-label={t(MarketplaceKeys.Browse.BadgeVerified)}
+                        >
+                          <path d={verifiedBadgePath} />
+                        </svg>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{pkg.description}</p>
