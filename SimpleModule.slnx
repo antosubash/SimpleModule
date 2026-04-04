@@ -100,7 +100,8 @@
   <Folder Name="/modules/Rag/">
     <Project Path="modules/Rag/src/SimpleModule.Rag.Module/SimpleModule.Rag.Module.csproj" />
   </Folder>
-  <Folder Name="/modules/AgentsPersistence/">
+  <Folder Name="/modules/Agents/">
+    <Project Path="modules/Agents/src/SimpleModule.Agents.Contracts/SimpleModule.Agents.Contracts.csproj" />
     <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
   </Folder>
   <Folder Name="/modules/BackgroundJobs/">

@@ -16,6 +16,8 @@
     <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
     <!-- Hardlinks instead of file copies where possible -->
     <CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>true</CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>
+    <!-- Auto-discover runsettings for parallel test execution -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
   <!-- NuGet package metadata (version injected by CI via -p:Version) -->
   <PropertyGroup>

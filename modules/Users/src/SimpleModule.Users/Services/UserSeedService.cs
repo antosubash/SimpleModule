@@ -11,6 +11,7 @@ namespace SimpleModule.Users.Services;
 public partial class UserSeedService(
     IServiceProvider serviceProvider,
     IConfiguration configuration,
+    IHostEnvironment environment,
     ILogger<UserSeedService> logger
 ) : IHostedService
 {
@@ -116,6 +117,8 @@ public partial class UserSeedService(
         };
 
         var password = configuration[passwordConfigKey] ?? defaultPassword;
+        if (password == defaultPassword && !environment.IsDevelopment())
+            LogDefaultPasswordWarning(logger, email, passwordConfigKey);
         var result = await userManager.CreateAsync(user, password);
         if (result.Succeeded)
         {
@@ -135,6 +138,16 @@ public partial class UserSeedService(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Seeding user: {Email}")]
     private static partial void LogSeedingUser(ILogger logger, string email);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Seeding {Email} with default password. Set '{ConfigKey}' in configuration before deploying to production."
+    )]
+    private static partial void LogDefaultPasswordWarning(
+        ILogger logger,
+        string email,
+        string configKey
+    );
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Seed error: {ErrorDescription}")]
     private static partial void LogSeedError(ILogger logger, string errorDescription);

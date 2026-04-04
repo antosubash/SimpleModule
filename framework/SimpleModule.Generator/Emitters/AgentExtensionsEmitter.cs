@@ -144,19 +144,6 @@ internal sealed class AgentExtensionsEmitter : IEmitter
         sb.AppendLine("        return services;");
         sb.AppendLine("    }");
 
-        sb.AppendLine();
-
-        // MapModuleAgentEndpoints
-        sb.AppendLine("    public static void MapModuleAgentEndpoints(this WebApplication app)");
-        sb.AppendLine("    {");
-        sb.AppendLine(
-            "        var registry = app.Services.GetRequiredService<global::SimpleModule.Agents.IAgentRegistry>();"
-        );
-        sb.AppendLine(
-            "        global::SimpleModule.Agents.AgentEndpoints.MapAgentEndpoints(app, registry);"
-        );
-        sb.AppendLine("    }");
-
         sb.AppendLine("}");
 
         context.AddSource("AgentExtensions.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));

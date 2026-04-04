@@ -8,7 +8,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace BackgroundJobs.Tests.Integration;
 
-public class BackgroundJobsEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection(TestCollections.Integration)]
+public class BackgroundJobsEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 

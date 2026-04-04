@@ -34,16 +34,11 @@ internal sealed class SettingsExtensionsEmitter : IEmitter
             );
         }
 
-        if (data.HasAgentsAssembly)
-        {
-            sb.AppendLine();
-            sb.AppendLine(
-                "        global::SimpleModule.Agents.AgentSettingsDefinitions.Register(settings);"
-            );
-            sb.AppendLine(
-                "        global::SimpleModule.Rag.RagSettingsDefinitions.Register(settings);"
-            );
-        }
+        sb.AppendLine();
+        sb.AppendLine("        // RAG settings definitions");
+        sb.AppendLine(
+            "        global::SimpleModule.Rag.RagSettingsDefinitions.Register(settings);"
+        );
 
         sb.AppendLine();
         sb.AppendLine(

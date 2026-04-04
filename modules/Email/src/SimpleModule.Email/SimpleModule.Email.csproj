@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>Email module for SimpleModule. Handles email sending with configurable SMTP providers, templates, and retry logic.</Description>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

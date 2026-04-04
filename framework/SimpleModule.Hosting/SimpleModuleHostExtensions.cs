@@ -14,6 +14,7 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.RateLimiting;
+using SimpleModule.Core.Security;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
@@ -78,6 +79,8 @@ public static class SimpleModuleHostExtensions
         // Register default IPublicMenuProvider if no module provides one
         builder.Services.TryAddScoped<IPublicMenuProvider, DefaultPublicMenuProvider>();
 
+        builder.Services.AddScoped<ICspNonce, CspNonce>();
+
         if (options.EnableHealthChecks)
         {
             builder
@@ -136,6 +139,34 @@ public static class SimpleModuleHostExtensions
         }
 
         app.UseHttpsRedirection();
+        app.Use(
+            async (context, next) =>
+            {
+                var nonce = context.RequestServices.GetRequiredService<ICspNonce>().Value;
+                context.Response.OnStarting(() =>
+                {
+                    var headers = context.Response.Headers;
+                    headers["X-Content-Type-Options"] = "nosniff";
+                    headers["X-Frame-Options"] = "SAMEORIGIN";
+                    headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+                    headers["X-Permitted-Cross-Domain-Policies"] = "none";
+                    headers["Content-Security-Policy"] =
+                        $"default-src 'none'; "
+                        + $"script-src 'self' 'nonce-{nonce}'; "
+                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
+                        + $"font-src 'self' fonts.gstatic.com; "
+                        + $"connect-src 'self'; "
+                        + $"img-src 'self' data:; "
+                        + $"object-src 'none'; "
+                        + $"base-uri 'self'; "
+                        + $"form-action 'self'; "
+                        + $"frame-ancestors 'none'; "
+                        + $"upgrade-insecure-requests;";
+                    return Task.CompletedTask;
+                });
+                await next();
+            }
+        );
         app.UseInertia();
         UseStaticFileCaching(app);
         app.MapStaticAssets();
