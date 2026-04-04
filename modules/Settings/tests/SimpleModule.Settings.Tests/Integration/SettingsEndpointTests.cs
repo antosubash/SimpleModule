@@ -7,7 +7,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace Settings.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
     [Fact]

@@ -5,7 +5,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace OpenIddict.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class ConnectEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

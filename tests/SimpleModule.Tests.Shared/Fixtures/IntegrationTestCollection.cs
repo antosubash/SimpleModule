@@ -3,12 +3,10 @@ using Xunit;
 
 /// <summary>
 /// Shares a single <see cref="SimpleModuleWebApplicationFactory"/> across all test classes
-/// in the same assembly that are decorated with <c>[Collection("Integration")]</c>.
+/// in the same assembly that are decorated with <c>[Collection(TestCollections.Integration)]</c>.
 /// This avoids spinning up a separate WebApplicationFactory per test class.
 /// Copy this definition into each test assembly that uses the collection.
 /// </summary>
-#pragma warning disable CA1711 // xUnit collection fixture naming convention
-[CollectionDefinition("Integration")]
+[CollectionDefinition(TestCollections.Integration)]
 public sealed class IntegrationTestCollection
     : ICollectionFixture<SimpleModuleWebApplicationFactory>;
-#pragma warning restore CA1711

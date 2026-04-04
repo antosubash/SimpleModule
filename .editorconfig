@@ -127,6 +127,9 @@ dotnet_diagnostic.CA1724.severity = none
 # CA2007 — consider calling ConfigureAwait (not needed in ASP.NET Core)
 dotnet_diagnostic.CA2007.severity = none
 
+# CA1711 — identifiers should not have incorrect suffix (xUnit collections, EventHandler, Permission)
+dotnet_diagnostic.CA1711.severity = none
+
 # CA1716 — identifiers should not match keywords
 dotnet_diagnostic.CA1716.severity = none
 

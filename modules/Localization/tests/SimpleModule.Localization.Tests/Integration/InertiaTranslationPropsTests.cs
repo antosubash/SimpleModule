@@ -6,7 +6,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Localization.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class InertiaTranslationPropsTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

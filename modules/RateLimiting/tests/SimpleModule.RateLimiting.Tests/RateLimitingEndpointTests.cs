@@ -5,7 +5,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.RateLimiting.Tests;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class RateLimitingEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

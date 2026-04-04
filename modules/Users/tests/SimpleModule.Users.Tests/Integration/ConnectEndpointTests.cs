@@ -4,7 +4,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace Users.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class ConnectEndpointTests
 {
     private readonly HttpClient _unauthenticatedClient;

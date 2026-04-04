@@ -7,7 +7,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace PageBuilder.Tests;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class PageEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

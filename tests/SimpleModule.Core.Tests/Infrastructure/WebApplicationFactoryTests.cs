@@ -16,7 +16,7 @@ namespace SimpleModule.Core.Tests.Infrastructure;
 /// missing DbContext replacements, and service resolution deadlocks that
 /// would silently hang every integration test.
 /// </summary>
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class WebApplicationFactoryTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

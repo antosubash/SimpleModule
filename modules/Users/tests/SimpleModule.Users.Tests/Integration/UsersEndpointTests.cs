@@ -8,7 +8,7 @@ using SimpleModule.Users.Contracts;
 
 namespace Users.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class UsersEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

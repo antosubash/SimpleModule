@@ -7,7 +7,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Core.Tests.Inertia;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class InertiaResultTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

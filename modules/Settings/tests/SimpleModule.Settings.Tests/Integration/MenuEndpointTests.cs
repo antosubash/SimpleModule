@@ -6,7 +6,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace Settings.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class MenuEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
     [Fact]

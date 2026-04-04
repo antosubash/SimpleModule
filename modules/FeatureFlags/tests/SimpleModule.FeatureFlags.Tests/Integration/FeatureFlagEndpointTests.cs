@@ -7,7 +7,7 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace FeatureFlags.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class FeatureFlagEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
     private static readonly string[] ViewPermission = [FeatureFlagsPermissions.View];

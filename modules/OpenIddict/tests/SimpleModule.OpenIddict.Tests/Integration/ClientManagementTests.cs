@@ -9,7 +9,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class ClientManagementTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;

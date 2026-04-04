@@ -14,7 +14,7 @@
     <PackageReference Include="FluentAssertions" />
   </ItemGroup>
   <ItemGroup>
-    <!-- This file is compiled into test assemblies via linked compile in Directory.Build.targets -->
+    <!-- Excluded here; each test assembly includes its own copy of IntegrationTestCollection.cs -->
     <Compile Remove="Fixtures/IntegrationTestCollection.cs" />
   </ItemGroup>
   <ItemGroup>

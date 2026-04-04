@@ -9,7 +9,7 @@ using SimpleModule.Users.Contracts;
 
 namespace Admin.Tests.Integration;
 
-[Collection("Integration")]
+[Collection(TestCollections.Integration)]
 public class AdminRolesEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
