@@ -139,7 +139,7 @@ export default function Browse({
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-base font-semibold text-text">{pkg.title}</h3>
-                    <p className="text-xs text-text-muted">{pkg.authors}</p>
+                    <p className="truncate text-xs font-mono text-text-muted">{pkg.id}</p>
                   </div>
                 </div>
                 <p className="mt-3 line-clamp-2 text-sm text-text-secondary">{pkg.description}</p>

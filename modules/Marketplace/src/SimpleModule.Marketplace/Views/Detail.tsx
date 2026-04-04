@@ -171,9 +171,8 @@ export default function Detail({ package: pkg }: Props) {
                 )}
                 <div className="flex-1">
                   <h1 className="text-2xl font-bold text-text">{pkg.title}</h1>
+                  <div className="mt-1 font-mono text-xs text-text-muted">{pkg.id}</div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-text-muted">
-                    <span>{pkg.authors}</span>
-                    <Separator orientation="vertical" className="h-4" />
                     <span className="flex items-center gap-1">
                       <svg
                         className="h-3.5 w-3.5"

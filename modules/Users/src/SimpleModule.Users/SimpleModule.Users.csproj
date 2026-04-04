@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>Users module for SimpleModule. User authentication and identity management via ASP.NET Core Identity.</Description>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Locales/*.json" />

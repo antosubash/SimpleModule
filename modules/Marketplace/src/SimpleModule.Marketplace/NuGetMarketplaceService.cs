@@ -93,11 +93,7 @@ public class NuGetMarketplaceService(
 
             var installedIds = await installedPackageDetector.GetInstalledPackageIdsAsync();
 
-            var filtered = response
-                .Data.Where(d =>
-                    d.Id?.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase) != true
-                )
-                .ToList();
+            var filtered = response.Data.Where(d => IsModulePackage(d.Id)).ToList();
 
             var contractsRemoved = response.Data.Count - filtered.Count;
             var packages = filtered.Select(d => MapToPackage(d, installedIds)).ToList();
@@ -206,6 +202,39 @@ public class NuGetMarketplaceService(
             return string.Empty;
         }
     }
+
+    private static bool IsModulePackage(string? packageId)
+    {
+        if (string.IsNullOrEmpty(packageId))
+        {
+            return false;
+        }
+
+        // Exclude contract packages (e.g. SimpleModule.Products.Contracts)
+        if (packageId.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // Exclude known framework packages
+        return !FrameworkPackagePrefixes.Exists(prefix =>
+            packageId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    private static readonly List<string> FrameworkPackagePrefixes =
+    [
+        "SimpleModule.Core",
+        "SimpleModule.Generator",
+        "SimpleModule.Database",
+        "SimpleModule.Blazor",
+        "SimpleModule.Hosting",
+        "SimpleModule.DevTools",
+        "SimpleModule.Storage",
+        "SimpleModule.AI.",
+        "SimpleModule.Rag.VectorStore",
+        "SimpleModule.Rag.StructuredRag",
+    ];
 
     private static MarketplacePackage MapToPackage(
         NuGetPackageData data,

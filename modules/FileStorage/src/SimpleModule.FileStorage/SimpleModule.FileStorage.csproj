@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>File storage module for SimpleModule. Manages file uploads and downloads with configurable storage providers.</Description>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Locales/*.json" />

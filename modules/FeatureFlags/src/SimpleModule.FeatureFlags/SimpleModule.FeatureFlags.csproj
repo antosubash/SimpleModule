@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <Description>Feature flag module for SimpleModule. Provides feature toggle management with in-memory caching.</Description>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="Locales/*.json" />
