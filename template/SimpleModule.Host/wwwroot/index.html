@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="/css/app.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>SimpleModule</title>
-    <script>
+    <script nonce="<!--CSP_NONCE-->">
         function applyTheme() {
             var stored = localStorage.getItem('theme');
             var shouldBeDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -35,7 +35,7 @@
             }
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     </script>
-    <script type="importmap">
+    <script type="importmap" nonce="<!--CSP_NONCE-->">
     {
         "imports": {
             "react": "/js/vendor/react.js",
