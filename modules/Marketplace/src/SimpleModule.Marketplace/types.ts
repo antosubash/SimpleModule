@@ -11,6 +11,7 @@ export interface MarketplacePackage {
   projectLink: string;
   category: any;
   isInstalled: boolean;
+  isVerified: boolean;
 }
 
 export interface MarketplacePackageDetail {
