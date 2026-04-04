@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import type * as React from 'react';
 import { AppLayout } from './app-layout';
+import { PageErrorBoundary } from './page-error-boundary';
 import { PublicLayout } from './public-layout';
 import type { SharedProps } from './types';
 
@@ -9,9 +10,17 @@ function AutoLayout({ children }: { children: React.ReactNode }) {
   const { auth } = props;
 
   if (auth?.isAuthenticated) {
-    return <AppLayout>{children}</AppLayout>;
+    return (
+      <AppLayout>
+        <PageErrorBoundary>{children}</PageErrorBoundary>
+      </AppLayout>
+    );
   }
-  return <PublicLayout>{children}</PublicLayout>;
+  return (
+    <PublicLayout>
+      <PageErrorBoundary>{children}</PageErrorBoundary>
+    </PublicLayout>
+  );
 }
 
 export function resolveLayout(page: any) {

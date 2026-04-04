@@ -248,7 +248,7 @@ export default function Detail({ package: pkg }: Props) {
             </CardContent>
           </Card>
 
-          {pkg.versions.length > 0 && (
+          {pkg.versions?.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>{t(MarketplaceKeys.Detail.RecentVersionsTitle)}</CardTitle>
@@ -269,7 +269,7 @@ export default function Detail({ package: pkg }: Props) {
             </Card>
           )}
 
-          {pkg.tags.length > 0 && (
+          {pkg.tags?.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>{t(MarketplaceKeys.Detail.TagsTitle)}</CardTitle>
