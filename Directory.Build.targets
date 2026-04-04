@@ -1,0 +1,10 @@
+<Project>
+  <!-- Disable analyzers in test projects for faster compilation -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <RunAnalyzers>false</RunAnalyzers>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Remove="Roslynator.Analyzers" />
+  </ItemGroup>
+</Project>

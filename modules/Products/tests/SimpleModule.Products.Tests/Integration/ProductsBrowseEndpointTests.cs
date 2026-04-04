@@ -7,7 +7,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Products.Tests.Integration;
 
-public class ProductsBrowseEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection("Integration")]
+public class ProductsBrowseEndpointTests
 {
     private readonly HttpClient _client;
 

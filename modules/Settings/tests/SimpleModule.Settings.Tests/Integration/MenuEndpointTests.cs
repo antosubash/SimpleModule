@@ -6,8 +6,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace Settings.Tests.Integration;
 
+[Collection("Integration")]
 public class MenuEndpointTests(SimpleModuleWebApplicationFactory factory)
-    : IClassFixture<SimpleModuleWebApplicationFactory>
 {
     [Fact]
     public async Task GetMenus_Authenticated_Returns200()

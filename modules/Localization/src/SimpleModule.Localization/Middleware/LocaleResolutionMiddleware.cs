@@ -16,7 +16,8 @@ public sealed class LocaleResolutionMiddleware(
     RequestDelegate next,
     IConfiguration configuration,
     TranslationLoader loader,
-    IMemoryCache cache)
+    IMemoryCache cache
+)
 {
     private static readonly TimeSpan UserLocaleCacheDuration = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan AcceptLanguageCacheDuration = TimeSpan.FromMinutes(30);
@@ -43,7 +44,10 @@ public sealed class LocaleResolutionMiddleware(
         if (sharedData is not null)
         {
             sharedData.Set(LocalizationConstants.LocaleSharedDataKey, locale);
-            sharedData.Set(LocalizationConstants.TranslationsSharedDataKey, loader.GetAllTranslations(locale));
+            sharedData.Set(
+                LocalizationConstants.TranslationsSharedDataKey,
+                loader.GetAllTranslations(locale)
+            );
         }
 
         await next(context);
@@ -67,7 +71,10 @@ public sealed class LocaleResolutionMiddleware(
             if (settings is not null)
             {
                 var userLocale = await settings.GetSettingAsync<string>(
-                    LocalizationConstants.UserLanguageSetting, SettingScope.User, userId);
+                    LocalizationConstants.UserLanguageSetting,
+                    SettingScope.User,
+                    userId
+                );
                 if (!string.IsNullOrEmpty(userLocale))
                 {
                     cache.Set(cacheKey, userLocale, UserLocaleCacheDuration);
@@ -126,5 +133,7 @@ public sealed class LocaleResolutionMiddleware(
     }
 
     private static string UserLocaleKey(string userId) => string.Concat("locale:user:", userId);
-    private static string AcceptLanguageKey(string headerValue) => string.Concat("locale:accept:", headerValue);
+
+    private static string AcceptLanguageKey(string headerValue) =>
+        string.Concat("locale:accept:", headerValue);
 }

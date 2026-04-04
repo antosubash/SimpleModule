@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
   <!--
     Incremental JS/Vite build for modules.
     Skips npx vite build when no source files have changed since the last build.

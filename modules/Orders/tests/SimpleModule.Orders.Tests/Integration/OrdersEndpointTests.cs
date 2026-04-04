@@ -7,7 +7,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace Orders.Tests.Integration;
 
-public class OrdersEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection("Integration")]
+public class OrdersEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 

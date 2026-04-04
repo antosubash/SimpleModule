@@ -8,7 +8,8 @@ using SimpleModule.Users.Contracts;
 
 namespace Users.Tests.Integration;
 
-public class UsersEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection("Integration")]
+public class UsersEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
     private readonly HttpClient _unauthenticatedClient;

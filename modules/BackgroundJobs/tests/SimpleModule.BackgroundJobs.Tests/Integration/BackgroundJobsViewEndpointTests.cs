@@ -5,7 +5,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace BackgroundJobs.Tests.Integration;
 
-public class BackgroundJobsViewEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection("Integration")]
+public class BackgroundJobsViewEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 

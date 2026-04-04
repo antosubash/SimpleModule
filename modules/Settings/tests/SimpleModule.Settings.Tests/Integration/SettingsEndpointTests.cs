@@ -7,8 +7,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace Settings.Tests.Integration;
 
+[Collection("Integration")]
 public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
-    : IClassFixture<SimpleModuleWebApplicationFactory>
 {
     [Fact]
     public async Task GetDefinitions_Authenticated_Returns200()

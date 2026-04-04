@@ -9,7 +9,8 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.Tests.Integration;
 
-public class ClientManagementTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection("Integration")]
+public class ClientManagementTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 

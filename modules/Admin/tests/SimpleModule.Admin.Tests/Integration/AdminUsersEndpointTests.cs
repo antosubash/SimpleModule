@@ -9,7 +9,8 @@ using SimpleModule.Users.Contracts;
 
 namespace Admin.Tests.Integration;
 
-public class AdminUsersEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection("Integration")]
+public class AdminUsersEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 
