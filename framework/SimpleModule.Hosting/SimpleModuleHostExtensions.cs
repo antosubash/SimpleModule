@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using SimpleModule.Blazor;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
@@ -19,6 +18,7 @@ using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
+using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
 
@@ -56,16 +56,7 @@ public static class SimpleModuleHostExtensions
             builder.Services.AddSwaggerGen();
         }
 
-        builder.Services.AddRazorComponents();
-
-        if (options.ShellComponent is not null)
-        {
-            builder.Services.AddSimpleModuleBlazor(o => o.ShellComponent = options.ShellComponent);
-        }
-        else
-        {
-            builder.Services.AddSimpleModuleBlazor();
-        }
+        builder.Services.AddSingleton<IInertiaPageRenderer, HtmlFileInertiaPageRenderer>();
 
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();

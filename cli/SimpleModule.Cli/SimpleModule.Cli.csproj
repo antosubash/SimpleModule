@@ -29,20 +29,8 @@
       LogicalName="Templates.Host.appsettings.Development.json"
     />
     <EmbeddedResource
-      Include="..\..\template\SimpleModule.Host\Components\App.razor"
-      LogicalName="Templates.Host.Components.App.razor"
-    />
-    <EmbeddedResource
-      Include="..\..\template\SimpleModule.Host\Components\InertiaShell.razor"
-      LogicalName="Templates.Host.Components.InertiaShell.razor"
-    />
-    <EmbeddedResource
-      Include="..\..\template\SimpleModule.Host\Components\Routes.razor"
-      LogicalName="Templates.Host.Components.Routes.razor"
-    />
-    <EmbeddedResource
-      Include="..\..\template\SimpleModule.Host\Components\_Imports.razor"
-      LogicalName="Templates.Host.Components._Imports.razor"
+      Include="..\..\template\SimpleModule.Host\wwwroot\index.html"
+      LogicalName="Templates.Host.wwwroot.index.html"
     />
     <EmbeddedResource
       Include="..\..\template\SimpleModule.Host\ClientApp\app.tsx"

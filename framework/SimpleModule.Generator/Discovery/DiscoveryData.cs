@@ -127,7 +127,6 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigureFeatureFlags,
     bool HasConfigureAgents,
     bool HasConfigureRateLimits,
-    bool HasRazorComponents,
     string RoutePrefix,
     string ViewPrefix,
     ImmutableArray<EndpointInfoRecord> Endpoints,
@@ -148,7 +147,6 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigureFeatureFlags == other.HasConfigureFeatureFlags
             && HasConfigureAgents == other.HasConfigureAgents
             && HasConfigureRateLimits == other.HasConfigureRateLimits
-            && HasRazorComponents == other.HasRazorComponents
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
             && Endpoints.SequenceEqual(other.Endpoints)
@@ -170,7 +168,6 @@ internal readonly record struct ModuleInfoRecord(
         hash = HashHelper.Combine(hash, HasConfigureFeatureFlags.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureAgents.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureRateLimits.GetHashCode());
-        hash = HashHelper.Combine(hash, HasRazorComponents.GetHashCode());
         hash = HashHelper.Combine(hash, (RoutePrefix ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, (ViewPrefix ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, Endpoints);
@@ -466,7 +463,6 @@ internal sealed class ModuleInfo
     public bool HasConfigureFeatureFlags { get; set; }
     public bool HasConfigureAgents { get; set; }
     public bool HasConfigureRateLimits { get; set; }
-    public bool HasRazorComponents { get; set; }
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
     public List<EndpointInfo> Endpoints { get; set; } = new();

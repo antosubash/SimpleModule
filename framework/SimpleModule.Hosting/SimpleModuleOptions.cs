@@ -8,8 +8,6 @@ public class SimpleModuleOptions
 {
     private readonly List<Action<IServiceCollection>> _moduleOptionsActions = [];
 
-    public Type? ShellComponent { get; set; }
-
     public bool EnableSwagger { get; set; } = true;
 
     public bool EnableHealthChecks { get; set; } = true;

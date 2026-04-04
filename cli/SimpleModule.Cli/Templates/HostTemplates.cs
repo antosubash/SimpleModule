@@ -112,60 +112,11 @@ public sealed class HostTemplates
     }
 
     /// <summary>
-    /// Copy App.razor, replace SimpleModule with projectName.
+    /// Copy index.html as-is.
     /// </summary>
-    public static string AppRazor(string projectName)
+    public static string IndexHtml()
     {
-        var content = EmbeddedResourceReader.ReadTemplate("Templates.Host.Components.App.razor");
-        return ReplaceProjectName(content, projectName);
-    }
-
-    /// <summary>
-    /// Copy InertiaShell.razor, replace SimpleModule with projectName.
-    /// </summary>
-    public static string InertiaShellRazor(string projectName)
-    {
-        var content = EmbeddedResourceReader.ReadTemplate(
-            "Templates.Host.Components.InertiaShell.razor"
-        );
-        return ReplaceProjectName(content, projectName);
-    }
-
-    /// <summary>
-    /// Copy Routes.razor, stripping AdditionalAssemblies references and
-    /// closing the Router tag properly.
-    /// </summary>
-    public static string RoutesRazor()
-    {
-        var lines = EmbeddedResourceReader.ReadTemplateLines(
-            "Templates.Host.Components.Routes.razor"
-        );
-        lines.RemoveAll(line => line.Contains("AdditionalAssemblies", StringComparison.Ordinal));
-
-        // Fix unclosed Router tag: replace trailing open attribute list with closing >
-        for (var i = 0; i < lines.Count; i++)
-        {
-            var trimmed = lines[i].TrimEnd();
-            if (trimmed.Contains("<Router", StringComparison.Ordinal) && !trimmed.EndsWith('>'))
-            {
-                lines[i] = trimmed + ">";
-            }
-        }
-
-        lines = TemplateExtractor.CollapseBlankLines(lines);
-
-        return string.Join(Environment.NewLine, lines);
-    }
-
-    /// <summary>
-    /// Copy _Imports.razor, replace SimpleModule with projectName.
-    /// </summary>
-    public static string ImportsRazor(string projectName)
-    {
-        var content = EmbeddedResourceReader.ReadTemplate(
-            "Templates.Host.Components._Imports.razor"
-        );
-        return ReplaceProjectName(content, projectName);
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.wwwroot.index.html");
     }
 
     /// <summary>
@@ -252,7 +203,7 @@ public sealed class HostTemplates
 
     /// <summary>
     /// Replaces "SimpleModule" with projectName in content, preserving framework names
-    /// (SimpleModule.Hosting, SimpleModule.Generator, SimpleModule.Blazor, SimpleModule.Core,
+    /// (SimpleModule.Hosting, SimpleModule.Generator, SimpleModule.Core,
     /// SimpleModule.Database, SimpleModule.DevTools).
     /// </summary>
     private static string ReplaceProjectName(string content, string projectName)
@@ -262,7 +213,6 @@ public sealed class HostTemplates
         {
             "SimpleModule.Hosting",
             "SimpleModule.Generator",
-            "SimpleModule.Blazor",
             "SimpleModule.Core",
             "SimpleModule.Database",
             "SimpleModule.DevTools",
