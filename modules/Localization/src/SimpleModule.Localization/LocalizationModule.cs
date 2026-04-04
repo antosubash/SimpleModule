@@ -18,7 +18,9 @@ public sealed class LocalizationModule : IModule
         services.AddLocalization();
         services.AddSingleton<IStringLocalizerFactory, JsonStringLocalizerFactory>();
         services.AddScoped<LocalizationService>();
-        services.AddScoped<ILocalizationContracts>(sp => sp.GetRequiredService<LocalizationService>());
+        services.AddScoped<ILocalizationContracts>(sp =>
+            sp.GetRequiredService<LocalizationService>()
+        );
     }
 
     public void ConfigureMiddleware(IApplicationBuilder app)

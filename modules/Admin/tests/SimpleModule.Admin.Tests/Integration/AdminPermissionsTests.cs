@@ -10,7 +10,8 @@ using SimpleModule.Users.Contracts;
 
 namespace Admin.Tests.Integration;
 
-public class AdminPermissionsTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection(TestCollections.Integration)]
+public class AdminPermissionsTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 

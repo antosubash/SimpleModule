@@ -9,7 +9,8 @@ public sealed class JsonStringLocalizerFactory(TranslationLoader loader) : IStri
 
     public IStringLocalizer Create(Type resourceSource)
     {
-        var ns = TranslationLoader.GetModuleName(resourceSource.Assembly)
+        var ns =
+            TranslationLoader.GetModuleName(resourceSource.Assembly)
             ?? resourceSource.Assembly.GetName().Name
             ?? "unknown";
 

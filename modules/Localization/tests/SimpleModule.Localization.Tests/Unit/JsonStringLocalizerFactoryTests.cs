@@ -12,10 +12,10 @@ public sealed class JsonStringLocalizerFactoryTests
     public JsonStringLocalizerFactoryTests()
     {
         _loader = new TranslationLoader();
-        _loader.InitializeFromDictionary("en", new Dictionary<string, string>
-        {
-            ["test.key"] = "Value",
-        });
+        _loader.InitializeFromDictionary(
+            "en",
+            new Dictionary<string, string> { ["test.key"] = "Value" }
+        );
         _factory = new JsonStringLocalizerFactory(_loader);
     }
 

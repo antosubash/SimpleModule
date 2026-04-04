@@ -10,9 +10,15 @@ namespace SimpleModule.Localization.Services;
 
 public sealed class TranslationLoader
 {
-    private static readonly Regex EmbeddedLocalePattern = new(@"\.Locales\.([^.]+)\.json$", RegexOptions.Compiled);
+    private static readonly Regex EmbeddedLocalePattern = new(
+        @"\.Locales\.([^.]+)\.json$",
+        RegexOptions.Compiled
+    );
 
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _mutableTranslations = new();
+    private readonly ConcurrentDictionary<
+        string,
+        ConcurrentDictionary<string, string>
+    > _mutableTranslations = new();
 
     private FrozenDictionary<string, FrozenDictionary<string, string>>? _frozenTranslations;
     private IReadOnlyList<string>? _supportedLocales;
@@ -48,7 +54,10 @@ public sealed class TranslationLoader
                 var json = reader.ReadToEnd();
                 var flatTranslations = FlattenJson(json);
 
-                var localeDictionary = _mutableTranslations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+                var localeDictionary = _mutableTranslations.GetOrAdd(
+                    locale,
+                    _ => new ConcurrentDictionary<string, string>()
+                );
                 var prefix = moduleName;
                 foreach (var kvp in flatTranslations)
                 {
@@ -73,7 +82,10 @@ public sealed class TranslationLoader
             var json = File.ReadAllText(file);
             var flatTranslations = FlattenJson(json);
 
-            var localeDictionary = _mutableTranslations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+            var localeDictionary = _mutableTranslations.GetOrAdd(
+                locale,
+                _ => new ConcurrentDictionary<string, string>()
+            );
             foreach (var kvp in flatTranslations)
             {
                 localeDictionary[kvp.Key] = kvp.Value;
@@ -83,9 +95,15 @@ public sealed class TranslationLoader
         Freeze();
     }
 
-    internal void InitializeFromDictionary(string locale, IReadOnlyDictionary<string, string> translations)
+    internal void InitializeFromDictionary(
+        string locale,
+        IReadOnlyDictionary<string, string> translations
+    )
     {
-        var localeDictionary = _mutableTranslations.GetOrAdd(locale, _ => new ConcurrentDictionary<string, string>());
+        var localeDictionary = _mutableTranslations.GetOrAdd(
+            locale,
+            _ => new ConcurrentDictionary<string, string>()
+        );
         foreach (var kvp in translations)
         {
             localeDictionary[kvp.Key] = kvp.Value;
@@ -99,14 +117,19 @@ public sealed class TranslationLoader
         var frozen = _frozenTranslations;
         if (frozen is not null)
         {
-            if (frozen.TryGetValue(locale, out var translations) && translations.TryGetValue(key, out var value))
+            if (
+                frozen.TryGetValue(locale, out var translations)
+                && translations.TryGetValue(key, out var value)
+            )
             {
                 return value;
             }
 
-            if (locale != LocalizationConstants.DefaultLocale
+            if (
+                locale != LocalizationConstants.DefaultLocale
                 && frozen.TryGetValue(LocalizationConstants.DefaultLocale, out var fallback)
-                && fallback.TryGetValue(key, out var fallbackValue))
+                && fallback.TryGetValue(key, out var fallbackValue)
+            )
             {
                 return fallbackValue;
             }
@@ -114,14 +137,22 @@ public sealed class TranslationLoader
             return null;
         }
 
-        if (_mutableTranslations.TryGetValue(locale, out var mutableTranslations) && mutableTranslations.TryGetValue(key, out var mutableValue))
+        if (
+            _mutableTranslations.TryGetValue(locale, out var mutableTranslations)
+            && mutableTranslations.TryGetValue(key, out var mutableValue)
+        )
         {
             return mutableValue;
         }
 
-        if (locale != LocalizationConstants.DefaultLocale
-            && _mutableTranslations.TryGetValue(LocalizationConstants.DefaultLocale, out var mutableFallback)
-            && mutableFallback.TryGetValue(key, out var mutableFallbackValue))
+        if (
+            locale != LocalizationConstants.DefaultLocale
+            && _mutableTranslations.TryGetValue(
+                LocalizationConstants.DefaultLocale,
+                out var mutableFallback
+            )
+            && mutableFallback.TryGetValue(key, out var mutableFallbackValue)
+        )
         {
             return mutableFallbackValue;
         }
@@ -178,14 +209,20 @@ public sealed class TranslationLoader
         return result;
     }
 
-    private static void FlattenElement(JsonElement element, string prefix, Dictionary<string, string> result)
+    private static void FlattenElement(
+        JsonElement element,
+        string prefix,
+        Dictionary<string, string> result
+    )
     {
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
                 foreach (var property in element.EnumerateObject())
                 {
-                    var key = string.IsNullOrEmpty(prefix) ? property.Name : $"{prefix}.{property.Name}";
+                    var key = string.IsNullOrEmpty(prefix)
+                        ? property.Name
+                        : $"{prefix}.{property.Name}";
                     FlattenElement(property.Value, key, result);
                 }
                 break;

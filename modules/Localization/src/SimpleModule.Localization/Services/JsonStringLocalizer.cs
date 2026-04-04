@@ -3,7 +3,8 @@ using Microsoft.Extensions.Localization;
 
 namespace SimpleModule.Localization.Services;
 
-public sealed class JsonStringLocalizer(string moduleNamespace, TranslationLoader loader) : IStringLocalizer
+public sealed class JsonStringLocalizer(string moduleNamespace, TranslationLoader loader)
+    : IStringLocalizer
 {
     public LocalizedString this[string name]
     {

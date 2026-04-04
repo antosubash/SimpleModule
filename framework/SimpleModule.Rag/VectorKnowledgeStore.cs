@@ -57,7 +57,6 @@ public sealed class VectorKnowledgeStore(
         if (!await collection.CollectionExistsAsync(cancellationToken))
             return [];
 
-
         var queryEmbeddings = await embeddingGenerator.GenerateAsync(
             [query],
             cancellationToken: cancellationToken

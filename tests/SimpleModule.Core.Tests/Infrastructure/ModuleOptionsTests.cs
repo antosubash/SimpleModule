@@ -18,7 +18,8 @@ namespace SimpleModule.Core.Tests.Infrastructure;
 /// resolved with their default values. Also verifies that overrides from the host
 /// app's Configure{Module}() calls are applied correctly.
 /// </summary>
-public class ModuleOptionsTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection(TestCollections.Integration)]
+public class ModuleOptionsTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 
