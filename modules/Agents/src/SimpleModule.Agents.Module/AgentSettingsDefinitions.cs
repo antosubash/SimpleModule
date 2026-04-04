@@ -1,6 +1,6 @@
 using SimpleModule.Core.Settings;
 
-namespace SimpleModule.Agents;
+namespace SimpleModule.Agents.Module;
 
 public static class AgentSettingsDefinitions
 {

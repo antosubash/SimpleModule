@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
+using SimpleModule.Agents.Guardrails;
 
-namespace SimpleModule.Agents.Guardrails;
+namespace SimpleModule.Agents.Module;
 
 public sealed partial class PiiRedactionGuardrail : IAgentGuardrail
 {

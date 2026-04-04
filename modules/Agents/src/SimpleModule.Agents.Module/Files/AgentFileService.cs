@@ -1,10 +1,10 @@
 using SimpleModule.Storage;
 
-namespace SimpleModule.Agents.Files;
+namespace SimpleModule.Agents.Module;
 
 public sealed class AgentFileService(IStorageProvider storageProvider)
 {
-    private const string AgentFilesPrefix = "agents/";
+    private const string AgentFilesPrefix = "agents";
 
     public async Task<StorageResult> SaveFileAsync(
         string agentName,
@@ -14,7 +14,7 @@ public sealed class AgentFileService(IStorageProvider storageProvider)
         CancellationToken cancellationToken = default
     )
     {
-        var path = $"{AgentFilesPrefix}{agentName}/{fileName}";
+        var path = StoragePathHelper.Combine($"{AgentFilesPrefix}/{agentName}", fileName);
         return await storageProvider.SaveAsync(path, content, contentType, cancellationToken);
     }
 
@@ -24,7 +24,7 @@ public sealed class AgentFileService(IStorageProvider storageProvider)
         CancellationToken cancellationToken = default
     )
     {
-        var path = $"{AgentFilesPrefix}{agentName}/{fileName}";
+        var path = StoragePathHelper.Combine($"{AgentFilesPrefix}/{agentName}", fileName);
         return await storageProvider.GetAsync(path, cancellationToken);
     }
 
@@ -33,7 +33,7 @@ public sealed class AgentFileService(IStorageProvider storageProvider)
         CancellationToken cancellationToken = default
     )
     {
-        var prefix = $"{AgentFilesPrefix}{agentName}/";
+        var prefix = StoragePathHelper.Normalize($"{AgentFilesPrefix}/{agentName}") + "/";
         return await storageProvider.ListAsync(prefix, cancellationToken);
     }
 
@@ -43,7 +43,7 @@ public sealed class AgentFileService(IStorageProvider storageProvider)
         CancellationToken cancellationToken = default
     )
     {
-        var path = $"{AgentFilesPrefix}{agentName}/{fileName}";
+        var path = StoragePathHelper.Combine($"{AgentFilesPrefix}/{agentName}", fileName);
         return await storageProvider.DeleteAsync(path, cancellationToken);
     }
 }

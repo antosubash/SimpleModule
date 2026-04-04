@@ -9,5 +9,7 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Agents\SimpleModule.Agents.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Storage\SimpleModule.Storage.csproj" />
+    <ProjectReference Include="..\SimpleModule.Agents.Contracts\SimpleModule.Agents.Contracts.csproj" />
   </ItemGroup>
 </Project>

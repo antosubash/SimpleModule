@@ -1,7 +1,12 @@
-namespace SimpleModule.Agents.Guardrails;
+using SimpleModule.Agents.Guardrails;
+
+namespace SimpleModule.Agents.Module;
 
 public sealed class PromptInjectionGuardrail : IAgentGuardrail
 {
+    private static readonly Task<GuardrailResult> _allowed = Task.FromResult(
+        GuardrailResult.Allowed()
+    );
     private static readonly string[] SuspiciousPatterns =
     [
         "ignore previous instructions",
@@ -22,7 +27,7 @@ public sealed class PromptInjectionGuardrail : IAgentGuardrail
     )
     {
         if (direction != GuardrailDirection.Input)
-            return Task.FromResult(GuardrailResult.Allowed());
+            return _allowed;
 
         foreach (var pattern in SuspiciousPatterns)
         {
@@ -36,6 +41,6 @@ public sealed class PromptInjectionGuardrail : IAgentGuardrail
             }
         }
 
-        return Task.FromResult(GuardrailResult.Allowed());
+        return _allowed;
     }
 }

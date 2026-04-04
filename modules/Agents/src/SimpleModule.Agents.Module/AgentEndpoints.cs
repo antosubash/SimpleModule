@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Agents;
 using SimpleModule.Agents.Dtos;
 
-namespace SimpleModule.Agents;
+namespace SimpleModule.Agents.Module;
 
 public static class AgentEndpoints
 {

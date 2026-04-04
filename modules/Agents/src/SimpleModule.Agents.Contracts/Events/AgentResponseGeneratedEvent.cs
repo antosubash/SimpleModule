@@ -1,6 +1,6 @@
 using SimpleModule.Core.Events;
 
-namespace SimpleModule.Agents.Events;
+namespace SimpleModule.Agents.Contracts;
 
 public sealed class AgentResponseGeneratedEvent : IEvent
 {

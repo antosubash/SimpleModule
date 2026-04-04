@@ -29,7 +29,6 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("using SimpleModule.Core.Menu;");
         sb.AppendLine("using SimpleModule.Database;");
         sb.AppendLine("using SimpleModule.Hosting;");
-        sb.AppendLine("using SimpleModule.Agents;");
         sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine($"using {data.HostAssemblyName};");
         sb.AppendLine($"using {data.HostAssemblyName}.Components;");
@@ -116,12 +115,6 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("        // Source-generated component and endpoint mapping");
         sb.AppendLine("        app.MapRazorComponents<App>().AddModuleAssemblies();");
         sb.AppendLine("        app.MapModuleEndpoints();");
-        sb.AppendLine("        app.MapModuleAgentEndpoints();");
-        sb.AppendLine();
-        sb.AppendLine("        if (app.Environment.IsDevelopment())");
-        sb.AppendLine("        {");
-        sb.AppendLine("            app.UseAgentDevTools();");
-        sb.AppendLine("        }");
         sb.AppendLine();
         sb.AppendLine("        return app;");
         sb.AppendLine("    }");

@@ -1,7 +1,9 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Options;
+using SimpleModule.Agents;
+using SimpleModule.Agents.Middleware;
 
-namespace SimpleModule.Agents.Middleware;
+namespace SimpleModule.Agents.Module;
 
 public sealed class RateLimitingMiddleware(IOptions<AgentOptions> options) : IAgentMiddleware
 {
@@ -25,12 +27,6 @@ public sealed class RateLimitingMiddleware(IOptions<AgentOptions> options) : IAg
             }
 
             entry.Add();
-
-            // Remove empty entries to prevent unbounded dictionary growth
-            if (entry.Count == 0)
-            {
-                _entries.TryRemove(key, out _);
-            }
         }
 
         await next(context);
