@@ -2,14 +2,14 @@
 
 > **Experimental** — This project is vibe coded and under active development. APIs, conventions, and structure may change without notice. Use at your own risk.
 
-A modular monolith framework for .NET 10 that uses Roslyn source generators to discover and wire up modules at compile time — no reflection, no manual registration. The frontend is React 19 + Inertia.js, rendered server-side through Blazor SSR and hydrated on the client.
+A modular monolith framework for .NET 10 that uses Roslyn source generators to discover and wire up modules at compile time — no reflection, no manual registration. The frontend is React 19 + Inertia.js, rendered server-side through a static HTML shell and hydrated on the client.
 
 ## What it does
 
 - **Compile-time module discovery** — A Roslyn `IIncrementalGenerator` scans referenced assemblies for `[Module]` classes, `IEndpoint`/`IViewEndpoint` implementors, and `[Dto]` types. It emits `AddModules()`, `MapModuleEndpoints()`, JSON serializer contexts, and TypeScript interface definitions. No startup reflection.
 - **Module isolation** — Each module has its own database schema (or table prefix on SQLite), its own contracts project, and its own React page bundle. Modules communicate through contract interfaces and an async event bus — never by referencing each other's internals.
 - **Full-stack type safety** — `[Dto]`-decorated C# types generate TypeScript interfaces that the React frontend imports. The source generator keeps both sides in sync automatically.
-- **Inertia.js bridge** — Endpoints call `Inertia.Render("Module/Page", props)`. The Blazor SSR shell delivers initial HTML with JSON props, then React hydrates client-side. No separate API layer needed for page rendering.
+- **Inertia.js bridge** — Endpoints call `Inertia.Render("Module/Page", props)`. The static HTML shell delivers initial HTML with JSON props, then React hydrates client-side. No separate API layer needed for page rendering.
 - **Pluggable infrastructure** — File storage (Local, Azure Blob, S3), multi-provider database (SQLite, PostgreSQL, SQL Server), permission system, settings, audit logging, and OpenID Connect are all provided as optional modules.
 
 ## Prerequisites
@@ -58,8 +58,7 @@ framework/
   SimpleModule.Core            # IModule, IEndpoint, IViewEndpoint, [Dto], [Module], IEventBus
   SimpleModule.Generator       # Roslyn IIncrementalGenerator (netstandard2.0)
   SimpleModule.Database        # Multi-provider DB (SQLite, PostgreSQL, SQL Server)
-  SimpleModule.Blazor          # Blazor SSR shell for Inertia page rendering
-  SimpleModule.Hosting         # ASP.NET host builder extensions
+  SimpleModule.Hosting         # ASP.NET host builder extensions, Inertia page rendering
   SimpleModule.DevTools        # Developer tooling and diagnostics
   SimpleModule.Storage         # File storage abstraction with Local, Azure Blob, and S3 providers
 modules/
@@ -84,7 +83,7 @@ tools/                         # Build/dev orchestrators, type extraction, compo
 ```
 Browser request
   → ASP.NET route handler calls Inertia.Render("Products/Browse", { products })
-  → Inertia middleware renders Blazor SSR shell with JSON props
+  → Inertia middleware renders static HTML shell with JSON props
   → Client loads React, dynamically imports module's Products.pages.js bundle
   → React component hydrates with server-provided props
 ```

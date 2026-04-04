@@ -16,7 +16,7 @@ description: >
 
 ## Architecture Overview
 
-SimpleModule is a **modular monolith** for .NET 10 with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via Blazor SSR.
+SimpleModule is a **modular monolith** for .NET 10 with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via a static HTML shell.
 
 **Key principle:** Single deployment, shared database, compile-time safety over runtime discipline, convention over configuration.
 

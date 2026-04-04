@@ -22,7 +22,6 @@ COPY *.slnx ./
 COPY framework/SimpleModule.Core/*.csproj framework/SimpleModule.Core/
 COPY framework/SimpleModule.Database/*.csproj framework/SimpleModule.Database/
 COPY framework/SimpleModule.Generator/*.csproj framework/SimpleModule.Generator/
-COPY framework/SimpleModule.Blazor/*.csproj framework/SimpleModule.Blazor/
 COPY template/SimpleModule.Host/*.csproj template/SimpleModule.Host/
 # ... module project files ...
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj

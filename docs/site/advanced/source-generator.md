@@ -113,7 +113,7 @@ The generator feeds `DiscoveryData` through a pipeline of **emitters**, each res
 | Emitter | Generated File | Purpose |
 |---------|---------------|---------|
 | `JsonResolverEmitter` | `ModulesJsonResolver.g.cs` | AOT-compatible JSON type info resolver for all DTO types |
-| `RazorComponentExtensionsEmitter` | `RazorComponentExtensions.g.cs` | Discovers assemblies containing Razor components |
+| `ViewPagesEmitter` | `ViewPages.g.cs` | Maps view endpoints to React component names |
 | `DiagnosticEmitter` | _(diagnostics only)_ | Reports compiler warnings/errors for illegal module references and other issues |
 
 ## The Discovery-Emit Pipeline
@@ -160,7 +160,6 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new EndpointExtensionsEmitter(),
         new MenuExtensionsEmitter(),
         new SettingsExtensionsEmitter(),
-        new RazorComponentExtensionsEmitter(),
         new ViewPagesEmitter(),
         new PageRegistryEmitter(),
         new JsonResolverEmitter(),

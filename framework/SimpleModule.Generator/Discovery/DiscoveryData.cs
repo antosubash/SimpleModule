@@ -47,9 +47,19 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<AgentDefinitionRecord> AgentDefinitions,
     ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
     ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
+    bool HasAgentsAssembly,
     string HostAssemblyName
 )
 {
+    public bool HasAnyAgentContent =>
+        HasAgentsAssembly
+        && (
+            AgentDefinitions.Length > 0
+            || AgentToolProviders.Length > 0
+            || KnowledgeSources.Length > 0
+            || Modules.Any(m => m.HasConfigureAgents)
+        );
+
     public static readonly DiscoveryData Empty = new(
         ImmutableArray<ModuleInfoRecord>.Empty,
         ImmutableArray<DtoTypeInfoRecord>.Empty,
@@ -67,6 +77,7 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<AgentDefinitionRecord>.Empty,
         ImmutableArray<AgentToolProviderRecord>.Empty,
         ImmutableArray<KnowledgeSourceRecord>.Empty,
+        false,
         ""
     );
 
@@ -88,6 +99,7 @@ internal readonly record struct DiscoveryData(
             && AgentDefinitions.SequenceEqual(other.AgentDefinitions)
             && AgentToolProviders.SequenceEqual(other.AgentToolProviders)
             && KnowledgeSources.SequenceEqual(other.KnowledgeSources)
+            && HasAgentsAssembly == other.HasAgentsAssembly
             && HostAssemblyName == other.HostAssemblyName;
     }
 
@@ -110,6 +122,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, AgentDefinitions);
         hash = HashHelper.HashArray(hash, AgentToolProviders);
         hash = HashHelper.HashArray(hash, KnowledgeSources);
+        hash = HashHelper.Combine(hash, HasAgentsAssembly.GetHashCode());
         hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
         return hash;
     }

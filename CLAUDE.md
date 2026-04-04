@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via Blazor SSR.
+Modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via a static HTML shell.
 
 ## Build & Run
 
@@ -92,7 +92,7 @@ HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant
 - **Settings** — read operations (settings, definitions, menus, available pages)
 - **AuditLogs, FileStorage** — read operations (list, get by ID, folders)
 - **PageBuilder** — full lifecycle (create → get → update → publish → unpublish → delete + tags/templates)
-- **Admin** — role create/delete (handles 302 Blazor SSR redirects)
+- **Admin** — role create/delete (handles 302 redirects)
 - **FeatureFlags** — get all flags, check flag status
 - **Marketplace** — search and browse (anonymous)
 - **Mixed Realistic** — weighted workload (70% reads, 20% creates, 10% updates)
@@ -107,8 +107,8 @@ HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant
 ### .NET Backend
 
 - **SimpleModule.Core** — `IModule` interface, `[Module]` attribute, `IEndpoint` interface, `[Dto]` attribute, menu system (`IMenuRegistry`), event bus (`IEventBus`), Inertia integration.
-- **SimpleModule.Generator** — Roslyn `IIncrementalGenerator` (netstandard2.0). Scans referenced assemblies for `[Module]` classes, `IEndpoint` implementors, and `[Dto]` types. Generates: `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()`, JSON serializers, TypeScript interface definitions, Razor component assembly discovery.
-- **SimpleModule.Host** — Host app (net10.0). Calls generated extension methods in `Program.cs`. Custom Inertia middleware bridges Blazor SSR → React.
+- **SimpleModule.Generator** — Roslyn `IIncrementalGenerator` (netstandard2.0). Scans referenced assemblies for `[Module]` classes, `IEndpoint` implementors, and `[Dto]` types. Generates: `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()`, JSON serializers, TypeScript interface definitions.
+- **SimpleModule.Host** — Host app (net10.0). Calls generated extension methods in `Program.cs`. Inertia middleware renders static HTML shell with embedded JSON props for React hydration.
 
 ### Frontend (React + Inertia.js)
 
@@ -119,7 +119,7 @@ HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant
 ### Request Flow
 
 1. ASP.NET route handler calls `Inertia.Render("Products/Browse", props)`
-2. Inertia middleware renders Blazor SSR shell with JSON props
+2. Inertia middleware renders static HTML shell with embedded JSON props
 3. React ClientApp dynamically imports module's `pages.js` bundle
 4. Component hydrates with server-provided props
 

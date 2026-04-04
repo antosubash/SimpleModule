@@ -768,6 +768,8 @@ internal static class SymbolDiscovery
             knowledgeSources
                 .Select(k => new KnowledgeSourceRecord(k.FullyQualifiedName, k.ModuleName))
                 .ToImmutableArray(),
+            compilation.GetTypeByMetadataName("SimpleModule.Agents.SimpleModuleAgentExtensions")
+                is not null,
             hostAssemblyName
         );
     }

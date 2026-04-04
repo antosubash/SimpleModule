@@ -11,7 +11,7 @@ setup('authenticate as admin', async ({ page }) => {
   await page.getByRole('link', { name: 'Log in' }).click();
   await page.waitForURL('**/Identity/Account/Login**');
 
-  // Fill the login form (Blazor Identity — labels render as divs, use placeholders)
+  // Fill the login form (labels render as divs, use placeholders)
   await page.getByPlaceholder('you@example.com').fill('admin@simplemodule.dev');
   await page.locator('input[type="password"]').fill('Admin123!');
   await page.getByRole('button', { name: 'Log in' }).click();

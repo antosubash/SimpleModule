@@ -199,6 +199,9 @@ publish/
 # in these scripts will be unencrypted
 PublishScripts/
 
+# Test scaffold temp directories
+.scaffold-test/
+
 # NuGet Packages
 *.nupkg
 # NuGet Symbol Packages

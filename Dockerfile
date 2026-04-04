@@ -23,7 +23,6 @@ COPY *.slnx ./
 COPY framework/SimpleModule.Core/*.csproj framework/SimpleModule.Core/
 COPY framework/SimpleModule.Database/*.csproj framework/SimpleModule.Database/
 COPY framework/SimpleModule.Generator/*.csproj framework/SimpleModule.Generator/
-COPY framework/SimpleModule.Blazor/*.csproj framework/SimpleModule.Blazor/
 COPY framework/SimpleModule.Hosting/*.csproj framework/SimpleModule.Hosting/
 COPY framework/SimpleModule.DevTools/*.csproj framework/SimpleModule.DevTools/
 COPY framework/SimpleModule.Storage/*.csproj framework/SimpleModule.Storage/
