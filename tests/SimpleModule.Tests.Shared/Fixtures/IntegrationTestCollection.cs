@@ -7,6 +7,8 @@ using Xunit;
 /// This avoids spinning up a separate WebApplicationFactory per test class.
 /// Copy this definition into each test assembly that uses the collection.
 /// </summary>
+#pragma warning disable CA1711 // xUnit collection fixture naming convention
 [CollectionDefinition("Integration")]
 public sealed class IntegrationTestCollection
     : ICollectionFixture<SimpleModuleWebApplicationFactory>;
+#pragma warning restore CA1711
