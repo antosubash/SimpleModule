@@ -42,7 +42,10 @@ public sealed partial class ProgressFlushService(
 
                     if (batch.Count > 0)
                     {
-                        await FlushBatchAsync(batch, opts.MaxLogEntries, stoppingToken);
+                        // Use CancellationToken.None: entries were already consumed from the
+                        // channel, so the flush must complete to avoid data loss if StopAsync
+                        // cancels stoppingToken mid-save.
+                        await FlushBatchAsync(batch, opts.MaxLogEntries, CancellationToken.None);
                     }
                 }
             }

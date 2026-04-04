@@ -4,7 +4,8 @@ using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.Marketplace.Tests.Integration;
 
-public class MarketplaceBrowseEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+[Collection(TestCollections.Integration)]
+public class MarketplaceBrowseEndpointTests
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 

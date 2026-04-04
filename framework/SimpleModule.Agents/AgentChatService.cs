@@ -56,11 +56,7 @@ public sealed class AgentChatService(
             ? new FunctionInvokingChatClient(chatClient)
             : chatClient;
         await foreach (
-            var update in client.GetStreamingResponseAsync(
-                messages,
-                chatOptions,
-                cancellationToken
-            )
+            var update in client.GetStreamingResponseAsync(messages, chatOptions, cancellationToken)
         )
         {
             foreach (var content in update.Contents)

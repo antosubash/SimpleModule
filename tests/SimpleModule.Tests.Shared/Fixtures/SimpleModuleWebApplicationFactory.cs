@@ -173,6 +173,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<AgentsDbContext>(sp);
         EnsureTablesCreated<BackgroundJobsDbContext>(sp);
         EnsureTablesCreated<RateLimitingDbContext>(sp);
+        EnsureTablesCreated<EmailDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 

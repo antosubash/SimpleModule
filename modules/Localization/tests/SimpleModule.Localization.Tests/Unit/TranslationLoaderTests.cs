@@ -10,10 +10,10 @@ public sealed class TranslationLoaderTests
     [Fact]
     public void GetTranslation_KnownKey_ReturnsValue()
     {
-        _loader.InitializeFromDictionary("en", new Dictionary<string, string>
-        {
-            ["common.save"] = "Save",
-        });
+        _loader.InitializeFromDictionary(
+            "en",
+            new Dictionary<string, string> { ["common.save"] = "Save" }
+        );
 
         var result = _loader.GetTranslation("common.save", "en");
 
@@ -33,10 +33,10 @@ public sealed class TranslationLoaderTests
     [Fact]
     public void GetTranslation_FallsBackToEnglish()
     {
-        _loader.InitializeFromDictionary("en", new Dictionary<string, string>
-        {
-            ["common.save"] = "Save",
-        });
+        _loader.InitializeFromDictionary(
+            "en",
+            new Dictionary<string, string> { ["common.save"] = "Save" }
+        );
 
         var result = _loader.GetTranslation("common.save", "fr");
 
@@ -46,14 +46,14 @@ public sealed class TranslationLoaderTests
     [Fact]
     public void GetTranslation_LocalizedValue_ReturnsLocaleSpecific()
     {
-        _loader.InitializeFromDictionary("en", new Dictionary<string, string>
-        {
-            ["common.save"] = "Save",
-        });
-        _loader.InitializeFromDictionary("es", new Dictionary<string, string>
-        {
-            ["common.save"] = "Guardar",
-        });
+        _loader.InitializeFromDictionary(
+            "en",
+            new Dictionary<string, string> { ["common.save"] = "Save" }
+        );
+        _loader.InitializeFromDictionary(
+            "es",
+            new Dictionary<string, string> { ["common.save"] = "Guardar" }
+        );
 
         var result = _loader.GetTranslation("common.save", "es");
 

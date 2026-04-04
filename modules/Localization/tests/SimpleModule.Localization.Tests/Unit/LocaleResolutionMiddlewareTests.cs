@@ -21,14 +21,14 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
     public LocaleResolutionMiddlewareTests()
     {
         _loader = new TranslationLoader();
-        _loader.InitializeFromDictionary("en", new Dictionary<string, string>
-        {
-            ["common.save"] = "Save",
-        });
-        _loader.InitializeFromDictionary("es", new Dictionary<string, string>
-        {
-            ["common.save"] = "Guardar",
-        });
+        _loader.InitializeFromDictionary(
+            "en",
+            new Dictionary<string, string> { ["common.save"] = "Save" }
+        );
+        _loader.InitializeFromDictionary(
+            "es",
+            new Dictionary<string, string> { ["common.save"] = "Guardar" }
+        );
     }
 
     [Fact]
@@ -41,7 +41,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration(null),
-            _cache);
+            _cache
+        );
 
         await middleware.InvokeAsync(context);
 
@@ -63,7 +64,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration(null),
-            _cache);
+            _cache
+        );
 
         await middleware.InvokeAsync(context);
 
@@ -80,7 +82,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration("es"),
-            _cache);
+            _cache
+        );
 
         await middleware.InvokeAsync(context);
 
@@ -97,7 +100,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration(null),
-            _cache);
+            _cache
+        );
 
         await middleware.InvokeAsync(context);
 
@@ -114,7 +118,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
             CreateConfiguration(null),
-            localCache);
+            localCache
+        );
 
         var context1 = CreateHttpContext(settings, userId: "user-1");
         await middleware.InvokeAsync(context1);
@@ -139,7 +144,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
             CreateConfiguration(null),
-            localCache);
+            localCache
+        );
 
         var context1 = CreateHttpContext(settings, userId: "user-2");
         await middleware.InvokeAsync(context1);
@@ -154,7 +160,8 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
     private LocaleResolutionMiddleware CreateMiddleware(
         RequestDelegate next,
         IConfiguration config,
-        IMemoryCache cache)
+        IMemoryCache cache
+    )
     {
         return new LocaleResolutionMiddleware(next, config, _loader, cache);
     }
@@ -170,23 +177,20 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
 
     private static DefaultHttpContext CreateHttpContext(
         FakeSettingsContracts settings,
-        string? userId = null)
+        string? userId = null
+    )
     {
         var services = new ServiceCollection();
         services.AddScoped<InertiaSharedData>();
         services.AddSingleton<ISettingsContracts>(settings);
 
-        var context = new DefaultHttpContext
-        {
-            RequestServices = services.BuildServiceProvider(),
-        };
+        var context = new DefaultHttpContext { RequestServices = services.BuildServiceProvider() };
 
         if (userId is not null)
         {
-            context.User = new ClaimsPrincipal(new ClaimsIdentity(
-            [
-                new Claim(ClaimTypes.NameIdentifier, userId),
-            ], "TestAuth"));
+            context.User = new ClaimsPrincipal(
+                new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId)], "TestAuth")
+            );
         }
 
         return context;
@@ -200,12 +204,11 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
             configData["Localization:DefaultLocale"] = defaultLocale;
         }
 
-        return new ConfigurationBuilder()
-            .AddInMemoryCollection(configData)
-            .Build();
+        return new ConfigurationBuilder().AddInMemoryCollection(configData).Build();
     }
 
-    private sealed class FakeSettingsContracts(string? language, Action? onGet = null) : ISettingsContracts
+    private sealed class FakeSettingsContracts(string? language, Action? onGet = null)
+        : ISettingsContracts
     {
         public Task<string?> GetSettingAsync(string key, SettingScope scope, string? userId = null)
         {
@@ -229,7 +232,12 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
             return Task.FromResult(language);
         }
 
-        public Task SetSettingAsync(string key, string value, SettingScope scope, string? userId = null)
+        public Task SetSettingAsync(
+            string key,
+            string value,
+            SettingScope scope,
+            string? userId = null
+        )
         {
             return Task.CompletedTask;
         }

@@ -16,4 +16,5 @@ public class MarketplacePackage
     public string ProjectLink { get; set; } = string.Empty;
     public MarketplaceCategory Category { get; set; }
     public bool IsInstalled { get; set; }
+    public bool IsVerified { get; set; }
 }
