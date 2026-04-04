@@ -674,6 +674,7 @@ internal static class SymbolDiscovery
                 .Select(d => new DtoTypeInfoRecord(
                     d.FullyQualifiedName,
                     d.SafeName,
+                    d.BaseTypeFqn,
                     d.Properties.Select(p => new DtoPropertyInfoRecord(
                             p.Name,
                             p.TypeFqn,
@@ -1101,11 +1102,37 @@ internal static class SymbolDiscovery
                         );
                         var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
+                        string? baseTypeFqn = null;
+                        if (
+                            typeSymbol.BaseType
+                            is { SpecialType: not SpecialType.System_Object }
+                                and var baseType
+                        )
+                        {
+                            var baseFqn = baseType.ToDisplayString(
+                                SymbolDisplayFormat.FullyQualifiedFormat
+                            );
+                            if (
+                                baseType
+                                    .GetAttributes()
+                                    .Any(a =>
+                                        SymbolEqualityComparer.Default.Equals(
+                                            a.AttributeClass,
+                                            dtoAttributeSymbol
+                                        )
+                                    )
+                            )
+                            {
+                                baseTypeFqn = baseFqn;
+                            }
+                        }
+
                         dtoTypes.Add(
                             new DtoTypeInfo
                             {
                                 FullyQualifiedName = fqn,
                                 SafeName = safeName,
+                                BaseTypeFqn = baseTypeFqn,
                                 Properties = ExtractDtoProperties(typeSymbol),
                             }
                         );
@@ -1772,12 +1799,29 @@ internal static class SymbolDiscovery
 
                 var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
+                string? baseTypeFqn = null;
+                if (
+                    typeSymbol.BaseType
+                    is { SpecialType: not SpecialType.System_Object }
+                        and var baseType
+                )
+                {
+                    var baseFqn = baseType.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    );
+                    if (existingFqns.Contains(baseFqn))
+                    {
+                        baseTypeFqn = baseFqn;
+                    }
+                }
+
                 existingFqns.Add(fqn);
                 dtoTypes.Add(
                     new DtoTypeInfo
                     {
                         FullyQualifiedName = fqn,
                         SafeName = safeName,
+                        BaseTypeFqn = baseTypeFqn,
                         Properties = ExtractDtoProperties(typeSymbol),
                     }
                 );

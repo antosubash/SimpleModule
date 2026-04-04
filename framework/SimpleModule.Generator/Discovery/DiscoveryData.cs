@@ -222,6 +222,7 @@ internal readonly record struct ViewInfoRecord(
 internal readonly record struct DtoTypeInfoRecord(
     string FullyQualifiedName,
     string SafeName,
+    string? BaseTypeFqn,
     ImmutableArray<DtoPropertyInfoRecord> Properties
 )
 {
@@ -229,6 +230,7 @@ internal readonly record struct DtoTypeInfoRecord(
     {
         return FullyQualifiedName == other.FullyQualifiedName
             && SafeName == other.SafeName
+            && BaseTypeFqn == other.BaseTypeFqn
             && Properties.SequenceEqual(other.Properties);
     }
 
@@ -237,6 +239,7 @@ internal readonly record struct DtoTypeInfoRecord(
         var hash = 17;
         hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
         hash = HashHelper.Combine(hash, SafeName.GetHashCode());
+        hash = HashHelper.Combine(hash, BaseTypeFqn?.GetHashCode() ?? 0);
         hash = HashHelper.HashArray(hash, Properties);
         return hash;
     }
@@ -502,6 +505,7 @@ internal sealed class DtoTypeInfo
 {
     public string FullyQualifiedName { get; set; } = "";
     public string SafeName { get; set; } = "";
+    public string? BaseTypeFqn { get; set; }
     public List<DtoPropertyInfo> Properties { get; set; } = new();
 }
 
