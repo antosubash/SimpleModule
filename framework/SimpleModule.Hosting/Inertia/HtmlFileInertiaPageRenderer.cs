@@ -47,12 +47,8 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         if (_isDevelopment)
         {
             _beforePlaceholderViteDev = TransformForViteDev(_beforePlaceholder);
-            _afterPlaceholderViteDev = TransformForViteDev(_afterPlaceholder)
-                .Replace(
-                    "<script type=\"module\" src=\"/js/app.js\"></script>",
-                    ViteEntryPlaceholder,
-                    StringComparison.Ordinal
-                );
+            // Replace the app.js script tag (with or without ?v= cache-buster) with Vite entry
+            _afterPlaceholderViteDev = ReplaceAppJsScript(TransformForViteDev(_afterPlaceholder));
         }
         else
         {
@@ -100,13 +96,43 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
             }
         }
 
-        html = html.Replace(
-            "<link rel=\"stylesheet\" href=\"/css/app.css\" />",
-            "",
-            StringComparison.Ordinal
-        );
+        // Strip the app.css link (with or without ?v= cache-buster) — Vite serves CSS via HMR
+        html = StripTag(html, "<link", "/css/app.css", "/>");
 
         return html;
+    }
+
+    private static string ReplaceAppJsScript(string html)
+    {
+        return ReplaceTag(html, "<script", "/js/app.js", "</script>", ViteEntryPlaceholder);
+    }
+
+    private static string StripTag(string html, string tagStart, string marker, string tagEnd)
+    {
+        return ReplaceTag(html, tagStart, marker, tagEnd, "");
+    }
+
+    private static string ReplaceTag(
+        string html,
+        string tagStart,
+        string marker,
+        string tagEnd,
+        string replacement
+    )
+    {
+        var markerIdx = html.IndexOf(marker, StringComparison.Ordinal);
+        if (markerIdx < 0)
+            return html;
+
+        var start = html.LastIndexOf(tagStart, markerIdx, StringComparison.Ordinal);
+        if (start < 0)
+            return html;
+
+        var end = html.IndexOf(tagEnd, markerIdx, StringComparison.Ordinal);
+        if (end < 0)
+            return html;
+
+        return string.Concat(html.AsSpan(0, start), replacement, html.AsSpan(end + tagEnd.Length));
     }
 
     /// <summary>
