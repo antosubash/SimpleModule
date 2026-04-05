@@ -1,7 +1,7 @@
 export const pages: Record<string, unknown> = {
-  'Tenants/Browse': () => import('@/Views/Browse'),
-  'Tenants/Manage': () => import('@/Views/Manage'),
-  'Tenants/Create': () => import('@/Views/Create'),
-  'Tenants/Edit': () => import('@/Views/Edit'),
-  'Tenants/Features': () => import('@/Views/Features'),
+  'Tenants/Browse': () => import('./Browse'),
+  'Tenants/Manage': () => import('./Manage'),
+  'Tenants/Create': () => import('./Create'),
+  'Tenants/Edit': () => import('./Edit'),
+  'Tenants/Features': () => import('./Features'),
 };

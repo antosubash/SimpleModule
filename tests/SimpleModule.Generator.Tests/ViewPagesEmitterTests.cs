@@ -37,7 +37,7 @@ public class ViewPagesEmitterTests
                 public class ProductsModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class BrowseEndpoint : IViewEndpoint
                 {
@@ -71,7 +71,7 @@ public class ViewPagesEmitterTests
                 public class ItemsModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class CreateEndpoint : IViewEndpoint
                 {
@@ -88,7 +88,7 @@ public class ViewPagesEmitterTests
 
         var viewPages = GetGeneratedSource(result, "ViewPages_Items.g.cs");
 
-        viewPages.Should().Contain("'Items/Create': () => import('../Views/Create')");
+        viewPages.Should().Contain("'Items/Create': () => import('./Create')");
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class ViewPagesEmitterTests
                 public class OrdersModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class DetailEndpoint : IViewEndpoint
                 {
@@ -123,7 +123,7 @@ public class ViewPagesEmitterTests
         var viewPages = GetGeneratedSource(result, "ViewPages_Orders.g.cs");
 
         viewPages.Should().Contain("export const pages: Record<string, any> = {");
-        viewPages.Should().Contain("'Orders/Detail': () => import('../Views/Detail')");
+        viewPages.Should().Contain("'Orders/Detail': () => import('./Detail')");
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public class ViewPagesEmitterTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class BrowseEndpoint : IViewEndpoint
                 {
@@ -173,9 +173,9 @@ public class ViewPagesEmitterTests
 
         var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
 
-        viewPages.Should().Contain("'Test/Browse': () => import('../Views/Browse')");
-        viewPages.Should().Contain("'Test/Create': () => import('../Views/Create')");
-        viewPages.Should().Contain("'Test/Edit': () => import('../Views/Edit')");
+        viewPages.Should().Contain("'Test/Browse': () => import('./Browse')");
+        viewPages.Should().Contain("'Test/Create': () => import('./Create')");
+        viewPages.Should().Contain("'Test/Edit': () => import('./Edit')");
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public class ViewPagesEmitterTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class IndexEndpoint : IViewEndpoint
                 {
@@ -229,7 +229,7 @@ public class ViewPagesEmitterTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class DetailView : IViewEndpoint
                 {
@@ -246,7 +246,7 @@ public class ViewPagesEmitterTests
 
         var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
 
-        viewPages.Should().Contain("'Test/Detail': () => import('../Views/Detail')");
+        viewPages.Should().Contain("'Test/Detail': () => import('./Detail')");
     }
 
     private static string GetGeneratedSource(

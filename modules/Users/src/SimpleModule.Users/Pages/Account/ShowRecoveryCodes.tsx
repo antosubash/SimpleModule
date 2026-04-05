@@ -1,7 +1,7 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, AlertTitle, Button } from '@simplemodule/ui';
+import ManageLayout from '@/components/ManageLayout';
 import { UsersKeys } from '@/Locales/keys';
-import ManageLayout from './ManageLayout';
 
 interface Props {
   recoveryCodes: string[];

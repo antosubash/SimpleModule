@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -300,6 +301,15 @@ internal sealed class DiagnosticEmitter : IEmitter
         id: "SM0048",
         title: "Feature field is not a const string",
         messageFormat: "Field '{0}' in feature class '{1}' must be a public const string",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor MultipleEndpointsPerFile = new(
+        id: "SM0049",
+        title: "Multiple endpoints in a single file",
+        messageFormat: "File '{0}' contains multiple endpoint classes ({1}). Each endpoint must be in its own file for maintainability and to match the Pages/index.ts convention.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true
@@ -1013,6 +1023,44 @@ internal sealed class DiagnosticEmitter : IEmitter
                 {
                     featureValueOwners[field.Value] = feat.FullyQualifiedName;
                 }
+            }
+        }
+
+        // SM0049: Multiple endpoints (IViewEndpoint) in a single file
+        var viewsByFile = new Dictionary<string, List<(string Name, SourceLocationRecord Loc)>>();
+
+        foreach (var module in data.Modules)
+        {
+            foreach (var view in module.Views)
+            {
+                if (view.Location is { } loc && !string.IsNullOrEmpty(loc.FilePath))
+                {
+                    if (!viewsByFile.TryGetValue(loc.FilePath, out var list))
+                    {
+                        list = new List<(string Name, SourceLocationRecord Loc)>();
+                        viewsByFile[loc.FilePath] = list;
+                    }
+
+                    list.Add((Strip(view.FullyQualifiedName), loc));
+                }
+            }
+        }
+
+        foreach (var kvp in viewsByFile)
+        {
+            if (kvp.Value.Count > 1)
+            {
+                var names = string.Join(", ", kvp.Value.Select(e => e.Name));
+                var fileName = Path.GetFileName(kvp.Key);
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MultipleEndpointsPerFile,
+                        LocationHelper.ToLocation(kvp.Value[1].Loc),
+                        fileName,
+                        names
+                    )
+                );
             }
         }
     }

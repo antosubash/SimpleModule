@@ -3,8 +3,8 @@ import { useTranslation } from '@simplemodule/client/use-translation';
 import { Alert, AlertDescription, Button, Input, Label } from '@simplemodule/ui';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
+import ManageLayout from '@/components/ManageLayout';
 import { UsersKeys } from '@/Locales/keys';
-import ManageLayout from './ManageLayout';
 
 interface Props {
   sharedKey: string;

@@ -1,5 +1,5 @@
 export const pages: Record<string, unknown> = {
-  'Settings/AdminSettings': () => import('@/Views/AdminSettings'),
-  'Settings/UserSettings': () => import('@/Views/UserSettings'),
-  'Settings/MenuManager': () => import('@/Views/MenuManager'),
+  'Settings/AdminSettings': () => import('./AdminSettings'),
+  'Settings/UserSettings': () => import('./UserSettings'),
+  'Settings/MenuManager': () => import('./MenuManager'),
 };

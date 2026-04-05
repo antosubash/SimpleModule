@@ -167,6 +167,17 @@ internal static class SymbolDiscovery
                         owner.Endpoints.Add(ep);
                 }
 
+                // Pre-compute module namespace per module name for page inference
+                var moduleNsByName = new Dictionary<string, string>();
+                foreach (var m in modules)
+                {
+                    if (!moduleNsByName.ContainsKey(m.ModuleName))
+                    {
+                        var mFqn = TypeMappingHelpers.StripGlobalPrefix(m.FullyQualifiedName);
+                        moduleNsByName[m.ModuleName] = TypeMappingHelpers.ExtractNamespace(mFqn);
+                    }
+                }
+
                 foreach (var v in rawViews)
                 {
                     var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
@@ -174,9 +185,37 @@ internal static class SymbolDiscovery
                     var owner = modules.Find(m => m.ModuleName == ownerName);
                     if (owner is not null)
                     {
-                        // Set page name using owner module name if not already set via [ViewPage]
+                        // Derive page name from namespace segments between module NS and class name.
+                        // e.g. SimpleModule.Users.Pages.Account.LoginEndpoint → Users/Account/Login
                         if (v.Page is null)
-                            v.Page = ownerName + "/" + v.InferredClassName;
+                        {
+                            var moduleNs = moduleNsByName[ownerName];
+                            var typeNs = TypeMappingHelpers.ExtractNamespace(vFqn);
+
+                            // Extract segments after the module namespace, stripping Views/Pages
+                            var remaining =
+                                typeNs.Length > moduleNs.Length
+                                    ? typeNs.Substring(moduleNs.Length).TrimStart('.')
+                                    : "";
+
+                            var segments = remaining.Split('.');
+                            var pathParts = new List<string>();
+                            foreach (var seg in segments)
+                            {
+                                if (
+                                    seg.Length > 0
+                                    && !seg.Equals("Views", StringComparison.Ordinal)
+                                    && !seg.Equals("Pages", StringComparison.Ordinal)
+                                )
+                                {
+                                    pathParts.Add(seg);
+                                }
+                            }
+
+                            var subPath =
+                                pathParts.Count > 0 ? string.Join("/", pathParts) + "/" : "";
+                            v.Page = ownerName + "/" + subPath + v.InferredClassName;
+                        }
 
                         owner.Views.Add(v);
                     }
@@ -933,24 +972,6 @@ internal static class SymbolDiscovery
                         && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol)
                     )
                     {
-                        // Prefer [ViewPage("Component")] attribute over class name inference
-                        string? page = null;
-                        foreach (var attr in typeSymbol.GetAttributes())
-                        {
-                            var attrName = attr.AttributeClass?.ToDisplayString(
-                                SymbolDisplayFormat.FullyQualifiedFormat
-                            );
-                            if (
-                                attrName == "global::SimpleModule.Core.ViewPageAttribute"
-                                && attr.ConstructorArguments.Length > 0
-                                && attr.ConstructorArguments[0].Value is string component
-                            )
-                            {
-                                page = component;
-                                break;
-                            }
-                        }
-
                         // Infer class name for deferred page name computation
                         var className = typeSymbol.Name;
                         if (className.EndsWith("Endpoint", StringComparison.Ordinal))
@@ -965,7 +986,6 @@ internal static class SymbolDiscovery
                             new ViewInfo
                             {
                                 FullyQualifiedName = fqn,
-                                Page = page,
                                 InferredClassName = className,
                                 Location = GetSourceLocation(typeSymbol),
                             }
@@ -1221,9 +1241,7 @@ internal static class SymbolDiscovery
         foreach (var module in modules)
         {
             var moduleFqn = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
-            var moduleNs = moduleFqn.Contains(".")
-                ? moduleFqn.Substring(0, moduleFqn.LastIndexOf('.'))
-                : "";
+            var moduleNs = TypeMappingHelpers.ExtractNamespace(moduleFqn);
 
             if (
                 typeFqn.StartsWith(moduleNs, StringComparison.Ordinal)
