@@ -175,7 +175,7 @@ function AdminGroup({
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { props } = usePage<SharedProps>();
+  const { props } = usePage<SharedProps & Record<string, unknown>>();
   const { auth, menus, csrfToken } = props;
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
 

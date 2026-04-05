@@ -82,7 +82,7 @@ export default function Detail({ job }: Props) {
               <Badge variant={stateVariant[job.state] ?? 'default'}>{job.state}</Badge>
               {job.retryCount > 0 && (
                 <span className="text-sm text-text-muted">
-                  {t(BackgroundJobsKeys.Detail.RetryCount, { count: job.retryCount })}
+                  {t(BackgroundJobsKeys.Detail.RetryCount, { count: String(job.retryCount) })}
                 </span>
               )}
             </div>
@@ -138,7 +138,7 @@ export default function Detail({ job }: Props) {
         <Card className="mt-4 sm:mt-6">
           <CardHeader>
             <CardTitle>
-              {t(BackgroundJobsKeys.Detail.LogsCard, { count: job.logs.length })}
+              {t(BackgroundJobsKeys.Detail.LogsCard, { count: String(job.logs.length) })}
             </CardTitle>
           </CardHeader>
           <CardContent>
