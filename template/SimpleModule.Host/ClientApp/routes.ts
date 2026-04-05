@@ -130,7 +130,7 @@ export const routes = {
       getSetting: (key: string | number) => `/api/settings/${key}`,
       getSettings: () => '/api/settings' as const,
       updateSetting: () => '/api/settings' as const,
-      deleteMySetting: () => '/api/settings/me/{**key}' as const,
+      deleteMySetting: (key: string | number) => `/api/settings/me/${key}`,
       getMySettings: () => '/api/settings/me' as const,
       updateMySetting: () => '/api/settings/me' as const,
     },

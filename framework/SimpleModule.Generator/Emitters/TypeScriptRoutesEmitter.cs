@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -14,7 +13,7 @@ internal sealed class TypeScriptRoutesEmitter : IEmitter
         var modules = TopologicalSort.SortModules(data);
 
         // Only emit if at least one endpoint has a route template
-        if (!modules.Any(m => HasAnyRouteTemplates(m)))
+        if (!modules.Any(m => RoutesEmitter.HasAnyRouteTemplates(m)))
             return;
 
         var sb = new StringBuilder();
@@ -25,10 +24,9 @@ internal sealed class TypeScriptRoutesEmitter : IEmitter
         sb.AppendLine();
         sb.AppendLine("export const routes = {");
 
-        var moduleIndex = 0;
         foreach (var module in modules)
         {
-            if (!HasAnyRouteTemplates(module))
+            if (!RoutesEmitter.HasAnyRouteTemplates(module))
                 continue;
 
             var moduleCamel = ToCamelCase(module.ModuleName);
@@ -39,17 +37,14 @@ internal sealed class TypeScriptRoutesEmitter : IEmitter
             if (apiEndpoints.Count > 0)
             {
                 sb.AppendLine("    api: {");
-                for (var i = 0; i < apiEndpoints.Count; i++)
+                foreach (var ep in apiEndpoints)
                 {
-                    var ep = apiEndpoints[i];
-                    var comma = ",";
                     EmitTsRouteEntry(
                         sb,
                         ep.FullyQualifiedName,
                         module.RoutePrefix,
                         ep.RouteTemplate,
-                        "      ",
-                        comma
+                        "      "
                     );
                 }
                 sb.AppendLine("    },");
@@ -60,24 +55,20 @@ internal sealed class TypeScriptRoutesEmitter : IEmitter
             if (viewEndpoints.Count > 0)
             {
                 sb.AppendLine("    views: {");
-                for (var i = 0; i < viewEndpoints.Count; i++)
+                foreach (var view in viewEndpoints)
                 {
-                    var view = viewEndpoints[i];
-                    var comma = ",";
                     EmitTsRouteEntry(
                         sb,
                         view.FullyQualifiedName,
                         module.ViewPrefix,
                         view.RouteTemplate,
-                        "      ",
-                        comma
+                        "      "
                     );
                 }
                 sb.AppendLine("    },");
             }
 
             sb.AppendLine("  },");
-            moduleIndex++;
         }
 
         sb.AppendLine("} as const;");
@@ -88,42 +79,34 @@ internal sealed class TypeScriptRoutesEmitter : IEmitter
         context.AddSource("TypeScriptRoutes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
-    private static bool HasAnyRouteTemplates(ModuleInfoRecord module)
-    {
-        return module.Endpoints.Any(e => e.RouteTemplate.Length > 0)
-            || module.Views.Any(v => v.RouteTemplate.Length > 0);
-    }
-
     private static void EmitTsRouteEntry(
         StringBuilder sb,
         string fullyQualifiedName,
         string prefix,
         string routeTemplate,
-        string indent,
-        string comma
+        string indent
     )
     {
         var methodName = ToCamelCase(RoutesEmitter.DeriveMethodName(fullyQualifiedName));
         var parameters = RoutesEmitter.ExtractRouteParameters(routeTemplate);
+        var fullRoute = RoutesEmitter.StripRouteConstraints(
+            RoutesEmitter.CombineRoute(prefix, routeTemplate)
+        );
 
         if (parameters.Count == 0)
         {
-            var fullRoute = RoutesEmitter.CombineRoute(prefix, routeTemplate);
-            sb.AppendLine($"{indent}{methodName}: () => '{fullRoute}' as const{comma}");
+            sb.AppendLine($"{indent}{methodName}: () => '{fullRoute}' as const,");
         }
         else
         {
             var paramList = string.Join(", ", parameters.Select(p => $"{p}: string | number"));
-            var fullRoute = RoutesEmitter.CombineRoute(prefix, routeTemplate);
-
-            // Strip route constraints and convert to TS template literal: {id:guid} → ${id}
-            var templateLiteral = RoutesEmitter.StripRouteConstraints(fullRoute);
+            var templateLiteral = fullRoute;
             foreach (var param in parameters)
             {
                 templateLiteral = templateLiteral.Replace("{" + param + "}", "${" + param + "}");
             }
 
-            sb.AppendLine($"{indent}{methodName}: ({paramList}) => `{templateLiteral}`{comma}");
+            sb.AppendLine($"{indent}{methodName}: ({paramList}) => `{templateLiteral}`,");
         }
     }
 

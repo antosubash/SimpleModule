@@ -2,7 +2,7 @@
 // Extracts TypeScript route definitions from TypeScriptRoutes.g.cs
 // Usage: node tools/extract-routes.mjs <generated-dir> <output-path>
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';
 
 const generatedDir = process.argv[2];
@@ -17,19 +17,13 @@ if (!generatedDir) {
   process.exit(1);
 }
 
-const files = readdirSync(generatedDir).filter((f) =>
-  f === 'TypeScriptRoutes.g.cs',
-);
-
-if (files.length === 0) {
+const filePath = join(generatedDir, 'TypeScriptRoutes.g.cs');
+if (!existsSync(filePath)) {
   console.log('No TypeScriptRoutes.g.cs found — skipping route extraction.');
   process.exit(0);
 }
 
-const content = readFileSync(join(generatedDir, files[0]), 'utf-8').replace(
-  /\r\n/g,
-  '\n',
-);
+const content = readFileSync(filePath, 'utf-8').replace(/\r\n/g, '\n');
 
 // Extract TS content from comment block (between /* and */)
 const tsMatch = content.match(/\/\*\n\/\/ @routes\n\n([\s\S]*?)\*\//);

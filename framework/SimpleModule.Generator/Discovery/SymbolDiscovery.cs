@@ -995,7 +995,8 @@ internal static class SymbolDiscovery
                             Location = GetSourceLocation(typeSymbol),
                         };
 
-                        ReadRouteConstFields(typeSymbol, viewInfo);
+                        var (viewRoute, _) = ReadRouteConstFields(typeSymbol);
+                        viewInfo.RouteTemplate = viewRoute;
                         views.Add(viewInfo);
                     }
                     else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
@@ -1039,7 +1040,9 @@ internal static class SymbolDiscovery
                             }
                         }
 
-                        ReadRouteConstFields(typeSymbol, info);
+                        var (epRoute, epMethod) = ReadRouteConstFields(typeSymbol);
+                        info.RouteTemplate = epRoute;
+                        info.HttpMethod = epMethod;
                         endpoints.Add(info);
                     }
                 }
@@ -1047,32 +1050,21 @@ internal static class SymbolDiscovery
         }
     }
 
-    private static void ReadRouteConstFields(INamedTypeSymbol typeSymbol, EndpointInfo info)
+    private static (string route, string method) ReadRouteConstFields(INamedTypeSymbol typeSymbol)
     {
+        var route = "";
+        var method = "";
         foreach (var m in typeSymbol.GetMembers())
         {
             if (m is IFieldSymbol { IsConst: true, ConstantValue: string value } field)
             {
                 if (field.Name == "Route")
-                    info.RouteTemplate = value;
+                    route = value;
                 else if (field.Name == "Method")
-                    info.HttpMethod = value;
+                    method = value;
             }
         }
-    }
-
-    private static void ReadRouteConstFields(INamedTypeSymbol typeSymbol, ViewInfo info)
-    {
-        foreach (var m in typeSymbol.GetMembers())
-        {
-            if (
-                m is IFieldSymbol { IsConst: true, ConstantValue: string value } field
-                && field.Name == "Route"
-            )
-            {
-                info.RouteTemplate = value;
-            }
-        }
+        return (route, method);
     }
 
     private static bool ImplementsInterface(

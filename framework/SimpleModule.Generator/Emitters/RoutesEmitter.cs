@@ -11,7 +11,7 @@ namespace SimpleModule.Generator;
 internal sealed class RoutesEmitter : IEmitter
 {
     private static readonly Regex RouteParamRegex = new Regex(
-        @"\{(\w+?)(?:[:?*].*?)?\}",
+        @"\{[*?]*(\w+?)(?:[:?*].*?)?\}",
         RegexOptions.Compiled
     );
 
@@ -97,7 +97,7 @@ internal sealed class RoutesEmitter : IEmitter
         context.AddSource("ModuleRoutes.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
 
-    private static bool HasAnyRouteTemplates(ModuleInfoRecord module)
+    internal static bool HasAnyRouteTemplates(ModuleInfoRecord module)
     {
         return module.Endpoints.Any(e => e.RouteTemplate.Length > 0)
             || module.Views.Any(v => v.RouteTemplate.Length > 0);
@@ -117,14 +117,13 @@ internal sealed class RoutesEmitter : IEmitter
 
         if (parameters.Count == 0)
         {
-            // Static route — return string constant
-            sb.AppendLine($"{indent}public static string {methodName}() => \"{fullRoute}\";");
+            var cleanRoute = StripRouteConstraints(fullRoute);
+            sb.AppendLine($"{indent}public static string {methodName}() => \"{cleanRoute}\";");
         }
         else
         {
-            // Parameterized route — generate method with object params
             var paramList = string.Join(", ", parameters.Select(p => $"object {p}"));
-            var interpolated = BuildInterpolatedRoute(prefix, routeTemplate, parameters);
+            var interpolated = BuildInterpolatedRoute(prefix, routeTemplate);
             sb.AppendLine(
                 $"{indent}public static string {methodName}({paramList}) => $\"{interpolated}\";"
             );
@@ -180,17 +179,8 @@ internal sealed class RoutesEmitter : IEmitter
         return RouteParamRegex.Replace(route, "{$1}");
     }
 
-    private static string BuildInterpolatedRoute(
-        string prefix,
-        string routeTemplate,
-        List<string> parameters
-    )
+    private static string BuildInterpolatedRoute(string prefix, string routeTemplate)
     {
-        // Replace {param} with {param} for C# string interpolation
-        // The route template already has {param} syntax which matches C# interpolation
-        var combined = CombineRoute(prefix, routeTemplate);
-
-        // Strip route constraints like {id:int} → {id}
-        return RouteParamRegex.Replace(combined, "{$1}");
+        return StripRouteConstraints(CombineRoute(prefix, routeTemplate));
     }
 }
