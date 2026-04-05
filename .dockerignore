@@ -17,6 +17,7 @@
 # Tests (not needed for Host build)
 tests/
 !tests/e2e/package.json
+!tests/k6/package.json
 modules/*/tests/
 
 # Development artifacts
