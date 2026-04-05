@@ -19,6 +19,11 @@ if ! command -v dotnet &> /dev/null; then
   echo "export PATH=\"$DOTNET_ROOT:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
+# Install Docker if not available
+if ! command -v docker &> /dev/null; then
+  curl -fsSL https://get.docker.com | sh
+fi
+
 # Install .NET dependencies
 dotnet restore
 
