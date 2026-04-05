@@ -110,7 +110,7 @@ public partial class OpenIddictSeedService(
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "Updating OpenIddict client application redirect URIs..."
+        Message = "Updating OpenIddict client application..."
     )]
     private static partial void LogUpdatingClient(ILogger logger);
 

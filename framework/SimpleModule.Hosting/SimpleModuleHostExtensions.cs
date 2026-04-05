@@ -139,8 +139,8 @@ public static class SimpleModuleHostExtensions
             }
         }
 
-        app.UseExceptionHandler();
         app.UseForwardedHeaders();
+        app.UseExceptionHandler();
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (options.EnableSwagger && app.Environment.IsDevelopment())
