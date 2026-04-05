@@ -53,7 +53,7 @@ export default function Recurring({ jobs }: Props) {
     <>
       <DataGridPage
         title={t(BackgroundJobsKeys.Recurring.Title)}
-        description={t(BackgroundJobsKeys.Recurring.Description, { count: jobs.length })}
+        description={t(BackgroundJobsKeys.Recurring.Description, { count: String(jobs.length) })}
         data={jobs}
         emptyTitle={t(BackgroundJobsKeys.Recurring.EmptyTitle)}
         emptyDescription={t(BackgroundJobsKeys.Recurring.EmptyDescription)}

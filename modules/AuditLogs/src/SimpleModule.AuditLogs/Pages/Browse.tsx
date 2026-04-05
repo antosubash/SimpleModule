@@ -415,8 +415,8 @@ export default function Browse({ result, filters }: Props) {
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
             <span className="text-sm text-text-muted">
               {t(AuditLogsKeys.Browse.Showing, {
-                start: startItem,
-                end: endItem,
+                start: String(startItem),
+                end: String(endItem),
                 total: result.totalCount.toLocaleString(),
               })}
             </span>
