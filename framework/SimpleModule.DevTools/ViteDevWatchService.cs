@@ -13,7 +13,8 @@ namespace SimpleModule.DevTools;
 /// </summary>
 public sealed partial class ViteDevWatchService(
     ILogger<ViteDevWatchService> logger,
-    IHostEnvironment environment
+    IHostEnvironment environment,
+    LiveReloadServer liveReloadServer
 ) : BackgroundService
 {
     private static readonly string[] FrontendExtensions =
@@ -163,7 +164,12 @@ public sealed partial class ViteDevWatchService(
         _watchers.Add(watcher);
     }
 
-    private async Task RunBuild(string name, string command, string workingDir)
+    private async Task RunBuild(
+        string name,
+        string command,
+        string workingDir,
+        ReloadType reloadType = ReloadType.Full
+    )
     {
         LogRebuilding(logger, name);
         var stopwatch = Stopwatch.StartNew();
@@ -181,6 +187,7 @@ public sealed partial class ViteDevWatchService(
         if (success)
         {
             LogRebuiltSuccessfully(logger, name, stopwatch.ElapsedMilliseconds);
+            await liveReloadServer.NotifyReloadAsync(reloadType, name).ConfigureAwait(false);
         }
         else
         {
@@ -200,7 +207,7 @@ public sealed partial class ViteDevWatchService(
         var tailwindCli = Path.Combine(_npmBinPath, tailwindBin);
         var command = $"\"{tailwindCli}\" -i \"{inputPath}\" -o \"{outputPath}\"";
 
-        await RunBuild("Tailwind", command, hostDir).ConfigureAwait(false);
+        await RunBuild("Tailwind", command, hostDir, ReloadType.CssOnly).ConfigureAwait(false);
     }
 
     private void DebouncedBuild(string buildKey, Func<Task> buildAction)

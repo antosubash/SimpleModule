@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./vite": "./src/vite-plugin-vendor.ts",
+    "./vite-hmr": "./src/vite-plugin-module-hmr.ts",
     "./module": "./src/define-module-config.ts",
     "./resolve-page": "./src/resolve-page.ts",
     "./use-translation": "./src/use-translation.ts"
