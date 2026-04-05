@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -1050,10 +1051,7 @@ internal sealed class DiagnosticEmitter : IEmitter
             if (kvp.Value.Count > 1)
             {
                 var names = string.Join(", ", kvp.Value.Select(e => e.Name));
-                var fileName =
-                    kvp.Key.Contains("/") ? kvp.Key.Substring(kvp.Key.LastIndexOf('/') + 1)
-                    : kvp.Key.Contains("\\") ? kvp.Key.Substring(kvp.Key.LastIndexOf('\\') + 1)
-                    : kvp.Key;
+                var fileName = Path.GetFileName(kvp.Key);
 
                 context.ReportDiagnostic(
                     Diagnostic.Create(

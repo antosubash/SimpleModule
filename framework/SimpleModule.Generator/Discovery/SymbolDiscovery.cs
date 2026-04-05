@@ -167,6 +167,17 @@ internal static class SymbolDiscovery
                         owner.Endpoints.Add(ep);
                 }
 
+                // Pre-compute module namespace per module name for page inference
+                var moduleNsByName = new Dictionary<string, string>();
+                foreach (var m in modules)
+                {
+                    if (!moduleNsByName.ContainsKey(m.ModuleName))
+                    {
+                        var mFqn = TypeMappingHelpers.StripGlobalPrefix(m.FullyQualifiedName);
+                        moduleNsByName[m.ModuleName] = TypeMappingHelpers.ExtractNamespace(mFqn);
+                    }
+                }
+
                 foreach (var v in rawViews)
                 {
                     var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
@@ -178,25 +189,15 @@ internal static class SymbolDiscovery
                         // e.g. SimpleModule.Users.Pages.Account.LoginEndpoint → Users/Account/Login
                         if (v.Page is null)
                         {
-                            var ownerFqn = TypeMappingHelpers.StripGlobalPrefix(
-                                owner.FullyQualifiedName
-                            );
-                            var moduleNs = ownerFqn.Contains(".")
-                                ? ownerFqn.Substring(0, ownerFqn.LastIndexOf('.'))
-                                : "";
+                            var moduleNs = moduleNsByName[ownerName];
+                            var typeNs = TypeMappingHelpers.ExtractNamespace(vFqn);
 
-                            // Get the type's namespace (everything before the class name)
-                            var typeNs = vFqn.Contains(".")
-                                ? vFqn.Substring(0, vFqn.LastIndexOf('.'))
-                                : "";
-
-                            // Extract segments after the module namespace
+                            // Extract segments after the module namespace, stripping Views/Pages
                             var remaining =
                                 typeNs.Length > moduleNs.Length
                                     ? typeNs.Substring(moduleNs.Length).TrimStart('.')
                                     : "";
 
-                            // Strip "Views" and "Pages" segments from the path
                             var segments = remaining.Split('.');
                             var pathParts = new List<string>();
                             foreach (var seg in segments)
@@ -211,7 +212,6 @@ internal static class SymbolDiscovery
                                 }
                             }
 
-                            // Build the page name: ModuleName/[subpath/]ClassName
                             var subPath =
                                 pathParts.Count > 0 ? string.Join("/", pathParts) + "/" : "";
                             v.Page = ownerName + "/" + subPath + v.InferredClassName;
@@ -1241,9 +1241,7 @@ internal static class SymbolDiscovery
         foreach (var module in modules)
         {
             var moduleFqn = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
-            var moduleNs = moduleFqn.Contains(".")
-                ? moduleFqn.Substring(0, moduleFqn.LastIndexOf('.'))
-                : "";
+            var moduleNs = TypeMappingHelpers.ExtractNamespace(moduleFqn);
 
             if (
                 typeFqn.StartsWith(moduleNs, StringComparison.Ordinal)
