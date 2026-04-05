@@ -270,11 +270,145 @@ process.on('uncaughtException', (err) => {
 });
 
 // ---------------------------------------------------------------------------
-// Start all processes
+// Port checking
 // ---------------------------------------------------------------------------
-log('startup', 'Starting development environment...');
-startDotnetRun();
-startClientAppWatch();
-modules.forEach((modulePath) => startModuleWatch(modulePath));
+import { execFileSync } from 'child_process';
+import * as readline from 'readline';
 
-log('startup', `All processes started. Press Ctrl+C to stop.`);
+/**
+ * Find the PID and process name listening on a TCP port.
+ * Returns { pid, name } or null if port is free.
+ * Works on Linux (ss), macOS (lsof), and Windows (netstat).
+ */
+function findProcessOnPort(port) {
+  try {
+    if (isWindows) {
+      const out = execFileSync('netstat', ['-ano'], { encoding: 'utf8', timeout: 5000 });
+      for (const line of out.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed.includes('LISTENING') || !trimmed.includes(`:${port}`)) continue;
+        const parts = trimmed.split(/\s+/);
+        if (parts.length < 5 || !parts[1].endsWith(`:${port}`)) continue;
+        const pid = parseInt(parts[parts.length - 1], 10);
+        if (isNaN(pid)) continue;
+        let name = 'unknown';
+        try {
+          name = execFileSync('tasklist', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'], {
+            encoding: 'utf8',
+            timeout: 3000,
+          })
+            .split(',')[0]
+            ?.replace(/"/g, '') || 'unknown';
+        } catch {}
+        return { pid, name };
+      }
+    } else {
+      // Try lsof (works on Linux + macOS)
+      const pidStr = execFileSync('lsof', ['-iTCP:' + port, '-sTCP:LISTEN', '-nP', '-t'], {
+        encoding: 'utf8',
+        timeout: 5000,
+      }).trim();
+      const pid = parseInt(pidStr.split('\n')[0], 10);
+      if (isNaN(pid)) return null;
+      let name = 'unknown';
+      try {
+        if (process.platform === 'linux') {
+          name = readFileSync(`/proc/${pid}/comm`, 'utf8').trim();
+        } else {
+          name = execFileSync('ps', ['-p', String(pid), '-o', 'comm='], {
+            encoding: 'utf8',
+            timeout: 3000,
+          }).trim();
+        }
+      } catch {}
+      return { pid, name };
+    }
+  } catch {
+    // Command failed = port is free (lsof exits non-zero when nothing found)
+  }
+  return null;
+}
+
+/**
+ * Prompt the user to kill a process blocking a port.
+ * Returns true if port is free (or was freed), false otherwise.
+ */
+function ensurePortFree(port, label) {
+  const blocker = findProcessOnPort(port);
+  if (!blocker) return true;
+
+  log(label, `Port ${port} is in use by ${blocker.name} (PID ${blocker.pid})`);
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(`  Kill ${blocker.name} (PID ${blocker.pid}) to free port ${port}? [Y/n] `, (answer) => {
+      rl.close();
+      const yes = !answer || answer.toLowerCase().startsWith('y');
+      if (!yes) {
+        log(label, `Port ${port} still in use. Aborting.`);
+        resolve(false);
+        return;
+      }
+
+      try {
+        process.kill(blocker.pid, 'SIGKILL');
+      } catch (err) {
+        log(label, `Failed to kill PID ${blocker.pid}: ${err.message}`);
+        resolve(false);
+        return;
+      }
+
+      // Wait briefly for port release
+      setTimeout(() => {
+        const still = findProcessOnPort(port);
+        if (still) {
+          log(label, `Port ${port} still in use after kill.`);
+          resolve(false);
+        } else {
+          log(label, `Port ${port} freed.`);
+          resolve(true);
+        }
+      }, 500);
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Start all processes (with port checks)
+// ---------------------------------------------------------------------------
+async function main() {
+  log('startup', 'Starting development environment...');
+
+  // Check ASP.NET ports (from launchSettings.json)
+  const launchSettingsPath = path.resolve(rootDir, 'template/SimpleModule.Host/Properties/launchSettings.json');
+  const dotnetPorts = [];
+  try {
+    const ls = JSON.parse(readFileSync(launchSettingsPath, 'utf8'));
+    for (const profile of Object.values(ls.profiles || {})) {
+      if (profile.applicationUrl) {
+        for (const url of profile.applicationUrl.split(';')) {
+          const match = url.match(/:(\d+)$/);
+          if (match) {
+            const p = parseInt(match[1], 10);
+            if (!dotnetPorts.includes(p)) dotnetPorts.push(p);
+          }
+        }
+        break; // Use first profile only
+      }
+    }
+  } catch {}
+
+  for (const port of dotnetPorts) {
+    if (!(await ensurePortFree(port, 'dotnet'))) {
+      process.exit(1);
+    }
+  }
+
+  startDotnetRun();
+  startClientAppWatch();
+  modules.forEach((modulePath) => startModuleWatch(modulePath));
+
+  log('startup', `All processes started. Press Ctrl+C to stop.`);
+}
+
+main();
