@@ -1,4 +1,5 @@
-﻿using SimpleModule.Cli.Commands.Doctor;
+﻿using SimpleModule.Cli.Commands.Dev;
+using SimpleModule.Cli.Commands.Doctor;
 using SimpleModule.Cli.Commands.Install;
 using SimpleModule.Cli.Commands.New;
 using Spectre.Console.Cli;
@@ -28,6 +29,12 @@ app.Configure(config =>
                 .WithDescription("Add an AI agent to an existing module");
         }
     );
+
+    config
+        .AddCommand<DevCommand>("dev")
+        .WithDescription(
+            "Start the development environment (dotnet watch + Vite dev server with HMR)"
+        );
 
     config
         .AddCommand<InstallCommand>("install")

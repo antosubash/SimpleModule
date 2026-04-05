@@ -187,6 +187,14 @@ public static class SimpleModuleHostExtensions
                 await next();
             }
         );
+        // Vite dev server proxy — intercepts /@vite/, /@fs/, .tsx requests and
+        // proxies them to the Vite dev server. Also sets HttpContext.Items["ViteDevServer"]
+        // so downstream middleware (Inertia renderer) can adapt the HTML.
+        if (options.EnableDevTools && isDevelopment)
+        {
+            app.UseMiddleware<ViteDevMiddleware>();
+        }
+
         app.UseInertia();
         UseStaticFileCaching(app);
         app.MapStaticAssets();
