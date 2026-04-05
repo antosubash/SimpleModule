@@ -143,6 +143,7 @@ public static class SimpleModuleHostExtensions
             async (context, next) =>
             {
                 var nonce = context.RequestServices.GetRequiredService<ICspNonce>().Value;
+                var isHttps = context.Request.IsHttps;
                 context.Response.OnStarting(() =>
                 {
                     var headers = context.Response.Headers;
@@ -150,7 +151,7 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-                    headers["Content-Security-Policy"] =
+                    var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
                         + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
@@ -160,8 +161,13 @@ public static class SimpleModuleHostExtensions
                         + $"object-src 'none'; "
                         + $"base-uri 'self'; "
                         + $"form-action 'self'; "
-                        + $"frame-ancestors 'none'; "
-                        + $"upgrade-insecure-requests;";
+                        + $"frame-ancestors 'none';";
+                    if (isHttps)
+                    {
+                        csp += " upgrade-insecure-requests;";
+                    }
+
+                    headers["Content-Security-Policy"] = csp;
                     return Task.CompletedTask;
                 });
                 await next();
