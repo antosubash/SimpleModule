@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -47,6 +48,15 @@ public static class SimpleModuleHostExtensions
 
         BridgeAspireConnectionString(builder.Configuration);
         options.DatabaseProvider = ValidateDatabaseConfiguration(builder.Configuration);
+
+        builder.Services.Configure<ForwardedHeadersOptions>(fhOptions =>
+        {
+            fhOptions.ForwardedHeaders =
+                ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            // Allow any proxy in containerized/cloud environments
+            fhOptions.KnownIPNetworks.Clear();
+            fhOptions.KnownProxies.Clear();
+        });
 
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -129,6 +139,7 @@ public static class SimpleModuleHostExtensions
             }
         }
 
+        app.UseForwardedHeaders();
         app.UseExceptionHandler();
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();

@@ -35,7 +35,7 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
     <>
       <DataGridPage
         title={t(TenantsKeys.Manage.Title)}
-        description={t(TenantsKeys.Manage.Description, { count: tenants.length })}
+        description={t(TenantsKeys.Manage.Description, { count: String(tenants.length) })}
         actions={
           <Button onClick={() => router.get('/tenants/create')}>
             {t(TenantsKeys.Manage.CreateButton)}
@@ -108,7 +108,7 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
           <DialogHeader>
             <DialogTitle>{t(TenantsKeys.Manage.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              {t(TenantsKeys.Manage.DeleteDialog.Confirm, { name: deleteTarget?.name })}
+              {t(TenantsKeys.Manage.DeleteDialog.Confirm, { name: deleteTarget?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

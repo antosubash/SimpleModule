@@ -25,17 +25,17 @@ import type { EmailMessage } from '../types';
 
 type EmailStatus = 'Queued' | 'Sending' | 'Sent' | 'Failed' | 'Retrying';
 
-function statusVariant(status: EmailStatus): 'default' | 'secondary' | 'destructive' | 'outline' {
+function statusVariant(status: EmailStatus): 'default' | 'success' | 'danger' | 'warning' | 'info' {
   switch (status) {
     case 'Sent':
-      return 'default';
+      return 'success';
     case 'Failed':
-      return 'destructive';
+      return 'danger';
     case 'Sending':
     case 'Retrying':
-      return 'secondary';
+      return 'warning';
     default:
-      return 'outline';
+      return 'default';
   }
 }
 

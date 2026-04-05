@@ -26,7 +26,16 @@ jobs:
         run: npm ci
 
       - name: Lint and format check
-        run: npm run check
+        run: npx biome check .
+
+      - name: Validate pages registry
+        run: npm run validate-pages
+
+      - name: Validate i18n keys
+        run: npm run validate:i18n
+
+      - name: TypeScript type check
+        run: npm run typecheck
 
   build:
     runs-on: ubuntu-latest

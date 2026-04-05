@@ -99,7 +99,7 @@ export default function Manage({ products }: Props) {
           <DialogHeader>
             <DialogTitle>{t(ProductsKeys.Manage.DeleteDialog.Title)}</DialogTitle>
             <DialogDescription>
-              {t(ProductsKeys.Manage.DeleteDialog.Confirm, { name: deleteTarget?.name })}
+              {t(ProductsKeys.Manage.DeleteDialog.Confirm, { name: deleteTarget?.name ?? '' })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

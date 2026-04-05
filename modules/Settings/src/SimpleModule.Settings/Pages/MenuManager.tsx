@@ -167,7 +167,9 @@ export default function MenuManager({ menuItems: initial, availablePages }: Menu
                   {t(SettingsKeys.MenuManager.CardTreeTitle)}
                 </CardTitle>
                 {totalItems > 0 && (
-                  <Badge>{t(SettingsKeys.MenuManager.ItemsCount, { count: totalItems })}</Badge>
+                  <Badge>
+                    {t(SettingsKeys.MenuManager.ItemsCount, { count: String(totalItems) })}
+                  </Badge>
                 )}
               </div>
               <div className="flex gap-1.5">
