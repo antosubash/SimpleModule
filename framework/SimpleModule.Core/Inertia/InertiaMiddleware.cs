@@ -6,8 +6,6 @@ namespace SimpleModule.Core.Inertia;
 public static class InertiaMiddleware
 {
     private const string DeploymentVersionEnvVar = "DEPLOYMENT_VERSION";
-    private const int SemanticVersionFields = 3;
-    private const string DefaultVersion = "1.0.0";
 
     /// <summary>
     /// Inertia protocol version. Must match CacheBuster for 409 stale-version detection.
@@ -59,12 +57,15 @@ public static class InertiaMiddleware
             return deploymentVersion;
         }
 
-        // Fallback to assembly version (major.minor.patch)
-        // If assembly has no version, default to "1.0.0"
-        var assemblyVersion =
-            typeof(InertiaMiddleware).Assembly.GetName().Version?.ToString(SemanticVersionFields)
-            ?? DefaultVersion;
-        return assemblyVersion;
+        // No explicit version set — generate one from the entry assembly's build timestamp.
+        // This changes on every recompile/publish, ensuring cache-busting without manual config.
+        var entryAssembly =
+            System.Reflection.Assembly.GetEntryAssembly() ?? typeof(InertiaMiddleware).Assembly;
+        var buildTime = File.GetLastWriteTimeUtc(entryAssembly.Location);
+        return buildTime.ToString(
+            "yyyyMMddHHmmss",
+            System.Globalization.CultureInfo.InvariantCulture
+        );
     }
 
     private static string GetEncodedUrl(this HttpRequest request)
