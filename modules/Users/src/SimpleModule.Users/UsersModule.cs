@@ -24,6 +24,13 @@ public class UsersModule : IModule
             .AddEntityFrameworkStores<UsersDbContext>()
             .AddDefaultTokenProviders();
 
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.LoginPath = "/Identity/Account/Login";
+            options.LogoutPath = "/Identity/Account/Logout";
+            options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+        });
+
         // Bridge UsersModuleOptions into ASP.NET Identity options
         services.AddSingleton<IPostConfigureOptions<IdentityOptions>, ApplyUsersModuleOptions>();
 
