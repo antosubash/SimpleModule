@@ -145,12 +145,16 @@ RUN npm run build \
        -o template/SimpleModule.Host/wwwroot/css/app.css \
        --minify
 
-# Publish the .NET application
+# Publish the .NET application.
+# JsBuild is skipped (echo) because npm run build above already built all
+# frontend bundles — running Vite again via MSBuild would be redundant and
+# risk producing different chunk hashes after the static-asset manifest is built.
 RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
     -c Release \
     -o /app/publish \
     --no-restore \
-    -p:ErrorOnDuplicatePublishOutputFiles=false
+    -p:ErrorOnDuplicatePublishOutputFiles=false \
+    -p:JsBuildCommand=echo
 
 # =============================================================================
 # Stage 5: Runtime (slim image, non-root user)
