@@ -9,9 +9,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Views.Account.Manage;
+namespace SimpleModule.Users.Pages.Account.Manage;
 
-[ViewPage("Users/Account/Manage/ChangePassword")]
 public class ChangePasswordEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

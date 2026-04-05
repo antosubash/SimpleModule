@@ -6,9 +6,8 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
 
-namespace SimpleModule.Orders.Views;
+namespace SimpleModule.Orders.Pages;
 
-[ViewPage("Orders/Edit")]
 public class EditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

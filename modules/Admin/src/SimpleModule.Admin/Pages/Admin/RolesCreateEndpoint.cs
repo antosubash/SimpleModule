@@ -4,9 +4,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.Admin.Views.Admin;
+namespace SimpleModule.Admin.Pages.Admin;
 
-[ViewPage("Admin/Admin/RolesCreate")]
 public class RolesCreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

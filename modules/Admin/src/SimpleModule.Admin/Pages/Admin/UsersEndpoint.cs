@@ -5,9 +5,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Admin.Views.Admin;
+namespace SimpleModule.Admin.Pages.Admin;
 
-[ViewPage("Admin/Admin/Users")]
 public class UsersEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

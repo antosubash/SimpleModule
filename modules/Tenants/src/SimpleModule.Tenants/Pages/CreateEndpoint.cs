@@ -5,9 +5,8 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Tenants.Contracts;
 
-namespace SimpleModule.Tenants.Views;
+namespace SimpleModule.Tenants.Pages;
 
-[ViewPage("Tenants/Create")]
 public class CreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

@@ -5,9 +5,8 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Services;
 
-namespace SimpleModule.Settings.Views;
+namespace SimpleModule.Settings.Pages;
 
-[ViewPage("Settings/MenuManager")]
 public class MenuManagerEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

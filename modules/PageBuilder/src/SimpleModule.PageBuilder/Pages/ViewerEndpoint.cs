@@ -6,9 +6,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.PageBuilder.Contracts;
 
-namespace SimpleModule.PageBuilder.Views;
+namespace SimpleModule.PageBuilder.Pages;
 
-[ViewPage("PageBuilder/Viewer")]
 public class ViewerEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

@@ -5,9 +5,8 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.BackgroundJobs.Views;
+namespace SimpleModule.BackgroundJobs.Pages;
 
-[ViewPage("BackgroundJobs/Detail")]
 public class DetailEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

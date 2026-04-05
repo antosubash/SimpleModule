@@ -8,9 +8,8 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Validators;
 
-namespace SimpleModule.Email.Views;
+namespace SimpleModule.Email.Pages;
 
-[ViewPage("Email/CreateTemplate")]
 public class CreateTemplateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

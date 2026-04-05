@@ -12,9 +12,8 @@ using SimpleModule.Settings.Contracts;
 using SimpleModule.Users.Constants;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Views.Account;
+namespace SimpleModule.Users.Pages.Account;
 
-[ViewPage("Users/Account/Login")]
 public class LoginEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

@@ -12,9 +12,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Views.Account;
+namespace SimpleModule.Users.Pages.Account;
 
-[ViewPage("Users/Account/ExternalLogin")]
 public class ExternalLoginEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

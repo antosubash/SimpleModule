@@ -6,9 +6,8 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.RateLimiting.Contracts;
 
-namespace SimpleModule.RateLimiting.Views;
+namespace SimpleModule.RateLimiting.Pages;
 
-[ViewPage("RateLimiting/Admin")]
 public class AdminEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

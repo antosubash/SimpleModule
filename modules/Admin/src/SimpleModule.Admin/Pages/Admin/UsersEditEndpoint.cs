@@ -9,9 +9,8 @@ using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Admin.Views.Admin;
+namespace SimpleModule.Admin.Pages.Admin;
 
-[ViewPage("Admin/Admin/UsersEdit")]
 public class UsersEditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

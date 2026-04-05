@@ -9,9 +9,8 @@ using SimpleModule.FeatureFlags.Contracts;
 using SimpleModule.Tenants.Contracts;
 using SimpleModule.Tenants.Endpoints.TenantFeatures;
 
-namespace SimpleModule.Tenants.Views;
+namespace SimpleModule.Tenants.Pages;
 
-[ViewPage("Tenants/Features")]
 public class FeaturesEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

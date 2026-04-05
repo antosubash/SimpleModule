@@ -6,9 +6,8 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 
-namespace SimpleModule.Settings.Views;
+namespace SimpleModule.Settings.Pages;
 
-[ViewPage("Settings/AdminSettings")]
 public class AdminSettingsEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

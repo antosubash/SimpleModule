@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.OpenIddict.Views;
+namespace SimpleModule.OpenIddict.Pages.OpenIddict;
 
-[ViewPage("OpenIddict/OpenIddict/ClientsCreate")]
 public class ClientsCreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

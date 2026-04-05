@@ -10,9 +10,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Views.Account.Manage;
+namespace SimpleModule.Users.Pages.Account.Manage;
 
-[ViewPage("Users/Account/Manage/Email")]
 public class EmailEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

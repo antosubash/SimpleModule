@@ -6,9 +6,8 @@ using OpenIddict.Abstractions;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.OpenIddict.Views;
+namespace SimpleModule.OpenIddict.Pages.OpenIddict;
 
-[ViewPage("OpenIddict/OpenIddict/Clients")]
 public class ClientsEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

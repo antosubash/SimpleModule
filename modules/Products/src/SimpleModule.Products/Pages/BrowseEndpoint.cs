@@ -5,9 +5,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Products.Contracts;
 
-namespace SimpleModule.Products.Views;
+namespace SimpleModule.Products.Pages;
 
-[ViewPage("Products/Browse")]
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

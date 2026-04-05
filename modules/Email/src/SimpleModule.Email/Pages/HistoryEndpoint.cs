@@ -6,9 +6,8 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Email.Contracts;
 
-namespace SimpleModule.Email.Views;
+namespace SimpleModule.Email.Pages;
 
-[ViewPage("Email/History")]
 public class HistoryEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

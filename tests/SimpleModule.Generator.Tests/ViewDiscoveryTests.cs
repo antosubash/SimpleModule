@@ -6,7 +6,7 @@ namespace SimpleModule.Generator.Tests;
 public class ViewDiscoveryTests
 {
     [Fact]
-    public void EndpointInViewsNamespace_DiscoveredAsView_RoutedUnderViewPrefix()
+    public void EndpointInPagesNamespace_DiscoveredAsView_RoutedUnderViewPrefix()
     {
         var source = """
             using Microsoft.AspNetCore.Builder;
@@ -19,7 +19,7 @@ public class ViewDiscoveryTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class CreateEndpoint : IViewEndpoint
                 {
@@ -46,11 +46,11 @@ public class ViewDiscoveryTests
             .Contain(
                 "var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()"
             );
-        endpointExt.Should().Contain("new global::TestApp.Views.CreateEndpoint().Map(viewGroup)");
+        endpointExt.Should().Contain("new global::TestApp.Pages.CreateEndpoint().Map(viewGroup)");
     }
 
     [Fact]
-    public void EndpointInNonViewsNamespace_DiscoveredAsEndpoint_RoutedUnderRoutePrefix()
+    public void EndpointInNonPagesNamespace_DiscoveredAsEndpoint_RoutedUnderRoutePrefix()
     {
         var source = """
             using Microsoft.AspNetCore.Builder;
@@ -104,7 +104,7 @@ public class ViewDiscoveryTests
                 public class ProductsModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class BrowseEndpoint : IViewEndpoint
                 {
@@ -130,7 +130,7 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        viewPages.Should().Contain("'Products/Browse': () => import('../Views/Browse')");
+        viewPages.Should().Contain("'Products/Browse': () => import('./Browse')");
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class ViewDiscoveryTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class BrowseEndpoint : IViewEndpoint
                 {
@@ -181,8 +181,8 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        viewPages.Should().Contain("'Test/Browse': () => import('../Views/Browse')");
-        viewPages.Should().Contain("'Test/Create': () => import('../Views/Create')");
+        viewPages.Should().Contain("'Test/Browse': () => import('./Browse')");
+        viewPages.Should().Contain("'Test/Create': () => import('./Create')");
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public class ViewDiscoveryTests
                 }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class BrowseEndpoint : IViewEndpoint
                 {
@@ -242,7 +242,7 @@ public class ViewDiscoveryTests
             .Contain(
                 "var viewGroup = app.MapGroup(\"/test\").WithTags(\"Test\").ExcludeFromDescription()"
             );
-        endpointExt.Should().Contain("new global::TestApp.Views.BrowseEndpoint().Map(viewGroup)");
+        endpointExt.Should().Contain("new global::TestApp.Pages.BrowseEndpoint().Map(viewGroup)");
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public class ViewDiscoveryTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class DetailView : IViewEndpoint
                 {
@@ -281,11 +281,11 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        viewPages.Should().Contain("'Test/Detail': () => import('../Views/Detail')");
+        viewPages.Should().Contain("'Test/Detail': () => import('./Detail')");
     }
 
     [Fact]
-    public void IEndpointInViewsNamespace_DiscoveredAsEndpoint_NotView()
+    public void IEndpointInPagesNamespace_DiscoveredAsEndpoint_NotView()
     {
         var source = """
             using Microsoft.AspNetCore.Builder;
@@ -298,7 +298,7 @@ public class ViewDiscoveryTests
                 public class TestModule : IModule { }
             }
 
-            namespace TestApp.Views
+            namespace TestApp.Pages
             {
                 public class ListEndpoint : IEndpoint
                 {
@@ -320,7 +320,46 @@ public class ViewDiscoveryTests
             .GetText()
             .ToString();
 
-        endpointExt.Should().Contain("new global::TestApp.Views.ListEndpoint().Map(group)");
+        endpointExt.Should().Contain("new global::TestApp.Pages.ListEndpoint().Map(group)");
         endpointExt.Should().NotContain("viewGroup");
+    }
+
+    [Fact]
+    public void NestedNamespace_IncludedInPageName()
+    {
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace TestApp
+            {
+                [Module("Users", ViewPrefix = "/identity")]
+                public class UsersModule : IModule { }
+            }
+
+            namespace TestApp.Pages.Account
+            {
+                public class LoginEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app)
+                    {
+                        app.MapGet("/login", () => "login");
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var viewPages = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ViewPages_Users.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        viewPages.Should().Contain("'Users/Account/Login': () => import('./Login')");
     }
 }

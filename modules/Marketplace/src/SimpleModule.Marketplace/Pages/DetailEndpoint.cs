@@ -5,9 +5,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Marketplace.Contracts;
 
-namespace SimpleModule.Marketplace.Views;
+namespace SimpleModule.Marketplace.Pages;
 
-[ViewPage("Marketplace/Detail")]
 public class DetailEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

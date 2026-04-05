@@ -10,9 +10,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Views.Account;
+namespace SimpleModule.Users.Pages.Account;
 
-[ViewPage("Users/Account/EnableAuthenticator")]
 public class EnableAuthenticatorEndpoint : IViewEndpoint
 {
     private static readonly CompositeFormat AuthenticatorUriFormat = CompositeFormat.Parse(

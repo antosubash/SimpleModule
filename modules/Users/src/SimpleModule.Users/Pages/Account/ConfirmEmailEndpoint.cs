@@ -9,9 +9,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Users.Views.Account;
+namespace SimpleModule.Users.Pages.Account;
 
-[ViewPage("Users/Account/ConfirmEmail")]
 public class ConfirmEmailEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

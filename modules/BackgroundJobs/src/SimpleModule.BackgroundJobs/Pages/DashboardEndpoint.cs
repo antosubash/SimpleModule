@@ -4,9 +4,8 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.BackgroundJobs.Views;
+namespace SimpleModule.BackgroundJobs.Pages;
 
-[ViewPage("BackgroundJobs/Dashboard")]
 public class DashboardEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

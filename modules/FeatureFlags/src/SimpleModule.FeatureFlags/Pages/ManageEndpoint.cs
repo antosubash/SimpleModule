@@ -6,9 +6,8 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.FeatureFlags.Contracts;
 
-namespace SimpleModule.FeatureFlags.Views;
+namespace SimpleModule.FeatureFlags.Pages;
 
-[ViewPage("FeatureFlags/Manage")]
 public class ManageEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

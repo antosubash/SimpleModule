@@ -6,9 +6,8 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Tenants.Contracts;
 
-namespace SimpleModule.Tenants.Views;
+namespace SimpleModule.Tenants.Pages;
 
-[ViewPage("Tenants/Edit")]
 public class EditEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

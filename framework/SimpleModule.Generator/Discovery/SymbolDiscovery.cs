@@ -174,9 +174,48 @@ internal static class SymbolDiscovery
                     var owner = modules.Find(m => m.ModuleName == ownerName);
                     if (owner is not null)
                     {
-                        // Set page name using owner module name if not already set via [ViewPage]
+                        // Derive page name from namespace segments between module NS and class name.
+                        // e.g. SimpleModule.Users.Pages.Account.LoginEndpoint → Users/Account/Login
                         if (v.Page is null)
-                            v.Page = ownerName + "/" + v.InferredClassName;
+                        {
+                            var ownerFqn = TypeMappingHelpers.StripGlobalPrefix(
+                                owner.FullyQualifiedName
+                            );
+                            var moduleNs = ownerFqn.Contains(".")
+                                ? ownerFqn.Substring(0, ownerFqn.LastIndexOf('.'))
+                                : "";
+
+                            // Get the type's namespace (everything before the class name)
+                            var typeNs = vFqn.Contains(".")
+                                ? vFqn.Substring(0, vFqn.LastIndexOf('.'))
+                                : "";
+
+                            // Extract segments after the module namespace
+                            var remaining =
+                                typeNs.Length > moduleNs.Length
+                                    ? typeNs.Substring(moduleNs.Length).TrimStart('.')
+                                    : "";
+
+                            // Strip "Views" and "Pages" segments from the path
+                            var segments = remaining.Split('.');
+                            var pathParts = new List<string>();
+                            foreach (var seg in segments)
+                            {
+                                if (
+                                    seg.Length > 0
+                                    && !seg.Equals("Views", StringComparison.Ordinal)
+                                    && !seg.Equals("Pages", StringComparison.Ordinal)
+                                )
+                                {
+                                    pathParts.Add(seg);
+                                }
+                            }
+
+                            // Build the page name: ModuleName/[subpath/]ClassName
+                            var subPath =
+                                pathParts.Count > 0 ? string.Join("/", pathParts) + "/" : "";
+                            v.Page = ownerName + "/" + subPath + v.InferredClassName;
+                        }
 
                         owner.Views.Add(v);
                     }
@@ -933,24 +972,6 @@ internal static class SymbolDiscovery
                         && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol)
                     )
                     {
-                        // Prefer [ViewPage("Component")] attribute over class name inference
-                        string? page = null;
-                        foreach (var attr in typeSymbol.GetAttributes())
-                        {
-                            var attrName = attr.AttributeClass?.ToDisplayString(
-                                SymbolDisplayFormat.FullyQualifiedFormat
-                            );
-                            if (
-                                attrName == "global::SimpleModule.Core.ViewPageAttribute"
-                                && attr.ConstructorArguments.Length > 0
-                                && attr.ConstructorArguments[0].Value is string component
-                            )
-                            {
-                                page = component;
-                                break;
-                            }
-                        }
-
                         // Infer class name for deferred page name computation
                         var className = typeSymbol.Name;
                         if (className.EndsWith("Endpoint", StringComparison.Ordinal))
@@ -965,7 +986,6 @@ internal static class SymbolDiscovery
                             new ViewInfo
                             {
                                 FullyQualifiedName = fqn,
-                                Page = page,
                                 InferredClassName = className,
                                 Location = GetSourceLocation(typeSymbol),
                             }

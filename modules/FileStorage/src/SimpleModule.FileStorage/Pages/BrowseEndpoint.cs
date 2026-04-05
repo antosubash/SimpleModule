@@ -6,9 +6,8 @@ using SimpleModule.Core.Inertia;
 using SimpleModule.FileStorage.Contracts;
 using SimpleModule.Storage;
 
-namespace SimpleModule.FileStorage.Views;
+namespace SimpleModule.FileStorage.Pages;
 
-[ViewPage("FileStorage/Browse")]
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

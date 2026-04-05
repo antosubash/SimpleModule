@@ -4,9 +4,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 
-namespace SimpleModule.Orders.Views;
+namespace SimpleModule.Orders.Pages;
 
-[ViewPage("Orders/List")]
 public class ListEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

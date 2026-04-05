@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.Users.Views.Account;
+namespace SimpleModule.Users.Pages.Account;
 
-[ViewPage("Users/Account/Lockout")]
 public class LockoutEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

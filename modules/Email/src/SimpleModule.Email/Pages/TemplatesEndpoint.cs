@@ -6,9 +6,8 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Email.Contracts;
 
-namespace SimpleModule.Email.Views;
+namespace SimpleModule.Email.Pages;
 
-[ViewPage("Email/Templates")]
 public class TemplatesEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

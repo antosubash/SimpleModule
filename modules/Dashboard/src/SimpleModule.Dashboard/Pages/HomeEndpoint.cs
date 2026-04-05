@@ -7,9 +7,8 @@ using Microsoft.Extensions.Hosting;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.Dashboard.Views;
+namespace SimpleModule.Dashboard.Pages;
 
-[ViewPage("Dashboard/Home")]
 public class HomeEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

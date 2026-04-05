@@ -6,9 +6,8 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 
-namespace SimpleModule.AuditLogs.Views;
+namespace SimpleModule.AuditLogs.Pages;
 
-[ViewPage("AuditLogs/Browse")]
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
