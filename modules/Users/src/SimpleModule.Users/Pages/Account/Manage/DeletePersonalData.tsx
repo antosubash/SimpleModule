@@ -57,7 +57,7 @@ export default function DeletePersonalData({ requirePassword, errors }: Props) {
                   />
                 </Field>
               )}
-              <Button type="submit" variant="destructive" className="w-full">
+              <Button type="submit" variant="danger" className="w-full">
                 Delete data and close my account
               </Button>
             </FieldGroup>

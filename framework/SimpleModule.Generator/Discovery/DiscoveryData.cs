@@ -47,6 +47,7 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<AgentDefinitionRecord> AgentDefinitions,
     ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
     ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
+    ImmutableArray<string> ContractsAssemblyNames,
     bool HasAgentsAssembly,
     string HostAssemblyName
 )
@@ -77,6 +78,7 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<AgentDefinitionRecord>.Empty,
         ImmutableArray<AgentToolProviderRecord>.Empty,
         ImmutableArray<KnowledgeSourceRecord>.Empty,
+        ImmutableArray<string>.Empty,
         false,
         ""
     );
@@ -99,6 +101,7 @@ internal readonly record struct DiscoveryData(
             && AgentDefinitions.SequenceEqual(other.AgentDefinitions)
             && AgentToolProviders.SequenceEqual(other.AgentToolProviders)
             && KnowledgeSources.SequenceEqual(other.KnowledgeSources)
+            && ContractsAssemblyNames.SequenceEqual(other.ContractsAssemblyNames)
             && HasAgentsAssembly == other.HasAgentsAssembly
             && HostAssemblyName == other.HostAssemblyName;
     }
@@ -122,6 +125,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, AgentDefinitions);
         hash = HashHelper.HashArray(hash, AgentToolProviders);
         hash = HashHelper.HashArray(hash, KnowledgeSources);
+        hash = HashHelper.HashArray(hash, ContractsAssemblyNames);
         hash = HashHelper.Combine(hash, HasAgentsAssembly.GetHashCode());
         hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
         return hash;
@@ -131,6 +135,7 @@ internal readonly record struct DiscoveryData(
 internal readonly record struct ModuleInfoRecord(
     string FullyQualifiedName,
     string ModuleName,
+    string AssemblyName,
     bool HasConfigureServices,
     bool HasConfigureEndpoints,
     bool HasConfigureMenu,
@@ -151,6 +156,7 @@ internal readonly record struct ModuleInfoRecord(
     {
         return FullyQualifiedName == other.FullyQualifiedName
             && ModuleName == other.ModuleName
+            && AssemblyName == other.AssemblyName
             && HasConfigureServices == other.HasConfigureServices
             && HasConfigureEndpoints == other.HasConfigureEndpoints
             && HasConfigureMenu == other.HasConfigureMenu
@@ -172,6 +178,7 @@ internal readonly record struct ModuleInfoRecord(
         var hash = 17;
         hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
         hash = HashHelper.Combine(hash, (ModuleName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (AssemblyName ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureServices.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureEndpoints.GetHashCode());
         hash = HashHelper.Combine(hash, HasConfigureMenu.GetHashCode());
@@ -470,6 +477,7 @@ internal sealed class ModuleInfo
 {
     public string FullyQualifiedName { get; set; } = "";
     public string ModuleName { get; set; } = "";
+    public string AssemblyName { get; set; } = "";
     public bool HasConfigureServices { get; set; }
     public bool HasConfigureEndpoints { get; set; }
     public bool HasConfigureMenu { get; set; }

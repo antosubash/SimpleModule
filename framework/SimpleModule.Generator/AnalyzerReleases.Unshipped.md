@@ -36,3 +36,5 @@ SM0046 | SimpleModule.Generator | Warning | Feature field naming violation
 SM0047 | SimpleModule.Generator | Error | Duplicate feature name
 SM0048 | SimpleModule.Generator | Error | Feature field is not a const string
 SM0049 | SimpleModule.Generator | Error | Multiple endpoints in a single file
+SM0052 | SimpleModule.Generator | Error | Module assembly name does not follow naming convention
+SM0053 | SimpleModule.Generator | Error | Module has no matching Contracts assembly

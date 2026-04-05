@@ -9,7 +9,10 @@ namespace SimpleModule.Admin;
 [Module(AdminConstants.ModuleName, ViewPrefix = "/admin")]
 public class AdminModule : IModule
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration configuration) { }
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddScoped<IAdminContracts, AdminService>();
+    }
 
     public void ConfigureMenu(IMenuBuilder menus)
     {

@@ -450,6 +450,13 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | SM0049 | Warning | Module has `IStringLocalizer` injection but no `Locales/en.json` embedded resource |
 | SM0050 | Warning | `Locales/en.json` exists but is not marked as `EmbeddedResource` in `.csproj` |
 
+### Module Structure
+
+| Diagnostic | Severity | Rule |
+|------------|----------|------|
+| SM0052 | Error | Module assembly name must follow `SimpleModule.{ModuleName}` convention |
+| SM0053 | Error | Module must have a matching `SimpleModule.{ModuleName}.Contracts` assembly |
+
 ---
 
 ## 12. Framework Contributor Guidelines

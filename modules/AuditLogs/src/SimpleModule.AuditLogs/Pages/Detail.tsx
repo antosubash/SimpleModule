@@ -173,7 +173,7 @@ export default function Detail({ entry, correlated }: Props) {
     <TooltipProvider>
       <PageShell
         className="space-y-4 sm:space-y-6"
-        title={t(AuditLogsKeys.Detail.Title, { id: entry.id })}
+        title={t(AuditLogsKeys.Detail.Title, { id: String(entry.id) })}
         actions={
           <Button variant="secondary" onClick={() => router.get('/audit-logs/browse')}>
             {t(AuditLogsKeys.Detail.BackToBrowse)}
@@ -181,7 +181,7 @@ export default function Detail({ entry, correlated }: Props) {
         }
         breadcrumbs={[
           { label: t(AuditLogsKeys.Detail.BreadcrumbAuditLogs), href: '/audit-logs/browse' },
-          { label: t(AuditLogsKeys.Detail.BreadcrumbEntry, { id: entry.id }) },
+          { label: t(AuditLogsKeys.Detail.BreadcrumbEntry, { id: String(entry.id) }) },
         ]}
       >
         {/* Overview Card */}
@@ -382,7 +382,7 @@ export default function Detail({ entry, correlated }: Props) {
               <CardTitle>
                 {t(AuditLogsKeys.Detail.CorrelatedTitle)}
                 <span className="ml-2 text-sm font-normal text-text-muted">
-                  {t(AuditLogsKeys.Detail.CorrelatedRelated, { count: correlated.length })}
+                  {t(AuditLogsKeys.Detail.CorrelatedRelated, { count: String(correlated.length) })}
                 </span>
               </CardTitle>
             </CardHeader>

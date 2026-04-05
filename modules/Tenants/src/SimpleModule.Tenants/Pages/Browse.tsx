@@ -31,7 +31,7 @@ export default function Browse({ tenants }: { tenants: BrowseTenant[] }) {
                     tenant.hostCount !== 1
                       ? TenantsKeys.Browse.HostCount_other
                       : TenantsKeys.Browse.HostCount_one,
-                    { count: tenant.hostCount },
+                    { count: String(tenant.hostCount) },
                   )}
                 </span>
                 <span className={`text-sm font-medium ${statusColors[tenant.status]}`}>

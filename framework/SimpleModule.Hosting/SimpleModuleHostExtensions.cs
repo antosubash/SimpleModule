@@ -199,10 +199,9 @@ public static class SimpleModuleHostExtensions
         UseStaticFileCaching(app);
         app.MapStaticAssets();
 
-        // Fallback for dynamically generated .mjs chunks (Vite watch rebuilds)
-        // MapStaticAssets only knows about files present at build time;
-        // Vite generates new hash-named chunks at runtime that need correct MIME types
-        if (app.Environment.IsDevelopment())
+        // Fallback for .mjs chunks not in the MapStaticAssets manifest.
+        // MapStaticAssets only knows about files present at publish time;
+        // mismatched builds or Vite watch rebuilds can produce chunks it misses.
         {
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings[".mjs"] = "application/javascript";

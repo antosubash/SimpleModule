@@ -142,8 +142,13 @@ function showErrorToast(message: string) {
 
 createInertiaApp({
   resolve: async (name) => {
-    const page = await resolvePage(name);
-    return resolveLayout(page);
+    try {
+      const page = await resolvePage(name);
+      return resolveLayout(page);
+    } catch (err) {
+      showErrorToast(`Failed to load page "${name}". Try refreshing the page.`);
+      throw err;
+    }
   },
   setup({ el, App, props }) {
     createRoot(el).render(<App {...props} />);
