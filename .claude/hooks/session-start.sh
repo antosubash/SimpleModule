@@ -24,8 +24,9 @@ if ! command -v docker &> /dev/null; then
   curl -fsSL https://get.docker.com | sh
 fi
 
-# Install .NET dependencies
+# Install .NET dependencies and tools
 dotnet restore
+dotnet tool restore
 
 # Install Node.js dependencies (npm workspaces)
 npm install
