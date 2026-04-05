@@ -2,13 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <Description>RAG module for SimpleModule. Provides database-backed storage for structured knowledge cache and RAG data.</Description>
+    <Description>Contracts for the SimpleModule RAG module. Shared interfaces and types for cross-module use.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Rag.StructuredRag\SimpleModule.Rag.StructuredRag.csproj" />
-    <ProjectReference Include="..\SimpleModule.Rag.Contracts\SimpleModule.Rag.Contracts.csproj" />
   </ItemGroup>
 </Project>
