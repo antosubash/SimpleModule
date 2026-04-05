@@ -5,13 +5,15 @@
  *
  * Runs `tsc --noEmit` in every module and package that has a tsconfig.json.
  * Each project is checked independently so @/* path aliases resolve correctly.
+ * All checks run in parallel for speed.
  *
  * Exit codes:
  *   0 = All projects pass type checking
  *   1 = Type errors found
  */
 
-import { execSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -19,7 +21,10 @@ const projectRoot = path.resolve(import.meta.dirname, '..');
 const modulesDir = path.join(projectRoot, 'modules');
 const packagesDir = path.join(projectRoot, 'packages');
 
-function findTsConfigs(baseDir, depth) {
+const require = createRequire(import.meta.url);
+const tscBin = require.resolve('typescript/bin/tsc');
+
+function findProjects(baseDir, layout) {
   const dirs = [];
   if (!fs.existsSync(baseDir)) return dirs;
 
@@ -27,7 +32,7 @@ function findTsConfigs(baseDir, depth) {
     const full = path.join(baseDir, entry);
     if (!fs.statSync(full).isDirectory()) continue;
 
-    if (depth === 1) {
+    if (layout === 'flat') {
       // packages/Foo — check directly
       if (fs.existsSync(path.join(full, 'tsconfig.json'))) {
         dirs.push(full);
@@ -50,22 +55,32 @@ function findTsConfigs(baseDir, depth) {
   return dirs;
 }
 
+function checkProject(dir) {
+  return new Promise((resolve) => {
+    const proc = spawn(process.execPath, [tscBin, '--noEmit'], {
+      cwd: dir,
+      stdio: 'pipe',
+    });
+    let output = '';
+    proc.stdout.on('data', (d) => (output += d));
+    proc.stderr.on('data', (d) => (output += d));
+    proc.on('close', (code) => resolve({ dir, code, output }));
+  });
+}
+
 const projects = [
-  ...findTsConfigs(modulesDir, 2),
-  ...findTsConfigs(packagesDir, 1),
+  ...findProjects(modulesDir, 'nested'),
+  ...findProjects(packagesDir, 'flat'),
 ];
 
-let failed = false;
-const failures = [];
+const results = await Promise.all(projects.map(checkProject));
 
-for (const dir of projects) {
+const failures = [];
+for (const { dir, code, output } of results) {
   const label = path.relative(projectRoot, dir);
-  try {
-    execSync('npx tsc --noEmit', { cwd: dir, stdio: 'pipe' });
+  if (code === 0) {
     console.log(`  \u2713 ${label}`);
-  } catch (err) {
-    failed = true;
-    const output = err.stdout?.toString() || err.stderr?.toString() || '';
+  } else {
     failures.push({ label, output });
     console.log(`  \u2717 ${label}`);
   }
@@ -82,4 +97,4 @@ if (failures.length > 0) {
 console.log(
   `\nTypecheck: ${projects.length - failures.length}/${projects.length} passed`,
 );
-process.exit(failed ? 1 : 0);
+process.exit(failures.length > 0 ? 1 : 0);

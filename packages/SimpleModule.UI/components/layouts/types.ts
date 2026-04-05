@@ -17,7 +17,6 @@ export interface PublicMenuItem {
 }
 
 export interface SharedProps {
-  [key: string]: unknown;
   auth: {
     isAuthenticated: boolean;
     userName: string | null;

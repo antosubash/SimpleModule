@@ -6,7 +6,7 @@ import { PublicLayout } from './public-layout';
 import type { SharedProps } from './types';
 
 function AutoLayout({ children }: { children: React.ReactNode }) {
-  const { props } = usePage<SharedProps>();
+  const { props } = usePage<SharedProps & Record<string, unknown>>();
   const { auth } = props;
 
   if (auth?.isAuthenticated) {
