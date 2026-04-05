@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.Agents;
+using SimpleModule.Agents.Contracts;
 using SimpleModule.Agents.Guardrails;
 using SimpleModule.Agents.Middleware;
 using SimpleModule.Core;
@@ -19,6 +20,7 @@ public class AgentsModule : IModule
     {
         services.AddModuleDbContext<AgentsDbContext>(configuration, AgentsConstants.ModuleName);
         services.AddScoped<IAgentSessionStore, EfAgentSessionStore>();
+        services.AddScoped<IAgentsContracts, AgentsService>();
 
         // Middleware
         services.AddSingleton<IAgentMiddleware, LoggingMiddleware>();

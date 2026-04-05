@@ -73,12 +73,12 @@ const API_BASE = '/api/rate-limiting';
 
 function PolicyTypeBadge({ type }: { type: string }) {
   const variant =
-    type === 'TokenBucket' ? 'secondary' : type === 'SlidingWindow' ? 'outline' : 'default';
+    type === 'TokenBucket' ? 'info' : type === 'SlidingWindow' ? 'warning' : 'default';
   return <Badge variant={variant}>{type}</Badge>;
 }
 
 function TargetBadge({ target }: { target: string }) {
-  return <Badge variant="outline">{target}</Badge>;
+  return <Badge variant="info">{target}</Badge>;
 }
 
 export default function Admin({ rules, activePolicies }: AdminProps) {

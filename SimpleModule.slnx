@@ -31,6 +31,7 @@
   <Folder Name="/modules/Dashboard/">
     <Project Path="modules/Dashboard/src/SimpleModule.Dashboard.Contracts/SimpleModule.Dashboard.Contracts.csproj" />
     <Project Path="modules/Dashboard/src/SimpleModule.Dashboard/SimpleModule.Dashboard.csproj" />
+    <Project Path="modules/Dashboard/tests/SimpleModule.Dashboard.Tests/SimpleModule.Dashboard.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/Orders/">
     <Project Path="modules/Orders/src/SimpleModule.Orders.Contracts/SimpleModule.Orders.Contracts.csproj" />
@@ -98,11 +99,14 @@
     <Project Path="modules/Tenants/tests/SimpleModule.Tenants.Tests/SimpleModule.Tenants.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/Rag/">
+    <Project Path="modules/Rag/src/SimpleModule.Rag.Contracts/SimpleModule.Rag.Contracts.csproj" />
     <Project Path="modules/Rag/src/SimpleModule.Rag.Module/SimpleModule.Rag.Module.csproj" />
+    <Project Path="modules/Rag/tests/SimpleModule.Rag.Tests/SimpleModule.Rag.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/Agents/">
     <Project Path="modules/Agents/src/SimpleModule.Agents.Contracts/SimpleModule.Agents.Contracts.csproj" />
     <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
+    <Project Path="modules/Agents/tests/SimpleModule.Agents.Tests/SimpleModule.Agents.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/BackgroundJobs/">
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/SimpleModule.BackgroundJobs.Contracts.csproj" />

@@ -683,6 +683,7 @@ internal static class SymbolDiscovery
                 .Select(m => new ModuleInfoRecord(
                     m.FullyQualifiedName,
                     m.ModuleName,
+                    m.AssemblyName,
                     m.HasConfigureServices,
                     m.HasConfigureEndpoints,
                     m.HasConfigureMenu,
@@ -808,6 +809,7 @@ internal static class SymbolDiscovery
             knowledgeSources
                 .Select(k => new KnowledgeSourceRecord(k.FullyQualifiedName, k.ModuleName))
                 .ToImmutableArray(),
+            contractsAssemblyMap.Keys.ToImmutableArray(),
             compilation.GetTypeByMetadataName("SimpleModule.Agents.SimpleModuleAgentExtensions")
                 is not null,
             hostAssemblyName
@@ -927,6 +929,7 @@ internal static class SymbolDiscovery
                                 ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
+                                AssemblyName = typeSymbol.ContainingAssembly.Name,
                                 Location = GetSourceLocation(typeSymbol),
                             }
                         );

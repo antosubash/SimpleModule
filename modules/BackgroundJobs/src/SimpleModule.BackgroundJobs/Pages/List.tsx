@@ -41,7 +41,7 @@ export default function List({ jobs }: Props) {
   return (
     <DataGridPage
       title={t(BackgroundJobsKeys.List.Title)}
-      description={t(BackgroundJobsKeys.List.TotalCount, { count: jobs.totalCount })}
+      description={t(BackgroundJobsKeys.List.TotalCount, { count: String(jobs.totalCount) })}
       data={jobs.items}
       emptyTitle={t(BackgroundJobsKeys.List.EmptyTitle)}
       emptyDescription={t(BackgroundJobsKeys.List.EmptyDescription)}

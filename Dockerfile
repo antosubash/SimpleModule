@@ -80,6 +80,7 @@ COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/*.csproj m
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
 COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modules/Localization/src/SimpleModule.Localization.Contracts/
 COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
+COPY modules/Rag/src/SimpleModule.Rag.Contracts/*.csproj modules/Rag/src/SimpleModule.Rag.Contracts/
 COPY modules/Rag/src/SimpleModule.Rag.Module/*.csproj modules/Rag/src/SimpleModule.Rag.Module/
 COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/SimpleModule.Email.Contracts/
 COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/

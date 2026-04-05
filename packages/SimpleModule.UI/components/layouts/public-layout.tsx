@@ -287,7 +287,7 @@ function MobileOverlay({
 }
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
-  const { props } = usePage<SharedProps>();
+  const { props } = usePage<SharedProps & Record<string, unknown>>();
   const { publicMenu = [] } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const closeMobile = React.useCallback(() => setMobileOpen(false), []);
