@@ -78,7 +78,6 @@ public class DeleteEndpoint : IEndpoint
 
 ```csharp
 // Browse page (public)
-[ViewPage("Products/Browse")]
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
@@ -89,7 +88,6 @@ public class BrowseEndpoint : IViewEndpoint
 }
 
 // Form page with GET (render) + POST (submit)
-[ViewPage("Products/Create")]
 public class CreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)

@@ -24,9 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import { PermissionGroups } from '@/components/PermissionGroups';
+import { TabNav } from '@/components/TabNav';
 import { AdminKeys } from '@/Locales/keys';
-import { PermissionGroups } from '@/Pages/components/PermissionGroups';
-import { TabNav } from '@/Pages/components/TabNav';
 
 interface RoleDetail {
   id: string;

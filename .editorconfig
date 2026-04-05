@@ -171,7 +171,12 @@ generated_code = true
 # CA1812 — internal payload classes instantiated by ASP.NET model binding
 dotnet_diagnostic.CA1812.severity = none
 
-[**/Views/*Endpoint.cs]
+[**/Pages/**/*Endpoint.cs]
+
+# CA1812 — internal payload classes instantiated by ASP.NET model binding
+dotnet_diagnostic.CA1812.severity = none
+
+[**/Pages/*Endpoint.cs]
 
 # CA1812 — internal payload classes instantiated by ASP.NET model binding
 dotnet_diagnostic.CA1812.severity = none

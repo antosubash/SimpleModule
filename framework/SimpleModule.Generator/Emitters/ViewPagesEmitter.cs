@@ -35,7 +35,7 @@ internal sealed class ViewPagesEmitter : IEmitter
                     ? view.Page.Substring(view.Page.LastIndexOf('/') + 1)
                     : view.Page;
                 var comma = i < module.Views.Length - 1 ? "," : "";
-                sb.AppendLine($"  '{view.Page}': () => import('../Views/{componentName}'){comma}");
+                sb.AppendLine($"  '{view.Page}': () => import('./{componentName}'){comma}");
             }
 
             sb.AppendLine("};");

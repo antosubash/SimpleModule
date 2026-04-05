@@ -1,5 +1,5 @@
 export const pages: Record<string, unknown> = {
-  'AuditLogs/Browse': () => import('@/Views/Browse'),
-  'AuditLogs/Dashboard': () => import('@/Views/Dashboard'),
-  'AuditLogs/Detail': () => import('@/Views/Detail'),
+  'AuditLogs/Browse': () => import('./Browse'),
+  'AuditLogs/Dashboard': () => import('./Dashboard'),
+  'AuditLogs/Detail': () => import('./Detail'),
 };

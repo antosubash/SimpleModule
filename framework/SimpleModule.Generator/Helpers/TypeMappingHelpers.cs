@@ -6,6 +6,9 @@ internal static class TypeMappingHelpers
 {
     internal static string StripGlobalPrefix(string fqn) => fqn.Replace("global::", "");
 
+    internal static string ExtractNamespace(string fqn) =>
+        fqn.Contains(".") ? fqn.Substring(0, fqn.LastIndexOf('.')) : "";
+
     internal static string GetModuleFieldName(string fullyQualifiedName)
     {
         var name = StripGlobalPrefix(fullyQualifiedName).Replace(".", "_");
