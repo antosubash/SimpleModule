@@ -116,9 +116,11 @@ COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleM
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
+COPY packages/SimpleModule.TsConfig/package.json packages/SimpleModule.TsConfig/
 COPY packages/SimpleModule.UI/package.json packages/SimpleModule.UI/
 COPY template/SimpleModule.Host/ClientApp/package.json template/SimpleModule.Host/ClientApp/
 COPY tests/e2e/package.json tests/e2e/
+COPY tests/k6/package.json tests/k6/
 COPY docs/site/package.json docs/site/
 COPY website/package.json website/
 
