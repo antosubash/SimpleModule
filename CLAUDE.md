@@ -160,9 +160,9 @@ When you add a new `IViewEndpoint`, you **must** register it in your module's `P
 ```typescript
 // modules/Products/src/Products/Pages/index.ts
 export const pages: Record<string, any> = {
-    "Products/Browse": () => import("../Views/Browse"),
-    "Products/Manage": () => import("../Views/Manage"),
-    "Products/Create": () => import("../Views/Create"),
+    "Products/Browse": () => import("./Browse"),
+    "Products/Manage": () => import("./Manage"),
+    "Products/Create": () => import("./Create"),
 };
 ```
 

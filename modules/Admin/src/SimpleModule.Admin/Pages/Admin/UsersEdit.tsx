@@ -33,9 +33,9 @@ import {
   TableRow,
 } from '@simplemodule/ui';
 import { useState } from 'react';
+import { PermissionGroups } from '@/components/PermissionGroups';
+import { TabNav } from '@/components/TabNav';
 import { AdminKeys } from '@/Locales/keys';
-import { PermissionGroups } from '@/Pages/components/PermissionGroups';
-import { TabNav } from '@/Pages/components/TabNav';
 
 interface UserDetail {
   id: string;

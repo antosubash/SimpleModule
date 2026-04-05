@@ -1,7 +1,7 @@
 export const pages: Record<string, unknown> = {
-  'Email/Templates': () => import('../Views/Templates'),
-  'Email/CreateTemplate': () => import('../Views/CreateTemplate'),
-  'Email/EditTemplate': () => import('../Views/EditTemplate'),
-  'Email/History': () => import('../Views/History'),
-  'Email/Dashboard': () => import('../Views/Dashboard'),
+  'Email/Templates': () => import('./Templates'),
+  'Email/CreateTemplate': () => import('./CreateTemplate'),
+  'Email/EditTemplate': () => import('./EditTemplate'),
+  'Email/History': () => import('./History'),
+  'Email/Dashboard': () => import('./Dashboard'),
 };
