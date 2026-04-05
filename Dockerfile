@@ -173,6 +173,11 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 # Writable directory for SQLite database and local storage
 RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
 
+# Set deployment version for JS/CSS cache-busting and Inertia stale-version detection.
+# Override at runtime or build time: docker build --build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)
+ARG DEPLOY_VERSION=latest
+ENV DEPLOYMENT_VERSION=${DEPLOY_VERSION}
+
 USER appuser
 EXPOSE 8080
 

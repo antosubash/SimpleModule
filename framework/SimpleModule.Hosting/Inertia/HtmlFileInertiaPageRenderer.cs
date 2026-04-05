@@ -10,6 +10,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
 {
     private const string PagePlaceholder = "<!--INERTIA_PAGE_DATA-->";
     private const string NoncePlaceholder = "<!--CSP_NONCE-->";
+    private const string VersionPlaceholder = "<!--DEPLOY_VERSION-->";
 
     private readonly string _beforePlaceholder;
     private readonly string _afterPlaceholder;
@@ -18,6 +19,15 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
     {
         var path = Path.Combine(env.WebRootPath, "index.html");
         var html = File.ReadAllText(path);
+
+        // Inject deployment version for cache-busting JS/CSS imports.
+        // Uses the same version as the Inertia protocol so stale clients
+        // are detected and forced to do full page reloads.
+        html = html.Replace(
+            VersionPlaceholder,
+            InertiaMiddleware.Version,
+            StringComparison.Ordinal
+        );
 
         var idx = html.IndexOf(PagePlaceholder, StringComparison.Ordinal);
         if (idx < 0)
