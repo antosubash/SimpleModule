@@ -9,6 +9,9 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
+      # Set to your public URL so OpenIddict registers correct redirect URIs.
+      # Examples: https://app.simplemodule.dev, http://localhost:8080
+      OpenIddict__BaseUrl: ${APP_BASE_URL:-http://localhost:8080}
     depends_on:
       postgres:
         condition: service_healthy

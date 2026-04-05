@@ -38,16 +38,6 @@ public partial class OpenIddictSeedService(
     {
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
 
-        if (
-            await manager.FindByClientIdAsync(ClientConstants.ClientId, cancellationToken)
-            is not null
-        )
-        {
-            return;
-        }
-
-        LogSeedingClient(logger);
-
         var baseUrl = configuration[ConfigKeys.OpenIddictBaseUrl] ?? ClientConstants.DefaultBaseUrl;
 
         var descriptor = new OpenIddictApplicationDescriptor
@@ -97,6 +87,18 @@ public partial class OpenIddictSeedService(
             }
         }
 
+        var existing = await manager.FindByClientIdAsync(
+            ClientConstants.ClientId,
+            cancellationToken
+        );
+        if (existing is not null)
+        {
+            LogUpdatingClient(logger);
+            await manager.UpdateAsync(existing, descriptor, cancellationToken);
+            return;
+        }
+
+        LogSeedingClient(logger);
         await manager.CreateAsync(descriptor, cancellationToken);
     }
 
@@ -105,6 +107,12 @@ public partial class OpenIddictSeedService(
         Message = "Seeding OpenIddict client application..."
     )]
     private static partial void LogSeedingClient(ILogger logger);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Updating OpenIddict client application..."
+    )]
+    private static partial void LogUpdatingClient(ILogger logger);
 
     [LoggerMessage(
         Level = LogLevel.Warning,
