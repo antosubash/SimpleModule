@@ -19,8 +19,17 @@ if ! command -v dotnet &> /dev/null; then
   echo "export PATH=\"$DOTNET_ROOT:\$PATH\"" >> "$CLAUDE_ENV_FILE"
 fi
 
-# Install .NET dependencies
+# Install Docker if not available
+if ! command -v docker &> /dev/null; then
+  curl -fsSL https://get.docker.com | sh
+fi
+
+# Install .NET dependencies and tools
 dotnet restore
+dotnet tool restore
 
 # Install Node.js dependencies (npm workspaces)
 npm install
+
+# Install Playwright browsers for e2e tests
+npx -w tests/e2e playwright install --with-deps
