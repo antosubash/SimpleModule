@@ -9,9 +9,12 @@ namespace SimpleModule.BackgroundJobs.Endpoints.Jobs;
 
 public class DeleteRecurringEndpoint : IEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.DeleteRecurring;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/recurring/{id:guid}",
+                Route,
                 async (Guid id, IBackgroundJobs jobs) =>
                 {
                     await jobs.RemoveRecurringAsync(RecurringJobId.From(id));

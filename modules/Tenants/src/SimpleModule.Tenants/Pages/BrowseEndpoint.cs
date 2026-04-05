@@ -8,10 +8,12 @@ namespace SimpleModule.Tenants.Pages;
 
 public class BrowseEndpoint : IViewEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Views.Browse;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/browse",
+                Route,
                 async (ITenantContracts contracts) =>
                 {
                     var tenants = (await contracts.GetAllTenantsAsync()).Select(t => new

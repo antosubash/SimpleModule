@@ -698,12 +698,15 @@ internal static class SymbolDiscovery
                     m.Endpoints.Select(e => new EndpointInfoRecord(
                             e.FullyQualifiedName,
                             e.RequiredPermissions.ToImmutableArray(),
-                            e.AllowAnonymous
+                            e.AllowAnonymous,
+                            e.RouteTemplate,
+                            e.HttpMethod
                         ))
                         .ToImmutableArray(),
                     m.Views.Select(v => new ViewInfoRecord(
                             v.FullyQualifiedName,
                             v.Page ?? "",
+                            v.RouteTemplate,
                             v.Location
                         ))
                         .ToImmutableArray(),
@@ -985,14 +988,15 @@ internal static class SymbolDiscovery
                         else if (className.EndsWith("View", StringComparison.Ordinal))
                             className = className.Substring(0, className.Length - "View".Length);
 
-                        views.Add(
-                            new ViewInfo
-                            {
-                                FullyQualifiedName = fqn,
-                                InferredClassName = className,
-                                Location = GetSourceLocation(typeSymbol),
-                            }
-                        );
+                        var viewInfo = new ViewInfo
+                        {
+                            FullyQualifiedName = fqn,
+                            InferredClassName = className,
+                            Location = GetSourceLocation(typeSymbol),
+                        };
+
+                        ReadRouteConstFields(typeSymbol, viewInfo);
+                        views.Add(viewInfo);
                     }
                     else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
                     {
@@ -1035,9 +1039,38 @@ internal static class SymbolDiscovery
                             }
                         }
 
+                        ReadRouteConstFields(typeSymbol, info);
                         endpoints.Add(info);
                     }
                 }
+            }
+        }
+    }
+
+    private static void ReadRouteConstFields(INamedTypeSymbol typeSymbol, EndpointInfo info)
+    {
+        foreach (var m in typeSymbol.GetMembers())
+        {
+            if (m is IFieldSymbol { IsConst: true, ConstantValue: string value } field)
+            {
+                if (field.Name == "Route")
+                    info.RouteTemplate = value;
+                else if (field.Name == "Method")
+                    info.HttpMethod = value;
+            }
+        }
+    }
+
+    private static void ReadRouteConstFields(INamedTypeSymbol typeSymbol, ViewInfo info)
+    {
+        foreach (var m in typeSymbol.GetMembers())
+        {
+            if (
+                m is IFieldSymbol { IsConst: true, ConstantValue: string value } field
+                && field.Name == "Route"
+            )
+            {
+                info.RouteTemplate = value;
             }
         }
     }

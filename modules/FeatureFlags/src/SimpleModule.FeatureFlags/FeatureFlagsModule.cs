@@ -12,7 +12,7 @@ namespace SimpleModule.FeatureFlags;
 [Module(
     FeatureFlagsConstants.ModuleName,
     RoutePrefix = FeatureFlagsConstants.RoutePrefix,
-    ViewPrefix = "/feature-flags"
+    ViewPrefix = FeatureFlagsConstants.ViewPrefix
 )]
 public class FeatureFlagsModule : IModule
 {

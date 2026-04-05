@@ -9,9 +9,11 @@ namespace SimpleModule.BackgroundJobs.Endpoints.Jobs;
 
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id:guid}",
+                Route,
                 async (Guid id, IBackgroundJobsContracts contracts) =>
                 {
                     var detail = await contracts.GetJobDetailAsync(JobId.From(id));

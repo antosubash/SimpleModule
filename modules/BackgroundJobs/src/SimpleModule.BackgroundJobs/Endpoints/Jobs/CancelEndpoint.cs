@@ -9,9 +9,12 @@ namespace SimpleModule.BackgroundJobs.Endpoints.Jobs;
 
 public class CancelEndpoint : IEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.Cancel;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id:guid}/cancel",
+                Route,
                 async (Guid id, IBackgroundJobs jobs) =>
                 {
                     await jobs.CancelAsync(JobId.From(id));

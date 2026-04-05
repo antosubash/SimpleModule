@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class RestoreEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Restore;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id}/restore",
+                Route,
                 async (PageId id, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.RestorePageAsync(id);

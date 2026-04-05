@@ -9,9 +9,12 @@ namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
 public class DeleteEndpoint : IEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.Delete;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id:int}",
+                Route,
                 (int id, IRateLimitingContracts contracts) =>
                     CrudEndpoints.Delete(() => contracts.DeleteRuleAsync(RateLimitRuleId.From(id)))
             )

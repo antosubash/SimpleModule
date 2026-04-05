@@ -12,10 +12,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class LoginWithRecoveryCodeEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.LoginWithRecoveryCode;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/LoginWithRecoveryCode",
+                Route,
                 async (
                     [FromQuery] string? returnUrl,
                     SignInManager<ApplicationUser> signInManager
@@ -36,7 +38,7 @@ public class LoginWithRecoveryCodeEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/LoginWithRecoveryCode",
+                Route,
                 async (
                     [FromForm] string recoveryCode,
                     [FromQuery] string? returnUrl,

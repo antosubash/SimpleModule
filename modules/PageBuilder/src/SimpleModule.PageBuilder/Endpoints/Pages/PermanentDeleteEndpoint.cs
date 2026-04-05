@@ -10,9 +10,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class PermanentDeleteEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.PermanentDelete;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id}/permanent",
+                Route,
                 (PageId id, IPageBuilderContracts pageBuilder) =>
                     CrudEndpoints.Delete(() => pageBuilder.PermanentDeletePageAsync(id))
             )

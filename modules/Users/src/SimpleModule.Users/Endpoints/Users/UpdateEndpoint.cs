@@ -9,10 +9,13 @@ namespace SimpleModule.Users.Endpoints.Users;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = UsersConstants.RoutePrefix + UsersConstants.Routes.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapPut(
-                UsersConstants.RoutePrefix + "/{id}",
+                Route,
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     UserId id,
                     UpdateUserRequest request,

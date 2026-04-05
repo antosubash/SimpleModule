@@ -4,15 +4,18 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Marketplace.Contracts;
+using MarketplaceConstants = SimpleModule.Marketplace.Contracts.MarketplaceConstants;
 
 namespace SimpleModule.Marketplace.Pages;
 
 public class BrowseEndpoint : IViewEndpoint
 {
+    public const string Route = MarketplaceConstants.Routes.Browse;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/browse",
+                Route,
                 async (
                     IMarketplaceContracts marketplace,
                     string? q,

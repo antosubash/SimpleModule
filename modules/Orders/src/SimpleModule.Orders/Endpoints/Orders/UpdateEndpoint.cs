@@ -5,14 +5,18 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Orders.Contracts;
+using OrdersConstants = SimpleModule.Orders.Contracts.OrdersConstants;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = OrdersConstants.Routes.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}",
+                Route,
                 (OrderId id, UpdateOrderRequest request, IOrderContracts orderContracts) =>
                 {
                     var createRequest = new CreateOrderRequest

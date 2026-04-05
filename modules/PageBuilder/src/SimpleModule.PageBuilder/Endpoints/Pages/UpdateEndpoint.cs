@@ -11,9 +11,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}",
+                Route,
                 (PageId id, UpdatePageRequest request, IPageBuilderContracts pageBuilder) =>
                 {
                     var validation = new ValidationBuilder()

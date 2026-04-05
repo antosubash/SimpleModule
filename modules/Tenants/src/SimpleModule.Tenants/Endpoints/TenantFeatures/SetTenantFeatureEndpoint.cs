@@ -11,9 +11,12 @@ namespace SimpleModule.Tenants.Endpoints.TenantFeatures;
 
 public class SetTenantFeatureEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.SetTenantFeature;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}/features/{flagName}",
+                Route,
                 async (
                     TenantId id,
                     string flagName,

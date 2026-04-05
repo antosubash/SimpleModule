@@ -9,9 +9,12 @@ namespace SimpleModule.FileStorage.Endpoints.Files;
 
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = FileStorageConstants.Routes.GetAll;
+    public const string Method = "GET";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 (string? folder, IFileStorageContracts files) =>
                     CrudEndpoints.GetAll(() => files.GetFilesAsync(folder))
             )

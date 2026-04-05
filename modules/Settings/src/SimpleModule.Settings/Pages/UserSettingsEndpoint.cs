@@ -11,10 +11,12 @@ namespace SimpleModule.Settings.Pages;
 
 public class UserSettingsEndpoint : IViewEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Views.UserSettings;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/me",
+                Route,
                 async (
                     ISettingsContracts settings,
                     ISettingsDefinitionRegistry registry,

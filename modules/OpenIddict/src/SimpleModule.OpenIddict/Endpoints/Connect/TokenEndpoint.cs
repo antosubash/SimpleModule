@@ -17,6 +17,9 @@ namespace SimpleModule.OpenIddict.Endpoints.Connect;
 
 public class TokenEndpoint : IEndpoint
 {
+    public const string Route = ConnectRouteConstants.ConnectToken;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapPost(ConnectRouteConstants.ConnectToken, (Delegate)HandleAsync)

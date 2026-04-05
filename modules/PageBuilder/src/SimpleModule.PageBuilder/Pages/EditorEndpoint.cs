@@ -9,10 +9,12 @@ namespace SimpleModule.PageBuilder.Pages;
 
 public class EditorEndpoint : IViewEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Editor;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/new",
+                Route,
                 async (IPageBuilderTemplateContracts templates) =>
                     Inertia.Render(
                         "PageBuilder/Editor",
@@ -26,7 +28,7 @@ public class EditorEndpoint : IViewEndpoint
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         app.MapGet(
-                "/{id}/edit",
+                PageBuilderConstants.Routes.EditPage,
                 async (PageId id, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.GetPageByIdAsync(id);

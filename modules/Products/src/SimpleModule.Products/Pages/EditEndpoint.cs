@@ -10,10 +10,12 @@ namespace SimpleModule.Products.Pages;
 
 public class EditEndpoint : IViewEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Edit;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/{id}/edit",
+            Route,
             async (ProductId id, IProductContracts products) =>
             {
                 var product = await products.GetProductByIdAsync(id);

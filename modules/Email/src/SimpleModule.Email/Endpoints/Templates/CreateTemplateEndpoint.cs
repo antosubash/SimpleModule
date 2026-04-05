@@ -10,9 +10,12 @@ namespace SimpleModule.Email.Endpoints.Templates;
 
 public class CreateTemplateEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.CreateTemplate;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/templates",
+                Route,
                 (CreateEmailTemplateRequest request, IEmailContracts emailContracts) =>
                 {
                     var validation = CreateEmailTemplateRequestValidator.Validate(request);

@@ -13,10 +13,12 @@ namespace SimpleModule.Tenants.Pages;
 
 public class FeaturesEndpoint : IViewEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Views.Features;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/{id}/features",
+                Route,
                 async (TenantId id, ITenantContracts contracts, HttpContext context) =>
                 {
                     var tenant = await contracts.GetTenantByIdAsync(id);

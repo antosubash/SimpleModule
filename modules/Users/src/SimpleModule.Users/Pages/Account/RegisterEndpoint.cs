@@ -14,10 +14,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class RegisterEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.Register;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Register",
+                Route,
                 async (
                     SignInManager<ApplicationUser> signInManager,
                     [FromQuery] string? returnUrl
@@ -38,7 +40,7 @@ public class RegisterEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/Register",
+                Route,
                 async (
                     [FromForm] string email,
                     [FromForm] string password,

@@ -13,6 +13,9 @@ namespace SimpleModule.Users.Endpoints.Account;
 
 public class AccountSecurityEndpoint : IEndpoint
 {
+    public const string Route = UsersConstants.Routes.TwoFactorAuthentication;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/Identity/Account/Manage")

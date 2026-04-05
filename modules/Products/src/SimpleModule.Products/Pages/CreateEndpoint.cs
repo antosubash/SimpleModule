@@ -10,9 +10,11 @@ namespace SimpleModule.Products.Pages;
 
 public class CreateEndpoint : IViewEndpoint
 {
+    public const string Route = ProductsConstants.Routes.CreateView;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/create", () => Inertia.Render("Products/Create"));
+        app.MapGet(Route, () => Inertia.Render("Products/Create"));
 
         app.MapPost(
                 "/",

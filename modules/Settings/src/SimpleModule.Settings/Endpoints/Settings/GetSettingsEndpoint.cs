@@ -9,9 +9,11 @@ namespace SimpleModule.Settings.Endpoints.Settings;
 
 public class GetSettingsEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.GetSettings;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 async (ISettingsContracts settings, SettingScope? scope) =>
                 {
                     var filter = scope is not null ? new SettingsFilter { Scope = scope } : null;

@@ -9,9 +9,12 @@ namespace SimpleModule.Email.Endpoints.Templates;
 
 public class DeleteTemplateEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.DeleteTemplate;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/templates/{id}",
+                Route,
                 (int id, IEmailContracts emailContracts) =>
                     CrudEndpoints.Delete(() =>
                         emailContracts.DeleteTemplateAsync(EmailTemplateId.From(id))

@@ -9,9 +9,12 @@ namespace SimpleModule.Settings.Endpoints.Menus;
 
 public class UpdateMenuItemEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.UpdateMenuItem;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/menus/{id}",
+                Route,
                 async Task<IResult> (
                     int id,
                     UpdateMenuItemRequest request,

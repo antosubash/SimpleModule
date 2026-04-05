@@ -10,9 +10,12 @@ namespace SimpleModule.Email.Endpoints.Templates;
 
 public class UpdateTemplateEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.UpdateTemplate;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/templates/{id}",
+                Route,
                 (int id, UpdateEmailTemplateRequest request, IEmailContracts emailContracts) =>
                 {
                     var validation = UpdateEmailTemplateRequestValidator.Validate(request);

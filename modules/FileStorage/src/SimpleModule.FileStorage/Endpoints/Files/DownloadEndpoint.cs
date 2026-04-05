@@ -9,9 +9,12 @@ namespace SimpleModule.FileStorage.Endpoints.Files;
 
 public class DownloadEndpoint : IEndpoint
 {
+    public const string Route = FileStorageConstants.Routes.Download;
+    public const string Method = "GET";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}/download",
+                Route,
                 async (FileStorageId id, IFileStorageContracts files) =>
                 {
                     var file = await files.GetFileByIdAsync(id);

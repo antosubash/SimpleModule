@@ -12,10 +12,12 @@ namespace SimpleModule.Email.Pages;
 
 public class EditTemplateEndpoint : IViewEndpoint
 {
+    public const string Route = EmailConstants.Routes.EditTemplatePage;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/templates/{id}/edit",
+                Route,
                 async (int id, IEmailContracts emailContracts) =>
                 {
                     var template = await emailContracts.GetTemplateByIdAsync(

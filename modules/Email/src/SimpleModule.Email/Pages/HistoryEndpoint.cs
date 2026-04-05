@@ -10,10 +10,12 @@ namespace SimpleModule.Email.Pages;
 
 public class HistoryEndpoint : IViewEndpoint
 {
+    public const string Route = EmailConstants.Routes.History;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/history",
+                Route,
                 async (
                     [AsParameters] QueryEmailMessagesRequest request,
                     IEmailContracts emailContracts

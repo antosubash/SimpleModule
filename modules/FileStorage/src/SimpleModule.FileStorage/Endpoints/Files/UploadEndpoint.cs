@@ -9,9 +9,12 @@ namespace SimpleModule.FileStorage.Endpoints.Files;
 
 public class UploadEndpoint : IEndpoint
 {
+    public const string Route = FileStorageConstants.Routes.Upload;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 async Task<IResult> (
                     IFormFile? file,
                     string? folder,

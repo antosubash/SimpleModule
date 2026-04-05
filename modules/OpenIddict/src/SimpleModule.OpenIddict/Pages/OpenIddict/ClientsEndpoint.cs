@@ -5,15 +5,18 @@ using Microsoft.AspNetCore.Routing;
 using OpenIddict.Abstractions;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.OpenIddict.Pages.OpenIddict;
 
 public class ClientsEndpoint : IViewEndpoint
 {
+    public const string Route = OpenIddictModuleConstants.Routes.Clients;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/clients",
+                Route,
                 async (IOpenIddictApplicationManager manager) =>
                 {
                     var clients = new List<object>();
@@ -37,7 +40,7 @@ public class ClientsEndpoint : IViewEndpoint
             .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
         app.MapPost(
-                "/clients",
+                Route,
                 async (
                     [FromForm] string clientId,
                     [FromForm] string? displayName,

@@ -10,9 +10,12 @@ namespace SimpleModule.Products.Endpoints.Products;
 
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Create;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 (CreateProductRequest request, IProductContracts productContracts) =>
                 {
                     var validation = CreateRequestValidator.Validate(request);

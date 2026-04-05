@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.OpenIddict.Contracts;
 
@@ -8,6 +9,9 @@ namespace SimpleModule.Admin.Endpoints.Admin;
 
 public class AdminSessionsEndpoint : IEndpoint
 {
+    public const string Route = AdminConstants.Routes.SessionsRevokeApi;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/users/{id}/sessions")

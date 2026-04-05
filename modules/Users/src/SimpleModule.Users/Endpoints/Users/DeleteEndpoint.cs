@@ -9,10 +9,13 @@ namespace SimpleModule.Users.Endpoints.Users;
 
 public class DeleteEndpoint : IEndpoint
 {
+    public const string Route = UsersConstants.RoutePrefix + UsersConstants.Routes.Delete;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapDelete(
-                UsersConstants.RoutePrefix + "/{id}",
+                Route,
                 (UserId id, IUserContracts userContracts) =>
                     CrudEndpoints.Delete(() => userContracts.DeleteUserAsync(id))
             )

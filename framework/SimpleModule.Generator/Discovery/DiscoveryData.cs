@@ -200,13 +200,17 @@ internal readonly record struct ModuleInfoRecord(
 internal readonly record struct EndpointInfoRecord(
     string FullyQualifiedName,
     ImmutableArray<string> RequiredPermissions,
-    bool AllowAnonymous
+    bool AllowAnonymous,
+    string RouteTemplate,
+    string HttpMethod
 )
 {
     public bool Equals(EndpointInfoRecord other)
     {
         return FullyQualifiedName == other.FullyQualifiedName
             && AllowAnonymous == other.AllowAnonymous
+            && RouteTemplate == other.RouteTemplate
+            && HttpMethod == other.HttpMethod
             && RequiredPermissions.SequenceEqual(other.RequiredPermissions);
     }
 
@@ -215,6 +219,8 @@ internal readonly record struct EndpointInfoRecord(
         var hash = 17;
         hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
         hash = HashHelper.Combine(hash, AllowAnonymous.GetHashCode());
+        hash = HashHelper.Combine(hash, (RouteTemplate ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (HttpMethod ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, RequiredPermissions);
         return hash;
     }
@@ -223,6 +229,7 @@ internal readonly record struct EndpointInfoRecord(
 internal readonly record struct ViewInfoRecord(
     string FullyQualifiedName,
     string Page,
+    string RouteTemplate,
     SourceLocationRecord? Location
 );
 
@@ -499,6 +506,8 @@ internal sealed class EndpointInfo
     public string FullyQualifiedName { get; set; } = "";
     public List<string> RequiredPermissions { get; set; } = new();
     public bool AllowAnonymous { get; set; }
+    public string RouteTemplate { get; set; } = "";
+    public string HttpMethod { get; set; } = "";
 }
 
 internal sealed class ViewInfo
@@ -506,6 +515,7 @@ internal sealed class ViewInfo
     public string FullyQualifiedName { get; set; } = "";
     public string? Page { get; set; }
     public string InferredClassName { get; set; } = "";
+    public string RouteTemplate { get; set; } = "";
     public SourceLocationRecord? Location { get; set; }
 }
 

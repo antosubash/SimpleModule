@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Templates;
 
 public class CreateTemplateEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.CreateTemplate;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/templates",
+                Route,
                 async (
                     CreatePageTemplateRequest request,
                     IPageBuilderTemplateContracts templates
@@ -22,7 +25,7 @@ public class CreateTemplateEndpoint : IEndpoint
 
                     var template = await templates.CreateTemplateAsync(request);
                     return TypedResults.Created(
-                        $"/api/pagebuilder/templates/{template.Id}",
+                        $"{PageBuilderConstants.RoutePrefix}/templates/{template.Id}",
                         template
                     );
                 }

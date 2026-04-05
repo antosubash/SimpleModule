@@ -10,9 +10,12 @@ namespace SimpleModule.Products.Endpoints.Products;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}",
+                Route,
                 (ProductId id, UpdateProductRequest request, IProductContracts productContracts) =>
                 {
                     var validation = UpdateRequestValidator.Validate(request);

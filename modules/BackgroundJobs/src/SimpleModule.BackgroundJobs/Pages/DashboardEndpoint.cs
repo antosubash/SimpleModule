@@ -8,10 +8,12 @@ namespace SimpleModule.BackgroundJobs.Pages;
 
 public class DashboardEndpoint : IViewEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.Dashboard;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/",
+            Route,
             async (IBackgroundJobsContracts contracts) =>
             {
                 var activeJobs = await contracts.GetJobsAsync(
