@@ -145,12 +145,16 @@ RUN npm run build \
        -o template/SimpleModule.Host/wwwroot/css/app.css \
        --minify
 
-# Publish the .NET application
+# Publish the .NET application.
+# JsBuild is skipped (echo) because npm run build above already built all
+# frontend bundles — running Vite again via MSBuild would be redundant and
+# risk producing different chunk hashes after the static-asset manifest is built.
 RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
     -c Release \
     -o /app/publish \
     --no-restore \
-    -p:ErrorOnDuplicatePublishOutputFiles=false
+    -p:ErrorOnDuplicatePublishOutputFiles=false \
+    -p:JsBuildCommand=echo
 
 # =============================================================================
 # Stage 5: Runtime (slim image, non-root user)
@@ -168,6 +172,11 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 
 # Writable directory for SQLite database and local storage
 RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
+
+# Set deployment version for JS/CSS cache-busting and Inertia stale-version detection.
+# Override at runtime or build time: docker build --build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)
+ARG DEPLOY_VERSION=latest
+ENV DEPLOYMENT_VERSION=${DEPLOY_VERSION}
 
 USER appuser
 EXPOSE 8080
