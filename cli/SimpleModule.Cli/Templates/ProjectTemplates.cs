@@ -368,7 +368,7 @@ public sealed class ProjectTemplates
             return FallbackApiCsproj(projectName);
         }
 
-        // Strip module references, OpenIddict, InternalsVisibleTo, Tailwind, Blazor-related
+        // Strip module references, OpenIddict, InternalsVisibleTo, Tailwind
         var stripPatterns = new List<string>
         {
             "modules",
@@ -425,7 +425,7 @@ public sealed class ProjectTemplates
 
     public static string ApiProgram()
     {
-        // The actual Program.cs is too complex (auth, Blazor, health checks, etc.)
+        // The actual Program.cs is too complex (auth, health checks, etc.)
         // For a new project, provide a clean minimal version
         return """
             var builder = WebApplication.CreateBuilder(args);

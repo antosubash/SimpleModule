@@ -1,5 +1,6 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePage } from '@simplemodule/client/resolve-page';
+import { resolveLayout } from '@simplemodule/ui/layouts';
 import { createRoot } from 'react-dom/client';
 
 // Navigation progress bar — 150ms delay so instant navigations don't flash
@@ -38,9 +39,9 @@ function clearTimers() {
   }
 }
 
-// Intercept plain <a> clicks from the Blazor layout (sidebar, nav, dropdowns) and
-// route them through Inertia so the page swap is SPA-style — no full reload.
-const nonInertiaPathPrefixes = ['/Identity/', '/swagger', '/health', '/connect/'];
+// Intercept plain <a> clicks and route them through Inertia so the page swap
+// is SPA-style — no full reload.
+const nonInertiaPathPrefixes = ['/swagger', '/health', '/connect/'];
 
 document.addEventListener('click', (event) => {
   const link = (event.target as Element).closest?.('a');
@@ -133,7 +134,10 @@ function showErrorToast(message: string) {
 }
 
 createInertiaApp({
-  resolve: resolvePage,
+  resolve: async (name) => {
+    const page = await resolvePage(name);
+    return resolveLayout(page);
+  },
   setup({ el, App, props }) {
     createRoot(el).render(<App {...props} />);
   },

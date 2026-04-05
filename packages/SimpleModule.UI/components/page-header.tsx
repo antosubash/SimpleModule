@@ -17,7 +17,7 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
       )}
       {...props}
     >
-      <div className="min-w-0">
+      <div className="shrink-0">
         <h1
           className="text-xl sm:text-2xl font-extrabold tracking-tight"
           style={{ fontFamily: "'Sora', sans-serif" }}

@@ -57,7 +57,15 @@ internal sealed class TypeScriptDefinitionsEmitter : IEmitter
             foreach (var dto in moduleDtos)
             {
                 var shortName = knownDtoTypes[dto.FullyQualifiedName];
-                sb.AppendLine($"export interface {shortName} {{");
+                var extendsClause = "";
+                if (
+                    dto.BaseTypeFqn is not null
+                    && knownDtoTypes.TryGetValue(dto.BaseTypeFqn, out var baseName)
+                )
+                {
+                    extendsClause = $" extends {baseName}";
+                }
+                sb.AppendLine($"export interface {shortName}{extendsClause} {{");
                 foreach (var prop in dto.Properties)
                 {
                     var tsType = TypeMappingHelpers.MapCSharpTypeToTypeScript(

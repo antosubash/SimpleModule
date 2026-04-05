@@ -31,7 +31,6 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("using SimpleModule.Hosting;");
         sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine($"using {data.HostAssemblyName};");
-        sb.AppendLine($"using {data.HostAssemblyName}.Components;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Hosting;");
         sb.AppendLine();
@@ -51,7 +50,6 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("        SimpleModuleOptions? smOptions = null;");
         sb.AppendLine("        builder.AddSimpleModuleInfrastructure(o =>");
         sb.AppendLine("        {");
-        sb.AppendLine("            o.ShellComponent ??= typeof(InertiaShell);");
         sb.AppendLine("            configure?.Invoke(o);");
         sb.AppendLine("            smOptions = o;");
         sb.AppendLine("        });");
@@ -112,8 +110,7 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         }
 
         sb.AppendLine();
-        sb.AppendLine("        // Source-generated component and endpoint mapping");
-        sb.AppendLine("        app.MapRazorComponents<App>().AddModuleAssemblies();");
+        sb.AppendLine("        // Source-generated endpoint mapping");
         sb.AppendLine("        app.MapModuleEndpoints();");
         sb.AppendLine();
         sb.AppendLine("        return app;");

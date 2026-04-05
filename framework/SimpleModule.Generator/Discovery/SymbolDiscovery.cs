@@ -256,37 +256,6 @@ internal static class SymbolDiscovery
             );
         }
 
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var componentBaseSymbol = compilation.GetTypeByMetadataName(
-            "Microsoft.AspNetCore.Components.ComponentBase"
-        );
-        if (componentBaseSymbol is not null)
-        {
-            var assembliesWithComponents = new HashSet<IAssemblySymbol>(
-                SymbolEqualityComparer.Default
-            );
-            foreach (var reference in compilation.References)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
-                    continue;
-
-                if (HasComponentBaseDescendant(asm.GlobalNamespace, componentBaseSymbol))
-                    assembliesWithComponents.Add(asm);
-            }
-
-            foreach (var module in modules)
-            {
-                if (
-                    moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol)
-                    && assembliesWithComponents.Contains(typeSymbol.ContainingAssembly)
-                )
-                    module.HasRazorComponents = true;
-            }
-        }
-
         // --- Dependency inference ---
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -684,7 +653,6 @@ internal static class SymbolDiscovery
                     m.HasConfigureFeatureFlags,
                     m.HasConfigureAgents,
                     m.HasConfigureRateLimits,
-                    m.HasRazorComponents,
                     m.RoutePrefix,
                     m.ViewPrefix,
                     m.Endpoints.Select(e => new EndpointInfoRecord(
@@ -706,6 +674,7 @@ internal static class SymbolDiscovery
                 .Select(d => new DtoTypeInfoRecord(
                     d.FullyQualifiedName,
                     d.SafeName,
+                    d.BaseTypeFqn,
                     d.Properties.Select(p => new DtoPropertyInfoRecord(
                             p.Name,
                             p.TypeFqn,
@@ -800,6 +769,8 @@ internal static class SymbolDiscovery
             knowledgeSources
                 .Select(k => new KnowledgeSourceRecord(k.FullyQualifiedName, k.ModuleName))
                 .ToImmutableArray(),
+            compilation.GetTypeByMetadataName("SimpleModule.Agents.SimpleModuleAgentExtensions")
+                is not null,
             hostAssemblyName
         );
     }
@@ -1131,11 +1102,37 @@ internal static class SymbolDiscovery
                         );
                         var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
+                        string? baseTypeFqn = null;
+                        if (
+                            typeSymbol.BaseType
+                            is { SpecialType: not SpecialType.System_Object }
+                                and var baseType
+                        )
+                        {
+                            var baseFqn = baseType.ToDisplayString(
+                                SymbolDisplayFormat.FullyQualifiedFormat
+                            );
+                            if (
+                                baseType
+                                    .GetAttributes()
+                                    .Any(a =>
+                                        SymbolEqualityComparer.Default.Equals(
+                                            a.AttributeClass,
+                                            dtoAttributeSymbol
+                                        )
+                                    )
+                            )
+                            {
+                                baseTypeFqn = baseFqn;
+                            }
+                        }
+
                         dtoTypes.Add(
                             new DtoTypeInfo
                             {
                                 FullyQualifiedName = fqn,
                                 SafeName = safeName,
+                                BaseTypeFqn = baseTypeFqn,
                                 Properties = ExtractDtoProperties(typeSymbol),
                             }
                         );
@@ -1144,27 +1141,6 @@ internal static class SymbolDiscovery
                 }
             }
         }
-    }
-
-    private static bool HasComponentBaseDescendant(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol componentBaseSymbol
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            if (member is INamespaceSymbol childNamespace)
-            {
-                if (HasComponentBaseDescendant(childNamespace, componentBaseSymbol))
-                    return true;
-            }
-            else if (member is INamedTypeSymbol typeSymbol)
-            {
-                if (InheritsFrom(typeSymbol, componentBaseSymbol))
-                    return true;
-            }
-        }
-        return false;
     }
 
     private static bool InheritsFrom(INamedTypeSymbol typeSymbol, INamedTypeSymbol baseType)
@@ -1823,12 +1799,29 @@ internal static class SymbolDiscovery
 
                 var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
 
+                string? baseTypeFqn = null;
+                if (
+                    typeSymbol.BaseType
+                    is { SpecialType: not SpecialType.System_Object }
+                        and var baseType
+                )
+                {
+                    var baseFqn = baseType.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    );
+                    if (existingFqns.Contains(baseFqn))
+                    {
+                        baseTypeFqn = baseFqn;
+                    }
+                }
+
                 existingFqns.Add(fqn);
                 dtoTypes.Add(
                     new DtoTypeInfo
                     {
                         FullyQualifiedName = fqn,
                         SafeName = safeName,
+                        BaseTypeFqn = baseTypeFqn,
                         Properties = ExtractDtoProperties(typeSymbol),
                     }
                 );

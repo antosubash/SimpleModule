@@ -3,7 +3,7 @@
 ## How It Works
 
 1. ASP.NET endpoint calls `Inertia.Render("Module/Page", props)`
-2. Inertia middleware renders Blazor SSR shell with JSON props
+2. Inertia middleware renders static HTML shell with embedded JSON props
 3. React ClientApp dynamically imports module's `pages.js` bundle
 4. Component hydrates with server-provided props
 

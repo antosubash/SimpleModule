@@ -248,15 +248,14 @@ public class ClientManagementTests
     // ── Delete tests ─────────────────────────────────────────────────
 
     [Fact]
-    public async Task DeleteClient_ExistingClient_Redirects()
+    public async Task DeleteClient_ExistingClient_ReturnsOk()
     {
         var appId = await SeedTestClientAsync();
         var client = CreateAdminClient();
 
         var response = await client.DeleteAsync($"/openiddict/clients/{appId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
-        response.Headers.Location?.ToString().Should().Be("/openiddict/clients");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]

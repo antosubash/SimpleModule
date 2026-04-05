@@ -17,7 +17,7 @@ public class MenuManagerEndpoint : IViewEndpoint
                 async (PublicMenuService service, IReadOnlyList<AvailablePage> availablePages) =>
                     Inertia.Render(
                         "Settings/MenuManager",
-                        new { menus = await service.GetAllAsync(), availablePages }
+                        new { menuItems = await service.GetAllAsync(), availablePages }
                     )
             )
             .RequireAuthorization();

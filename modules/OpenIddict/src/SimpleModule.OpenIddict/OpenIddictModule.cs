@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -5,6 +7,7 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Hosting;
+using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.OpenIddict.Contracts;
@@ -114,6 +117,13 @@ public class OpenIddictModule : IModule
         services.AddTransient<IConfigureOptions<SwaggerUIOptions>, OpenIddictSwaggerUISetup>();
         services.AddSingleton<IHostDbContextContributor, OpenIddictDbContextContributor>();
         OpenIddictAuthSetup.AddSmartAuthentication(services);
+    }
+
+    public void ConfigureEndpoints(IEndpointRouteBuilder endpoints)
+    {
+        endpoints
+            .MapGet("/oauth-callback", () => Inertia.Render("OpenIddict/OAuthCallback"))
+            .AllowAnonymous();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

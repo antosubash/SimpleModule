@@ -17,7 +17,7 @@ export class PageBuilderManagePage {
   }
 
   get newPageButton() {
-    return this.page.getByRole('button', { name: /new page/i });
+    return this.page.getByRole('button', { name: /new page/i }).first();
   }
 
   get emptyMessage() {

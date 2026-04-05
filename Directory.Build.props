@@ -29,6 +29,13 @@
     <PackageTags>simplemodule;modular-monolith;aspnetcore;blazor;react;inertia</PackageTags>
     <Copyright>Copyright (c) SimpleModule contributors</Copyright>
   </PropertyGroup>
+  <!-- Static web asset optimizations: fingerprinting + build/publish-time compression -->
+  <PropertyGroup>
+    <StaticWebAssetsFingerprintContent>true</StaticWebAssetsFingerprintContent>
+    <StaticWebAssetFingerprintingEnabled>true</StaticWebAssetFingerprintingEnabled>
+    <StaticWebAssetBuildCompressAllAssets>true</StaticWebAssetBuildCompressAllAssets>
+    <StaticWebAssetPublishCompressAllAssets>true</StaticWebAssetPublishCompressAllAssets>
+  </PropertyGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <AnalysisLevel>latest-all</AnalysisLevel>

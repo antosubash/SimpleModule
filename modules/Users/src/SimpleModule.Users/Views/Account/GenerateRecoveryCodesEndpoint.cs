@@ -15,7 +15,7 @@ public class GenerateRecoveryCodesEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/GenerateRecoveryCodes",
+                "/Manage/GenerateRecoveryCodes",
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

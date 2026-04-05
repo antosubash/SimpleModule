@@ -15,7 +15,7 @@ public class ResetAuthenticatorEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/ResetAuthenticator",
+                "/Manage/ResetAuthenticator",
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

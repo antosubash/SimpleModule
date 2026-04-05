@@ -40,7 +40,7 @@ interface AvailablePage {
 }
 
 interface MenuManagerProps {
-  menus: MenuItemDto[];
+  menuItems: MenuItemDto[];
   availablePages: AvailablePage[];
 }
 
@@ -70,7 +70,7 @@ function countItems(items: MenuItemDto[]): number {
   return count;
 }
 
-export default function MenuManager({ menus: initial, availablePages }: MenuManagerProps) {
+export default function MenuManager({ menuItems: initial, availablePages }: MenuManagerProps) {
   const { t } = useTranslation('Settings');
   const [menus, setMenus] = useState(initial);
   const [selectedId, setSelectedId] = useState<number | null>(null);

@@ -27,7 +27,7 @@ public class InertiaResultTests
 
         var html = await response.Content.ReadAsStringAsync();
         html.Should().Contain("id=\"app\"");
-        html.Should().Contain("<script data-page=\"app\" type=\"application/json\">");
+        html.Should().Contain("data-page=\"app\"").And.Contain("type=\"application/json\"");
         html.Should().Contain("/js/app.js");
     }
 

@@ -721,7 +721,6 @@ public sealed class ModuleTemplates
             ["SimpleModule.Core"] = "SimpleModule.Core",
             ["SimpleModule.Database"] = "SimpleModule.Database",
             ["SimpleModule.Hosting"] = "SimpleModule.Hosting",
-            ["SimpleModule.Blazor"] = "SimpleModule.Blazor",
             ["SimpleModule.DevTools"] = "SimpleModule.DevTools",
         };
 

@@ -20,7 +20,7 @@ public static class AdminScenario
                     ]);
                     var roleResponse = await client.PostAsync("/admin/roles/", roleForm);
 
-                    // Admin endpoints return 302 redirect on success (Blazor SSR pattern).
+                    // Admin endpoints return 302 redirect on success (Inertia SSR pattern).
                     // With AllowAutoRedirect=false, we get the raw 302.
                     if (!IsSuccess(roleResponse))
                         return Response.Fail(
@@ -56,7 +56,7 @@ public static class AdminScenario
     }
 
     /// <summary>
-    /// Admin form endpoints return 302 redirects on success (Blazor SSR pattern).
+    /// Admin form endpoints return 302 redirects on success (Inertia SSR pattern).
     /// Treat 2xx and 3xx as success.
     /// </summary>
     private static bool IsSuccess(HttpResponseMessage response)

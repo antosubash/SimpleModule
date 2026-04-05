@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using SimpleModule.Blazor;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
@@ -20,6 +19,8 @@ using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
+using SimpleModule.Hosting.Inertia;
+using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
 
 namespace SimpleModule.Hosting;
@@ -56,16 +57,7 @@ public static class SimpleModuleHostExtensions
             builder.Services.AddSwaggerGen();
         }
 
-        builder.Services.AddRazorComponents();
-
-        if (options.ShellComponent is not null)
-        {
-            builder.Services.AddSimpleModuleBlazor(o => o.ShellComponent = options.ShellComponent);
-        }
-        else
-        {
-            builder.Services.AddSimpleModuleBlazor();
-        }
+        builder.Services.AddSingleton<IInertiaPageRenderer, HtmlFileInertiaPageRenderer>();
 
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
@@ -82,6 +74,7 @@ public static class SimpleModuleHostExtensions
         // Register a baseline so the middleware pipeline works even without an auth module.
         builder.Services.AddAuthentication();
         builder.Services.AddAuthorization();
+        builder.Services.AddAntiforgery();
 
         // Register default IPublicMenuProvider if no module provides one
         builder.Services.TryAddScoped<IPublicMenuProvider, DefaultPublicMenuProvider>();
@@ -150,6 +143,7 @@ public static class SimpleModuleHostExtensions
             async (context, next) =>
             {
                 var nonce = context.RequestServices.GetRequiredService<ICspNonce>().Value;
+                var isHttps = context.Request.IsHttps;
                 context.Response.OnStarting(() =>
                 {
                     var headers = context.Response.Headers;
@@ -157,7 +151,7 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-                    headers["Content-Security-Policy"] =
+                    var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
                         + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
@@ -167,8 +161,13 @@ public static class SimpleModuleHostExtensions
                         + $"object-src 'none'; "
                         + $"base-uri 'self'; "
                         + $"form-action 'self'; "
-                        + $"frame-ancestors 'none'; "
-                        + $"upgrade-insecure-requests;";
+                        + $"frame-ancestors 'none';";
+                    if (isHttps)
+                    {
+                        csp += " upgrade-insecure-requests;";
+                    }
+
+                    headers["Content-Security-Policy"] = csp;
                     return Task.CompletedTask;
                 });
                 await next();
@@ -191,6 +190,7 @@ public static class SimpleModuleHostExtensions
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseSimpleModuleRateLimiting();
+        app.UseMiddleware<InertiaLayoutDataMiddleware>();
 
         // Module middleware is added by the source-generated UseSimpleModule()
         // via IModule.ConfigureMiddleware() calls.

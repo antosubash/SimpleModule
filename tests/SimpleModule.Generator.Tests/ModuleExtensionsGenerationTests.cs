@@ -289,28 +289,6 @@ public class ModuleExtensionsGenerationTests
     }
 
     [Fact]
-    public void RazorComponentExtensions_AlwaysGenerated()
-    {
-        var source = """
-            using SimpleModule.Core;
-
-            namespace TestApp;
-
-            [Module("Test")]
-            public class TestModule : IModule { }
-            """;
-
-        var compilation = GeneratorTestHelper.CreateCompilation(source);
-        var result = GeneratorTestHelper.RunGenerator(compilation);
-
-        result
-            .GeneratedTrees.Should()
-            .Contain(t =>
-                t.FilePath.EndsWith("RazorComponentExtensions.g.cs", StringComparison.Ordinal)
-            );
-    }
-
-    [Fact]
     public void GeneratedCode_UsesCorrectNamespace()
     {
         var source = """

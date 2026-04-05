@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>Background job module for SimpleModule. Manages scheduled job execution with cron support and progress tracking.</Description>

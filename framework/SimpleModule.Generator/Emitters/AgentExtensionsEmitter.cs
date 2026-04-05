@@ -10,12 +10,7 @@ internal sealed class AgentExtensionsEmitter : IEmitter
 {
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
-        if (
-            data.AgentDefinitions.Length == 0
-            && data.AgentToolProviders.Length == 0
-            && data.KnowledgeSources.Length == 0
-            && !data.Modules.Any(m => m.HasConfigureAgents)
-        )
+        if (!data.HasAnyAgentContent)
             return;
 
         var sb = new StringBuilder();

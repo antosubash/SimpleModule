@@ -132,7 +132,7 @@ export default function Editor({ page, templates }: Props) {
   const { t } = useTranslation('PageBuilder');
   const [showTemplatePicker, setShowTemplatePicker] = useState(!page && !!templates?.length);
 
-  // Hide the Blazor shell (sidebar + toggle) so the editor has full screen
+  // Hide the app shell (sidebar + toggle) so the editor has full screen
   useEffect(() => {
     const sidebar = document.getElementById('app-sidebar');
     const toggle = document.querySelector('.app-sidebar-toggle') as HTMLElement;

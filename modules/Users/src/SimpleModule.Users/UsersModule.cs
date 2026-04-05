@@ -12,7 +12,7 @@ using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users;
 
-[Module(UsersConstants.ModuleName, ViewPrefix = "/Identity/Account/Manage")]
+[Module(UsersConstants.ModuleName, ViewPrefix = "/Identity/Account")]
 public class UsersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

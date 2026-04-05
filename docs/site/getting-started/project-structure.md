@@ -14,7 +14,6 @@ MyApp/
 │   ├── SimpleModule.Core/
 │   ├── SimpleModule.Generator/
 │   ├── SimpleModule.Database/
-│   ├── SimpleModule.Blazor/
 │   ├── SimpleModule.Hosting/
 │   ├── SimpleModule.DevTools/
 │   ├── SimpleModule.Agents/       # AI agent runtime and registry
@@ -100,7 +99,7 @@ It generates:
 | `CollectModuleMenuItems()` | Builds the navigation menu from module registrations |
 | JSON serializer contexts | AOT-friendly serialization for `[Dto]` types |
 | TypeScript interfaces | Embedded TS definitions extracted by build tooling |
-| Razor component discovery | Assembly metadata for Blazor SSR |
+| View page registry | Maps view endpoints to React components |
 
 ::: tip Inspecting Generated Code
 In Visual Studio or Rider, expand **Dependencies > Analyzers > SimpleModule.Generator** to see exactly what code the generator produces. This is useful for debugging registration issues.
@@ -114,13 +113,9 @@ Multi-provider database support built on EF Core. Handles:
 - **Schema isolation** -- each module's tables are automatically namespaced (table prefixes for SQLite, schemas for PostgreSQL/SQL Server)
 - **`ModuleDbContextInfo`** -- metadata that each module registers to declare its database context and schema name
 
-### SimpleModule.Blazor
-
-The Blazor SSR shell that serves as the bridge between ASP.NET and React. It renders the initial HTML page with serialized Inertia props, which React then hydrates on the client side.
-
 ### SimpleModule.Hosting
 
-Module registration infrastructure. Provides the runtime plumbing that the generated `AddModules()` and `MapModuleEndpoints()` methods call into. Handles service collection extensions, endpoint routing integration, and module lifecycle management.
+Module registration infrastructure and Inertia page rendering. Provides the runtime plumbing that the generated `AddModules()` and `MapModuleEndpoints()` methods call into. Handles service collection extensions, endpoint routing integration, module lifecycle management, and renders the static HTML shell with embedded JSON props for React hydration.
 
 ### SimpleModule.DevTools
 

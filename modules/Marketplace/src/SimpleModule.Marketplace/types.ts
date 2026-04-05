@@ -14,7 +14,7 @@ export interface MarketplacePackage {
   isVerified: boolean;
 }
 
-export interface MarketplacePackageDetail {
+export interface MarketplacePackageDetail extends MarketplacePackage {
   licenseLink: string;
   versions: MarketplacePackageVersion[];
   dependencies: string[];

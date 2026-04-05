@@ -29,7 +29,7 @@ app.MapModuleEndpoints(); // Generated method
 - **CollectModuleMenuItems()** -- gathers menu registrations from all modules
 - **JSON serializer contexts** for all [Dto] types
 - **TypeScript interface definitions** embedded as resources
-- **Razor component assembly discovery** for Blazor SSR
+- **View page registry** mapping view endpoints to React components
 
 ## Key Features
 

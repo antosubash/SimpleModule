@@ -90,7 +90,6 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         var moduleTestDir = Path.Combine(modulesDir, moduleName, "tests", $"{moduleName}.Tests");
 
         // ── Create directories ────────────────────────────────
-        Directory.CreateDirectory(Path.Combine(hostDir, "Components"));
         Directory.CreateDirectory(Path.Combine(hostDir, "ClientApp"));
         Directory.CreateDirectory(Path.Combine(hostDir, "Styles"));
         Directory.CreateDirectory(Path.Combine(hostDir, "Properties"));
@@ -141,20 +140,8 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         );
         File.WriteAllText(Path.Combine(hostDir, "Program.cs"), HostTemplates.ProgramCs());
         File.WriteAllText(
-            Path.Combine(hostDir, "Components", "App.razor"),
-            HostTemplates.AppRazor(projectName)
-        );
-        File.WriteAllText(
-            Path.Combine(hostDir, "Components", "InertiaShell.razor"),
-            HostTemplates.InertiaShellRazor(projectName)
-        );
-        File.WriteAllText(
-            Path.Combine(hostDir, "Components", "Routes.razor"),
-            HostTemplates.RoutesRazor()
-        );
-        File.WriteAllText(
-            Path.Combine(hostDir, "Components", "_Imports.razor"),
-            HostTemplates.ImportsRazor(projectName)
+            Path.Combine(hostDir, "wwwroot", "index.html"),
+            HostTemplates.IndexHtml()
         );
         File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), HostTemplates.AppTsx());
         File.WriteAllText(
@@ -303,10 +290,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         // Host project files
         Plan(Path.Combine(hostDir, $"{projectName}.Host.csproj"));
         Plan(Path.Combine(hostDir, "Program.cs"));
-        Plan(Path.Combine(hostDir, "Components", "App.razor"));
-        Plan(Path.Combine(hostDir, "Components", "InertiaShell.razor"));
-        Plan(Path.Combine(hostDir, "Components", "Routes.razor"));
-        Plan(Path.Combine(hostDir, "Components", "_Imports.razor"));
+        Plan(Path.Combine(hostDir, "wwwroot", "index.html"));
         Plan(Path.Combine(hostDir, "ClientApp", "app.tsx"));
         Plan(Path.Combine(hostDir, "ClientApp", "vite.config.ts"));
         Plan(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"));
