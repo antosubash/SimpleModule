@@ -315,6 +315,24 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor ModuleAssemblyNamingViolation = new(
+        id: "SM0052",
+        title: "Module assembly name does not follow naming convention",
+        messageFormat: "Module '{0}' is in assembly '{1}', but the assembly name must be 'SimpleModule.{0}' (or 'SimpleModule.{0}.Module' when a framework assembly with the same base name exists). Rename the project/assembly to follow the standard module naming convention.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    internal static readonly DiagnosticDescriptor MissingContractsAssembly = new(
+        id: "SM0053",
+        title: "Module has no matching Contracts assembly",
+        messageFormat: "Module '{0}' (assembly '{1}') has no matching Contracts assembly. Every module must have a 'SimpleModule.{0}.Contracts' project with at least one public interface. Create the project and add a reference to it.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -1059,6 +1077,73 @@ internal sealed class DiagnosticEmitter : IEmitter
                         LocationHelper.ToLocation(kvp.Value[1].Loc),
                         fileName,
                         names
+                    )
+                );
+            }
+        }
+
+        // SM0050: Module assembly name must follow SimpleModule.{ModuleName} convention
+        // SM0051: Module must have matching Contracts assembly
+        var contractsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var name in data.ContractsAssemblyNames)
+            contractsSet.Add(name);
+
+        foreach (var module in data.Modules)
+        {
+            if (string.IsNullOrEmpty(module.ModuleName))
+                continue;
+
+            // SM0052: Assembly naming convention
+            // Accepted patterns: SimpleModule.{ModuleName} or SimpleModule.{ModuleName}.Module
+            // The .Module suffix is allowed when a framework assembly with the same base name exists.
+            var expectedAssemblyName = "SimpleModule." + module.ModuleName;
+            var expectedModuleSuffix = expectedAssemblyName + ".Module";
+            if (
+                !string.IsNullOrEmpty(module.AssemblyName)
+                && !string.Equals(
+                    module.AssemblyName,
+                    expectedAssemblyName,
+                    System.StringComparison.Ordinal
+                )
+                && !string.Equals(
+                    module.AssemblyName,
+                    expectedModuleSuffix,
+                    System.StringComparison.Ordinal
+                )
+                && !string.Equals(
+                    module.AssemblyName,
+                    data.HostAssemblyName,
+                    System.StringComparison.Ordinal
+                )
+            )
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        ModuleAssemblyNamingViolation,
+                        LocationHelper.ToLocation(module.Location),
+                        module.ModuleName,
+                        module.AssemblyName
+                    )
+                );
+            }
+
+            // SM0051: Missing contracts assembly
+            var expectedContractsName = "SimpleModule." + module.ModuleName + ".Contracts";
+            if (
+                !contractsSet.Contains(expectedContractsName)
+                && !string.Equals(
+                    module.AssemblyName,
+                    data.HostAssemblyName,
+                    System.StringComparison.Ordinal
+                )
+            )
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        MissingContractsAssembly,
+                        LocationHelper.ToLocation(module.Location),
+                        module.ModuleName,
+                        module.AssemblyName
                     )
                 );
             }
