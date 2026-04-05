@@ -74,6 +74,7 @@ COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/*.csproj modul
 COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags/*.csproj modules/FeatureFlags/src/SimpleModule.FeatureFlags/
 COPY modules/Tenants/src/SimpleModule.Tenants.Contracts/*.csproj modules/Tenants/src/SimpleModule.Tenants.Contracts/
 COPY modules/Tenants/src/SimpleModule.Tenants/*.csproj modules/Tenants/src/SimpleModule.Tenants/
+COPY modules/Agents/src/SimpleModule.Agents.Contracts/*.csproj modules/Agents/src/SimpleModule.Agents.Contracts/
 COPY modules/Agents/src/SimpleModule.Agents.Module/*.csproj modules/Agents/src/SimpleModule.Agents.Module/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
