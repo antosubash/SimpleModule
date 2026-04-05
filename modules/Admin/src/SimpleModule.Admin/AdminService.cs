@@ -10,11 +10,14 @@ public sealed class AdminService(IUserAdminContracts userAdmin, IRoleAdminContra
         CancellationToken cancellationToken = default
     )
     {
-        var usersPage = await userAdmin.GetUsersPagedAsync(null, 1, 1).ConfigureAwait(false);
-        var activePage = await userAdmin
-            .GetUsersPagedAsync(null, 1, 1, filterStatus: "active")
-            .ConfigureAwait(false);
-        var roles = await roleAdmin.GetAllRolesAsync().ConfigureAwait(false);
+        var usersTask = userAdmin.GetUsersPagedAsync(null, 1, 1);
+        var activeTask = userAdmin.GetUsersPagedAsync(null, 1, 1, filterStatus: "active");
+        var rolesTask = roleAdmin.GetAllRolesAsync();
+        await Task.WhenAll(usersTask, activeTask, rolesTask).ConfigureAwait(false);
+
+        var usersPage = await usersTask.ConfigureAwait(false);
+        var activePage = await activeTask.ConfigureAwait(false);
+        var roles = await rolesTask.ConfigureAwait(false);
 
         return new AdminOverviewDto
         {

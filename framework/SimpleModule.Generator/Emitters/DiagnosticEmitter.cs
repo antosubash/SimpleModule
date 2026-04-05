@@ -1082,8 +1082,8 @@ internal sealed class DiagnosticEmitter : IEmitter
             }
         }
 
-        // SM0050: Module assembly name must follow SimpleModule.{ModuleName} convention
-        // SM0051: Module must have matching Contracts assembly
+        // SM0052: Module assembly name must follow SimpleModule.{ModuleName} convention
+        // SM0053: Module must have matching Contracts assembly
         var contractsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var name in data.ContractsAssemblyNames)
             contractsSet.Add(name);
@@ -1127,7 +1127,7 @@ internal sealed class DiagnosticEmitter : IEmitter
                 );
             }
 
-            // SM0051: Missing contracts assembly
+            // SM0053: Missing contracts assembly
             var expectedContractsName = "SimpleModule." + module.ModuleName + ".Contracts";
             if (
                 !contractsSet.Contains(expectedContractsName)
