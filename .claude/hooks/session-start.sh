@@ -32,6 +32,3 @@ npm install
 
 # Install Playwright browsers for e2e tests
 npx -w tests/e2e playwright install --with-deps
-
-# Run sm doctor to validate project structure
-dotnet run --project cli/SimpleModule.Cli -- doctor
