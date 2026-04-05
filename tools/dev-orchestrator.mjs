@@ -1,8 +1,9 @@
-import { spawn, execSync } from 'child_process';
+import { spawn, execFileSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { readdirSync, readFileSync, existsSync } from 'fs';
+import * as readline from 'readline';
 import { createLogger, discoverModulesWithVite } from './orchestrator-utils.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -272,9 +273,6 @@ process.on('uncaughtException', (err) => {
 // ---------------------------------------------------------------------------
 // Port checking
 // ---------------------------------------------------------------------------
-import { execFileSync } from 'child_process';
-import * as readline from 'readline';
-
 /**
  * Find the PID and process name listening on a TCP port.
  * Returns { pid, name } or null if port is free.

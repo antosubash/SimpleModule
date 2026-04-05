@@ -15,7 +15,14 @@ public sealed class DevCommand : Command<DevSettings>
     private const int ForceKillTimeoutMs = 3000;
 
     private readonly List<(Process Process, string Label)> _processes = [];
-    private volatile int _shutdownState; // 0=running, 1=graceful, 2=force
+    private volatile int _shutdownState; // ShutdownPhase values
+
+    private static class ShutdownPhase
+    {
+        public const int Running = 0;
+        public const int Graceful = 1;
+        public const int Force = 2;
+    }
 
     public override int Execute(CommandContext context, DevSettings settings)
     {
@@ -101,7 +108,11 @@ public sealed class DevCommand : Command<DevSettings>
         {
             AnsiConsole.MarkupLine("[cyan][[dotnet]][/] Starting dotnet watch...");
             var dotnetArgs = $"watch run --project \"{hostProject}\" --no-restore";
-            StartProcess("dotnet", dotnetArgs, solution.RootPath, "dotnet");
+            var dotnetEnv = new Dictionary<string, string>
+            {
+                ["ASPNETCORE_ENVIRONMENT"] = "Development",
+            };
+            StartProcess("dotnet", dotnetArgs, solution.RootPath, "dotnet", dotnetEnv);
         }
 
         if (startVite)
@@ -140,7 +151,8 @@ public sealed class DevCommand : Command<DevSettings>
         string fileName,
         string arguments,
         string workingDirectory,
-        string label
+        string label,
+        IReadOnlyDictionary<string, string>? environment = null
     )
     {
         var startInfo = new ProcessStartInfo
@@ -153,10 +165,12 @@ public sealed class DevCommand : Command<DevSettings>
             RedirectStandardError = false,
         };
 
-        // Ensure ASPNETCORE_ENVIRONMENT is set for dotnet
-        if (label == "dotnet")
+        if (environment is not null)
         {
-            startInfo.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
+            foreach (var (key, value) in environment)
+            {
+                startInfo.Environment[key] = value;
+            }
         }
 
         try
@@ -183,7 +197,7 @@ public sealed class DevCommand : Command<DevSettings>
     private void WaitForExit()
     {
         // Wait until any process exits or shutdown is requested
-        while (_shutdownState == 0)
+        while (_shutdownState == ShutdownPhase.Running)
         {
             foreach (var (process, label) in _processes)
             {
@@ -191,7 +205,7 @@ public sealed class DevCommand : Command<DevSettings>
                 {
                     if (process.HasExited)
                     {
-                        if (_shutdownState == 0)
+                        if (_shutdownState == ShutdownPhase.Running)
                         {
                             AnsiConsole.MarkupLine(
                                 $"[yellow][[{label}]][/] Exited with code {process.ExitCode}. Shutting down..."
@@ -221,7 +235,13 @@ public sealed class DevCommand : Command<DevSettings>
     private void GracefulShutdown()
     {
         // Transition: running → graceful
-        if (Interlocked.CompareExchange(ref _shutdownState, 1, 0) != 0)
+        if (
+            Interlocked.CompareExchange(
+                ref _shutdownState,
+                ShutdownPhase.Graceful,
+                ShutdownPhase.Running
+            ) != ShutdownPhase.Running
+        )
         {
             return;
         }
@@ -503,7 +523,7 @@ public sealed class DevCommand : Command<DevSettings>
     private void ForceKillAll()
     {
         // Transition to force state (from any state)
-        Interlocked.Exchange(ref _shutdownState, 2);
+        Interlocked.Exchange(ref _shutdownState, ShutdownPhase.Force);
 
         foreach (var (process, label) in _processes)
         {
@@ -649,7 +669,7 @@ public sealed class DevCommand : Command<DevSettings>
 
     private void OnCancelKeyPress(object? sender, ConsoleCancelEventArgs e)
     {
-        if (_shutdownState == 0)
+        if (_shutdownState == ShutdownPhase.Running)
         {
             // First Ctrl+C: graceful shutdown, cancel the default termination
             e.Cancel = true;

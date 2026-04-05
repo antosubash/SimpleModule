@@ -42,37 +42,37 @@ public sealed partial class LiveReloadServer : IDisposable
 
         LogBroadcasting(_logger, type, source, _clients.Count);
 
-        List<string>? deadClients = null;
-
+        // Send to all clients concurrently so a slow/stalled connection
+        // doesn't block the rest of the broadcast.
+        var sendTasks = new List<Task>(_clients.Count);
         foreach (var (id, socket) in _clients)
         {
             if (socket.State != WebSocketState.Open)
             {
-                (deadClients ??= []).Add(id);
+                RemoveClient(id);
                 continue;
             }
 
-            try
-            {
-                await socket
-                    .SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None)
-                    .ConfigureAwait(false);
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031
-            {
-                LogSendFailed(_logger, ex, id);
-                (deadClients ??= []).Add(id);
-            }
+            sendTasks.Add(SendToClientAsync(id, socket, buffer));
         }
 
-        if (deadClients is not null)
+        await Task.WhenAll(sendTasks).ConfigureAwait(false);
+    }
+
+    private async Task SendToClientAsync(string id, WebSocket socket, byte[] buffer)
+    {
+        try
         {
-            foreach (var id in deadClients)
-            {
-                RemoveClient(id);
-            }
+            await socket
+                .SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+#pragma warning disable CA1031 // Do not catch general exception types
+        catch (Exception ex)
+#pragma warning restore CA1031
+        {
+            LogSendFailed(_logger, ex, id);
+            RemoveClient(id);
         }
     }
 

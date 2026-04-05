@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -15,10 +13,13 @@ public sealed partial class ViteDevMiddleware : IDisposable
     private readonly RequestDelegate _next;
     private readonly ILogger<ViteDevMiddleware> _logger;
     private readonly HttpClient _httpClient;
-    private readonly Uri _viteBaseUri;
     private readonly int _vitePort;
-    private bool _viteDetected;
-    private DateTime _lastCheck = DateTime.MinValue;
+
+    // Thread-safe Vite detection state (middleware is singleton)
+    private volatile bool _viteDetected;
+    private long _lastCheckTicks;
+
+    private static readonly long CheckIntervalTicks = TimeSpan.FromSeconds(10).Ticks;
 
     /// <summary>Path prefixes that should be proxied to Vite dev server.</summary>
     private static readonly string[] ViteProxyPrefixes =
@@ -39,10 +40,9 @@ public sealed partial class ViteDevMiddleware : IDisposable
         _next = next;
         _logger = logger;
         _vitePort = vitePort;
-        _viteBaseUri = new Uri($"http://localhost:{vitePort}");
         _httpClient = new HttpClient
         {
-            BaseAddress = _viteBaseUri,
+            BaseAddress = new Uri($"http://localhost:{vitePort}"),
             Timeout = TimeSpan.FromSeconds(5),
         };
     }
@@ -51,14 +51,20 @@ public sealed partial class ViteDevMiddleware : IDisposable
     {
         var path = context.Request.Path.Value ?? "";
 
-        // Periodically check if Vite dev server is running (every 10 seconds)
-        if (DateTime.UtcNow - _lastCheck > TimeSpan.FromSeconds(10))
+        // Periodically check if Vite dev server is running.
+        // Uses Interlocked to prevent thundering-herd probes from concurrent requests.
+        var now = DateTime.UtcNow.Ticks;
+        var lastCheck = Interlocked.Read(ref _lastCheckTicks);
+        if (now - lastCheck > CheckIntervalTicks)
         {
-            _viteDetected = await IsViteRunningAsync().ConfigureAwait(false);
-            _lastCheck = DateTime.UtcNow;
-            if (_viteDetected)
+            // Only one thread wins the CAS; losers use the stale value (fine for 10s interval)
+            if (Interlocked.CompareExchange(ref _lastCheckTicks, now, lastCheck) == lastCheck)
             {
-                LogViteDetected(_logger, _vitePort);
+                _viteDetected = await IsViteRunningAsync().ConfigureAwait(false);
+                if (_viteDetected)
+                {
+                    LogViteDetected(_logger, _vitePort);
+                }
             }
         }
 
@@ -68,18 +74,9 @@ public sealed partial class ViteDevMiddleware : IDisposable
             return;
         }
 
-        // Signal to HtmlFileInertiaPageRenderer that Vite dev server is active
-        context.Items["ViteDevServer"] = true;
+        context.Items[DevToolsConstants.ViteDevServerKey] = true;
 
-        // Proxy Vite-specific requests
-        if (ShouldProxy(path))
-        {
-            await ProxyToViteAsync(context).ConfigureAwait(false);
-            return;
-        }
-
-        // Proxy source file requests (.tsx, .ts, .css, .jsx, .js — not built assets)
-        if (IsSourceFileRequest(path))
+        if (ShouldProxy(path) || IsSourceFileRequest(path))
         {
             await ProxyToViteAsync(context).ConfigureAwait(false);
             return;
@@ -103,16 +100,8 @@ public sealed partial class ViteDevMiddleware : IDisposable
 
     private static bool IsSourceFileRequest(string path)
     {
-        // Proxy requests for the app entry point (app.tsx)
-        if (
-            path.EndsWith(".tsx", StringComparison.OrdinalIgnoreCase)
-            || path.EndsWith(".jsx", StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            return true;
-        }
-
-        return false;
+        return path.EndsWith(".tsx", StringComparison.OrdinalIgnoreCase)
+            || path.EndsWith(".jsx", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task ProxyToViteAsync(HttpContext context)
@@ -123,7 +112,6 @@ public sealed partial class ViteDevMiddleware : IDisposable
 
             using var proxyRequest = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
-            // Forward relevant headers
             if (context.Request.Headers.TryGetValue("Accept", out var accept))
             {
                 proxyRequest.Headers.TryAddWithoutValidation("Accept", accept.ToString());
@@ -135,13 +123,11 @@ public sealed partial class ViteDevMiddleware : IDisposable
 
             context.Response.StatusCode = (int)response.StatusCode;
 
-            // Forward content type
             if (response.Content.Headers.ContentType is not null)
             {
                 context.Response.ContentType = response.Content.Headers.ContentType.ToString();
             }
 
-            // Forward CORS headers from Vite
             foreach (var header in response.Headers)
             {
                 if (header.Key.StartsWith("Access-Control", StringComparison.OrdinalIgnoreCase))
