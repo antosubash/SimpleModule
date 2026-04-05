@@ -25,10 +25,10 @@ interface Props {
   stats: EmailStats;
 }
 
-function failureRateVariant(rate: number): 'default' | 'secondary' | 'destructive' {
+function failureRateVariant(rate: number): 'default' | 'warning' | 'danger' {
   if (rate < 5) return 'default';
-  if (rate <= 15) return 'secondary';
-  return 'destructive';
+  if (rate <= 15) return 'warning';
+  return 'danger';
 }
 
 export default function Dashboard({ stats }: Props) {
