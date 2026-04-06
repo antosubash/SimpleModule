@@ -14,7 +14,4 @@
     <ProjectReference Include="..\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Settings\src\SimpleModule.Settings.Contracts\SimpleModule.Settings.Contracts.csproj" />
   </ItemGroup>
-  <PropertyGroup>
-    <JsBuildCommand>npx vite build --configLoader runner &amp;&amp; npx cross-env VITE_BUILD_TARGET=pages npx vite build --configLoader runner</JsBuildCommand>
-  </PropertyGroup>
 </Project>

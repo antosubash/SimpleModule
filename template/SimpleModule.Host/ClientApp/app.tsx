@@ -3,6 +3,13 @@ import { resolvePage } from '@simplemodule/client/resolve-page';
 import { resolveLayout } from '@simplemodule/ui/layouts';
 import { createRoot } from 'react-dom/client';
 
+// In Vite dev server mode, import the Tailwind CSS entry so that
+// @tailwindcss/vite can serve it with HMR. In production builds,
+// Tailwind is compiled separately and included via <link> tag.
+if (import.meta.hot) {
+  import('../Styles/app.css');
+}
+
 // Navigation progress bar — 150ms delay so instant navigations don't flash
 const PROGRESS_DELAY = 150;
 const PROGRESS_FILL_PAUSE = 200;
@@ -135,8 +142,13 @@ function showErrorToast(message: string) {
 
 createInertiaApp({
   resolve: async (name) => {
-    const page = await resolvePage(name);
-    return resolveLayout(page);
+    try {
+      const page = await resolvePage(name);
+      return resolveLayout(page);
+    } catch (err) {
+      showErrorToast(`Failed to load page "${name}". Try refreshing the page.`);
+      throw err;
+    }
   },
   setup({ el, App, props }) {
     createRoot(el).render(<App {...props} />);

@@ -150,6 +150,7 @@ public static class SimpleModuleHostExtensions
         }
 
         app.UseHttpsRedirection();
+        var isDevelopment = app.Environment.IsDevelopment();
         app.Use(
             async (context, next) =>
             {
@@ -162,12 +163,14 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
+                    // In development, allow WebSocket connections for live reload
+                    var connectSrc = isDevelopment ? "'self' ws: wss:" : "'self'";
                     var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
                         + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
                         + $"font-src 'self' fonts.gstatic.com; "
-                        + $"connect-src 'self'; "
+                        + $"connect-src {connectSrc}; "
                         + $"img-src 'self' data:; "
                         + $"object-src 'none'; "
                         + $"base-uri 'self'; "
@@ -184,14 +187,21 @@ public static class SimpleModuleHostExtensions
                 await next();
             }
         );
+        // Vite dev server proxy — intercepts /@vite/, /@fs/, .tsx requests and
+        // proxies them to the Vite dev server. Also sets HttpContext.Items["ViteDevServer"]
+        // so downstream middleware (Inertia renderer) can adapt the HTML.
+        if (options.EnableDevTools && isDevelopment)
+        {
+            app.UseMiddleware<ViteDevMiddleware>();
+        }
+
         app.UseInertia();
         UseStaticFileCaching(app);
         app.MapStaticAssets();
 
-        // Fallback for dynamically generated .mjs chunks (Vite watch rebuilds)
-        // MapStaticAssets only knows about files present at build time;
-        // Vite generates new hash-named chunks at runtime that need correct MIME types
-        if (app.Environment.IsDevelopment())
+        // Fallback for .mjs chunks not in the MapStaticAssets manifest.
+        // MapStaticAssets only knows about files present at publish time;
+        // mismatched builds or Vite watch rebuilds can produce chunks it misses.
         {
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings[".mjs"] = "application/javascript";
@@ -202,6 +212,11 @@ public static class SimpleModuleHostExtensions
         app.UseAuthorization();
         app.UseSimpleModuleRateLimiting();
         app.UseMiddleware<InertiaLayoutDataMiddleware>();
+
+        if (options.EnableDevTools && app.Environment.IsDevelopment())
+        {
+            app.MapLiveReload();
+        }
 
         // Module middleware is added by the source-generated UseSimpleModule()
         // via IModule.ConfigureMiddleware() calls.
