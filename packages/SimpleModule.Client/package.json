@@ -8,6 +8,7 @@
     "./vite": "./src/vite-plugin-vendor.ts",
     "./module": "./src/define-module-config.ts",
     "./resolve-page": "./src/resolve-page.ts",
+    "./routes": "./src/routes.ts",
     "./use-translation": "./src/use-translation.ts"
   },
   "peerDependencies": {

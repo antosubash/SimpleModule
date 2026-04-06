@@ -109,7 +109,7 @@
     Outputs="$(ExtractRoutesStamp)"
   >
     <Exec
-      Command="node &quot;$(RepoRoot)tools/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(MSBuildProjectDirectory)/ClientApp/routes.ts&quot;"
+      Command="node &quot;$(RepoRoot)tools/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)packages/SimpleModule.Client/src/routes.ts&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
     <Touch Files="$(ExtractRoutesStamp)" AlwaysCreate="true" />

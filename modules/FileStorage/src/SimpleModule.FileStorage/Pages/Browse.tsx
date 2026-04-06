@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
@@ -70,7 +71,7 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    await fetch(`/api/files/${deleteTarget.id}`, { method: 'DELETE' });
+    await fetch(routes.fileStorage.api.delete(deleteTarget.id), { method: 'DELETE' });
     setDeleteTarget(null);
     router.reload();
   }
@@ -85,7 +86,7 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
       formData.append('folder', currentFolder);
     }
 
-    await fetch('/api/files', { method: 'POST', body: formData });
+    await fetch(routes.fileStorage.api.upload(), { method: 'POST', body: formData });
     router.reload();
 
     if (fileInputRef.current) {
@@ -109,7 +110,10 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
                     type="button"
                     className="text-primary hover:underline"
                     onClick={() =>
-                      router.get('/files/browse', crumb.path ? { folder: crumb.path } : {})
+                      router.get(
+                        routes.fileStorage.views.browse(),
+                        crumb.path ? { folder: crumb.path } : {},
+                      )
                     }
                   >
                     {crumb.label}
@@ -150,7 +154,10 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
                 <TableRow
                   className="cursor-pointer hover:bg-muted/50"
                   onClick={() =>
-                    router.get('/files/browse', parentFolder ? { folder: parentFolder } : {})
+                    router.get(
+                      routes.fileStorage.views.browse(),
+                      parentFolder ? { folder: parentFolder } : {},
+                    )
                   }
                 >
                   <TableCell className="font-medium" colSpan={5}>
@@ -162,7 +169,7 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
                 <TableRow
                   key={f}
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => router.get('/files/browse', { folder: f })}
+                  onClick={() => router.get(routes.fileStorage.views.browse(), { folder: f })}
                 >
                   <TableCell className="font-medium">
                     <span className="mr-2">📁</span>
@@ -187,7 +194,9 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.open(`/api/files/${file.id}/download`, '_blank')}
+                        onClick={() =>
+                          window.open(routes.fileStorage.api.download(file.id), '_blank')
+                        }
                       >
                         {t(FileStorageKeys.Browse.DownloadButton)}
                       </Button>

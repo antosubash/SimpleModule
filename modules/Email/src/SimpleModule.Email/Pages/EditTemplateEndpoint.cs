@@ -50,7 +50,9 @@ public class EditTemplateEndpoint : IViewEndpoint
                         throw new Core.Exceptions.ValidationException(validation.Errors);
 
                     await emailContracts.UpdateTemplateAsync(EmailTemplateId.From(id), request);
-                    return Results.Redirect("/email/templates");
+                    return Results.Redirect(
+                        EmailConstants.ViewPrefix + EmailConstants.Routes.Templates
+                    );
                 }
             )
             .RequirePermission(EmailPermissions.ManageTemplates);
@@ -60,7 +62,9 @@ public class EditTemplateEndpoint : IViewEndpoint
                 async (int id, IEmailContracts emailContracts) =>
                 {
                     await emailContracts.DeleteTemplateAsync(EmailTemplateId.From(id));
-                    return Results.Redirect("/email/templates");
+                    return Results.Redirect(
+                        EmailConstants.ViewPrefix + EmailConstants.Routes.Templates
+                    );
                 }
             )
             .RequirePermission(EmailPermissions.ManageTemplates);

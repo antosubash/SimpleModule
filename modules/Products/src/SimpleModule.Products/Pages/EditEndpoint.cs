@@ -37,7 +37,7 @@ public class EditEndpoint : IViewEndpoint
                 {
                     var request = new UpdateProductRequest { Name = name, Price = price };
                     await products.UpdateProductAsync(id, request);
-                    return TypedResults.Redirect($"/products/{id}/edit");
+                    return TypedResults.Redirect($"{ProductsConstants.ViewPrefix}/{id}/edit");
                 }
             )
             .DisableAntiforgery();
@@ -47,7 +47,9 @@ public class EditEndpoint : IViewEndpoint
             async (ProductId id, IProductContracts products) =>
             {
                 await products.DeleteProductAsync(id);
-                return TypedResults.Redirect("/products/manage");
+                return TypedResults.Redirect(
+                    ProductsConstants.ViewPrefix + ProductsConstants.Routes.Manage
+                );
             }
         );
     }

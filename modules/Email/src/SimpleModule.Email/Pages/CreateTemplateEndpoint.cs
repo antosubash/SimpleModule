@@ -36,7 +36,9 @@ public class CreateTemplateEndpoint : IViewEndpoint
                         throw new Core.Exceptions.ValidationException(validation.Errors);
 
                     await emailContracts.CreateTemplateAsync(request);
-                    return Results.Redirect("/email/templates");
+                    return Results.Redirect(
+                        EmailConstants.ViewPrefix + EmailConstants.Routes.Templates
+                    );
                 }
             )
             .RequirePermission(EmailPermissions.ManageTemplates);

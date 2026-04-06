@@ -62,7 +62,7 @@ public class EditEndpoint : IViewEndpoint
                 };
 
                 await orders.UpdateOrderAsync(id, request);
-                return TypedResults.Redirect($"/orders/{id}/edit");
+                return TypedResults.Redirect($"{OrdersConstants.ViewPrefix}/{id}/edit");
             }
         );
 
@@ -71,7 +71,9 @@ public class EditEndpoint : IViewEndpoint
             async (OrderId id, IOrderContracts orders) =>
             {
                 await orders.DeleteOrderAsync(id);
-                return TypedResults.Redirect("/orders");
+                return TypedResults.Redirect(
+                    OrdersConstants.ViewPrefix + OrdersConstants.Routes.List
+                );
             }
         );
     }

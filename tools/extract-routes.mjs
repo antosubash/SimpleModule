@@ -8,7 +8,7 @@ import { resolve, dirname, join } from 'path';
 const generatedDir = process.argv[2];
 const outputPath =
   process.argv[3] ||
-  'template/SimpleModule.Host/ClientApp/routes.ts';
+  'packages/SimpleModule.Client/src/routes.ts';
 
 if (!generatedDir) {
   console.error(
