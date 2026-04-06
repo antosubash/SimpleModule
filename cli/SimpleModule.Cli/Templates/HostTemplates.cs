@@ -136,6 +136,14 @@ public sealed class HostTemplates
     }
 
     /// <summary>
+    /// Copy vite.dev.config.ts as-is.
+    /// </summary>
+    public static string ViteDevConfig()
+    {
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.ClientApp.vite.dev.config.ts");
+    }
+
+    /// <summary>
     /// Copy validate-pages.mjs as-is.
     /// </summary>
     public static string ValidatePages()

@@ -1084,68 +1084,77 @@ internal sealed class DiagnosticEmitter : IEmitter
 
         // SM0052: Module assembly name must follow SimpleModule.{ModuleName} convention
         // SM0053: Module must have matching Contracts assembly
-        var contractsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var name in data.ContractsAssemblyNames)
-            contractsSet.Add(name);
+        // These checks only apply when the host project itself is a SimpleModule.* project.
+        // User projects (e.g. TestApp.Host) use their own naming conventions.
+        var hostIsFramework =
+            data.HostAssemblyName?.StartsWith("SimpleModule.", System.StringComparison.Ordinal)
+            == true;
 
-        foreach (var module in data.Modules)
+        if (hostIsFramework)
         {
-            if (string.IsNullOrEmpty(module.ModuleName))
-                continue;
+            var contractsSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var name in data.ContractsAssemblyNames)
+                contractsSet.Add(name);
 
-            // SM0052: Assembly naming convention
-            // Accepted patterns: SimpleModule.{ModuleName} or SimpleModule.{ModuleName}.Module
-            // The .Module suffix is allowed when a framework assembly with the same base name exists.
-            var expectedAssemblyName = "SimpleModule." + module.ModuleName;
-            var expectedModuleSuffix = expectedAssemblyName + ".Module";
-            if (
-                !string.IsNullOrEmpty(module.AssemblyName)
-                && !string.Equals(
-                    module.AssemblyName,
-                    expectedAssemblyName,
-                    System.StringComparison.Ordinal
-                )
-                && !string.Equals(
-                    module.AssemblyName,
-                    expectedModuleSuffix,
-                    System.StringComparison.Ordinal
-                )
-                && !string.Equals(
-                    module.AssemblyName,
-                    data.HostAssemblyName,
-                    System.StringComparison.Ordinal
-                )
-            )
+            foreach (var module in data.Modules)
             {
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        ModuleAssemblyNamingViolation,
-                        LocationHelper.ToLocation(module.Location),
-                        module.ModuleName,
-                        module.AssemblyName
-                    )
-                );
-            }
+                if (string.IsNullOrEmpty(module.ModuleName))
+                    continue;
 
-            // SM0053: Missing contracts assembly
-            var expectedContractsName = "SimpleModule." + module.ModuleName + ".Contracts";
-            if (
-                !contractsSet.Contains(expectedContractsName)
-                && !string.Equals(
-                    module.AssemblyName,
-                    data.HostAssemblyName,
-                    System.StringComparison.Ordinal
-                )
-            )
-            {
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        MissingContractsAssembly,
-                        LocationHelper.ToLocation(module.Location),
-                        module.ModuleName,
-                        module.AssemblyName
+                // SM0052: Assembly naming convention
+                // Accepted patterns: SimpleModule.{ModuleName} or SimpleModule.{ModuleName}.Module
+                // The .Module suffix is allowed when a framework assembly with the same base name exists.
+                var expectedAssemblyName = "SimpleModule." + module.ModuleName;
+                var expectedModuleSuffix = expectedAssemblyName + ".Module";
+                if (
+                    !string.IsNullOrEmpty(module.AssemblyName)
+                    && !string.Equals(
+                        module.AssemblyName,
+                        expectedAssemblyName,
+                        System.StringComparison.Ordinal
                     )
-                );
+                    && !string.Equals(
+                        module.AssemblyName,
+                        expectedModuleSuffix,
+                        System.StringComparison.Ordinal
+                    )
+                    && !string.Equals(
+                        module.AssemblyName,
+                        data.HostAssemblyName,
+                        System.StringComparison.Ordinal
+                    )
+                )
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            ModuleAssemblyNamingViolation,
+                            LocationHelper.ToLocation(module.Location),
+                            module.ModuleName,
+                            module.AssemblyName
+                        )
+                    );
+                }
+
+                // SM0053: Missing contracts assembly
+                var expectedContractsName = "SimpleModule." + module.ModuleName + ".Contracts";
+                if (
+                    !contractsSet.Contains(expectedContractsName)
+                    && !string.Equals(
+                        module.AssemblyName,
+                        data.HostAssemblyName,
+                        System.StringComparison.Ordinal
+                    )
+                )
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            MissingContractsAssembly,
+                            LocationHelper.ToLocation(module.Location),
+                            module.ModuleName,
+                            module.AssemblyName
+                        )
+                    );
+                }
             }
         }
     }

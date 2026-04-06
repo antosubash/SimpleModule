@@ -122,7 +122,7 @@ public sealed class DevCommand : Command<DevSettings>
             );
             var npx = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "npx.cmd" : "npx";
             var viteArgs =
-                $"vite dev --config \"{viteConfigPath}\" --port {settings.VitePort} --strictPort";
+                $"vite --config \"{viteConfigPath}\" --port {settings.VitePort} --strictPort --configLoader runner";
             StartProcess(npx, viteArgs, solution.RootPath, "vite");
         }
         else if (!settings.NoVite && !File.Exists(viteConfigPath))

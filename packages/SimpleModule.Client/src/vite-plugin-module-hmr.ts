@@ -17,7 +17,10 @@ interface ModuleEntry {
  * Discovers all SimpleModule modules that have a Pages/index.ts entry.
  */
 function discoverModules(repoRoot: string): ModuleEntry[] {
-  const modulesDir = resolve(repoRoot, 'modules');
+  // Support both `modules/` (framework repo) and `src/modules/` (scaffolded projects)
+  const modulesDir = existsSync(resolve(repoRoot, 'modules'))
+    ? resolve(repoRoot, 'modules')
+    : resolve(repoRoot, 'src', 'modules');
   const entries: ModuleEntry[] = [];
 
   if (!existsSync(modulesDir)) return entries;
