@@ -1,3 +1,4 @@
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
@@ -43,7 +44,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
   const [overrideDialogOpen, setOverrideDialogOpen] = useState(false);
 
   const handleToggle = async (name: string, enabled: boolean) => {
-    const response = await fetch(`/api/feature-flags/${encodeURIComponent(name)}`, {
+    const response = await fetch(routes.featureFlags.api.update(encodeURIComponent(name)), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isEnabled: enabled }),
@@ -54,7 +55,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
   };
 
   const loadOverrides = async (name: string) => {
-    const response = await fetch(`/api/feature-flags/${encodeURIComponent(name)}/overrides`);
+    const response = await fetch(routes.featureFlags.api.getOverrides(encodeURIComponent(name)));
     if (response.ok) {
       const data = await response.json();
       setOverrides(data);
@@ -73,7 +74,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
     const isEnabled = formData.get('isEnabled') === 'on';
 
     const response = await fetch(
-      `/api/feature-flags/${encodeURIComponent(selectedFlag)}/overrides`,
+      routes.featureFlags.api.setOverride(encodeURIComponent(selectedFlag)),
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,7 +90,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
   };
 
   const handleDeleteOverride = async (id: number) => {
-    const response = await fetch(`/api/feature-flags/overrides/${id}`, { method: 'DELETE' });
+    const response = await fetch(routes.featureFlags.api.deleteOverride(id), { method: 'DELETE' });
     if (response.ok && selectedFlag) {
       setOverrides((prev) => prev.filter((o) => o.id !== id));
     }

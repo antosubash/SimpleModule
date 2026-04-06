@@ -9,9 +9,11 @@ namespace SimpleModule.Email.Endpoints.Templates;
 
 public class GetAllTemplatesEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.GetAllTemplates;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/templates",
+                Route,
                 (
                     [AsParameters] QueryEmailTemplatesRequest request,
                     IEmailContracts emailContracts

@@ -10,10 +10,12 @@ namespace SimpleModule.FeatureFlags.Pages;
 
 public class ManageEndpoint : IViewEndpoint
 {
+    public const string Route = FeatureFlagsConstants.Routes.Manage;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/",
+                Route,
                 async (IFeatureFlagContracts featureFlags) =>
                 {
                     var flags = await featureFlags.GetAllFlagsAsync();

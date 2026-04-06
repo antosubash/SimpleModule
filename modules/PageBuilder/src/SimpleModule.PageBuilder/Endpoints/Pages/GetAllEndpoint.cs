@@ -9,9 +9,11 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 (IPageBuilderContracts pageBuilder) =>
                     CrudEndpoints.GetAll(pageBuilder.GetAllPagesAsync)
             )

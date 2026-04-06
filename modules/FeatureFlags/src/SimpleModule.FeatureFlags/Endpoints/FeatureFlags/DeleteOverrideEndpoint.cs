@@ -9,9 +9,12 @@ namespace SimpleModule.FeatureFlags.Endpoints.FeatureFlags;
 
 public class DeleteOverrideEndpoint : IEndpoint
 {
+    public const string Route = FeatureFlagsConstants.Routes.DeleteOverride;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/overrides/{id:int}",
+                Route,
                 async (int id, IFeatureFlagContracts featureFlags) =>
                 {
                     await featureFlags.DeleteOverrideAsync(id);

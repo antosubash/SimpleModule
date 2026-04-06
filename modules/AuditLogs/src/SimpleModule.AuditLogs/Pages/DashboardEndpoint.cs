@@ -10,9 +10,11 @@ namespace SimpleModule.AuditLogs.Pages;
 
 public class DashboardEndpoint : IViewEndpoint
 {
+    public const string Route = AuditLogsConstants.Routes.Dashboard;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/dashboard",
+                Route,
                 async (
                     DateTimeOffset? from,
                     DateTimeOffset? to,

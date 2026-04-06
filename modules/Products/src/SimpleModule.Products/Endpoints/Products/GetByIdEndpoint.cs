@@ -9,9 +9,11 @@ namespace SimpleModule.Products.Endpoints.Products;
 
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}",
+                Route,
                 (ProductId id, IProductContracts productContracts) =>
                     CrudEndpoints.GetById(() => productContracts.GetProductByIdAsync(id))
             )

@@ -3,13 +3,14 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
+using SimpleModule.PageBuilder.Contracts;
 
 namespace SimpleModule.PageBuilder;
 
 [Module(
     PageBuilderConstants.ModuleName,
     RoutePrefix = PageBuilderConstants.RoutePrefix,
-    ViewPrefix = "/pages"
+    ViewPrefix = PageBuilderConstants.ViewPrefix
 )]
 public class PageBuilderModule : IModule
 {

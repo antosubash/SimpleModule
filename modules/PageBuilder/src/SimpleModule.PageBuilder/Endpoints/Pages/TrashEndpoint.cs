@@ -10,9 +10,11 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class TrashEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Trash;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/trash",
+                Route,
                 (IPageBuilderContracts pageBuilder) =>
                     CrudEndpoints.GetAll(pageBuilder.GetTrashedPagesAsync)
             )

@@ -9,9 +9,11 @@ namespace SimpleModule.FeatureFlags.Endpoints.FeatureFlags;
 
 public class CheckEndpoint : IEndpoint
 {
+    public const string Route = FeatureFlagsConstants.Routes.Check;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/check/{name}",
+                Route,
                 async (string name, IFeatureFlagContracts featureFlags, ClaimsPrincipal user) =>
                 {
                     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);

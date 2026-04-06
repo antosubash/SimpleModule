@@ -11,10 +11,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class GenerateRecoveryCodesEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.GenerateRecoveryCodes;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/GenerateRecoveryCodes",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

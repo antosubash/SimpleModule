@@ -9,9 +9,12 @@ namespace SimpleModule.BackgroundJobs.Endpoints.Jobs;
 
 public class RetryEndpoint : IEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.Retry;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id:guid}/retry",
+                Route,
                 async (Guid id, IBackgroundJobsContracts contracts) =>
                 {
                     await contracts.RetryAsync(JobId.From(id));

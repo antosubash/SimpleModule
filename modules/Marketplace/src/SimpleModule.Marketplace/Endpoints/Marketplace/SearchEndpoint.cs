@@ -3,14 +3,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Marketplace.Contracts;
+using MarketplaceConstants = SimpleModule.Marketplace.Contracts.MarketplaceConstants;
 
 namespace SimpleModule.Marketplace.Endpoints.Marketplace;
 
 public class SearchEndpoint : IEndpoint
 {
+    public const string Route = MarketplaceConstants.Routes.Search;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 (
                     IMarketplaceContracts marketplace,
                     string? q,

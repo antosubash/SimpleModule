@@ -9,9 +9,11 @@ namespace SimpleModule.AuditLogs.Endpoints.AuditLogs;
 
 public class ExportEndpoint : IEndpoint
 {
+    public const string Route = AuditLogsConstants.Routes.Export;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/export",
+                Route,
                 async ([AsParameters] AuditExportRequest request, IAuditLogContracts auditLogs) =>
                 {
                     var stream = await auditLogs.ExportAsync(request);

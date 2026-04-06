@@ -13,10 +13,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class ConfirmEmailEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ConfirmEmail;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/ConfirmEmail",
+                Route,
                 async (
                     [FromQuery] string? userId,
                     [FromQuery] string? code,

@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
@@ -24,7 +25,7 @@ export default function Create() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    router.post('/api/tenants', formData);
+    router.post(routes.tenants.api.create(), formData);
   }
 
   return (
@@ -32,7 +33,9 @@ export default function Create() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tenants/manage">{t(TenantsKeys.Manage.Title)}</BreadcrumbLink>
+            <BreadcrumbLink href={routes.tenants.views.manage()}>
+              {t(TenantsKeys.Manage.Title)}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

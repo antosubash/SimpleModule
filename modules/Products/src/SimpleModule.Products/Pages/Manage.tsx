@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
@@ -43,7 +44,7 @@ export default function Manage({ products }: Props) {
         title={t(ProductsKeys.Manage.Title)}
         description={`${products.length} total products`}
         actions={
-          <Button onClick={() => router.get('/products/create')}>
+          <Button onClick={() => router.get(routes.products.views.create())}>
             {t(ProductsKeys.Manage.CreateButton)}
           </Button>
         }
@@ -73,7 +74,7 @@ export default function Manage({ products }: Props) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => router.get(`/products/${product.id}/edit`)}
+                          onClick={() => router.get(routes.products.views.edit(product.id))}
                         >
                           {t(ProductsKeys.Manage.EditButton)}
                         </Button>

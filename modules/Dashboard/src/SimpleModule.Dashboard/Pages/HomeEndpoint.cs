@@ -6,15 +6,18 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Dashboard.Contracts;
 
 namespace SimpleModule.Dashboard.Pages;
 
 public class HomeEndpoint : IViewEndpoint
 {
+    public const string Route = DashboardConstants.Routes.Views.Home;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/",
+                Route,
                 (ClaimsPrincipal principal, IHostEnvironment env) =>
                 {
                     var isAuthenticated = principal.Identity?.IsAuthenticated == true;

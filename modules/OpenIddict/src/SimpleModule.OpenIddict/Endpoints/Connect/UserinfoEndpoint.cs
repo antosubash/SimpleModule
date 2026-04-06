@@ -14,6 +14,8 @@ namespace SimpleModule.OpenIddict.Endpoints.Connect;
 
 public class UserinfoEndpoint : IEndpoint
 {
+    public const string Route = ConnectRouteConstants.ConnectUserInfo;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapMethods(

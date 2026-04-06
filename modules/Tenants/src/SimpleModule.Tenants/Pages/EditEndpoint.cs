@@ -10,10 +10,12 @@ namespace SimpleModule.Tenants.Pages;
 
 public class EditEndpoint : IViewEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Views.Edit;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/{id}/edit",
+                Route,
                 async (TenantId id, ITenantContracts contracts) =>
                 {
                     var tenant = await contracts.GetTenantByIdAsync(id);

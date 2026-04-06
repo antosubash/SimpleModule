@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using SimpleModule.Tenants.Contracts;
 
 namespace SimpleModule.Tenants.Resolvers;
 

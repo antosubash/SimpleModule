@@ -10,9 +10,12 @@ namespace SimpleModule.Tenants.Endpoints.Tenants;
 
 public class AddHostEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.AddHost;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id}/hosts",
+                Route,
                 async (TenantId id, AddTenantHostRequest request, ITenantContracts contracts) =>
                 {
                     var validation = AddHostRequestValidator.Validate(request);

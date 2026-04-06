@@ -5,15 +5,18 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
+using OrdersConstants = SimpleModule.Orders.Contracts.OrdersConstants;
 
 namespace SimpleModule.Orders.Pages;
 
 public class CreateEndpoint : IViewEndpoint
 {
+    public const string Route = OrdersConstants.Routes.CreateView;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/create",
+            Route,
             async (IProductContracts products) =>
                 Inertia.Render(
                     "Orders/Create",
@@ -38,7 +41,9 @@ public class CreateEndpoint : IViewEndpoint
                 };
 
                 await orders.CreateOrderAsync(request);
-                return TypedResults.Redirect("/orders");
+                return TypedResults.Redirect(
+                    OrdersConstants.ViewPrefix + OrdersConstants.Routes.List
+                );
             }
         );
     }

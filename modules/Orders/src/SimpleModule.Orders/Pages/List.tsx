@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
@@ -41,7 +42,7 @@ export default function List({ orders }: Props) {
         title={t(OrdersKeys.List.Title)}
         description={t(OrdersKeys.List.Description).replace('{count}', String(orders.length))}
         actions={
-          <Button onClick={() => router.get('/orders/create')}>
+          <Button onClick={() => router.get(routes.orders.views.create())}>
             {t(OrdersKeys.List.CreateButton)}
           </Button>
         }
@@ -80,7 +81,7 @@ export default function List({ orders }: Props) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.get(`/orders/${order.id}/edit`)}
+                        onClick={() => router.get(routes.orders.views.edit(order.id))}
                       >
                         {t(OrdersKeys.List.EditButton)}
                       </Button>

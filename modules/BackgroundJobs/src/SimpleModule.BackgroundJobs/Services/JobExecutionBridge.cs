@@ -12,7 +12,7 @@ public sealed partial class JobExecutionBridge(
     ILogger<JobExecutionBridge> logger
 )
 {
-    [TickerFunction(BackgroundJobsConstants.DispatcherFunctionName)]
+    [TickerFunction(BackgroundJobsInternalConstants.DispatcherFunctionName)]
     public async Task ExecuteAsync(
         TickerFunctionContext<JobDispatchPayload> context,
         CancellationToken ct

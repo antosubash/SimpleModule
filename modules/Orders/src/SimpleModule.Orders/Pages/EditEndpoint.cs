@@ -5,15 +5,18 @@ using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
+using OrdersConstants = SimpleModule.Orders.Contracts.OrdersConstants;
 
 namespace SimpleModule.Orders.Pages;
 
 public class EditEndpoint : IViewEndpoint
 {
+    public const string Route = OrdersConstants.Routes.Edit;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/{id}/edit",
+            Route,
             async (OrderId id, IOrderContracts orders, IProductContracts products) =>
             {
                 var order = await orders.GetOrderByIdAsync(id);
@@ -59,7 +62,7 @@ public class EditEndpoint : IViewEndpoint
                 };
 
                 await orders.UpdateOrderAsync(id, request);
-                return TypedResults.Redirect($"/orders/{id}/edit");
+                return TypedResults.Redirect($"{OrdersConstants.ViewPrefix}/{id}/edit");
             }
         );
 
@@ -68,7 +71,9 @@ public class EditEndpoint : IViewEndpoint
             async (OrderId id, IOrderContracts orders) =>
             {
                 await orders.DeleteOrderAsync(id);
-                return TypedResults.Redirect("/orders");
+                return TypedResults.Redirect(
+                    OrdersConstants.ViewPrefix + OrdersConstants.Routes.List
+                );
             }
         );
     }

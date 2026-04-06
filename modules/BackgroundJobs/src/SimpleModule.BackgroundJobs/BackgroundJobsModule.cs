@@ -21,7 +21,7 @@ namespace SimpleModule.BackgroundJobs;
 [Module(
     BackgroundJobsConstants.ModuleName,
     RoutePrefix = BackgroundJobsConstants.RoutePrefix,
-    ViewPrefix = "/admin/jobs"
+    ViewPrefix = BackgroundJobsConstants.ViewPrefix
 )]
 public class BackgroundJobsModule : IModule
 {
@@ -122,7 +122,7 @@ public class BackgroundJobsModule : IModule
             new MenuItem
             {
                 Label = "Background Jobs",
-                Url = "/admin/jobs",
+                Url = BackgroundJobsConstants.ViewPrefix,
                 Icon =
                     """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 12v.01M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072"/></svg>""",
                 Order = 95,

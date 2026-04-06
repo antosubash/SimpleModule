@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
@@ -8,10 +9,12 @@ namespace SimpleModule.Admin.Pages.Admin;
 
 public class RolesCreateEndpoint : IViewEndpoint
 {
+    public const string Route = AdminConstants.Routes.RolesCreate;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/roles/create",
+                Route,
                 (PermissionRegistry permissionRegistry) =>
                 {
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(

@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Tags;
 
 public class RemoveTagFromPageEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.RemoveTag;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id}/tags/{tagId}",
+                Route,
                 async (PageId id, PageTagId tagId, IPageBuilderTagContracts tags) =>
                 {
                     await tags.RemoveTagFromPageAsync(id, tagId);

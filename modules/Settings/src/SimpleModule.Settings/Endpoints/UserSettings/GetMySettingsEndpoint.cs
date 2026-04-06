@@ -10,9 +10,11 @@ namespace SimpleModule.Settings.Endpoints.UserSettings;
 
 public class GetMySettingsEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.GetMySettings;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/me",
+                Route,
                 async (
                     ISettingsContracts settings,
                     ISettingsDefinitionRegistry registry,

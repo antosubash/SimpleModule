@@ -4,13 +4,14 @@ using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.Database;
+using SimpleModule.RateLimiting.Contracts;
 
 namespace SimpleModule.RateLimiting;
 
 [Module(
     RateLimitingConstants.ModuleName,
     RoutePrefix = RateLimitingConstants.RoutePrefix,
-    ViewPrefix = "/rate-limiting"
+    ViewPrefix = RateLimitingConstants.ViewPrefix
 )]
 public class RateLimitingModule : IModule, IModuleMenu
 {

@@ -13,10 +13,12 @@ namespace SimpleModule.Users.Pages.Account.Manage;
 
 public class DeletePersonalDataEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.DeletePersonalData;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/DeletePersonalData",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);
@@ -35,7 +37,7 @@ public class DeletePersonalDataEndpoint : IViewEndpoint
             .RequireAuthorization();
 
         app.MapPost(
-                "/Manage/DeletePersonalData",
+                Route,
                 async (
                     [FromForm] string? password,
                     ClaimsPrincipal principal,

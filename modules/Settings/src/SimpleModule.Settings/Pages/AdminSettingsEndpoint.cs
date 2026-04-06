@@ -10,10 +10,12 @@ namespace SimpleModule.Settings.Pages;
 
 public class AdminSettingsEndpoint : IViewEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Views.AdminSettings;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/",
+                Route,
                 async (ISettingsContracts settings, ISettingsDefinitionRegistry registry) =>
                 {
                     var definitions = registry.GetDefinitions();

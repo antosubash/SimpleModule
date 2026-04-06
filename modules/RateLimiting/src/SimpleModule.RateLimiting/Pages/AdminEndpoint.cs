@@ -10,10 +10,12 @@ namespace SimpleModule.RateLimiting.Pages;
 
 public class AdminEndpoint : IViewEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.Admin;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/",
+                Route,
                 async (IRateLimitingContracts contracts, IRateLimitPolicyRegistry policyRegistry) =>
                 {
                     var rules = await contracts.GetAllRulesAsync();

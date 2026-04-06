@@ -9,9 +9,12 @@ namespace SimpleModule.Tenants.Endpoints.Tenants;
 
 public class RemoveHostEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.RemoveHost;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id}/hosts/{hostId}",
+                Route,
                 (TenantId id, TenantHostId hostId, ITenantContracts contracts) =>
                     CrudEndpoints.Delete(() => contracts.RemoveHostAsync(id, hostId))
             )

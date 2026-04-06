@@ -10,9 +10,12 @@ namespace SimpleModule.Tenants.Endpoints.Tenants;
 
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.Create;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 (CreateTenantRequest request, ITenantContracts contracts) =>
                 {
                     var validation = CreateRequestValidator.Validate(request);

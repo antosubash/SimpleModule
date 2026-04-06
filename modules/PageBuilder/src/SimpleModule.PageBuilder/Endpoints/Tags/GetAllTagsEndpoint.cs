@@ -10,9 +10,11 @@ namespace SimpleModule.PageBuilder.Endpoints.Tags;
 
 public class GetAllTagsEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.GetAllTags;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/tags",
+                Route,
                 (IPageBuilderTagContracts tags) => CrudEndpoints.GetAll(tags.GetAllTagsAsync)
             )
             .RequirePermission(PageBuilderPermissions.View);

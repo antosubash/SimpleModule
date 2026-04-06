@@ -11,9 +11,12 @@ namespace SimpleModule.Tenants.Endpoints.TenantFeatures;
 
 public class DeleteTenantFeatureEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.DeleteTenantFeature;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id}/features/{flagName}",
+                Route,
                 async (TenantId id, string flagName, HttpContext context) =>
                 {
                     var featureFlags = context.RequestServices.GetService<IFeatureFlagContracts>();

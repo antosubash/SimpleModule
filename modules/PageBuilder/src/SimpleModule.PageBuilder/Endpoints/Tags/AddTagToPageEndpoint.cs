@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Tags;
 
 public class AddTagToPageEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.AddTag;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id}/tags",
+                Route,
                 async (PageId id, AddTagRequest request, IPageBuilderTagContracts tags) =>
                 {
                     if (string.IsNullOrWhiteSpace(request.Name))

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
@@ -11,10 +12,12 @@ namespace SimpleModule.Admin.Pages.Admin;
 
 public class RolesEditEndpoint : IViewEndpoint
 {
+    public const string Route = AdminConstants.Routes.RolesEdit;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/roles/{id}/edit",
+                Route,
                 async (
                     string id,
                     IRoleAdminContracts roleAdmin,

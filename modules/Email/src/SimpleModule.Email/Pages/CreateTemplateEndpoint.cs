@@ -12,9 +12,11 @@ namespace SimpleModule.Email.Pages;
 
 public class CreateTemplateEndpoint : IViewEndpoint
 {
+    public const string Route = EmailConstants.Routes.CreateTemplatePage;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/templates/create", () => Inertia.Render("Email/CreateTemplate"))
+        app.MapGet(Route, () => Inertia.Render("Email/CreateTemplate"))
             .RequirePermission(EmailPermissions.ManageTemplates);
 
         app.MapPost(
@@ -34,7 +36,9 @@ public class CreateTemplateEndpoint : IViewEndpoint
                         throw new Core.Exceptions.ValidationException(validation.Errors);
 
                     await emailContracts.CreateTemplateAsync(request);
-                    return Results.Redirect("/email/templates");
+                    return Results.Redirect(
+                        EmailConstants.ViewPrefix + EmailConstants.Routes.Templates
+                    );
                 }
             )
             .RequirePermission(EmailPermissions.ManageTemplates);

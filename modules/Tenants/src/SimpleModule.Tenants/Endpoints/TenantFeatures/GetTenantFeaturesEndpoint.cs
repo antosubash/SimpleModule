@@ -11,9 +11,11 @@ namespace SimpleModule.Tenants.Endpoints.TenantFeatures;
 
 public class GetTenantFeaturesEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.GetTenantFeatures;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}/features",
+                Route,
                 async (TenantId id, HttpContext context) =>
                 {
                     var featureFlags = context.RequestServices.GetService<IFeatureFlagContracts>();

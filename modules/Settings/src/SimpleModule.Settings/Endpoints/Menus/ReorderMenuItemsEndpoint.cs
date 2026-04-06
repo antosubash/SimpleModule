@@ -9,9 +9,12 @@ namespace SimpleModule.Settings.Endpoints.Menus;
 
 public class ReorderMenuItemsEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.ReorderMenuItems;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/menus/reorder",
+                Route,
                 async (ReorderMenuItemsRequest request, PublicMenuService service) =>
                 {
                     await service.ReorderAsync(request);

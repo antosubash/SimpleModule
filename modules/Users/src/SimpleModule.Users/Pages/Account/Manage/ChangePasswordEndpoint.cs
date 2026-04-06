@@ -13,10 +13,12 @@ namespace SimpleModule.Users.Pages.Account.Manage;
 
 public class ChangePasswordEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ChangePassword;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/ChangePassword",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);
@@ -37,7 +39,7 @@ public class ChangePasswordEndpoint : IViewEndpoint
             .RequireAuthorization();
 
         app.MapPost(
-                "/Manage/ChangePassword",
+                Route,
                 async (
                     [FromForm] string oldPassword,
                     [FromForm] string newPassword,
