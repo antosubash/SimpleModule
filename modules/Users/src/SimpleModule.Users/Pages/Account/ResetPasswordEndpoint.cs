@@ -13,10 +13,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class ResetPasswordEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ResetPassword;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/ResetPassword",
+                Route,
                 ([FromQuery] string? code) =>
                 {
                     if (code is null)
@@ -37,7 +39,7 @@ public class ResetPasswordEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/ResetPassword",
+                Route,
                 async (
                     [FromForm] string email,
                     [FromForm] string password,

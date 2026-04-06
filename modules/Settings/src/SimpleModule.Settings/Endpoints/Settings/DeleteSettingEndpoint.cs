@@ -9,9 +9,12 @@ namespace SimpleModule.Settings.Endpoints.Settings;
 
 public class DeleteSettingEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.DeleteSetting;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{key}",
+                Route,
                 async (string key, SettingScope scope, ISettingsContracts settings) =>
                 {
                     await settings.DeleteSettingAsync(key, scope);

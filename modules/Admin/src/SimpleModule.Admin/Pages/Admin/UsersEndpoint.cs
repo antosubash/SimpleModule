@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
@@ -9,10 +10,12 @@ namespace SimpleModule.Admin.Pages.Admin;
 
 public class UsersEndpoint : IViewEndpoint
 {
+    public const string Route = AdminConstants.Routes.Users;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/users",
+                Route,
                 async (
                     IUserAdminContracts userAdmin,
                     IRoleAdminContracts roleAdmin,

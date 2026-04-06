@@ -4,6 +4,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
+using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Services;
 
 namespace SimpleModule.Settings;

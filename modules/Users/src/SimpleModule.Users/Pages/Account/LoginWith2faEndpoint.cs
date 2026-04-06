@@ -12,10 +12,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class LoginWith2faEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.LoginWith2fa;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/LoginWith2fa",
+                Route,
                 async (
                     [FromQuery] bool rememberMe,
                     [FromQuery] string? returnUrl,
@@ -37,7 +39,7 @@ public class LoginWith2faEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/LoginWith2fa",
+                Route,
                 async (
                     [FromForm] string twoFactorCode,
                     [FromForm] bool rememberMachine,

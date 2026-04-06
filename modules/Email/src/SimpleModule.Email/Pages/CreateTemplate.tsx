@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
@@ -32,7 +33,10 @@ export default function CreateTemplate() {
       title={t(EmailKeys.CreateTemplate.Title)}
       description={t(EmailKeys.CreateTemplate.Description)}
       breadcrumbs={[
-        { label: t(EmailKeys.CreateTemplate.BreadcrumbTemplates), href: '/email/templates' },
+        {
+          label: t(EmailKeys.CreateTemplate.BreadcrumbTemplates),
+          href: routes.email.views.templates(),
+        },
         { label: t(EmailKeys.CreateTemplate.Breadcrumb) },
       ]}
     >
@@ -85,7 +89,7 @@ export default function CreateTemplate() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.visit('/email/templates')}
+                onClick={() => router.visit(routes.email.views.templates())}
               >
                 {t(EmailKeys.CreateTemplate.CancelButton)}
               </Button>

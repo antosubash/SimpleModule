@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
@@ -52,7 +53,7 @@ export default function Edit({ product }: Props) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/products/manage">Products</BreadcrumbLink>
+            <BreadcrumbLink href={routes.products.views.manage()}>Products</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

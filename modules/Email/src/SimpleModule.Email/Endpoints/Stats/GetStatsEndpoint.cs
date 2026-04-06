@@ -9,9 +9,11 @@ namespace SimpleModule.Email.Endpoints.Stats;
 
 public class GetStatsEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.GetStats;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/stats",
+                Route,
                 async (IEmailContracts emailContracts) =>
                     TypedResults.Ok(await emailContracts.GetEmailStatsAsync())
             )

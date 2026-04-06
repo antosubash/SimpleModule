@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
@@ -144,7 +145,10 @@ export default function Detail({ package: pkg }: Props) {
       title={pkg.title}
       description={pkg.description}
       breadcrumbs={[
-        { label: t(MarketplaceKeys.Detail.BreadcrumbMarketplace), href: '/marketplace/browse' },
+        {
+          label: t(MarketplaceKeys.Detail.BreadcrumbMarketplace),
+          href: routes.marketplace.views.browse(),
+        },
         { label: pkg.title },
       ]}
     >
@@ -301,7 +305,7 @@ export default function Detail({ package: pkg }: Props) {
           <Button
             variant="secondary"
             className="w-full"
-            onClick={() => router.get('/marketplace/browse')}
+            onClick={() => router.get(routes.marketplace.views.browse())}
           >
             {t(MarketplaceKeys.Detail.BackToMarketplace)}
           </Button>

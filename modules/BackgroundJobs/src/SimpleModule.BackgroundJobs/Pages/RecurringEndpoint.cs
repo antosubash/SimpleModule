@@ -8,10 +8,12 @@ namespace SimpleModule.BackgroundJobs.Pages;
 
 public class RecurringEndpoint : IViewEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.Recurring;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/recurring",
+            Route,
             async (IBackgroundJobsContracts contracts) =>
                 Inertia.Render(
                     "BackgroundJobs/Recurring",

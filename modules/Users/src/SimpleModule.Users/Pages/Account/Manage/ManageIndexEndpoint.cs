@@ -12,10 +12,12 @@ namespace SimpleModule.Users.Pages.Account.Manage;
 
 public class ManageIndexEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ManageIndex;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);
@@ -36,7 +38,7 @@ public class ManageIndexEndpoint : IViewEndpoint
             .RequireAuthorization();
 
         app.MapPost(
-                "/Manage",
+                Route,
                 async (
                     [FromForm] string? phoneNumber,
                     ClaimsPrincipal principal,

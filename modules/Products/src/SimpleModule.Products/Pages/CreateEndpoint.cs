@@ -10,9 +10,11 @@ namespace SimpleModule.Products.Pages;
 
 public class CreateEndpoint : IViewEndpoint
 {
+    public const string Route = ProductsConstants.Routes.CreateView;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/create", () => Inertia.Render("Products/Create"));
+        app.MapGet(Route, () => Inertia.Render("Products/Create"));
 
         app.MapPost(
                 "/",
@@ -24,7 +26,9 @@ public class CreateEndpoint : IViewEndpoint
                 {
                     var request = new CreateProductRequest { Name = name, Price = price };
                     await products.CreateProductAsync(request);
-                    return TypedResults.Redirect("/products/manage");
+                    return TypedResults.Redirect(
+                        ProductsConstants.ViewPrefix + ProductsConstants.Routes.Manage
+                    );
                 }
             )
             .DisableAntiforgery();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
@@ -11,6 +12,9 @@ namespace SimpleModule.Admin.Endpoints.Admin;
 
 public class AdminUsersEndpoint : IEndpoint
 {
+    public const string Route = AdminConstants.Routes.UsersCreateApi;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/users")

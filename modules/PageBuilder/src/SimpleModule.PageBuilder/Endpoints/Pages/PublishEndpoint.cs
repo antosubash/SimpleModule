@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class PublishEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Publish;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id}/publish",
+                Route,
                 async (PageId id, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.PublishPageAsync(id);

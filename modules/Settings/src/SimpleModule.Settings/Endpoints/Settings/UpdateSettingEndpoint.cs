@@ -8,9 +8,12 @@ namespace SimpleModule.Settings.Endpoints.Settings;
 
 public class UpdateSettingEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.UpdateSetting;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/",
+                Route,
                 async (UpdateSettingRequest request, ISettingsContracts settings) =>
                 {
                     await settings.SetSettingAsync(

@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
@@ -54,14 +55,16 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
 
   function handleToggle(flagName: string, currentlyEnabled: boolean) {
     router.put(
-      `/api/tenants/${tenant.id}/features/${flagName}`,
+      routes.tenants.api.setTenantFeature(tenant.id, flagName),
       { isEnabled: !currentlyEnabled },
       { preserveScroll: true },
     );
   }
 
   function handleReset(flagName: string) {
-    router.delete(`/api/tenants/${tenant.id}/features/${flagName}`, { preserveScroll: true });
+    router.delete(routes.tenants.api.deleteTenantFeature(tenant.id, flagName), {
+      preserveScroll: true,
+    });
   }
 
   if (flags.length === 0) {
@@ -78,11 +81,15 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tenants/manage">{t(TenantsKeys.Manage.Title)}</BreadcrumbLink>
+            <BreadcrumbLink href={routes.tenants.views.manage()}>
+              {t(TenantsKeys.Manage.Title)}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/tenants/${tenant.id}/edit`}>{tenant.name}</BreadcrumbLink>
+            <BreadcrumbLink href={routes.tenants.views.edit(tenant.id)}>
+              {tenant.name}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

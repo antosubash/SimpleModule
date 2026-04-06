@@ -16,10 +16,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class ExternalLoginEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ExternalLogin;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/ExternalLogin",
+                Route,
                 async (
                     [FromQuery] string? action,
                     [FromQuery] string? returnUrl,
@@ -90,7 +92,7 @@ public class ExternalLoginEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/ExternalLogin",
+                Route,
                 async (
                     HttpContext context,
                     [FromQuery] string? action,

@@ -14,7 +14,11 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Email;
 
-[Module(EmailConstants.ModuleName, RoutePrefix = EmailConstants.RoutePrefix, ViewPrefix = "/email")]
+[Module(
+    EmailConstants.ModuleName,
+    RoutePrefix = EmailConstants.RoutePrefix,
+    ViewPrefix = EmailConstants.ViewPrefix
+)]
 public class EmailModule : IModule, IModuleServices, IModuleMenu
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)

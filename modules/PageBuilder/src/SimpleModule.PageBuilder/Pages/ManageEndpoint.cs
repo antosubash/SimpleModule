@@ -8,10 +8,12 @@ namespace SimpleModule.PageBuilder.Pages;
 
 public class ManageEndpoint : IViewEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Manage;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/manage",
+                Route,
                 async (IPageBuilderContracts pageBuilder) =>
                     Inertia.Render(
                         "PageBuilder/Manage",

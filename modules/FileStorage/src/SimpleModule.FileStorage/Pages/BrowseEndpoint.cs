@@ -10,10 +10,12 @@ namespace SimpleModule.FileStorage.Pages;
 
 public class BrowseEndpoint : IViewEndpoint
 {
+    public const string Route = FileStorageConstants.Routes.Browse;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/browse",
+                Route,
                 async (string? folder, IFileStorageContracts fileStorage) =>
                 {
                     var filesTask = fileStorage.GetFilesAsync(folder);

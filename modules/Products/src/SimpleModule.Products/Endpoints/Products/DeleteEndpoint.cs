@@ -9,9 +9,12 @@ namespace SimpleModule.Products.Endpoints.Products;
 
 public class DeleteEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Delete;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id}",
+                Route,
                 (ProductId id, IProductContracts productContracts) =>
                     CrudEndpoints.Delete(() => productContracts.DeleteProductAsync(id))
             )

@@ -8,10 +8,12 @@ namespace SimpleModule.BackgroundJobs.Pages;
 
 public class ListEndpoint : IViewEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.List;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "/list",
+            Route,
             async (
                 IBackgroundJobsContracts contracts,
                 JobState? state,

@@ -9,9 +9,12 @@ namespace SimpleModule.FileStorage.Endpoints.Files;
 
 public class ListFoldersEndpoint : IEndpoint
 {
+    public const string Route = FileStorageConstants.Routes.ListFolders;
+    public const string Method = "GET";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/folders",
+                Route,
                 async (string? parent, IFileStorageContracts files) =>
                     TypedResults.Ok(await files.GetFoldersAsync(parent))
             )

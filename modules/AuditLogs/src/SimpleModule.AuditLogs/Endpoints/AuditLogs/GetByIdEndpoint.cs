@@ -9,9 +9,11 @@ namespace SimpleModule.AuditLogs.Endpoints.AuditLogs;
 
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = AuditLogsConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}",
+                Route,
                 (int id, IAuditLogContracts auditLogs) =>
                     CrudEndpoints.GetById(() => auditLogs.GetByIdAsync(AuditEntryId.From(id)))
             )

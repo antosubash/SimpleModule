@@ -9,10 +9,12 @@ namespace SimpleModule.Products.Pages;
 
 public class BrowseEndpoint : IViewEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Browse;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/browse",
+                Route,
                 async (IProductContracts products, IOptions<ProductsModuleOptions> options) =>
                     Inertia.Render(
                         "Products/Browse",

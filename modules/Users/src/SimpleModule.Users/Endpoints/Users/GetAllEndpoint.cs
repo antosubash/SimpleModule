@@ -9,10 +9,12 @@ namespace SimpleModule.Users.Endpoints.Users;
 
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = UsersConstants.RoutePrefix + UsersConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                UsersConstants.RoutePrefix,
+                Route,
                 (IUserContracts userContracts) =>
                     CrudEndpoints.GetAll(userContracts.GetAllUsersAsync)
             )

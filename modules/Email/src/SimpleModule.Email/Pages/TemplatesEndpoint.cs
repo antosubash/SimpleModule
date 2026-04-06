@@ -10,10 +10,12 @@ namespace SimpleModule.Email.Pages;
 
 public class TemplatesEndpoint : IViewEndpoint
 {
+    public const string Route = EmailConstants.Routes.Templates;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/templates",
+                Route,
                 async (
                     [AsParameters] QueryEmailTemplatesRequest request,
                     IEmailContracts emailContracts

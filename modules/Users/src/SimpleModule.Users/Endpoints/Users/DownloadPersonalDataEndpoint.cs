@@ -13,10 +13,14 @@ namespace SimpleModule.Users.Endpoints.Users;
 
 public class DownloadPersonalDataEndpoint : IEndpoint
 {
+    public const string Route =
+        UsersConstants.RoutePrefix + UsersConstants.Routes.DownloadPersonalData;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapPost(
-                UsersConstants.RoutePrefix + UsersConstants.DownloadPersonalDataRoute,
+                Route,
                 async (
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,

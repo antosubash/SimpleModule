@@ -13,10 +13,12 @@ namespace SimpleModule.Users.Pages.Account.Manage;
 
 public class ExternalLoginsEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ExternalLogins;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/ExternalLogins",
+                Route,
                 async (
                     [FromQuery] string? action,
                     ClaimsPrincipal principal,
@@ -88,7 +90,7 @@ public class ExternalLoginsEndpoint : IViewEndpoint
             .RequireAuthorization();
 
         app.MapPost(
-                "/Manage/ExternalLogins",
+                Route,
                 async (
                     HttpContext context,
                     ClaimsPrincipal principal,

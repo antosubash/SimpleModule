@@ -333,6 +333,15 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    private static readonly DiagnosticDescriptor MissingEndpointRouteConst = new(
+        id: "SM0054",
+        title: "Endpoint missing Route const field",
+        messageFormat: "Endpoint '{0}' does not declare a 'public const string Route' field. Add a Route const so the source generator can emit type-safe route helpers.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -1146,6 +1155,35 @@ internal sealed class DiagnosticEmitter : IEmitter
                         module.AssemblyName
                     )
                 );
+            }
+
+            // SM0054: Endpoint missing Route const
+            foreach (var endpoint in module.Endpoints)
+            {
+                if (string.IsNullOrEmpty(endpoint.RouteTemplate))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            MissingEndpointRouteConst,
+                            Location.None,
+                            Strip(endpoint.FullyQualifiedName)
+                        )
+                    );
+                }
+            }
+
+            foreach (var view in module.Views)
+            {
+                if (string.IsNullOrEmpty(view.RouteTemplate))
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            MissingEndpointRouteConst,
+                            LocationHelper.ToLocation(view.Location),
+                            Strip(view.FullyQualifiedName)
+                        )
+                    );
+                }
             }
         }
     }

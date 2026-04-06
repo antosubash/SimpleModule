@@ -13,13 +13,14 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class ForgotPasswordEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ForgotPassword;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/ForgotPassword", () => Inertia.Render("Users/Account/ForgotPassword"))
-            .AllowAnonymous();
+        app.MapGet(Route, () => Inertia.Render("Users/Account/ForgotPassword")).AllowAnonymous();
 
         app.MapPost(
-                "/ForgotPassword",
+                Route,
                 async (
                     [FromForm] string email,
                     UserManager<ApplicationUser> userManager,

@@ -9,10 +9,12 @@ namespace SimpleModule.PageBuilder.Pages;
 
 public class PagesListEndpoint : IViewEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.PagesList;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/",
+                Route,
                 async (IPageBuilderContracts pageBuilder) =>
                     Inertia.Render(
                         "PageBuilder/PagesList",

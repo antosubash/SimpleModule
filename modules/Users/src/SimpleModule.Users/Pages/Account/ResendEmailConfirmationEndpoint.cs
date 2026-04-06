@@ -13,16 +13,15 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class ResendEmailConfirmationEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ResendEmailConfirmation;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet(
-                "/ResendEmailConfirmation",
-                () => Inertia.Render("Users/Account/ResendEmailConfirmation")
-            )
+        app.MapGet(Route, () => Inertia.Render("Users/Account/ResendEmailConfirmation"))
             .AllowAnonymous();
 
         app.MapPost(
-                "/ResendEmailConfirmation",
+                Route,
                 async (
                     [FromForm] string email,
                     UserManager<ApplicationUser> userManager,

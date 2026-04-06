@@ -14,6 +14,8 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class EnableAuthenticatorEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.EnableAuthenticator;
+
     private static readonly CompositeFormat AuthenticatorUriFormat = CompositeFormat.Parse(
         "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6"
     );
@@ -21,7 +23,7 @@ public class EnableAuthenticatorEndpoint : IViewEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/EnableAuthenticator",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

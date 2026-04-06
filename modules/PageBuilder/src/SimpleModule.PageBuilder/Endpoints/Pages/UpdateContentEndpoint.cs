@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class UpdateContentEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.UpdateContent;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}/content",
+                Route,
                 (PageId id, UpdatePageContentRequest request, IPageBuilderContracts pageBuilder) =>
                     CrudEndpoints.Update(() => pageBuilder.UpdatePageContentAsync(id, request))
             )

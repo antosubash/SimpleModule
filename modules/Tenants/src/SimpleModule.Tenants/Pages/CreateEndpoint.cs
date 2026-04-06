@@ -9,9 +9,11 @@ namespace SimpleModule.Tenants.Pages;
 
 public class CreateEndpoint : IViewEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Views.Create;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/create", () => Inertia.Render("Tenants/Create"))
+        app.MapGet(Route, () => Inertia.Render("Tenants/Create"))
             .RequirePermission(TenantsPermissions.Create);
     }
 }

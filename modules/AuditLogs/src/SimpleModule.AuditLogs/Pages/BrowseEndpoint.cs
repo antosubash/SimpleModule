@@ -10,9 +10,11 @@ namespace SimpleModule.AuditLogs.Pages;
 
 public class BrowseEndpoint : IViewEndpoint
 {
+    public const string Route = AuditLogsConstants.Routes.Browse;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/browse",
+                Route,
                 async ([AsParameters] AuditQueryRequest request, IAuditLogContracts auditLogs) =>
                 {
                     var result = await auditLogs.QueryAsync(request);

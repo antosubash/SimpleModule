@@ -9,9 +9,12 @@ namespace SimpleModule.BackgroundJobs.Endpoints.Jobs;
 
 public class ToggleRecurringEndpoint : IEndpoint
 {
+    public const string Route = BackgroundJobsConstants.Routes.ToggleRecurring;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/recurring/{id:guid}/toggle",
+                Route,
                 async (Guid id, IBackgroundJobs jobs) =>
                 {
                     try

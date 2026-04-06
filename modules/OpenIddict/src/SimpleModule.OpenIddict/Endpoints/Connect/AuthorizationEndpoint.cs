@@ -18,6 +18,8 @@ namespace SimpleModule.OpenIddict.Endpoints.Connect;
 
 public class AuthorizationEndpoint : IEndpoint
 {
+    public const string Route = ConnectRouteConstants.ConnectAuthorize;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapMethods(

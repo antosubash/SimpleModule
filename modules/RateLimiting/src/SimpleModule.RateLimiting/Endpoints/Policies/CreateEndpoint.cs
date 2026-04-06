@@ -10,9 +10,12 @@ namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.Create;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 (CreateRateLimitRuleRequest request, IRateLimitingContracts contracts) =>
                 {
                     var validation = CreateRequestValidator.Validate(request);

@@ -11,9 +11,12 @@ namespace SimpleModule.FeatureFlags.Endpoints.FeatureFlags;
 
 public class SetOverrideEndpoint : IEndpoint
 {
+    public const string Route = FeatureFlagsConstants.Routes.SetOverride;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{name}/overrides",
+                Route,
                 async (
                     string name,
                     SetOverrideRequest request,

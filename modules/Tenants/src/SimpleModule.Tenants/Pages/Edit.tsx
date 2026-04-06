@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Breadcrumb,
@@ -34,13 +35,13 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    router.put(`/api/tenants/${tenant.id}`, Object.fromEntries(formData));
+    router.put(routes.tenants.api.update(tenant.id), Object.fromEntries(formData));
   }
 
   function handleAddHost() {
     if (!newHost.trim()) return;
     router.post(
-      `/api/tenants/${tenant.id}/hosts`,
+      routes.tenants.api.addHost(tenant.id),
       { hostName: newHost.trim() },
       { preserveScroll: true },
     );
@@ -48,11 +49,11 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
   }
 
   function handleRemoveHost(hostId: number) {
-    router.delete(`/api/tenants/${tenant.id}/hosts/${hostId}`, { preserveScroll: true });
+    router.delete(routes.tenants.api.removeHost(tenant.id, hostId), { preserveScroll: true });
   }
 
   function handleStatusChange(status: number) {
-    router.put(`/api/tenants/${tenant.id}/status`, { status }, { preserveScroll: true });
+    router.put(routes.tenants.api.changeStatus(tenant.id), { status }, { preserveScroll: true });
   }
 
   return (
@@ -60,7 +61,9 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/tenants/manage">{t(TenantsKeys.Manage.Title)}</BreadcrumbLink>
+            <BreadcrumbLink href={routes.tenants.views.manage()}>
+              {t(TenantsKeys.Manage.Title)}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -70,7 +73,10 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
       </Breadcrumb>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Edit.Title)}</h1>
-        <Button variant="ghost" onClick={() => router.get(`/tenants/${tenant.id}/features`)}>
+        <Button
+          variant="ghost"
+          onClick={() => router.get(routes.tenants.views.features(tenant.id))}
+        >
           {t(TenantsKeys.Edit.ManageFeaturesButton)}
         </Button>
       </div>

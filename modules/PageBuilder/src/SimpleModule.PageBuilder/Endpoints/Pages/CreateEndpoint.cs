@@ -11,9 +11,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Create;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 (CreatePageRequest request, IPageBuilderContracts pageBuilder) =>
                 {
                     var validation = new ValidationBuilder()

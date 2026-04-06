@@ -19,7 +19,7 @@ namespace SimpleModule.AuditLogs;
 [Module(
     AuditLogsConstants.ModuleName,
     RoutePrefix = AuditLogsConstants.RoutePrefix,
-    ViewPrefix = "/audit-logs"
+    ViewPrefix = AuditLogsConstants.ViewPrefix
 )]
 public class AuditLogsModule : IModule
 {

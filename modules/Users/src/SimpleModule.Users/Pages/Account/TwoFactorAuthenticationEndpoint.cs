@@ -11,10 +11,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class TwoFactorAuthenticationEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.TwoFactorAuthentication;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/TwoFactorAuthentication",
+                Route,
                 async (
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,

@@ -9,9 +9,11 @@ namespace SimpleModule.AuditLogs.Endpoints.AuditLogs;
 
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = AuditLogsConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 async ([AsParameters] AuditQueryRequest request, IAuditLogContracts auditLogs) =>
                     TypedResults.Ok(await auditLogs.QueryAsync(request))
             )

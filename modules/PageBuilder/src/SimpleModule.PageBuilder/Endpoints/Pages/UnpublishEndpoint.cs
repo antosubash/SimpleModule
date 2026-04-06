@@ -9,9 +9,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class UnpublishEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Unpublish;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/{id}/unpublish",
+                Route,
                 async (PageId id, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.UnpublishPageAsync(id);
