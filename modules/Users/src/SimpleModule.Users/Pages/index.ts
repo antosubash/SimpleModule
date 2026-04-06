@@ -25,6 +25,7 @@ export const pages: Record<string, unknown> = {
   'Users/Account/Manage/DeletePersonalData': () => import('./Account/Manage/DeletePersonalData'),
   'Users/Account/Manage/PersonalData': () => import('./Account/Manage/PersonalData'),
   'Users/Account/Manage/ExternalLogins': () => import('./Account/Manage/ExternalLogins'),
+  'Users/Account/Manage/Passkeys': () => import('./Account/Manage/ManagePasskeys'),
   'Users/Account/TwoFactorAuthentication': () => import('./Account/TwoFactorAuthentication'),
   'Users/Account/EnableAuthenticator': () => import('./Account/EnableAuthenticator'),
   'Users/Account/Disable2fa': () => import('./Account/Disable2fa'),
