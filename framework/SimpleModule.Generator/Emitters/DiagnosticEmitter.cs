@@ -1164,34 +1164,34 @@ internal sealed class DiagnosticEmitter : IEmitter
                         )
                     );
                 }
-            }
 
-            // SM0054: Endpoint missing Route const
-            foreach (var endpoint in module.Endpoints)
-            {
-                if (string.IsNullOrEmpty(endpoint.RouteTemplate))
+                // SM0054: Endpoint missing Route const
+                foreach (var endpoint in module.Endpoints)
                 {
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(
-                            MissingEndpointRouteConst,
-                            Location.None,
-                            Strip(endpoint.FullyQualifiedName)
-                        )
-                    );
+                    if (string.IsNullOrEmpty(endpoint.RouteTemplate))
+                    {
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                MissingEndpointRouteConst,
+                                Location.None,
+                                Strip(endpoint.FullyQualifiedName)
+                            )
+                        );
+                    }
                 }
-            }
 
-            foreach (var view in module.Views)
-            {
-                if (string.IsNullOrEmpty(view.RouteTemplate))
+                foreach (var view in module.Views)
                 {
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(
-                            MissingEndpointRouteConst,
-                            LocationHelper.ToLocation(view.Location),
-                            Strip(view.FullyQualifiedName)
-                        )
-                    );
+                    if (string.IsNullOrEmpty(view.RouteTemplate))
+                    {
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                MissingEndpointRouteConst,
+                                LocationHelper.ToLocation(view.Location),
+                                Strip(view.FullyQualifiedName)
+                            )
+                        );
+                    }
                 }
             }
         }
