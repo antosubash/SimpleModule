@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
@@ -24,6 +25,7 @@ public class LoginEndpoint : IViewEndpoint
                     HttpContext context,
                     ISettingsContracts settingsService,
                     ISettingsDefinitionRegistry settingsDefinitions,
+                    IOptions<IdentityPasskeyOptions> passkeyOptions,
                     [FromQuery] string? returnUrl
                 ) =>
                 {
@@ -43,6 +45,9 @@ public class LoginEndpoint : IViewEndpoint
                         {
                             returnUrl = returnUrl ?? "/",
                             showTestAccounts = showTestAccounts == "true",
+                            passkeyEnabled = !string.IsNullOrEmpty(
+                                passkeyOptions.Value.ServerDomain
+                            ),
                         }
                     );
                 }
@@ -92,6 +97,7 @@ public class LoginEndpoint : IViewEndpoint
                         {
                             returnUrl = returnUrl ?? "/",
                             showTestAccounts = false,
+                            passkeyEnabled = false,
                             errors = new { email = "Invalid login attempt." },
                         }
                     );
