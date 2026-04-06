@@ -10,10 +10,12 @@ namespace SimpleModule.PageBuilder.Pages;
 
 public class ViewerEndpoint : IViewEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.Viewer;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/view/{slug}",
+                Route,
                 async (string slug, IPageBuilderContracts pageBuilder) =>
                 {
                     var page = await pageBuilder.GetPageBySlugAsync(slug);

@@ -13,10 +13,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class RegisterConfirmationEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.RegisterConfirmation;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/RegisterConfirmation",
+                Route,
                 async (
                     [FromQuery] string? email,
                     [FromQuery] string? returnUrl,

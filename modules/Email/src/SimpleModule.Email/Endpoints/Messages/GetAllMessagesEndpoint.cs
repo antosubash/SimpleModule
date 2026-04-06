@@ -9,9 +9,11 @@ namespace SimpleModule.Email.Endpoints.Messages;
 
 public class GetAllMessagesEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.GetAllMessages;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/messages",
+                Route,
                 (
                     [AsParameters] QueryEmailMessagesRequest request,
                     IEmailContracts emailContracts

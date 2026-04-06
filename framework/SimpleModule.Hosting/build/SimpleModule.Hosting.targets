@@ -11,6 +11,7 @@
     <TailwindOutput>$(MSBuildProjectDirectory)/wwwroot/css/app.css</TailwindOutput>
     <ViteBuildStamp>$(IntermediateOutputPath)vitebuild.stamp</ViteBuildStamp>
     <ExtractDtoStamp>$(IntermediateOutputPath)extractdto.stamp</ExtractDtoStamp>
+    <ExtractRoutesStamp>$(IntermediateOutputPath)extractroutes.stamp</ExtractRoutesStamp>
   </PropertyGroup>
   <!-- Incremental Tailwind: track CSS source files + theme + Razor layouts -->
   <ItemGroup Condition="Exists('$(TailwindInput)')">
@@ -98,5 +99,19 @@
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
     <Touch Files="$(ExtractDtoStamp)" AlwaysCreate="true" />
+  </Target>
+  <!-- Extract TypeScript route definitions from source generator output (incremental via stamp file) -->
+  <Target
+    Name="ExtractRoutes"
+    AfterTargets="CoreCompile"
+    Condition="Exists('$(RepoRoot)tools/extract-routes.mjs')"
+    Inputs="$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/**/*"
+    Outputs="$(ExtractRoutesStamp)"
+  >
+    <Exec
+      Command="node &quot;$(RepoRoot)tools/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)packages/SimpleModule.Client/src/routes.ts&quot;"
+      WorkingDirectory="$(MSBuildProjectDirectory)"
+    />
+    <Touch Files="$(ExtractRoutesStamp)" AlwaysCreate="true" />
   </Target>
 </Project>

@@ -10,9 +10,11 @@ namespace SimpleModule.AuditLogs.Pages;
 
 public class DetailEndpoint : IViewEndpoint
 {
+    public const string Route = AuditLogsConstants.Routes.Detail;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}",
+                Route,
                 async (int id, IAuditLogContracts auditLogs) =>
                 {
                     var entry = await auditLogs.GetByIdAsync(AuditEntryId.From(id));

@@ -4,15 +4,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
 public class ErrorEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.Error;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Error",
+                Route,
                 (HttpContext context) =>
                 {
                     var requestId = Activity.Current?.Id ?? context.TraceIdentifier;

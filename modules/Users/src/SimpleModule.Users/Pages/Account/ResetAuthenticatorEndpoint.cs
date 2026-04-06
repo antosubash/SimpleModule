@@ -11,10 +11,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class ResetAuthenticatorEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.ResetAuthenticator;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/ResetAuthenticator",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

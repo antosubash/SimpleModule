@@ -698,12 +698,15 @@ internal static class SymbolDiscovery
                     m.Endpoints.Select(e => new EndpointInfoRecord(
                             e.FullyQualifiedName,
                             e.RequiredPermissions.ToImmutableArray(),
-                            e.AllowAnonymous
+                            e.AllowAnonymous,
+                            e.RouteTemplate,
+                            e.HttpMethod
                         ))
                         .ToImmutableArray(),
                     m.Views.Select(v => new ViewInfoRecord(
                             v.FullyQualifiedName,
                             v.Page ?? "",
+                            v.RouteTemplate,
                             v.Location
                         ))
                         .ToImmutableArray(),
@@ -985,14 +988,16 @@ internal static class SymbolDiscovery
                         else if (className.EndsWith("View", StringComparison.Ordinal))
                             className = className.Substring(0, className.Length - "View".Length);
 
-                        views.Add(
-                            new ViewInfo
-                            {
-                                FullyQualifiedName = fqn,
-                                InferredClassName = className,
-                                Location = GetSourceLocation(typeSymbol),
-                            }
-                        );
+                        var viewInfo = new ViewInfo
+                        {
+                            FullyQualifiedName = fqn,
+                            InferredClassName = className,
+                            Location = GetSourceLocation(typeSymbol),
+                        };
+
+                        var (viewRoute, _) = ReadRouteConstFields(typeSymbol);
+                        viewInfo.RouteTemplate = viewRoute;
+                        views.Add(viewInfo);
                     }
                     else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
                     {
@@ -1035,11 +1040,31 @@ internal static class SymbolDiscovery
                             }
                         }
 
+                        var (epRoute, epMethod) = ReadRouteConstFields(typeSymbol);
+                        info.RouteTemplate = epRoute;
+                        info.HttpMethod = epMethod;
                         endpoints.Add(info);
                     }
                 }
             }
         }
+    }
+
+    private static (string route, string method) ReadRouteConstFields(INamedTypeSymbol typeSymbol)
+    {
+        var route = "";
+        var method = "";
+        foreach (var m in typeSymbol.GetMembers())
+        {
+            if (m is IFieldSymbol { IsConst: true, ConstantValue: string value } field)
+            {
+                if (field.Name == "Route")
+                    route = value;
+                else if (field.Name == "Method")
+                    method = value;
+            }
+        }
+        return (route, method);
     }
 
     private static bool ImplementsInterface(

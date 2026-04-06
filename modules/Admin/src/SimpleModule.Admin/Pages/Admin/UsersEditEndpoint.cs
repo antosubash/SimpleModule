@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
@@ -13,10 +14,12 @@ namespace SimpleModule.Admin.Pages.Admin;
 
 public class UsersEditEndpoint : IViewEndpoint
 {
+    public const string Route = AdminConstants.Routes.UsersEdit;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/users/{id}/edit",
+                Route,
                 async (
                     string id,
                     HttpContext context,

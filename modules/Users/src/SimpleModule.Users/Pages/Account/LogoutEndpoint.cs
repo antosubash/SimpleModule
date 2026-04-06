@@ -12,10 +12,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class LogoutEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.Logout;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Logout",
+                Route,
                 (HttpContext context) =>
                 {
                     var isAuthenticated = context.User.Identity?.IsAuthenticated == true;
@@ -25,7 +27,7 @@ public class LogoutEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/Logout",
+                Route,
                 async (
                     [FromQuery] string? returnUrl,
                     SignInManager<ApplicationUser> signInManager,

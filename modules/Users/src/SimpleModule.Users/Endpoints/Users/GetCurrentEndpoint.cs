@@ -11,10 +11,12 @@ namespace SimpleModule.Users.Endpoints.Users;
 
 public class GetCurrentEndpoint : IEndpoint
 {
+    public const string Route = UsersConstants.RoutePrefix + UsersConstants.Routes.GetCurrent;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                UsersConstants.RoutePrefix + UsersConstants.MeRoute,
+                Route,
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     ClaimsPrincipal principal,
                     IUserContracts userContracts

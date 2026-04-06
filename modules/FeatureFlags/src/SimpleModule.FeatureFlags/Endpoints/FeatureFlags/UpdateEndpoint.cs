@@ -12,9 +12,12 @@ namespace SimpleModule.FeatureFlags.Endpoints.FeatureFlags;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = FeatureFlagsConstants.Routes.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{name}",
+                Route,
                 async (
                     string name,
                     UpdateFeatureFlagRequest request,

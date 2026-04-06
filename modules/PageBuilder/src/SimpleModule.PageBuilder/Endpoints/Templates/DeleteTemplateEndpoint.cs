@@ -10,9 +10,12 @@ namespace SimpleModule.PageBuilder.Endpoints.Templates;
 
 public class DeleteTemplateEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.DeleteTemplate;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/templates/{id}",
+                Route,
                 (PageTemplateId id, IPageBuilderTemplateContracts templates) =>
                     CrudEndpoints.Delete(() => templates.DeleteTemplateAsync(id))
             )

@@ -13,7 +13,7 @@ namespace SimpleModule.FileStorage;
 [Module(
     FileStorageConstants.ModuleName,
     RoutePrefix = FileStorageConstants.RoutePrefix,
-    ViewPrefix = "/files"
+    ViewPrefix = FileStorageConstants.ViewPrefix
 )]
 public class FileStorageModule : IModule
 {

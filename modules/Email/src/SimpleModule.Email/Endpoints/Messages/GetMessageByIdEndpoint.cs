@@ -9,9 +9,11 @@ namespace SimpleModule.Email.Endpoints.Messages;
 
 public class GetMessageByIdEndpoint : IEndpoint
 {
+    public const string Route = EmailConstants.Routes.GetMessageById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/messages/{id}",
+                Route,
                 (int id, IEmailContracts emailContracts) =>
                     CrudEndpoints.GetById(() =>
                         emailContracts.GetMessageByIdAsync(EmailMessageId.From(id))

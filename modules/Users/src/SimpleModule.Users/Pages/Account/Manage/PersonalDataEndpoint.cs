@@ -11,10 +11,12 @@ namespace SimpleModule.Users.Pages.Account.Manage;
 
 public class PersonalDataEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.PersonalData;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Manage/PersonalData",
+                Route,
                 async (ClaimsPrincipal principal, UserManager<ApplicationUser> userManager) =>
                 {
                     var user = await userManager.GetUserAsync(principal);

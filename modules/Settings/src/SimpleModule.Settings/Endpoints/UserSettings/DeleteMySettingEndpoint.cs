@@ -10,9 +10,12 @@ namespace SimpleModule.Settings.Endpoints.UserSettings;
 
 public class DeleteMySettingEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.DeleteMySetting;
+    public const string Method = "DELETE";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/me/{**key}",
+                Route,
                 async (string key, ISettingsContracts settings, ClaimsPrincipal principal) =>
                 {
                     var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);

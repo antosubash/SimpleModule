@@ -4,14 +4,17 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.RateLimiting;
+using SimpleModule.RateLimiting.Contracts;
 
 namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
 public class GetActivePoliciesEndpoint : IEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.GetActivePolicies;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/active",
+                Route,
                 (IRateLimitPolicyRegistry registry) =>
                     TypedResults.Ok(
                         registry

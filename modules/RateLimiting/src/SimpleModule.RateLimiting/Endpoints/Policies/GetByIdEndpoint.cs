@@ -9,9 +9,11 @@ namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id:int}",
+                Route,
                 (int id, IRateLimitingContracts contracts) =>
                     CrudEndpoints.GetById(() =>
                         contracts.GetRuleByIdAsync(RateLimitRuleId.From(id))

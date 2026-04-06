@@ -5,14 +5,18 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Orders.Contracts;
+using OrdersConstants = SimpleModule.Orders.Contracts.OrdersConstants;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = OrdersConstants.Routes.Create;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 (CreateOrderRequest request, IOrderContracts orderContracts) =>
                 {
                     var validation = CreateRequestValidator.Validate(request);

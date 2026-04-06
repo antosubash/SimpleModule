@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Permissions.Contracts;
@@ -9,10 +10,12 @@ namespace SimpleModule.Admin.Pages.Admin;
 
 public class RolesEndpoint : IViewEndpoint
 {
+    public const string Route = AdminConstants.Routes.Roles;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/roles",
+                Route,
                 async (IRoleAdminContracts roleAdmin, IPermissionContracts permissionContracts) =>
                 {
                     var roles = await roleAdmin.GetAllRolesAsync();

@@ -5,15 +5,18 @@ using Microsoft.AspNetCore.Routing;
 using OpenIddict.Abstractions;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.OpenIddict.Pages.OpenIddict;
 
 public class ClientsEditEndpoint : IViewEndpoint
 {
+    public const string Route = OpenIddictModuleConstants.Routes.ClientsEdit;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/clients/{id}/edit",
+                Route,
                 async (string id, IOpenIddictApplicationManager manager, string? tab) =>
                 {
                     var application = await manager.FindByIdAsync(id);

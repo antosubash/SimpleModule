@@ -17,10 +17,12 @@ namespace SimpleModule.Users.Pages.Account;
 
 public class LoginEndpoint : IViewEndpoint
 {
+    public const string Route = UsersConstants.Routes.Login;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/Login",
+                Route,
                 async (
                     HttpContext context,
                     ISettingsContracts settingsService,
@@ -55,7 +57,7 @@ public class LoginEndpoint : IViewEndpoint
             .AllowAnonymous();
 
         app.MapPost(
-                "/Login",
+                Route,
                 async (
                     [FromForm] string email,
                     [FromForm] string password,

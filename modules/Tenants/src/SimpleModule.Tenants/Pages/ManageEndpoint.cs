@@ -9,10 +9,12 @@ namespace SimpleModule.Tenants.Pages;
 
 public class ManageEndpoint : IViewEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Views.Manage;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/manage",
+                Route,
                 async (ITenantContracts contracts) =>
                     Inertia.Render(
                         "Tenants/Manage",

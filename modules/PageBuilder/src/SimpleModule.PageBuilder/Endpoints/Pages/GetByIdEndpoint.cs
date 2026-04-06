@@ -9,9 +9,11 @@ namespace SimpleModule.PageBuilder.Endpoints.Pages;
 
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = PageBuilderConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}",
+                Route,
                 (PageId id, IPageBuilderContracts pageBuilder) =>
                     CrudEndpoints.GetById(() => pageBuilder.GetPageByIdAsync(id))
             )

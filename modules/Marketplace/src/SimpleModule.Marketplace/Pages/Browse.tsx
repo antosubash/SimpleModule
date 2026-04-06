@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import { Badge, Button, Card, CardContent, CardFooter, Input, PageShell } from '@simplemodule/ui';
 import { useState } from 'react';
@@ -53,7 +54,7 @@ export default function Browse({
   }
 
   function navigate(overrides: Record<string, string>) {
-    router.get(`/marketplace/browse?${buildParams(overrides).toString()}`);
+    router.get(`${routes.marketplace.views.browse()}?${buildParams(overrides).toString()}`);
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -64,7 +65,7 @@ export default function Browse({
   function handleLoadMore() {
     const params = buildParams({ q: query });
     params.set('skip', String(skip + PAGE_SIZE));
-    router.get(`/marketplace/browse?${params.toString()}`);
+    router.get(`${routes.marketplace.views.browse()}?${params.toString()}`);
   }
 
   return (
@@ -117,7 +118,7 @@ export default function Browse({
               className={`cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
                 pkg.isInstalled ? 'border-l-2 border-l-primary' : ''
               }`}
-              onClick={() => router.get(`/marketplace/${pkg.id}`)}
+              onClick={() => router.get(routes.marketplace.views.detail(pkg.id))}
             >
               <CardContent className="pt-5">
                 <div className="flex items-start gap-4">
@@ -206,7 +207,7 @@ export default function Browse({
               <Button
                 variant="secondary"
                 className="mt-4"
-                onClick={() => router.get('/marketplace/browse')}
+                onClick={() => router.get(routes.marketplace.views.browse())}
               >
                 {t(MarketplaceKeys.Browse.ClearFilters)}
               </Button>

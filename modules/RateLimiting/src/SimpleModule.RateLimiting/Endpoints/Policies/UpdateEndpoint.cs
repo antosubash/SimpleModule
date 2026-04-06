@@ -9,9 +9,12 @@ namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id:int}",
+                Route,
                 (int id, UpdateRateLimitRuleRequest request, IRateLimitingContracts contracts) =>
                     CrudEndpoints.Update(() =>
                         contracts.UpdateRuleAsync(RateLimitRuleId.From(id), request)

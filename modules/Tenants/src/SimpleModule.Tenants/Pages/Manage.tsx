@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
@@ -27,7 +28,7 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
 
   function handleDelete() {
     if (!deleteTarget) return;
-    router.delete(`/api/tenants/${deleteTarget.id}`);
+    router.delete(routes.tenants.api.delete(deleteTarget.id));
     setDeleteTarget(null);
   }
 
@@ -37,7 +38,7 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
         title={t(TenantsKeys.Manage.Title)}
         description={t(TenantsKeys.Manage.Description, { count: String(tenants.length) })}
         actions={
-          <Button onClick={() => router.get('/tenants/create')}>
+          <Button onClick={() => router.get(routes.tenants.views.create())}>
             {t(TenantsKeys.Manage.CreateButton)}
           </Button>
         }
@@ -76,14 +77,14 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.get(`/tenants/${tenant.id}/edit`)}
+                        onClick={() => router.get(routes.tenants.views.edit(tenant.id))}
                       >
                         {t(TenantsKeys.Manage.EditButton)}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => router.get(`/tenants/${tenant.id}/features`)}
+                        onClick={() => router.get(routes.tenants.views.features(tenant.id))}
                       >
                         {t(TenantsKeys.Manage.FeaturesButton)}
                       </Button>

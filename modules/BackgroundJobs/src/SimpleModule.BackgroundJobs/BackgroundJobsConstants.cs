@@ -1,9 +1,9 @@
+using SimpleModule.BackgroundJobs.Contracts;
+
 namespace SimpleModule.BackgroundJobs;
 
-public static class BackgroundJobsConstants
+internal static class BackgroundJobsInternalConstants
 {
-    public const string ModuleName = "BackgroundJobs";
-    public const string RoutePrefix = "/api/jobs";
     public const string DispatcherFunctionName = "ModuleJobDispatcher";
     public const string UnknownValue = "Unknown";
 

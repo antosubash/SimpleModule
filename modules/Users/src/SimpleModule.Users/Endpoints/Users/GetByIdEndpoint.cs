@@ -9,10 +9,12 @@ namespace SimpleModule.Users.Endpoints.Users;
 
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = UsersConstants.RoutePrefix + UsersConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                UsersConstants.RoutePrefix + "/{id}",
+                Route,
                 async Task<Results<Ok<UserDto>, NotFound>> (
                     UserId id,
                     IUserContracts userContracts

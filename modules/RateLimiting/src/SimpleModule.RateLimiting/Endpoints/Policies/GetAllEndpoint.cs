@@ -9,9 +9,11 @@ namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = RateLimitingConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 (IRateLimitingContracts contracts) =>
                     CrudEndpoints.GetAll(contracts.GetAllRulesAsync)
             )

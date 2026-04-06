@@ -9,9 +9,12 @@ namespace SimpleModule.Tenants.Endpoints.Tenants;
 
 public class ChangeStatusEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.ChangeStatus;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}/status",
+                Route,
                 (TenantId id, ChangeStatusRequest request, ITenantContracts contracts) =>
                     CrudEndpoints.Update(() => contracts.ChangeStatusAsync(id, request.Status))
             )

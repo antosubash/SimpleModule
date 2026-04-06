@@ -9,9 +9,12 @@ namespace SimpleModule.Settings.Endpoints.Menus;
 
 public class CreateMenuItemEndpoint : IEndpoint
 {
+    public const string Route = SettingsConstants.Routes.Api.CreateMenuItem;
+    public const string Method = "POST";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/menus",
+                Route,
                 async (CreateMenuItemRequest request, PublicMenuService service) =>
                 {
                     var entity = await service.CreateAsync(request);

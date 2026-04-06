@@ -9,9 +9,11 @@ namespace SimpleModule.Products.Endpoints.Products;
 
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 (IProductContracts productContracts) =>
                     CrudEndpoints.GetAll(productContracts.GetAllProductsAsync)
             )

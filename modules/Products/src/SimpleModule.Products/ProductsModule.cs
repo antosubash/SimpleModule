@@ -4,13 +4,14 @@ using SimpleModule.Core;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
+using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products;
 
 [Module(
     ProductsConstants.ModuleName,
     RoutePrefix = ProductsConstants.RoutePrefix,
-    ViewPrefix = "/products"
+    ViewPrefix = ProductsConstants.ViewPrefix
 )]
 public class ProductsModule : IModule, IModuleServices, IModuleMenu
 {

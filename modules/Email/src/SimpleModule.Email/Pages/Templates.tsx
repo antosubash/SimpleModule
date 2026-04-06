@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Button,
@@ -86,11 +87,11 @@ export default function Templates({ result, filters }: Props) {
 
   function applySearch(e?: FormEvent) {
     e?.preventDefault();
-    router.get('/email/templates', buildFilterParams(currentFilters()));
+    router.get(routes.email.views.templates(), buildFilterParams(currentFilters()));
   }
 
   function goToPage(page: number) {
-    router.get('/email/templates', buildFilterParams(currentFilters(), page), {
+    router.get(routes.email.views.templates(), buildFilterParams(currentFilters(), page), {
       preserveState: true,
     });
   }
@@ -105,7 +106,7 @@ export default function Templates({ result, filters }: Props) {
         title={t(EmailKeys.Templates.Title)}
         description={t(EmailKeys.Templates.Description)}
         actions={
-          <Button onClick={() => router.visit('/email/templates/create')}>
+          <Button onClick={() => router.visit(routes.email.views.createTemplate())}>
             {t(EmailKeys.Templates.NewTemplate)}
           </Button>
         }
@@ -165,7 +166,7 @@ export default function Templates({ result, filters }: Props) {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => router.visit(`/email/templates/${tpl.id}/edit`)}
+                              onClick={() => router.visit(routes.email.views.editTemplate(tpl.id))}
                             >
                               {t(EmailKeys.Templates.EditButton)}
                             </Button>

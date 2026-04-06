@@ -12,6 +12,8 @@ namespace SimpleModule.OpenIddict.Endpoints.Connect;
 
 public class LogoutEndpoint : IEndpoint
 {
+    public const string Route = ConnectRouteConstants.ConnectEndSession;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapMethods(

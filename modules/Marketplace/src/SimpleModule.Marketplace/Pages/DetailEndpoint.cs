@@ -4,15 +4,18 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Marketplace.Contracts;
+using MarketplaceConstants = SimpleModule.Marketplace.Contracts.MarketplaceConstants;
 
 namespace SimpleModule.Marketplace.Pages;
 
 public class DetailEndpoint : IViewEndpoint
 {
+    public const string Route = MarketplaceConstants.Routes.Detail;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/{id}",
+                Route,
                 async (IMarketplaceContracts marketplace, string id) =>
                 {
                     var package = await marketplace.GetPackageDetailsAsync(id);

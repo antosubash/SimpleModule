@@ -9,10 +9,12 @@ namespace SimpleModule.Email.Pages;
 
 public class DashboardEndpoint : IViewEndpoint
 {
+    public const string Route = EmailConstants.Routes.Dashboard;
+
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
-                "/dashboard",
+                Route,
                 async (IEmailContracts emailContracts) =>
                     Inertia.Render(
                         "Email/Dashboard",

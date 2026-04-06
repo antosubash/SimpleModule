@@ -10,9 +10,12 @@ namespace SimpleModule.Tenants.Endpoints.Tenants;
 
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = TenantsConstants.Routes.Api.Update;
+    public const string Method = "PUT";
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}",
+                Route,
                 (TenantId id, UpdateTenantRequest request, ITenantContracts contracts) =>
                 {
                     var validation = UpdateRequestValidator.Validate(request);

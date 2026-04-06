@@ -38,3 +38,4 @@ SM0048 | SimpleModule.Generator | Error | Feature field is not a const string
 SM0049 | SimpleModule.Generator | Error | Multiple endpoints in a single file
 SM0052 | SimpleModule.Generator | Error | Module assembly name does not follow naming convention
 SM0053 | SimpleModule.Generator | Error | Module has no matching Contracts assembly
+SM0054 | SimpleModule.Generator | Info | Endpoint missing Route const field
