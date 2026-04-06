@@ -8,6 +8,16 @@ interface Passkey {
   credentialId: string;
   name: string;
   createdAt: string;
+  transports: string[];
+}
+
+function deviceTypeHint(transports: string[]): string {
+  if (transports.includes('internal')) return 'Built-in sensor';
+  if (transports.includes('hybrid')) return 'Passkey on another device';
+  if (transports.includes('usb')) return 'Security key (USB)';
+  if (transports.includes('nfc')) return 'Security key (NFC)';
+  if (transports.includes('ble')) return 'Security key (Bluetooth)';
+  return 'Passkey';
 }
 
 interface Props {
@@ -85,6 +95,7 @@ export default function ManagePasskeys({ passkeys }: Props) {
             >
               <div>
                 <p className="text-sm font-medium">{passkey.name || 'Passkey'}</p>
+                <p className="text-xs text-text-muted">{deviceTypeHint(passkey.transports)}</p>
                 <p className="text-xs text-text-muted">
                   Added {new Date(passkey.createdAt).toLocaleDateString()}
                 </p>

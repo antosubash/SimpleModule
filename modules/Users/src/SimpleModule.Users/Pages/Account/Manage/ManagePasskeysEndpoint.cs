@@ -28,6 +28,7 @@ public class ManagePasskeysEndpoint : IViewEndpoint
                         credentialId = ToBase64Url(p.CredentialId),
                         name = p.Name,
                         createdAt = p.CreatedAt,
+                        transports = p.Transports,
                     });
 
                     return Inertia.Render(
