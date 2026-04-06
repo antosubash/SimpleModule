@@ -25,7 +25,11 @@ public class PasskeyRegisterCompleteEndpoint : IEndpoint
                     if (user is null)
                         return Results.Unauthorized();
 
-                    var credentialJson = await new StreamReader(request.Body).ReadToEndAsync();
+                    string credentialJson;
+                    using (var reader = new StreamReader(request.Body, leaveOpen: true))
+                    {
+                        credentialJson = await reader.ReadToEndAsync();
+                    }
                     if (string.IsNullOrWhiteSpace(credentialJson))
                         return Results.BadRequest("Credential JSON is required.");
 
