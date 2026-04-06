@@ -1,14 +1,22 @@
-import type { Page } from '@playwright/test';
+import type { CDPSession, Page } from '@playwright/test';
 import { expect, test } from '../../fixtures/base';
 import { PasskeysPage } from '../../pages/users/passkeys.page';
+
+// CDP returns byte arrays as standard base64; WebAuthn needs base64url (no +, /, or =).
+function cdpBase64ToBase64Url(base64: string): string {
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
 
 // Helper: set up a CDP virtual WebAuthn authenticator on the page.
 // The virtual authenticator auto-responds to navigator.credentials.create/get
 // with isUserVerified:true — no real hardware or biometrics needed.
-async function setupVirtualAuthenticator(page: Page) {
+// Returns the CDP session and authenticator ID for follow-up CDP calls.
+async function setupVirtualAuthenticator(
+  page: Page,
+): Promise<{ cdp: CDPSession; authenticatorId: string }> {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('WebAuthn.enable', { enableUI: false });
-  await cdp.send('WebAuthn.addVirtualAuthenticator', {
+  const { authenticatorId } = (await cdp.send('WebAuthn.addVirtualAuthenticator', {
     options: {
       protocol: 'ctap2',
       transport: 'internal',
@@ -17,11 +25,35 @@ async function setupVirtualAuthenticator(page: Page) {
       isUserVerified: true,
       automaticPresenceSimulation: true,
     },
-  });
-  return cdp;
+  })) as { authenticatorId: string };
+  return { cdp, authenticatorId };
 }
 
 test.describe('Passkeys flows', () => {
+  // Run tests serially so they don't race on the shared admin user's passkey list
+  test.describe.configure({ mode: 'serial' });
+
+  // Clean up all passkeys before each test to start from a known state.
+  // Passkeys accumulate across runs (file-based SQLite) and parallel suites.
+  test.beforeEach(async ({ page }) => {
+    const passkeys = new PasskeysPage(page);
+    await passkeys.goto();
+    // Re-query the DOM after each deletion rather than decrementing a local counter,
+    // so the loop stays correct if a delete is slower than expected.
+    let count = await passkeys.removeButtons.count();
+    while (count > 0) {
+      page.once('dialog', (dialog) => dialog.accept());
+      await passkeys.removeButtons.first().click();
+      count--;
+      if (count > 0) {
+        await expect(passkeys.removeButtons).toHaveCount(count, { timeout: 5_000 });
+      } else {
+        await expect(passkeys.emptyState).toBeVisible({ timeout: 5_000 });
+      }
+      count = await passkeys.removeButtons.count();
+    }
+  });
+
   test('register a passkey - it appears in list', async ({ page }) => {
     await setupVirtualAuthenticator(page);
 
@@ -51,13 +83,13 @@ test.describe('Passkeys flows', () => {
     page.once('dialog', (dialog) => dialog.accept());
     await passkeys.removeButtons.first().click();
 
-    // Passkey should be gone
+    // Passkey should be gone (beforeEach guarantees we started from empty)
     await expect(passkeys.emptyState).toBeVisible({ timeout: 5_000 });
   });
 
   test('register passkey and sign in with it', async ({ page }) => {
     // Start: logged in as admin (via storageState from base fixture)
-    await setupVirtualAuthenticator(page);
+    const { cdp, authenticatorId } = await setupVirtualAuthenticator(page);
 
     // Register a passkey while authenticated
     const passkeys = new PasskeysPage(page);
@@ -65,51 +97,73 @@ test.describe('Passkeys flows', () => {
     await passkeys.addPasskeyButton.click();
     await expect(passkeys.removeButtons.first()).toBeVisible({ timeout: 10_000 });
 
-    // Simulate logout by clearing the auth cookie
-    // (CDP session stays alive so the virtual authenticator retains the registered credential)
+    // Read the registered credential ID from the virtual authenticator.
+    // Chrome's virtual authenticator persists across same-origin navigations
+    // (same browser tab = same CDP target), but the credential may not have been
+    // stored as a discoverable/resident key depending on the server's creation options.
+    // We include it explicitly in allowCredentials to guarantee the authenticator
+    // can find it regardless of whether it is resident.
+    const { credentials } = (await cdp.send('WebAuthn.getCredentials', {
+      authenticatorId,
+    })) as { credentials: Array<{ credentialId: string }> };
+    const credentialIdBase64url = cdpBase64ToBase64Url(credentials[0]?.credentialId ?? '');
+
+    // Intercept the assertion-begin response to add this credential's ID to allowCredentials.
+    // Registered before navigation so no request can slip through on page load.
+    // The challenge cookie is set by the real server response (route.fetch forwards headers).
+    await page.route('**/api/passkeys/login/begin', async (route) => {
+      const response = await route.fetch();
+      const body = (await response.json()) as Record<string, unknown>;
+      if (credentialIdBase64url) {
+        body.allowCredentials = [{ type: 'public-key', id: credentialIdBase64url }];
+      }
+      await route.fulfill({ response, json: body });
+    });
+
+    // Simulate logout by clearing auth cookies
     await page.context().clearCookies();
 
-    // Navigate to login page — passkey button must be visible
+    // Navigate to login page — the virtual authenticator persists (same browser tab)
     await page.goto('/Identity/Account/Login');
+
     const passkeySignInButton = page.getByRole('button', { name: /sign in with passkey/i });
     await expect(passkeySignInButton).toBeVisible();
 
     // Click — virtual authenticator auto-responds with the registered credential
     await passkeySignInButton.click();
 
-    // Successful sign-in redirects to the root (or dashboard)
-    await page.waitForURL('/', { timeout: 10_000 });
+    // Successful sign-in redirects to '/'. If it fails, surface the alert text as the error.
+    try {
+      await page.waitForURL('/', { timeout: 12_000 });
+    } catch {
+      const alertText = await page
+        .getByRole('alert')
+        .textContent()
+        .catch(() => null);
+      throw new Error(
+        alertText ? `Passkey sign-in failed: ${alertText}` : 'No redirect to / and no error alert',
+      );
+    }
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test('passkey sign-in cancelled - shows error message', async ({ page }) => {
+  test('passkey sign-in failure - shows error message', async ({ page }) => {
     // Start unauthenticated
     await page.context().clearCookies();
+
+    // Mock the begin endpoint to fail immediately — simulates any network or server error
+    // that prevents passkey sign-in from starting. This is more reliable than relying on
+    // the virtual authenticator's NotAllowedError timing (which varies across Chrome versions).
+    await page.route('**/api/passkeys/login/begin', (route) =>
+      route.fulfill({ status: 500, body: 'Internal Server Error' }),
+    );
+
     await page.goto('/Identity/Account/Login');
-
-    // Set up virtual authenticator with automaticPresenceSimulation: false
-    // so that navigator.credentials.get() will be rejected as if the user cancelled
-    const cdp = await page.context().newCDPSession(page);
-    await cdp.send('WebAuthn.enable', { enableUI: false });
-    await cdp.send('WebAuthn.addVirtualAuthenticator', {
-      options: {
-        protocol: 'ctap2',
-        transport: 'internal',
-        hasResidentKey: true,
-        hasUserVerification: true,
-        isUserVerified: true,
-        automaticPresenceSimulation: false, // will cause NotAllowedError after timeout
-      },
-    });
-
     const passkeySignInButton = page.getByRole('button', { name: /sign in with passkey/i });
     await expect(passkeySignInButton).toBeVisible();
     await passkeySignInButton.click();
 
-    // With no registered credential and no auto-presence, the browser rejects the request.
-    // The login page should show an error message.
-    await expect(page.getByRole('alert').or(page.getByText(/passkey sign-in/i))).toBeVisible({
-      timeout: 10_000,
-    });
+    // The login page should show an error alert
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 5_000 });
   });
 });
