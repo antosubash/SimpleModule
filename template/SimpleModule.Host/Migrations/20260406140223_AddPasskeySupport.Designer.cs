@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SimpleModule.Host;
 
@@ -10,9 +11,11 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    partial class HostDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406140223_AddPasskeySupport")]
+    partial class AddPasskeySupport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
