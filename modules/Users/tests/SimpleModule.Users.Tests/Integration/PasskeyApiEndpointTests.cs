@@ -103,4 +103,94 @@ public class PasskeyApiEndpointTests
             .StatusCode.Should()
             .BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.UnprocessableEntity);
     }
+
+    // ── Login Begin ───────────────────────────────────────────────────
+
+    [Fact]
+    public async Task LoginBegin_WhenAnonymous_Returns200WithJson()
+    {
+        var response = await _unauthenticated.PostAsync("/api/passkeys/login/begin", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().NotBeNullOrEmpty();
+    }
+
+    // ── Login Complete ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task LoginComplete_WithInvalidCredential_ReturnsUnauthorized()
+    {
+        using var content = new StringContent(
+            """{"id":"invalid","type":"public-key"}""",
+            System.Text.Encoding.UTF8,
+            "application/json"
+        );
+
+        var response = await _unauthenticated.PostAsync("/api/passkeys/login/complete", content);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task LoginComplete_WithEmptyBody_ReturnsBadRequest()
+    {
+        var response = await _unauthenticated.PostAsync("/api/passkeys/login/complete", null);
+
+        response
+            .StatusCode.Should()
+            .BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.Unauthorized);
+    }
+
+    // ── Get Passkeys ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetPasskeys_WhenUnauthenticated_Returns401()
+    {
+        var response = await _unauthenticated.GetAsync("/api/passkeys");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetPasskeys_WhenAuthenticated_ReturnsOkWithList()
+    {
+        var userId = await SeedTestUserAsync();
+        var client = _factory.CreateAuthenticatedClient(
+            new Claim(ClaimTypes.NameIdentifier, userId)
+        );
+
+        var response = await client.GetAsync("/api/passkeys");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().NotBeNull();
+        // New users have no passkeys — should return empty array
+        body.Should().Be("[]");
+    }
+
+    // ── Delete Passkey ────────────────────────────────────────────────
+
+    [Fact]
+    public async Task DeletePasskey_WhenUnauthenticated_Returns401()
+    {
+        var response = await _unauthenticated.DeleteAsync("/api/passkeys/someCredentialId");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeletePasskey_WithNonExistentCredential_ReturnsNotFound()
+    {
+        var userId = await SeedTestUserAsync();
+        var client = _factory.CreateAuthenticatedClient(
+            new Claim(ClaimTypes.NameIdentifier, userId)
+        );
+
+        // Use a valid base64url-encoded value that doesn't match any passkey
+        var response = await client.DeleteAsync("/api/passkeys/dGVzdC1jcmVkZW50aWFsLWlk");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 }
