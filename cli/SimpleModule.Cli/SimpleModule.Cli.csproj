@@ -41,6 +41,10 @@
       LogicalName="Templates.Host.ClientApp.vite.config.ts"
     />
     <EmbeddedResource
+      Include="..\..\template\SimpleModule.Host\ClientApp\vite.dev.config.ts"
+      LogicalName="Templates.Host.ClientApp.vite.dev.config.ts"
+    />
+    <EmbeddedResource
       Include="..\..\template\SimpleModule.Host\ClientApp\validate-pages.mjs"
       LogicalName="Templates.Host.ClientApp.validate-pages.mjs"
     />

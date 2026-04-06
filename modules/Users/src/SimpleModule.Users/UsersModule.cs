@@ -24,6 +24,13 @@ public class UsersModule : IModule
             .AddEntityFrameworkStores<UsersDbContext>()
             .AddDefaultTokenProviders();
 
+        services.Configure<IdentityPasskeyOptions>(configuration.GetSection("Passkeys"));
+
+        // Opt into Identity Schema Version 3 to enable the AspNetUserPasskeys table
+        services.Configure<IdentityOptions>(options =>
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3
+        );
+
         services.ConfigureApplicationCookie(options =>
         {
             options.LoginPath = "/Identity/Account/Login";

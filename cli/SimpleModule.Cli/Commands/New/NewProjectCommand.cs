@@ -149,6 +149,10 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             HostTemplates.ViteConfig()
         );
         File.WriteAllText(
+            Path.Combine(hostDir, "ClientApp", "vite.dev.config.ts"),
+            HostTemplates.ViteDevConfig()
+        );
+        File.WriteAllText(
             Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"),
             HostTemplates.ValidatePages()
         );
@@ -293,6 +297,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         Plan(Path.Combine(hostDir, "wwwroot", "index.html"));
         Plan(Path.Combine(hostDir, "ClientApp", "app.tsx"));
         Plan(Path.Combine(hostDir, "ClientApp", "vite.config.ts"));
+        Plan(Path.Combine(hostDir, "ClientApp", "vite.dev.config.ts"));
         Plan(Path.Combine(hostDir, "ClientApp", "validate-pages.mjs"));
         Plan(Path.Combine(hostDir, "ClientApp", "package.json"));
         Plan(Path.Combine(hostDir, "Styles", "app.css"));

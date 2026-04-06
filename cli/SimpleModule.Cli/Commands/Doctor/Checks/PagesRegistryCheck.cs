@@ -8,7 +8,7 @@ public sealed partial class PagesRegistryCheck : IDoctorCheck
     [GeneratedRegex(@"Inertia\.Render\s*\(\s*""([^""]+)""")]
     private static partial Regex InertiaRenderPattern();
 
-    [GeneratedRegex(@"""([^""]+)""\s*:\s*(?:\(\s*\)|(?:async\s*)?\(\s*\)\s*=>|import)")]
+    [GeneratedRegex(@"[""']([^""']+)[""']\s*:\s*(?:\(\s*\)|(?:async\s*)?\(\s*\)\s*=>|import)")]
     private static partial Regex PagesKeyPattern();
 
     public IEnumerable<CheckResult> Run(SolutionContext solution)

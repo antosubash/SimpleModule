@@ -74,6 +74,9 @@ public static class SimpleModuleHostExtensions
         builder.Services.AddScoped<IEventBus, EventBus>();
         builder.Services.AddScoped<InertiaSharedData>();
 
+        // Required by EntityInterceptor to access the current HTTP context
+        builder.Services.AddHttpContextAccessor();
+
         // Entity framework interceptors for automatic entity field population
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, DomainEventInterceptor>();

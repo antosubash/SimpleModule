@@ -227,12 +227,14 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             services.Remove(descriptor);
         }
 
-        // Register fresh options that use the shared in-memory SQLite connection
-        // WITHOUT resolving interceptors from DI (avoids circular dependency)
+        // Register fresh options that use the shared in-memory SQLite connection.
+        // UseApplicationServiceProvider is required so that IdentityDbContext can resolve
+        // IdentityOptions (e.g. SchemaVersion = Version3) during OnModelCreating.
         services.AddScoped(sp =>
         {
             var builder = new DbContextOptionsBuilder<TContext>();
             builder.UseSqlite(_connection);
+            builder.UseApplicationServiceProvider(sp);
             builder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
             if (useOpenIddict)
             {

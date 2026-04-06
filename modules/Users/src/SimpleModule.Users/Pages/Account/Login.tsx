@@ -9,14 +9,20 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
+import { useState } from 'react';
+import { startPasskeyAssertion } from '../passkey';
 
 interface Props {
   returnUrl: string;
   showTestAccounts: boolean;
+  passkeyEnabled: boolean;
   errors?: { email?: string };
 }
 
-export default function Login({ returnUrl, showTestAccounts, errors }: Props) {
+export default function Login({ returnUrl, showTestAccounts, passkeyEnabled, errors }: Props) {
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -27,6 +33,42 @@ export default function Login({ returnUrl, showTestAccounts, errors }: Props) {
     const form = document.querySelector('form') as HTMLFormElement;
     (form.querySelector('[name="email"]') as HTMLInputElement).value = email;
     (form.querySelector('[name="password"]') as HTMLInputElement).value = password;
+  }
+
+  async function handlePasskeySignIn() {
+    if (!window.PublicKeyCredential) {
+      setPasskeyError('Your browser does not support passkeys.');
+      return;
+    }
+    setPasskeyLoading(true);
+    setPasskeyError(null);
+    try {
+      const credential = await startPasskeyAssertion();
+      const res = await fetch(
+        `/api/passkeys/login/complete?returnUrl=${encodeURIComponent(returnUrl)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(credential),
+        },
+      );
+      if (res.ok) {
+        const data = (await res.json()) as { redirectUrl: string };
+        window.location.href = data.redirectUrl;
+      } else if (res.status === 423) {
+        setPasskeyError('Your account is locked. Please try again later.');
+      } else {
+        setPasskeyError('Passkey sign-in failed. Use your password instead.');
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === 'NotAllowedError') {
+        setPasskeyError('Passkey sign-in was cancelled.');
+      } else {
+        setPasskeyError('An unexpected error occurred.');
+      }
+    } finally {
+      setPasskeyLoading(false);
+    }
   }
 
   return (
@@ -104,6 +146,41 @@ export default function Login({ returnUrl, showTestAccounts, errors }: Props) {
                   </Button>
                 </FieldGroup>
               </form>
+
+              {passkeyEnabled && (
+                <>
+                  <div className="relative my-6">
+                    <hr />
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface px-3 text-xs text-text-muted">
+                      or
+                    </span>
+                  </div>
+                  {passkeyError && (
+                    <div className="alert-danger mb-3 text-sm" role="alert">
+                      {passkeyError}
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full"
+                    onClick={handlePasskeySignIn}
+                    disabled={passkeyLoading}
+                  >
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    {passkeyLoading ? 'Signing in…' : 'Sign in with passkey'}
+                  </Button>
+                </>
+              )}
 
               {showTestAccounts && (
                 <>
