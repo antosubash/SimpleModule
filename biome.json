@@ -47,7 +47,8 @@
       "docs/**",
       "website/**",
       "!**/wwwroot",
-      "!modules/*/src/*/types.ts"
+      "!modules/*/src/*/types.ts",
+      "!test-projects"
     ]
   }
 }
