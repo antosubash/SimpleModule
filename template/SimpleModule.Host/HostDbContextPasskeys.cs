@@ -1,11 +1,10 @@
-// Passkey support is enabled by configuring IdentityOptions.Stores.SchemaVersion
-// in UsersModule.ConfigureServices. The source-generated HostDbContext inherits from
-// IdentityDbContext, which reads SchemaVersion from IdentityOptions at model creation time
-// and adds the AspNetUserPasskeys table when Version3 is active.
-//
-// This file is a placeholder for any future hand-written HostDbContext extensions
-// related to passkey infrastructure (e.g. custom entity configurations).
+using Microsoft.AspNetCore.Identity;
 
 namespace SimpleModule.Host;
 
-public partial class HostDbContext;
+public partial class HostDbContext
+{
+    // Override SchemaVersion to opt into Identity Schema Version 3, which provisions the
+    // AspNetUserPasskeys table required for WebAuthn/passkey authentication support.
+    protected override Version SchemaVersion => IdentitySchemaVersions.Version3;
+}

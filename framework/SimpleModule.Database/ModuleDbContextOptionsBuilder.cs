@@ -34,10 +34,6 @@ public static class ModuleDbContextOptionsBuilder
         services.AddDbContext<TContext>(
             (sp, options) =>
             {
-                // Expose the application service provider so that EF model creation can
-                // read IOptions<T> values (e.g. IdentityOptions.Stores.SchemaVersion).
-                options.UseApplicationServiceProvider(sp);
-
                 switch (provider)
                 {
                     case DatabaseProvider.PostgreSql:

@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 
@@ -21,15 +19,6 @@ public class HostDbContextFactory : IDesignTimeDbContextFactory<HostDbContext>
 
         var dbOptions =
             config.GetSection("Database").Get<DatabaseOptions>() ?? new DatabaseOptions();
-
-        // Build a minimal service provider that includes IdentityOptions with SchemaVersion 3.
-        // This allows HostDbContext (which inherits from IdentityDbContext) to discover
-        // the passkeys schema (AspNetUserPasskeys table) during model creation.
-        var services = new ServiceCollection();
-        services.Configure<IdentityOptions>(options =>
-            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3
-        );
-        var sp = services.BuildServiceProvider();
 
         var optionsBuilder = new DbContextOptionsBuilder<HostDbContext>();
         var provider = DatabaseProviderDetector.Detect(
@@ -51,7 +40,6 @@ public class HostDbContextFactory : IDesignTimeDbContextFactory<HostDbContext>
         }
 
         optionsBuilder.UseOpenIddict();
-        optionsBuilder.UseApplicationServiceProvider(sp);
 
         return new HostDbContext(optionsBuilder.Options, Options.Create(dbOptions));
     }
