@@ -62,7 +62,8 @@ public class LoginEndpoint : IViewEndpoint
                     [FromForm] bool? rememberMe,
                     [FromQuery] string? returnUrl,
                     SignInManager<ApplicationUser> signInManager,
-                    ILogger<UsersModule> logger
+                    ILogger<UsersModule> logger,
+                    IOptions<IdentityPasskeyOptions> passkeyOptions
                 ) =>
                 {
                     var result = await signInManager.PasswordSignInAsync(
@@ -97,7 +98,9 @@ public class LoginEndpoint : IViewEndpoint
                         {
                             returnUrl = returnUrl ?? "/",
                             showTestAccounts = false,
-                            passkeyEnabled = false,
+                            passkeyEnabled = !string.IsNullOrEmpty(
+                                passkeyOptions.Value.ServerDomain
+                            ),
                             errors = new { email = "Invalid login attempt." },
                         }
                     );

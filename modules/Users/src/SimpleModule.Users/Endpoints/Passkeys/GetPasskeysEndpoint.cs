@@ -24,7 +24,7 @@ public class GetPasskeysEndpoint : IEndpoint
 
                     var result = passkeys.Select(p => new
                     {
-                        credentialId = ToBase64Url(p.CredentialId),
+                        credentialId = PasskeyHelpers.ToBase64Url(p.CredentialId),
                         name = p.Name,
                         createdAt = p.CreatedAt,
                     });
@@ -35,7 +35,4 @@ public class GetPasskeysEndpoint : IEndpoint
             .RequireAuthorization()
             .WithTags("Passkeys");
     }
-
-    private static string ToBase64Url(byte[] bytes) =>
-        Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 }

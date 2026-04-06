@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Endpoints.Passkeys;
 
 namespace SimpleModule.Users.Pages.Account.Manage;
 
@@ -25,7 +26,7 @@ public class ManagePasskeysEndpoint : IViewEndpoint
 
                     var passkeysDto = passkeys.Select(p => new
                     {
-                        credentialId = ToBase64Url(p.CredentialId),
+                        credentialId = PasskeyHelpers.ToBase64Url(p.CredentialId),
                         name = p.Name,
                         createdAt = p.CreatedAt,
                         transports = p.Transports,
@@ -39,7 +40,4 @@ public class ManagePasskeysEndpoint : IViewEndpoint
             )
             .RequireAuthorization();
     }
-
-    private static string ToBase64Url(byte[] bytes) =>
-        Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 }
