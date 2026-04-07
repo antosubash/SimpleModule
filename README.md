@@ -62,8 +62,9 @@ framework/
   SimpleModule.DevTools        # Developer tooling and diagnostics
   SimpleModule.Storage         # File storage abstraction with Local, Azure Blob, and S3 providers
 modules/
-  Admin, AuditLogs, Dashboard, FileStorage, Orders, PageBuilder,
-  Products, Settings, Users
+  Admin, Agents, AuditLogs, BackgroundJobs, Dashboard, Email,
+  FeatureFlags, FileStorage, Localization, Marketplace, Orders,
+  PageBuilder, Products, Rag, RateLimiting, Settings, Tenants, Users
   OpenIddict                   # OpenID Connect / OAuth 2.0 via OpenIddict
   Permissions                  # RBAC and access control
 packages/
