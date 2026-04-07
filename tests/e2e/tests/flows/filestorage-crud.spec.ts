@@ -39,7 +39,7 @@ test.describe
 
     test('file appears in browse UI', async ({ page }) => {
       const browse = new FileStorageBrowsePage(page);
-      await page.goto('/files/browse');
+      await page.goto('/files');
 
       await expect(browse.fileRow(testFileName)).toBeVisible();
       await expect(browse.downloadButton(testFileName)).toBeVisible();
@@ -91,14 +91,14 @@ test.describe
 
     test('folder appears in browse UI', async ({ page }) => {
       const browse = new FileStorageBrowsePage(page);
-      await page.goto('/files/browse');
+      await page.goto('/files');
 
       await expect(browse.folderRow('docs')).toBeVisible();
     });
 
     test('navigate into folder', async ({ page }) => {
       const browse = new FileStorageBrowsePage(page);
-      await page.goto('/files/browse');
+      await page.goto('/files');
 
       await browse.folderRow('docs').click();
       await page.waitForURL(/folder=docs/);
@@ -117,7 +117,7 @@ test.describe
 
     test('delete file via UI', async ({ page }) => {
       const browse = new FileStorageBrowsePage(page);
-      await page.goto('/files/browse');
+      await page.goto('/files');
 
       await browse.deleteButton(testFileName).click();
       await expect(browse.deleteDialogTitle).toBeVisible();

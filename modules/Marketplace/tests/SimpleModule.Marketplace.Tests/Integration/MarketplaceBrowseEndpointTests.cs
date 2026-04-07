@@ -18,7 +18,7 @@ public class MarketplaceBrowseEndpointTests
     public async Task Browse_EndpointIsRegistered_DoesNotReturn404()
     {
         var client = _factory.CreateClient();
-        var response = await client.GetAsync("/marketplace/browse");
+        var response = await client.GetAsync("/marketplace");
 
         // The endpoint should be registered (not 404/405).
         // It may return 500 if the external NuGet API is unreachable in CI,

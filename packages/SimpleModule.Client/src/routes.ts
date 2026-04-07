@@ -32,7 +32,7 @@ export const routes = {
       update: (name: string | number) => `/api/feature-flags/${name}`,
     },
     views: {
-      manage: () => '/feature-flags' as const,
+      manage: () => '/feature-flags/manage' as const,
     },
   },
   fileStorage: {
@@ -45,7 +45,7 @@ export const routes = {
       upload: () => '/api/files' as const,
     },
     views: {
-      browse: () => '/files/browse' as const,
+      browse: () => '/files' as const,
     },
   },
   marketplace: {
@@ -54,7 +54,7 @@ export const routes = {
       search: () => '/api/marketplace' as const,
     },
     views: {
-      browse: () => '/marketplace/browse' as const,
+      browse: () => '/marketplace' as const,
       detail: (id: string | number) => `/marketplace/${id}`,
     },
   },
@@ -73,8 +73,7 @@ export const routes = {
       update: (id: string | number) => `/api/pagebuilder/${id}`,
       addTagToPage: (id: string | number) => `/api/pagebuilder/${id}/tags`,
       getAllTags: () => '/api/pagebuilder/tags' as const,
-      removeTagFromPage: (id: string | number, tagId: string | number) =>
-        `/api/pagebuilder/${id}/tags/${tagId}`,
+      removeTagFromPage: (id: string | number, tagId: string | number) => `/api/pagebuilder/${id}/tags/${tagId}`,
       createTemplate: () => '/api/pagebuilder/templates' as const,
       deleteTemplate: (id: string | number) => `/api/pagebuilder/templates/${id}`,
       getAllTemplates: () => '/api/pagebuilder/templates' as const,
@@ -96,7 +95,7 @@ export const routes = {
       update: (id: string | number) => `/api/products/${id}`,
     },
     views: {
-      browse: () => '/products/browse' as const,
+      browse: () => '/products' as const,
       create: () => '/products/create' as const,
       edit: (id: string | number) => `/products/${id}/edit`,
       manage: () => '/products/manage' as const,
@@ -112,7 +111,7 @@ export const routes = {
       update: (id: string | number) => `/api/rate-limiting/${id}`,
     },
     views: {
-      admin: () => '/rate-limiting' as const,
+      admin: () => '/rate-limiting/manage' as const,
     },
   },
   settings: {
@@ -135,26 +134,23 @@ export const routes = {
       updateMySetting: () => '/api/settings/me' as const,
     },
     views: {
-      adminSettings: () => '/settings' as const,
+      adminSettings: () => '/settings/manage' as const,
       menuManager: () => '/settings/menus' as const,
       userSettings: () => '/settings/me' as const,
     },
   },
   tenants: {
     api: {
-      deleteTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      deleteTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       getTenantFeatures: (id: string | number) => `/api/tenants/${id}/features`,
-      setTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      setTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       addHost: (id: string | number) => `/api/tenants/${id}/hosts`,
       changeStatus: (id: string | number) => `/api/tenants/${id}/status`,
       create: () => '/api/tenants' as const,
       delete: (id: string | number) => `/api/tenants/${id}`,
       getAll: () => '/api/tenants' as const,
       getById: (id: string | number) => `/api/tenants/${id}`,
-      removeHost: (id: string | number, hostId: string | number) =>
-        `/api/tenants/${id}/hosts/${hostId}`,
+      removeHost: (id: string | number, hostId: string | number) => `/api/tenants/${id}/hosts/${hostId}`,
       update: (id: string | number) => `/api/tenants/${id}`,
     },
     views: {
@@ -271,11 +267,11 @@ export const routes = {
   admin: {
     api: {
       adminRoles: () => '/admin/roles' as const,
-      adminSessions: (id: string | number, tokenId: string | number) =>
-        `/admin/users/${id}/sessions/${tokenId}`,
+      adminSessions: (id: string | number, tokenId: string | number) => `/admin/users/${id}/sessions/${tokenId}`,
       adminUsers: () => '/admin/users' as const,
     },
     views: {
+      hub: () => '/admin' as const,
       rolesCreate: () => '/admin/roles/create' as const,
       rolesEdit: (id: string | number) => `/admin/roles/${id}/edit`,
       roles: () => '/admin/roles' as const,
@@ -285,3 +281,4 @@ export const routes = {
     },
   },
 } as const;
+

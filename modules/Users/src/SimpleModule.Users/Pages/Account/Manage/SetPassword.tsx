@@ -1,14 +1,6 @@
 import { router } from '@inertiajs/react';
-import {
-  Button,
-  Card,
-  CardContent,
-  Container,
-  Field,
-  FieldGroup,
-  Input,
-  Label,
-} from '@simplemodule/ui';
+import { Button, Field, FieldGroup, Input, Label } from '@simplemodule/ui';
+import ManageLayout from '@/components/ManageLayout';
 
 interface Props {
   statusMessage?: string;
@@ -23,7 +15,7 @@ export default function SetPassword({ statusMessage, errors }: Props) {
   }
 
   return (
-    <Container size="sm">
+    <ManageLayout activePage="ChangePassword">
       <h3 className="text-xl font-bold mb-4">Set your password</h3>
       {statusMessage && (
         <div className="alert-success mb-4 text-sm" role="alert">
@@ -43,37 +35,33 @@ export default function SetPassword({ statusMessage, errors }: Props) {
           </ul>
         </div>
       )}
-      <Card>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <Label htmlFor="newPassword">New password</Label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="confirmPassword">Confirm new password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                />
-              </Field>
-              <Button type="submit" className="w-full">
-                Set password
-              </Button>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </Container>
+      <form onSubmit={handleSubmit}>
+        <FieldGroup>
+          <Field>
+            <Label htmlFor="newPassword">New password</Label>
+            <Input
+              id="newPassword"
+              name="newPassword"
+              type="password"
+              required
+              autoComplete="new-password"
+            />
+          </Field>
+          <Field>
+            <Label htmlFor="confirmPassword">Confirm new password</Label>
+            <Input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              required
+              autoComplete="new-password"
+            />
+          </Field>
+          <Button type="submit" className="w-full">
+            Set password
+          </Button>
+        </FieldGroup>
+      </form>
+    </ManageLayout>
   );
 }

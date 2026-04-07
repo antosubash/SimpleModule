@@ -46,6 +46,8 @@ public static class SimpleModuleHostExtensions
         configure?.Invoke(options);
         builder.Services.AddSingleton(options);
 
+        builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(5));
+
         BridgeAspireConnectionString(builder.Configuration);
         options.DatabaseProvider = ValidateDatabaseConfiguration(builder.Configuration);
 
@@ -171,8 +173,8 @@ public static class SimpleModuleHostExtensions
                     var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
-                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
-                        + $"font-src 'self' fonts.gstatic.com; "
+                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me; "
+                        + $"font-src 'self' fonts.gstatic.com rsms.me; "
                         + $"connect-src {connectSrc}; "
                         + $"img-src 'self' data:; "
                         + $"object-src 'none'; "

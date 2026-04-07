@@ -1,6 +1,7 @@
 using System.Security.Claims;
+using SimpleModule.Core.Authorization;
 
-namespace SimpleModule.Users.Extensions;
+namespace SimpleModule.Core.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
@@ -11,5 +12,13 @@ public static class ClaimsPrincipalExtensions
     {
         return principal.FindFirstValue("sub")
             ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    /// <summary>
+    /// Returns null for Admin users (no scoping — sees all resources), or the user ID for regular users.
+    /// </summary>
+    public static string? GetScopedUserId(this ClaimsPrincipal principal)
+    {
+        return principal.IsInRole(WellKnownRoles.Admin) ? null : principal.GetUserId();
     }
 }
