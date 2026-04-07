@@ -14,7 +14,7 @@ For example, a Products module owns everything related to products: the database
 
 ## The `IModule` Interface
 
-The `IModule` interface defines six lifecycle hooks, all with default (no-op) implementations. You only override the ones you need:
+The `IModule` interface defines a set of lifecycle hooks, all with default (no-op) implementations. You only override the ones you need:
 
 ```csharp
 public interface IModule
@@ -25,6 +25,14 @@ public interface IModule
     virtual void ConfigureMenu(IMenuBuilder menus) { }
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
+    virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
+    virtual void ConfigureAgents(IAgentBuilder builder) { }
+    virtual void ConfigureRateLimits(IRateLimitBuilder builder) { }
+    virtual void ConfigureHost(IHost host) { }
+    virtual Task OnStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    virtual Task OnStopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    virtual Task<ModuleHealthStatus> CheckHealthAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(ModuleHealthStatus.Healthy);
 }
 ```
 
@@ -36,6 +44,13 @@ public interface IModule
 | `ConfigureMenu` | Register navigation items in the menu system |
 | `ConfigurePermissions` | Define module-specific permissions for authorization |
 | `ConfigureSettings` | Register configurable settings for the module |
+| `ConfigureFeatureFlags` | Register feature flag definitions |
+| `ConfigureAgents` | Register AI agent definitions |
+| `ConfigureRateLimits` | Register rate limit policies |
+| `ConfigureHost` | Configure host-level integrations after the host is built (e.g., TickerQ, database initialization) |
+| `OnStartAsync` | One-time async initialization after all services are registered |
+| `OnStopAsync` | Graceful shutdown cleanup |
+| `CheckHealthAsync` | Report per-module health status |
 
 ::: tip
 All methods are `virtual` with default no-op implementations. You only need to override the hooks your module actually uses.
