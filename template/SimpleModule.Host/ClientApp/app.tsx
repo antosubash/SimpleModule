@@ -134,7 +134,8 @@ function showErrorToast(message: string) {
       </button>
     </div>
   `;
-  container.querySelector('p.opacity-90')!.textContent = message;
+  const msg = container.querySelector('p.opacity-90');
+  if (msg) msg.textContent = message;
   container.querySelector('button')?.addEventListener('click', () => container.remove());
   document.body.appendChild(container);
   setTimeout(() => container.remove(), 8000);

@@ -20,8 +20,8 @@ test.describe('OpenIddict Clients', () => {
     await expect(page.getByRole('heading', { name: /create client/i })).toBeVisible();
   });
 
-  test('navbar has OAuth Clients link', async ({ page }) => {
-    await page.goto('/');
+  test('admin hub has OAuth Clients link', async ({ page }) => {
+    await page.goto('/admin');
     await expect(page.getByRole('link', { name: 'OAuth Clients' })).toBeVisible();
   });
 });

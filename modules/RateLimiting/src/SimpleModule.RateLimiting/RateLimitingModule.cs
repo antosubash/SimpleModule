@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
-using SimpleModule.Core.Menu;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.Database;
 using SimpleModule.RateLimiting.Contracts;
@@ -13,7 +12,7 @@ namespace SimpleModule.RateLimiting;
     RoutePrefix = RateLimitingConstants.RoutePrefix,
     ViewPrefix = RateLimitingConstants.ViewPrefix
 )]
-public class RateLimitingModule : IModule, IModuleMenu
+public class RateLimitingModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
@@ -70,18 +69,5 @@ public class RateLimitingModule : IModule, IModuleMenu
             );
     }
 
-    public void ConfigureMenu(IMenuBuilder menus)
-    {
-        menus.Add(
-            new MenuItem
-            {
-                Label = "Rate Limiting",
-                Url = "/rate-limiting",
-                Icon =
-                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>""",
-                Order = 85,
-                Section = MenuSection.AdminSidebar,
-            }
-        );
-    }
+    // Menu items removed — accessible via Admin hub page
 }

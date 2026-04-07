@@ -11,5 +11,6 @@ public class StoredFile
     public string ContentType { get; set; } = string.Empty;
     public long Size { get; set; }
     public string? Folder { get; set; }
+    public string? CreatedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }

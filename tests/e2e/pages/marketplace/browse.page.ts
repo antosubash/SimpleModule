@@ -4,7 +4,7 @@ export class MarketplaceBrowsePage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/marketplace/browse');
+    await this.page.goto('/marketplace');
   }
 
   get heading() {

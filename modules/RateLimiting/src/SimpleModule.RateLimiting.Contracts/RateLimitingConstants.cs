@@ -17,6 +17,6 @@ public static class RateLimitingConstants
         public const string GetActivePolicies = "/active";
 
         // View endpoints
-        public const string Admin = "/";
+        public const string Admin = "/manage";
     }
 }
