@@ -4,7 +4,7 @@ export class AdminSettingsPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/settings');
+    await this.page.goto('/settings/manage');
   }
 
   get heading() {

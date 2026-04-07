@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
+using SimpleModule.Core.Extensions;
 using SimpleModule.FileStorage.Contracts;
 
 namespace SimpleModule.FileStorage.Endpoints.Files;
@@ -15,8 +17,11 @@ public class GetAllEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                (string? folder, IFileStorageContracts files) =>
-                    CrudEndpoints.GetAll(() => files.GetFilesAsync(folder))
+                (string? folder, HttpContext context, IFileStorageContracts files) =>
+                {
+                    var userId = context.User.GetScopedUserId();
+                    return CrudEndpoints.GetAll(() => files.GetFilesAsync(folder, userId));
+                }
             )
             .RequirePermission(FileStoragePermissions.View);
 }

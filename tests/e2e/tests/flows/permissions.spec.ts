@@ -50,7 +50,7 @@ test.describe('Permission System', () => {
     });
 
     test('can access public browse page', async ({ page }) => {
-      await page.goto('/products/browse');
+      await page.goto('/products');
       // Should NOT redirect to login — this page is AllowAnonymous
       await expect(page.getByRole('heading', { name: /products/i })).toBeVisible();
     });

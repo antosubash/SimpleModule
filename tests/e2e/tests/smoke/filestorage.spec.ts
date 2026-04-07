@@ -5,7 +5,7 @@ import { FileStorageBrowsePage } from '../../pages/filestorage/browse.page';
 test.describe('FileStorage smoke', () => {
   test('browse page loads with empty state', async ({ page }) => {
     const browse = new FileStorageBrowsePage(page);
-    await page.goto('/files/browse');
+    await page.goto('/files');
 
     await expect(browse.uploadButton).toBeVisible();
     await expect(browse.emptyTitle).toBeVisible();
@@ -16,7 +16,7 @@ test.describe('FileStorage smoke', () => {
     await page.goto('/');
     const filesLink = page.getByRole('link', { name: 'Files' });
     await expect(filesLink).toBeVisible();
-    await expect(filesLink).toHaveAttribute('href', '/files/browse');
+    await expect(filesLink).toHaveAttribute('href', '/files');
   });
 
   test('API endpoint returns empty list', async ({ request }) => {
@@ -39,7 +39,7 @@ test.describe('FileStorage smoke', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
     test('browse page redirects to login', async ({ page }) => {
-      const response = await page.goto('/files/browse');
+      const response = await page.goto('/files');
       expect(response?.url()).toContain('/Account/Login');
     });
 
