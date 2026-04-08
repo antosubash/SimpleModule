@@ -107,9 +107,6 @@ public partial class MapService(
             Description = request.Description,
             Type = LayerSourceType.Dataset,
             Url = $"/api/datasets/{request.DatasetId}/features",
-            Attribution = null,
-            MinZoom = null,
-            MaxZoom = null,
             Bounds = bounds,
             Coverage = PolygonFromBounds(bounds),
             Metadata = new Dictionary<string, string>

@@ -51,10 +51,9 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
   async function loadDatasets() {
     if (datasetsLoaded) return;
     const res = await fetch('/api/datasets/', { headers: { Accept: 'application/json' } });
-    if (res.ok) {
-      const list = (await res.json()) as Array<{ id: string; name: string }>;
-      setDatasets(list);
-    }
+    if (!res.ok) return;
+    const list = (await res.json()) as Array<{ id: string; name: string }>;
+    setDatasets(list);
     setDatasetsLoaded(true);
   }
 
