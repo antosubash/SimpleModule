@@ -52,8 +52,6 @@
     <PackageVersion Include="AWSSDK.S3" Version="3.7.500.2" />
     <!-- Background Jobs -->
     <PackageVersion Include="Cronos" Version="0.8.4" />
-    <PackageVersion Include="TickerQ" Version="10.2.5" />
-    <PackageVersion Include="TickerQ.EntityFrameworkCore" Version="10.2.5" />
     <!-- Email -->
     <PackageVersion Include="MailKit" Version="4.15.1" />
     <!-- CLI -->
