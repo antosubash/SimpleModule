@@ -120,6 +120,7 @@ COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules
 COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleModule.Email/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
 COPY modules/Chat/src/SimpleModule.Chat/package.json modules/Chat/src/SimpleModule.Chat/
+COPY modules/Map/src/SimpleModule.Map/package.json modules/Map/src/SimpleModule.Map/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
 COPY packages/SimpleModule.TsConfig/package.json packages/SimpleModule.TsConfig/
