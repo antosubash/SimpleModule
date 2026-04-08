@@ -63,6 +63,31 @@ export const routes = {
       browse: () => '/files' as const,
     },
   },
+  map: {
+    api: {
+      createBasemap: () => '/api/map/basemaps' as const,
+      deleteBasemap: (id: string | number) => `/api/map/basemaps/${id}`,
+      getAllBasemaps: () => '/api/map/basemaps' as const,
+      getBasemapById: (id: string | number) => `/api/map/basemaps/${id}`,
+      updateBasemap: (id: string | number) => `/api/map/basemaps/${id}`,
+      createLayerSource: () => '/api/map/sources' as const,
+      deleteLayerSource: (id: string | number) => `/api/map/sources/${id}`,
+      getAllLayerSources: () => '/api/map/sources' as const,
+      getLayerSourceById: (id: string | number) => `/api/map/sources/${id}`,
+      updateLayerSource: (id: string | number) => `/api/map/sources/${id}`,
+      createMap: () => '/api/map/maps' as const,
+      deleteMap: (id: string | number) => `/api/map/maps/${id}`,
+      getAllMaps: () => '/api/map/maps' as const,
+      getMapById: (id: string | number) => `/api/map/maps/${id}`,
+      updateMap: (id: string | number) => `/api/map/maps/${id}`,
+    },
+    views: {
+      browse: () => '/map' as const,
+      edit: (id: string | number) => `/map/${id}/edit`,
+      layers: () => '/map/layers' as const,
+      view: (id: string | number) => `/map/${id}`,
+    },
+  },
   marketplace: {
     api: {
       getById: (id: string | number) => `/api/marketplace/${id}`,

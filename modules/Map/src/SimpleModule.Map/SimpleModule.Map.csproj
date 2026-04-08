@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>Map module for SimpleModule. MapLibre GL JS-based interactive map with layer source catalog (WMS, WFS, WMTS, PMTiles, COG, XYZ, vector tiles).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="NetTopologySuite" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\SimpleModule.Map.Contracts\SimpleModule.Map.Contracts.csproj" />
+  </ItemGroup>
+</Project>

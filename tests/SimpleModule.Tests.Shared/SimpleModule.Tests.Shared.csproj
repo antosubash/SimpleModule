@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\template\SimpleModule.Host\SimpleModule.Host.csproj" />
     <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Map\src\SimpleModule.Map\SimpleModule.Map.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders.Contracts\SimpleModule.Orders.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
     <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
