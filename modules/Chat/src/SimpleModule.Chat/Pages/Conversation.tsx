@@ -2,7 +2,7 @@ import { Button, Card, CardContent, Input, PageShell } from '@simplemodule/ui';
 import { fetchServerSentEvents, useChat } from '@tanstack/ai-react';
 import { useMemo, useState } from 'react';
 
-type UiMessagePart = { type: string; content: string };
+type UiMessagePart = { type: 'text'; content: string };
 
 type UiMessage = {
   id: string;
