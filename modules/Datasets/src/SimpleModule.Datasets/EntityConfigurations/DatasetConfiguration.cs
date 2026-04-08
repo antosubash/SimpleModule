@@ -28,6 +28,7 @@ public sealed class DatasetConfiguration : IEntityTypeConfiguration<Dataset>
             d.BboxMaxY,
         });
         builder.HasIndex(d => new { d.IsDeleted, d.CreatedAt });
-        builder.HasQueryFilter(d => !d.IsDeleted);
+        // Soft-delete query filter is applied by ApplyEntityConventions via the named
+        // filter key; adding an anonymous filter here conflicts with it.
     }
 }
