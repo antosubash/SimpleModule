@@ -12,6 +12,7 @@ public static class EmailConstants
         public const string GetAllMessages = "/messages";
         public const string GetMessageById = "/messages/{id}";
         public const string SendEmail = "/messages/send";
+        public const string TestSend = "/messages/test-send";
 
         // API endpoints - Stats
         public const string GetStats = "/stats";
@@ -29,5 +30,6 @@ public static class EmailConstants
         public const string Templates = "/templates";
         public const string CreateTemplatePage = "/templates/create";
         public const string EditTemplatePage = "/templates/{id}/edit";
+        public const string Settings = "/settings";
     }
 }

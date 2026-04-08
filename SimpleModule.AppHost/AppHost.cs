@@ -14,4 +14,10 @@ builder
     .WithReference(db)
     .WaitFor(db);
 
+builder
+    .AddProject<Projects.SimpleModule_Worker>("simplemodule-worker")
+    .WithReference(db)
+    .WaitFor(db)
+    .WithReplicas(2);
+
 builder.Build().Run();

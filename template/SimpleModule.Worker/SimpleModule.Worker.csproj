@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <TargetFramework>net10.0</TargetFramework>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <NoWarn>$(NoWarn);SM0025;SM0028</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\framework\SimpleModule.Hosting\SimpleModule.Hosting.csproj" />
+    <ProjectReference
+      Include="..\..\framework\SimpleModule.Generator\SimpleModule.Generator.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+    <!-- Reference every module so the source generator discovers all jobs -->
+    <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users\SimpleModule.Users.csproj" />
+    <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions\SimpleModule.Permissions.csproj" />
+    <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products\SimpleModule.Products.csproj" />
+    <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders\SimpleModule.Orders.csproj" />
+    <ProjectReference Include="..\..\modules\Admin\src\SimpleModule.Admin\SimpleModule.Admin.csproj" />
+    <ProjectReference Include="..\..\modules\Settings\src\SimpleModule.Settings\SimpleModule.Settings.csproj" />
+    <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
+    <ProjectReference Include="..\..\modules\FileStorage\src\SimpleModule.FileStorage\SimpleModule.FileStorage.csproj" />
+    <ProjectReference Include="..\..\modules\FeatureFlags\src\SimpleModule.FeatureFlags\SimpleModule.FeatureFlags.csproj" />
+    <ProjectReference Include="..\..\modules\Tenants\src\SimpleModule.Tenants\SimpleModule.Tenants.csproj" />
+    <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
+    <ProjectReference Include="..\..\modules\Localization\src\SimpleModule.Localization\SimpleModule.Localization.csproj" />
+    <ProjectReference Include="..\..\modules\RateLimiting\src\SimpleModule.RateLimiting\SimpleModule.RateLimiting.csproj" />
+    <ProjectReference Include="..\..\modules\Dashboard\src\SimpleModule.Dashboard\SimpleModule.Dashboard.csproj" />
+    <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
+    <ProjectReference Include="..\..\modules\Marketplace\src\SimpleModule.Marketplace\SimpleModule.Marketplace.csproj" />
+    <ProjectReference Include="..\..\modules\Email\src\SimpleModule.Email\SimpleModule.Email.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Storage.Local\SimpleModule.Storage.Local.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Agents\SimpleModule.Agents.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.AI.Ollama\SimpleModule.AI.Ollama.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag\SimpleModule.Rag.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag.StructuredRag\SimpleModule.Rag.StructuredRag.csproj" />
+    <ProjectReference Include="..\..\framework\SimpleModule.Rag.VectorStore.InMemory\SimpleModule.Rag.VectorStore.InMemory.csproj" />
+    <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
+    <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
+    <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
+  </ItemGroup>
+</Project>

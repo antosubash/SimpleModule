@@ -9,8 +9,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Cronos" />
-    <PackageReference Include="TickerQ" />
-    <PackageReference Include="TickerQ.EntityFrameworkCore" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.BackgroundJobs.Contracts\SimpleModule.BackgroundJobs.Contracts.csproj" />

@@ -27,7 +27,7 @@ public interface IModule
     /// <summary>
     /// Called once during application startup after all services are built but before
     /// hosted services start. Receives the host instance for configuring host-level
-    /// integrations (e.g., TickerQ's UseTickerQ, database initialization).
+    /// integrations (e.g., database initialization).
     /// </summary>
     virtual void ConfigureHost(IHost host) { }
 
