@@ -13,21 +13,23 @@ public sealed partial class StalledJobSweeperService(
     ILogger<StalledJobSweeperService> logger
 ) : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken ct)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var opts = options.Value;
-        while (!ct.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await Task.Delay(opts.StallSweepInterval, ct);
+                await Task.Delay(opts.StallSweepInterval, stoppingToken);
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var queue = scope.ServiceProvider.GetRequiredService<IJobQueue>();
-                var count = await queue.RequeueStalledAsync(opts.StallTimeout, ct);
+                var count = await queue.RequeueStalledAsync(opts.StallTimeout, stoppingToken);
                 if (count > 0) LogSwept(logger, count);
             }
             catch (OperationCanceledException) { break; }
+#pragma warning disable CA1031
             catch (Exception ex)
+#pragma warning restore CA1031
             {
                 LogError(logger, ex);
             }

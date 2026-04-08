@@ -19,39 +19,41 @@ public sealed partial class JobProcessorService(
 {
     private readonly BackgroundJobsWorkerOptions _options = options.Value;
 
-    protected override async Task ExecuteAsync(CancellationToken ct)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         LogStarted(logger, identity.Id, _options.MaxConcurrency);
         using var semaphore = new SemaphoreSlim(_options.MaxConcurrency, _options.MaxConcurrency);
 
-        while (!ct.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                await semaphore.WaitAsync(ct);
+                await semaphore.WaitAsync(stoppingToken);
 
                 JobQueueEntry? entry;
                 await using (var dequeueScope = scopeFactory.CreateAsyncScope())
                 {
                     var queue = dequeueScope.ServiceProvider.GetRequiredService<IJobQueue>();
-                    entry = await queue.DequeueAsync(identity.Id, ct);
+                    entry = await queue.DequeueAsync(identity.Id, stoppingToken);
                 }
 
                 if (entry is null)
                 {
                     semaphore.Release();
-                    await Task.Delay(_options.PollInterval, ct);
+                    await Task.Delay(_options.PollInterval, stoppingToken);
                     continue;
                 }
 
                 _ = Task.Run(async () =>
                 {
-                    try { await ExecuteEntryAsync(entry, ct); }
+                    try { await ExecuteEntryAsync(entry, stoppingToken); }
                     finally { semaphore.Release(); }
-                }, ct);
+                }, stoppingToken);
             }
             catch (OperationCanceledException) { break; }
+#pragma warning disable CA1031
             catch (Exception ex)
+#pragma warning restore CA1031
             {
                 LogLoopError(logger, ex);
                 await Task.Delay(_options.PollInterval, CancellationToken.None);
@@ -92,7 +94,9 @@ public sealed partial class JobProcessorService(
         {
             // Shutdown — leave as Claimed, stall sweeper will requeue.
         }
+#pragma warning disable CA1031
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             LogJobError(logger, entry.Id, jobType.Name, ex);
             if (entry.AttemptCount < _options.MaxAttempts)

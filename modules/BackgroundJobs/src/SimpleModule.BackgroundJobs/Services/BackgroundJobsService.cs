@@ -71,7 +71,7 @@ public sealed partial class BackgroundJobsService(
 
         await queue.EnqueueAsync(new JobQueueEntry(
             id, jobType.AssemblyQualifiedName!, serialized,
-            new DateTimeOffset(next.Value, TimeSpan.Zero),
+            new DateTimeOffset(next, TimeSpan.Zero),
             JobQueueEntryState.Pending, 0, cronExpression, name, DateTimeOffset.UtcNow), ct);
 
         LogRecurringJobAdded(logger, name, cronExpression);
