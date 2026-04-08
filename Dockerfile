@@ -86,6 +86,8 @@ COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/S
 COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
+COPY modules/Chat/src/SimpleModule.Chat.Contracts/*.csproj modules/Chat/src/SimpleModule.Chat.Contracts/
+COPY modules/Chat/src/SimpleModule.Chat/*.csproj modules/Chat/src/SimpleModule.Chat/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
@@ -115,6 +117,7 @@ COPY modules/Users/src/SimpleModule.Users/package.json modules/Users/src/SimpleM
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
 COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleModule.Email/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
+COPY modules/Chat/src/SimpleModule.Chat/package.json modules/Chat/src/SimpleModule.Chat/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
 COPY packages/SimpleModule.TsConfig/package.json packages/SimpleModule.TsConfig/
@@ -173,9 +176,12 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 # Writable directory for SQLite database and local storage
 RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
 
-# Set deployment version for JS/CSS cache-busting and Inertia stale-version detection.
-# Override at runtime or build time: docker build --build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)
-ARG DEPLOY_VERSION=latest
+# Deployment version for JS/CSS cache-busting and Inertia stale-version detection.
+# Left empty by default so InertiaMiddleware.GetVersion() falls back to the entry
+# assembly's last-write timestamp (yyyyMMddHHmmss), which changes on every publish
+# and guarantees cache invalidation with zero configuration.
+# Override for deterministic versions: docker build --build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)
+ARG DEPLOY_VERSION=
 ENV DEPLOYMENT_VERSION=${DEPLOY_VERSION}
 
 USER appuser

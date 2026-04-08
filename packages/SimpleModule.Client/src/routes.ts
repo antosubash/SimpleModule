@@ -17,6 +17,21 @@ export const routes = {
       recurring: () => '/admin/jobs/recurring' as const,
     },
   },
+  chat: {
+    api: {
+      createConversation: () => '/api/chat/conversations' as const,
+      deleteConversation: (id: string | number) => `/api/chat/conversations/${id}`,
+      getConversation: (id: string | number) => `/api/chat/conversations/${id}`,
+      getMessages: (id: string | number) => `/api/chat/conversations/${id}/messages`,
+      listConversations: () => '/api/chat/conversations' as const,
+      renameConversation: (id: string | number) => `/api/chat/conversations/${id}`,
+      sendMessageStream: (id: string | number) => `/api/chat/conversations/${id}/stream`,
+    },
+    views: {
+      browse: () => '/chat' as const,
+      conversation: (id: string | number) => `/chat/${id}`,
+    },
+  },
   dashboard: {
     views: {
       home: () => '/' as const,

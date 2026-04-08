@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
 using SimpleModule.BackgroundJobs;
+using SimpleModule.Chat;
 using SimpleModule.Database;
 using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
@@ -77,6 +78,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<TenantsDbContext>(services);
             ReplaceDbContext<RagDbContext>(services);
             ReplaceDbContext<AgentsDbContext>(services);
+            ReplaceDbContext<ChatDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<RateLimitingDbContext>(services);
             ReplaceDbContext<EmailDbContext>(services);
@@ -180,6 +182,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<TenantsDbContext>(sp);
         EnsureTablesCreated<RagDbContext>(sp);
         EnsureTablesCreated<AgentsDbContext>(sp);
+        EnsureTablesCreated<ChatDbContext>(sp);
         EnsureTablesCreated<BackgroundJobsDbContext>(sp);
         EnsureTablesCreated<RateLimitingDbContext>(sp);
         EnsureTablesCreated<EmailDbContext>(sp);

@@ -113,6 +113,11 @@
     <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
     <Project Path="modules/Agents/tests/SimpleModule.Agents.Tests/SimpleModule.Agents.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/Chat/">
+    <Project Path="modules/Chat/src/SimpleModule.Chat.Contracts/SimpleModule.Chat.Contracts.csproj" />
+    <Project Path="modules/Chat/src/SimpleModule.Chat/SimpleModule.Chat.csproj" />
+    <Project Path="modules/Chat/tests/SimpleModule.Chat.Tests/SimpleModule.Chat.Tests.csproj" />
+  </Folder>
   <Folder Name="/modules/BackgroundJobs/">
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/SimpleModule.BackgroundJobs.Contracts.csproj" />
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/SimpleModule.BackgroundJobs.csproj" />

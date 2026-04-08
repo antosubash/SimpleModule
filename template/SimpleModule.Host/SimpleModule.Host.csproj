@@ -48,6 +48,7 @@
     <ProjectReference Include="..\..\framework\SimpleModule.Rag.VectorStore.InMemory\SimpleModule.Rag.VectorStore.InMemory.csproj" />
     <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
     <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
+    <ProjectReference Include="..\..\modules\Chat\src\SimpleModule.Chat\SimpleModule.Chat.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <Import Project="..\..\framework\SimpleModule.Hosting\build\SimpleModule.Hosting.targets" />

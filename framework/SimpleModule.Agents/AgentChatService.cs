@@ -131,6 +131,21 @@ public sealed class AgentChatService(
             }
         }
 
+        if (request.History is { Count: > 0 })
+        {
+            foreach (var turn in request.History)
+            {
+                if (string.IsNullOrWhiteSpace(turn.Content))
+                {
+                    continue;
+                }
+                var role = string.Equals(turn.Role, "assistant", StringComparison.OrdinalIgnoreCase)
+                    ? ChatRole.Assistant
+                    : ChatRole.User;
+                messages.Add(new ChatMessage(role, turn.Content));
+            }
+        }
+
         messages.Add(new ChatMessage(ChatRole.User, request.Message));
 
         var chatOptions = new ChatOptions
