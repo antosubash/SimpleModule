@@ -436,3 +436,4 @@ tests/k6/results/
 
 # Website build output
 website/dist/
+template/SimpleModule.Host/storage/*
