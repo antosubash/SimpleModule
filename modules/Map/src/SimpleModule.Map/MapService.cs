@@ -2,11 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using SimpleModule.Core.Exceptions;
+using SimpleModule.Datasets.Contracts;
 using SimpleModule.Map.Contracts;
 
 namespace SimpleModule.Map;
 
-public partial class MapService(MapDbContext db, ILogger<MapService> logger) : IMapContracts
+public partial class MapService(
+    MapDbContext db,
+    IDatasetsContracts datasets,
+    ILogger<MapService> logger
+) : IMapContracts
 {
     /// <summary>
     /// Shared geometry factory configured for SRID 4326 (WGS84). NetTopologySuite uses
@@ -76,6 +81,45 @@ public partial class MapService(MapDbContext db, ILogger<MapService> logger) : I
 
         db.LayerSources.Add(source);
         await db.SaveChangesAsync();
+
+        LogLayerSourceCreated(logger, source.Id, source.Name);
+        return source;
+    }
+
+    public async Task<LayerSource> CreateLayerSourceFromDatasetAsync(
+        CreateLayerSourceFromDatasetRequest request,
+        CancellationToken ct = default
+    )
+    {
+        var datasetId = DatasetId.From(request.DatasetId);
+        var dataset =
+            await datasets.GetByIdAsync(datasetId, ct)
+            ?? throw new NotFoundException("Dataset", request.DatasetId);
+
+        double[]? bounds = dataset.BoundingBox is { } bb
+            ? [bb.MinX, bb.MinY, bb.MaxX, bb.MaxY]
+            : null;
+
+        var source = new LayerSource
+        {
+            Id = LayerSourceId.From(Guid.NewGuid()),
+            Name = string.IsNullOrWhiteSpace(request.Name) ? dataset.Name : request.Name,
+            Description = request.Description,
+            Type = LayerSourceType.Dataset,
+            Url = $"/api/datasets/{request.DatasetId}/features",
+            Attribution = null,
+            MinZoom = null,
+            MaxZoom = null,
+            Bounds = bounds,
+            Coverage = PolygonFromBounds(bounds),
+            Metadata = new Dictionary<string, string>
+            {
+                ["datasetId"] = request.DatasetId.ToString(),
+            },
+        };
+
+        db.LayerSources.Add(source);
+        await db.SaveChangesAsync(ct);
 
         LogLayerSourceCreated(logger, source.Id, source.Name);
         return source;
