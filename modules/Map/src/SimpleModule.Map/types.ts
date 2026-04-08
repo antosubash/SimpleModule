@@ -21,6 +21,12 @@ export interface CreateBasemapRequest {
   thumbnailUrl: string;
 }
 
+export interface CreateLayerSourceFromDatasetRequest {
+  datasetId: string;
+  name: string;
+  description: string;
+}
+
 export interface CreateLayerSourceRequest {
   name: string;
   description: string;
