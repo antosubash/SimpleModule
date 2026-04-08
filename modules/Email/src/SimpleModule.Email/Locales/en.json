@@ -92,5 +92,18 @@
   "Dashboard.TopErrorsCount": "Count",
   "Dashboard.TopErrorsEmpty": "No errors recorded.",
   "Dashboard.Sent": "Sent",
-  "Dashboard.Failed": "Failed"
+  "Dashboard.Failed": "Failed",
+  "Settings.Title": "Email Settings",
+  "Settings.Description": "View current email configuration and send a test email.",
+  "Settings.CurrentConfig": "Current Configuration",
+  "Settings.Provider": "Provider",
+  "Settings.DefaultFromAddress": "Default From Address",
+  "Settings.SendTestTitle": "Send Test Email",
+  "Settings.ToLabel": "To",
+  "Settings.SubjectLabel": "Subject (optional)",
+  "Settings.BodyLabel": "Body (optional)",
+  "Settings.SendButton": "Send Test Email",
+  "Settings.SendingLabel": "Sending...",
+  "Settings.SuccessMessage": "Test email enqueued. Message ID: {messageId}",
+  "Settings.ErrorMessage": "Failed to send test email. Please try again."
 }

@@ -140,6 +140,7 @@
   </Folder>
   <Folder Name="/template/">
     <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
+    <Project Path="template/SimpleModule.Worker/SimpleModule.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SimpleModule.Cli.Tests/SimpleModule.Cli.Tests.csproj" />

@@ -5,7 +5,7 @@ namespace SimpleModule.BackgroundJobs.Services;
 
 internal sealed class DefaultJobExecutionContext(
     JobId jobId,
-    JobDispatchPayload payload,
+    string? serializedData,
     ProgressChannel channel
 ) : IJobExecutionContext
 {
@@ -13,12 +13,12 @@ internal sealed class DefaultJobExecutionContext(
 
     public T GetData<T>()
     {
-        if (string.IsNullOrEmpty(payload.SerializedData))
+        if (string.IsNullOrEmpty(serializedData))
         {
             throw new InvalidOperationException("No data was provided for this job.");
         }
 
-        return JsonSerializer.Deserialize<T>(payload.SerializedData)
+        return JsonSerializer.Deserialize<T>(serializedData)
             ?? throw new InvalidOperationException(
                 $"Failed to deserialize job data as {typeof(T).Name}."
             );
@@ -26,27 +26,11 @@ internal sealed class DefaultJobExecutionContext(
 
     public void ReportProgress(int percentage, string? message = null)
     {
-        channel.Enqueue(
-            new ProgressEntry(
-                jobId.Value,
-                percentage,
-                message,
-                LogMessage: null,
-                DateTimeOffset.UtcNow
-            )
-        );
+        channel.Enqueue(new ProgressEntry(jobId.Value, percentage, message, LogMessage: null, DateTimeOffset.UtcNow));
     }
 
     public void Log(string message)
     {
-        channel.Enqueue(
-            new ProgressEntry(
-                jobId.Value,
-                Percentage: -1,
-                Message: null,
-                message,
-                DateTimeOffset.UtcNow
-            )
-        );
+        channel.Enqueue(new ProgressEntry(jobId.Value, Percentage: -1, Message: null, message, DateTimeOffset.UtcNow));
     }
 }

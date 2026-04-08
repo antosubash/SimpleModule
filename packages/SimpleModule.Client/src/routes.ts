@@ -278,6 +278,7 @@ export const routes = {
       dashboard: () => '/email/dashboard' as const,
       editTemplate: (id: string | number) => `/email/templates/${id}/edit`,
       history: () => '/email/history' as const,
+      settings: () => '/email/settings' as const,
       templates: () => '/email/templates' as const,
     },
   },
