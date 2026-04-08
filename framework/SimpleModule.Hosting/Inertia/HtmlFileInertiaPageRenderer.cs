@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
     private const string PagePlaceholder = "<!--INERTIA_PAGE_DATA-->";
     private const string NoncePlaceholder = "<!--CSP_NONCE-->";
     private const string VersionPlaceholder = "<!--DEPLOY_VERSION-->";
+    private const string ModuleCssPlaceholder = "<!--MODULE_CSS_LINKS-->";
 
     private readonly string _beforePlaceholder;
     private readonly string _afterPlaceholder;
@@ -31,6 +33,16 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         html = html.Replace(
             VersionPlaceholder,
             InertiaMiddleware.Version,
+            StringComparison.Ordinal
+        );
+
+        // Inject <link> tags for every module RCL that ships its own CSS file
+        // (e.g. _content/SimpleModule.PageBuilder/pagebuilder.css). Discovered
+        // once at startup by walking the WebRootFileProvider, which sees both
+        // the host's physical wwwroot and every RCL's static web assets.
+        html = html.Replace(
+            ModuleCssPlaceholder,
+            BuildModuleCssLinks(env, InertiaMiddleware.Version),
             StringComparison.Ordinal
         );
 
@@ -79,6 +91,41 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
                 after.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal)
             )
         );
+    }
+
+    private static string BuildModuleCssLinks(IWebHostEnvironment env, string version)
+    {
+        var contents = env.WebRootFileProvider.GetDirectoryContents("_content");
+        if (!contents.Exists)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        foreach (var entry in contents)
+        {
+            if (
+                !entry.IsDirectory
+                || !entry.Name.StartsWith("SimpleModule.", StringComparison.Ordinal)
+            )
+                continue;
+
+            // Module Vite builds emit CSS as {assembly}.lowercase().css by convention
+            // (see define-module-config.ts assetFileNames). The URL must match the
+            // on-disk filename, so ToLowerInvariant is the correct behavior here, not
+            // the security-focused ToUpperInvariant that CA1308 suggests.
+#pragma warning disable CA1308
+            var cssFileName = entry.Name.ToLowerInvariant() + ".css";
+#pragma warning restore CA1308
+            var cssPath = $"_content/{entry.Name}/{cssFileName}";
+            if (!env.WebRootFileProvider.GetFileInfo(cssPath).Exists)
+                continue;
+
+            sb.Append("<link rel=\"stylesheet\" href=\"/")
+                .Append(cssPath)
+                .Append("?v=")
+                .Append(version)
+                .Append("\" />");
+        }
+        return sb.ToString();
     }
 
     private static string TransformForViteDev(string html)
