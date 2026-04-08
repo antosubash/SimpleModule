@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@simplemodule/ui';
+import type * as React from 'react';
 import { DATASET_STATUS, FORMAT_NAMES, STATUS_NAMES } from './labels';
 
 interface DatasetSummary {
@@ -30,7 +31,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
-function statusBadge(status: number): JSX.Element {
+function statusBadge(status: number): React.ReactElement {
   const name = STATUS_NAMES[status] ?? 'Unknown';
   const color =
     status === DATASET_STATUS.Ready

@@ -118,14 +118,14 @@ export default function Detail({ dataset }: Props) {
         </div>
       )}
 
-      {dataset.metadata && (
+      {dataset.metadata ? (
         <details className="border rounded p-4" open>
           <summary className="font-medium cursor-pointer">Full metadata</summary>
           <pre className="mt-2 text-xs overflow-auto bg-muted p-3 rounded">
             {JSON.stringify(dataset.metadata, null, 2)}
           </pre>
         </details>
-      )}
+      ) : null}
     </div>
   );
 }
