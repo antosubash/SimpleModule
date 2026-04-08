@@ -178,6 +178,22 @@ export const routes = {
       detail: (id: string | number) => `/audit-logs/${id}`,
     },
   },
+  datasets: {
+    api: {
+      convertDataset: (id: string | number) => `/api/datasets/${id}/convert`,
+      deleteDataset: (id: string | number) => `/api/datasets/${id}`,
+      downloadDataset: (id: string | number) => `/api/datasets/${id}/download`,
+      getDataset: (id: string | number) => `/api/datasets/${id}`,
+      getDatasetFeatures: (id: string | number) => `/api/datasets/${id}/features`,
+      listDatasets: () => '/api/datasets' as const,
+      uploadDataset: () => '/api/datasets' as const,
+    },
+    views: {
+      datasetsBrowse: () => '/datasets' as const,
+      datasetsDetail: (id: string | number) => `/datasets/${id}`,
+      datasetsUpload: () => '/datasets/upload' as const,
+    },
+  },
   users: {
     api: {
       accountSecurity: () => '/Manage/TwoFactorAuthentication' as const,

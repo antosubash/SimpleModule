@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>GIS datasets module for SimpleModule. Upload, process and expose GIS datasets (GeoJSON, Shapefile, KML, GeoPackage, PMTiles, COG).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Storage\SimpleModule.Storage.csproj" />
+    <ProjectReference Include="..\SimpleModule.Datasets.Contracts\SimpleModule.Datasets.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BackgroundJobs\src\SimpleModule.BackgroundJobs.Contracts\SimpleModule.BackgroundJobs.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Settings\src\SimpleModule.Settings.Contracts\SimpleModule.Settings.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Views\*.tsx">
+      <DependentUpon>%(Filename)View.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+</Project>
