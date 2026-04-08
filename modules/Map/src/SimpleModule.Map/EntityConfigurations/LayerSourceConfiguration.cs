@@ -10,11 +10,11 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
 {
     /// <summary>
     /// Toggles mapping of the spatial <see cref="LayerSource.Coverage"/> column.
-    /// Defaults to <c>true</c> (production providers: PostGIS, SQL Server geometry,
-    /// SpatiaLite). Set to <c>false</c> in environments without spatial support
-    /// such as in-memory SQLite test fixtures.
+    /// Defaults to <c>false</c>; flipped on by <c>MapModule.ConfigureServices</c>
+    /// when the host opts in via <c>Modules:Map:EnableSpatial = true</c> and the
+    /// EF Core provider is configured with NetTopologySuite.
     /// </summary>
-    public static bool EnableSpatial { get; set; } = true;
+    public static bool EnableSpatial { get; set; }
 
     public void Configure(EntityTypeBuilder<LayerSource> builder)
     {

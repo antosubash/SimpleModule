@@ -4,6 +4,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using SimpleModule.Map.Contracts;
+using SimpleModule.Map.EntityConfigurations;
 
 namespace SimpleModule.Map;
 
@@ -16,10 +17,18 @@ public class MapModule : IModule, IModuleServices, IModuleMenu
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        // Spatial columns (PostGIS / SQL Server geometry / SpatiaLite) are opt-in:
+        // they require a provider configured with NetTopologySuite. Default off so
+        // vanilla SQLite (no mod_spatialite) and other plain providers continue to
+        // work. Hosts opt in via "Modules:Map:EnableSpatial": true in appsettings.
+        var enableSpatial = configuration.GetValue<bool>("Modules:Map:EnableSpatial");
+        LayerSourceConfiguration.EnableSpatial = enableSpatial;
+        SavedMapConfiguration.EnableSpatial = enableSpatial;
+
         services.AddModuleDbContext<MapDbContext>(
             configuration,
             MapConstants.ModuleName,
-            enableSpatial: true
+            enableSpatial: enableSpatial
         );
         services.AddScoped<IMapContracts, MapService>();
     }

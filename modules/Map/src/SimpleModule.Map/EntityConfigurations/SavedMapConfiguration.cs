@@ -8,10 +8,10 @@ public class SavedMapConfiguration : IEntityTypeConfiguration<SavedMap>
 {
     /// <summary>
     /// Toggles mapping of the spatial <see cref="SavedMap.Center"/> column.
-    /// Defaults to <c>true</c> (production providers). Set to <c>false</c> in
-    /// environments without spatial support such as in-memory SQLite test fixtures.
+    /// Defaults to <c>false</c>; flipped on by <c>MapModule.ConfigureServices</c>
+    /// when the host opts in via <c>Modules:Map:EnableSpatial = true</c>.
     /// </summary>
-    public static bool EnableSpatial { get; set; } = true;
+    public static bool EnableSpatial { get; set; }
 
     public void Configure(EntityTypeBuilder<SavedMap> builder)
     {

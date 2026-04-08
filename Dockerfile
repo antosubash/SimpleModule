@@ -88,6 +88,8 @@ COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modul
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
 COPY modules/Chat/src/SimpleModule.Chat.Contracts/*.csproj modules/Chat/src/SimpleModule.Chat.Contracts/
 COPY modules/Chat/src/SimpleModule.Chat/*.csproj modules/Chat/src/SimpleModule.Chat/
+COPY modules/Map/src/SimpleModule.Map.Contracts/*.csproj modules/Map/src/SimpleModule.Map.Contracts/
+COPY modules/Map/src/SimpleModule.Map/*.csproj modules/Map/src/SimpleModule.Map/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
