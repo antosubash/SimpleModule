@@ -46,6 +46,7 @@ const TYPE_LABELS: Record<number, string> = {
   [LayerSourceType.PmTiles]: 'PMTiles',
   [LayerSourceType.Cog]: 'COG (cloud-optimized GeoTIFF)',
   [LayerSourceType.GeoJson]: 'GeoJSON',
+  [LayerSourceType.Dataset]: 'Dataset',
 };
 
 const blankRequest: CreateLayerSourceRequest = {
