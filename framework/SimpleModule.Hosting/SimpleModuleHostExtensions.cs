@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -203,15 +202,6 @@ public static class SimpleModuleHostExtensions
         app.UseInertia();
         UseStaticFileCaching(app);
         app.MapStaticAssets();
-
-        // Fallback for .mjs chunks not in the MapStaticAssets manifest.
-        // MapStaticAssets only knows about files present at publish time;
-        // mismatched builds or Vite watch rebuilds can produce chunks it misses.
-        {
-            var provider = new FileExtensionContentTypeProvider();
-            provider.Mappings[".mjs"] = "application/javascript";
-            app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
-        }
 
         app.UseAuthentication();
         app.UseAuthorization();
