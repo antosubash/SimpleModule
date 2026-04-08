@@ -111,24 +111,23 @@ public partial class EmailService(
 
         var totalCount = await query.CountAsync();
 
-        query = request.SortBy switch
+        var sortDesc = request.SortDescending ?? true;
+        query = (request.SortBy ?? "CreatedAt") switch
         {
-            "To" => request.SortDescending
-                ? query.OrderByDescending(m => m.To)
-                : query.OrderBy(m => m.To),
-            "Subject" => request.SortDescending
+            "To" => sortDesc ? query.OrderByDescending(m => m.To) : query.OrderBy(m => m.To),
+            "Subject" => sortDesc
                 ? query.OrderByDescending(m => m.Subject)
                 : query.OrderBy(m => m.Subject),
-            "Status" => request.SortDescending
+            "Status" => sortDesc
                 ? query.OrderByDescending(m => m.Status)
                 : query.OrderBy(m => m.Status),
-            "CreatedAt" or _ => request.SortDescending
+            _ => sortDesc
                 ? query.OrderByDescending(m => m.CreatedAt)
                 : query.OrderBy(m => m.CreatedAt),
         };
 
-        var page = Math.Max(1, request.Page);
-        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var page = Math.Max(1, request.Page ?? 1);
+        var pageSize = Math.Clamp(request.PageSize ?? 20, 1, 100);
 
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
@@ -156,8 +155,8 @@ public partial class EmailService(
             );
 
         var totalCount = await query.CountAsync();
-        var page = Math.Max(1, request.Page);
-        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+        var page = Math.Max(1, request.Page ?? 1);
+        var pageSize = Math.Clamp(request.PageSize ?? 20, 1, 100);
 
         var items = await query
             .OrderBy(t => t.Name)

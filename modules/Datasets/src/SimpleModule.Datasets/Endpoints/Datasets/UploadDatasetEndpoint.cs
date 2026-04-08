@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
@@ -16,8 +17,8 @@ public class UploadDatasetEndpoint : IEndpoint
         app.MapPost(
                 Route,
                 async Task<IResult> (
-                    IFormFile? file,
-                    string? name,
+                    [FromForm] IFormFile? file,
+                    [FromForm] string? name,
                     IDatasetsContracts datasets,
                     CancellationToken ct
                 ) =>

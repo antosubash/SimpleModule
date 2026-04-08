@@ -39,6 +39,9 @@ public class SavedMapConfiguration : IEntityTypeConfiguration<SavedMap>
             m => m.Basemaps,
             bm =>
             {
+                // Pin the table name so both HostDbContext and MapDbContext agree
+                // regardless of module processing order in ApplyModuleSchema.
+                bm.ToTable("Map_SavedMapBasemaps");
                 bm.WithOwner().HasForeignKey("SavedMapId");
                 bm.Property<int>("Id").ValueGeneratedOnAdd();
                 bm.HasKey("Id");
@@ -51,6 +54,7 @@ public class SavedMapConfiguration : IEntityTypeConfiguration<SavedMap>
             m => m.Layers,
             layer =>
             {
+                layer.ToTable("Map_SavedMapLayers");
                 layer.WithOwner().HasForeignKey("SavedMapId");
                 layer.Property<int>("Id").ValueGeneratedOnAdd();
                 layer.HasKey("Id");

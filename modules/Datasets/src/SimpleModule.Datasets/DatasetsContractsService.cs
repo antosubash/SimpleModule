@@ -22,11 +22,9 @@ public sealed partial class DatasetsContractsService(
 {
     public async Task<IReadOnlyList<DatasetDto>> GetAllAsync(CancellationToken ct = default)
     {
-        var rows = await db
-            .Datasets.AsNoTracking()
-            .OrderByDescending(d => d.CreatedAt)
-            .ToListAsync(ct);
-        return rows.Select(ToDto).ToList();
+        // SQLite cannot ORDER BY DateTimeOffset server-side; fetch then sort client-side.
+        var rows = await db.Datasets.AsNoTracking().ToListAsync(ct);
+        return rows.OrderByDescending(d => d.CreatedAt).Select(ToDto).ToList();
     }
 
     public async Task<DatasetDto?> GetByIdAsync(DatasetId id, CancellationToken ct = default)

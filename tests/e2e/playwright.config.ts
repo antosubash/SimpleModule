@@ -41,6 +41,8 @@ export default defineConfig({
       ...process.env,
       ASPNETCORE_URLS: baseURL,
       Database__DefaultConnection: 'Data Source=e2e-test.db',
+      // Process background jobs in-host so e2e tests don't need a separate Worker.
+      BackgroundJobs__WorkerMode: 'Consumer',
     },
   },
 });

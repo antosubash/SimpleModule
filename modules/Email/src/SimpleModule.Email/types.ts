@@ -62,20 +62,20 @@ export interface EmailTemplate {
 }
 
 export interface QueryEmailMessagesRequest {
-  page: number;
-  pageSize: number;
+  page: number | null;
+  pageSize: number | null;
   status: any | null;
   to: string;
   subject: string;
   dateFrom: string | null;
   dateTo: string | null;
   sortBy: string;
-  sortDescending: boolean;
+  sortDescending: boolean | null;
 }
 
 export interface QueryEmailTemplatesRequest {
-  page: number;
-  pageSize: number;
+  page: number | null;
+  pageSize: number | null;
   search: string;
 }
 

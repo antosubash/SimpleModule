@@ -11,8 +11,8 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260406204452_AddFileStorageOwnership")]
-    partial class AddFileStorageOwnership
+    [Migration("20260408193036_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,9 +69,11 @@ namespace SimpleModule.Host.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderKey")
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderDisplayName")
@@ -86,6 +88,23 @@ namespace SimpleModule.Host.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Users_AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<string>", b =>
+                {
+                    b.Property<byte[]>("CredentialId")
+                        .HasMaxLength(1024)
+                        .HasColumnType("BLOB");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CredentialId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Users_AspNetUserPasskeys", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
@@ -109,9 +128,11 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -530,6 +551,237 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("BackgroundJobs_JobProgress", (string)null);
                 });
 
+            modelBuilder.Entity("SimpleModule.BackgroundJobs.Entities.JobQueueEntryEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClaimedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CronExpression")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("JobTypeName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecurringName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("ScheduledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SerializedData")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecurringName")
+                        .HasDatabaseName("IX_JobQueueEntries_RecurringName");
+
+                    b.HasIndex("State", "ScheduledAt")
+                        .HasDatabaseName("IX_JobQueueEntries_State_ScheduledAt");
+
+                    b.ToTable("BackgroundJobs_JobQueueEntries", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Chat.Contracts.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "CreatedAt");
+
+                    b.ToTable("Chat_ChatMessages", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Chat.Contracts.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AgentName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Pinned")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "UpdatedAt");
+
+                    b.ToTable("Chat_Conversations", (string)null);
+                });
+
+            modelBuilder.Entity("SimpleModule.Datasets.Entities.Dataset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("BboxMaxX")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BboxMaxY")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BboxMinX")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BboxMinY")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(4096)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("FeatureCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Format")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedPath")
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SourceSrid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Srid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContentHash");
+
+                    b.HasIndex("Format");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("IsDeleted", "CreatedAt");
+
+                    b.HasIndex("BboxMinX", "BboxMaxX", "BboxMinY", "BboxMaxY");
+
+                    b.ToTable("Datasets_Datasets", (string)null);
+                });
+
             modelBuilder.Entity("SimpleModule.Email.Contracts.EmailMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -772,6 +1024,333 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("FileStorage_StoredFiles", (string)null);
                 });
 
+            modelBuilder.Entity("SimpleModule.Map.Contracts.Basemap", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Attribution")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StyleUrl")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ThumbnailUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Map_Basemaps", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-000000000001"),
+                            Attribution = "MapLibre",
+                            ConcurrencyStamp = "seed-basemap-demotiles",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Official MapLibre demo vector style. Free for development.",
+                            Name = "MapLibre Demotiles",
+                            StyleUrl = "https://demotiles.maplibre.org/style.json",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-000000000002"),
+                            Attribution = "© OpenStreetMap contributors, OpenFreeMap",
+                            ConcurrencyStamp = "seed-basemap-openfreemap-liberty",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "OpenFreeMap free vector basemap, Liberty style.",
+                            Name = "OpenFreeMap Liberty",
+                            StyleUrl = "https://tiles.openfreemap.org/styles/liberty",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-000000000003"),
+                            Attribution = "© OpenStreetMap contributors, OpenFreeMap",
+                            ConcurrencyStamp = "seed-basemap-openfreemap-positron",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "OpenFreeMap free vector basemap, light Positron style.",
+                            Name = "OpenFreeMap Positron",
+                            StyleUrl = "https://tiles.openfreemap.org/styles/positron",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-000000000004"),
+                            Attribution = "© OpenStreetMap contributors, OpenFreeMap",
+                            ConcurrencyStamp = "seed-basemap-openfreemap-bright",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "OpenFreeMap free vector basemap, Bright style.",
+                            Name = "OpenFreeMap Bright",
+                            StyleUrl = "https://tiles.openfreemap.org/styles/bright",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-000000000005"),
+                            Attribution = "© OpenStreetMap contributors, VersaTiles",
+                            ConcurrencyStamp = "seed-basemap-versatiles-colorful",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "VersaTiles free OSM-based vector basemap, Colorful style.",
+                            Name = "Versatiles Colorful",
+                            StyleUrl = "https://tiles.versatiles.org/assets/styles/colorful/style.json",
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
+            modelBuilder.Entity("SimpleModule.Map.Contracts.LayerSource", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Attribution")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Bounds")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MaxZoom")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Metadata")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MinZoom")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Map_LayerSources", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000001"),
+                            Attribution = "© OpenStreetMap contributors",
+                            Bounds = "[-180,-85,180,85]",
+                            ConcurrencyStamp = "seed-osm-xyz",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Standard OSM raster tiles. Free for low-volume use; respect the OSMF tile usage policy.",
+                            MaxZoom = 19,
+                            Metadata = "{}",
+                            MinZoom = 0,
+                            Name = "OpenStreetMap (raster tiles)",
+                            Type = 3,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000002"),
+                            Attribution = "© OpenStreetMap contributors, terrestris",
+                            Bounds = "[-180,-85,180,85]",
+                            ConcurrencyStamp = "seed-terrestris-wms",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Public WMS by terrestris. Used in the official MapLibre 'Add a WMS source' example.",
+                            Metadata = "{\"layers\":\"OSM-WMS\",\"format\":\"image/png\",\"version\":\"1.1.1\",\"crs\":\"EPSG:3857\",\"transparent\":\"true\"}",
+                            Name = "terrestris OSM-WMS",
+                            Type = 0,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://ows.terrestris.de/osm/service"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000003"),
+                            Attribution = "© OpenStreetMap contributors, terrestris",
+                            Bounds = "[-180,-85,180,85]",
+                            ConcurrencyStamp = "seed-terrestris-topo",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "terrestris topographic WMS overlay layer (transparent).",
+                            Metadata = "{\"layers\":\"TOPO-WMS,OSM-Overlay-WMS\",\"format\":\"image/png\",\"version\":\"1.1.1\",\"crs\":\"EPSG:3857\",\"transparent\":\"true\"}",
+                            Name = "terrestris TOPO-WMS",
+                            Type = 0,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://ows.terrestris.de/osm/service"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000004"),
+                            Attribution = "MapLibre",
+                            Bounds = "[-180,-85,180,85]",
+                            ConcurrencyStamp = "seed-maplibre-demotiles",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Official MapLibre demo MVT vector tileset. Free for development.",
+                            MaxZoom = 14,
+                            Metadata = "{\"sourceLayer\":\"countries\"}",
+                            MinZoom = 0,
+                            Name = "MapLibre demotiles (vector)",
+                            Type = 4,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://demotiles.maplibre.org/tiles/{z}/{x}/{y}.pbf"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000005"),
+                            Attribution = "© OpenStreetMap contributors, Protomaps",
+                            Bounds = "[11.154,43.727,11.328,43.823]",
+                            ConcurrencyStamp = "seed-protomaps-firenze",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Public PMTiles vector archive of Florence (ODbL). Used in the MapLibre PMTiles example.",
+                            Metadata = "{\"tileType\":\"vector\",\"sourceLayer\":\"landuse\"}",
+                            Name = "Protomaps Firenze (PMTiles)",
+                            Type = 5,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://pmtiles.io/protomaps(vector)ODbL_firenze.pmtiles"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000006"),
+                            Attribution = "Geomatico",
+                            Bounds = "[-180,-85,180,85]",
+                            ConcurrencyStamp = "seed-geomatico-cog",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Public Cloud-Optimized GeoTIFF demo from the maplibre-cog-protocol sample viewer.",
+                            Metadata = "{}",
+                            Name = "Geomatico kriging COG (demo)",
+                            Type = 6,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://labs.geomatico.es/maplibre-cog-protocol/data/kriging.tif"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-000000000007"),
+                            Attribution = "USGS / MapLibre demo",
+                            Bounds = "[-180,-85,180,85]",
+                            ConcurrencyStamp = "seed-maplibre-earthquakes",
+                            CreatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Small public GeoJSON FeatureCollection from the MapLibre demo assets.",
+                            Metadata = "{\"color\":\"#ef4444\"}",
+                            Name = "MapLibre demotiles point sample (GeoJSON)",
+                            Type = 7,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Url = "https://maplibre.org/maplibre-gl-js/docs/assets/significant-earthquakes-2015.geojson"
+                        });
+                });
+
+            modelBuilder.Entity("SimpleModule.Map.Contracts.SavedMap", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BaseStyleUrl")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Bearing")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("CenterLat")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("CenterLng")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Pitch")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Zoom")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Map_SavedMaps", (string)null);
+                });
+
             modelBuilder.Entity("SimpleModule.Orders.Contracts.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -973,61 +1552,61 @@ namespace SimpleModule.Host.Migrations
                         {
                             Id = 1,
                             Name = "Fantastic Rubber Shoes",
-                            Price = 99168m
+                            Price = 991.68m
                         },
                         new
                         {
                             Id = 2,
                             Name = "Fantastic Rubber Bacon",
-                            Price = 44622m
+                            Price = 446.22m
                         },
                         new
                         {
                             Id = 3,
                             Name = "Fantastic Concrete Bike",
-                            Price = 66012m
+                            Price = 660.12m
                         },
                         new
                         {
                             Id = 4,
                             Name = "Handcrafted Concrete Keyboard",
-                            Price = 63367m
+                            Price = 633.67m
                         },
                         new
                         {
                             Id = 5,
                             Name = "Intelligent Frozen Mouse",
-                            Price = 67430m
+                            Price = 674.30m
                         },
                         new
                         {
                             Id = 6,
                             Name = "Sleek Soft Hat",
-                            Price = 85163m
+                            Price = 851.63m
                         },
                         new
                         {
                             Id = 7,
                             Name = "Practical Fresh Bike",
-                            Price = 41748m
+                            Price = 417.48m
                         },
                         new
                         {
                             Id = 8,
                             Name = "Handmade Steel Ball",
-                            Price = 97556m
+                            Price = 975.56m
                         },
                         new
                         {
                             Id = 9,
                             Name = "Ergonomic Fresh Pants",
-                            Price = 92809m
+                            Price = 928.09m
                         },
                         new
                         {
                             Id = 10,
                             Name = "Licensed Steel Sausages",
-                            Price = 59260m
+                            Price = 592.60m
                         });
                 });
 
@@ -1475,6 +2054,7 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhoneNumber")
+                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("PhoneNumberConfirmed")
@@ -1502,166 +2082,6 @@ namespace SimpleModule.Host.Migrations
                     b.ToTable("Users_AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("TickerQ.Utilities.Entities.CronTickerEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Expression")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Function")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InitIdentifier")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<byte[]>("Request")
-                        .HasColumnType("BLOB");
-
-                    b.Property<int>("Retries")
-                        .HasColumnType("INTEGER");
-
-                    b.PrimitiveCollection<string>("RetryIntervals")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BackgroundJobs_CronTickers", (string)null);
-                });
-
-            modelBuilder.Entity("TickerQ.Utilities.Entities.CronTickerOccurrenceEntity<TickerQ.Utilities.Entities.CronTickerEntity>", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("CronTickerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("ElapsedTime")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ExceptionMessage")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ExecutedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExecutionTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LockHolder")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LockedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SkippedReason")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CronTickerId");
-
-                    b.ToTable("BackgroundJobs_CronTickerOccurrences", (string)null);
-                });
-
-            modelBuilder.Entity("TickerQ.Utilities.Entities.TimeTickerEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("ElapsedTime")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ExceptionMessage")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ExecutedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ExecutionTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Function")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("InitIdentifier")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LockHolder")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("LockedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte[]>("Request")
-                        .HasColumnType("BLOB");
-
-                    b.Property<int>("Retries")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("INTEGER");
-
-                    b.PrimitiveCollection<string>("RetryIntervals")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("RunCondition")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SkippedReason")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
-
-                    b.ToTable("BackgroundJobs_TimeTickers", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("SimpleModule.Users.Contracts.ApplicationRole", null)
@@ -1686,6 +2106,57 @@ namespace SimpleModule.Host.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<string>", b =>
+                {
+                    b.HasOne("SimpleModule.Users.Contracts.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Microsoft.AspNetCore.Identity.IdentityPasskeyData", "Data", b1 =>
+                        {
+                            b1.Property<byte[]>("IdentityUserPasskeyCredentialId");
+
+                            b1.Property<byte[]>("AttestationObject")
+                                .IsRequired();
+
+                            b1.Property<byte[]>("ClientDataJson")
+                                .IsRequired();
+
+                            b1.Property<DateTimeOffset>("CreatedAt");
+
+                            b1.Property<bool>("IsBackedUp");
+
+                            b1.Property<bool>("IsBackupEligible");
+
+                            b1.Property<bool>("IsUserVerified");
+
+                            b1.Property<string>("Name");
+
+                            b1.Property<byte[]>("PublicKey")
+                                .IsRequired();
+
+                            b1.Property<uint>("SignCount");
+
+                            b1.PrimitiveCollection<string>("Transports");
+
+                            b1.HasKey("IdentityUserPasskeyCredentialId");
+
+                            b1.ToTable("Users_AspNetUserPasskeys");
+
+                            b1
+                                .ToJson("Data")
+                                .HasColumnType("TEXT");
+
+                            b1.WithOwner()
+                                .HasForeignKey("IdentityUserPasskeyCredentialId");
+                        });
+
+                    b.Navigation("Data")
                         .IsRequired();
                 });
 
@@ -1737,6 +2208,82 @@ namespace SimpleModule.Host.Migrations
                     b.Navigation("Authorization");
                 });
 
+            modelBuilder.Entity("SimpleModule.Chat.Contracts.ChatMessage", b =>
+                {
+                    b.HasOne("SimpleModule.Chat.Contracts.Conversation", null)
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SimpleModule.Map.Contracts.SavedMap", b =>
+                {
+                    b.OwnsMany("SimpleModule.Map.Contracts.MapBasemap", "Basemaps", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("BasemapId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<int>("Order")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("SavedMapId")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("SavedMapId");
+
+                            b1.ToTable("Map_SavedMapBasemaps", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("SavedMapId");
+                        });
+
+                    b.OwnsMany("SimpleModule.Map.Contracts.MapLayer", "Layers", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("LayerSourceId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<double>("Opacity")
+                                .HasColumnType("REAL");
+
+                            b1.Property<int>("Order")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<Guid>("SavedMapId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("StyleOverrides")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<bool>("Visible")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("SavedMapId");
+
+                            b1.ToTable("Map_SavedMapLayers", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("SavedMapId");
+                        });
+
+                    b.Navigation("Basemaps");
+
+                    b.Navigation("Layers");
+                });
+
             modelBuilder.Entity("SimpleModule.Orders.Contracts.OrderItem", b =>
                 {
                     b.HasOne("SimpleModule.Orders.Contracts.Order", null)
@@ -1774,26 +2321,6 @@ namespace SimpleModule.Host.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("TickerQ.Utilities.Entities.CronTickerOccurrenceEntity<TickerQ.Utilities.Entities.CronTickerEntity>", b =>
-                {
-                    b.HasOne("TickerQ.Utilities.Entities.CronTickerEntity", "CronTicker")
-                        .WithMany()
-                        .HasForeignKey("CronTickerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CronTicker");
-                });
-
-            modelBuilder.Entity("TickerQ.Utilities.Entities.TimeTickerEntity", b =>
-                {
-                    b.HasOne("TickerQ.Utilities.Entities.TimeTickerEntity", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId");
-
-                    b.Navigation("Parent");
-                });
-
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
                 {
                     b.Navigation("Authorizations");
@@ -1804,6 +2331,11 @@ namespace SimpleModule.Host.Migrations
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", b =>
                 {
                     b.Navigation("Tokens");
+                });
+
+            modelBuilder.Entity("SimpleModule.Chat.Contracts.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("SimpleModule.Orders.Contracts.Order", b =>
@@ -1824,11 +2356,6 @@ namespace SimpleModule.Host.Migrations
             modelBuilder.Entity("SimpleModule.Tenants.Entities.TenantEntity", b =>
                 {
                     b.Navigation("Hosts");
-                });
-
-            modelBuilder.Entity("TickerQ.Utilities.Entities.TimeTickerEntity", b =>
-                {
-                    b.Navigation("Children");
                 });
 #pragma warning restore 612, 618
         }

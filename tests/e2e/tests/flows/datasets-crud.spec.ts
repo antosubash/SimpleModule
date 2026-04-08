@@ -3,8 +3,8 @@ import path from 'node:path';
 import { faker } from '@faker-js/faker';
 import { expect, test } from '../../fixtures/base';
 
-// DATASET_STATUS.Ready = 1 (modules/Datasets/src/SimpleModule.Datasets/Pages/labels.ts)
-const STATUS_READY = 1;
+// DatasetStatus enum (modules/Datasets/src/SimpleModule.Datasets.Contracts/DatasetStatus.cs)
+const STATUS_READY = 2;
 const STATUS_FAILED = 3;
 
 const fixturePath = path.resolve(__dirname, '../../fixtures/data/point.geojson');
@@ -56,8 +56,8 @@ test.describe('Datasets CRUD', () => {
     // Features endpoint returns the single point
     const featuresRes = await request.get(`/api/datasets/${dataset.id}/features`);
     expect(featuresRes.ok()).toBeTruthy();
-    const features = (await featuresRes.json()) as unknown[];
-    expect(features.length).toBeGreaterThanOrEqual(1);
+    const featureCollection = (await featuresRes.json()) as { features: unknown[] };
+    expect(featureCollection.features.length).toBeGreaterThanOrEqual(1);
 
     // Download original succeeds
     const downloadRes = await request.get(`/api/datasets/${dataset.id}/download?variant=original`);

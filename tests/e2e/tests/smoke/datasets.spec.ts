@@ -3,7 +3,7 @@ import { expect, test } from '../../fixtures/base';
 test.describe('Datasets pages', () => {
   test('browse page loads', async ({ page }) => {
     await page.goto('/datasets');
-    await expect(page.getByRole('heading', { name: /datasets/i })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Datasets' })).toBeVisible();
   });
 
   test('upload page loads', async ({ page }) => {
