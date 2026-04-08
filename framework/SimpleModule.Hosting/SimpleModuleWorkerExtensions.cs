@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,14 @@ public static class SimpleModuleWorkerExtensions
     /// </summary>
     public static HostApplicationBuilder AddSimpleModuleWorker(this HostApplicationBuilder builder)
     {
+        // Bridge Aspire connection string to the Database:DefaultConnection key,
+        // matching the pattern used in AddSimpleModuleInfrastructure.
+        var aspireConnectionString = builder.Configuration.GetConnectionString("simplemoduledb");
+        if (!string.IsNullOrEmpty(aspireConnectionString))
+        {
+            builder.Configuration["Database:DefaultConnection"] = aspireConnectionString;
+        }
+
         // Force consumer mode regardless of config. User can still tune Worker:* options.
         builder.Configuration["BackgroundJobs:WorkerMode"] = "Consumer";
 
@@ -24,6 +33,10 @@ public static class SimpleModuleWorkerExtensions
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();
+
+        // HttpContextAccessor is required by EntityInterceptor even in a worker
+        // (it returns null in non-HTTP contexts, which the interceptor handles gracefully).
+        builder.Services.AddHttpContextAccessor();
 
         // EF interceptors (entities expect these when SaveChanges is called):
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
