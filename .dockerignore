@@ -2,6 +2,14 @@
 **/bin/
 **/obj/
 **/node_modules/
+**/.vite/
+
+# Vite output directories — regenerated from source by `npm run build` in
+# Dockerfile stage 4. Excluding these prevents stale local build artifacts
+# (e.g. files left over from a previous `assetFileNames` convention) from
+# being baked into the image.
+modules/*/src/SimpleModule.*/wwwroot/
+template/SimpleModule.Host/wwwroot/js/
 
 # Version control
 .git/

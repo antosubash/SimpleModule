@@ -276,6 +276,14 @@ ci-full: check build-all test-all ## Full CI: lint, build (.NET + JS), all tests
 docker-build: ## Build the Docker image
 	docker build -t simplemodule .
 
+.PHONY: docker-build-nocache
+docker-build-nocache: ## Build the Docker image with no layer cache (guaranteed fresh)
+	docker build --no-cache -t simplemodule .
+
+.PHONY: docker-clean-run
+docker-clean-run: docker-build ## Build a fresh Docker image and start the stack
+	docker compose up -d --force-recreate
+
 .PHONY: docker-up
 docker-up: ## Start all Docker Compose services
 	docker compose up -d
@@ -295,9 +303,18 @@ docker-ps: ## Show running Docker Compose services
 # ─── Clean ───────────────────────────────────────
 
 .PHONY: clean
-clean: ## Clean .NET build outputs
+clean: ## Clean .NET + Vite build outputs, static asset manifests, and Vite caches
 	dotnet clean
+	@echo "Removing bin/ and obj/ directories..."
 	find . -type d \( -name bin -o -name obj \) -not -path './node_modules/*' -exec rm -rf {} + 2>/dev/null || true
+	@echo "Removing module wwwroot build outputs (Vite does not clean these — emptyOutDir is false)..."
+	find modules -type f \( -name '*.mjs' -o -name '*.mjs.map' -o -name '*.js' -o -name '*.js.map' -o -name '*.css' -o -name '*.css.map' \) -path '*/src/SimpleModule.*/wwwroot/*' -delete 2>/dev/null || true
+	@echo "Removing ClientApp bundle..."
+	rm -f $(HOST_PROJECT)/wwwroot/js/app.js $(HOST_PROJECT)/wwwroot/js/app.js.map
+	@echo "Removing Vite caches..."
+	find . -type d -name '.vite' -not -path './node_modules/*' -exec rm -rf {} + 2>/dev/null || true
+	rm -rf node_modules/.vite 2>/dev/null || true
+	@echo "Clean complete."
 
 .PHONY: clean-js
 clean-js: ## Remove node_modules and JS build outputs
@@ -307,6 +324,10 @@ clean-js: ## Remove node_modules and JS build outputs
 .PHONY: clean-all
 clean-all: clean clean-js db-reset ## Full clean (.NET + JS + database)
 	@echo "All build artifacts and database removed."
+
+.PHONY: clean-run
+clean-run: clean build-js ## Clean everything, rebuild all JS, then run the host
+	dotnet run --project $(HOST_PROJECT)
 
 .PHONY: pristine
 pristine: clean-all setup ## Clean everything and reinstall from scratch

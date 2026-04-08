@@ -55,7 +55,7 @@ app.CollectModuleMenuItems(); // builds the navigation menu
 
 ### React + Inertia.js Frontend
 
-Each module ships its own React pages as a Vite library-mode bundle. The host app uses Blazor SSR to deliver the initial HTML with serialized props, then React hydrates on the client.
+Each module ships its own React pages as a Vite library-mode bundle. The host app uses Inertia.js middleware to render a static HTML shell with embedded JSON props, then React hydrates on the client.
 
 This means:
 

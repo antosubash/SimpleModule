@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
-using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Email.Contracts;
@@ -19,7 +18,7 @@ namespace SimpleModule.Email;
     RoutePrefix = EmailConstants.RoutePrefix,
     ViewPrefix = EmailConstants.ViewPrefix
 )]
-public class EmailModule : IModule, IModuleServices, IModuleMenu
+public class EmailModule : IModule, IModuleServices
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
@@ -101,40 +100,5 @@ public class EmailModule : IModule, IModuleServices, IModuleMenu
             );
     }
 
-    public void ConfigureMenu(IMenuBuilder menus)
-    {
-        menus.Add(
-            new MenuItem
-            {
-                Label = "Email Dashboard",
-                Url = "/email/dashboard",
-                Icon =
-                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>""",
-                Order = 49,
-                Section = MenuSection.AdminSidebar,
-            }
-        );
-        menus.Add(
-            new MenuItem
-            {
-                Label = "Email Templates",
-                Url = "/email/templates",
-                Icon =
-                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>""",
-                Order = 50,
-                Section = MenuSection.AdminSidebar,
-            }
-        );
-        menus.Add(
-            new MenuItem
-            {
-                Label = "Email History",
-                Url = "/email/history",
-                Icon =
-                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>""",
-                Order = 51,
-                Section = MenuSection.AdminSidebar,
-            }
-        );
-    }
+    // Menu items removed — accessible via Admin hub page
 }

@@ -4,7 +4,7 @@ export class FeatureFlagsManagePage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/feature-flags');
+    await this.page.goto('/feature-flags/manage');
   }
 
   get heading() {

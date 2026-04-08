@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
@@ -17,6 +18,7 @@ public class PermissionsModule : IModule
             PermissionsConstants.ModuleName
         );
 
+        services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
         services.AddHostedService<PermissionSeedService>();
     }
 }

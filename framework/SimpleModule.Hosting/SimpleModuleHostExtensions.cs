@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +44,8 @@ public static class SimpleModuleHostExtensions
         var options = new SimpleModuleOptions();
         configure?.Invoke(options);
         builder.Services.AddSingleton(options);
+
+        builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(5));
 
         BridgeAspireConnectionString(builder.Configuration);
         options.DatabaseProvider = ValidateDatabaseConfiguration(builder.Configuration);
@@ -171,8 +172,8 @@ public static class SimpleModuleHostExtensions
                     var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
-                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com; "
-                        + $"font-src 'self' fonts.gstatic.com; "
+                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me; "
+                        + $"font-src 'self' fonts.gstatic.com rsms.me; "
                         + $"connect-src {connectSrc}; "
                         + $"img-src 'self' data:; "
                         + $"object-src 'none'; "
@@ -201,15 +202,6 @@ public static class SimpleModuleHostExtensions
         app.UseInertia();
         UseStaticFileCaching(app);
         app.MapStaticAssets();
-
-        // Fallback for .mjs chunks not in the MapStaticAssets manifest.
-        // MapStaticAssets only knows about files present at publish time;
-        // mismatched builds or Vite watch rebuilds can produce chunks it misses.
-        {
-            var provider = new FileExtensionContentTypeProvider();
-            provider.Mappings[".mjs"] = "application/javascript";
-            app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = provider });
-        }
 
         app.UseAuthentication();
         app.UseAuthorization();

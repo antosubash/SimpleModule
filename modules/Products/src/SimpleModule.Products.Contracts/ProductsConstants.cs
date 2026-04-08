@@ -14,7 +14,7 @@ public static class ProductsConstants
         public const string Update = "/{id}";
         public const string Delete = "/{id}";
 
-        public const string Browse = "/browse";
+        public const string Browse = "/";
         public const string Manage = "/manage";
         public const string CreateView = "/create";
         public const string Edit = "/{id}/edit";

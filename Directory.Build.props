@@ -36,6 +36,17 @@
     <StaticWebAssetBuildCompressAllAssets>true</StaticWebAssetBuildCompressAllAssets>
     <StaticWebAssetPublishCompressAllAssets>true</StaticWebAssetPublishCompressAllAssets>
   </PropertyGroup>
+  <!-- Register .mjs (ES module chunks emitted by Vite code-splitting) so
+       Microsoft.NET.Sdk.StaticWebAssets generates an endpoint for each one
+       in the MapStaticAssets manifest. Without this, .mjs files silently
+       drop out of the manifest and MapStaticAssets returns 404 for them. -->
+  <ItemGroup>
+    <StaticWebAssetContentTypeMapping
+      Include="text/javascript"
+      Cache="$(StaticWebAssetEndpointDefaultMediaCacheControlHeader)"
+      Pattern="*.mjs"
+      Priority="1" />
+  </ItemGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <AnalysisLevel>latest-all</AnalysisLevel>

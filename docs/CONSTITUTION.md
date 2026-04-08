@@ -47,9 +47,13 @@ All hooks are optional. All have default no-op implementations.
 4. **ConfigureMenu** -- register navigation menu items
 5. **ConfigurePermissions** -- register authorization permissions
 6. **ConfigureSettings** -- register runtime-configurable settings
-7. **OnStartAsync** -- one-time initialization after all services are registered
-8. **OnStopAsync** -- graceful shutdown cleanup
-9. **CheckHealthAsync** -- report module health status (Healthy, Degraded, Unhealthy)
+7. **ConfigureFeatureFlags** -- register feature flag definitions
+8. **ConfigureAgents** -- register AI agent definitions
+9. **ConfigureRateLimits** -- register rate limit policies
+10. **ConfigureHost** -- configure host-level integrations (e.g., TickerQ, database initialization) after the host is built
+11. **OnStartAsync** -- one-time initialization after all services are registered
+12. **OnStopAsync** -- graceful shutdown cleanup
+13. **CheckHealthAsync** -- report module health status (Healthy, Degraded, Unhealthy)
 
 ### Module Options
 

@@ -11,7 +11,10 @@ public sealed partial class FileStorageService(
     ILogger<FileStorageService> logger
 ) : IFileStorageContracts
 {
-    public async Task<IEnumerable<StoredFile>> GetFilesAsync(string? folder = null)
+    public async Task<IEnumerable<StoredFile>> GetFilesAsync(
+        string? folder = null,
+        string? userId = null
+    )
     {
         var query = db.StoredFiles.AsNoTracking();
 
@@ -23,6 +26,11 @@ public sealed partial class FileStorageService(
         else
         {
             query = query.Where(f => f.Folder == null);
+        }
+
+        if (userId is not null)
+        {
+            query = query.Where(f => f.CreatedByUserId == userId);
         }
 
         return await query.OrderBy(f => f.FileName).ToListAsync();
@@ -43,7 +51,8 @@ public sealed partial class FileStorageService(
         Stream content,
         string fileName,
         string contentType,
-        string? folder = null
+        string? folder = null,
+        string? userId = null
     )
     {
         var normalizedFolder = folder is not null ? StoragePathHelper.Normalize(folder) : null;
@@ -60,6 +69,7 @@ public sealed partial class FileStorageService(
                 ContentType = contentType,
                 Size = result.Size,
                 Folder = normalizedFolder,
+                CreatedByUserId = userId,
                 CreatedAt = DateTimeOffset.UtcNow,
             };
 
@@ -82,6 +92,11 @@ public sealed partial class FileStorageService(
             await db.StoredFiles.FindAsync(id)
             ?? throw new InvalidOperationException($"File with ID {id} not found.");
 
+        await DeleteFileAsync(file);
+    }
+
+    public async Task DeleteFileAsync(StoredFile file)
+    {
         var storagePath = file.StoragePath;
 
         db.StoredFiles.Remove(file);
@@ -95,11 +110,11 @@ public sealed partial class FileStorageService(
         catch (Exception ex)
 #pragma warning restore CA1031
         {
-            LogStorageDeletionFailed(logger, id, storagePath, ex);
+            LogStorageDeletionFailed(logger, file.Id, storagePath, ex);
             return;
         }
 
-        LogFileDeleted(logger, id, file.FileName);
+        LogFileDeleted(logger, file.Id, file.FileName);
     }
 
     public async Task<Stream?> DownloadFileAsync(FileStorageId id)
@@ -111,12 +126,23 @@ public sealed partial class FileStorageService(
             return null;
         }
 
-        return await storageProvider.GetAsync(file.StoragePath);
+        return await DownloadFileAsync(file);
     }
 
-    public async Task<IEnumerable<string>> GetFoldersAsync(string? parentFolder = null)
+    public Task<Stream?> DownloadFileAsync(StoredFile file) =>
+        storageProvider.GetAsync(file.StoragePath);
+
+    public async Task<IEnumerable<string>> GetFoldersAsync(
+        string? parentFolder = null,
+        string? userId = null
+    )
     {
         var query = db.StoredFiles.AsNoTracking().Where(f => f.Folder != null);
+
+        if (userId is not null)
+        {
+            query = query.Where(f => f.CreatedByUserId == userId);
+        }
 
         string? normalizedParent = null;
         if (parentFolder is not null)

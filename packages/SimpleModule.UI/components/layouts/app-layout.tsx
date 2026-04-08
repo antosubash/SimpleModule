@@ -19,41 +19,6 @@ function SidebarIcon({ icon }: { icon: string }) {
   return <span className="sidebar-icon" dangerouslySetInnerHTML={{ __html: icon }} />;
 }
 
-interface MenuGroup {
-  group: string | null;
-  groupId: string;
-  items: MenuItem[];
-}
-
-function groupAdminItems(items: MenuItem[]): MenuGroup[] {
-  const groups: MenuGroup[] = [];
-  let currentGroup: string | null = null;
-  let currentItems: MenuItem[] = [];
-
-  for (const item of items) {
-    if (item.group !== currentGroup) {
-      if (currentItems.length > 0) {
-        groups.push({
-          group: currentGroup,
-          groupId: (currentGroup ?? '').replace(/ /g, '-').toLowerCase(),
-          items: currentItems,
-        });
-      }
-      currentGroup = item.group;
-      currentItems = [];
-    }
-    currentItems.push(item);
-  }
-  if (currentItems.length > 0) {
-    groups.push({
-      group: currentGroup,
-      groupId: (currentGroup ?? '').replace(/ /g, '-').toLowerCase(),
-      items: currentItems,
-    });
-  }
-  return groups;
-}
-
 function NavLink({
   item,
   pathname,
@@ -69,108 +34,6 @@ function NavLink({
       <SidebarIcon icon={item.icon} />
       <span className="sidebar-label">{item.label}</span>
     </Link>
-  );
-}
-
-function AdminSection({
-  adminItems,
-  pathname,
-  onLinkClick,
-}: {
-  adminItems: MenuItem[];
-  pathname: string;
-  onLinkClick?: () => void;
-}) {
-  const [open, setOpen] = React.useState(() => localStorage.getItem('admin-nav-open') !== 'false');
-  const groups = React.useMemo(() => groupAdminItems(adminItems), [adminItems]);
-
-  const toggle = React.useCallback(() => {
-    setOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem('admin-nav-open', String(next));
-      return next;
-    });
-  }, []);
-
-  return (
-    <div className="pt-4 mt-4 border-t border-border">
-      <button
-        type="button"
-        className="flex items-center gap-2 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-text-muted bg-transparent border-none cursor-pointer hover:text-text transition-colors"
-        onClick={toggle}
-      >
-        <span className="sidebar-label">Admin</span>
-        <svg
-          aria-hidden="true"
-          className={`w-3 h-3 transition-transform duration-200 ml-auto sidebar-label ${!open ? '-rotate-90' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-        >
-          <path d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {open && (
-        <div className="space-y-1 mt-1">
-          {groups.map((menuGroup) =>
-            menuGroup.group !== null ? (
-              <AdminGroup
-                key={menuGroup.groupId}
-                group={menuGroup}
-                pathname={pathname}
-                onLinkClick={onLinkClick}
-              />
-            ) : (
-              menuGroup.items.map((item) => (
-                <NavLink key={item.url} item={item} pathname={pathname} onClick={onLinkClick} />
-              ))
-            ),
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AdminGroup({
-  group,
-  pathname,
-  onLinkClick,
-}: {
-  group: MenuGroup;
-  pathname: string;
-  onLinkClick?: () => void;
-}) {
-  const [open, setOpen] = React.useState(true);
-
-  return (
-    <div className="mt-2">
-      <button
-        type="button"
-        className="flex items-center gap-2 w-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-text-muted bg-transparent border-none cursor-pointer hover:text-text transition-colors"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="sidebar-label">{group.group}</span>
-        <svg
-          aria-hidden="true"
-          className={`w-3 h-3 transition-transform duration-200 ml-auto sidebar-label ${!open ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-        >
-          <path d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {open && (
-        <div className="space-y-0.5 mt-0.5">
-          {group.items.map((item) => (
-            <NavLink key={item.url} item={item} pathname={pathname} onClick={onLinkClick} />
-          ))}
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -194,7 +57,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const closeMobile = React.useCallback(() => setMobileOpen(false), []);
 
-  const isAdmin = auth.roles.includes('Admin');
   const displayName = auth.userName ?? 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
 
@@ -265,14 +127,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {menus.sidebar.map((item) => (
               <NavLink key={item.url} item={item} pathname={pathname} onClick={closeMobile} />
             ))}
-
-            {isAdmin && menus.adminSidebar.length > 0 && (
-              <AdminSection
-                adminItems={menus.adminSidebar}
-                pathname={pathname}
-                onLinkClick={closeMobile}
-              />
-            )}
           </nav>
 
           {/* Footer: Dark Mode + User */}
