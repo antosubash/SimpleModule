@@ -90,6 +90,8 @@ COPY modules/Chat/src/SimpleModule.Chat.Contracts/*.csproj modules/Chat/src/Simp
 COPY modules/Chat/src/SimpleModule.Chat/*.csproj modules/Chat/src/SimpleModule.Chat/
 COPY modules/Map/src/SimpleModule.Map.Contracts/*.csproj modules/Map/src/SimpleModule.Map.Contracts/
 COPY modules/Map/src/SimpleModule.Map/*.csproj modules/Map/src/SimpleModule.Map/
+COPY modules/Datasets/src/SimpleModule.Datasets.Contracts/*.csproj modules/Datasets/src/SimpleModule.Datasets.Contracts/
+COPY modules/Datasets/src/SimpleModule.Datasets/*.csproj modules/Datasets/src/SimpleModule.Datasets/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
