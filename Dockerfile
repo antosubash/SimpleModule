@@ -173,9 +173,12 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 # Writable directory for SQLite database and local storage
 RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
 
-# Set deployment version for JS/CSS cache-busting and Inertia stale-version detection.
-# Override at runtime or build time: docker build --build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)
-ARG DEPLOY_VERSION=latest
+# Deployment version for JS/CSS cache-busting and Inertia stale-version detection.
+# Left empty by default so InertiaMiddleware.GetVersion() falls back to the entry
+# assembly's last-write timestamp (yyyyMMddHHmmss), which changes on every publish
+# and guarantees cache invalidation with zero configuration.
+# Override for deterministic versions: docker build --build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)
+ARG DEPLOY_VERSION=
 ENV DEPLOYMENT_VERSION=${DEPLOY_VERSION}
 
 USER appuser
