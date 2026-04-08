@@ -20,6 +20,11 @@ interface Props {
   defaultFromAddress: string;
 }
 
+type SubmitResult =
+  | { kind: 'success'; messageId: string }
+  | { kind: 'error'; message: string }
+  | null;
+
 export default function Settings({ provider, defaultFromAddress }: Props) {
   const { t } = useTranslation('Email');
 
@@ -27,14 +32,17 @@ export default function Settings({ provider, defaultFromAddress }: Props) {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(false);
-  const [successMessageId, setSuccessMessageId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<SubmitResult>(null);
+
+  const configFields = [
+    { label: t(EmailKeys.Settings.Provider), value: provider },
+    { label: t(EmailKeys.Settings.DefaultFromAddress), value: defaultFromAddress },
+  ];
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setSuccessMessageId(null);
-    setError(null);
+    setResult(null);
 
     try {
       const response = await fetch('/api/email/messages/test-send', {
@@ -48,12 +56,13 @@ export default function Settings({ provider, defaultFromAddress }: Props) {
       }
 
       const data = (await response.json()) as { messageId: string; status: string };
-      setSuccessMessageId(data.messageId);
+      setResult({ kind: 'success', messageId: data.messageId });
       setTo('');
       setSubject('');
       setBody('');
-    } catch {
-      setError(t(EmailKeys.Settings.ErrorMessage));
+    } catch (err) {
+      console.error('Failed to send test email', err);
+      setResult({ kind: 'error', message: t(EmailKeys.Settings.ErrorMessage) });
     } finally {
       setLoading(false);
     }
@@ -65,7 +74,6 @@ export default function Settings({ provider, defaultFromAddress }: Props) {
       title={t(EmailKeys.Settings.Title)}
       description={t(EmailKeys.Settings.Description)}
     >
-      {/* Current Configuration */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">
@@ -73,22 +81,17 @@ export default function Settings({ provider, defaultFromAddress }: Props) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 p-4 sm:p-6">
-          <div>
-            <p className="text-xs font-medium tracking-wide text-text-muted uppercase">
-              {t(EmailKeys.Settings.Provider)}
-            </p>
-            <p className="mt-1 text-sm font-medium">{provider}</p>
-          </div>
-          <div>
-            <p className="text-xs font-medium tracking-wide text-text-muted uppercase">
-              {t(EmailKeys.Settings.DefaultFromAddress)}
-            </p>
-            <p className="mt-1 text-sm font-medium">{defaultFromAddress}</p>
-          </div>
+          {configFields.map((field) => (
+            <div key={field.label}>
+              <p className="text-xs font-medium tracking-wide text-text-muted uppercase">
+                {field.label}
+              </p>
+              <p className="mt-1 text-sm font-medium">{field.value}</p>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
-      {/* Send Test Email */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">
@@ -131,19 +134,19 @@ export default function Settings({ provider, defaultFromAddress }: Props) {
               </Field>
             </FieldGroup>
 
-            {successMessageId !== null && (
-              <p className="mt-4 text-sm text-green-600">
-                {t(EmailKeys.Settings.SuccessMessage).replace('{{messageId}}', successMessageId)}
+            {result?.kind === 'success' && (
+              <p className="mt-4 text-sm text-success">
+                {t(EmailKeys.Settings.SuccessMessage, { messageId: result.messageId })}
               </p>
             )}
 
-            {error !== null && <p className="mt-4 text-sm text-danger">{error}</p>}
+            {result?.kind === 'error' && (
+              <p className="mt-4 text-sm text-danger">{result.message}</p>
+            )}
 
-            <div className="mt-4">
-              <Button type="submit" disabled={loading}>
-                {loading ? t(EmailKeys.Settings.SendingLabel) : t(EmailKeys.Settings.SendButton)}
-              </Button>
-            </div>
+            <Button type="submit" disabled={loading} className="mt-4">
+              {loading ? t(EmailKeys.Settings.SendingLabel) : t(EmailKeys.Settings.SendButton)}
+            </Button>
           </form>
         </CardContent>
       </Card>

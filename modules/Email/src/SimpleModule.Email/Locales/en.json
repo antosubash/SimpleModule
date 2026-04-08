@@ -104,6 +104,6 @@
   "Settings.BodyLabel": "Body (optional)",
   "Settings.SendButton": "Send Test Email",
   "Settings.SendingLabel": "Sending...",
-  "Settings.SuccessMessage": "Test email enqueued. Message ID: {{messageId}}",
+  "Settings.SuccessMessage": "Test email enqueued. Message ID: {messageId}",
   "Settings.ErrorMessage": "Failed to send test email. Please try again."
 }
