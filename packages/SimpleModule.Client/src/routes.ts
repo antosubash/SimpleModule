@@ -17,6 +17,21 @@ export const routes = {
       recurring: () => '/admin/jobs/recurring' as const,
     },
   },
+  chat: {
+    api: {
+      createConversation: () => '/api/chat/conversations' as const,
+      deleteConversation: (id: string | number) => `/api/chat/conversations/${id}`,
+      getConversation: (id: string | number) => `/api/chat/conversations/${id}`,
+      getMessages: (id: string | number) => `/api/chat/conversations/${id}/messages`,
+      listConversations: () => '/api/chat/conversations' as const,
+      renameConversation: (id: string | number) => `/api/chat/conversations/${id}`,
+      sendMessageStream: (id: string | number) => `/api/chat/conversations/${id}/stream`,
+    },
+    views: {
+      browse: () => '/chat' as const,
+      conversation: (id: string | number) => `/chat/${id}`,
+    },
+  },
   dashboard: {
     views: {
       home: () => '/' as const,
@@ -32,7 +47,7 @@ export const routes = {
       update: (name: string | number) => `/api/feature-flags/${name}`,
     },
     views: {
-      manage: () => '/feature-flags' as const,
+      manage: () => '/feature-flags/manage' as const,
     },
   },
   fileStorage: {
@@ -45,7 +60,32 @@ export const routes = {
       upload: () => '/api/files' as const,
     },
     views: {
-      browse: () => '/files/browse' as const,
+      browse: () => '/files' as const,
+    },
+  },
+  map: {
+    api: {
+      createBasemap: () => '/api/map/basemaps' as const,
+      deleteBasemap: (id: string | number) => `/api/map/basemaps/${id}`,
+      getAllBasemaps: () => '/api/map/basemaps' as const,
+      getBasemapById: (id: string | number) => `/api/map/basemaps/${id}`,
+      updateBasemap: (id: string | number) => `/api/map/basemaps/${id}`,
+      createLayerSource: () => '/api/map/sources' as const,
+      deleteLayerSource: (id: string | number) => `/api/map/sources/${id}`,
+      getAllLayerSources: () => '/api/map/sources' as const,
+      getLayerSourceById: (id: string | number) => `/api/map/sources/${id}`,
+      updateLayerSource: (id: string | number) => `/api/map/sources/${id}`,
+      createMap: () => '/api/map/maps' as const,
+      deleteMap: (id: string | number) => `/api/map/maps/${id}`,
+      getAllMaps: () => '/api/map/maps' as const,
+      getMapById: (id: string | number) => `/api/map/maps/${id}`,
+      updateMap: (id: string | number) => `/api/map/maps/${id}`,
+    },
+    views: {
+      browse: () => '/map' as const,
+      edit: (id: string | number) => `/map/${id}/edit`,
+      layers: () => '/map/layers' as const,
+      view: (id: string | number) => `/map/${id}`,
     },
   },
   marketplace: {
@@ -54,7 +94,7 @@ export const routes = {
       search: () => '/api/marketplace' as const,
     },
     views: {
-      browse: () => '/marketplace/browse' as const,
+      browse: () => '/marketplace' as const,
       detail: (id: string | number) => `/marketplace/${id}`,
     },
   },
@@ -95,7 +135,7 @@ export const routes = {
       update: (id: string | number) => `/api/products/${id}`,
     },
     views: {
-      browse: () => '/products/browse' as const,
+      browse: () => '/products' as const,
       create: () => '/products/create' as const,
       edit: (id: string | number) => `/products/${id}/edit`,
       manage: () => '/products/manage' as const,
@@ -111,7 +151,7 @@ export const routes = {
       update: (id: string | number) => `/api/rate-limiting/${id}`,
     },
     views: {
-      admin: () => '/rate-limiting' as const,
+      admin: () => '/rate-limiting/manage' as const,
     },
   },
   settings: {
@@ -134,7 +174,7 @@ export const routes = {
       updateMySetting: () => '/api/settings/me' as const,
     },
     views: {
-      adminSettings: () => '/settings' as const,
+      adminSettings: () => '/settings/manage' as const,
       menuManager: () => '/settings/menus' as const,
       userSettings: () => '/settings/me' as const,
     },
@@ -272,6 +312,7 @@ export const routes = {
       adminUsers: () => '/admin/users' as const,
     },
     views: {
+      hub: () => '/admin' as const,
       rolesCreate: () => '/admin/roles/create' as const,
       rolesEdit: (id: string | number) => `/admin/roles/${id}/edit`,
       roles: () => '/admin/roles' as const,

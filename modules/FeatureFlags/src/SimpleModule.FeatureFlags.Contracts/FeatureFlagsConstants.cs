@@ -17,6 +17,6 @@ public static class FeatureFlagsConstants
         public const string DeleteOverride = "/overrides/{id:int}";
 
         // View endpoints
-        public const string Manage = "/";
+        public const string Manage = "/manage";
     }
 }

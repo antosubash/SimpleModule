@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Extensions;
 using SimpleModule.FileStorage.Contracts;
 
 namespace SimpleModule.FileStorage.Endpoints.Files;
@@ -15,8 +16,11 @@ public class ListFoldersEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                async (string? parent, IFileStorageContracts files) =>
-                    TypedResults.Ok(await files.GetFoldersAsync(parent))
+                async (string? parent, HttpContext context, IFileStorageContracts files) =>
+                {
+                    var userId = context.User.GetScopedUserId();
+                    return TypedResults.Ok(await files.GetFoldersAsync(parent, userId));
+                }
             )
             .RequirePermission(FileStoragePermissions.View);
 }

@@ -6,6 +6,7 @@ export interface StoredFile {
   contentType: string;
   size: number;
   folder: string;
+  createdByUserId: string;
   createdAt: string;
 }
 

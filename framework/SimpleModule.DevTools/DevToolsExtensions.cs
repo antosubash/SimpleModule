@@ -12,7 +12,6 @@ public static class DevToolsExtensions
     public static IServiceCollection AddDevTools(this IServiceCollection services)
     {
         services.AddSingleton<LiveReloadServer>();
-        services.AddHostedService<ViteDevWatchService>();
         return services;
     }
 }

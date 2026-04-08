@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "name": "@simplemodule/chat",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "cross-env VITE_MODE=prod vite build --configLoader runner",
+    "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+    "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch"
+  },
+  "dependencies": {
+    "@tanstack/ai-client": "^0.1.0",
+    "@tanstack/ai-react": "^0.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

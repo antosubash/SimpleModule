@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
     <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions\SimpleModule.Permissions.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products\SimpleModule.Products.csproj" />
+    <ProjectReference Include="..\..\modules\Map\src\SimpleModule.Map\SimpleModule.Map.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders\SimpleModule.Orders.csproj" />
     <ProjectReference Include="..\..\modules\Admin\src\SimpleModule.Admin\SimpleModule.Admin.csproj" />
     <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
@@ -47,6 +48,7 @@
     <ProjectReference Include="..\..\framework\SimpleModule.Rag.VectorStore.InMemory\SimpleModule.Rag.VectorStore.InMemory.csproj" />
     <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
     <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
+    <ProjectReference Include="..\..\modules\Chat\src\SimpleModule.Chat\SimpleModule.Chat.csproj" />
     <ProjectReference Include="..\..\SimpleModule.ServiceDefaults\SimpleModule.ServiceDefaults.csproj" />
   </ItemGroup>
   <Import Project="..\..\framework\SimpleModule.Hosting\build\SimpleModule.Hosting.targets" />

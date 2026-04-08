@@ -53,6 +53,24 @@ export interface AuditEntry {
 export interface AuditExportRequest {
   format: string;
   effectiveFormat: string;
+  from: string | null;
+  to: string | null;
+  userId: string;
+  module: string;
+  entityType: string;
+  entityId: string;
+  source: any | null;
+  action: any | null;
+  statusCode: number | null;
+  searchText: string;
+  page: number | null;
+  pageSize: number | null;
+  sortBy: string;
+  sortDescending: boolean | null;
+  effectivePage: number;
+  effectivePageSize: number;
+  effectiveSortBy: string;
+  effectiveSortDescending: boolean;
 }
 
 export interface AuditQueryRequest {

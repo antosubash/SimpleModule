@@ -23,6 +23,14 @@ public interface IModule
     virtual void ConfigureMenu(IMenuBuilder menus) { }
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
+    virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
+    virtual void ConfigureAgents(IAgentBuilder builder) { }
+    virtual void ConfigureRateLimits(IRateLimitBuilder builder) { }
+    virtual void ConfigureHost(IHost host) { }
+    virtual Task OnStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    virtual Task OnStopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    virtual Task<ModuleHealthStatus> CheckHealthAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(ModuleHealthStatus.Healthy);
 }
 ```
 
@@ -34,6 +42,13 @@ public interface IModule
 | `ConfigureMenu` | Application startup | Add navigation menu items |
 | `ConfigurePermissions` | Application startup | Register permission definitions |
 | `ConfigureSettings` | Application startup | Register settings definitions |
+| `ConfigureFeatureFlags` | Application startup | Register feature flag definitions |
+| `ConfigureAgents` | Application startup | Register AI agent definitions |
+| `ConfigureRateLimits` | Application startup | Register rate limit policies |
+| `ConfigureHost` | After host is built | Configure host-level integrations (TickerQ, DB init) |
+| `OnStartAsync` | After services registered | One-time async initialization |
+| `OnStopAsync` | Graceful shutdown | Cleanup, flush buffers, drain work |
+| `CheckHealthAsync` | Health check endpoint | Report module health status |
 
 ::: info
 `ConfigureEndpoints` is an escape hatch. If your module has `IEndpoint`/`IViewEndpoint` implementations, the source generator registers them automatically. Only override `ConfigureEndpoints` for non-standard routing needs.

@@ -43,6 +43,11 @@
     <Project Path="modules/Products/src/SimpleModule.Products/SimpleModule.Products.csproj" />
     <Project Path="modules/Products/tests/SimpleModule.Products.Tests/SimpleModule.Products.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/Map/">
+    <Project Path="modules/Map/src/SimpleModule.Map.Contracts/SimpleModule.Map.Contracts.csproj" />
+    <Project Path="modules/Map/src/SimpleModule.Map/SimpleModule.Map.csproj" />
+    <Project Path="modules/Map/tests/SimpleModule.Map.Tests/SimpleModule.Map.Tests.csproj" />
+  </Folder>
   <Folder Name="/modules/Users/">
     <Project Path="modules/Users/src/SimpleModule.Users.Contracts/SimpleModule.Users.Contracts.csproj" />
     <Project Path="modules/Users/src/SimpleModule.Users/SimpleModule.Users.csproj" />
@@ -107,6 +112,11 @@
     <Project Path="modules/Agents/src/SimpleModule.Agents.Contracts/SimpleModule.Agents.Contracts.csproj" />
     <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
     <Project Path="modules/Agents/tests/SimpleModule.Agents.Tests/SimpleModule.Agents.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Chat/">
+    <Project Path="modules/Chat/src/SimpleModule.Chat.Contracts/SimpleModule.Chat.Contracts.csproj" />
+    <Project Path="modules/Chat/src/SimpleModule.Chat/SimpleModule.Chat.csproj" />
+    <Project Path="modules/Chat/tests/SimpleModule.Chat.Tests/SimpleModule.Chat.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/BackgroundJobs/">
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/SimpleModule.BackgroundJobs.Contracts.csproj" />

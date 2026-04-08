@@ -24,6 +24,10 @@ export interface RoleDto {
 export interface ApplicationRole {
   description: string;
   createdAt: string;
+  id: string;
+  name: string;
+  normalizedName: string;
+  concurrencyStamp: string;
 }
 
 export interface ApplicationUser {
@@ -31,6 +35,21 @@ export interface ApplicationUser {
   createdAt: string;
   lastLoginAt: string | null;
   deactivatedAt: string | null;
+  id: string;
+  userName: string;
+  normalizedUserName: string;
+  email: string;
+  normalizedEmail: string;
+  emailConfirmed: boolean;
+  passwordHash: string;
+  securityStamp: string;
+  concurrencyStamp: string;
+  phoneNumber: string;
+  phoneNumberConfirmed: boolean;
+  twoFactorEnabled: boolean;
+  lockoutEnd: string | null;
+  lockoutEnabled: boolean;
+  accessFailedCount: number;
 }
 
 export interface CreateAdminUserRequest {

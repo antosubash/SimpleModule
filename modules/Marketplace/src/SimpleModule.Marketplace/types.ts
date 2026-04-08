@@ -19,6 +19,18 @@ export interface MarketplacePackageDetail extends MarketplacePackage {
   versions: MarketplacePackageVersion[];
   dependencies: string[];
   readme: string;
+  id: string;
+  title: string;
+  description: string;
+  authors: string;
+  icon: string;
+  totalDownloads: number;
+  tags: string[];
+  latestVersion: string;
+  projectLink: string;
+  category: any;
+  isInstalled: boolean;
+  isVerified: boolean;
 }
 
 export interface MarketplacePackageVersion {

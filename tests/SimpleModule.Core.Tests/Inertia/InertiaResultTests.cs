@@ -21,7 +21,7 @@ public class InertiaResultTests
     public async Task InertiaEndpoint_WithoutInertiaHeader_ReturnsHtml()
     {
         using var client = _factory.CreateClient();
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType?.MediaType.Should().Be("text/html");
 
@@ -38,7 +38,7 @@ public class InertiaResultTests
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
         client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
 
@@ -56,9 +56,9 @@ public class InertiaResultTests
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
         client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        json.GetProperty("url").GetString().Should().Be("/products/browse");
+        json.GetProperty("url").GetString().Should().Be("/products");
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class InertiaResultTests
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
         client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.Headers.Contains("X-Inertia").Should().BeTrue();
         response.Headers.GetValues("X-Inertia").Should().Contain("true");
     }
@@ -77,7 +77,7 @@ public class InertiaResultTests
     public async Task InertiaEndpoint_HtmlResponse_ContainsImportMap()
     {
         using var client = _factory.CreateClient();
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         var html = await response.Content.ReadAsStringAsync();
         html.Should().Contain("importmap");
         html.Should().Contain("react");
@@ -87,7 +87,7 @@ public class InertiaResultTests
     public async Task InertiaMiddleware_AddsVersionHeader()
     {
         using var client = _factory.CreateClient();
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.Headers.Contains("X-Inertia-Version").Should().BeTrue();
     }
 
@@ -100,7 +100,7 @@ public class InertiaResultTests
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
         client.DefaultRequestHeaders.Add("X-Inertia-Version", "wrong-version");
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 }
