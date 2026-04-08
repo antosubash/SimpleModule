@@ -1,4 +1,4 @@
-import cogProtocol from '@geomatico/maplibre-cog-protocol';
+import { cogProtocol } from '@geomatico/maplibre-cog-protocol';
 import maplibregl from 'maplibre-gl';
 import { Protocol as PMTilesProtocol } from 'pmtiles';
 

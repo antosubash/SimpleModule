@@ -114,7 +114,7 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
     setSaving(true);
     const body: UpdateMapRequest = {
       name,
-      description: description || null,
+      description,
       centerLng: map.centerLng,
       centerLat: map.centerLat,
       zoom: map.zoom,
