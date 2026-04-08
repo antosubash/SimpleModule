@@ -1,12 +1,25 @@
 import { router } from '@inertiajs/react';
 import { Button, Card, CardContent, PageShell } from '@simplemodule/ui';
-import type { SavedMap } from '@/types';
+import type { LayerSource, MapLayer, SavedMap } from '@/types';
+import MapCanvas from './components/MapCanvas';
 
 interface Props {
   maps: SavedMap[];
+  sources: LayerSource[];
+  defaultStyleUrl: string;
 }
 
-export default function Browse({ maps }: Props) {
+export default function Browse({ maps, sources, defaultStyleUrl }: Props) {
+  // Render every seeded layer source stacked on top of the default basemap so
+  // the preview shows the full catalog out of the box.
+  const previewLayers: MapLayer[] = sources.map((s, index) => ({
+    layerSourceId: s.id,
+    order: index,
+    visible: true,
+    opacity: 1,
+    styleOverrides: {},
+  }));
+
   return (
     <PageShell title="Maps" description="Saved map compositions and viewers.">
       <div className="flex justify-end mb-3">
@@ -14,6 +27,16 @@ export default function Browse({ maps }: Props) {
           Manage layer sources
         </Button>
       </div>
+      <Card className="mb-4 overflow-hidden">
+        <MapCanvas
+          styleUrl={defaultStyleUrl}
+          center={[0, 20]}
+          zoom={1.5}
+          layers={previewLayers}
+          sources={sources}
+          className="h-[420px] w-full"
+        />
+      </Card>
       <div className="space-y-2 sm:space-y-3">
         {maps.length === 0 && (
           <Card>

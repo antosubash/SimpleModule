@@ -21,6 +21,7 @@ public class BrowseEndpoint : IViewEndpoint
                         new
                         {
                             maps = await maps.GetAllMapsAsync(),
+                            sources = await maps.GetAllLayerSourcesAsync(),
                             defaultStyleUrl = options.Value.BaseStyleUrl,
                         }
                     )

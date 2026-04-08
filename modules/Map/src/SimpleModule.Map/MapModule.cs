@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
 using SimpleModule.Database;
@@ -31,6 +34,60 @@ public class MapModule : IModule, IModuleServices, IModuleMenu
             enableSpatial: enableSpatial
         );
         services.AddScoped<IMapContracts, MapService>();
+    }
+
+    public void ConfigureHost(IHost host)
+    {
+        // Seed a default "All seeded layers" saved map on first run so the
+        // /map browse page has something to show without the user having to
+        // build a composition by hand. Idempotent: skips if any saved map
+        // already exists.
+        using var scope = host.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MapDbContext>();
+        if (db.SavedMaps.Any())
+        {
+            return;
+        }
+
+        var sources = db.LayerSources.AsNoTracking().OrderBy(s => s.Name).ToList();
+        if (sources.Count == 0)
+        {
+            return;
+        }
+
+        var options = scope.ServiceProvider.GetRequiredService<IOptions<MapModuleOptions>>().Value;
+        var now = DateTimeOffset.UtcNow;
+
+        db.SavedMaps.Add(
+            new SavedMap
+            {
+                Id = SavedMapId.From(Guid.NewGuid()),
+                Name = "All seeded layers",
+                Description = "Default map composition showcasing every seeded layer source.",
+                CenterLng = 0,
+                CenterLat = 20,
+                Zoom = 1.5,
+                Pitch = 0,
+                Bearing = 0,
+                BaseStyleUrl = options.BaseStyleUrl,
+                CreatedAt = now,
+                UpdatedAt = now,
+                ConcurrencyStamp = Guid.NewGuid().ToString("N"),
+                Layers = sources
+                    .Select(
+                        (s, i) =>
+                            new MapLayer
+                            {
+                                LayerSourceId = s.Id,
+                                Order = i,
+                                Visible = true,
+                                Opacity = 1,
+                            }
+                    )
+                    .ToList(),
+            }
+        );
+        db.SaveChanges();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

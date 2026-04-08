@@ -167,15 +167,20 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-                    // In development, allow WebSocket connections for live reload
-                    var connectSrc = isDevelopment ? "'self' ws: wss:" : "'self'";
+                    // In development, allow WebSocket connections for live reload.
+                    // MapLibre needs https: connect for tile/style fetches and blob:
+                    // workers (it spawns a tile worker from a Blob URL).
+                    var connectSrc = isDevelopment
+                        ? "'self' ws: wss: https: data:"
+                        : "'self' https: data:";
                     var csp =
                         $"default-src 'none'; "
-                        + $"script-src 'self' 'nonce-{nonce}'; "
+                        + $"script-src 'self' 'nonce-{nonce}' blob:; "
+                        + $"worker-src 'self' blob:; "
                         + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me; "
                         + $"font-src 'self' fonts.gstatic.com rsms.me; "
                         + $"connect-src {connectSrc}; "
-                        + $"img-src 'self' data:; "
+                        + $"img-src 'self' data: blob: https:; "
                         + $"object-src 'none'; "
                         + $"base-uri 'self'; "
                         + $"form-action 'self'; "
