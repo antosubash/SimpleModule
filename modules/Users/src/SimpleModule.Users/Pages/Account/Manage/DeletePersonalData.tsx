@@ -1,14 +1,6 @@
 import { router } from '@inertiajs/react';
-import {
-  Button,
-  Card,
-  CardContent,
-  Container,
-  Field,
-  FieldGroup,
-  Input,
-  Label,
-} from '@simplemodule/ui';
+import { Button, Field, FieldGroup, Input, Label } from '@simplemodule/ui';
+import ManageLayout from '@/components/ManageLayout';
 
 interface Props {
   requirePassword: boolean;
@@ -23,7 +15,7 @@ export default function DeletePersonalData({ requirePassword, errors }: Props) {
   }
 
   return (
-    <Container size="sm">
+    <ManageLayout activePage="PersonalData">
       <h3 className="text-xl font-bold mb-4">Delete Personal Data</h3>
       <div className="alert-warning mb-4" role="alert">
         <p>
@@ -41,29 +33,25 @@ export default function DeletePersonalData({ requirePassword, errors }: Props) {
           </ul>
         </div>
       )}
-      <Card>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              {requirePassword && (
-                <Field>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    autoComplete="current-password"
-                  />
-                </Field>
-              )}
-              <Button type="submit" variant="danger" className="w-full">
-                Delete data and close my account
-              </Button>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </Container>
+      <form onSubmit={handleSubmit}>
+        <FieldGroup>
+          {requirePassword && (
+            <Field>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+              />
+            </Field>
+          )}
+          <Button type="submit" variant="danger" className="w-full">
+            Delete data and close my account
+          </Button>
+        </FieldGroup>
+      </form>
+    </ManageLayout>
   );
 }

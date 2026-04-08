@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
-import { Button, Card, CardContent, Container } from '@simplemodule/ui';
+import { Button } from '@simplemodule/ui';
+import ManageLayout from '@/components/ManageLayout';
 
 interface LoginInfo {
   loginProvider: string;
@@ -41,7 +42,7 @@ export default function ExternalLogins({
   }
 
   return (
-    <Container size="sm">
+    <ManageLayout activePage="ExternalLogins">
       {statusMessage && (
         <div className="alert-success mb-4 text-sm" role="alert">
           {statusMessage}
@@ -50,30 +51,26 @@ export default function ExternalLogins({
       {currentLogins.length > 0 && (
         <>
           <h3 className="text-xl font-bold mb-4">Registered Logins</h3>
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <table className="w-full">
-                <tbody>
-                  {currentLogins.map((login) => (
-                    <tr key={login.loginProvider}>
-                      <td className="py-2">{login.providerDisplayName ?? login.loginProvider}</td>
-                      <td className="py-2 text-right">
-                        {showRemoveButton && (
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() => handleRemove(login.loginProvider, login.providerKey)}
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+          <table className="w-full mb-6">
+            <tbody>
+              {currentLogins.map((login) => (
+                <tr key={login.loginProvider}>
+                  <td className="py-2">{login.providerDisplayName ?? login.loginProvider}</td>
+                  <td className="py-2 text-right">
+                    {showRemoveButton && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => handleRemove(login.loginProvider, login.providerKey)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
       )}
       {otherLogins.length > 0 && (
@@ -91,6 +88,6 @@ export default function ExternalLogins({
           </form>
         </>
       )}
-    </Container>
+    </ManageLayout>
   );
 }

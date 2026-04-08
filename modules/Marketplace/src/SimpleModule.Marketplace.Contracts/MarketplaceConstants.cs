@@ -11,7 +11,7 @@ public static class MarketplaceConstants
         public const string Search = "/";
         public const string GetById = "/{id}";
 
-        public const string Browse = "/browse";
+        public const string Browse = "/";
         public const string Detail = "/{id}";
     }
 }

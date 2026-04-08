@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Extensions;
 using SimpleModule.Users.Contracts;
-using SimpleModule.Users.Extensions;
 
 namespace SimpleModule.Users.Endpoints.Users;
 

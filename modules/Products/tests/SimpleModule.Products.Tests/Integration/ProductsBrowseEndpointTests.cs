@@ -20,7 +20,7 @@ public class ProductsBrowseEndpointTests
     [Fact]
     public async Task Browse_ReturnsHtmlPage()
     {
-        var response = await _client.GetAsync("/products/browse");
+        var response = await _client.GetAsync("/products");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         response.Content.Headers.ContentType?.MediaType.Should().Be("text/html");
     }
@@ -31,7 +31,7 @@ public class ProductsBrowseEndpointTests
         _client.DefaultRequestHeaders.Add("X-Inertia", "true");
         _client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await _client.GetAsync("/products/browse");
+        var response = await _client.GetAsync("/products");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -48,7 +48,7 @@ public class ProductsBrowseEndpointTests
         _client.DefaultRequestHeaders.Add("X-Inertia", "true");
         _client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await _client.GetAsync("/products/browse");
+        var response = await _client.GetAsync("/products");
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
         var firstProduct = json.GetProperty("props").GetProperty("products")[0];
 

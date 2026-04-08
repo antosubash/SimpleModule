@@ -32,18 +32,31 @@ public sealed class InertiaLayoutDataMiddleware(RequestDelegate next)
                 }
             );
 
-            // Menu items
+            // Menu items (filtered by user roles)
             var menuRegistry = context.RequestServices.GetService<IMenuRegistry>();
             if (menuRegistry is not null)
             {
+                IReadOnlyList<MenuItem> Filter(MenuSection section)
+                {
+                    var items = menuRegistry.GetItems(section);
+                    if (!isAuthenticated)
+                    {
+                        return items.Where(m => !m.RequiresAuth).ToList();
+                    }
+
+                    return items
+                        .Where(m => m.Roles.Count == 0 || m.Roles.Any(r => user.IsInRole(r)))
+                        .ToList();
+                }
+
                 sharedData.Set(
                     "menus",
                     new
                     {
-                        sidebar = menuRegistry.GetItems(MenuSection.AppSidebar),
-                        adminSidebar = menuRegistry.GetItems(MenuSection.AdminSidebar),
-                        userDropdown = menuRegistry.GetItems(MenuSection.UserDropdown),
-                        navbar = menuRegistry.GetItems(MenuSection.Navbar),
+                        sidebar = Filter(MenuSection.AppSidebar),
+                        adminSidebar = Filter(MenuSection.AdminSidebar),
+                        userDropdown = Filter(MenuSection.UserDropdown),
+                        navbar = Filter(MenuSection.Navbar),
                     }
                 );
             }

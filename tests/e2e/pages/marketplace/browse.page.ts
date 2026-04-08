@@ -4,11 +4,11 @@ export class MarketplaceBrowsePage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/marketplace/browse');
+    await this.page.goto('/marketplace');
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /marketplace|modules/i });
+    return this.page.getByRole('heading', { level: 1, name: /marketplace|modules/i });
   }
 
   get searchInput() {

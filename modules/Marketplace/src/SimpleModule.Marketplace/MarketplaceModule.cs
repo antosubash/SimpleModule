@@ -36,21 +36,10 @@ public class MarketplaceModule : IModule
             new MenuItem
             {
                 Label = "Marketplace",
-                Url = "/marketplace/browse",
+                Url = "/marketplace",
                 Icon = MenuIcon,
                 Order = 40,
                 Section = MenuSection.Navbar,
-                RequiresAuth = false,
-            }
-        );
-        menus.Add(
-            new MenuItem
-            {
-                Label = "Marketplace",
-                Url = "/marketplace/browse",
-                Icon = MenuIcon,
-                Order = 40,
-                Section = MenuSection.AppSidebar,
                 RequiresAuth = false,
             }
         );

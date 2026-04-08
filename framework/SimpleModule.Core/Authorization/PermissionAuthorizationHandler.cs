@@ -11,7 +11,7 @@ public sealed class PermissionAuthorizationHandler : AuthorizationHandler<Permis
     )
     {
         // Admin role bypasses all permission checks
-        if (context.User.IsInRole("Admin"))
+        if (context.User.IsInRole(WellKnownRoles.Admin))
         {
             context.Succeed(requirement);
             return Task.CompletedTask;

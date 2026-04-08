@@ -99,7 +99,17 @@ public sealed class EntityChangeInterceptor(
     {
         var entityType = entity.GetType();
         var metadata = MetadataCache.GetOrAdd(entityType, BuildMetadata);
-        var handlers = serviceProvider.GetServices(metadata.HandlerType);
+
+        object?[] handlers;
+        try
+        {
+            handlers = [.. serviceProvider.GetServices(metadata.HandlerType)];
+        }
+        catch (ObjectDisposedException)
+        {
+            // Service provider disposed during shutdown — skip handler dispatch
+            return;
+        }
 
         foreach (var handler in handlers)
         {

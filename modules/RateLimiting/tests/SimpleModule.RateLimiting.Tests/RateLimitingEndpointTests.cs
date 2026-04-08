@@ -18,7 +18,7 @@ public class RateLimitingEndpointTests
     {
         using var client = _factory.CreateAuthenticatedClient(new Claim(ClaimTypes.Role, "Admin"));
 
-        var response = await client.GetAsync("/rate-limiting");
+        var response = await client.GetAsync("/rate-limiting/manage");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
