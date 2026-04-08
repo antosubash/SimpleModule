@@ -43,6 +43,44 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
   const [pickerSourceId, setPickerSourceId] = useState<string>('');
   const [pickerBasemapId, setPickerBasemapId] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [availableSources, setAvailableSources] = useState<LayerSource[]>(sources);
+  const [datasets, setDatasets] = useState<Array<{ id: string; name: string }>>([]);
+  const [pickerDatasetId, setPickerDatasetId] = useState<string>('');
+  const [datasetsLoaded, setDatasetsLoaded] = useState(false);
+
+  async function loadDatasets() {
+    if (datasetsLoaded) return;
+    const res = await fetch('/api/datasets/', { headers: { Accept: 'application/json' } });
+    if (res.ok) {
+      const list = (await res.json()) as Array<{ id: string; name: string }>;
+      setDatasets(list);
+    }
+    setDatasetsLoaded(true);
+  }
+
+  async function addFromDataset() {
+    if (!pickerDatasetId) return;
+    if (layers.length >= maxLayers) return;
+    const res = await fetch('/api/map/sources/from-dataset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ datasetId: pickerDatasetId }),
+    });
+    if (!res.ok) return;
+    const created = (await res.json()) as LayerSource;
+    setAvailableSources((prev) => [...prev, created]);
+    setLayers([
+      ...layers,
+      {
+        layerSourceId: created.id,
+        order: layers.length,
+        visible: true,
+        opacity: 1,
+        styleOverrides: {},
+      },
+    ]);
+    setPickerDatasetId('');
+  }
 
   function moveBasemap(idx: number, delta: number) {
     const next = [...mapBasemaps];
@@ -133,7 +171,7 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
     router.visit(`/map/${map.id}`);
   }
 
-  const sourceById = new Map(sources.map((s) => [s.id, s]));
+  const sourceById = new Map(availableSources.map((s) => [s.id, s]));
   const basemapById = new Map(basemaps.map((b) => [b.id, b]));
 
   return (
@@ -288,7 +326,7 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
                     <SelectValue placeholder="Add source…" />
                   </SelectTrigger>
                   <SelectContent>
-                    {sources.map((s) => (
+                    {availableSources.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
                       </SelectItem>
@@ -296,6 +334,32 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
                   </SelectContent>
                 </Select>
                 <Button onClick={addLayer} disabled={!pickerSourceId || layers.length >= maxLayers}>
+                  Add
+                </Button>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Select
+                  value={pickerDatasetId}
+                  onValueChange={setPickerDatasetId}
+                  onOpenChange={(open) => {
+                    if (open) loadDatasets();
+                  }}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Add from dataset…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {datasets.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={addFromDataset}
+                  disabled={!pickerDatasetId || layers.length >= maxLayers}
+                >
                   Add
                 </Button>
               </div>
@@ -312,7 +376,7 @@ export default function Edit({ map, sources, basemaps, defaultStyleUrl, maxLayer
               pitch={map.pitch}
               bearing={map.bearing}
               layers={layers}
-              sources={sources}
+              sources={availableSources}
             />
           </div>
         </div>
