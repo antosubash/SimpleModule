@@ -1,28 +1,9 @@
-const loadedCss = new Set<string>();
-
-function ensureModuleCss(assemblyName: string, suffix: string) {
-  if (loadedCss.has(assemblyName)) return;
-  loadedCss.add(assemblyName);
-
-  const href = `/_content/${assemblyName}/${assemblyName.toLowerCase()}.css${suffix}`;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = href;
-  link.onerror = () => {
-    // Module has no CSS — remove the broken link and suppress further attempts
-    link.remove();
-  };
-  document.head.appendChild(link);
-}
-
 export async function resolvePage(name: string) {
   const moduleName = name.split('/')[0];
   const assemblyName = `SimpleModule.${moduleName}`;
   const cacheBuster = (document.querySelector('meta[name="cache-buster"]') as HTMLMetaElement)
     ?.content;
   const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
-
-  ensureModuleCss(assemblyName, suffix);
 
   const mod = await import(
     /* @vite-ignore */
