@@ -4,8 +4,6 @@ using NSubstitute;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Entities;
 using SimpleModule.BackgroundJobs.Services;
-using TickerQ.Utilities.Entities;
-using TickerQ.Utilities.Interfaces.Managers;
 
 namespace BackgroundJobs.Tests.Unit;
 
@@ -13,15 +11,13 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
 {
     private readonly TestDbContextFactory _factory = new();
     private readonly BackgroundJobsDbContext _db;
-    private readonly ITimeTickerManager<TimeTickerEntity> _timeManager = Substitute.For<
-        ITimeTickerManager<TimeTickerEntity>
-    >();
+    private readonly IJobQueue _queue = Substitute.For<IJobQueue>();
     private readonly BackgroundJobsContractsService _sut;
 
     public BackgroundJobsContractsServiceTests()
     {
         _db = _factory.Create();
-        _sut = new BackgroundJobsContractsService(_db, _timeManager);
+        _sut = new BackgroundJobsContractsService(_queue, _db);
     }
 
     public void Dispose()
@@ -53,15 +49,40 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
         result.PageSize.Should().Be(10);
     }
 
+    [Fact]
+    public async Task GetJobsAsync_ExcludesRecurringJobs()
+    {
+        _db.JobQueueEntries.Add(new JobQueueEntryEntity
+        {
+            Id = Guid.NewGuid(),
+            JobTypeName = "TestJob",
+            ScheduledAt = DateTimeOffset.UtcNow,
+            State = JobQueueEntryState.Pending,
+            RecurringName = "my-recurring",
+            CreatedAt = DateTimeOffset.UtcNow,
+        });
+        _db.JobQueueEntries.Add(new JobQueueEntryEntity
+        {
+            Id = Guid.NewGuid(),
+            JobTypeName = "TestJob",
+            ScheduledAt = DateTimeOffset.UtcNow,
+            State = JobQueueEntryState.Pending,
+            RecurringName = null,
+            CreatedAt = DateTimeOffset.UtcNow,
+        });
+        await _db.SaveChangesAsync();
+
+        var result = await _sut.GetJobsAsync(new JobFilter(), CancellationToken.None);
+
+        result.TotalCount.Should().Be(1);
+    }
+
     // --- GetJobDetailAsync ---
 
     [Fact]
     public async Task GetJobDetailAsync_NonExistentId_ReturnsNull()
     {
-        var result = await _sut.GetJobDetailAsync(
-            JobId.From(Guid.NewGuid()),
-            CancellationToken.None
-        );
+        var result = await _sut.GetJobDetailAsync(JobId.From(Guid.NewGuid()), CancellationToken.None);
 
         result.Should().BeNull();
     }

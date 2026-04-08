@@ -82,6 +82,9 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             RemoveHostedService<SimpleModule.AuditLogs.Pipeline.AuditWriterService>(services);
             RemoveHostedService<SimpleModule.AuditLogs.Retention.AuditRetentionService>(services);
             RemoveHostedService<SimpleModule.FeatureFlags.FeatureFlagSyncService>(services);
+            // Email recurring job registration runs during startup and accesses the
+            // BackgroundJobs DB; remove it in tests to avoid table-not-found errors.
+            RemoveHostedService<SimpleModule.Email.Jobs.EmailJobRegistrationHostedService>(services);
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services

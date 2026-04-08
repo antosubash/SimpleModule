@@ -1,26 +1,21 @@
 // modules/BackgroundJobs/tests/SimpleModule.BackgroundJobs.Tests/Queue/DatabaseJobQueueTests.cs
+using BackgroundJobs.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Queue;
-using SimpleModule.Database;
 
 namespace SimpleModule.BackgroundJobs.Tests.Queue;
 
-public class DatabaseJobQueueTests : IAsyncDisposable
+public sealed class DatabaseJobQueueTests : IDisposable
 {
+    private readonly TestDbContextFactory _factory = new();
     private readonly BackgroundJobsDbContext _db;
 
     public DatabaseJobQueueTests()
     {
-        var options = new DbContextOptionsBuilder<BackgroundJobsDbContext>()
-            .UseSqlite($"DataSource=file:{Guid.NewGuid()}?mode=memory&cache=shared")
-            .Options;
-        _db = new BackgroundJobsDbContext(options, Options.Create(new DatabaseOptions()));
-        _db.Database.OpenConnection();
-        _db.Database.EnsureCreated();
+        _db = _factory.Create();
     }
 
     [Fact]
@@ -133,8 +128,10 @@ public class DatabaseJobQueueTests : IAsyncDisposable
         reloaded.ClaimedBy.Should().BeNull();
     }
 
-    public async ValueTask DisposeAsync()
+    public void Dispose()
     {
-        await _db.DisposeAsync();
+        _db.Dispose();
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

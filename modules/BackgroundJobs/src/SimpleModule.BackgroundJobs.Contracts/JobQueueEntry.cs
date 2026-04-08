@@ -1,5 +1,8 @@
+using SimpleModule.Core;
+
 namespace SimpleModule.BackgroundJobs.Contracts;
 
+[NoDtoGeneration]
 public sealed record JobQueueEntry(
     Guid Id,
     string JobTypeName,
