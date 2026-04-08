@@ -1,6 +1,7 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.1.2">
   <ItemGroup>
     <ProjectReference Include="..\template\SimpleModule.Host\SimpleModule.Host.csproj" />
+    <ProjectReference Include="..\template\SimpleModule.Worker\SimpleModule.Worker.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
