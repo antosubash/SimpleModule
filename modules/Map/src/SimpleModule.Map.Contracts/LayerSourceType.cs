@@ -14,4 +14,5 @@ public enum LayerSourceType
     PmTiles = 5,
     Cog = 6,
     GeoJson = 7,
+    Dataset = 8,
 }
