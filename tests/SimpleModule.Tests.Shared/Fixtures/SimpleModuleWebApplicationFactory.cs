@@ -18,6 +18,7 @@ using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
+using SimpleModule.Map;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Orders;
@@ -60,6 +61,13 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<UsersDbContext>(services);
             ReplaceDbContext<OrdersDbContext>(services);
             ReplaceDbContext<ProductsDbContext>(services);
+            // Map module: in-memory SQLite has no SpatiaLite native lib, so disable
+            // the geometry columns globally for the test fixture. Production providers
+            // (PostGIS, SQL Server, SpatiaLite when installed) still get the spatial
+            // columns because the static defaults to true.
+            SimpleModule.Map.EntityConfigurations.LayerSourceConfiguration.EnableSpatial = false;
+            SimpleModule.Map.EntityConfigurations.SavedMapConfiguration.EnableSpatial = false;
+            ReplaceDbContext<MapDbContext>(services);
             ReplaceDbContext<PageBuilderDbContext>(services);
             ReplaceDbContext<PermissionsDbContext>(services);
             ReplaceDbContext<SettingsDbContext>(services);
@@ -162,6 +170,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         EnsureTablesCreated<UsersDbContext>(sp);
         EnsureTablesCreated<OrdersDbContext>(sp);
         EnsureTablesCreated<ProductsDbContext>(sp);
+        EnsureTablesCreated<MapDbContext>(sp);
         EnsureTablesCreated<PageBuilderDbContext>(sp);
         EnsureTablesCreated<PermissionsDbContext>(sp);
         EnsureTablesCreated<SettingsDbContext>(sp);

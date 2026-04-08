@@ -13,7 +13,8 @@ public static class ModuleDbContextOptionsBuilder
         this IServiceCollection services,
         IConfiguration configuration,
         string moduleName,
-        Action<DbContextOptionsBuilder>? configureOptions = null
+        Action<DbContextOptionsBuilder>? configureOptions = null,
+        bool enableSpatial = false
     )
         where TContext : DbContext
     {
@@ -37,13 +38,40 @@ public static class ModuleDbContextOptionsBuilder
                 switch (provider)
                 {
                     case DatabaseProvider.PostgreSql:
-                        options.UseNpgsql(connectionString);
+                        options.UseNpgsql(
+                            connectionString,
+                            npgsql =>
+                            {
+                                if (enableSpatial)
+                                {
+                                    npgsql.UseNetTopologySuite();
+                                }
+                            }
+                        );
                         break;
                     case DatabaseProvider.SqlServer:
-                        options.UseSqlServer(connectionString);
+                        options.UseSqlServer(
+                            connectionString,
+                            sql =>
+                            {
+                                if (enableSpatial)
+                                {
+                                    sql.UseNetTopologySuite();
+                                }
+                            }
+                        );
                         break;
                     default:
-                        options.UseSqlite(connectionString);
+                        options.UseSqlite(
+                            connectionString,
+                            sqlite =>
+                            {
+                                if (enableSpatial)
+                                {
+                                    sqlite.UseNetTopologySuite();
+                                }
+                            }
+                        );
                         break;
                 }
 

@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
     <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions\SimpleModule.Permissions.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products\SimpleModule.Products.csproj" />
+    <ProjectReference Include="..\..\modules\Map\src\SimpleModule.Map\SimpleModule.Map.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders\SimpleModule.Orders.csproj" />
     <ProjectReference Include="..\..\modules\Admin\src\SimpleModule.Admin\SimpleModule.Admin.csproj" />
     <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
