@@ -14,6 +14,7 @@ export const LayerSourceType = {
   PmTiles: 5,
   Cog: 6,
   GeoJson: 7,
+  Dataset: 8,
 } as const;
 
 export type BuiltLayer = {
@@ -119,7 +120,8 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
       };
     }
     case LayerSourceType.Wfs:
-    case LayerSourceType.GeoJson: {
+    case LayerSourceType.GeoJson:
+    case LayerSourceType.Dataset: {
       return {
         sourceId,
         source: {
