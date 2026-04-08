@@ -79,6 +79,7 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             ReplaceDbContext<RagDbContext>(services);
             ReplaceDbContext<AgentsDbContext>(services);
             ReplaceDbContext<ChatDbContext>(services);
+            ReplaceDbContext<SimpleModule.Datasets.DatasetsDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<RateLimitingDbContext>(services);
             ReplaceDbContext<EmailDbContext>(services);
@@ -94,7 +95,9 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
             RemoveHostedService<SimpleModule.FeatureFlags.FeatureFlagSyncService>(services);
             // Email recurring job registration runs during startup and accesses the
             // BackgroundJobs DB; remove it in tests to avoid table-not-found errors.
-            RemoveHostedService<SimpleModule.Email.Jobs.EmailJobRegistrationHostedService>(services);
+            RemoveHostedService<SimpleModule.Email.Jobs.EmailJobRegistrationHostedService>(
+                services
+            );
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services

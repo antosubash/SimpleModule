@@ -78,6 +78,11 @@
     <Project Path="modules/Settings/src/SimpleModule.Settings/SimpleModule.Settings.csproj" />
     <Project Path="modules/Settings/tests/SimpleModule.Settings.Tests/SimpleModule.Settings.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/Datasets/">
+    <Project Path="modules/Datasets/src/SimpleModule.Datasets.Contracts/SimpleModule.Datasets.Contracts.csproj" />
+    <Project Path="modules/Datasets/src/SimpleModule.Datasets/SimpleModule.Datasets.csproj" />
+    <Project Path="modules/Datasets/tests/SimpleModule.Datasets.Tests/SimpleModule.Datasets.Tests.csproj" />
+  </Folder>
   <Folder Name="/modules/FileStorage/">
     <Project Path="modules/FileStorage/src/SimpleModule.FileStorage.Contracts/SimpleModule.FileStorage.Contracts.csproj" />
     <Project Path="modules/FileStorage/src/SimpleModule.FileStorage/SimpleModule.FileStorage.csproj" />

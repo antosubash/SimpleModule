@@ -12,6 +12,7 @@ public static class MapConstants
         public const string GetAllSources = "/sources";
         public const string GetSourceById = "/sources/{id}";
         public const string CreateSource = "/sources";
+        public const string CreateSourceFromDataset = "/sources/from-dataset";
         public const string UpdateSource = "/sources/{id}";
         public const string DeleteSource = "/sources/{id}";
 

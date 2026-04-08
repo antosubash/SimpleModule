@@ -6,6 +6,10 @@ public interface IMapContracts
     Task<IEnumerable<LayerSource>> GetAllLayerSourcesAsync();
     Task<LayerSource?> GetLayerSourceByIdAsync(LayerSourceId id);
     Task<LayerSource> CreateLayerSourceAsync(CreateLayerSourceRequest request);
+    Task<LayerSource> CreateLayerSourceFromDatasetAsync(
+        CreateLayerSourceFromDatasetRequest request,
+        CancellationToken ct = default
+    );
     Task<LayerSource> UpdateLayerSourceAsync(LayerSourceId id, UpdateLayerSourceRequest request);
     Task DeleteLayerSourceAsync(LayerSourceId id);
 

@@ -35,6 +35,7 @@
     <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
     <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
     <ProjectReference Include="..\..\modules\Chat\src\SimpleModule.Chat\SimpleModule.Chat.csproj" />
+    <ProjectReference Include="..\..\modules\Datasets\src\SimpleModule.Datasets\SimpleModule.Datasets.csproj" />
     <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
     <ProjectReference Include="..\..\modules\RateLimiting\src\SimpleModule.RateLimiting\SimpleModule.RateLimiting.csproj" />
   </ItemGroup>
