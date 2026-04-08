@@ -1,18 +1,16 @@
+// modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/Services/BackgroundJobsService.cs
 using System.Text.Json;
+using Cronos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Entities;
-using TickerQ.Utilities.Entities;
-using TickerQ.Utilities.Enums;
-using TickerQ.Utilities.Interfaces.Managers;
 using static SimpleModule.BackgroundJobs.BackgroundJobsInternalConstants;
 
 namespace SimpleModule.BackgroundJobs.Services;
 
 public sealed partial class BackgroundJobsService(
-    ITimeTickerManager<TimeTickerEntity> timeManager,
-    ICronTickerManager<CronTickerEntity> cronManager,
+    IJobQueue queue,
     BackgroundJobsDbContext db,
     ILogger<BackgroundJobsService> logger
 ) : IBackgroundJobs
@@ -21,210 +19,165 @@ public sealed partial class BackgroundJobsService(
         where TJob : IModuleJob
     {
         var jobType = typeof(TJob);
-        var payload = CreatePayload(jobType, data);
+        var id = Guid.NewGuid();
+        var serialized = data is not null ? JsonSerializer.Serialize(data) : null;
+        var now = DateTimeOffset.UtcNow;
 
-        var ticker = new TimeTickerEntity
-        {
-            Function = DispatcherFunctionName,
-            ExecutionTime = DateTime.UtcNow,
-            Request = JsonSerializer.SerializeToUtf8Bytes(payload),
-        };
+        await queue.EnqueueAsync(new JobQueueEntry(
+            id, jobType.AssemblyQualifiedName!, serialized, now,
+            JobQueueEntryState.Pending, 0, null, null, now), ct);
 
-#pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
-        await timeManager.AddAsync(ticker);
-#pragma warning restore CA2016
-
-        await CreateJobProgressAsync(ticker.Id, jobType, data, ct);
-
-        LogJobEnqueued(logger, jobType.Name, ticker.Id);
-        return JobId.From(ticker.Id);
+        await CreateJobProgressAsync(id, jobType, serialized, ct);
+        LogJobEnqueued(logger, jobType.Name, id);
+        return JobId.From(id);
     }
 
-    public async Task<JobId> ScheduleAsync<TJob>(
-        DateTimeOffset executeAt,
-        object? data,
-        CancellationToken ct
-    )
+    public async Task<JobId> ScheduleAsync<TJob>(DateTimeOffset executeAt, object? data, CancellationToken ct)
         where TJob : IModuleJob
     {
         var jobType = typeof(TJob);
-        var payload = CreatePayload(jobType, data);
+        var id = Guid.NewGuid();
+        var serialized = data is not null ? JsonSerializer.Serialize(data) : null;
 
-        var ticker = new TimeTickerEntity
-        {
-            Function = DispatcherFunctionName,
-            ExecutionTime = executeAt.UtcDateTime,
-            Request = JsonSerializer.SerializeToUtf8Bytes(payload),
-        };
+        await queue.EnqueueAsync(new JobQueueEntry(
+            id, jobType.AssemblyQualifiedName!, serialized, executeAt,
+            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow), ct);
 
-#pragma warning disable CA2016 // TickerQ manager methods do not accept CancellationToken
-        await timeManager.AddAsync(ticker);
-#pragma warning restore CA2016
-
-        await CreateJobProgressAsync(ticker.Id, jobType, data, ct);
-
-        LogJobScheduled(logger, jobType.Name, ticker.Id, executeAt);
-        return JobId.From(ticker.Id);
+        await CreateJobProgressAsync(id, jobType, serialized, ct);
+        LogJobScheduled(logger, jobType.Name, id, executeAt);
+        return JobId.From(id);
     }
 
     public async Task<RecurringJobId> AddRecurringAsync<TJob>(
-        string name,
-        string cronExpression,
-        object? data,
-        CancellationToken ct
-    )
+        string name, string cronExpression, object? data, CancellationToken ct)
         where TJob : IModuleJob
     {
+        // Validate cron expression
+        var format = cronExpression.Split(' ').Length > 5 ? CronFormat.IncludeSeconds : CronFormat.Standard;
+        var cron = CronExpression.Parse(cronExpression, format);
+        var next = cron.GetNextOccurrence(DateTime.UtcNow, inclusive: false)
+            ?? throw new InvalidOperationException($"Cron '{cronExpression}' has no next occurrence.");
+
+        // Remove any existing recurring with the same name to keep it unique
+        var existing = await db.JobQueueEntries
+            .Where(e => e.RecurringName == name && e.State == JobQueueEntryState.Pending)
+            .ToListAsync(ct);
+        db.JobQueueEntries.RemoveRange(existing);
+        if (existing.Count > 0) await db.SaveChangesAsync(ct);
+
         var jobType = typeof(TJob);
-        var payload = CreatePayload(jobType, data);
+        var id = Guid.NewGuid();
+        var serialized = data is not null ? JsonSerializer.Serialize(data) : null;
 
-        var ticker = new CronTickerEntity
-        {
-            Function = DispatcherFunctionName,
-            Description = name,
-            Expression = cronExpression,
-            Request = JsonSerializer.SerializeToUtf8Bytes(payload),
-            IsEnabled = true,
-        };
-
-#pragma warning disable CA2016
-        await cronManager.AddAsync(ticker);
-#pragma warning restore CA2016
+        await queue.EnqueueAsync(new JobQueueEntry(
+            id, jobType.AssemblyQualifiedName!, serialized,
+            new DateTimeOffset(next.Value, TimeSpan.Zero),
+            JobQueueEntryState.Pending, 0, cronExpression, name, DateTimeOffset.UtcNow), ct);
 
         LogRecurringJobAdded(logger, name, cronExpression);
-        return RecurringJobId.From(ticker.Id);
+        return RecurringJobId.From(id);
     }
 
     public async Task RemoveRecurringAsync(RecurringJobId id, CancellationToken ct)
     {
-#pragma warning disable CA2016
-        await cronManager.DeleteAsync(id.Value);
-#pragma warning restore CA2016
+        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == id.Value, ct);
+        if (row is null) return;
+        var name = row.RecurringName;
+        if (name is not null)
+        {
+            var all = await db.JobQueueEntries.Where(e => e.RecurringName == name).ToListAsync(ct);
+            db.JobQueueEntries.RemoveRange(all);
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     public async Task<bool> ToggleRecurringAsync(RecurringJobId id, CancellationToken ct)
     {
-        var ticker =
-            await db.CronTickers.FirstOrDefaultAsync(c => c.Id == id.Value, ct)
+        // Toggle: if Pending → set ScheduledAt far future (disabled). If "disabled" → reset to next cron occurrence.
+        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == id.Value, ct)
             ?? throw new InvalidOperationException($"Recurring job {id} not found.");
 
-        ticker.IsEnabled = !ticker.IsEnabled;
+        var disabledSentinel = DateTimeOffset.MaxValue.AddDays(-1);
+        var isDisabled = row.ScheduledAt >= disabledSentinel.AddYears(-1);
+
+        if (isDisabled && row.CronExpression is not null)
+        {
+            var format = row.CronExpression.Split(' ').Length > 5 ? CronFormat.IncludeSeconds : CronFormat.Standard;
+            var cron = CronExpression.Parse(row.CronExpression, format);
+            var next = cron.GetNextOccurrence(DateTime.UtcNow, inclusive: false);
+            row.ScheduledAt = next.HasValue ? new DateTimeOffset(next.Value, TimeSpan.Zero) : DateTimeOffset.UtcNow;
+        }
+        else
+        {
+            row.ScheduledAt = disabledSentinel;
+        }
         await db.SaveChangesAsync(ct);
-        return ticker.IsEnabled;
+        return !isDisabled ? false : true;
     }
 
     public async Task CancelAsync(JobId jobId, CancellationToken ct)
     {
-#pragma warning disable CA2016
-        await timeManager.DeleteAsync(jobId.Value);
-#pragma warning restore CA2016
+        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == jobId.Value, ct);
+        if (row is null || row.State != JobQueueEntryState.Pending) return;
+        db.JobQueueEntries.Remove(row);
+        await db.SaveChangesAsync(ct);
     }
 
     public async Task<JobStatusDto?> GetStatusAsync(JobId jobId, CancellationToken ct)
     {
-        var ticker = await db
-            .TimeTickers.AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == jobId.Value, ct);
+        var row = await db.JobQueueEntries.AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == jobId.Value, ct);
+        if (row is null) return null;
 
-        if (ticker is null)
-        {
-            return null;
-        }
-
-        var progress = await db
-            .JobProgress.AsNoTracking()
+        var progress = await db.JobProgress.AsNoTracking()
             .FirstOrDefaultAsync(j => j.Id == jobId.Value, ct);
 
         return new JobStatusDto
         {
             Id = jobId,
-            JobType = GetShortTypeName(progress?.JobTypeName),
-            State = MapTickerStatus(ticker.Status),
-            ProgressPercentage =
-                progress?.ProgressPercentage ?? (ticker.Status == TickerStatus.Done ? 100 : 0),
+            JobType = GetShortTypeName(row.JobTypeName),
+            State = MapQueueState(row.State),
+            ProgressPercentage = progress?.ProgressPercentage ?? (row.State == JobQueueEntryState.Completed ? 100 : 0),
             ProgressMessage = progress?.ProgressMessage,
-            Error = ticker.ExceptionMessage,
-            CreatedAt = AsUtc(ticker.CreatedAt),
-            StartedAt = ticker.ExecutedAt.HasValue ? AsUtc(ticker.ExecutedAt.Value) : null,
-            CompletedAt = ticker.Status
-                is TickerStatus.Done
-                    or TickerStatus.DueDone
-                    or TickerStatus.Failed
-                ? AsUtc(ticker.UpdatedAt)
-                : null,
-            RetryCount = ticker.RetryCount,
+            Error = row.Error,
+            CreatedAt = row.CreatedAt,
+            StartedAt = row.ClaimedAt,
+            CompletedAt = row.CompletedAt,
+            RetryCount = Math.Max(0, row.AttemptCount - 1),
         };
     }
 
-    private async Task CreateJobProgressAsync(
-        Guid tickerId,
-        Type jobType,
-        object? data,
-        CancellationToken ct
-    )
+    public static JobState MapQueueState(JobQueueEntryState state) => state switch
     {
-        var moduleName =
-            jobType.Assembly.GetName().Name?.Replace("SimpleModule.", "", StringComparison.Ordinal)
-            ?? UnknownValue;
+        JobQueueEntryState.Pending => JobState.Pending,
+        JobQueueEntryState.Claimed => JobState.Running,
+        JobQueueEntryState.Completed => JobState.Completed,
+        JobQueueEntryState.Failed => JobState.Failed,
+        _ => JobState.Pending,
+    };
 
-        db.JobProgress.Add(
-            new JobProgress
-            {
-                Id = tickerId,
-                JobTypeName = jobType.AssemblyQualifiedName!,
-                ModuleName = moduleName,
-                ProgressPercentage = 0,
-                Data = data is not null ? JsonSerializer.Serialize(data) : null,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            }
-        );
-
-        await db.SaveChangesAsync(ct);
-    }
-
-    private static JobDispatchPayload CreatePayload(Type jobType, object? data)
+    private async Task CreateJobProgressAsync(Guid id, Type jobType, string? data, CancellationToken ct)
     {
-        return new JobDispatchPayload(
-            jobType.AssemblyQualifiedName!,
-            data is not null ? JsonSerializer.Serialize(data) : null
-        );
-    }
-
-    public static JobState MapTickerStatus(TickerStatus status)
-    {
-        return status switch
+        var moduleName = jobType.Assembly.GetName().Name?
+            .Replace("SimpleModule.", "", StringComparison.Ordinal) ?? UnknownValue;
+        db.JobProgress.Add(new JobProgress
         {
-            TickerStatus.Idle or TickerStatus.Queued => JobState.Pending,
-            TickerStatus.InProgress => JobState.Running,
-            TickerStatus.Done or TickerStatus.DueDone => JobState.Completed,
-            TickerStatus.Failed => JobState.Failed,
-            TickerStatus.Cancelled => JobState.Cancelled,
-            TickerStatus.Skipped => JobState.Skipped,
-            _ => JobState.Pending,
-        };
+            Id = id,
+            JobTypeName = jobType.AssemblyQualifiedName!,
+            ModuleName = moduleName,
+            ProgressPercentage = 0,
+            Data = data,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync(ct);
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Job {JobType} enqueued ({JobId})")]
     private static partial void LogJobEnqueued(ILogger logger, string jobType, Guid jobId);
 
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Job {JobType} scheduled ({JobId}) for {ExecuteAt}"
-    )]
-    private static partial void LogJobScheduled(
-        ILogger logger,
-        string jobType,
-        Guid jobId,
-        DateTimeOffset executeAt
-    );
+    [LoggerMessage(Level = LogLevel.Information, Message = "Job {JobType} scheduled ({JobId}) for {ExecuteAt}")]
+    private static partial void LogJobScheduled(ILogger logger, string jobType, Guid jobId, DateTimeOffset executeAt);
 
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Recurring job '{Name}' added with cron '{CronExpression}'"
-    )]
-    private static partial void LogRecurringJobAdded(
-        ILogger logger,
-        string name,
-        string cronExpression
-    );
+    [LoggerMessage(Level = LogLevel.Information, Message = "Recurring job '{Name}' added with cron '{CronExpression}'")]
+    private static partial void LogRecurringJobAdded(ILogger logger, string name, string cronExpression);
 }
