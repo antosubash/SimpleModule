@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\template\SimpleModule.Host\SimpleModule.Host.csproj" />
     <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\Map\src\SimpleModule.Map\SimpleModule.Map.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders.Contracts\SimpleModule.Orders.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
     <ProjectReference Include="..\..\modules\PageBuilder\src\SimpleModule.PageBuilder\SimpleModule.PageBuilder.csproj" />
@@ -33,6 +34,7 @@
     <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs.Contracts\SimpleModule.AuditLogs.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Rag\src\SimpleModule.Rag.Module\SimpleModule.Rag.Module.csproj" />
     <ProjectReference Include="..\..\modules\Agents\src\SimpleModule.Agents.Module\SimpleModule.Agents.Module.csproj" />
+    <ProjectReference Include="..\..\modules\Chat\src\SimpleModule.Chat\SimpleModule.Chat.csproj" />
     <ProjectReference Include="..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs\SimpleModule.BackgroundJobs.csproj" />
     <ProjectReference Include="..\..\modules\RateLimiting\src\SimpleModule.RateLimiting\SimpleModule.RateLimiting.csproj" />
   </ItemGroup>

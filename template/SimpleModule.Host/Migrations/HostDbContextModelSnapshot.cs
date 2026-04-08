@@ -66,11 +66,9 @@ namespace SimpleModule.Host.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ProviderDisplayName")
@@ -85,23 +83,6 @@ namespace SimpleModule.Host.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Users_AspNetUserLogins", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<string>", b =>
-                {
-                    b.Property<byte[]>("CredentialId")
-                        .HasMaxLength(1024)
-                        .HasColumnType("BLOB");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("CredentialId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Users_AspNetUserPasskeys", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
@@ -125,11 +106,9 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Value")
@@ -757,6 +736,10 @@ namespace SimpleModule.Host.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CreatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -775,6 +758,8 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("Folder");
 
@@ -985,61 +970,61 @@ namespace SimpleModule.Host.Migrations
                         {
                             Id = 1,
                             Name = "Fantastic Rubber Shoes",
-                            Price = 991.68m
+                            Price = 99168m
                         },
                         new
                         {
                             Id = 2,
                             Name = "Fantastic Rubber Bacon",
-                            Price = 446.22m
+                            Price = 44622m
                         },
                         new
                         {
                             Id = 3,
                             Name = "Fantastic Concrete Bike",
-                            Price = 660.12m
+                            Price = 66012m
                         },
                         new
                         {
                             Id = 4,
                             Name = "Handcrafted Concrete Keyboard",
-                            Price = 633.67m
+                            Price = 63367m
                         },
                         new
                         {
                             Id = 5,
                             Name = "Intelligent Frozen Mouse",
-                            Price = 674.30m
+                            Price = 67430m
                         },
                         new
                         {
                             Id = 6,
                             Name = "Sleek Soft Hat",
-                            Price = 851.63m
+                            Price = 85163m
                         },
                         new
                         {
                             Id = 7,
                             Name = "Practical Fresh Bike",
-                            Price = 417.48m
+                            Price = 41748m
                         },
                         new
                         {
                             Id = 8,
                             Name = "Handmade Steel Ball",
-                            Price = 975.56m
+                            Price = 97556m
                         },
                         new
                         {
                             Id = 9,
                             Name = "Ergonomic Fresh Pants",
-                            Price = 928.09m
+                            Price = 92809m
                         },
                         new
                         {
                             Id = 10,
                             Name = "Licensed Steel Sausages",
-                            Price = 592.60m
+                            Price = 59260m
                         });
                 });
 
@@ -1487,7 +1472,6 @@ namespace SimpleModule.Host.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhoneNumber")
-                        .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("PhoneNumberConfirmed")
@@ -1699,57 +1683,6 @@ namespace SimpleModule.Host.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<string>", b =>
-                {
-                    b.HasOne("SimpleModule.Users.Contracts.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("Microsoft.AspNetCore.Identity.IdentityPasskeyData", "Data", b1 =>
-                        {
-                            b1.Property<byte[]>("IdentityUserPasskeyCredentialId");
-
-                            b1.Property<byte[]>("AttestationObject")
-                                .IsRequired();
-
-                            b1.Property<byte[]>("ClientDataJson")
-                                .IsRequired();
-
-                            b1.Property<DateTimeOffset>("CreatedAt");
-
-                            b1.Property<bool>("IsBackedUp");
-
-                            b1.Property<bool>("IsBackupEligible");
-
-                            b1.Property<bool>("IsUserVerified");
-
-                            b1.Property<string>("Name");
-
-                            b1.Property<byte[]>("PublicKey")
-                                .IsRequired();
-
-                            b1.Property<uint>("SignCount");
-
-                            b1.PrimitiveCollection<string>("Transports");
-
-                            b1.HasKey("IdentityUserPasskeyCredentialId");
-
-                            b1.ToTable("Users_AspNetUserPasskeys");
-
-                            b1
-                                .ToJson("Data")
-                                .HasColumnType("TEXT");
-
-                            b1.WithOwner()
-                                .HasForeignKey("IdentityUserPasskeyCredentialId");
-                        });
-
-                    b.Navigation("Data")
                         .IsRequired();
                 });
 

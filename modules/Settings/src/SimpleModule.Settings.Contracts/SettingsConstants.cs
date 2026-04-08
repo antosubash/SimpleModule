@@ -30,7 +30,7 @@ public static class SettingsConstants
 
         public static class Views
         {
-            public const string AdminSettings = "/";
+            public const string AdminSettings = "/manage";
             public const string UserSettings = "/me";
             public const string MenuManager = "/menus";
         }

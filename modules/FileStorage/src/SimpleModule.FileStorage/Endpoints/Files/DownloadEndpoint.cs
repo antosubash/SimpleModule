@@ -15,7 +15,7 @@ public class DownloadEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                async (FileStorageId id, IFileStorageContracts files) =>
+                async (FileStorageId id, HttpContext context, IFileStorageContracts files) =>
                 {
                     var file = await files.GetFileByIdAsync(id);
                     if (file is null)
@@ -23,13 +23,15 @@ public class DownloadEndpoint : IEndpoint
                         return Results.NotFound();
                     }
 
-                    var stream = await files.DownloadFileAsync(id);
-                    if (stream is null)
+                    if (!FileOwnershipCheck.CanAccess(file, context.User))
                     {
-                        return Results.NotFound();
+                        return Results.Forbid();
                     }
 
-                    return TypedResults.File(stream, file.ContentType, file.FileName);
+                    var stream = await files.DownloadFileAsync(file);
+                    return stream is null
+                        ? Results.NotFound()
+                        : TypedResults.File(stream, file.ContentType, file.FileName);
                 }
             )
             .RequirePermission(FileStoragePermissions.View);

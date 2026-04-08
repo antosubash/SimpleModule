@@ -1877,35 +1877,67 @@ internal static class SymbolDiscovery
 
     private static List<DtoPropertyInfo> ExtractDtoProperties(INamedTypeSymbol typeSymbol)
     {
+        // Walk the inheritance chain (most-derived first) so derived properties shadow
+        // base properties of the same name. This lets DTOs inherit shared base classes
+        // (e.g., AuditableEntity<TId> -> Id, CreatedAt, UpdatedAt, ConcurrencyStamp)
+        // and still get serialized correctly.
+        var seen = new HashSet<string>(StringComparer.Ordinal);
         var properties = new List<DtoPropertyInfo>();
-        foreach (var m in typeSymbol.GetMembers())
+        for (
+            var current = typeSymbol;
+            current is not null && current.SpecialType != SpecialType.System_Object;
+            current = current.BaseType
+        )
         {
-            if (
-                m is IPropertySymbol prop
-                && prop.DeclaredAccessibility == Accessibility.Public
-                && !prop.IsStatic
-                && !prop.IsIndexer
-                && prop.GetMethod is not null
-            )
+            foreach (var m in current.GetMembers())
             {
-                var resolvedType = ResolveUnderlyingType(prop.Type);
-                var actualType = prop.Type.ToDisplayString(
-                    SymbolDisplayFormat.FullyQualifiedFormat
-                );
-                properties.Add(
-                    new DtoPropertyInfo
-                    {
-                        Name = prop.Name,
-                        TypeFqn = actualType,
-                        UnderlyingTypeFqn = resolvedType != actualType ? resolvedType : null,
-                        HasSetter =
-                            prop.SetMethod is not null
-                            && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
-                    }
-                );
+                if (
+                    m is IPropertySymbol prop
+                    && prop.DeclaredAccessibility == Accessibility.Public
+                    && !prop.IsStatic
+                    && !prop.IsIndexer
+                    && prop.GetMethod is not null
+                    && !HasJsonIgnoreAttribute(prop)
+                    && seen.Add(prop.Name)
+                )
+                {
+                    var resolvedType = ResolveUnderlyingType(prop.Type);
+                    var actualType = prop.Type.ToDisplayString(
+                        SymbolDisplayFormat.FullyQualifiedFormat
+                    );
+                    properties.Add(
+                        new DtoPropertyInfo
+                        {
+                            Name = prop.Name,
+                            TypeFqn = actualType,
+                            UnderlyingTypeFqn = resolvedType != actualType ? resolvedType : null,
+                            HasSetter =
+                                prop.SetMethod is not null
+                                && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                        }
+                    );
+                }
             }
         }
         return properties;
+    }
+
+    /// <summary>
+    /// Returns true if the property is decorated with <c>[System.Text.Json.Serialization.JsonIgnore]</c>.
+    /// Properties marked this way are excluded from generated JSON metadata, mirroring
+    /// runtime System.Text.Json behavior.
+    /// </summary>
+    private static bool HasJsonIgnoreAttribute(IPropertySymbol prop)
+    {
+        foreach (var attr in prop.GetAttributes())
+        {
+            var name = attr.AttributeClass?.ToDisplayString();
+            if (name == "System.Text.Json.Serialization.JsonIgnoreAttribute")
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void FindVogenValueObjectsWithEfConverters(

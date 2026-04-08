@@ -23,7 +23,7 @@ public class InertiaTranslationPropsTests
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
         client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -48,7 +48,7 @@ public class InertiaTranslationPropsTests
         client.DefaultRequestHeaders.Add("X-Inertia", "true");
         client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
@@ -65,7 +65,7 @@ public class InertiaTranslationPropsTests
         client.DefaultRequestHeaders.Add("X-Inertia-Version", InertiaMiddleware.Version);
         client.DefaultRequestHeaders.Add("Accept-Language", "fr-FR,fr;q=0.9,en;q=0.8");
 
-        var response = await client.GetAsync("/products/browse");
+        var response = await client.GetAsync("/products");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>Chat module for SimpleModule. User-facing conversations backed by the Agents framework with automatic RAG augmentation.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Agents\SimpleModule.Agents.csproj" />
+    <ProjectReference Include="..\SimpleModule.Chat.Contracts\SimpleModule.Chat.Contracts.csproj" />
+  </ItemGroup>
+</Project>

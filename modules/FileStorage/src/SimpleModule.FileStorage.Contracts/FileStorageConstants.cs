@@ -17,6 +17,6 @@ public static class FileStorageConstants
         public const string ListFolders = "/folders";
 
         // View endpoints
-        public const string Browse = "/browse";
+        public const string Browse = "/";
     }
 }
