@@ -13,7 +13,7 @@ public class SendTestEmailEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/test-send",
+                EmailConstants.Routes.TestSend,
                 async (SendTestEmailRequest request, IEmailContracts emailContracts) =>
                 {
                     var full = new SendEmailRequest

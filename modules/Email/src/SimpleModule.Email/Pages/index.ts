@@ -4,4 +4,5 @@ export const pages: Record<string, unknown> = {
   'Email/EditTemplate': () => import('./EditTemplate'),
   'Email/History': () => import('./History'),
   'Email/Dashboard': () => import('./Dashboard'),
+  'Email/Settings': () => import('./Settings'),
 };
