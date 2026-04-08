@@ -8,7 +8,6 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Services;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
-using SimpleModule.Core.Menu;
 using SimpleModule.Database;
 using TickerQ.DependencyInjection;
 using TickerQ.EntityFrameworkCore.Customizer;
@@ -116,19 +115,5 @@ public class BackgroundJobsModule : IModule
         builder.AddPermissions<BackgroundJobsPermissions>();
     }
 
-    public void ConfigureMenu(IMenuBuilder menus)
-    {
-        menus.Add(
-            new MenuItem
-            {
-                Label = "Background Jobs",
-                Url = BackgroundJobsConstants.ViewPrefix,
-                Icon =
-                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M12 12v.01M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072"/></svg>""",
-                Order = 95,
-                Section = MenuSection.AdminSidebar,
-                Group = "Background Jobs",
-            }
-        );
-    }
+    // Menu items removed — accessible via Admin hub page
 }

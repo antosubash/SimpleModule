@@ -4,7 +4,7 @@ export class RateLimitingAdminPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/rate-limiting');
+    await this.page.goto('/rate-limiting/manage');
   }
 
   get heading() {

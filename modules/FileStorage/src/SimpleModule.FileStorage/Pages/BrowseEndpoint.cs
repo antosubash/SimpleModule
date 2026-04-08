@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Extensions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.FileStorage.Contracts;
 using SimpleModule.Storage;
@@ -16,13 +18,12 @@ public class BrowseEndpoint : IViewEndpoint
     {
         app.MapGet(
                 Route,
-                async (string? folder, IFileStorageContracts fileStorage) =>
+                async (string? folder, HttpContext context, IFileStorageContracts fileStorage) =>
                 {
-                    var filesTask = fileStorage.GetFilesAsync(folder);
-                    var foldersTask = fileStorage.GetFoldersAsync(folder);
+                    var userId = context.User.GetScopedUserId();
 
-                    var files = await filesTask;
-                    var folders = await foldersTask;
+                    var files = await fileStorage.GetFilesAsync(folder, userId);
+                    var folders = await fileStorage.GetFoldersAsync(folder, userId);
 
                     var parentFolder = folder is not null
                         ? StoragePathHelper.GetFolder(folder)

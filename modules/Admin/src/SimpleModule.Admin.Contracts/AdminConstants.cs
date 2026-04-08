@@ -9,6 +9,7 @@ public static class AdminConstants
     public static class Routes
     {
         // View routes
+        public const string Hub = "/";
         public const string Roles = "/roles";
         public const string RolesCreate = "/roles/create";
         public const string RolesEdit = "/roles/{id}/edit";

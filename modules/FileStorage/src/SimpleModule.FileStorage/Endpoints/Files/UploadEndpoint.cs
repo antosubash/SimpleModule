@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Extensions;
 using SimpleModule.FileStorage.Contracts;
 
 namespace SimpleModule.FileStorage.Endpoints.Files;
@@ -18,6 +19,7 @@ public class UploadEndpoint : IEndpoint
                 async Task<IResult> (
                     IFormFile? file,
                     string? folder,
+                    HttpContext context,
                     IFileStorageContracts files
                 ) =>
                 {
@@ -26,12 +28,14 @@ public class UploadEndpoint : IEndpoint
                         return TypedResults.BadRequest("A file is required.");
                     }
 
+                    var userId = context.User.GetUserId();
                     await using var stream = file.OpenReadStream();
                     var storedFile = await files.UploadFileAsync(
                         stream,
                         file.FileName,
                         file.ContentType,
-                        folder
+                        folder,
+                        userId
                     );
                     return TypedResults.Created($"/api/files/{storedFile.Id}", storedFile);
                 }
