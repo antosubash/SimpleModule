@@ -1,31 +1,30 @@
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Caching;
 
 namespace SimpleModule.Marketplace;
 
 public partial class InstalledPackageDetector(
     IWebHostEnvironment environment,
-    IMemoryCache cache,
+    ICacheStore cache,
     ILogger<InstalledPackageDetector> logger
 )
 {
     private const string CacheKey = "Marketplace:InstalledPackages";
+    private static readonly CacheEntryOptions CacheOptions = CacheEntryOptions.Expires(
+        TimeSpan.FromMinutes(1)
+    );
 
-    public Task<HashSet<string>> GetInstalledPackageIdsAsync()
+    public async Task<HashSet<string>> GetInstalledPackageIdsAsync()
     {
-        return Task.FromResult(
-            cache.GetOrCreate(
-                CacheKey,
-                entry =>
-                {
-                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
-                    return ReadInstalledPackages();
-                }
-            ) ?? []
+        var result = await cache.GetOrCreateAsync<HashSet<string>>(
+            CacheKey,
+            _ => new ValueTask<HashSet<string>?>(ReadInstalledPackages()),
+            CacheOptions
         );
+        return result ?? [];
     }
 
     private HashSet<string> ReadInstalledPackages()

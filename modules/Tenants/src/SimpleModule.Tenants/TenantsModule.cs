@@ -17,7 +17,6 @@ public class TenantsModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMemoryCache();
         services.AddModuleDbContext<TenantsDbContext>(configuration, TenantsConstants.ModuleName);
         services.AddScoped<ITenantContracts, TenantService>();
         services.AddScoped<TenantContext>();

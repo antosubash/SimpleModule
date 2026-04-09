@@ -1,15 +1,14 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+using SimpleModule.Core.Caching;
 
 namespace SimpleModule.Tenants.Resolvers;
 
-public sealed class HostNameTenantResolver(TenantsDbContext db, IMemoryCache cache)
+public sealed class HostNameTenantResolver(TenantsDbContext db, ICacheStore cache)
 {
-    private static readonly MemoryCacheEntryOptions CacheOptions = new()
-    {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
-    };
+    private static readonly CacheEntryOptions CacheOptions = CacheEntryOptions.Expires(
+        TimeSpan.FromMinutes(5)
+    );
 
     public async Task<string?> ResolveAsync(HttpContext context)
     {
@@ -22,18 +21,17 @@ public sealed class HostNameTenantResolver(TenantsDbContext db, IMemoryCache cac
         var cacheKey = $"tenant:host:{host}";
         return await cache.GetOrCreateAsync(
             cacheKey,
-            async entry =>
+            async ct =>
             {
-                entry.SetOptions(CacheOptions);
-
                 var tenantHost = await db
                     .TenantHosts.AsNoTracking()
                     .Where(h => h.HostName == host && h.IsActive)
                     .Select(h => (int?)h.TenantId.Value)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync(ct);
 
                 return tenantHost?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            }
+            },
+            CacheOptions
         );
     }
 }

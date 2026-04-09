@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Caching.Memory;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Extensions;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
@@ -10,10 +10,12 @@ namespace SimpleModule.Permissions;
 public sealed class PermissionClaimsTransformation(
     IPermissionContracts permissionContracts,
     IUserContracts userContracts,
-    IMemoryCache cache
+    ICacheStore cache
 ) : IClaimsTransformation
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly CacheEntryOptions CacheOptions = CacheEntryOptions.Expires(
+        TimeSpan.FromMinutes(5)
+    );
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
@@ -33,20 +35,22 @@ public sealed class PermissionClaimsTransformation(
         var rolesKey = string.Join(',', roles.Order());
         var cacheKey = $"permissions:{userId}:{rolesKey}";
 
-        if (!cache.TryGetValue(cacheKey, out IReadOnlySet<string>? permissions))
-        {
-            var roleIdMap =
-                roles.Count > 0
-                    ? await userContracts.GetRoleIdsByNamesAsync(roles)
-                    : new Dictionary<string, string>();
+        var permissions = await cache.GetOrCreateAsync<IReadOnlySet<string>>(
+            cacheKey,
+            async _ =>
+            {
+                var roleIdMap =
+                    roles.Count > 0
+                        ? await userContracts.GetRoleIdsByNamesAsync(roles)
+                        : new Dictionary<string, string>();
 
-            permissions = await permissionContracts.GetAllPermissionsForUserAsync(
-                UserId.From(userId),
-                roleIdMap.Values.Select(id => RoleId.From(id))
-            );
-
-            cache.Set(cacheKey, permissions, CacheDuration);
-        }
+                return await permissionContracts.GetAllPermissionsForUserAsync(
+                    UserId.From(userId),
+                    roleIdMap.Values.Select(id => RoleId.From(id))
+                );
+            },
+            CacheOptions
+        );
 
         var identity = new ClaimsIdentity();
         foreach (var permission in permissions!)
