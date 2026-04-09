@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Caching;
 using SimpleModule.Marketplace.Contracts;
 
 namespace SimpleModule.Marketplace;
@@ -11,7 +11,7 @@ public class NuGetMarketplaceService(
     IHttpClientFactory httpClientFactory,
     IOptions<MarketplaceModuleOptions> options,
     InstalledPackageDetector installedPackageDetector,
-    IMemoryCache cache
+    ICacheStore cache
 ) : IMarketplaceContracts
 {
     public async Task<MarketplaceSearchResult> SearchPackagesAsync(MarketplaceSearchRequest request)
@@ -20,13 +20,10 @@ public class NuGetMarketplaceService(
 
         var cached = await cache.GetOrCreateAsync(
             cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
-                    options.Value.SearchCacheDurationMinutes
-                );
-                return await FetchAllPackagesAsync(request.Query);
-            }
+            async _ => await FetchAllPackagesAsync(request.Query),
+            CacheEntryOptions.Expires(
+                TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes)
+            )
         );
 
         var result = cached ?? new MarketplaceSearchResult();
@@ -60,13 +57,10 @@ public class NuGetMarketplaceService(
 
         return await cache.GetOrCreateAsync(
             cacheKey,
-            async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(
-                    options.Value.DetailCacheDurationMinutes
-                );
-                return await FetchPackageDetailsAsync(packageId);
-            }
+            async _ => await FetchPackageDetailsAsync(packageId),
+            CacheEntryOptions.Expires(
+                TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes)
+            )
         );
     }
 

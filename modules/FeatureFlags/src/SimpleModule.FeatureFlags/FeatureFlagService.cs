@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
@@ -12,7 +12,7 @@ namespace SimpleModule.FeatureFlags;
 public sealed partial class FeatureFlagService(
     FeatureFlagsDbContext db,
     IFeatureFlagRegistry registry,
-    IMemoryCache cache,
+    ICacheStore cache,
     ILogger<FeatureFlagService> logger,
     IServiceProvider serviceProvider
 ) : IFeatureFlagContracts, IFeatureFlagService
@@ -22,6 +22,9 @@ public sealed partial class FeatureFlagService(
     );
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
     private const string AllFlagDataCacheKey = "ff:all-data";
+    private const string FlagDataKeyPrefix = "ff:data:";
+
+    private static string FlagDataCacheKey(string flagName) => FlagDataKeyPrefix + flagName;
 
     private sealed record FlagData(
         bool IsEnabled,
@@ -125,7 +128,7 @@ public sealed partial class FeatureFlagService(
         }
 
         await db.SaveChangesAsync();
-        InvalidateCache(flagName);
+        await InvalidateCacheAsync(flagName);
 
         LogFlagToggled(logger, flagName, request.IsEnabled);
 
@@ -177,7 +180,7 @@ public sealed partial class FeatureFlagService(
         }
 
         await db.SaveChangesAsync();
-        InvalidateCache(flagName);
+        await InvalidateCacheAsync(flagName);
 
         return new FeatureFlagOverride
         {
@@ -196,78 +199,85 @@ public sealed partial class FeatureFlagService(
         {
             db.FeatureFlagOverrides.Remove(entity);
             await db.SaveChangesAsync();
-            InvalidateCache(entity.FlagName);
+            await InvalidateCacheAsync(entity.FlagName);
         }
     }
 
     private async Task<Dictionary<string, FlagData>> GetAllFlagDataAsync()
     {
-        if (
-            cache.TryGetValue(AllFlagDataCacheKey, out Dictionary<string, FlagData>? cached)
-            && cached is not null
-        )
-        {
-            return cached;
-        }
+        var result = await cache.GetOrCreateAsync<Dictionary<string, FlagData>>(
+            AllFlagDataCacheKey,
+            async ct =>
+            {
+                var definitions = registry.GetAllDefinitions();
+                var flagNames = definitions.Select(d => d.Name).ToList();
 
-        var definitions = registry.GetAllDefinitions();
-        var flagNames = definitions.Select(d => d.Name).ToList();
+                var dbFlags = await db
+                    .FeatureFlags.AsNoTracking()
+                    .Where(f => flagNames.Contains(f.Name))
+                    .ToDictionaryAsync(f => f.Name, ct);
 
-        var dbFlags = await db
-            .FeatureFlags.AsNoTracking()
-            .Where(f => flagNames.Contains(f.Name))
-            .ToDictionaryAsync(f => f.Name);
+                var dbOverrides = await db
+                    .FeatureFlagOverrides.AsNoTracking()
+                    .Where(o => flagNames.Contains(o.FlagName))
+                    .ToListAsync(ct);
 
-        var dbOverrides = await db
-            .FeatureFlagOverrides.AsNoTracking()
-            .Where(o => flagNames.Contains(o.FlagName))
-            .ToListAsync();
+                var overridesByFlag = dbOverrides
+                    .GroupBy(o => o.FlagName)
+                    .ToDictionary(g => g.Key, g => g.ToList());
 
-        var overridesByFlag = dbOverrides
-            .GroupBy(o => o.FlagName)
-            .ToDictionary(g => g.Key, g => g.ToList());
+                var allData = new Dictionary<string, FlagData>(
+                    flagNames.Count,
+                    StringComparer.Ordinal
+                );
+                foreach (var def in definitions)
+                {
+                    var isEnabled = dbFlags.TryGetValue(def.Name, out var entity)
+                        ? entity.IsEnabled
+                        : def.DefaultEnabled;
 
-        var allData = new Dictionary<string, FlagData>(flagNames.Count, StringComparer.Ordinal);
-        foreach (var def in definitions)
-        {
-            var isEnabled = dbFlags.TryGetValue(def.Name, out var entity)
-                ? entity.IsEnabled
-                : def.DefaultEnabled;
+                    var flagOverrides = overridesByFlag.GetValueOrDefault(def.Name, []);
+                    var data = BuildFlagData(isEnabled, flagOverrides);
 
-            var flagOverrides = overridesByFlag.GetValueOrDefault(def.Name, []);
-            var data = BuildFlagData(isEnabled, flagOverrides);
+                    allData[def.Name] = data;
+                    await cache.SetAsync(
+                        FlagDataCacheKey(def.Name),
+                        data,
+                        CacheEntryOptions.Expires(CacheDuration),
+                        ct
+                    );
+                }
 
-            allData[def.Name] = data;
-            cache.Set($"ff:data:{def.Name}", data, CacheDuration);
-        }
-
-        cache.Set(AllFlagDataCacheKey, allData, CacheDuration);
-        return allData;
+                return allData;
+            },
+            CacheEntryOptions.Expires(CacheDuration)
+        );
+        return result ?? [];
     }
 
     private async Task<FlagData> GetFlagDataAsync(string flagName)
     {
-        var cacheKey = $"ff:data:{flagName}";
-        if (cache.TryGetValue(cacheKey, out FlagData? cached) && cached is not null)
-        {
-            return cached;
-        }
+        var result = await cache.GetOrCreateAsync<FlagData>(
+            FlagDataCacheKey(flagName),
+            async ct =>
+            {
+                var flag = await db
+                    .FeatureFlags.AsNoTracking()
+                    .FirstOrDefaultAsync(f => f.Name == flagName, ct);
 
-        var flag = await db
-            .FeatureFlags.AsNoTracking()
-            .FirstOrDefaultAsync(f => f.Name == flagName);
+                var isEnabled =
+                    flag?.IsEnabled ?? registry.GetDefinition(flagName)?.DefaultEnabled ?? false;
 
-        var isEnabled =
-            flag?.IsEnabled ?? registry.GetDefinition(flagName)?.DefaultEnabled ?? false;
+                var overrides = await db
+                    .FeatureFlagOverrides.AsNoTracking()
+                    .Where(o => o.FlagName == flagName)
+                    .ToListAsync(ct);
 
-        var overrides = await db
-            .FeatureFlagOverrides.AsNoTracking()
-            .Where(o => o.FlagName == flagName)
-            .ToListAsync();
-
-        var data = BuildFlagData(isEnabled, overrides);
-        cache.Set(cacheKey, data, CacheDuration);
-        return data;
+                return BuildFlagData(isEnabled, overrides);
+            },
+            CacheEntryOptions.Expires(CacheDuration)
+        );
+        return result ?? BuildFlagData(false, []);
     }
 
     private static FlagData BuildFlagData(bool isEnabled, List<FeatureFlagOverrideEntity> overrides)
@@ -338,10 +348,10 @@ public sealed partial class FeatureFlagService(
         };
     }
 
-    private void InvalidateCache(string flagName)
+    private async ValueTask InvalidateCacheAsync(string flagName)
     {
-        cache.Remove($"ff:data:{flagName}");
-        cache.Remove(AllFlagDataCacheKey);
+        await cache.RemoveAsync(FlagDataCacheKey(flagName));
+        await cache.RemoveAsync(AllFlagDataCacheKey);
     }
 
     [LoggerMessage(

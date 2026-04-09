@@ -26,7 +26,6 @@ public class MarketplaceModule : IModule
             }
         );
 
-        services.AddMemoryCache();
         services.AddSingleton<InstalledPackageDetector>();
     }
 

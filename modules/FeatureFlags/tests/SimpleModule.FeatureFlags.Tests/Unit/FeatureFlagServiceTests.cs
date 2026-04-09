@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags;
@@ -18,7 +19,9 @@ public sealed class FeatureFlagServiceTests : IDisposable
     private readonly FeatureFlagService _sut;
     private readonly IFeatureFlagRegistry _registry;
     private readonly MemoryCache _cache;
+    private readonly MemoryCacheStore _cacheStore;
     private readonly List<MemoryCache> _freshCaches = [];
+    private readonly List<MemoryCacheStore> _freshCacheStores = [];
 
     public FeatureFlagServiceTests()
     {
@@ -51,10 +54,11 @@ public sealed class FeatureFlagServiceTests : IDisposable
         _registry = builder.Build();
 
         _cache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        _cacheStore = new MemoryCacheStore(_cache);
         _sut = new FeatureFlagService(
             _db,
             _registry,
-            _cache,
+            _cacheStore,
             NullLogger<FeatureFlagService>.Instance,
             new ServiceCollection().BuildServiceProvider()
         );
@@ -62,11 +66,17 @@ public sealed class FeatureFlagServiceTests : IDisposable
 
     public void Dispose()
     {
+        foreach (var s in _freshCacheStores)
+        {
+            s.Dispose();
+        }
+
         foreach (var c in _freshCaches)
         {
             c.Dispose();
         }
 
+        _cacheStore.Dispose();
         _cache.Dispose();
         _db.Dispose();
     }
@@ -76,10 +86,12 @@ public sealed class FeatureFlagServiceTests : IDisposable
         // Create a new cache to bypass cached results
         var freshCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
         _freshCaches.Add(freshCache);
+        var freshStore = new MemoryCacheStore(freshCache);
+        _freshCacheStores.Add(freshStore);
         return new FeatureFlagService(
             _db,
             _registry,
-            freshCache,
+            freshStore,
             NullLogger<FeatureFlagService>.Instance,
             new ServiceCollection().BuildServiceProvider()
         );

@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Entities;
@@ -12,7 +12,7 @@ namespace SimpleModule.Settings;
 public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
-    IMemoryCache cache,
+    ICacheStore cache,
     IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
@@ -25,8 +25,9 @@ public sealed partial class SettingsService(
     {
         var cacheKey = BuildCacheKey(key, scope, userId);
 
-        if (cache.TryGetValue(cacheKey, out string? cached))
-            return cached;
+        var hit = await cache.TryGetAsync<string?>(cacheKey);
+        if (hit.Hit)
+            return hit.Value;
 
         var entity = await db
             .Settings.AsNoTracking()
@@ -36,7 +37,11 @@ public sealed partial class SettingsService(
                 && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
             );
 
-        cache.Set(cacheKey, entity?.Value, moduleOptions.Value.CacheDuration);
+        await cache.SetAsync(
+            cacheKey,
+            entity?.Value,
+            CacheEntryOptions.Expires(moduleOptions.Value.CacheDuration)
+        );
         return entity?.Value;
     }
 
@@ -104,7 +109,7 @@ public sealed partial class SettingsService(
         }
 
         await db.SaveChangesAsync();
-        cache.Remove(BuildCacheKey(key, scope, userId));
+        await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
         LogSettingUpdated(key, scope);
     }
 
@@ -120,7 +125,7 @@ public sealed partial class SettingsService(
         {
             db.Settings.Remove(entity);
             await db.SaveChangesAsync();
-            cache.Remove(BuildCacheKey(key, scope, userId));
+            await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
             LogSettingDeleted(key, scope);
         }
     }
@@ -174,5 +179,5 @@ public sealed partial class SettingsService(
     private partial void LogDeserializationError(string key, string type, string error);
 
     private static string BuildCacheKey(string key, SettingScope scope, string? userId) =>
-        userId is not null ? $"setting:{scope}:{userId}:{key}" : $"setting:{scope}:{key}";
+        CacheKey.Compose("setting", scope.ToString(), userId, key);
 }

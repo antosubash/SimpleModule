@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
 using SimpleModule.Localization.Middleware;
@@ -17,6 +18,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
 {
     private readonly TranslationLoader _loader;
     private readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private readonly MemoryCacheStore _cacheStore;
 
     public LocaleResolutionMiddlewareTests()
     {
@@ -29,6 +31,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
             "es",
             new Dictionary<string, string> { ["common.save"] = "Guardar" }
         );
+        _cacheStore = new MemoryCacheStore(_cache);
     }
 
     [Fact]
@@ -41,7 +44,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration(null),
-            _cache
+            _cacheStore
         );
 
         await middleware.InvokeAsync(context);
@@ -64,7 +67,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration(null),
-            _cache
+            _cacheStore
         );
 
         await middleware.InvokeAsync(context);
@@ -82,7 +85,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration("es"),
-            _cache
+            _cacheStore
         );
 
         await middleware.InvokeAsync(context);
@@ -100,7 +103,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var middleware = CreateMiddleware(
             CaptureLocale(v => capturedLocale = v),
             CreateConfiguration(null),
-            _cache
+            _cacheStore
         );
 
         await middleware.InvokeAsync(context);
@@ -114,11 +117,12 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var callCount = 0;
         var settings = new FakeSettingsContracts("es", onGet: () => callCount++);
         using var localCache = new MemoryCache(new MemoryCacheOptions());
+        using var localCacheStore = new MemoryCacheStore(localCache);
 
         var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
             CreateConfiguration(null),
-            localCache
+            localCacheStore
         );
 
         var context1 = CreateHttpContext(settings, userId: "user-1");
@@ -140,11 +144,12 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         var callCount = 0;
         var settings = new FakeSettingsContracts(null, onGet: () => callCount++);
         using var localCache = new MemoryCache(new MemoryCacheOptions());
+        using var localCacheStore = new MemoryCacheStore(localCache);
 
         var middleware = CreateMiddleware(
             _ => Task.CompletedTask,
             CreateConfiguration(null),
-            localCache
+            localCacheStore
         );
 
         var context1 = CreateHttpContext(settings, userId: "user-2");
@@ -160,7 +165,7 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
     private LocaleResolutionMiddleware CreateMiddleware(
         RequestDelegate next,
         IConfiguration config,
-        IMemoryCache cache
+        ICacheStore cache
     )
     {
         return new LocaleResolutionMiddleware(next, config, _loader, cache);
@@ -253,5 +258,9 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         }
     }
 
-    public void Dispose() => _cache.Dispose();
+    public void Dispose()
+    {
+        _cacheStore.Dispose();
+        _cache.Dispose();
+    }
 }

@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
 using SimpleModule.Localization.Contracts;
@@ -16,11 +16,14 @@ public sealed class LocaleResolutionMiddleware(
     RequestDelegate next,
     IConfiguration configuration,
     TranslationLoader loader,
-    IMemoryCache cache
+    ICacheStore cache
 )
 {
-    private static readonly TimeSpan UserLocaleCacheDuration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan AcceptLanguageCacheDuration = TimeSpan.FromMinutes(30);
+    private static readonly CacheEntryOptions UserLocaleCacheOptions = CacheEntryOptions.Expires(
+        TimeSpan.FromMinutes(5)
+    );
+    private static readonly CacheEntryOptions AcceptLanguageCacheOptions =
+        CacheEntryOptions.Expires(TimeSpan.FromMinutes(30));
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -62,9 +65,10 @@ public sealed class LocaleResolutionMiddleware(
             // This avoids cross-browser cache pollution where one browser's Accept-Language
             // leaks to another browser for the same user.
             var cacheKey = UserLocaleKey(userId);
-            if (cache.TryGetValue(cacheKey, out string? cachedLocale) && cachedLocale is not null)
+            var cachedHit = await cache.TryGetAsync<string>(cacheKey);
+            if (cachedHit.Hit && !string.IsNullOrEmpty(cachedHit.Value))
             {
-                return cachedLocale;
+                return cachedHit.Value;
             }
 
             var settings = context.RequestServices.GetService<ISettingsContracts>();
@@ -77,17 +81,17 @@ public sealed class LocaleResolutionMiddleware(
                 );
                 if (!string.IsNullOrEmpty(userLocale))
                 {
-                    cache.Set(cacheKey, userLocale, UserLocaleCacheDuration);
+                    await cache.SetAsync(cacheKey, userLocale, UserLocaleCacheOptions);
                     return userLocale;
                 }
             }
         }
 
         // No explicit user setting — resolve from Accept-Language header or default
-        return ResolveFromAcceptLanguage(context);
+        return await ResolveFromAcceptLanguageAsync(context);
     }
 
-    private string ResolveFromAcceptLanguage(HttpContext context)
+    private async Task<string> ResolveFromAcceptLanguageAsync(HttpContext context)
     {
         var rawHeader = context.Request.Headers.AcceptLanguage.ToString();
         if (string.IsNullOrEmpty(rawHeader))
@@ -96,9 +100,10 @@ public sealed class LocaleResolutionMiddleware(
         }
 
         var cacheKey = AcceptLanguageKey(rawHeader);
-        if (cache.TryGetValue(cacheKey, out string? cached) && cached is not null)
+        var cachedHit = await cache.TryGetAsync<string>(cacheKey);
+        if (cachedHit.Hit && !string.IsNullOrEmpty(cachedHit.Value))
         {
-            return cached;
+            return cachedHit.Value;
         }
 
         var acceptLanguageHeaders = context.Request.GetTypedHeaders().AcceptLanguage;
@@ -111,14 +116,14 @@ public sealed class LocaleResolutionMiddleware(
 
                 if (supportedLocales.Contains(tag))
                 {
-                    cache.Set(cacheKey, tag, AcceptLanguageCacheDuration);
+                    await cache.SetAsync(cacheKey, tag, AcceptLanguageCacheOptions);
                     return tag;
                 }
 
                 var twoLetter = tag.Split('-')[0];
                 if (supportedLocales.Contains(twoLetter))
                 {
-                    cache.Set(cacheKey, twoLetter, AcceptLanguageCacheDuration);
+                    await cache.SetAsync(cacheKey, twoLetter, AcceptLanguageCacheOptions);
                     return twoLetter;
                 }
             }

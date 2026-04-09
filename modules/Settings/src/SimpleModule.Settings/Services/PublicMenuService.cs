@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Entities;
@@ -9,7 +9,7 @@ namespace SimpleModule.Settings.Services;
 
 public sealed class PublicMenuService(
     SettingsDbContext db,
-    IMemoryCache cache,
+    ICacheStore cache,
     IOptions<SettingsModuleOptions> moduleOptions
 ) : IPublicMenuProvider
 {
@@ -18,20 +18,19 @@ public sealed class PublicMenuService(
 
     public async Task<IReadOnlyList<PublicMenuItem>> GetMenuTreeAsync()
     {
-        if (
-            cache.TryGetValue(MenuTreeCacheKey, out IReadOnlyList<PublicMenuItem>? cached)
-            && cached is not null
-        )
-            return cached;
-
-        var entities = await db
-            .PublicMenuItems.Where(e => e.IsVisible)
-            .OrderBy(e => e.SortOrder)
-            .ToListAsync();
-
-        var tree = BuildPublicTree(entities, parentId: null);
-        cache.Set(MenuTreeCacheKey, tree, moduleOptions.Value.CacheDuration);
-        return tree;
+        var result = await cache.GetOrCreateAsync<IReadOnlyList<PublicMenuItem>>(
+            MenuTreeCacheKey,
+            async ct =>
+            {
+                var entities = await db
+                    .PublicMenuItems.Where(e => e.IsVisible)
+                    .OrderBy(e => e.SortOrder)
+                    .ToListAsync(ct);
+                return BuildPublicTree(entities, parentId: null);
+            },
+            CacheEntryOptions.Expires(moduleOptions.Value.CacheDuration)
+        );
+        return result ?? [];
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -41,16 +40,17 @@ public sealed class PublicMenuService(
     )]
     public async Task<string?> GetHomePageUrlAsync()
     {
-        if (cache.TryGetValue(HomePageCacheKey, out string? cached))
-            return cached;
-
-        var entity = await db
-            .PublicMenuItems.Where(e => e.IsVisible && e.IsHomePage)
-            .FirstOrDefaultAsync();
-
-        var url = entity is not null ? (entity.Url ?? entity.PageRoute) : null;
-        cache.Set(HomePageCacheKey, url, moduleOptions.Value.CacheDuration);
-        return url;
+        return await cache.GetOrCreateAsync<string?>(
+            HomePageCacheKey,
+            async ct =>
+            {
+                var entity = await db
+                    .PublicMenuItems.Where(e => e.IsVisible && e.IsHomePage)
+                    .FirstOrDefaultAsync(ct);
+                return entity is not null ? (entity.Url ?? entity.PageRoute) : null;
+            },
+            CacheEntryOptions.Expires(moduleOptions.Value.CacheDuration)
+        );
     }
 
     public async Task<List<PublicMenuItemDto>> GetAllAsync()
@@ -98,7 +98,7 @@ public sealed class PublicMenuService(
 
         db.PublicMenuItems.Add(entity);
         await db.SaveChangesAsync();
-        InvalidateCache();
+        await InvalidateCache();
         return entity;
     }
 
@@ -122,7 +122,7 @@ public sealed class PublicMenuService(
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync();
-        InvalidateCache();
+        await InvalidateCache();
         return entity;
     }
 
@@ -134,7 +134,7 @@ public sealed class PublicMenuService(
 
         db.PublicMenuItems.Remove(entity);
         await db.SaveChangesAsync();
-        InvalidateCache();
+        await InvalidateCache();
         return true;
     }
 
@@ -152,7 +152,7 @@ public sealed class PublicMenuService(
         }
 
         await db.SaveChangesAsync();
-        InvalidateCache();
+        await InvalidateCache();
     }
 
     public async Task SetHomePageAsync(int id)
@@ -167,14 +167,14 @@ public sealed class PublicMenuService(
             await db.SaveChangesAsync();
         }
 
-        InvalidateCache();
+        await InvalidateCache();
     }
 
     public async Task ClearHomePageAsync()
     {
         await ClearAllHomePageFlags();
         await db.SaveChangesAsync();
-        InvalidateCache();
+        await InvalidateCache();
     }
 
     private async Task ClearAllHomePageFlags()
@@ -253,9 +253,9 @@ public sealed class PublicMenuService(
             .ToList();
     }
 
-    private void InvalidateCache()
+    private async ValueTask InvalidateCache()
     {
-        cache.Remove(MenuTreeCacheKey);
-        cache.Remove(HomePageCacheKey);
+        await cache.RemoveAsync(MenuTreeCacheKey);
+        await cache.RemoveAsync(HomePageCacheKey);
     }
 }

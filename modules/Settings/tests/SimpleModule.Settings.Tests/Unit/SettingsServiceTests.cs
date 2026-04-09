@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Settings;
@@ -13,6 +14,7 @@ public sealed class SettingsServiceTests : IDisposable
 {
     private readonly SettingsDbContext _db;
     private readonly MemoryCache _cache;
+    private readonly MemoryCacheStore _cacheStore;
     private readonly SettingsService _service;
 
     public SettingsServiceTests()
@@ -38,10 +40,11 @@ public sealed class SettingsServiceTests : IDisposable
         ]);
 
         _cache = new MemoryCache(new MemoryCacheOptions());
+        _cacheStore = new MemoryCacheStore(_cache);
         _service = new SettingsService(
             _db,
             registry,
-            _cache,
+            _cacheStore,
             Options.Create(new SettingsModuleOptions()),
             NullLogger<SettingsService>.Instance
         );
@@ -139,6 +142,7 @@ public sealed class SettingsServiceTests : IDisposable
 
     public void Dispose()
     {
+        _cacheStore.Dispose();
         _cache.Dispose();
         _db.Dispose();
         GC.SuppressFinalize(this);

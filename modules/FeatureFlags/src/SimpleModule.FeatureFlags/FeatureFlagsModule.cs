@@ -17,7 +17,6 @@ public class FeatureFlagsModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMemoryCache();
         services.AddModuleDbContext<FeatureFlagsDbContext>(
             configuration,
             FeatureFlagsConstants.ModuleName

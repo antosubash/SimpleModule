@@ -18,7 +18,6 @@ public class SettingsModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMemoryCache();
         services.AddModuleDbContext<SettingsDbContext>(configuration, SettingsConstants.ModuleName);
         services.AddScoped<PublicMenuService>();
         services.AddScoped<IPublicMenuProvider>(sp => sp.GetRequiredService<PublicMenuService>());
