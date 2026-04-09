@@ -22,6 +22,9 @@ public sealed partial class FeatureFlagService(
     );
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
     private const string AllFlagDataCacheKey = "ff:all-data";
+    private const string FlagDataKeyPrefix = "ff:data:";
+
+    private static string FlagDataCacheKey(string flagName) => FlagDataKeyPrefix + flagName;
 
     private sealed record FlagData(
         bool IsEnabled,
@@ -238,7 +241,7 @@ public sealed partial class FeatureFlagService(
 
                     allData[def.Name] = data;
                     await cache.SetAsync(
-                        $"ff:data:{def.Name}",
+                        FlagDataCacheKey(def.Name),
                         data,
                         CacheEntryOptions.Expires(CacheDuration),
                         ct
@@ -254,9 +257,8 @@ public sealed partial class FeatureFlagService(
 
     private async Task<FlagData> GetFlagDataAsync(string flagName)
     {
-        var cacheKey = $"ff:data:{flagName}";
         var result = await cache.GetOrCreateAsync<FlagData>(
-            cacheKey,
+            FlagDataCacheKey(flagName),
             async ct =>
             {
                 var flag = await db
@@ -348,7 +350,7 @@ public sealed partial class FeatureFlagService(
 
     private async ValueTask InvalidateCacheAsync(string flagName)
     {
-        await cache.RemoveAsync($"ff:data:{flagName}");
+        await cache.RemoveAsync(FlagDataCacheKey(flagName));
         await cache.RemoveAsync(AllFlagDataCacheKey);
     }
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Events;
 using SimpleModule.Database.Interceptors;
 
@@ -30,6 +31,7 @@ public static class SimpleModuleWorkerExtensions
         builder.Configuration["BackgroundJobs:WorkerMode"] = "Consumer";
 
         // Core infrastructure that the worker needs:
+        builder.Services.AddSimpleModuleCaching();
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();

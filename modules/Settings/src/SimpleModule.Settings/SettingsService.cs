@@ -179,5 +179,5 @@ public sealed partial class SettingsService(
     private partial void LogDeserializationError(string key, string type, string error);
 
     private static string BuildCacheKey(string key, SettingScope scope, string? userId) =>
-        userId is not null ? $"setting:{scope}:{userId}:{key}" : $"setting:{scope}:{key}";
+        CacheKey.Compose("setting", scope.ToString(), userId, key);
 }

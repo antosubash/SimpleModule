@@ -84,6 +84,14 @@ public sealed class MemoryCacheStore : ICacheStore, IDisposable
         finally
         {
             gate.Release();
+            // Reclaim the lock entry once no other caller is waiting on it.
+            // CurrentCount == 1 means the semaphore is fully released and idle; any
+            // concurrent waiter would hold it below 1. This bounds the dictionary to
+            // keys currently being populated rather than every key ever populated.
+            if (gate.CurrentCount == 1 && _keyLocks.TryRemove(key, out var removed))
+            {
+                removed.Dispose();
+            }
         }
     }
 
@@ -94,6 +102,7 @@ public sealed class MemoryCacheStore : ICacheStore, IDisposable
 
         _cache.Remove(key);
         _trackedKeys.TryRemove(key, out _);
+        TryReclaimIdleLock(key);
         return ValueTask.CompletedTask;
     }
 
@@ -111,10 +120,29 @@ public sealed class MemoryCacheStore : ICacheStore, IDisposable
             {
                 _cache.Remove(key);
                 _trackedKeys.TryRemove(key, out _);
+                TryReclaimIdleLock(key);
             }
         }
 
         return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
+    /// Removes and disposes a per-key semaphore only when it is observably idle
+    /// (no waiters, fully released). If a <see cref="GetOrCreateAsync{T}"/> caller
+    /// is still holding the gate, the lock is left in place and that caller's
+    /// own finally block will reclaim it after release.
+    /// </summary>
+    private void TryReclaimIdleLock(string key)
+    {
+        if (
+            _keyLocks.TryGetValue(key, out var gate)
+            && gate.CurrentCount == 1
+            && _keyLocks.TryRemove(key, out var removed)
+        )
+        {
+            removed.Dispose();
+        }
     }
 
     private void SetCore<T>(string key, T? value, CacheEntryOptions? options)
@@ -145,16 +173,26 @@ public sealed class MemoryCacheStore : ICacheStore, IDisposable
             }
         }
 
-        // Track the key so RemoveByPrefixAsync can find it. The eviction callback below
-        // also removes from the tracking set when the entry naturally expires or is evicted
-        // by memory pressure, so the set stays bounded.
+        // Track the key so RemoveByPrefixAsync can find it. The eviction callback
+        // releases both tracking entries and any idle per-key lock when the entry
+        // naturally expires or is evicted by memory pressure, so both sets stay bounded.
         _trackedKeys[key] = 0;
         entry.RegisterPostEvictionCallback(
             static (evictedKey, _, _, state) =>
             {
-                if (state is MemoryCacheStore self && evictedKey is string s)
+                if (state is not MemoryCacheStore self || evictedKey is not string s)
                 {
-                    self._trackedKeys.TryRemove(s, out _);
+                    return;
+                }
+
+                self._trackedKeys.TryRemove(s, out _);
+                if (
+                    self._keyLocks.TryGetValue(s, out var gate)
+                    && gate.CurrentCount == 1
+                    && self._keyLocks.TryRemove(s, out var removed)
+                )
+                {
+                    removed.Dispose();
                 }
             },
             this

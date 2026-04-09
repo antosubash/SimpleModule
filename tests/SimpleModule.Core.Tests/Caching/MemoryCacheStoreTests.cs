@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Reflection;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using SimpleModule.Core.Caching;
@@ -228,6 +230,56 @@ public sealed class MemoryCacheStoreTests : IDisposable
         (await scoped.TryGetAsync<string>("user:1")).Hit.Should().BeFalse();
         (await scoped.TryGetAsync<string>("user:2")).Hit.Should().BeFalse();
         (await _store.TryGetAsync<string>("user:1")).Hit.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetOrCreateAsync_DoesNotLeakPerKeyLocks()
+    {
+        // Populate many distinct keys. After each uncontended call the per-key
+        // semaphore should be released; the lock dictionary must not grow unbounded.
+        for (var i = 0; i < 50; i++)
+        {
+            await _store.GetOrCreateAsync<int>($"leak:{i}", _ => new ValueTask<int>(i));
+        }
+
+        GetKeyLocks(_store).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RemoveAsync_DuringInFlightFactory_DoesNotCrash()
+    {
+        // RemoveAsync must not dispose a semaphore that a concurrent GetOrCreateAsync
+        // caller is still holding. The in-flight caller's own finally block reclaims
+        // the lock after it releases the gate.
+        var factoryGate = new TaskCompletionSource();
+        var held = _store
+            .GetOrCreateAsync<string>(
+                "contended",
+                async _ =>
+                {
+                    await factoryGate.Task;
+                    return "value";
+                }
+            )
+            .AsTask();
+
+        await Task.Yield();
+        await _store.RemoveAsync("contended");
+
+        factoryGate.SetResult();
+        var result = await held;
+
+        result.Should().Be("value");
+        GetKeyLocks(_store).Should().NotContainKey("contended");
+    }
+
+    private static ConcurrentDictionary<string, SemaphoreSlim> GetKeyLocks(MemoryCacheStore store)
+    {
+        var field = typeof(MemoryCacheStore).GetField(
+            "_keyLocks",
+            BindingFlags.NonPublic | BindingFlags.Instance
+        )!;
+        return (ConcurrentDictionary<string, SemaphoreSlim>)field.GetValue(store)!;
     }
 
     [Fact]

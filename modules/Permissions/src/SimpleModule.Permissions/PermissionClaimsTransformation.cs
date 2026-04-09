@@ -35,25 +35,26 @@ public sealed class PermissionClaimsTransformation(
         var rolesKey = string.Join(',', roles.Order());
         var cacheKey = $"permissions:{userId}:{rolesKey}";
 
-        var permissions = await cache.GetOrCreateAsync<IReadOnlySet<string>>(
-            cacheKey,
-            async _ =>
-            {
-                var roleIdMap =
-                    roles.Count > 0
-                        ? await userContracts.GetRoleIdsByNamesAsync(roles)
-                        : new Dictionary<string, string>();
+        var permissions =
+            await cache.GetOrCreateAsync<IReadOnlySet<string>>(
+                cacheKey,
+                async _ =>
+                {
+                    var roleIdMap =
+                        roles.Count > 0
+                            ? await userContracts.GetRoleIdsByNamesAsync(roles)
+                            : new Dictionary<string, string>();
 
-                return await permissionContracts.GetAllPermissionsForUserAsync(
-                    UserId.From(userId),
-                    roleIdMap.Values.Select(id => RoleId.From(id))
-                );
-            },
-            CacheOptions
-        );
+                    return await permissionContracts.GetAllPermissionsForUserAsync(
+                        UserId.From(userId),
+                        roleIdMap.Values.Select(id => RoleId.From(id))
+                    );
+                },
+                CacheOptions
+            ) ?? new HashSet<string>();
 
         var identity = new ClaimsIdentity();
-        foreach (var permission in permissions!)
+        foreach (var permission in permissions)
         {
             identity.AddClaim(new Claim("permission", permission));
         }
