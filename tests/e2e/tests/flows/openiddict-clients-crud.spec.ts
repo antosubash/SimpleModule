@@ -30,7 +30,7 @@ test.describe('OpenIddict Clients CRUD', () => {
     await expect(clientsPage.clientRow(clientId)).toBeVisible();
 
     // API: verify the client was persisted via Inertia page props
-    const listRes = await page.request.get('https://localhost:5001/openiddict/clients', {
+    const listRes = await page.request.get('/openiddict/clients', {
       headers: { 'X-Inertia': 'true', 'X-Inertia-Version': '' },
     });
     if (listRes.ok()) {

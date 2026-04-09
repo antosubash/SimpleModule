@@ -5,12 +5,12 @@ test.describe('Permission System', () => {
     // These tests use the default auth state (admin user)
 
     test('can access products API', async ({ page }) => {
-      const response = await page.request.get('https://localhost:5001/api/products');
+      const response = await page.request.get('/api/products');
       expect(response.status()).toBe(200);
     });
 
     test('can access orders API', async ({ page }) => {
-      const response = await page.request.get('https://localhost:5001/api/orders');
+      const response = await page.request.get('/api/orders');
       expect(response.status()).toBe(200);
     });
 
@@ -35,7 +35,7 @@ test.describe('Permission System', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
     test('products API rejects unauthenticated request', async ({ request }) => {
-      const response = await request.get('https://localhost:5001/api/products', {
+      const response = await request.get('/api/products', {
         maxRedirects: 0,
       });
       // Identity cookie scheme returns 302 redirect to login for unauthenticated requests
@@ -43,7 +43,7 @@ test.describe('Permission System', () => {
     });
 
     test('orders API rejects unauthenticated request', async ({ request }) => {
-      const response = await request.get('https://localhost:5001/api/orders', {
+      const response = await request.get('/api/orders', {
         maxRedirects: 0,
       });
       expect(response.status()).toBe(302);
