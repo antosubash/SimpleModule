@@ -57,22 +57,34 @@ export default function Browse({
   const [pickerDatasetId, setPickerDatasetId] = useState<string>('');
   const [datasetsLoaded, setDatasetsLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
 
-  // Resolved style URL — prefer the first selected basemap, fall back to the
-  // configured base style, then the host default.
-  const activeStyleUrl = useMemo(() => {
-    const byId = new Map(basemaps.map((b) => [b.id, b]));
-    const first = [...mapBasemaps].sort((a, b) => a.order - b.order)[0];
-    return first ? (byId.get(first.basemapId)?.styleUrl ?? styleUrl) : styleUrl;
-  }, [mapBasemaps, basemaps, styleUrl]);
-
+  const basemapById = useMemo(() => new Map(basemaps.map((b) => [b.id, b])), [basemaps]);
   const sourceById = useMemo(
     () => new Map(availableSources.map((s) => [s.id, s])),
     [availableSources],
   );
-  const basemapById = useMemo(() => new Map(basemaps.map((b) => [b.id, b])), [basemaps]);
+
+  // Basemaps attached to the default map, resolved to full Basemap definitions
+  // and ordered by persisted order. The first entry is the default shown on load.
+  const availableBasemaps = useMemo(() => {
+    return [...mapBasemaps]
+      .sort((a, b) => a.order - b.order)
+      .map((mb) => basemapById.get(mb.basemapId))
+      .filter((b): b is Basemap => Boolean(b));
+  }, [mapBasemaps, basemapById]);
+
+  // Locally-selected basemap for quick switching via the floating chip switcher.
+  // This does not persist; the persisted "default" is the first entry in mapBasemaps.
+  const [activeBasemapId, setActiveBasemapId] = useState<string | undefined>(
+    () => availableBasemaps[0]?.id,
+  );
+  const activeBasemap =
+    availableBasemaps.find((b) => b.id === activeBasemapId) ?? availableBasemaps[0];
+  const resolvedStyleUrl = activeBasemap?.styleUrl ?? styleUrl;
 
   async function loadDatasets() {
     if (datasetsLoaded) return;
@@ -147,16 +159,24 @@ export default function Browse({
   function addBasemap() {
     if (!pickerBasemapId) return;
     if (mapBasemaps.some((b) => b.basemapId === pickerBasemapId)) return;
-    setMapBasemaps([...mapBasemaps, { basemapId: pickerBasemapId, order: mapBasemaps.length }]);
+    const next = [...mapBasemaps, { basemapId: pickerBasemapId, order: mapBasemaps.length }];
+    setMapBasemaps(next);
+    if (!activeBasemapId) {
+      setActiveBasemapId(pickerBasemapId);
+    }
     setPickerBasemapId('');
   }
 
   function removeBasemap(idx: number) {
+    const removed = mapBasemaps[idx];
     const next = mapBasemaps.filter((_, i) => i !== idx);
     next.forEach((b, i) => {
       b.order = i;
     });
     setMapBasemaps(next);
+    if (removed && activeBasemapId === removed.basemapId) {
+      setActiveBasemapId(next[0]?.basemapId);
+    }
   }
 
   function moveBasemap(idx: number, delta: number) {
@@ -210,226 +230,296 @@ export default function Browse({
     });
   }
 
+  const visibleLayerCount = layers.filter((l) => l.visible).length;
+
   return (
-    <Container className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Default map</h1>
-          <p className="text-sm text-text-muted">
-            Add layers, basemaps and tools to the application's single shared map.
+    <Container size="full" className="space-y-3 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold leading-tight">Default map</h1>
+          <p className="text-xs text-text-muted">
+            {visibleLayerCount} of {layers.length} layer{layers.length === 1 ? '' : 's'} visible
+            {availableBasemaps.length > 0 && ` · ${availableBasemaps.length} basemap(s)`}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => router.visit('/map/layers')}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPanelOpen((v) => !v)}
+            aria-label={panelOpen ? 'Hide configuration panel' : 'Show configuration panel'}
+          >
+            {panelOpen ? '◀ Hide panel' : '▶ Show panel'}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => router.visit('/map/layers')}>
             Manage catalog
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="lg:col-span-1 space-y-3">
-          <Card>
-            <CardContent className="p-4">
-              <FieldGroup>
-                <Field>
-                  <Label htmlFor="style">Fallback base style URL</Label>
-                  <Input
-                    id="style"
-                    value={styleUrl}
-                    onChange={(e) => setStyleUrl(e.currentTarget.value)}
-                  />
-                </Field>
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="font-medium">Basemaps ({mapBasemaps.length})</div>
-              {mapBasemaps.length === 0 && (
-                <div className="text-xs text-text-muted">
-                  No basemaps yet. The fallback style URL above will be used.
+      <div className="flex gap-3" style={{ height: 'calc(100vh - 160px)', minHeight: '520px' }}>
+        {panelOpen && (
+          <aside
+            className="w-80 shrink-0 overflow-y-auto space-y-3 pr-1"
+            data-testid="map-side-panel"
+          >
+            <Card>
+              <CardContent className="p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-sm">Basemaps ({mapBasemaps.length})</div>
                 </div>
-              )}
-              {mapBasemaps.map((mb, idx) => {
-                const def = basemapById.get(mb.basemapId);
-                return (
-                  <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: order is the stable identity here
-                    key={`${mb.basemapId}-${idx}`}
-                    className="border border-border rounded p-2 flex items-center justify-between"
-                  >
-                    <div className="font-medium text-sm truncate">
-                      {def?.name ?? 'Unknown basemap'}
-                      {idx === 0 && <span className="ml-2 text-xs text-text-muted">(default)</span>}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="sm" variant="secondary" onClick={() => moveBasemap(idx, -1)}>
-                        ↑
-                      </Button>
-                      <Button size="sm" variant="secondary" onClick={() => moveBasemap(idx, 1)}>
-                        ↓
-                      </Button>
-                      <Button size="sm" variant="danger" onClick={() => removeBasemap(idx)}>
-                        ×
-                      </Button>
-                    </div>
+                {mapBasemaps.length === 0 && (
+                  <div className="text-xs text-text-muted">
+                    No basemaps yet. The fallback style URL will be used.
                   </div>
-                );
-              })}
-              <div className="flex gap-2 pt-2">
-                <Select value={pickerBasemapId} onValueChange={setPickerBasemapId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Add basemap…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {basemaps
-                      .filter((b) => !mapBasemaps.some((mb) => mb.basemapId === b.id))
-                      .map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={addBasemap} disabled={!pickerBasemapId}>
-                  Add
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 space-y-2">
-              <div className="font-medium">Layers ({layers.length})</div>
-              {layers.length === 0 && (
-                <div className="text-xs text-text-muted">No layers yet. Add one below.</div>
-              )}
-              {layers.map((layer, idx) => {
-                const src = sourceById.get(layer.layerSourceId);
-                return (
-                  <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: layer order is the stable identity here
-                    key={`${layer.layerSourceId}-${idx}`}
-                    className="border border-border rounded p-2 space-y-1"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="font-medium text-sm truncate">
-                        {src?.name ?? 'Unknown source'}
+                )}
+                {mapBasemaps.map((mb, idx) => {
+                  const def = basemapById.get(mb.basemapId);
+                  const isActive = def?.id === activeBasemapId;
+                  return (
+                    <div
+                      // biome-ignore lint/suspicious/noArrayIndexKey: order is the stable identity here
+                      key={`${mb.basemapId}-${idx}`}
+                      className={`border rounded p-2 flex items-center justify-between ${
+                        isActive ? 'border-primary bg-primary/5' : 'border-border'
+                      }`}
+                    >
+                      <div className="font-medium text-sm truncate min-w-0">
+                        {def?.name ?? 'Unknown basemap'}
+                        {idx === 0 && (
+                          <span className="ml-2 text-xs text-text-muted">(default)</span>
+                        )}
                       </div>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="secondary" onClick={() => moveLayer(idx, -1)}>
+                      <div className="flex gap-1 shrink-0">
+                        <Button size="sm" variant="secondary" onClick={() => moveBasemap(idx, -1)}>
                           ↑
                         </Button>
-                        <Button size="sm" variant="secondary" onClick={() => moveLayer(idx, 1)}>
+                        <Button size="sm" variant="secondary" onClick={() => moveBasemap(idx, 1)}>
                           ↓
                         </Button>
-                        <Button size="sm" variant="danger" onClick={() => removeLayer(idx)}>
+                        <Button size="sm" variant="danger" onClick={() => removeBasemap(idx)}>
                           ×
                         </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Switch
-                        checked={layer.visible}
-                        onCheckedChange={(v) => patchLayer(idx, { visible: v })}
-                      />
-                      <span>Visible</span>
-                      <Label htmlFor={`opacity-${idx}`} className="ml-auto">
-                        Opacity
-                      </Label>
-                      <Input
-                        id={`opacity-${idx}`}
-                        type="number"
-                        min={0}
-                        max={1}
-                        step={0.05}
-                        value={layer.opacity}
-                        onChange={(e) =>
-                          patchLayer(idx, { opacity: Number(e.currentTarget.value) })
-                        }
-                        className="w-16"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-              <div className="flex gap-2 pt-2">
-                <Select value={pickerSourceId} onValueChange={setPickerSourceId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Add source…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableSources.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={addLayer} disabled={!pickerSourceId || layers.length >= maxLayers}>
-                  Add
-                </Button>
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Select
-                  value={pickerDatasetId}
-                  onValueChange={setPickerDatasetId}
-                  onOpenChange={(open) => {
-                    if (open) loadDatasets();
-                  }}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Add from dataset…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {datasets.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={addFromDataset}
-                  disabled={!pickerDatasetId || layers.length >= maxLayers}
-                >
-                  Add
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {enableExportPng && (
-            <Card>
-              <CardContent className="p-4">
-                <Button variant="secondary" onClick={exportPng} className="w-full">
-                  Export PNG
-                </Button>
+                  );
+                })}
+                <div className="flex gap-2 pt-1">
+                  <Select value={pickerBasemapId} onValueChange={setPickerBasemapId}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Add basemap…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {basemaps
+                        .filter((b) => !mapBasemaps.some((mb) => mb.basemapId === b.id))
+                        .map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" onClick={addBasemap} disabled={!pickerBasemapId}>
+                    Add
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          )}
-        </div>
 
-        <div className="lg:col-span-2" style={{ height: '70vh' }}>
-          <div className="rounded border border-border h-full" data-testid="map-canvas-container">
-            <MapCanvas
-              styleUrl={activeStyleUrl}
-              center={[map.centerLng, map.centerLat]}
-              zoom={map.zoom}
-              pitch={map.pitch}
-              bearing={map.bearing}
-              layers={layers}
-              sources={availableSources}
-              enableGeolocate={enableGeolocate}
-              onMapReady={(m) => {
-                mapInstanceRef.current = m;
-              }}
-            />
+            <Card>
+              <CardContent className="p-3 space-y-2">
+                <div className="font-medium text-sm">Layers ({layers.length})</div>
+                {layers.length === 0 && (
+                  <div className="text-xs text-text-muted">No layers yet. Add one below.</div>
+                )}
+                {layers.map((layer, idx) => {
+                  const src = sourceById.get(layer.layerSourceId);
+                  return (
+                    <div
+                      // biome-ignore lint/suspicious/noArrayIndexKey: layer order is the stable identity here
+                      key={`${layer.layerSourceId}-${idx}`}
+                      className="border border-border rounded p-2 space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-sm truncate min-w-0">
+                          {src?.name ?? 'Unknown source'}
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button size="sm" variant="secondary" onClick={() => moveLayer(idx, -1)}>
+                            ↑
+                          </Button>
+                          <Button size="sm" variant="secondary" onClick={() => moveLayer(idx, 1)}>
+                            ↓
+                          </Button>
+                          <Button size="sm" variant="danger" onClick={() => removeLayer(idx)}>
+                            ×
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Switch
+                          checked={layer.visible}
+                          onCheckedChange={(v) => patchLayer(idx, { visible: v })}
+                        />
+                        <span>Visible</span>
+                        <Label htmlFor={`opacity-${idx}`} className="ml-auto">
+                          Opacity
+                        </Label>
+                        <Input
+                          id={`opacity-${idx}`}
+                          type="number"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={layer.opacity}
+                          onChange={(e) =>
+                            patchLayer(idx, { opacity: Number(e.currentTarget.value) })
+                          }
+                          className="w-16"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="flex gap-2 pt-1">
+                  <Select value={pickerSourceId} onValueChange={setPickerSourceId}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Add source…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableSources.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    onClick={addLayer}
+                    disabled={!pickerSourceId || layers.length >= maxLayers}
+                  >
+                    Add
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  <Select
+                    value={pickerDatasetId}
+                    onValueChange={setPickerDatasetId}
+                    onOpenChange={(open) => {
+                      if (open) loadDatasets();
+                    }}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Add from dataset…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {datasets.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    onClick={addFromDataset}
+                    disabled={!pickerDatasetId || layers.length >= maxLayers}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-3 space-y-2">
+                <button
+                  type="button"
+                  className="font-medium text-sm w-full text-left flex items-center justify-between"
+                  onClick={() => setAdvancedOpen((v) => !v)}
+                >
+                  <span>Advanced</span>
+                  <span className="text-xs text-text-muted">{advancedOpen ? '▲' : '▼'}</span>
+                </button>
+                {advancedOpen && (
+                  <FieldGroup>
+                    <Field>
+                      <Label htmlFor="style">Fallback base style URL</Label>
+                      <Input
+                        id="style"
+                        value={styleUrl}
+                        onChange={(e) => setStyleUrl(e.currentTarget.value)}
+                      />
+                      <p className="text-xs text-text-muted">Used when no basemap is selected.</p>
+                    </Field>
+                  </FieldGroup>
+                )}
+              </CardContent>
+            </Card>
+          </aside>
+        )}
+
+        <div className="flex-1 relative rounded border border-border overflow-hidden bg-surface-muted">
+          <MapCanvas
+            styleUrl={resolvedStyleUrl}
+            center={[map.centerLng, map.centerLat]}
+            zoom={map.zoom}
+            pitch={map.pitch}
+            bearing={map.bearing}
+            layers={layers}
+            sources={availableSources}
+            enableGeolocate={enableGeolocate}
+            onMapReady={(m) => {
+              mapInstanceRef.current = m;
+            }}
+          />
+
+          {/* Status badge — top-left */}
+          <div className="pointer-events-none absolute top-3 left-3 bg-surface/90 backdrop-blur rounded-md shadow px-3 py-1.5 text-xs text-text-muted border border-border">
+            {visibleLayerCount} / {layers.length} layer{layers.length === 1 ? '' : 's'}
+            {activeBasemap && ` · ${activeBasemap.name}`}
           </div>
+
+          {/* Empty state — centered when no layers and no basemaps */}
+          {layers.length === 0 && availableBasemaps.length === 0 && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="bg-surface/90 backdrop-blur rounded-lg shadow-lg border border-border px-6 py-4 text-center">
+                <div className="font-medium text-sm">This map is empty</div>
+                <div className="text-xs text-text-muted mt-1">
+                  Add a basemap or layer from the side panel to get started.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Basemap chip switcher — bottom-left */}
+          {availableBasemaps.length > 1 && (
+            <div className="absolute bottom-3 left-3 bg-surface/90 backdrop-blur rounded-md shadow border border-border p-1.5 flex gap-1 flex-wrap max-w-[60%]">
+              {availableBasemaps.map((b) => (
+                <Button
+                  key={b.id}
+                  size="sm"
+                  variant={b.id === activeBasemap?.id ? 'primary' : 'secondary'}
+                  onClick={() => setActiveBasemapId(b.id)}
+                >
+                  {b.name}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* Export PNG — bottom-right */}
+          {enableExportPng && (
+            <div className="absolute bottom-3 right-3">
+              <Button size="sm" variant="secondary" onClick={exportPng} className="shadow">
+                Export PNG
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </Container>
