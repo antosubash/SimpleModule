@@ -8,18 +8,18 @@ export class MapBrowsePage {
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /^maps$/i });
+    return this.page.getByRole('heading', { name: /default map/i });
   }
 
-  get manageLayerSourcesButton() {
-    return this.page.getByRole('button', { name: /manage layer sources/i });
+  get manageCatalogButton() {
+    return this.page.getByRole('button', { name: /manage catalog/i });
   }
 
-  get mapCards() {
-    return this.page.locator('[data-testid="map-card"]');
+  get sidePanel() {
+    return this.page.locator('[data-testid="map-side-panel"]');
   }
 
-  mapCardByName(name: string) {
-    return this.page.locator('[data-testid="map-card"]').filter({ hasText: name });
+  get saveButton() {
+    return this.page.getByRole('button', { name: /^save$/i });
   }
 }

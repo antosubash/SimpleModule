@@ -9,10 +9,17 @@ test.describe('Map pages', () => {
     await expect(browse.heading).toBeVisible();
   });
 
-  test('browse page shows manage layer sources button', async ({ page }) => {
+  test('browse page shows manage-catalog and save actions', async ({ page }) => {
     const browse = new MapBrowsePage(page);
     await browse.goto();
-    await expect(browse.manageLayerSourcesButton).toBeVisible();
+    await expect(browse.manageCatalogButton).toBeVisible();
+    await expect(browse.saveButton).toBeVisible();
+  });
+
+  test('browse page shows configuration side panel', async ({ page }) => {
+    const browse = new MapBrowsePage(page);
+    await browse.goto();
+    await expect(browse.sidePanel).toBeVisible();
   });
 
   test('layers page loads', async ({ page }) => {

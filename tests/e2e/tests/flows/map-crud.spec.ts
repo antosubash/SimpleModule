@@ -78,47 +78,21 @@ test.describe('Map CRUD flows', () => {
     expect(deleteRes.ok()).toBeTruthy();
   });
 
-  test('create, update, and delete a saved map via API', async ({ page, request }) => {
-    const mapName = `e2e-map-${faker.string.alphanumeric(8)}`;
-    const updatedName = `${mapName}-updated`;
+  test('get and update the singleton default map via API', async ({ page, request }) => {
+    // API: read the current default map — it's seeded at module startup
+    // and upserted in place, there is no create or delete.
+    const getRes = await request.get('/api/map/default');
+    expect(getRes.ok()).toBeTruthy();
+    const current = await getRes.json();
+    expect(current).toBeTruthy();
 
-    // API: create
-    const createRes = await request.post('/api/map/maps', {
+    // Pick a fresh viewport so the assertion below can tell the upsert ran.
+    const newZoom = (current.zoom ?? 0) + 1;
+    const updateRes = await request.put('/api/map/default', {
       data: {
-        name: mapName,
-        description: 'e2e map',
-        centerLng: 0,
-        centerLat: 0,
-        zoom: 2,
-        pitch: 0,
-        bearing: 0,
-        baseStyleUrl: 'https://demotiles.maplibre.org/style.json',
-        layers: [],
-        basemaps: [],
-      },
-    });
-    expect(createRes.ok()).toBeTruthy();
-    const created = await createRes.json();
-    expect(created.name).toBe(mapName);
-
-    // API: verify appears in list
-    const listRes = await request.get('/api/map/maps');
-    const maps = await listRes.json();
-    expect(maps.some((m: { name: string }) => m.name === mapName)).toBeTruthy();
-
-    // UI: browse page shows the new map card
-    const browse = new MapBrowsePage(page);
-    await browse.goto();
-    await expect(browse.mapCardByName(mapName)).toBeVisible();
-
-    // API: update
-    const updateRes = await request.put(`/api/map/maps/${created.id}`, {
-      data: {
-        name: updatedName,
-        description: 'e2e map updated',
-        centerLng: 1,
-        centerLat: 2,
-        zoom: 5,
+        centerLng: 10,
+        centerLat: 20,
+        zoom: newZoom,
         pitch: 0,
         bearing: 0,
         baseStyleUrl: 'https://demotiles.maplibre.org/style.json',
@@ -128,21 +102,18 @@ test.describe('Map CRUD flows', () => {
     });
     expect(updateRes.ok()).toBeTruthy();
 
-    // API: verify update
-    const afterUpdateRes = await request.get(`/api/map/maps/${created.id}`);
-    expect(afterUpdateRes.ok()).toBeTruthy();
-    const updated = await afterUpdateRes.json();
-    expect(updated.name).toBe(updatedName);
-    expect(updated.zoom).toBe(5);
+    // API: verify the upsert landed
+    const afterRes = await request.get('/api/map/default');
+    expect(afterRes.ok()).toBeTruthy();
+    const after = await afterRes.json();
+    expect(after.zoom).toBe(newZoom);
+    expect(after.centerLng).toBeCloseTo(10, 5);
+    expect(after.centerLat).toBeCloseTo(20, 5);
 
-    // API: delete
-    const deleteRes = await request.delete(`/api/map/maps/${created.id}`);
-    expect(deleteRes.ok()).toBeTruthy();
-
-    // API: verify gone
-    const afterDeleteRes = await request.get('/api/map/maps');
-    const afterDelete = await afterDeleteRes.json();
-    expect(afterDelete.some((m: { id: string }) => m.id === created.id)).toBeFalsy();
+    // UI: browse page renders the default map shell
+    const browse = new MapBrowsePage(page);
+    await browse.goto();
+    await expect(browse.heading).toBeVisible();
   });
 
   test('add layer source via UI dialog', async ({ page, request }) => {
