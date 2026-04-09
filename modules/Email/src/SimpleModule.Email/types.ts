@@ -71,12 +71,18 @@ export interface QueryEmailMessagesRequest {
   dateTo: string | null;
   sortBy: string;
   sortDescending: boolean | null;
+  effectivePage: number;
+  effectivePageSize: number;
+  effectiveSortBy: string;
+  effectiveSortDescending: boolean;
 }
 
 export interface QueryEmailTemplatesRequest {
   page: number | null;
   pageSize: number | null;
   search: string;
+  effectivePage: number;
+  effectivePageSize: number;
 }
 
 export interface SendEmailRequest {

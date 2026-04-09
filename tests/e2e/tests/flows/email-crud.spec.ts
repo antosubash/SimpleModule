@@ -77,7 +77,6 @@ test.describe('Email template CRUD flows', () => {
     const listRes = await request.get('/api/email/messages');
     expect(listRes.ok()).toBeTruthy();
     const body = await listRes.json();
-    // Paged result shape: { items, totalCount, page, pageSize }
     expect(body).toHaveProperty('items');
     expect(Array.isArray(body.items)).toBe(true);
   });

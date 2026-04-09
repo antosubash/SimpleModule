@@ -218,7 +218,6 @@ test.describe('Menu Manager - CRUD Flows', () => {
     await menuManager.deleteButton.waitFor({ state: 'visible' });
     await menuManager.deleteButton.click();
     const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
-    // Wait for the DELETE (or PUT replacing the tree) to settle before asserting
     await Promise.all([
       page.waitForResponse(
         (resp) =>
@@ -227,7 +226,6 @@ test.describe('Menu Manager - CRUD Flows', () => {
       ),
       dialog.getByRole('button', { name: 'Delete' }).click(),
     ]);
-    await page.waitForLoadState('networkidle');
 
     // UI: verify removed from tree
     await expect(menuManager.treeItemButton(label)).not.toBeVisible();

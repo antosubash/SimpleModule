@@ -42,9 +42,9 @@ test.describe('Passkeys flows', () => {
     const listRes = await request.get('/api/passkeys');
     if (!listRes.ok()) return;
     const existing = (await listRes.json()) as Array<{ credentialId: string }>;
-    for (const p of existing) {
-      await request.delete(`/api/passkeys/${encodeURIComponent(p.credentialId)}`);
-    }
+    await Promise.all(
+      existing.map((p) => request.delete(`/api/passkeys/${encodeURIComponent(p.credentialId)}`)),
+    );
   });
 
   test('register a passkey - it appears in list', async ({ page }) => {

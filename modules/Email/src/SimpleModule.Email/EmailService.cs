@@ -111,8 +111,8 @@ public partial class EmailService(
 
         var totalCount = await query.CountAsync();
 
-        var sortDescending = request.SortDescending ?? true;
-        query = request.SortBy switch
+        var sortDescending = request.EffectiveSortDescending;
+        query = request.EffectiveSortBy switch
         {
             "To" => sortDescending ? query.OrderByDescending(m => m.To) : query.OrderBy(m => m.To),
             "Subject" => sortDescending
@@ -126,8 +126,8 @@ public partial class EmailService(
                 : query.OrderBy(m => m.CreatedAt),
         };
 
-        var page = Math.Max(1, request.Page ?? 1);
-        var pageSize = Math.Clamp(request.PageSize ?? 20, 1, 100);
+        var page = request.EffectivePage;
+        var pageSize = request.EffectivePageSize;
 
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
@@ -155,8 +155,8 @@ public partial class EmailService(
             );
 
         var totalCount = await query.CountAsync();
-        var page = Math.Max(1, request.Page ?? 1);
-        var pageSize = Math.Clamp(request.PageSize ?? 20, 1, 100);
+        var page = request.EffectivePage;
+        var pageSize = request.EffectivePageSize;
 
         var items = await query
             .OrderBy(t => t.Name)
