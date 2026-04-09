@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Datasets.Contracts;
@@ -25,5 +26,23 @@ public class DatasetsDbContext(
         configurationBuilder
             .Properties<DatasetId>()
             .HaveConversion<DatasetId.EfCoreValueConverter, DatasetId.EfCoreValueComparer>();
+
+        // SQLite cannot ORDER BY DateTimeOffset natively. Store as ISO-8601 TEXT so
+        // lexicographic ordering matches chronological ordering. Other providers
+        // keep their native DateTimeOffset mapping.
+        var provider = DatabaseProviderDetector.Detect(
+            dbOptions.Value.DefaultConnection,
+            dbOptions.Value.Provider
+        );
+        if (provider == DatabaseProvider.Sqlite)
+        {
+            configurationBuilder
+                .Properties<DateTimeOffset>()
+                .HaveConversion<DateTimeOffsetToStringConverter>();
+
+            configurationBuilder
+                .Properties<DateTimeOffset?>()
+                .HaveConversion<DateTimeOffsetToStringConverter>();
+        }
     }
 }
