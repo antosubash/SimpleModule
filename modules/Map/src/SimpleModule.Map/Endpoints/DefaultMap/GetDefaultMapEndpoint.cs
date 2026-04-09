@@ -1,21 +1,20 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
-using SimpleModule.Core.Endpoints;
 using SimpleModule.Map.Contracts;
 
-namespace SimpleModule.Map.Endpoints.Maps;
+namespace SimpleModule.Map.Endpoints.DefaultMap;
 
-public class GetMapByIdEndpoint : IEndpoint
+public class GetDefaultMapEndpoint : IEndpoint
 {
-    public const string Route = MapConstants.Routes.GetMapById;
+    public const string Route = MapConstants.Routes.GetDefaultMap;
 
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                (SavedMapId id, IMapContracts map) =>
-                    CrudEndpoints.GetById(() => map.GetMapByIdAsync(id))
+                async (IMapContracts map) => TypedResults.Ok(await map.GetDefaultMapAsync())
             )
             .RequirePermission(MapPermissions.View);
 }
