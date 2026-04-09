@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.Settings;
 using SimpleModule.Map.Contracts;
+using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Map.Pages;
 
@@ -20,11 +22,27 @@ public class BrowseEndpoint : IViewEndpoint
     {
         app.MapGet(
                 Route,
-                async (IMapContracts maps, IOptions<MapModuleOptions> options) =>
+                async (
+                    IMapContracts maps,
+                    ISettingsContracts settings,
+                    IOptions<MapModuleOptions> options
+                ) =>
                 {
                     var mapTask = maps.GetDefaultMapAsync();
                     var sourcesTask = maps.GetAllLayerSourcesAsync();
                     var basemapsTask = maps.GetAllBasemapsAsync();
+                    var measureTask = settings.GetSettingAsync<bool?>(
+                        MapConstants.SettingKeys.EnableMeasureTools,
+                        SettingScope.Application
+                    );
+                    var exportTask = settings.GetSettingAsync<bool?>(
+                        MapConstants.SettingKeys.EnableExportPng,
+                        SettingScope.Application
+                    );
+                    var geolocateTask = settings.GetSettingAsync<bool?>(
+                        MapConstants.SettingKeys.EnableGeolocate,
+                        SettingScope.Application
+                    );
 
                     return Inertia.Render(
                         "Map/Browse",
@@ -35,9 +53,9 @@ public class BrowseEndpoint : IViewEndpoint
                             basemaps = await basemapsTask,
                             defaultStyleUrl = options.Value.BaseStyleUrl,
                             maxLayers = options.Value.MaxLayersPerMap,
-                            enableMeasure = options.Value.EnableMeasureTools,
-                            enableExportPng = options.Value.EnableExportPng,
-                            enableGeolocate = options.Value.EnableGeolocate,
+                            enableMeasure = await measureTask ?? true,
+                            enableExportPng = await exportTask ?? true,
+                            enableGeolocate = await geolocateTask ?? true,
                         }
                     );
                 }

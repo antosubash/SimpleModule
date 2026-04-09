@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Map.Contracts;
 using SimpleModule.Map.EntityConfigurations;
@@ -13,7 +14,7 @@ namespace SimpleModule.Map;
     RoutePrefix = MapConstants.RoutePrefix,
     ViewPrefix = MapConstants.ViewPrefix
 )]
-public class MapModule : IModule, IModuleServices, IModuleMenu
+public class MapModule : IModule, IModuleServices, IModuleMenu, IModuleSettings
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
@@ -57,5 +58,47 @@ public class MapModule : IModule, IModuleServices, IModuleMenu
                 Section = MenuSection.AppSidebar,
             }
         );
+    }
+
+    public void ConfigureSettings(ISettingsBuilder settings)
+    {
+        settings
+            .Add(
+                new SettingDefinition
+                {
+                    Key = MapConstants.SettingKeys.EnableMeasureTools,
+                    DisplayName = "Enable measure tools",
+                    Description = "Show the distance / area measure tools in the map viewer.",
+                    Group = "Map",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "true",
+                    Type = SettingType.Bool,
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = MapConstants.SettingKeys.EnableExportPng,
+                    DisplayName = "Enable PNG export",
+                    Description = "Show the canvas-to-PNG export button in the map viewer.",
+                    Group = "Map",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "true",
+                    Type = SettingType.Bool,
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = MapConstants.SettingKeys.EnableGeolocate,
+                    DisplayName = "Enable geolocate control",
+                    Description =
+                        "Show the browser geolocation control that centers the map on the user's position.",
+                    Group = "Map",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "true",
+                    Type = SettingType.Bool,
+                }
+            );
     }
 }

@@ -40,4 +40,16 @@ public static class MapConstants
         public const string Browse = "/";
         public const string Layers = "/layers";
     }
+
+    /// <summary>
+    /// Runtime-editable setting keys registered by <c>MapModule.ConfigureSettings</c>
+    /// and exposed in the generic admin settings UI. Values override the compile-time
+    /// defaults from <c>MapModuleOptions</c>.
+    /// </summary>
+    public static class SettingKeys
+    {
+        public const string EnableMeasureTools = "Map.EnableMeasureTools";
+        public const string EnableExportPng = "Map.EnableExportPng";
+        public const string EnableGeolocate = "Map.EnableGeolocate";
+    }
 }

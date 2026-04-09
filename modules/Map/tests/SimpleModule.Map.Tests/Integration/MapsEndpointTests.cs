@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using SimpleModule.Core.Settings;
 using SimpleModule.Map;
 using SimpleModule.Map.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
@@ -135,5 +136,33 @@ public class MapsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var response = await client.PutAsJsonAsync("/api/map/default", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task SettingDefinitions_ExposeMapToolToggles()
+    {
+        var client = factory.CreateAuthenticatedClient(Array.Empty<string>());
+
+        var response = await client.GetAsync(
+            $"/api/settings/definitions?scope={(int)SettingScope.Application}"
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var definitions = await response.Content.ReadFromJsonAsync<List<SettingDefinition>>();
+        definitions.Should().NotBeNull();
+        definitions!
+            .Should()
+            .Contain(d =>
+                d.Key == MapConstants.SettingKeys.EnableMeasureTools
+                && d.Group == "Map"
+                && d.Type == SettingType.Bool
+                && d.DefaultValue == "true"
+            );
+        definitions
+            .Should()
+            .Contain(d => d.Key == MapConstants.SettingKeys.EnableExportPng && d.Group == "Map");
+        definitions
+            .Should()
+            .Contain(d => d.Key == MapConstants.SettingKeys.EnableGeolocate && d.Group == "Map");
     }
 }
