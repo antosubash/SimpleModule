@@ -3,6 +3,9 @@ import {
   Button,
   Card,
   CardContent,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
   Container,
   Field,
   FieldGroup,
@@ -26,6 +29,21 @@ import type {
   UpdateDefaultMapRequest,
 } from '@/types';
 import MapCanvas from './components/MapCanvas';
+
+// Moves the item at `idx` by `delta` positions, rewriting `.order` on every
+// element so it matches its new array index. Returns a new array; returns the
+// original reference when the move would go out of bounds.
+function reorder<T extends { order: number }>(items: T[], idx: number, delta: number): T[] {
+  const target = idx + delta;
+  if (target < 0 || target >= items.length) return items;
+  const next = [...items];
+  [next[idx], next[target]] = [next[target], next[idx]];
+  return next.map((item, i) => ({ ...item, order: i }));
+}
+
+function removeAt<T extends { order: number }>(items: T[], idx: number): T[] {
+  return items.filter((_, i) => i !== idx).map((item, i) => ({ ...item, order: i }));
+}
 
 interface Props {
   map: SavedMap;
@@ -68,8 +86,6 @@ export default function Browse({
     [availableSources],
   );
 
-  // Basemaps attached to the default map, resolved to full Basemap definitions
-  // and ordered by persisted order. The first entry is the default shown on load.
   const availableBasemaps = useMemo(() => {
     return [...mapBasemaps]
       .sort((a, b) => a.order - b.order)
@@ -77,8 +93,8 @@ export default function Browse({
       .filter((b): b is Basemap => Boolean(b));
   }, [mapBasemaps, basemapById]);
 
-  // Locally-selected basemap for quick switching via the floating chip switcher.
-  // This does not persist; the persisted "default" is the first entry in mapBasemaps.
+  // Local selection for the floating basemap chip switcher; does not persist.
+  // The persisted default is the first entry in mapBasemaps.
   const [activeBasemapId, setActiveBasemapId] = useState<string | undefined>(
     () => availableBasemaps[0]?.id,
   );
@@ -133,25 +149,6 @@ export default function Browse({
     setPickerSourceId('');
   }
 
-  function removeLayer(idx: number) {
-    const next = layers.filter((_, i) => i !== idx);
-    next.forEach((l, i) => {
-      l.order = i;
-    });
-    setLayers(next);
-  }
-
-  function moveLayer(idx: number, delta: number) {
-    const next = [...layers];
-    const target = idx + delta;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    next.forEach((l, i) => {
-      l.order = i;
-    });
-    setLayers(next);
-  }
-
   function patchLayer(idx: number, patch: Partial<MapLayer>) {
     setLayers(layers.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
   }
@@ -159,8 +156,7 @@ export default function Browse({
   function addBasemap() {
     if (!pickerBasemapId) return;
     if (mapBasemaps.some((b) => b.basemapId === pickerBasemapId)) return;
-    const next = [...mapBasemaps, { basemapId: pickerBasemapId, order: mapBasemaps.length }];
-    setMapBasemaps(next);
+    setMapBasemaps([...mapBasemaps, { basemapId: pickerBasemapId, order: mapBasemaps.length }]);
     if (!activeBasemapId) {
       setActiveBasemapId(pickerBasemapId);
     }
@@ -168,37 +164,26 @@ export default function Browse({
   }
 
   function removeBasemap(idx: number) {
-    const removed = mapBasemaps[idx];
-    const next = mapBasemaps.filter((_, i) => i !== idx);
-    next.forEach((b, i) => {
-      b.order = i;
-    });
+    const removedId = mapBasemaps[idx]?.basemapId;
+    const next = removeAt(mapBasemaps, idx);
     setMapBasemaps(next);
-    if (removed && activeBasemapId === removed.basemapId) {
+    if (removedId && activeBasemapId === removedId) {
       setActiveBasemapId(next[0]?.basemapId);
     }
-  }
-
-  function moveBasemap(idx: number, delta: number) {
-    const next = [...mapBasemaps];
-    const target = idx + delta;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    next.forEach((b, i) => {
-      b.order = i;
-    });
-    setMapBasemaps(next);
   }
 
   async function handleSave() {
     setSaving(true);
     try {
+      // Read the current viewport from MapLibre so panning/zooming is persisted.
+      const live = mapInstanceRef.current;
+      const center = live?.getCenter();
       const body: UpdateDefaultMapRequest = {
-        centerLng: map.centerLng,
-        centerLat: map.centerLat,
-        zoom: map.zoom,
-        pitch: map.pitch,
-        bearing: map.bearing,
+        centerLng: center?.lng ?? map.centerLng,
+        centerLat: center?.lat ?? map.centerLat,
+        zoom: live?.getZoom() ?? map.zoom,
+        pitch: live?.getPitch() ?? map.pitch,
+        bearing: live?.getBearing() ?? map.bearing,
         baseStyleUrl: styleUrl,
         layers,
         basemaps: mapBasemaps,
@@ -281,8 +266,7 @@ export default function Browse({
                   const isActive = def?.id === activeBasemapId;
                   return (
                     <div
-                      // biome-ignore lint/suspicious/noArrayIndexKey: order is the stable identity here
-                      key={`${mb.basemapId}-${idx}`}
+                      key={mb.basemapId}
                       className={`border rounded p-2 flex items-center justify-between ${
                         isActive ? 'border-primary bg-primary/5' : 'border-border'
                       }`}
@@ -294,10 +278,18 @@ export default function Browse({
                         )}
                       </div>
                       <div className="flex gap-1 shrink-0">
-                        <Button size="sm" variant="secondary" onClick={() => moveBasemap(idx, -1)}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setMapBasemaps(reorder(mapBasemaps, idx, -1))}
+                        >
                           ↑
                         </Button>
-                        <Button size="sm" variant="secondary" onClick={() => moveBasemap(idx, 1)}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setMapBasemaps(reorder(mapBasemaps, idx, 1))}
+                        >
                           ↓
                         </Button>
                         <Button size="sm" variant="danger" onClick={() => removeBasemap(idx)}>
@@ -348,13 +340,25 @@ export default function Browse({
                           {src?.name ?? 'Unknown source'}
                         </div>
                         <div className="flex gap-1 shrink-0">
-                          <Button size="sm" variant="secondary" onClick={() => moveLayer(idx, -1)}>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setLayers(reorder(layers, idx, -1))}
+                          >
                             ↑
                           </Button>
-                          <Button size="sm" variant="secondary" onClick={() => moveLayer(idx, 1)}>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setLayers(reorder(layers, idx, 1))}
+                          >
                             ↓
                           </Button>
-                          <Button size="sm" variant="danger" onClick={() => removeLayer(idx)}>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => setLayers(removeAt(layers, idx))}
+                          >
                             ×
                           </Button>
                         </div>
@@ -435,31 +439,34 @@ export default function Browse({
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-3 space-y-2">
-                <button
-                  type="button"
-                  className="font-medium text-sm w-full text-left flex items-center justify-between"
-                  onClick={() => setAdvancedOpen((v) => !v)}
-                >
-                  <span>Advanced</span>
-                  <span className="text-xs text-text-muted">{advancedOpen ? '▲' : '▼'}</span>
-                </button>
-                {advancedOpen && (
-                  <FieldGroup>
-                    <Field>
-                      <Label htmlFor="style">Fallback base style URL</Label>
-                      <Input
-                        id="style"
-                        value={styleUrl}
-                        onChange={(e) => setStyleUrl(e.currentTarget.value)}
-                      />
-                      <p className="text-xs text-text-muted">Used when no basemap is selected.</p>
-                    </Field>
-                  </FieldGroup>
-                )}
-              </CardContent>
-            </Card>
+            <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+              <Card>
+                <CardContent className="p-3 space-y-2">
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      className="font-medium text-sm w-full text-left flex items-center justify-between"
+                    >
+                      <span>Advanced</span>
+                      <span className="text-xs text-text-muted">{advancedOpen ? '▲' : '▼'}</span>
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <FieldGroup>
+                      <Field>
+                        <Label htmlFor="style">Fallback base style URL</Label>
+                        <Input
+                          id="style"
+                          value={styleUrl}
+                          onChange={(e) => setStyleUrl(e.currentTarget.value)}
+                        />
+                        <p className="text-xs text-text-muted">Used when no basemap is selected.</p>
+                      </Field>
+                    </FieldGroup>
+                  </CollapsibleContent>
+                </CardContent>
+              </Card>
+            </Collapsible>
           </aside>
         )}
 
@@ -478,13 +485,11 @@ export default function Browse({
             }}
           />
 
-          {/* Status badge — top-left */}
           <div className="pointer-events-none absolute top-3 left-3 bg-surface/90 backdrop-blur rounded-md shadow px-3 py-1.5 text-xs text-text-muted border border-border">
             {visibleLayerCount} / {layers.length} layer{layers.length === 1 ? '' : 's'}
             {activeBasemap && ` · ${activeBasemap.name}`}
           </div>
 
-          {/* Empty state — centered when no layers and no basemaps */}
           {layers.length === 0 && availableBasemaps.length === 0 && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="bg-surface/90 backdrop-blur rounded-lg shadow-lg border border-border px-6 py-4 text-center">
@@ -496,7 +501,6 @@ export default function Browse({
             </div>
           )}
 
-          {/* Basemap chip switcher — bottom-left */}
           {availableBasemaps.length > 1 && (
             <div className="absolute bottom-3 left-3 bg-surface/90 backdrop-blur rounded-md shadow border border-border p-1.5 flex gap-1 flex-wrap max-w-[60%]">
               {availableBasemaps.map((b) => (
@@ -512,7 +516,6 @@ export default function Browse({
             </div>
           )}
 
-          {/* Export PNG — bottom-right */}
           {enableExportPng && (
             <div className="absolute bottom-3 right-3">
               <Button size="sm" variant="secondary" onClick={exportPng} className="shadow">

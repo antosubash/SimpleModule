@@ -28,38 +28,44 @@ public class BrowseEndpoint : IViewEndpoint
                     IOptions<MapModuleOptions> options
                 ) =>
                 {
-                    var mapTask = maps.GetDefaultMapAsync();
-                    var sourcesTask = maps.GetAllLayerSourcesAsync();
-                    var basemapsTask = maps.GetAllBasemapsAsync();
-                    var measureTask = settings.GetSettingAsync<bool?>(
-                        MapConstants.SettingKeys.EnableMeasureTools,
-                        SettingScope.Application
+                    var map = await maps.GetDefaultMapAsync();
+                    var sources = await maps.GetAllLayerSourcesAsync();
+                    var basemaps = await maps.GetAllBasemapsAsync();
+
+                    // Fetch all three Map tool toggles in one query instead of three.
+                    var toolSettings = await settings.GetSettingsAsync(
+                        new SettingsFilter { Scope = SettingScope.Application, Group = "Map" }
                     );
-                    var exportTask = settings.GetSettingAsync<bool?>(
-                        MapConstants.SettingKeys.EnableExportPng,
-                        SettingScope.Application
-                    );
-                    var geolocateTask = settings.GetSettingAsync<bool?>(
-                        MapConstants.SettingKeys.EnableGeolocate,
-                        SettingScope.Application
-                    );
+                    var toolsByKey = toolSettings.ToDictionary(s => s.Key, s => s.Value);
 
                     return Inertia.Render(
                         "Map/Browse",
                         new
                         {
-                            map = await mapTask,
-                            sources = await sourcesTask,
-                            basemaps = await basemapsTask,
+                            map,
+                            sources,
+                            basemaps,
                             defaultStyleUrl = options.Value.BaseStyleUrl,
                             maxLayers = options.Value.MaxLayersPerMap,
-                            enableMeasure = await measureTask ?? true,
-                            enableExportPng = await exportTask ?? true,
-                            enableGeolocate = await geolocateTask ?? true,
+                            enableMeasure = ResolveBool(
+                                toolsByKey,
+                                MapConstants.SettingKeys.EnableMeasureTools
+                            ),
+                            enableExportPng = ResolveBool(
+                                toolsByKey,
+                                MapConstants.SettingKeys.EnableExportPng
+                            ),
+                            enableGeolocate = ResolveBool(
+                                toolsByKey,
+                                MapConstants.SettingKeys.EnableGeolocate
+                            ),
                         }
                     );
                 }
             )
             .AllowAnonymous();
     }
+
+    private static bool ResolveBool(Dictionary<string, string?> values, string key) =>
+        values.TryGetValue(key, out var raw) && bool.TryParse(raw, out var parsed) ? parsed : true;
 }
