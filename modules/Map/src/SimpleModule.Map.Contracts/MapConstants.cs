@@ -6,6 +6,15 @@ public static class MapConstants
     public const string RoutePrefix = "/api/map";
     public const string ViewPrefix = "/map";
 
+    /// <summary>
+    /// Stable identity of the singleton default map. The Map module manages exactly
+    /// one map composition; this fixed id lets the service upsert it without a
+    /// dedicated "is default" column.
+    /// </summary>
+    public static readonly SavedMapId DefaultMapId = SavedMapId.From(
+        new Guid("00000000-0000-0000-0000-000000000001")
+    );
+
     public static class Routes
     {
         // Layer source CRUD
@@ -23,17 +32,12 @@ public static class MapConstants
         public const string UpdateBasemap = "/basemaps/{id}";
         public const string DeleteBasemap = "/basemaps/{id}";
 
-        // Saved map CRUD
-        public const string GetAllMaps = "/maps";
-        public const string GetMapById = "/maps/{id}";
-        public const string CreateMap = "/maps";
-        public const string UpdateMap = "/maps/{id}";
-        public const string DeleteMap = "/maps/{id}";
+        // Default map (singleton)
+        public const string GetDefaultMap = "/default";
+        public const string UpdateDefaultMap = "/default";
 
         // Views
         public const string Browse = "/";
         public const string Layers = "/layers";
-        public const string Edit = "/{id}/edit";
-        public const string View = "/{id}";
     }
 }

@@ -11,21 +11,35 @@ namespace Map.Tests.Integration;
 public class MapsEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
     [Fact]
-    public async Task GetAllMaps_WithViewPermission_Returns200()
+    public async Task GetDefaultMap_WithViewPermission_ReturnsSeededMap()
     {
         var client = factory.CreateAuthenticatedClient([MapPermissions.View]);
 
-        var response = await client.GetAsync("/api/map/maps");
+        var response = await client.GetAsync("/api/map/default");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var map = await response.Content.ReadFromJsonAsync<SavedMap>();
+        map.Should().NotBeNull();
+        map!.Id.Should().Be(MapConstants.DefaultMapId);
+        map.BaseStyleUrl.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]
-    public async Task CreateMap_WithLayers_PersistsAndRoundTrips()
+    public async Task GetDefaultMap_Unauthenticated_Returns401()
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/map/default");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateDefaultMap_WithLayers_PersistsAndRoundTrips()
     {
         var client = factory.CreateAuthenticatedClient([
             MapPermissions.View,
-            MapPermissions.Create,
+            MapPermissions.Update,
             MapPermissions.ManageSources,
             MapPermissions.ViewSources,
         ]);
@@ -41,10 +55,8 @@ public class MapsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var source = await sourceResponse.Content.ReadFromJsonAsync<LayerSource>();
         source.Should().NotBeNull();
 
-        var mapRequest = new CreateMapRequest
+        var update = new UpdateDefaultMapRequest
         {
-            Name = "Berlin Overview",
-            Description = "Test map composition",
             CenterLng = 13.405,
             CenterLat = 52.52,
             Zoom = 10,
@@ -63,17 +75,17 @@ public class MapsEndpointTests(SimpleModuleWebApplicationFactory factory)
             ],
         };
 
-        var response = await client.PostAsJsonAsync("/api/map/maps", mapRequest);
+        var response = await client.PutAsJsonAsync("/api/map/default", update);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var created = await response.Content.ReadFromJsonAsync<SavedMap>();
-        created.Should().NotBeNull();
-        created!.Name.Should().Be("Berlin Overview");
-        created.Layers.Should().HaveCount(1);
-        created.Layers[0].LayerSourceId.Should().Be(source.Id);
-        created.Layers[0].Opacity.Should().Be(0.8);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var saved = await response.Content.ReadFromJsonAsync<SavedMap>();
+        saved.Should().NotBeNull();
+        saved!.Id.Should().Be(MapConstants.DefaultMapId);
+        saved.Layers.Should().HaveCount(1);
+        saved.Layers[0].LayerSourceId.Should().Be(source.Id);
+        saved.Layers[0].Opacity.Should().Be(0.8);
 
-        var get = await client.GetAsync($"/api/map/maps/{created.Id.Value}");
+        var get = await client.GetAsync("/api/map/default");
         get.StatusCode.Should().Be(HttpStatusCode.OK);
         var fetched = await get.Content.ReadFromJsonAsync<SavedMap>();
         fetched!.Layers.Should().HaveCount(1);
@@ -81,50 +93,47 @@ public class MapsEndpointTests(SimpleModuleWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task CreateMap_WithInvalidLatitude_Returns400()
+    public async Task UpdateDefaultMap_WithInvalidLatitude_Returns400()
     {
-        var client = factory.CreateAuthenticatedClient([MapPermissions.Create]);
-        var request = new CreateMapRequest
+        var client = factory.CreateAuthenticatedClient([MapPermissions.Update]);
+        var request = new UpdateDefaultMapRequest
         {
-            Name = "Bad Map",
             CenterLng = 0,
             CenterLat = 200,
             Zoom = 5,
             BaseStyleUrl = "https://demotiles.maplibre.org/style.json",
         };
 
-        var response = await client.PostAsJsonAsync("/api/map/maps", request);
+        var response = await client.PutAsJsonAsync("/api/map/default", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
-    public async Task CreateMap_Unauthenticated_Returns401()
+    public async Task UpdateDefaultMap_Unauthenticated_Returns401()
     {
         var client = factory.CreateClient();
-        var request = new CreateMapRequest
+        var request = new UpdateDefaultMapRequest
         {
-            Name = "X",
             BaseStyleUrl = "https://demotiles.maplibre.org/style.json",
         };
 
-        var response = await client.PostAsJsonAsync("/api/map/maps", request);
+        var response = await client.PutAsJsonAsync("/api/map/default", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
-    public async Task UpdateMap_NonExistent_Returns404()
+    public async Task UpdateDefaultMap_WithoutUpdatePermission_Returns403()
     {
-        var client = factory.CreateAuthenticatedClient([MapPermissions.Update]);
-        var request = new UpdateMapRequest
+        var client = factory.CreateAuthenticatedClient([MapPermissions.View]);
+        var request = new UpdateDefaultMapRequest
         {
-            Name = "Nope",
             BaseStyleUrl = "https://demotiles.maplibre.org/style.json",
         };
 
-        var response = await client.PutAsJsonAsync($"/api/map/maps/{Guid.NewGuid()}", request);
+        var response = await client.PutAsJsonAsync("/api/map/default", request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

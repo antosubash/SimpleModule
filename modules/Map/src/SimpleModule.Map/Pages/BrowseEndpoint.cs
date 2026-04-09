@@ -7,6 +7,11 @@ using SimpleModule.Map.Contracts;
 
 namespace SimpleModule.Map.Pages;
 
+/// <summary>
+/// Renders the singleton default map. Layer sources, basemaps and tool flags are
+/// preloaded so the React page can show the map and let users add/remove overlays
+/// in a single screen — there is no longer a list of saved maps.
+/// </summary>
 public class BrowseEndpoint : IViewEndpoint
 {
     public const string Route = MapConstants.Routes.Browse;
@@ -16,14 +21,26 @@ public class BrowseEndpoint : IViewEndpoint
         app.MapGet(
                 Route,
                 async (IMapContracts maps, IOptions<MapModuleOptions> options) =>
-                    Inertia.Render(
+                {
+                    var mapTask = maps.GetDefaultMapAsync();
+                    var sourcesTask = maps.GetAllLayerSourcesAsync();
+                    var basemapsTask = maps.GetAllBasemapsAsync();
+
+                    return Inertia.Render(
                         "Map/Browse",
                         new
                         {
-                            maps = await maps.GetAllMapsAsync(),
+                            map = await mapTask,
+                            sources = await sourcesTask,
+                            basemaps = await basemapsTask,
                             defaultStyleUrl = options.Value.BaseStyleUrl,
+                            maxLayers = options.Value.MaxLayersPerMap,
+                            enableMeasure = options.Value.EnableMeasureTools,
+                            enableExportPng = options.Value.EnableExportPng,
+                            enableGeolocate = options.Value.EnableGeolocate,
                         }
-                    )
+                    );
+                }
             )
             .AllowAnonymous();
     }

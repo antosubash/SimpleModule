@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Datasets.Contracts;
@@ -10,9 +11,12 @@ namespace SimpleModule.Map;
 public partial class MapService(
     MapDbContext db,
     IDatasetsContracts datasets,
+    IOptions<MapModuleOptions> options,
     ILogger<MapService> logger
 ) : IMapContracts
 {
+    private MapModuleOptions Options => options.Value;
+
     /// <summary>
     /// Shared geometry factory configured for SRID 4326 (WGS84). NetTopologySuite uses
     /// this for all client-facing spatial values so PostGIS / SQL Server / SpatiaLite
@@ -158,77 +162,72 @@ public partial class MapService(
         LogLayerSourceDeleted(logger, id);
     }
 
-    // ---------- Saved maps ----------
+    // ---------- Default map (singleton) ----------
 
-    public async Task<IEnumerable<SavedMap>> GetAllMapsAsync() =>
-        await db
-            .SavedMaps.AsNoTracking()
-            .Include(m => m.Layers)
-            .Include(m => m.Basemaps)
-            .AsSplitQuery()
-            .OrderBy(m => m.Name)
-            .ToListAsync();
+    private const string DefaultMapName = "Default Map";
 
-    public async Task<SavedMap?> GetMapByIdAsync(SavedMapId id)
+    public async Task<SavedMap> GetDefaultMapAsync(CancellationToken ct = default)
     {
         var map = await db
             .SavedMaps.AsNoTracking()
             .Include(m => m.Layers)
             .Include(m => m.Basemaps)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (map is null)
+            .FirstOrDefaultAsync(m => m.Id == MapConstants.DefaultMapId, ct);
+
+        if (map is not null)
         {
-            LogMapNotFound(logger, id);
+            return map;
         }
 
-        return map;
-    }
-
-    public async Task<SavedMap> CreateMapAsync(CreateMapRequest request)
-    {
-        var map = new SavedMap
+        // Lazily seed from MapModuleOptions so the application always has exactly one map.
+        var seed = new SavedMap
         {
-            Id = SavedMapId.From(Guid.NewGuid()),
-            Name = request.Name,
-            Description = request.Description,
-            CenterLng = request.CenterLng,
-            CenterLat = request.CenterLat,
-            Center = PointFromLngLat(request.CenterLng, request.CenterLat),
-            Zoom = request.Zoom,
-            Pitch = request.Pitch,
-            Bearing = request.Bearing,
-            BaseStyleUrl = request.BaseStyleUrl,
-            Layers = request.Layers ?? [],
-            Basemaps = request.Basemaps ?? [],
+            Id = MapConstants.DefaultMapId,
+            Name = DefaultMapName,
+            Description = null,
+            CenterLng = Options.DefaultCenterLng,
+            CenterLat = Options.DefaultCenterLat,
+            Center = PointFromLngLat(Options.DefaultCenterLng, Options.DefaultCenterLat),
+            Zoom = Options.DefaultZoom,
+            Pitch = Options.DefaultPitch,
+            Bearing = Options.DefaultBearing,
+            BaseStyleUrl = Options.BaseStyleUrl,
         };
 
-        db.SavedMaps.Add(map);
-        await db.SaveChangesAsync();
+        db.SavedMaps.Add(seed);
+        await db.SaveChangesAsync(ct);
 
-        LogMapCreated(logger, map.Id, map.Name);
-        return map;
+        LogDefaultMapSeeded(logger);
+        return seed;
     }
 
-    public async Task<SavedMap> UpdateMapAsync(SavedMapId id, UpdateMapRequest request)
+    public async Task<SavedMap> UpdateDefaultMapAsync(
+        UpdateDefaultMapRequest request,
+        CancellationToken ct = default
+    )
     {
-        var map =
-            await db
-                .SavedMaps.Include(m => m.Layers)
-                .Include(m => m.Basemaps)
-                .AsSplitQuery()
-                .FirstOrDefaultAsync(m => m.Id == id)
-            ?? throw new NotFoundException("SavedMap", id);
+        var map = await db
+            .SavedMaps.Include(m => m.Layers)
+            .Include(m => m.Basemaps)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(m => m.Id == MapConstants.DefaultMapId, ct);
 
-        map.Name = request.Name;
-        map.Description = request.Description;
+        if (map is null)
+        {
+            map = new SavedMap { Id = MapConstants.DefaultMapId, Name = DefaultMapName };
+            db.SavedMaps.Add(map);
+        }
+
         map.CenterLng = request.CenterLng;
         map.CenterLat = request.CenterLat;
         map.Center = PointFromLngLat(request.CenterLng, request.CenterLat);
         map.Zoom = request.Zoom;
         map.Pitch = request.Pitch;
         map.Bearing = request.Bearing;
-        map.BaseStyleUrl = request.BaseStyleUrl;
+        map.BaseStyleUrl = string.IsNullOrWhiteSpace(request.BaseStyleUrl)
+            ? Options.BaseStyleUrl
+            : request.BaseStyleUrl;
 
         // Replace owned layers wholesale.
         map.Layers.Clear();
@@ -244,20 +243,10 @@ public partial class MapService(
             map.Basemaps.Add(basemap);
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(ct);
 
-        LogMapUpdated(logger, map.Id, map.Name);
+        LogDefaultMapUpdated(logger);
         return map;
-    }
-
-    public async Task DeleteMapAsync(SavedMapId id)
-    {
-        var map = await db.SavedMaps.FindAsync(id) ?? throw new NotFoundException("SavedMap", id);
-
-        db.SavedMaps.Remove(map);
-        await db.SaveChangesAsync();
-
-        LogMapDeleted(logger, id);
     }
 
     // ---------- Basemap catalog ----------
@@ -343,17 +332,14 @@ public partial class MapService(
     [LoggerMessage(Level = LogLevel.Information, Message = "LayerSource {Id} deleted")]
     private static partial void LogLayerSourceDeleted(ILogger logger, LayerSourceId id);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "SavedMap {Id} not found")]
-    private static partial void LogMapNotFound(ILogger logger, SavedMapId id);
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Default map seeded from MapModuleOptions"
+    )]
+    private static partial void LogDefaultMapSeeded(ILogger logger);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "SavedMap {Id} created: {Name}")]
-    private static partial void LogMapCreated(ILogger logger, SavedMapId id, string name);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "SavedMap {Id} updated: {Name}")]
-    private static partial void LogMapUpdated(ILogger logger, SavedMapId id, string name);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "SavedMap {Id} deleted")]
-    private static partial void LogMapDeleted(ILogger logger, SavedMapId id);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Default map updated")]
+    private static partial void LogDefaultMapUpdated(ILogger logger);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Basemap {Id} not found")]
     private static partial void LogBasemapNotFound(ILogger logger, BasemapId id);

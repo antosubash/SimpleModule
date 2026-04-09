@@ -39,19 +39,6 @@ export interface CreateLayerSourceRequest {
   metadata: Record<string, string>;
 }
 
-export interface CreateMapRequest {
-  name: string;
-  description: string;
-  centerLng: number;
-  centerLat: number;
-  zoom: number;
-  pitch: number;
-  bearing: number;
-  baseStyleUrl: string;
-  layers: MapLayer[];
-  basemaps: MapBasemap[];
-}
-
 export interface LayerSource {
   name: string;
   description: string;
@@ -110,6 +97,17 @@ export interface UpdateBasemapRequest {
   thumbnailUrl: string;
 }
 
+export interface UpdateDefaultMapRequest {
+  centerLng: number;
+  centerLat: number;
+  zoom: number;
+  pitch: number;
+  bearing: number;
+  baseStyleUrl: string;
+  layers: MapLayer[];
+  basemaps: MapBasemap[];
+}
+
 export interface UpdateLayerSourceRequest {
   name: string;
   description: string;
@@ -120,18 +118,5 @@ export interface UpdateLayerSourceRequest {
   maxZoom: number | null;
   bounds: any;
   metadata: Record<string, string>;
-}
-
-export interface UpdateMapRequest {
-  name: string;
-  description: string;
-  centerLng: number;
-  centerLat: number;
-  zoom: number;
-  pitch: number;
-  bearing: number;
-  baseStyleUrl: string;
-  layers: MapLayer[];
-  basemaps: MapBasemap[];
 }
 
