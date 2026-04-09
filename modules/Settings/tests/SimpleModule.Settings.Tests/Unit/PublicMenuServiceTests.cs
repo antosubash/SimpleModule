@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Caching;
 using SimpleModule.Database;
 using SimpleModule.Settings;
 using SimpleModule.Settings.Contracts;
@@ -15,6 +16,7 @@ public sealed class PublicMenuServiceTests : IDisposable
     private readonly SettingsDbContext _db;
     private readonly PublicMenuService _service;
     private readonly MemoryCache _cache;
+    private readonly MemoryCacheStore _cacheStore;
 
     public PublicMenuServiceTests()
     {
@@ -28,7 +30,12 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.Database.EnsureCreated();
 
         _cache = new MemoryCache(new MemoryCacheOptions());
-        _service = new PublicMenuService(_db, _cache, Options.Create(new SettingsModuleOptions()));
+        _cacheStore = new MemoryCacheStore(_cache);
+        _service = new PublicMenuService(
+            _db,
+            _cacheStore,
+            Options.Create(new SettingsModuleOptions())
+        );
     }
 
     [Fact]
@@ -218,6 +225,7 @@ public sealed class PublicMenuServiceTests : IDisposable
 
     public void Dispose()
     {
+        _cacheStore.Dispose();
         _cache.Dispose();
         _db.Dispose();
         GC.SuppressFinalize(this);

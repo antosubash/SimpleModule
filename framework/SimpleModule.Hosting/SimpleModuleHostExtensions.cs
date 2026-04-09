@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using SimpleModule.Core.Caching;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
@@ -69,6 +70,9 @@ public static class SimpleModuleHostExtensions
         }
 
         builder.Services.AddSingleton<IInertiaPageRenderer, HtmlFileInertiaPageRenderer>();
+
+        // Unified caching abstraction (ICacheStore) shared across all modules.
+        builder.Services.AddSimpleModuleCaching();
 
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
