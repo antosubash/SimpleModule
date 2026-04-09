@@ -35,23 +35,16 @@ test.describe('Passkeys flows', () => {
 
   // Clean up all passkeys before each test to start from a known state.
   // Passkeys accumulate across runs (file-based SQLite) and parallel suites.
-  test.beforeEach(async ({ page }) => {
-    const passkeys = new PasskeysPage(page);
-    await passkeys.goto();
-    // Re-query the DOM after each deletion rather than decrementing a local counter,
-    // so the loop stays correct if a delete is slower than expected.
-    let count = await passkeys.removeButtons.count();
-    while (count > 0) {
-      page.once('dialog', (dialog) => dialog.accept());
-      await passkeys.removeButtons.first().click();
-      count--;
-      if (count > 0) {
-        await expect(passkeys.removeButtons).toHaveCount(count, { timeout: 5_000 });
-      } else {
-        await expect(passkeys.emptyState).toBeVisible({ timeout: 5_000 });
-      }
-      count = await passkeys.removeButtons.count();
-    }
+  // We delete via the API rather than clicking Remove in the UI because the
+  // UI uses window.confirm() + router.reload(), which races with the test's
+  // own dialog handling when there are multiple passkeys to clean up.
+  test.beforeEach(async ({ request }) => {
+    const listRes = await request.get('/api/passkeys');
+    if (!listRes.ok()) return;
+    const existing = (await listRes.json()) as Array<{ credentialId: string }>;
+    await Promise.all(
+      existing.map((p) => request.delete(`/api/passkeys/${encodeURIComponent(p.credentialId)}`)),
+    );
   });
 
   test('register a passkey - it appears in list', async ({ page }) => {

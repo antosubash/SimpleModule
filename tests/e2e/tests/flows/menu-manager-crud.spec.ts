@@ -218,8 +218,14 @@ test.describe('Menu Manager - CRUD Flows', () => {
     await menuManager.deleteButton.waitFor({ state: 'visible' });
     await menuManager.deleteButton.click();
     const dialog = page.getByRole('alertdialog').or(page.getByRole('dialog'));
-    await dialog.getByRole('button', { name: 'Delete' }).click();
-    await page.waitForLoadState('networkidle');
+    await Promise.all([
+      page.waitForResponse(
+        (resp) =>
+          resp.url().includes('/api/settings/menus') &&
+          (resp.request().method() === 'DELETE' || resp.request().method() === 'PUT'),
+      ),
+      dialog.getByRole('button', { name: 'Delete' }).click(),
+    ]);
 
     // UI: verify removed from tree
     await expect(menuManager.treeItemButton(label)).not.toBeVisible();
