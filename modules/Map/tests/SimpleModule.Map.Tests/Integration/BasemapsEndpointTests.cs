@@ -75,11 +75,11 @@ public class BasemapsEndpointTests(SimpleModuleWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task CreateMap_WithBasemaps_PersistsAndRoundTrips()
+    public async Task UpdateDefaultMap_WithBasemaps_PersistsAndRoundTrips()
     {
         var client = factory.CreateAuthenticatedClient([
             MapPermissions.View,
-            MapPermissions.Create,
+            MapPermissions.Update,
             MapPermissions.ManageSources,
         ]);
 
@@ -88,9 +88,8 @@ public class BasemapsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var basemaps = await basemapsResponse.Content.ReadFromJsonAsync<List<Basemap>>();
         var basemap = basemaps!.First();
 
-        var request = new CreateMapRequest
+        var request = new UpdateDefaultMapRequest
         {
-            Name = "Map with basemap switcher",
             CenterLng = 0,
             CenterLat = 0,
             Zoom = 2,
@@ -98,11 +97,11 @@ public class BasemapsEndpointTests(SimpleModuleWebApplicationFactory factory)
             Basemaps = [new MapBasemap { BasemapId = basemap.Id, Order = 0 }],
         };
 
-        var response = await client.PostAsJsonAsync("/api/map/maps", request);
+        var response = await client.PutAsJsonAsync("/api/map/default", request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var created = await response.Content.ReadFromJsonAsync<SavedMap>();
-        created!.Basemaps.Should().HaveCount(1);
-        created.Basemaps[0].BasemapId.Should().Be(basemap.Id);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var saved = await response.Content.ReadFromJsonAsync<SavedMap>();
+        saved!.Basemaps.Should().HaveCount(1);
+        saved.Basemaps[0].BasemapId.Should().Be(basemap.Id);
     }
 }

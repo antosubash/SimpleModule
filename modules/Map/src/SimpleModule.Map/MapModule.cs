@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Map.Contracts;
 using SimpleModule.Map.EntityConfigurations;
@@ -13,7 +14,7 @@ namespace SimpleModule.Map;
     RoutePrefix = MapConstants.RoutePrefix,
     ViewPrefix = MapConstants.ViewPrefix
 )]
-public class MapModule : IModule, IModuleServices, IModuleMenu
+public class MapModule : IModule, IModuleServices, IModuleMenu, IModuleSettings
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
@@ -38,7 +39,7 @@ public class MapModule : IModule, IModuleServices, IModuleMenu
         menus.Add(
             new MenuItem
             {
-                Label = "Maps",
+                Label = "Map",
                 Url = MapConstants.ViewPrefix,
                 Icon =
                     """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>""",
@@ -57,5 +58,47 @@ public class MapModule : IModule, IModuleServices, IModuleMenu
                 Section = MenuSection.AppSidebar,
             }
         );
+    }
+
+    public void ConfigureSettings(ISettingsBuilder settings)
+    {
+        settings
+            .Add(
+                new SettingDefinition
+                {
+                    Key = MapConstants.SettingKeys.EnableMeasureTools,
+                    DisplayName = "Enable measure tools",
+                    Description = "Show the distance / area measure tools in the map viewer.",
+                    Group = "Map",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "true",
+                    Type = SettingType.Bool,
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = MapConstants.SettingKeys.EnableExportPng,
+                    DisplayName = "Enable PNG export",
+                    Description = "Show the canvas-to-PNG export button in the map viewer.",
+                    Group = "Map",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "true",
+                    Type = SettingType.Bool,
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = MapConstants.SettingKeys.EnableGeolocate,
+                    DisplayName = "Enable geolocate control",
+                    Description =
+                        "Show the browser geolocation control that centers the map on the user's position.",
+                    Group = "Map",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "true",
+                    Type = SettingType.Bool,
+                }
+            );
     }
 }

@@ -1,18 +1,12 @@
 using SimpleModule.Core.Validation;
 using SimpleModule.Map.Contracts;
 
-namespace SimpleModule.Map.Endpoints.Maps;
+namespace SimpleModule.Map.Endpoints.DefaultMap;
 
-public static class CreateMapRequestValidator
+public static class UpdateDefaultMapRequestValidator
 {
-    public static ValidationResult Validate(CreateMapRequest request, int maxLayers) =>
+    public static ValidationResult Validate(UpdateDefaultMapRequest request, int maxLayers) =>
         new ValidationBuilder()
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Name is required.")
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.BaseStyleUrl),
-                "BaseStyleUrl",
-                "Base style URL is required."
-            )
             .AddErrorIf(
                 request.CenterLat is < -90 or > 90,
                 "CenterLat",

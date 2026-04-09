@@ -10,5 +10,6 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.Map.Contracts\SimpleModule.Map.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Datasets\src\SimpleModule.Datasets.Contracts\SimpleModule.Datasets.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Settings\src\SimpleModule.Settings.Contracts\SimpleModule.Settings.Contracts.csproj" />
   </ItemGroup>
 </Project>

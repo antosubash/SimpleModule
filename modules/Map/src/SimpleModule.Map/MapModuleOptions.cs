@@ -44,15 +44,6 @@ public class MapModuleOptions : IModuleOptions
     /// <summary>Hard cap on layer source URL length. Default: 2048.</summary>
     public int MaxLayerSourceUrlLength { get; set; } = 2048;
 
-    /// <summary>Enable measure (distance/area) tools in the viewer. Default: true.</summary>
-    public bool EnableMeasureTools { get; set; } = true;
-
-    /// <summary>Enable canvas-to-PNG export in the viewer. Default: true.</summary>
-    public bool EnableExportPng { get; set; } = true;
-
-    /// <summary>Enable browser geolocation control. Default: true.</summary>
-    public bool EnableGeolocate { get; set; } = true;
-
     /// <summary>
     /// Map spatial geometry columns (<c>Coverage</c>, <c>Center</c>) onto provider-native
     /// spatial types (PostGIS, SQL Server geometry, SpatiaLite). Disable this only when
