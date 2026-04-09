@@ -13,12 +13,20 @@ public interface IMapContracts
     Task<LayerSource> UpdateLayerSourceAsync(LayerSourceId id, UpdateLayerSourceRequest request);
     Task DeleteLayerSourceAsync(LayerSourceId id);
 
-    // Saved maps
-    Task<IEnumerable<SavedMap>> GetAllMapsAsync();
-    Task<SavedMap?> GetMapByIdAsync(SavedMapId id);
-    Task<SavedMap> CreateMapAsync(CreateMapRequest request);
-    Task<SavedMap> UpdateMapAsync(SavedMapId id, UpdateMapRequest request);
-    Task DeleteMapAsync(SavedMapId id);
+    /// <summary>
+    /// Returns the singleton default map. Creates it lazily on first access using
+    /// <c>MapModuleOptions</c> defaults so the application always has exactly one map.
+    /// </summary>
+    Task<SavedMap> GetDefaultMapAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Upserts the singleton default map. The fixed <see cref="MapConstants.DefaultMapId"/>
+    /// is preserved across calls; layers and basemaps are replaced wholesale.
+    /// </summary>
+    Task<SavedMap> UpdateDefaultMapAsync(
+        UpdateDefaultMapRequest request,
+        CancellationToken ct = default
+    );
 
     // Basemap catalog
     Task<IEnumerable<Basemap>> GetAllBasemapsAsync();

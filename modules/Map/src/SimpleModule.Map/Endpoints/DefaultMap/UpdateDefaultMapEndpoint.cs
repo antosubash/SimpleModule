@@ -7,19 +7,23 @@ using SimpleModule.Core.Endpoints;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Map.Contracts;
 
-namespace SimpleModule.Map.Endpoints.Maps;
+namespace SimpleModule.Map.Endpoints.DefaultMap;
 
-public class CreateMapEndpoint : IEndpoint
+public class UpdateDefaultMapEndpoint : IEndpoint
 {
-    public const string Route = MapConstants.Routes.CreateMap;
-    public const string Method = "POST";
+    public const string Route = MapConstants.Routes.UpdateDefaultMap;
+    public const string Method = "PUT";
 
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPost(
+        app.MapPut(
                 Route,
-                (CreateMapRequest request, IMapContracts map, IOptions<MapModuleOptions> options) =>
+                (
+                    UpdateDefaultMapRequest request,
+                    IMapContracts map,
+                    IOptions<MapModuleOptions> options
+                ) =>
                 {
-                    var validation = CreateMapRequestValidator.Validate(
+                    var validation = UpdateDefaultMapRequestValidator.Validate(
                         request,
                         options.Value.MaxLayersPerMap
                     );
@@ -28,11 +32,8 @@ public class CreateMapEndpoint : IEndpoint
                         throw new ValidationException(validation.Errors);
                     }
 
-                    return CrudEndpoints.Create(
-                        () => map.CreateMapAsync(request),
-                        m => $"{MapConstants.RoutePrefix}/maps/{m.Id}"
-                    );
+                    return CrudEndpoints.Update(() => map.UpdateDefaultMapAsync(request));
                 }
             )
-            .RequirePermission(MapPermissions.Create);
+            .RequirePermission(MapPermissions.Update);
 }

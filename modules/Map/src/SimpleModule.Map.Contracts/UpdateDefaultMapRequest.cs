@@ -3,11 +3,14 @@ using SimpleModule.Core;
 
 namespace SimpleModule.Map.Contracts;
 
+/// <summary>
+/// Upsert payload for the singleton default map. Carries viewport state, the
+/// fallback base style, the ordered overlay layers and the catalog basemaps the
+/// switcher exposes. Name/Description are managed server-side.
+/// </summary>
 [Dto]
-public class UpdateMapRequest
+public class UpdateDefaultMapRequest
 {
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
     public double CenterLng { get; set; }
     public double CenterLat { get; set; }
     public double Zoom { get; set; }

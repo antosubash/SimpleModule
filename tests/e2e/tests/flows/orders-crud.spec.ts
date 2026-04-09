@@ -17,12 +17,12 @@ test.describe('Orders CRUD', () => {
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext({ storageState: authFile });
     const page = await context.newPage();
-    const response = await page.request.get('https://localhost:5001/api/users');
+    const response = await page.request.get('/api/users');
     const users = await response.json();
     adminUserId = users[0].id;
 
     // Track order count before tests
-    const ordersRes = await page.request.get('https://localhost:5001/api/orders');
+    const ordersRes = await page.request.get('/api/orders');
     const orders = await ordersRes.json();
     orderCountBefore = orders.length;
 
