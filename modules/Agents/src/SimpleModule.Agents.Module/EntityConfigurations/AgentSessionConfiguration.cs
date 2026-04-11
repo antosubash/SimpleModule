@@ -12,6 +12,8 @@ public sealed class AgentSessionConfiguration : IEntityTypeConfiguration<AgentSe
         builder.Property(e => e.AgentName).IsRequired().HasMaxLength(256);
         builder.Property(e => e.UserId).HasMaxLength(256);
         builder.Property(e => e.CreatedAt).IsRequired();
+        builder.Property(e => e.UpdatedAt).IsRequired();
+        builder.Property(e => e.ConcurrencyStamp).HasMaxLength(64);
         builder.Property(e => e.LastMessageAt).IsRequired();
 
         builder.HasIndex(e => e.AgentName);

@@ -17,6 +17,7 @@ public class ConversationConfiguration : IEntityTypeConfiguration<Conversation>
         // SQLite cannot ORDER BY DateTimeOffset natively; convert to binary long.
         builder.Property(c => c.CreatedAt).HasConversion<DateTimeOffsetToBinaryConverter>();
         builder.Property(c => c.UpdatedAt).HasConversion<DateTimeOffsetToBinaryConverter>();
+        builder.Property(c => c.ConcurrencyStamp).HasMaxLength(64);
         builder.HasIndex(c => new { c.UserId, c.UpdatedAt });
 
         builder
@@ -36,6 +37,8 @@ public class ChatMessageConfiguration : IEntityTypeConfiguration<ChatMessage>
         builder.Property(m => m.Content).IsRequired();
         builder.Property(m => m.Role).HasConversion<int>();
         builder.Property(m => m.CreatedAt).HasConversion<DateTimeOffsetToBinaryConverter>();
+        builder.Property(m => m.UpdatedAt).HasConversion<DateTimeOffsetToBinaryConverter>();
+        builder.Property(m => m.ConcurrencyStamp).HasMaxLength(64);
         builder.HasIndex(m => new { m.ConversationId, m.CreatedAt });
     }
 }

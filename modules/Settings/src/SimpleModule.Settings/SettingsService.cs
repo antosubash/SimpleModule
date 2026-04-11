@@ -92,7 +92,6 @@ public sealed partial class SettingsService(
         if (existing is not null)
         {
             existing.Value = value;
-            existing.UpdatedAt = DateTimeOffset.UtcNow;
         }
         else
         {
@@ -103,7 +102,6 @@ public sealed partial class SettingsService(
                     Value = value,
                     Scope = scope,
                     UserId = scope == SettingScope.User ? userId : null,
-                    UpdatedAt = DateTimeOffset.UtcNow,
                 }
             );
         }

@@ -14,6 +14,7 @@ public class PublicMenuItemEntityConfiguration : IEntityTypeConfiguration<Public
         builder.Property(m => m.PageRoute).HasMaxLength(256);
         builder.Property(m => m.Icon).HasMaxLength(4000);
         builder.Property(m => m.CssClass).HasMaxLength(500);
+        builder.Property(m => m.ConcurrencyStamp).HasMaxLength(64);
 
         builder
             .HasOne(m => m.Parent)

@@ -1,8 +1,9 @@
+using SimpleModule.Core.Entities;
+
 namespace SimpleModule.PageBuilder.Contracts;
 
-public class Page
+public class Page : FullAuditableEntity<PageId>
 {
-    public PageId Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
@@ -12,8 +13,5 @@ public class Page
     public string? OgImage { get; set; }
     public bool IsPublished { get; set; }
     public int Order { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
     public List<PageTag> Tags { get; set; } = [];
-    public DateTime? DeletedAt { get; set; }
 }

@@ -1,8 +1,9 @@
+using SimpleModule.Core.Entities;
+
 namespace SimpleModule.Settings.Entities;
 
-public class PublicMenuItemEntity
+public class PublicMenuItemEntity : Entity<int>
 {
-    public int Id { get; set; }
     public int? ParentId { get; set; }
     public PublicMenuItemEntity? Parent { get; set; }
     public List<PublicMenuItemEntity> Children { get; set; } = [];
@@ -22,6 +23,4 @@ public class PublicMenuItemEntity
     public bool IsVisible { get; set; } = true;
     public bool IsHomePage { get; set; }
     public int SortOrder { get; set; }
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

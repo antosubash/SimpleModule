@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.RateLimiting.Contracts;
@@ -27,5 +28,17 @@ public class RateLimitingDbContext(
                 RateLimitRuleId.EfCoreValueConverter,
                 RateLimitRuleId.EfCoreValueComparer
             >();
+
+        // SQLite cannot ORDER BY or compare DateTimeOffset expressions natively.
+        // Store as long (binary ticks) only when running against SQLite.
+        if (dbOptions.Value.DetectProvider("RateLimiting") == DatabaseProvider.Sqlite)
+        {
+            configurationBuilder
+                .Properties<DateTimeOffset>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+            configurationBuilder
+                .Properties<DateTimeOffset?>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+        }
     }
 }

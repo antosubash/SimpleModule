@@ -13,6 +13,7 @@ public class JobProgressConfiguration : IEntityTypeConfiguration<JobProgress>
         builder.Property(j => j.JobTypeName).IsRequired().HasMaxLength(500);
         builder.Property(j => j.ModuleName).IsRequired().HasMaxLength(100);
         builder.Property(j => j.ProgressMessage).HasMaxLength(1000);
+        builder.Property(j => j.ConcurrencyStamp).HasMaxLength(64);
         builder.HasIndex(j => j.ModuleName);
     }
 }

@@ -136,8 +136,6 @@ public sealed partial class ProgressFlushService(
 
                 existing.Logs = JsonSerializer.Serialize(logs);
             }
-
-            existing.UpdatedAt = DateTimeOffset.UtcNow;
         }
 
         await db.SaveChangesAsync(ct);

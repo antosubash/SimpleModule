@@ -92,8 +92,6 @@ public sealed class PublicMenuService(
             IsVisible = request.IsVisible,
             IsHomePage = request.IsHomePage,
             SortOrder = maxSortOrder + 1,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
         db.PublicMenuItems.Add(entity);
@@ -119,7 +117,6 @@ public sealed class PublicMenuService(
         entity.OpenInNewTab = request.OpenInNewTab;
         entity.IsVisible = request.IsVisible;
         entity.IsHomePage = request.IsHomePage;
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync();
         await InvalidateCache();
@@ -147,7 +144,6 @@ public sealed class PublicMenuService(
             {
                 entity.ParentId = item.ParentId;
                 entity.SortOrder = item.SortOrder;
-                entity.UpdatedAt = DateTimeOffset.UtcNow;
             }
         }
 
@@ -163,7 +159,6 @@ public sealed class PublicMenuService(
         if (entity is not null)
         {
             entity.IsHomePage = true;
-            entity.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
         }
 
@@ -184,7 +179,6 @@ public sealed class PublicMenuService(
         foreach (var hp in homePages)
         {
             hp.IsHomePage = false;
-            hp.UpdatedAt = DateTimeOffset.UtcNow;
         }
     }
 

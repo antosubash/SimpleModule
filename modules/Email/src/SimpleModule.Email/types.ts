@@ -9,7 +9,6 @@ export interface CreateEmailTemplateRequest {
 }
 
 export interface EmailMessage {
-  id: number;
   to: string;
   cc: string;
   bcc: string;
@@ -22,8 +21,11 @@ export interface EmailMessage {
   retryCount: number;
   templateSlug: string;
   provider: string;
-  createdAt: string;
   sentAt: string | null;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface EmailStats {
@@ -50,15 +52,16 @@ export interface DailyCount {
 }
 
 export interface EmailTemplate {
-  id: number;
   name: string;
   slug: string;
   subject: string;
   body: string;
   isHtml: boolean;
   defaultReplyTo: string;
+  id: number;
   createdAt: string;
-  updatedAt: string | null;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface QueryEmailMessagesRequest {

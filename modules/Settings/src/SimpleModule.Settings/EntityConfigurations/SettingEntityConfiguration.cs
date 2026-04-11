@@ -14,7 +14,9 @@ public class SettingEntityConfiguration : IEntityTypeConfiguration<SettingEntity
         builder.Property(s => s.Value).IsRequired(false);
         builder.Property(s => s.Scope).HasConversion<int>();
         builder.Property(s => s.UserId).IsRequired(false).HasMaxLength(450);
+        builder.Property(s => s.CreatedAt).IsRequired();
         builder.Property(s => s.UpdatedAt).IsRequired();
+        builder.Property(s => s.ConcurrencyStamp).HasMaxLength(64);
 
         builder
             .HasIndex(s => new

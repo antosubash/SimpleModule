@@ -20,11 +20,15 @@ public class JobQueueEntryConfiguration : IEntityTypeConfiguration<JobQueueEntry
         builder.Property(e => e.AttemptCount).IsRequired();
         builder.Property(e => e.Error);
         builder.Property(e => e.CreatedAt).IsRequired();
+        builder.Property(e => e.UpdatedAt).IsRequired();
+        builder.Property(e => e.ConcurrencyStamp).HasMaxLength(64);
         builder.Property(e => e.CompletedAt);
         builder.Property(e => e.CronExpression).HasMaxLength(100);
         builder.Property(e => e.RecurringName).HasMaxLength(200);
 
-        builder.HasIndex(e => new { e.State, e.ScheduledAt }).HasDatabaseName("IX_JobQueueEntries_State_ScheduledAt");
+        builder
+            .HasIndex(e => new { e.State, e.ScheduledAt })
+            .HasDatabaseName("IX_JobQueueEntries_State_ScheduledAt");
         builder.HasIndex(e => e.RecurringName).HasDatabaseName("IX_JobQueueEntries_RecurringName");
     }
 }

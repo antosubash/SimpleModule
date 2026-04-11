@@ -1,12 +1,12 @@
+using SimpleModule.Core.Entities;
+
 namespace SimpleModule.Chat.Contracts;
 
-public class ChatMessage
+public class ChatMessage : Entity<ChatMessageId>
 {
-    public ChatMessageId Id { get; set; }
     public ConversationId ConversationId { get; set; }
     public ChatRole Role { get; set; }
     public string Content { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
 }
 
 public enum ChatRole
