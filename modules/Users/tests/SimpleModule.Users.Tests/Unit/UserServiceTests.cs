@@ -2,7 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using SimpleModule.Core.Events;
+using SimpleModule.Tests.Shared.Fakes;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
 
@@ -200,14 +200,5 @@ public sealed class UserServiceTests
         var act = () => _sut.DeleteUserAsync(UserId.From("999"));
 
         await act.Should().ThrowAsync<SimpleModule.Core.Exceptions.NotFoundException>();
-    }
-
-    private sealed class TestEventBus : IEventBus
-    {
-        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-            where T : IEvent => Task.CompletedTask;
-
-        public void PublishInBackground<T>(T @event)
-            where T : IEvent { }
     }
 }

@@ -1,57 +1,47 @@
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using SimpleModule.Core.Events;
 
 namespace SimpleModule.Core.Tests.Events;
 
 /// <summary>
-/// Integration tests verifying cross-module event flows work correctly
-/// using the full DI container and event bus pipeline (handlers, pipeline behaviors,
-/// background dispatch).
+/// Integration tests verifying cross-module event flows work correctly using the
+/// full DI container and event bus pipeline (handlers, pipeline behaviors, background
+/// dispatch).
 /// </summary>
 public sealed class EventBusIntegrationTests
 {
     private sealed record TestEvent(string Value) : IEvent;
 
-    private sealed record AnotherEvent(int Number) : IEvent;
-
-    #region Handlers
-
-    private sealed class TrackingHandler : IEventHandler<TestEvent>
+    // Distinct marker types let DI register three independent handler instances
+    // without copy-pasting three identical handler classes.
+    private interface IHandlerSlot
     {
-        public List<TestEvent> ReceivedEvents { get; } = [];
-        public bool WasCalled => ReceivedEvents.Count > 0;
-
-        public Task HandleAsync(TestEvent @event, CancellationToken cancellationToken)
-        {
-            ReceivedEvents.Add(@event);
-            return Task.CompletedTask;
-        }
+        List<TestEvent> ReceivedEvents { get; }
     }
 
-    private sealed class SecondTrackingHandler : IEventHandler<TestEvent>
+    private sealed class SlotOne : IHandlerSlot
     {
         public List<TestEvent> ReceivedEvents { get; } = [];
-        public bool WasCalled => ReceivedEvents.Count > 0;
-
-        public Task HandleAsync(TestEvent @event, CancellationToken cancellationToken)
-        {
-            ReceivedEvents.Add(@event);
-            return Task.CompletedTask;
-        }
     }
 
-    private sealed class ThirdTrackingHandler : IEventHandler<TestEvent>
+    private sealed class SlotTwo : IHandlerSlot
     {
         public List<TestEvent> ReceivedEvents { get; } = [];
-        public bool WasCalled => ReceivedEvents.Count > 0;
+    }
 
+    private sealed class SlotThree : IHandlerSlot
+    {
+        public List<TestEvent> ReceivedEvents { get; } = [];
+    }
+
+    private sealed class TrackingHandler<TSlot>(TSlot slot) : IEventHandler<TestEvent>
+        where TSlot : IHandlerSlot
+    {
         public Task HandleAsync(TestEvent @event, CancellationToken cancellationToken)
         {
-            ReceivedEvents.Add(@event);
+            slot.ReceivedEvents.Add(@event);
             return Task.CompletedTask;
         }
     }
@@ -67,9 +57,15 @@ public sealed class EventBusIntegrationTests
         }
     }
 
-    #endregion
-
-    #region Pipeline Behaviors
+    private sealed class SignallingHandler(TaskCompletionSource<TestEvent> tcs)
+        : IEventHandler<TestEvent>
+    {
+        public Task HandleAsync(TestEvent @event, CancellationToken cancellationToken)
+        {
+            tcs.TrySetResult(@event);
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class TrackingPipelineBehavior : IEventPipelineBehavior<TestEvent>
     {
@@ -90,19 +86,11 @@ public sealed class EventBusIntegrationTests
         }
     }
 
-    #endregion
-
-    /// <summary>
-    /// Creates a fully configured <see cref="ServiceProvider"/> with the EventBus,
-    /// BackgroundEventChannel, and BackgroundEventDispatcher registered, plus any
-    /// additional service registrations provided by the caller.
-    /// </summary>
     private static ServiceProvider BuildProvider(Action<IServiceCollection> configure)
     {
         var services = new ServiceCollection();
 
-        // Core event infrastructure
-        services.AddSingleton<BackgroundEventChannel>(sp => new BackgroundEventChannel(
+        services.AddSingleton<BackgroundEventChannel>(_ => new BackgroundEventChannel(
             NullLogger<BackgroundEventChannel>.Instance
         ));
         services.AddSingleton<IEventBus>(sp => new EventBus(
@@ -115,11 +103,7 @@ public sealed class EventBusIntegrationTests
             sp.GetRequiredService<IServiceScopeFactory>(),
             NullLogger<BackgroundEventDispatcher>.Instance
         ));
-        services.AddSingleton<IHostedService>(sp =>
-            sp.GetRequiredService<BackgroundEventDispatcher>()
-        );
 
-        // Caller-specific registrations (handlers, behaviors, etc.)
         configure(services);
 
         return services.BuildServiceProvider();
@@ -128,74 +112,62 @@ public sealed class EventBusIntegrationTests
     [Fact]
     public async Task Event_PublishAsync_InvokesRegisteredHandler()
     {
-        // Arrange
-        var handler = new TrackingHandler();
+        var slot = new SlotOne();
         await using var provider = BuildProvider(services =>
         {
-            services.AddSingleton<IEventHandler<TestEvent>>(handler);
+            services.AddSingleton(slot);
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotOne>>();
         });
         var bus = provider.GetRequiredService<IEventBus>();
-        var testEvent = new TestEvent("integration-test");
 
-        // Act
-        await bus.PublishAsync(testEvent);
+        await bus.PublishAsync(new TestEvent("integration-test"));
 
-        // Assert
-        handler.WasCalled.Should().BeTrue();
-        handler.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("integration-test");
+        slot.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("integration-test");
     }
 
     [Fact]
     public async Task Event_PublishAsync_MultipleHandlers_AllInvoked()
     {
-        // Arrange
-        var handler1 = new TrackingHandler();
-        var handler2 = new SecondTrackingHandler();
-        var handler3 = new ThirdTrackingHandler();
+        var slot1 = new SlotOne();
+        var slot2 = new SlotTwo();
+        var slot3 = new SlotThree();
         await using var provider = BuildProvider(services =>
         {
-            services.AddSingleton<IEventHandler<TestEvent>>(handler1);
-            services.AddSingleton<IEventHandler<TestEvent>>(handler2);
-            services.AddSingleton<IEventHandler<TestEvent>>(handler3);
+            services.AddSingleton(slot1);
+            services.AddSingleton(slot2);
+            services.AddSingleton(slot3);
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotOne>>();
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotTwo>>();
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotThree>>();
         });
         var bus = provider.GetRequiredService<IEventBus>();
-        var testEvent = new TestEvent("multi-handler");
 
-        // Act
-        await bus.PublishAsync(testEvent);
+        await bus.PublishAsync(new TestEvent("multi-handler"));
 
-        // Assert
-        handler1.WasCalled.Should().BeTrue();
-        handler1.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("multi-handler");
-
-        handler2.WasCalled.Should().BeTrue();
-        handler2.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("multi-handler");
-
-        handler3.WasCalled.Should().BeTrue();
-        handler3.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("multi-handler");
+        slot1.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("multi-handler");
+        slot2.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("multi-handler");
+        slot3.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("multi-handler");
     }
 
     [Fact]
     public async Task Event_PublishAsync_HandlerThrows_OtherHandlersStillRun()
     {
-        // Arrange: throwing handler sandwiched between two successful handlers
-        var handlerBefore = new TrackingHandler();
+        var slotBefore = new SlotOne();
+        var slotAfter = new SlotTwo();
         var throwingHandler = new ThrowingHandler();
-        var handlerAfter = new SecondTrackingHandler();
 
         await using var provider = BuildProvider(services =>
         {
-            services.AddSingleton<IEventHandler<TestEvent>>(handlerBefore);
+            services.AddSingleton(slotBefore);
+            services.AddSingleton(slotAfter);
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotOne>>();
             services.AddSingleton<IEventHandler<TestEvent>>(throwingHandler);
-            services.AddSingleton<IEventHandler<TestEvent>>(handlerAfter);
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotTwo>>();
         });
         var bus = provider.GetRequiredService<IEventBus>();
-        var testEvent = new TestEvent("partial-failure");
 
-        // Act
-        var act = () => bus.PublishAsync(testEvent);
+        var act = () => bus.PublishAsync(new TestEvent("partial-failure"));
 
-        // Assert: AggregateException is thrown with the failing handler's exception
         var ex = await act.Should().ThrowAsync<AggregateException>();
         ex.Which.InnerExceptions.Should()
             .ContainSingle()
@@ -204,18 +176,13 @@ public sealed class EventBusIntegrationTests
             .Which.Message.Should()
             .Be("Handler intentionally failed");
 
-        // Both non-throwing handlers still executed
-        handlerBefore.WasCalled.Should().BeTrue();
-        handlerBefore
+        slotBefore
             .ReceivedEvents.Should()
             .ContainSingle()
             .Which.Value.Should()
             .Be("partial-failure");
-
         throwingHandler.WasCalled.Should().BeTrue();
-
-        handlerAfter.WasCalled.Should().BeTrue();
-        handlerAfter
+        slotAfter
             .ReceivedEvents.Should()
             .ContainSingle()
             .Which.Value.Should()
@@ -225,43 +192,25 @@ public sealed class EventBusIntegrationTests
     [Fact]
     public async Task Event_PublishInBackground_EventuallyInvokesHandler()
     {
-        // Arrange
-        var handler = new TrackingHandler();
+        var tcs = new TaskCompletionSource<TestEvent>(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
         await using var provider = BuildProvider(services =>
         {
-            services.AddSingleton<IEventHandler<TestEvent>>(handler);
+            services.AddSingleton(tcs);
+            services.AddSingleton<IEventHandler<TestEvent>, SignallingHandler>();
         });
         var bus = provider.GetRequiredService<IEventBus>();
-        var channel = provider.GetRequiredService<BackgroundEventChannel>();
-
-        // Start the background dispatcher so it reads from the channel
         var dispatcher = provider.GetRequiredService<BackgroundEventDispatcher>();
         using var cts = new CancellationTokenSource();
         await dispatcher.StartAsync(cts.Token);
 
         try
         {
-            var testEvent = new TestEvent("background-event");
+            bus.PublishInBackground(new TestEvent("background-event"));
 
-            // Act: fire-and-forget publish
-            bus.PublishInBackground(testEvent);
-
-            // Assert: wait for the background dispatcher to process the event.
-            // We poll briefly rather than sleeping a fixed duration to keep the test fast.
-            var deadline = DateTime.UtcNow.AddSeconds(5);
-            while (!handler.WasCalled && DateTime.UtcNow < deadline)
-            {
-                await Task.Delay(50);
-            }
-
-            handler
-                .WasCalled.Should()
-                .BeTrue("the background dispatcher should have invoked the handler");
-            handler
-                .ReceivedEvents.Should()
-                .ContainSingle()
-                .Which.Value.Should()
-                .Be("background-event");
+            var received = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            received.Value.Should().Be("background-event");
         }
         finally
         {
@@ -273,29 +222,23 @@ public sealed class EventBusIntegrationTests
     [Fact]
     public async Task Event_PipelineBehavior_WrapsHandlerExecution()
     {
-        // Arrange
         var behavior = new TrackingPipelineBehavior();
-        var handler = new TrackingHandler();
+        var slot = new SlotOne();
 
         await using var provider = BuildProvider(services =>
         {
             services.AddSingleton<IEventPipelineBehavior<TestEvent>>(behavior);
-            services.AddSingleton<IEventHandler<TestEvent>>(handler);
+            services.AddSingleton(slot);
+            services.AddSingleton<IEventHandler<TestEvent>, TrackingHandler<SlotOne>>();
         });
         var bus = provider.GetRequiredService<IEventBus>();
-        var testEvent = new TestEvent("pipeline-test");
 
-        // Act
-        await bus.PublishAsync(testEvent);
+        await bus.PublishAsync(new TestEvent("pipeline-test"));
 
-        // Assert: the pipeline behavior was invoked and wrapped the handler
         behavior.BeforeHandlerCalled.Should().BeTrue();
         behavior.AfterHandlerCalled.Should().BeTrue();
         behavior.ReceivedEvent.Should().NotBeNull();
         behavior.ReceivedEvent!.Value.Should().Be("pipeline-test");
-
-        // The handler was also called (the behavior called next())
-        handler.WasCalled.Should().BeTrue();
-        handler.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("pipeline-test");
+        slot.ReceivedEvents.Should().ContainSingle().Which.Value.Should().Be("pipeline-test");
     }
 }

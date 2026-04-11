@@ -78,6 +78,11 @@ public static class SimpleModuleHostExtensions
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();
+        // Lazy<IEventBus> lets services break factory-lambda cycles
+        // (e.g. SettingsService ↔ AuditingEventBus via ISettingsContracts).
+        builder.Services.AddScoped(sp => new Lazy<IEventBus>(() =>
+            sp.GetRequiredService<IEventBus>()
+        ));
         builder.Services.AddScoped<InertiaSharedData>();
 
         // Required by EntityInterceptor to access the current HTTP context
@@ -108,7 +113,10 @@ public static class SimpleModuleHostExtensions
                     HealthCheckConstants.DatabaseCheckName,
                     tags: [HealthCheckConstants.ReadyTag]
                 )
-                .AddCheck<ModuleHealthCheck>("modules", tags: [HealthCheckConstants.ReadyTag]);
+                .AddCheck<ModuleHealthCheck>(
+                    HealthCheckConstants.ModulesCheckName,
+                    tags: [HealthCheckConstants.ReadyTag]
+                );
         }
 
         if (options.EnableDevTools && builder.Environment.IsDevelopment())
@@ -238,6 +246,7 @@ public static class SimpleModuleHostExtensions
                     new HealthCheckOptions
                     {
                         Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
+                        ResponseWriter = WriteHealthCheckResponse,
                     }
                 )
                 .AllowAnonymous();

@@ -186,8 +186,7 @@ public sealed class UserAdminService(
             await userManager.AddToRolesAsync(user, toAdd);
         }
 
-        var updatedRoles = await userManager.GetRolesAsync(user);
-        await eventBus.PublishAsync(new UserRolesChangedEvent(id, updatedRoles.ToList()));
+        await eventBus.PublishAsync(new UserRolesChangedEvent(id, newRoles.ToList()));
     }
 
     public async Task ResetPasswordAsync(UserId id, string newPassword)

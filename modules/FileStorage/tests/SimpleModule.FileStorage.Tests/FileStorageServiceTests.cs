@@ -2,9 +2,9 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Events;
 using SimpleModule.Database;
 using SimpleModule.FileStorage.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 
 namespace SimpleModule.FileStorage.Tests;
 
@@ -377,13 +377,4 @@ public sealed class FileStorageServiceTests : IDisposable
     }
 
     public void Dispose() => _db.Dispose();
-
-    private sealed class TestEventBus : IEventBus
-    {
-        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-            where T : IEvent => Task.CompletedTask;
-
-        public void PublishInBackground<T>(T @event)
-            where T : IEvent { }
-    }
 }

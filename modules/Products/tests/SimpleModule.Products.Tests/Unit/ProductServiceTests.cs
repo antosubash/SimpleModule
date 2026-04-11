@@ -2,11 +2,11 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Products;
 using SimpleModule.Products.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 
 namespace Products.Tests.Unit;
 
@@ -124,14 +124,5 @@ public sealed class ProductServiceTests : IDisposable
         var act = () => _sut.DeleteProductAsync(ProductId.From(99999));
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*99999*not found*");
-    }
-
-    private sealed class TestEventBus : IEventBus
-    {
-        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-            where T : IEvent => Task.CompletedTask;
-
-        public void PublishInBackground<T>(T @event)
-            where T : IEvent { }
     }
 }

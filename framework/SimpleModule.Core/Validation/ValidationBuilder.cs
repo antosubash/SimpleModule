@@ -81,8 +81,10 @@ public sealed partial class ValidationBuilder
         string? message = null
     )
     {
+        // Static Regex.IsMatch caches a small set of compiled regexes internally,
+        // which is fine for the handful of patterns typical callers use.
         return AddErrorIf(
-            value is not null && !Regex.IsMatch(value, pattern),
+            value is not null && !Regex.IsMatch(value, pattern, RegexOptions.Compiled),
             field,
             message ?? $"{field} has an invalid format."
         );

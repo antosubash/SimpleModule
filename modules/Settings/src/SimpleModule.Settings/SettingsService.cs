@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
@@ -16,7 +15,7 @@ public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
     ICacheStore cache,
-    IServiceProvider serviceProvider,
+    Lazy<IEventBus> eventBus,
     IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
@@ -118,10 +117,9 @@ public sealed partial class SettingsService(
         await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
         LogSettingUpdated(key, scope);
 
-        // Resolve IEventBus lazily to avoid a circular dependency when it's decorated
-        // by AuditingEventBus (which itself depends on ISettingsContracts).
-        var eventBus = serviceProvider.GetRequiredService<IEventBus>();
-        await eventBus.PublishAsync(new SettingChangedEvent(key, oldValue, value, scope));
+        // IEventBus is Lazy to break the SettingsService → IEventBus → AuditingEventBus
+        // → ISettingsContracts → SettingsService cycle at construction time.
+        await eventBus.Value.PublishAsync(new SettingChangedEvent(key, oldValue, value, scope));
     }
 
     public async Task DeleteSettingAsync(string key, SettingScope scope, string? userId = null)
@@ -139,8 +137,7 @@ public sealed partial class SettingsService(
             await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
             LogSettingDeleted(key, scope);
 
-            var eventBus = serviceProvider.GetRequiredService<IEventBus>();
-            eventBus.PublishInBackground(new SettingDeletedEvent(key, scope));
+            eventBus.Value.PublishInBackground(new SettingDeletedEvent(key, scope));
         }
     }
 
