@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.FileStorage.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 using SimpleModule.Tests.Shared.Storage;
 
 namespace SimpleModule.FileStorage.Tests;
@@ -37,6 +38,7 @@ public sealed class FileStorageServiceTests : IDisposable
         _service = new FileStorageService(
             _db,
             _storageProvider,
+            new TestEventBus(),
             NullLogger<FileStorageService>.Instance
         );
     }
@@ -353,6 +355,7 @@ public sealed class FileStorageServiceTests : IDisposable
         var failingService = new FileStorageService(
             _db,
             failingProvider,
+            new TestEventBus(),
             NullLogger<FileStorageService>.Instance
         );
 

@@ -97,8 +97,8 @@ router.on('finish', () => {
   }
 });
 
-// Handle non-Inertia error responses (404, 500, etc.) by showing a toast
-// instead of the default "must receive a valid Inertia response" error.
+// Non-Inertia error responses (404, 500, etc.) would otherwise trigger Inertia's
+// default "must receive a valid Inertia response" full-page error.
 router.on('httpException', (event) => {
   event.preventDefault();
 
@@ -115,30 +115,99 @@ router.on('httpException', (event) => {
     parsed = body;
   }
   const message = parsed?.detail ?? parsed?.title ?? `Server error (${response.status})`;
-  showErrorToast(message);
+  showToast({ variant: 'error', title: 'Error', message, autoDismissMs: 8000 });
 });
 
-function showErrorToast(message: string) {
+router.on('exception', (event) => {
+  event.preventDefault();
+  showToast({
+    variant: 'error',
+    title: 'Error',
+    message: 'Network error. Please check your connection and try again.',
+    autoDismissMs: 8000,
+  });
+});
+
+let offlineToast: HTMLDivElement | null = null;
+
+window.addEventListener('offline', () => {
+  if (offlineToast) return;
+  offlineToast = showToast({
+    variant: 'warning',
+    title: 'Warning',
+    message: 'You are offline. Some features may be unavailable.',
+    onClose: () => {
+      offlineToast = null;
+    },
+  });
+});
+
+window.addEventListener('online', () => {
+  if (offlineToast) {
+    offlineToast.remove();
+    offlineToast = null;
+  }
+  showToast({
+    variant: 'success',
+    title: 'Success',
+    message: 'You are back online.',
+    autoDismissMs: 5000,
+  });
+});
+
+type ToastVariant = 'error' | 'warning' | 'success';
+
+interface ToastOptions {
+  variant: ToastVariant;
+  title: string;
+  message: string;
+  autoDismissMs?: number;
+  onClose?: () => void;
+}
+
+const toastStyles: Record<ToastVariant, { color: string; role: 'alert' | 'status' }> = {
+  error: { color: 'danger', role: 'alert' },
+  warning: { color: 'warning', role: 'alert' },
+  success: { color: 'success', role: 'status' },
+};
+
+function showToast({
+  variant,
+  title,
+  message,
+  autoDismissMs,
+  onClose,
+}: ToastOptions): HTMLDivElement {
+  const { color, role } = toastStyles[variant];
   const container = document.createElement('div');
-  container.role = 'alert';
-  container.className =
-    'fixed bottom-4 right-4 z-[100] max-w-md rounded-xl border border-danger/20 bg-danger-bg p-4 text-danger-text shadow-lg animate-in slide-in-from-bottom-full';
+  container.role = role;
+  container.className = `fixed bottom-4 right-4 z-[100] max-w-md rounded-xl border border-${color}/20 bg-${color}-bg p-4 text-${color}-text shadow-lg animate-in slide-in-from-bottom-full`;
   container.innerHTML = `
     <div class="flex items-start gap-3">
       <div class="flex-1">
-        <p class="text-sm font-semibold">Error</p>
+        <p class="text-sm font-semibold"></p>
         <p class="text-sm opacity-90"></p>
       </div>
-      <button class="rounded-lg p-1 text-danger-text/60 hover:text-danger-text" aria-label="Close">
+      <button class="rounded-lg p-1 text-${color}-text/60 hover:text-${color}-text" aria-label="Close">
         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
       </button>
     </div>
   `;
-  const msg = container.querySelector('p.opacity-90');
-  if (msg) msg.textContent = message;
-  container.querySelector('button')?.addEventListener('click', () => container.remove());
+  const titleEl = container.querySelector('p.font-semibold');
+  if (titleEl) titleEl.textContent = title;
+  const msgEl = container.querySelector('p.opacity-90');
+  if (msgEl) msgEl.textContent = message;
+
+  const dismiss = () => {
+    container.remove();
+    onClose?.();
+  };
+  container.querySelector('button')?.addEventListener('click', dismiss);
   document.body.appendChild(container);
-  setTimeout(() => container.remove(), 8000);
+  if (autoDismissMs) {
+    setTimeout(dismiss, autoDismissMs);
+  }
+  return container;
 }
 
 createInertiaApp({

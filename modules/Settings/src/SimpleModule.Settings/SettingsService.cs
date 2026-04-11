@@ -3,8 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
+using SimpleModule.Settings.Contracts.Events;
 
 namespace SimpleModule.Settings;
 
@@ -12,6 +14,7 @@ public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
     ICacheStore cache,
+    Lazy<IEventBus> eventBus,
     IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
@@ -88,6 +91,8 @@ public sealed partial class SettingsService(
             && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
         );
 
+        var oldValue = existing?.Value;
+
         if (existing is not null)
         {
             existing.Value = value;
@@ -108,6 +113,10 @@ public sealed partial class SettingsService(
         await db.SaveChangesAsync();
         await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
         LogSettingUpdated(key, scope);
+
+        // IEventBus is Lazy to break the SettingsService → IEventBus → AuditingEventBus
+        // → ISettingsContracts → SettingsService cycle at construction time.
+        await eventBus.Value.PublishAsync(new SettingChangedEvent(key, oldValue, value, scope));
     }
 
     public async Task DeleteSettingAsync(string key, SettingScope scope, string? userId = null)
@@ -124,6 +133,8 @@ public sealed partial class SettingsService(
             await db.SaveChangesAsync();
             await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
             LogSettingDeleted(key, scope);
+
+            eventBus.Value.PublishInBackground(new SettingDeletedEvent(key, scope));
         }
     }
 

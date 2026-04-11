@@ -12,6 +12,7 @@ using SimpleModule.Core.Caching;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Health;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.RateLimiting;
@@ -77,6 +78,11 @@ public static class SimpleModuleHostExtensions
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();
+        // Lazy<IEventBus> lets services break factory-lambda cycles
+        // (e.g. SettingsService ↔ AuditingEventBus via ISettingsContracts).
+        builder.Services.AddScoped(sp => new Lazy<IEventBus>(() =>
+            sp.GetRequiredService<IEventBus>()
+        ));
         builder.Services.AddScoped<InertiaSharedData>();
 
         // Required by EntityInterceptor to access the current HTTP context
@@ -105,6 +111,10 @@ public static class SimpleModuleHostExtensions
                 .Services.AddHealthChecks()
                 .AddCheck<DatabaseHealthCheck>(
                     HealthCheckConstants.DatabaseCheckName,
+                    tags: [HealthCheckConstants.ReadyTag]
+                )
+                .AddCheck<ModuleHealthCheck>(
+                    HealthCheckConstants.ModulesCheckName,
                     tags: [HealthCheckConstants.ReadyTag]
                 );
         }
@@ -236,6 +246,7 @@ public static class SimpleModuleHostExtensions
                     new HealthCheckOptions
                     {
                         Predicate = check => check.Tags.Contains(HealthCheckConstants.ReadyTag),
+                        ResponseWriter = WriteHealthCheckResponse,
                     }
                 )
                 .AllowAnonymous();
@@ -329,5 +340,32 @@ public static class SimpleModuleHostExtensions
                 await next();
             }
         );
+    }
+
+    private static async Task WriteHealthCheckResponse(
+        HttpContext context,
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport report
+    )
+    {
+        context.Response.ContentType = "application/json";
+
+        var entries = report
+            .Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                data = e.Value.Data,
+            })
+            .ToList();
+
+        var response = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds,
+            checks = entries,
+        };
+
+        await context.Response.WriteAsJsonAsync(response);
     }
 }

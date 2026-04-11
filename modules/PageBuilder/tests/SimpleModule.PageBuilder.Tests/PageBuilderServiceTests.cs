@@ -6,6 +6,7 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.PageBuilder;
 using SimpleModule.PageBuilder.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 
 namespace PageBuilder.Tests;
 
@@ -31,7 +32,11 @@ public sealed class PageBuilderServiceTests : IDisposable
         _db = new PageBuilderDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new PageBuilderService(_db, NullLogger<PageBuilderService>.Instance);
+        _sut = new PageBuilderService(
+            _db,
+            new TestEventBus(),
+            NullLogger<PageBuilderService>.Instance
+        );
     }
 
     public void Dispose() => _db.Dispose();
