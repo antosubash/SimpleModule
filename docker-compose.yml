@@ -38,7 +38,6 @@ services:
       DOTNET_ENVIRONMENT: Development
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
-      # Forced to Consumer by AddSimpleModuleWorker, set here for visibility.
       BackgroundJobs__WorkerMode: Consumer
     volumes:
       - storage_data:/app/storage

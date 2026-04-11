@@ -1,35 +1,26 @@
-# =============================================================================
 # SimpleModule.Worker — background-job consumer.
 #
-# Kept deliberately separate from the main Dockerfile (which builds the Host /
-# ASP.NET process). The Worker image is the only image that runs IModuleJob
-# handlers, so it's the only image that needs native GIS tooling (GDAL,
-# SpatiaLite, tippecanoe) required by the Datasets module's jobs.
+# Kept separate from the main Dockerfile (which builds the Host / ASP.NET
+# process). The Worker is the only image that runs IModuleJob handlers, so
+# it's the only image that needs native GIS tooling (GDAL, SpatiaLite,
+# tippecanoe) required by the Datasets module's jobs.
 #
 # Build from the repo root:
 #   docker build -f Dockerfile.worker -t simplemodule-worker .
-# =============================================================================
 
-# =============================================================================
-# Stage 1: Base build image with .NET SDK + Node.js
-#
-# Node is required in the build stage (though not at runtime) because the
-# ExtractDtoTypeScript / ExtractRoutes targets in SimpleModule.Hosting.targets
-# shell out to `node tools/extract-*.mjs` after CoreCompile. The scripts only
-# use Node stdlib so we don't need `npm ci` — just the node binary.
-# =============================================================================
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /src
 
+# Node is needed in the build stage (not at runtime) because the
+# ExtractDtoTypeScript / ExtractRoutes targets in SimpleModule.Hosting.targets
+# shell out to `node tools/extract-*.mjs` after CoreCompile. The scripts only
+# use Node stdlib, so no `npm ci` — just the node binary.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# =============================================================================
-# Stage 2: .NET restore (cached unless .csproj / props files change)
-# =============================================================================
 FROM base AS restore
 WORKDIR /src
 
@@ -110,9 +101,6 @@ COPY modules/Datasets/src/SimpleModule.Datasets/*.csproj modules/Datasets/src/Si
 
 RUN dotnet restore template/SimpleModule.Worker/SimpleModule.Worker.csproj
 
-# =============================================================================
-# Stage 3: Publish Worker
-# =============================================================================
 FROM restore AS build
 WORKDIR /src
 
@@ -124,11 +112,9 @@ RUN dotnet publish template/SimpleModule.Worker/SimpleModule.Worker.csproj \
     --no-restore \
     -p:ErrorOnDuplicatePublishOutputFiles=false
 
-# =============================================================================
-# Stage 4: Tippecanoe builder (felt/tippecanoe is not in Debian repos so we
-# build it from source. Output is ~5 MB of binaries that depend only on
-# libsqlite3-0 + zlib1g, both present in the runtime image.)
-# =============================================================================
+# felt/tippecanoe is not in Debian repos, so build it from source. Output is
+# ~5 MB of binaries depending only on libsqlite3-0 + zlib1g — both present in
+# the runtime image.
 FROM debian:bookworm-slim AS tippecanoe-builder
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -142,20 +128,15 @@ RUN apt-get update \
     && make -C /tmp/tippecanoe -j"$(nproc)" \
     && make -C /tmp/tippecanoe install PREFIX=/opt/tippecanoe
 
-# =============================================================================
-# Stage 5: Runtime (slim image, non-root user, with native GIS tooling)
-# =============================================================================
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
 WORKDIR /app
 
-# Native GIS tooling required by the Datasets module's background jobs:
+# Native GIS tooling for the Datasets module's background jobs:
 #   gdal-bin                   → gdal_translate, gdalwarp, ogr2ogr, ogrinfo
-#                                (raster → COG, vector reprojection,
-#                                 Shapefile / KML / GeoPackage ↔ GeoJSON)
 #   libsqlite3-mod-spatialite  → SpatiaLite extension for GeoPackage reads
-#   unzip                      → extracting .kmz and zipped Shapefile bundles
-# gdal-bin is large (~300 MB with deps: libproj, libgeos, libnetcdf, etc.)
-# but is the standard toolchain for every non-GeoJSON dataset format.
+#   unzip                      → .kmz and zipped Shapefile bundles
+# gdal-bin pulls libproj / libgeos / libnetcdf (~300 MB), unavoidable for
+# real GIS support.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -166,15 +147,13 @@ RUN apt-get update \
     && groupadd --system --gid 1001 workergroup \
     && useradd --system --uid 1001 --gid workergroup --create-home workeruser
 
-# Tippecanoe CLI (vector → PMTiles / MBTiles) from the builder stage above.
-# Copying the whole staging bin/ picks up every binary felt/tippecanoe ships
+# Copy the whole staging bin/ to pick up every binary felt/tippecanoe ships
 # (tippecanoe, tippecanoe-decode, tippecanoe-overzoom, tippecanoe-enumerate,
 # tippecanoe-json-tool, tile-join) without hard-coding names.
 COPY --from=tippecanoe-builder /opt/tippecanoe/bin/ /usr/local/bin/
 
 COPY --from=build --chown=workeruser:workergroup /app/publish .
 
-# Writable directory for SQLite database and local storage (mirrors Host).
 RUN mkdir -p /app/data /app/storage && chown workeruser:workergroup /app/data /app/storage
 
 USER workeruser

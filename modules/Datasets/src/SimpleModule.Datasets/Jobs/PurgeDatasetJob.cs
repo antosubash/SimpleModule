@@ -29,7 +29,8 @@ public sealed partial class PurgeDatasetJob(
 
         // The soft-delete query filter hides deleted rows by default — bypass it.
         var row = await db
-            .Datasets.IgnoreQueryFilters()
+            .Datasets.AsNoTracking()
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(d => d.Id == datasetId, cancellationToken);
         if (row is null)
         {
@@ -37,45 +38,31 @@ public sealed partial class PurgeDatasetJob(
             return;
         }
 
-        var deleted = 0;
-
+        var paths = new List<string>();
         if (!string.IsNullOrWhiteSpace(row.StoragePath))
         {
-            if (await storage.DeleteAsync(row.StoragePath, cancellationToken))
-            {
-                deleted++;
-            }
+            paths.Add(row.StoragePath);
         }
-
         if (!string.IsNullOrWhiteSpace(row.NormalizedPath))
         {
-            if (await storage.DeleteAsync(row.NormalizedPath, cancellationToken))
-            {
-                deleted++;
-            }
+            paths.Add(row.NormalizedPath);
         }
-
-        var metadata = DeserializeMetadata(row.MetadataJson);
-        if (metadata is not null)
+        if (!string.IsNullOrWhiteSpace(row.MetadataJson))
         {
-            foreach (var derivative in metadata.Derivatives)
+            var metadata = JsonSerializer.Deserialize<DatasetMetadata>(row.MetadataJson);
+            if (metadata is not null)
             {
-                if (string.IsNullOrWhiteSpace(derivative.StoragePath))
-                {
-                    continue;
-                }
-                if (await storage.DeleteAsync(derivative.StoragePath, cancellationToken))
-                {
-                    deleted++;
-                }
+                paths.AddRange(
+                    metadata
+                        .Derivatives.Select(d => d.StoragePath)
+                        .Where(p => !string.IsNullOrWhiteSpace(p))
+                );
             }
         }
 
-        LogDatasetPurged(logger, payload.DatasetId, deleted);
+        await Task.WhenAll(paths.Select(p => storage.DeleteAsync(p, cancellationToken)));
+        LogDatasetPurged(logger, payload.DatasetId, paths.Count);
     }
-
-    private static DatasetMetadata? DeserializeMetadata(string? json) =>
-        string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<DatasetMetadata>(json);
 
     [LoggerMessage(
         Level = LogLevel.Warning,
@@ -85,7 +72,7 @@ public sealed partial class PurgeDatasetJob(
 
     [LoggerMessage(
         Level = LogLevel.Information,
-        Message = "Dataset {Id} purged: {BlobCount} blob(s) deleted from storage"
+        Message = "Dataset {Id} purged: {BlobCount} storage path(s) processed"
     )]
     private static partial void LogDatasetPurged(ILogger logger, Guid id, int blobCount);
 }
