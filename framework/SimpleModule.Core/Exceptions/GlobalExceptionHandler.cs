@@ -68,13 +68,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
 
         httpContext.Response.StatusCode = statusCode;
 
-        // Inertia requests get an Inertia error page response
         if (httpContext.Request.Headers.ContainsKey("X-Inertia"))
         {
             return await WriteInertiaErrorAsync(httpContext, statusCode, title, detail);
         }
 
-        // API/non-Inertia requests get ProblemDetails JSON
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,

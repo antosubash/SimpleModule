@@ -1,6 +1,12 @@
 import type * as React from 'react';
 import { DarkModeToggle } from '../layouts/dark-mode-toggle';
 
+export interface ErrorPageProps {
+  status?: number;
+  title?: string;
+  message?: string;
+}
+
 interface ErrorPageLayoutProps {
   statusCode: number;
   icon: React.ReactNode;

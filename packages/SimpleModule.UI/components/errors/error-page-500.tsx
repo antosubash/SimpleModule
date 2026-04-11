@@ -1,12 +1,6 @@
-import { ErrorPageLayout } from './error-page-layout';
+import { ErrorPageLayout, type ErrorPageProps } from './error-page-layout';
 
-interface Props {
-  status?: number;
-  title?: string;
-  message?: string;
-}
-
-export default function ErrorPage500({ message }: Props) {
+export default function ErrorPage500({ message }: ErrorPageProps) {
   return (
     <ErrorPageLayout
       statusCode={500}

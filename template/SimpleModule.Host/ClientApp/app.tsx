@@ -143,17 +143,16 @@ function showErrorToast(message: string) {
   setTimeout(() => container.remove(), 8000);
 }
 
+const ERROR_PAGES: Record<string, { default: React.ComponentType }> = {
+  'Error/404': { default: ErrorPage404 },
+  'Error/403': { default: ErrorPage403 },
+  'Error/500': { default: ErrorPage500 },
+};
+
 createInertiaApp({
   resolve: async (name) => {
-    // Error pages are bundled in ClientApp, not in module pages.js files
-    const errorPages: Record<string, { default: React.ComponentType }> = {
-      'Error/404': { default: ErrorPage404 },
-      'Error/403': { default: ErrorPage403 },
-      'Error/500': { default: ErrorPage500 },
-    };
-
-    if (name in errorPages) {
-      return errorPages[name];
+    if (name in ERROR_PAGES) {
+      return ERROR_PAGES[name];
     }
 
     try {
