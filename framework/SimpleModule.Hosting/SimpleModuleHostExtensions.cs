@@ -149,6 +149,7 @@ public static class SimpleModuleHostExtensions
 
         app.UseForwardedHeaders();
         app.UseExceptionHandler();
+        app.UseStatusCodePagesWithReExecute("/error/{0}");
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (options.EnableSwagger && app.Environment.IsDevelopment())
@@ -240,6 +241,37 @@ public static class SimpleModuleHostExtensions
                 )
                 .AllowAnonymous();
         }
+
+        app.MapGet(
+                "/error/{statusCode:int}",
+                (int statusCode) =>
+                {
+                    var (title, message) = statusCode switch
+                    {
+                        403 => (
+                            ErrorMessages.ForbiddenTitle,
+                            ErrorMessages.DefaultForbiddenMessage
+                        ),
+                        404 => (ErrorMessages.NotFoundTitle, ErrorMessages.DefaultNotFoundMessage),
+                        _ => (
+                            ErrorMessages.InternalServerErrorTitle,
+                            ErrorMessages.UnexpectedError
+                        ),
+                    };
+
+                    return SimpleModule.Core.Inertia.Inertia.Render(
+                        $"Error/{statusCode}",
+                        new
+                        {
+                            status = statusCode,
+                            title,
+                            message,
+                        }
+                    );
+                }
+            )
+            .AllowAnonymous()
+            .ExcludeFromDescription();
     }
 
     private static void BridgeAspireConnectionString(ConfigurationManager configuration)
