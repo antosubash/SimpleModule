@@ -1,6 +1,8 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePage } from '@simplemodule/client/resolve-page';
+import { ErrorPage403, ErrorPage404, ErrorPage500 } from '@simplemodule/ui/errors';
 import { resolveLayout } from '@simplemodule/ui/layouts';
+import type React from 'react';
 import { createRoot } from 'react-dom/client';
 
 // In Vite dev server mode, import the Tailwind CSS entry so that
@@ -143,6 +145,17 @@ function showErrorToast(message: string) {
 
 createInertiaApp({
   resolve: async (name) => {
+    // Error pages are bundled in ClientApp, not in module pages.js files
+    const errorPages: Record<string, { default: React.ComponentType }> = {
+      'Error/404': { default: ErrorPage404 },
+      'Error/403': { default: ErrorPage403 },
+      'Error/500': { default: ErrorPage500 },
+    };
+
+    if (name in errorPages) {
+      return errorPages[name];
+    }
+
     try {
       const page = await resolvePage(name);
       return resolveLayout(page);
