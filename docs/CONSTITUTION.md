@@ -82,10 +82,19 @@ public class BrowseEndpoint(IOptions<ProductsModuleOptions> options) : IViewEndp
 - Options classes may live in the module assembly or its Contracts assembly.
 ### What a Module Must Never Expose
 
-- Entity classes
 - DbContext or DbSet types
 - Internal services
-- EF Core configurations
+- EF Core configurations (`IEntityTypeConfiguration<T>`)
+
+### What a Module Must Always Expose
+
+- **Entity classes** — every class used as `DbSet<T>` in a module's `DbContext`
+  must live in that module's `.Contracts` assembly (SM0055, error). This keeps
+  EF Core entities addressable from cross-module code without leaking the
+  implementation assembly, and it puts the entity alongside the DTOs and
+  contract interfaces that already describe the module's public surface.
+  Mark non-DTO entities with `[NoDtoGeneration]` so the source generator
+  doesn't emit TypeScript interfaces for them.
 
 ### Structural Rules
 
@@ -133,15 +142,20 @@ Dependencies flow one way: **implementation --> contracts --> core**. Never side
 
 ### Each Module Owns Its Data Exclusively
 
-- Entities live in the implementation assembly, never in Contracts.
-- Only the owning module's service layer may read or write its entities.
-- Other modules access data through the contract interface.
+- **Entity classes live in the module's `.Contracts` assembly** (enforced by
+  SM0055). Mark non-DTO entities with `[NoDtoGeneration]` so the source
+  generator doesn't emit TypeScript interfaces for them.
+- `IEntityTypeConfiguration<T>` mappings, the `DbContext`, and the service
+  layer all live in the implementation assembly. They are the only code
+  allowed to read or write the entities.
+- Other modules access data through the contract interface — they never
+  touch a `DbContext` or `IQueryable<T>` directly.
 
 ### DbContext Rules
 
 - Register with `AddModuleDbContext<TContext>(configuration, ModuleName)`.
 - Call `ApplyModuleSchema()` in `OnModelCreating`.
-- Use entity configurations via `IEntityTypeConfiguration<T>`.
+- Use entity configurations via `IEntityTypeConfiguration<T>` (implementation-only).
 - Register Vogen value object converters in `ConfigureConventions`.
 - One DbContext per module, maximum.
 
@@ -392,6 +406,7 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | SM0005 | Error | IdentityDbContext must use three type arguments |
 | SM0006 | Warning | Orphaned entity configuration (not referenced by any DbSet) |
 | SM0007 | Error | No duplicate entity configurations |
+| SM0055 | Error | Entity class must live in a `.Contracts` assembly |
 
 ### Module Structure
 

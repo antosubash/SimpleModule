@@ -31,6 +31,19 @@ export interface JobFilter {
   pageSize: number;
 }
 
+export interface JobProgress {
+  jobTypeName: string;
+  moduleName: string;
+  progressPercentage: number;
+  progressMessage: string;
+  data: string;
+  logs: string;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
+}
+
 export interface JobStatusDto {
   id: string;
   jobType: string;

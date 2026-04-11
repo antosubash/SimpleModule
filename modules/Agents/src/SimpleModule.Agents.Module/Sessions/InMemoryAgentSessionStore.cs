@@ -1,18 +1,19 @@
 using System.Collections.Concurrent;
+using SimpleModule.Agents.Contracts;
 
 namespace SimpleModule.Agents.Module;
 
 public sealed class InMemoryAgentSessionStore : IAgentSessionStore
 {
-    private readonly ConcurrentDictionary<string, AgentSession> _sessions = new();
-    private readonly ConcurrentDictionary<string, List<AgentMessage>> _messages = new();
+    private readonly ConcurrentDictionary<AgentSessionId, AgentSession> _sessions = new();
+    private readonly ConcurrentDictionary<AgentSessionId, List<AgentMessage>> _messages = new();
 
     public Task<AgentSession?> GetSessionAsync(
         string sessionId,
         CancellationToken cancellationToken = default
     )
     {
-        _sessions.TryGetValue(sessionId, out var session);
+        _sessions.TryGetValue(AgentSessionId.From(sessionId), out var session);
         return Task.FromResult(session);
     }
 
@@ -34,12 +35,13 @@ public sealed class InMemoryAgentSessionStore : IAgentSessionStore
         CancellationToken cancellationToken = default
     )
     {
-        message.SessionId = sessionId;
-        var messages = _messages.GetOrAdd(sessionId, _ => []);
+        var id = AgentSessionId.From(sessionId);
+        message.SessionId = id;
+        var messages = _messages.GetOrAdd(id, _ => []);
         lock (messages)
         {
             messages.Add(message);
-            if (_sessions.TryGetValue(sessionId, out var session))
+            if (_sessions.TryGetValue(id, out var session))
             {
                 session.LastMessageAt = DateTimeOffset.UtcNow;
             }
@@ -54,7 +56,7 @@ public sealed class InMemoryAgentSessionStore : IAgentSessionStore
         CancellationToken cancellationToken = default
     )
     {
-        if (!_messages.TryGetValue(sessionId, out var messages))
+        if (!_messages.TryGetValue(AgentSessionId.From(sessionId), out var messages))
             return Task.FromResult<IReadOnlyList<AgentMessage>>([]);
 
         lock (messages)

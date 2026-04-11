@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
-using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings;
 
@@ -92,7 +91,6 @@ public sealed partial class SettingsService(
         if (existing is not null)
         {
             existing.Value = value;
-            existing.UpdatedAt = DateTimeOffset.UtcNow;
         }
         else
         {
@@ -103,7 +101,6 @@ public sealed partial class SettingsService(
                     Value = value,
                     Scope = scope,
                     UserId = scope == SettingScope.User ? userId : null,
-                    UpdatedAt = DateTimeOffset.UtcNow,
                 }
             );
         }

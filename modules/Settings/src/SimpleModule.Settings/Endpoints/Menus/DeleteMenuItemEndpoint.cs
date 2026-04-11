@@ -17,7 +17,7 @@ public class DeleteMenuItemEndpoint : IEndpoint
                 Route,
                 async Task<IResult> (int id, PublicMenuService service) =>
                 {
-                    var deleted = await service.DeleteAsync(id);
+                    var deleted = await service.DeleteAsync(PublicMenuItemId.From(id));
                     return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )

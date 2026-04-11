@@ -32,7 +32,6 @@ public partial class EmailService(
             IsHtml = request.IsHtml,
             Status = EmailStatus.Queued,
             Provider = emailProvider.Name,
-            CreatedAt = DateTime.UtcNow,
         };
 
         db.EmailMessages.Add(message);
@@ -197,7 +196,6 @@ public partial class EmailService(
             Body = request.Body,
             IsHtml = request.IsHtml,
             DefaultReplyTo = request.DefaultReplyTo,
-            CreatedAt = DateTime.UtcNow,
         };
 
         db.EmailTemplates.Add(template);
@@ -237,7 +235,6 @@ public partial class EmailService(
         template.Body = request.Body;
         template.IsHtml = request.IsHtml;
         template.DefaultReplyTo = request.DefaultReplyTo;
-        template.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
@@ -265,7 +262,7 @@ public partial class EmailService(
 
     public async Task<EmailStats> GetEmailStatsAsync()
     {
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var last24Hours = now.AddHours(-24);
         var last7Days = now.AddDays(-7);
         var last30Days = now.AddDays(-30);
@@ -308,7 +305,7 @@ public partial class EmailService(
         var failureRate = total7d > 0 ? (double)failed7d / total7d * 100 : 0;
 
         var dailyVolume = recentMessages
-            .GroupBy(m => m.CreatedAt.Date)
+            .GroupBy(m => m.CreatedAt.UtcDateTime.Date)
             .Select(g => new DailyCount
             {
                 Date = g.Key,

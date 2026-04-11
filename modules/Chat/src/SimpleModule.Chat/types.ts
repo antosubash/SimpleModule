@@ -1,21 +1,24 @@
 // Auto-generated from [Dto] types — do not edit
 export interface ChatMessage {
-  id: string;
   conversationId: string;
   role: any;
   content: string;
+  id: string;
   createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface Conversation {
-  id: string;
   userId: string;
   title: string;
   agentName: string;
   pinned: boolean;
+  messages: ChatMessage[];
+  id: string;
   createdAt: string;
   updatedAt: string;
-  messages: ChatMessage[];
+  concurrencyStamp: string;
 }
 
 export interface CreateConversationRequest {

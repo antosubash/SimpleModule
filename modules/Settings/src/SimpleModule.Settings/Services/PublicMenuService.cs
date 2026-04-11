@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Contracts;
-using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings.Services;
 
@@ -71,9 +70,10 @@ public sealed class PublicMenuService(
                 );
         }
 
+        var parentId = request.ParentId;
         var maxSortOrder =
             await db
-                .PublicMenuItems.Where(e => e.ParentId == request.ParentId)
+                .PublicMenuItems.Where(e => e.ParentId == parentId)
                 .MaxAsync(e => (int?)e.SortOrder)
             ?? -1;
 
@@ -92,8 +92,6 @@ public sealed class PublicMenuService(
             IsVisible = request.IsVisible,
             IsHomePage = request.IsHomePage,
             SortOrder = maxSortOrder + 1,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
         };
 
         db.PublicMenuItems.Add(entity);
@@ -102,7 +100,10 @@ public sealed class PublicMenuService(
         return entity;
     }
 
-    public async Task<PublicMenuItemEntity?> UpdateAsync(int id, UpdateMenuItemRequest request)
+    public async Task<PublicMenuItemEntity?> UpdateAsync(
+        PublicMenuItemId id,
+        UpdateMenuItemRequest request
+    )
     {
         var entity = await db.PublicMenuItems.FindAsync(id);
         if (entity is null)
@@ -119,14 +120,13 @@ public sealed class PublicMenuService(
         entity.OpenInNewTab = request.OpenInNewTab;
         entity.IsVisible = request.IsVisible;
         entity.IsHomePage = request.IsHomePage;
-        entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync();
         await InvalidateCache();
         return entity;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(PublicMenuItemId id)
     {
         var entity = await db.PublicMenuItems.FindAsync(id);
         if (entity is null)
@@ -147,7 +147,6 @@ public sealed class PublicMenuService(
             {
                 entity.ParentId = item.ParentId;
                 entity.SortOrder = item.SortOrder;
-                entity.UpdatedAt = DateTimeOffset.UtcNow;
             }
         }
 
@@ -155,7 +154,7 @@ public sealed class PublicMenuService(
         await InvalidateCache();
     }
 
-    public async Task SetHomePageAsync(int id)
+    public async Task SetHomePageAsync(PublicMenuItemId id)
     {
         await ClearAllHomePageFlags();
 
@@ -163,7 +162,6 @@ public sealed class PublicMenuService(
         if (entity is not null)
         {
             entity.IsHomePage = true;
-            entity.UpdatedAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync();
         }
 
@@ -184,19 +182,19 @@ public sealed class PublicMenuService(
         foreach (var hp in homePages)
         {
             hp.IsHomePage = false;
-            hp.UpdatedAt = DateTimeOffset.UtcNow;
         }
     }
 
-    private async Task<int> GetDepthAsync(int parentId)
+    private async Task<int> GetDepthAsync(PublicMenuItemId parentId)
     {
         var depth = 1;
-        var currentId = (int?)parentId;
+        PublicMenuItemId? currentId = parentId;
 
         while (currentId is not null)
         {
+            var lookupId = currentId.Value;
             var parent = await db
-                .PublicMenuItems.Where(e => e.Id == currentId)
+                .PublicMenuItems.Where(e => e.Id == lookupId)
                 .Select(e => e.ParentId)
                 .FirstOrDefaultAsync();
 
@@ -210,7 +208,7 @@ public sealed class PublicMenuService(
 
     private static List<PublicMenuItem> BuildPublicTree(
         List<PublicMenuItemEntity> entities,
-        int? parentId
+        PublicMenuItemId? parentId
     )
     {
         return entities
@@ -230,7 +228,7 @@ public sealed class PublicMenuService(
 
     private static List<PublicMenuItemDto> BuildDtoTree(
         List<PublicMenuItemEntity> entities,
-        int? parentId
+        PublicMenuItemId? parentId
     )
     {
         return entities

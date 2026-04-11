@@ -735,7 +735,12 @@ internal static class SymbolDiscovery
                     c.IdentityUserTypeFqn,
                     c.IdentityRoleTypeFqn,
                     c.IdentityKeyTypeFqn,
-                    c.DbSets.Select(d => new DbSetInfoRecord(d.PropertyName, d.EntityFqn))
+                    c.DbSets.Select(d => new DbSetInfoRecord(
+                            d.PropertyName,
+                            d.EntityFqn,
+                            d.EntityAssemblyName,
+                            d.EntityLocation
+                        ))
                         .ToImmutableArray(),
                     c.Location
                 ))
@@ -1380,11 +1385,20 @@ internal static class SymbolDiscovery
                         ) == "global::Microsoft.EntityFrameworkCore.DbSet<TEntity>"
                     )
                     {
-                        var entityFqn = propType
-                            .TypeArguments[0]
-                            .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        var entityType = propType.TypeArguments[0];
+                        var entityFqn = entityType.ToDisplayString(
+                            SymbolDisplayFormat.FullyQualifiedFormat
+                        );
+                        var entityAssemblyName =
+                            entityType.ContainingAssembly?.Name ?? string.Empty;
                         info.DbSets.Add(
-                            new DbSetInfo { PropertyName = prop.Name, EntityFqn = entityFqn }
+                            new DbSetInfo
+                            {
+                                PropertyName = prop.Name,
+                                EntityFqn = entityFqn,
+                                EntityAssemblyName = entityAssemblyName,
+                                EntityLocation = GetSourceLocation(entityType),
+                            }
                         );
                     }
                 }

@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
-using SimpleModule.Settings.Entities;
+using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Settings;
 
@@ -18,5 +19,30 @@ public class SettingsDbContext(
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SettingsDbContext).Assembly);
         modelBuilder.ApplyModuleSchema("Settings", dbOptions.Value);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder
+            .Properties<SettingId>()
+            .HaveConversion<SettingId.EfCoreValueConverter, SettingId.EfCoreValueComparer>();
+        configurationBuilder
+            .Properties<PublicMenuItemId>()
+            .HaveConversion<
+                PublicMenuItemId.EfCoreValueConverter,
+                PublicMenuItemId.EfCoreValueComparer
+            >();
+
+        // SQLite cannot ORDER BY or compare DateTimeOffset expressions natively.
+        // Store as long (binary ticks) only when running against SQLite.
+        if (dbOptions.Value.DetectProvider("Settings") == DatabaseProvider.Sqlite)
+        {
+            configurationBuilder
+                .Properties<DateTimeOffset>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+            configurationBuilder
+                .Properties<DateTimeOffset?>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+        }
     }
 }

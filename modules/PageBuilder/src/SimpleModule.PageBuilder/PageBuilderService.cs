@@ -84,14 +84,11 @@ public sealed partial class PageBuilderService(
 
         slug = await EnsureUniqueSlugAsync(slug);
 
-        var now = DateTime.UtcNow;
         var page = new Page
         {
             Title = request.Title,
             Slug = slug,
             Content = "{}",
-            CreatedAt = now,
-            UpdatedAt = now,
         };
 
         db.Pages.Add(page);
@@ -124,7 +121,6 @@ public sealed partial class PageBuilderService(
         page.MetaDescription = request.MetaDescription;
         page.MetaKeywords = request.MetaKeywords;
         page.OgImage = request.OgImage;
-        page.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
@@ -137,7 +133,6 @@ public sealed partial class PageBuilderService(
         var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         page.DraftContent = request.Content;
-        page.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
@@ -149,8 +144,9 @@ public sealed partial class PageBuilderService(
     {
         var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
-        page.DeletedAt = DateTime.UtcNow;
         page.IsPublished = false;
+        page.IsDeleted = true;
+        page.DeletedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
 
         LogPageDeleted(logger, id);
@@ -167,7 +163,6 @@ public sealed partial class PageBuilderService(
         }
 
         page.IsPublished = true;
-        page.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
@@ -180,7 +175,6 @@ public sealed partial class PageBuilderService(
         var page = await db.Pages.FindAsync(id) ?? throw new NotFoundException("Page", id);
 
         page.IsPublished = false;
-        page.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 
@@ -193,7 +187,7 @@ public sealed partial class PageBuilderService(
             .Pages.IgnoreQueryFilters()
             .AsNoTracking()
             .Include(p => p.Tags)
-            .Where(p => p.DeletedAt != null)
+            .Where(p => p.IsDeleted)
             .OrderByDescending(p => p.DeletedAt)
             .Select(p => new PageSummary
             {
@@ -213,13 +207,12 @@ public sealed partial class PageBuilderService(
     public async Task<Page> RestorePageAsync(PageId id)
     {
         var page =
-            await db
-                .Pages.IgnoreQueryFilters()
-                .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt != null)
+            await db.Pages.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == id && p.IsDeleted)
             ?? throw new NotFoundException("Page", id);
 
+        page.IsDeleted = false;
         page.DeletedAt = null;
-        page.UpdatedAt = DateTime.UtcNow;
+        page.DeletedBy = null;
         await db.SaveChangesAsync();
 
         LogPageRestored(logger, page.Id, page.Title);
@@ -236,8 +229,10 @@ public sealed partial class PageBuilderService(
             ?? throw new NotFoundException("Page", id);
 
         page.Tags.Clear();
-        db.Pages.Remove(page);
         await db.SaveChangesAsync();
+
+        // Bypass the soft-delete interceptor for a true hard delete.
+        await db.Pages.IgnoreQueryFilters().Where(p => p.Id == id).ExecuteDeleteAsync();
 
         LogPagePermanentlyDeleted(logger, id);
     }
@@ -247,12 +242,7 @@ public sealed partial class PageBuilderService(
 
     public async Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request)
     {
-        var template = new PageTemplate
-        {
-            Name = request.Name,
-            Content = request.Content,
-            CreatedAt = DateTime.UtcNow,
-        };
+        var template = new PageTemplate { Name = request.Name, Content = request.Content };
 
         db.Templates.Add(template);
         await db.SaveChangesAsync();

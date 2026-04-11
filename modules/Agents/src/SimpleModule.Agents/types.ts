@@ -16,3 +16,13 @@ export interface AgentSessionDto {
   lastMessageAt: string;
 }
 
+export interface AgentSession {
+  agentName: string;
+  userId: string;
+  lastMessageAt: string;
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
+}
+

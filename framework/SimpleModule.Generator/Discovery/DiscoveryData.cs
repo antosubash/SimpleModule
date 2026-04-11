@@ -304,7 +304,12 @@ internal readonly record struct DbContextInfoRecord(
     }
 }
 
-internal readonly record struct DbSetInfoRecord(string PropertyName, string EntityFqn);
+internal readonly record struct DbSetInfoRecord(
+    string PropertyName,
+    string EntityFqn,
+    string EntityAssemblyName,
+    SourceLocationRecord? EntityLocation
+);
 
 internal readonly record struct EntityConfigInfoRecord(
     string ConfigFqn,
@@ -557,6 +562,8 @@ internal sealed class DbSetInfo
 {
     public string PropertyName { get; set; } = "";
     public string EntityFqn { get; set; } = "";
+    public string EntityAssemblyName { get; set; } = "";
+    public SourceLocationRecord? EntityLocation { get; set; }
 }
 
 internal sealed class EntityConfigInfo

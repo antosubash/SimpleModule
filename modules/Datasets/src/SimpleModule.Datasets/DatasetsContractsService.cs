@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core.Settings;
 using SimpleModule.Datasets.Contracts;
-using SimpleModule.Datasets.Entities;
 using SimpleModule.Datasets.Jobs;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Storage;
