@@ -63,7 +63,6 @@ public sealed partial class OrderService(
             UserId = request.UserId,
             Items = request.Items,
             Total = total,
-            CreatedAt = DateTime.UtcNow,
         };
 
         db.Orders.Add(order);

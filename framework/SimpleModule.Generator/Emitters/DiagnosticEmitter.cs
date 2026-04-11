@@ -7,6 +7,35 @@ using Microsoft.CodeAnalysis;
 
 namespace SimpleModule.Generator;
 
+/// <summary>
+/// Naming conventions for SimpleModule assemblies. Centralised so the same
+/// string literals don't drift between discovery code and diagnostic emission.
+/// </summary>
+internal static class AssemblyConventions
+{
+    internal const string FrameworkPrefix = "SimpleModule.";
+    internal const string ContractsSuffix = ".Contracts";
+    internal const string ModuleSuffix = ".Module";
+
+    /// <summary>
+    /// Derives the `.Contracts` sibling assembly name for a SimpleModule
+    /// implementation assembly. Strips a trailing <c>.Module</c> suffix first
+    /// so <c>SimpleModule.Agents.Module</c> maps to
+    /// <c>SimpleModule.Agents.Contracts</c> instead of
+    /// <c>SimpleModule.Agents.Module.Contracts</c>.
+    /// </summary>
+    internal static string GetExpectedContractsAssemblyName(string implementationAssemblyName)
+    {
+        var baseName = implementationAssemblyName.EndsWith(ModuleSuffix, StringComparison.Ordinal)
+            ? implementationAssemblyName.Substring(
+                0,
+                implementationAssemblyName.Length - ModuleSuffix.Length
+            )
+            : implementationAssemblyName;
+        return baseName + ContractsSuffix;
+    }
+}
+
 internal sealed class DiagnosticEmitter : IEmitter
 {
     internal static readonly DiagnosticDescriptor DuplicateDbSetPropertyName = new(
@@ -342,6 +371,15 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor EntityNotInContractsAssembly = new(
+        id: "SM0055",
+        title: "Entity class must live in a Contracts assembly",
+        messageFormat: "Entity '{0}' is exposed as DbSet '{1}' on '{2}' but is declared in assembly '{3}'. Entity classes must be declared in a '.Contracts' assembly so other modules can reference them type-safely through contracts. Move '{0}' to assembly '{4}' (or another '.Contracts' assembly that the module references).",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -461,14 +499,57 @@ internal sealed class DiagnosticEmitter : IEmitter
             }
         }
 
-        // SM0006: Entity config for entity not in any DbSet
+        // SM0055: Entity classes must live in a .Contracts assembly.
+        // Walks every DbSet in the same pass that also collects EntityFqns
+        // for SM0006 below, so we only iterate data.DbContexts once.
         var allEntityFqns = new HashSet<string>();
         foreach (var ctx in data.DbContexts)
         {
             foreach (var dbSet in ctx.DbSets)
+            {
                 allEntityFqns.Add(dbSet.EntityFqn);
+
+                // Skip entities we can't flag: IdentityDbContext external types,
+                // metadata-only symbols (no source location), and anything that
+                // lives outside the SimpleModule.* assembly family.
+                if (ctx.IsIdentityDbContext)
+                    continue;
+                if (dbSet.EntityLocation is null)
+                    continue;
+                if (
+                    !dbSet.EntityAssemblyName.StartsWith(
+                        AssemblyConventions.FrameworkPrefix,
+                        StringComparison.Ordinal
+                    )
+                )
+                    continue;
+                if (
+                    dbSet.EntityAssemblyName.EndsWith(
+                        AssemblyConventions.ContractsSuffix,
+                        StringComparison.Ordinal
+                    )
+                )
+                    continue;
+
+                var expectedContractsAssembly =
+                    AssemblyConventions.GetExpectedContractsAssemblyName(dbSet.EntityAssemblyName);
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        EntityNotInContractsAssembly,
+                        LocationHelper.ToLocation(dbSet.EntityLocation),
+                        Strip(dbSet.EntityFqn),
+                        dbSet.PropertyName,
+                        Strip(ctx.FullyQualifiedName),
+                        dbSet.EntityAssemblyName,
+                        expectedContractsAssembly
+                    )
+                );
+            }
         }
 
+        // SM0006: Entity config for entity not in any DbSet
+        // (allEntityFqns was populated above during the SM0055 pass)
         foreach (var config in data.EntityConfigs)
         {
             if (!allEntityFqns.Contains(config.EntityFqn))

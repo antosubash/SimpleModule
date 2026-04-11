@@ -14,7 +14,6 @@ export interface CreatePageTemplateRequest {
 }
 
 export interface Page {
-  id: number;
   title: string;
   slug: string;
   content: string;
@@ -24,10 +23,17 @@ export interface Page {
   ogImage: string;
   isPublished: boolean;
   order: number;
+  tags: PageTag[];
+  isDeleted: boolean;
+  deletedAt: string | null;
+  deletedBy: string;
+  version: number;
+  createdBy: string;
+  updatedBy: string;
+  id: number;
   createdAt: string;
   updatedAt: string;
-  tags: PageTag[];
-  deletedAt: string | null;
+  concurrencyStamp: string;
 }
 
 export interface PageSummary {
@@ -49,10 +55,12 @@ export interface PageTag {
 }
 
 export interface PageTemplate {
-  id: number;
   name: string;
   content: string;
+  id: number;
   createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface UpdatePageContentRequest {

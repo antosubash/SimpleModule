@@ -1,8 +1,9 @@
-using SimpleModule.Permissions.Contracts;
+using SimpleModule.Core;
 
-namespace SimpleModule.Permissions.Entities;
+namespace SimpleModule.Permissions.Contracts;
 
 #pragma warning disable CA1711
+[NoDtoGeneration]
 public class RolePermission
 #pragma warning restore CA1711
 {

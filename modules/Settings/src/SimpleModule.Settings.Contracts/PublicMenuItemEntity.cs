@@ -1,9 +1,12 @@
-namespace SimpleModule.Settings.Entities;
+using SimpleModule.Core;
+using SimpleModule.Core.Entities;
 
-public class PublicMenuItemEntity
+namespace SimpleModule.Settings.Contracts;
+
+[NoDtoGeneration]
+public class PublicMenuItemEntity : Entity<PublicMenuItemId>
 {
-    public int Id { get; set; }
-    public int? ParentId { get; set; }
+    public PublicMenuItemId? ParentId { get; set; }
     public PublicMenuItemEntity? Parent { get; set; }
     public List<PublicMenuItemEntity> Children { get; set; } = [];
 
@@ -22,6 +25,4 @@ public class PublicMenuItemEntity
     public bool IsVisible { get; set; } = true;
     public bool IsHomePage { get; set; }
     public int SortOrder { get; set; }
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

@@ -98,13 +98,15 @@ public partial class ChatService(ChatDbContext db, ILogger<ChatService> logger) 
         CancellationToken cancellationToken = default
     )
     {
+        var now = DateTimeOffset.UtcNow;
         var message = new ChatMessage
         {
             Id = ChatMessageId.From(Guid.NewGuid()),
             ConversationId = conversationId,
             Role = role,
             Content = content,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = now,
+            UpdatedAt = now,
         };
         db.ChatMessages.Add(message);
 
@@ -114,7 +116,7 @@ public partial class ChatService(ChatDbContext db, ILogger<ChatService> logger) 
         );
         if (conversation is not null)
         {
-            conversation.UpdatedAt = message.CreatedAt;
+            conversation.UpdatedAt = now;
         }
 
         await db.SaveChangesAsync(cancellationToken);

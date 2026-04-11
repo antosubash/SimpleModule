@@ -20,6 +20,7 @@ public class EmailMessageConfiguration : IEntityTypeConfiguration<EmailMessage>
         builder.Property(e => e.Provider).HasMaxLength(100);
         builder.Property(e => e.ReplyTo).HasMaxLength(500);
         builder.Property(e => e.Status).HasConversion<string>().HasMaxLength(50);
+        builder.Property(e => e.ConcurrencyStamp).HasMaxLength(64);
 
         builder.HasIndex(e => e.Status);
         builder.HasIndex(e => e.CreatedAt);

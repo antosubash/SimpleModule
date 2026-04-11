@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.PageBuilder.Contracts;
@@ -37,5 +38,18 @@ public class PageBuilderDbContext(
         configurationBuilder
             .Properties<PageTagId>()
             .HaveConversion<PageTagId.EfCoreValueConverter, PageTagId.EfCoreValueComparer>();
+
+        // SQLite cannot ORDER BY or compare DateTimeOffset expressions natively.
+        // Store as long (binary ticks) only when running against SQLite; leave
+        // other providers to their native timestamptz/datetimeoffset types.
+        if (dbOptions.Value.DetectProvider("PageBuilder") == DatabaseProvider.Sqlite)
+        {
+            configurationBuilder
+                .Properties<DateTimeOffset>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+            configurationBuilder
+                .Properties<DateTimeOffset?>()
+                .HaveConversion<DateTimeOffsetToBinaryConverter>();
+        }
     }
 }

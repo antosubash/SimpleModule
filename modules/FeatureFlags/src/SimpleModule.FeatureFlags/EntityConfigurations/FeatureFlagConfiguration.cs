@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SimpleModule.FeatureFlags.Contracts;
 
-namespace SimpleModule.FeatureFlags.Entities;
+namespace SimpleModule.FeatureFlags.EntityConfigurations;
 
 public class FeatureFlagConfiguration : IEntityTypeConfiguration<FeatureFlagEntity>
 {

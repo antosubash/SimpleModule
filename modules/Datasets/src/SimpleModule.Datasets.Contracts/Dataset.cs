@@ -1,8 +1,9 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
-using SimpleModule.Datasets.Contracts;
 
-namespace SimpleModule.Datasets.Entities;
+namespace SimpleModule.Datasets.Contracts;
 
+[NoDtoGeneration]
 public sealed class Dataset : FullAuditableEntity<DatasetId>
 {
     public string Name { get; set; } = string.Empty;

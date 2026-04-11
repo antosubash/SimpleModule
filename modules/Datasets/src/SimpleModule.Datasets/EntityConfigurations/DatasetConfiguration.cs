@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SimpleModule.Datasets.Entities;
+using SimpleModule.Datasets.Contracts;
 
 namespace SimpleModule.Datasets.EntityConfigurations;
 

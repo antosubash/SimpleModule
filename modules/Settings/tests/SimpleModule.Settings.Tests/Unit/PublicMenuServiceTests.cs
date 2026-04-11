@@ -6,7 +6,6 @@ using SimpleModule.Core.Caching;
 using SimpleModule.Database;
 using SimpleModule.Settings;
 using SimpleModule.Settings.Contracts;
-using SimpleModule.Settings.Entities;
 using SimpleModule.Settings.Services;
 
 namespace Settings.Tests.Unit;
@@ -52,7 +51,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 1,
+                Id = PublicMenuItemId.From(1),
                 Label = "Parent",
                 IsVisible = true,
                 SortOrder = 0,
@@ -61,8 +60,8 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 2,
-                ParentId = 1,
+                Id = PublicMenuItemId.From(2),
+                ParentId = PublicMenuItemId.From(1),
                 Label = "Child",
                 IsVisible = true,
                 SortOrder = 0,
@@ -84,7 +83,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 1,
+                Id = PublicMenuItemId.From(1),
                 Label = "Visible",
                 IsVisible = true,
                 SortOrder = 0,
@@ -93,7 +92,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 2,
+                Id = PublicMenuItemId.From(2),
                 Label = "Hidden",
                 IsVisible = false,
                 SortOrder = 1,
@@ -113,7 +112,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 1,
+                Id = PublicMenuItemId.From(1),
                 Label = "Page",
                 Url = "/some-page",
                 IsVisible = true,
@@ -134,7 +133,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 1,
+                Id = PublicMenuItemId.From(1),
                 Label = "Home",
                 Url = "/home",
                 IsVisible = true,
@@ -155,7 +154,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 1,
+                Id = PublicMenuItemId.From(1),
                 Label = "Level 1",
                 IsVisible = true,
                 SortOrder = 0,
@@ -164,8 +163,8 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 2,
-                ParentId = 1,
+                Id = PublicMenuItemId.From(2),
+                ParentId = PublicMenuItemId.From(1),
                 Label = "Level 2",
                 IsVisible = true,
                 SortOrder = 0,
@@ -174,8 +173,8 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 3,
-                ParentId = 2,
+                Id = PublicMenuItemId.From(3),
+                ParentId = PublicMenuItemId.From(2),
                 Label = "Level 3",
                 IsVisible = true,
                 SortOrder = 0,
@@ -183,7 +182,11 @@ public sealed class PublicMenuServiceTests : IDisposable
         );
         await _db.SaveChangesAsync();
 
-        var request = new CreateMenuItemRequest { ParentId = 3, Label = "Level 4" };
+        var request = new CreateMenuItemRequest
+        {
+            ParentId = PublicMenuItemId.From(3),
+            Label = "Level 4",
+        };
 
         var act = () => _service.CreateAsync(request);
 
@@ -196,7 +199,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 1,
+                Id = PublicMenuItemId.From(1),
                 Label = "Old Home",
                 IsVisible = true,
                 IsHomePage = true,
@@ -206,7 +209,7 @@ public sealed class PublicMenuServiceTests : IDisposable
         _db.PublicMenuItems.Add(
             new PublicMenuItemEntity
             {
-                Id = 2,
+                Id = PublicMenuItemId.From(2),
                 Label = "New Home",
                 IsVisible = true,
                 IsHomePage = false,
@@ -215,10 +218,10 @@ public sealed class PublicMenuServiceTests : IDisposable
         );
         await _db.SaveChangesAsync();
 
-        await _service.SetHomePageAsync(2);
+        await _service.SetHomePageAsync(PublicMenuItemId.From(2));
 
-        var oldHome = await _db.PublicMenuItems.FindAsync(1);
-        var newHome = await _db.PublicMenuItems.FindAsync(2);
+        var oldHome = await _db.PublicMenuItems.FindAsync(PublicMenuItemId.From(1));
+        var newHome = await _db.PublicMenuItems.FindAsync(PublicMenuItemId.From(2));
         oldHome!.IsHomePage.Should().BeFalse();
         newHome!.IsHomePage.Should().BeTrue();
     }

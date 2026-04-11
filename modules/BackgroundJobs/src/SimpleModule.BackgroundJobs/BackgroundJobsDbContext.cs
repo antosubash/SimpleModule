@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 using SimpleModule.BackgroundJobs.EntityConfigurations;
 using SimpleModule.Database;
 
@@ -25,9 +24,14 @@ public class BackgroundJobsDbContext(
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        var connectionString = dbOptions.Value.DefaultConnection;
-        var provider = DatabaseProviderDetector.Detect(connectionString, dbOptions.Value.Provider);
-        if (provider == DatabaseProvider.Sqlite)
+        configurationBuilder
+            .Properties<JobId>()
+            .HaveConversion<JobId.EfCoreValueConverter, JobId.EfCoreValueComparer>();
+
+        if (
+            dbOptions.Value.DetectProvider(BackgroundJobsConstants.ModuleName)
+            == DatabaseProvider.Sqlite
+        )
         {
             configurationBuilder
                 .Properties<DateTimeOffset>()

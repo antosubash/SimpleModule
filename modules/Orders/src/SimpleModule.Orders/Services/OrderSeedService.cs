@@ -76,9 +76,12 @@ public partial class OrderSeedService(
                     {
                         UserId = userId,
                         Total = Math.Round(total, 2),
-                        CreatedAt = faker.Date.Between(
-                            new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                            new DateTime(2026, 1, 31, 23, 59, 59, DateTimeKind.Utc)
+                        CreatedAt = new DateTimeOffset(
+                            faker.Date.Between(
+                                new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                                new DateTime(2026, 1, 31, 23, 59, 59, DateTimeKind.Utc)
+                            ),
+                            TimeSpan.Zero
                         ),
                         Items = items,
                     }

@@ -18,5 +18,5 @@ public interface IFeatureFlagContracts
     Task<FeatureFlag> UpdateFlagAsync(string flagName, UpdateFeatureFlagRequest request);
     Task<IEnumerable<FeatureFlagOverride>> GetOverridesAsync(string flagName);
     Task<FeatureFlagOverride> SetOverrideAsync(string flagName, SetOverrideRequest request);
-    Task DeleteOverrideAsync(int overrideId);
+    Task DeleteOverrideAsync(FeatureFlagOverrideId overrideId);
 }

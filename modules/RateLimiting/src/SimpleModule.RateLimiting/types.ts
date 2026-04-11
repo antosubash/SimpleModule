@@ -15,7 +15,6 @@ export interface CreateRateLimitRuleRequest {
 }
 
 export interface RateLimitRule {
-  id: number;
   policyName: string;
   policyType: any;
   target: any;
@@ -28,8 +27,10 @@ export interface RateLimitRule {
   queueLimit: number;
   endpointPattern: string;
   isEnabled: boolean;
+  id: number;
   createdAt: string;
-  updatedAt: string | null;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface UpdateRateLimitRuleRequest {

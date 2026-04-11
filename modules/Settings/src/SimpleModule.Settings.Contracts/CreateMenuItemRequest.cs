@@ -2,7 +2,7 @@ namespace SimpleModule.Settings.Contracts;
 
 public class CreateMenuItemRequest
 {
-    public int? ParentId { get; set; }
+    public PublicMenuItemId? ParentId { get; set; }
     public string Label { get; set; } = "";
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

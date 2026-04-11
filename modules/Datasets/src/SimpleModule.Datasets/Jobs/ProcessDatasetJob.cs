@@ -7,7 +7,6 @@ using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Datasets.Contracts;
 using SimpleModule.Datasets.Contracts.Events;
-using SimpleModule.Datasets.Entities;
 using SimpleModule.Datasets.Processing;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Storage;

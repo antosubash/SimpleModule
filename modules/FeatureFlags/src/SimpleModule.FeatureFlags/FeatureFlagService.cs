@@ -5,7 +5,6 @@ using SimpleModule.Core.Caching;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
-using SimpleModule.FeatureFlags.Entities;
 
 namespace SimpleModule.FeatureFlags;
 
@@ -192,7 +191,7 @@ public sealed partial class FeatureFlagService(
         };
     }
 
-    public async Task DeleteOverrideAsync(int overrideId)
+    public async Task DeleteOverrideAsync(FeatureFlagOverrideId overrideId)
     {
         var entity = await db.FeatureFlagOverrides.FindAsync(overrideId);
         if (entity is not null)

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Permissions.Contracts;
-using SimpleModule.Permissions.Entities;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Permissions;
