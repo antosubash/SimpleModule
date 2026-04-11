@@ -1,14 +1,21 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Constants;
+using SimpleModule.Core.Inertia;
 
 namespace SimpleModule.Core.Exceptions;
 
 public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
     : IExceptionHandler
 {
+    private static readonly JsonSerializerOptions InertiaJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
@@ -28,12 +35,12 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 null
             ),
             NotFoundException => (StatusCodes.Status404NotFound, ErrorMessages.NotFoundTitle, null),
-            ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
             ForbiddenException => (
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.ForbiddenTitle,
                 null
             ),
+            ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
             _ => (
                 StatusCodes.Status500InternalServerError,
                 ErrorMessages.InternalServerErrorTitle,
@@ -59,6 +66,15 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 ? ErrorMessages.UnexpectedError
                 : exception.Message;
 
+        httpContext.Response.StatusCode = statusCode;
+
+        // Inertia requests get an Inertia error page response
+        if (httpContext.Request.Headers.ContainsKey("X-Inertia"))
+        {
+            return await WriteInertiaErrorAsync(httpContext, statusCode, title, detail);
+        }
+
+        // API/non-Inertia requests get ProblemDetails JSON
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
@@ -71,8 +87,38 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             problemDetails.Extensions["errors"] = errors;
         }
 
-        httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        return true;
+    }
+
+    private static async ValueTask<bool> WriteInertiaErrorAsync(
+        HttpContext httpContext,
+        int statusCode,
+        string title,
+        string message
+    )
+    {
+        var component = $"Error/{statusCode}";
+        var props = new
+        {
+            status = statusCode,
+            title,
+            message,
+        };
+
+        var pageData = new
+        {
+            component,
+            props,
+            url = httpContext.Request.Path + httpContext.Request.QueryString,
+            version = InertiaMiddleware.Version,
+        };
+
+        httpContext.Response.Headers["X-Inertia"] = "true";
+        httpContext.Response.Headers["Vary"] = "X-Inertia";
+        httpContext.Response.ContentType = "application/json";
+        var json = JsonSerializer.Serialize(pageData, InertiaJsonOptions);
+        await httpContext.Response.WriteAsync(json);
         return true;
     }
 }
