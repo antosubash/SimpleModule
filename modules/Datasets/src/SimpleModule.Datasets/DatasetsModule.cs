@@ -46,6 +46,7 @@ public class DatasetsModule : IModule
         // register so DI can construct them.
         services.AddScoped<ProcessDatasetJob>();
         services.AddScoped<ConvertDatasetJob>();
+        services.AddScoped<PurgeDatasetJob>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

@@ -114,6 +114,13 @@ public sealed partial class DatasetsContractsService(
         row.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
         LogDatasetDeleted(logger, id.Value);
+
+        // Hand off blob cleanup (original + normalized + every derivative) to a background
+        // job so large uploads don't block the HTTP response.
+        await jobs.EnqueueAsync<PurgeDatasetJob>(
+            new PurgeDatasetJobData { DatasetId = id.Value },
+            ct
+        );
     }
 
     public async Task<Stream?> GetOriginalAsync(DatasetId id, CancellationToken ct = default)
