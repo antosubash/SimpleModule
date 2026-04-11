@@ -129,6 +129,25 @@ public class GlobalExceptionHandlerTests
     }
 
     [Fact]
+    public async Task ForbiddenException_Returns403()
+    {
+        var context = CreateHttpContext();
+        var exception = new ForbiddenException("Access denied to admin panel");
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(403);
+
+        var doc = await ReadResponseBodyAsync(context);
+        doc.RootElement.GetProperty("title").GetString().Should().Be("Forbidden");
+        doc.RootElement.GetProperty("detail")
+            .GetString()
+            .Should()
+            .Be("Access denied to admin panel");
+    }
+
+    [Fact]
     public async Task Handler_AlwaysReturnsTrue()
     {
         var context = CreateHttpContext();

@@ -29,6 +29,11 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             ),
             NotFoundException => (StatusCodes.Status404NotFound, ErrorMessages.NotFoundTitle, null),
             ConflictException => (StatusCodes.Status409Conflict, ErrorMessages.ConflictTitle, null),
+            ForbiddenException => (
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.ForbiddenTitle,
+                null
+            ),
             _ => (
                 StatusCodes.Status500InternalServerError,
                 ErrorMessages.InternalServerErrorTitle,
