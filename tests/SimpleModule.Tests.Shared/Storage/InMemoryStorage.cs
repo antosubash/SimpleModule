@@ -1,9 +1,13 @@
 using System.Collections.Concurrent;
 using SimpleModule.Storage;
 
-namespace SimpleModule.FileStorage.Tests;
+namespace SimpleModule.Tests.Shared.Storage;
 
-public sealed class InMemoryStorageProvider : IStorageProvider
+/// <summary>
+/// In-memory <see cref="IStorageProvider"/> for tests. Stores files in a
+/// concurrent dictionary keyed by normalized path.
+/// </summary>
+public sealed class InMemoryStorage : IStorageProvider
 {
     private readonly ConcurrentDictionary<
         string,
