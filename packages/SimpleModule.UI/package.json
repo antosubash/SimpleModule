@@ -7,7 +7,8 @@
     ".": "./components/index.ts",
     "./lib/utils": "./lib/utils.ts",
     "./hooks": "./hooks/use-feature-flag.ts",
-    "./layouts": "./components/layouts/index.ts"
+    "./layouts": "./components/layouts/index.ts",
+    "./errors": "./components/errors/index.ts"
   },
   "peerDependencies": {
     "react": "^19.0.0",
