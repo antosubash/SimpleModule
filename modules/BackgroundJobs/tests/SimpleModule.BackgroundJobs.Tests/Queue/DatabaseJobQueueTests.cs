@@ -23,8 +23,16 @@ public sealed class DatabaseJobQueueTests : IDisposable
     {
         var queue = new DatabaseJobQueue(_db, NullLogger<DatabaseJobQueue>.Instance);
         var entry = new JobQueueEntry(
-            Guid.NewGuid(), "My.Job, Asm", """{"x":1}""",
-            DateTimeOffset.UtcNow, JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow);
+            Guid.NewGuid(),
+            "My.Job, Asm",
+            """{"x":1}""",
+            DateTimeOffset.UtcNow,
+            JobQueueEntryState.Pending,
+            0,
+            null,
+            null,
+            DateTimeOffset.UtcNow
+        );
 
         await queue.EnqueueAsync(entry);
 
@@ -37,10 +45,28 @@ public sealed class DatabaseJobQueueTests : IDisposable
     public async Task DequeueAsync_ReturnsAndClaimsOldestPending()
     {
         var queue = new DatabaseJobQueue(_db, NullLogger<DatabaseJobQueue>.Instance);
-        var older = new JobQueueEntry(Guid.NewGuid(), "A", null, DateTimeOffset.UtcNow.AddMinutes(-5),
-            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow.AddMinutes(-5));
-        var newer = new JobQueueEntry(Guid.NewGuid(), "B", null, DateTimeOffset.UtcNow,
-            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow);
+        var older = new JobQueueEntry(
+            Guid.NewGuid(),
+            "A",
+            null,
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            JobQueueEntryState.Pending,
+            0,
+            null,
+            null,
+            DateTimeOffset.UtcNow.AddMinutes(-5)
+        );
+        var newer = new JobQueueEntry(
+            Guid.NewGuid(),
+            "B",
+            null,
+            DateTimeOffset.UtcNow,
+            JobQueueEntryState.Pending,
+            0,
+            null,
+            null,
+            DateTimeOffset.UtcNow
+        );
         await queue.EnqueueAsync(older);
         await queue.EnqueueAsync(newer);
 
@@ -48,7 +74,8 @@ public sealed class DatabaseJobQueueTests : IDisposable
 
         claimed.Should().NotBeNull();
         claimed!.JobTypeName.Should().Be("A");
-        var row = await _db.JobQueueEntries.SingleAsync(e => e.Id == claimed.Id);
+        var claimedId = JobId.From(claimed.Id);
+        var row = await _db.JobQueueEntries.SingleAsync(e => e.Id == claimedId);
         row.State.Should().Be(JobQueueEntryState.Claimed);
         row.ClaimedBy.Should().Be("worker-1");
         row.AttemptCount.Should().Be(1);
@@ -66,9 +93,19 @@ public sealed class DatabaseJobQueueTests : IDisposable
     public async Task DequeueAsync_IgnoresFutureScheduledEntries()
     {
         var queue = new DatabaseJobQueue(_db, NullLogger<DatabaseJobQueue>.Instance);
-        await queue.EnqueueAsync(new JobQueueEntry(
-            Guid.NewGuid(), "Future", null, DateTimeOffset.UtcNow.AddHours(1),
-            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow));
+        await queue.EnqueueAsync(
+            new JobQueueEntry(
+                Guid.NewGuid(),
+                "Future",
+                null,
+                DateTimeOffset.UtcNow.AddHours(1),
+                JobQueueEntryState.Pending,
+                0,
+                null,
+                null,
+                DateTimeOffset.UtcNow
+            )
+        );
 
         var result = await queue.DequeueAsync("worker-1");
         result.Should().BeNull();
@@ -79,8 +116,19 @@ public sealed class DatabaseJobQueueTests : IDisposable
     {
         var queue = new DatabaseJobQueue(_db, NullLogger<DatabaseJobQueue>.Instance);
         var id = Guid.NewGuid();
-        await queue.EnqueueAsync(new JobQueueEntry(id, "X", null, DateTimeOffset.UtcNow,
-            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow));
+        await queue.EnqueueAsync(
+            new JobQueueEntry(
+                id,
+                "X",
+                null,
+                DateTimeOffset.UtcNow,
+                JobQueueEntryState.Pending,
+                0,
+                null,
+                null,
+                DateTimeOffset.UtcNow
+            )
+        );
         await queue.DequeueAsync("worker-1");
 
         await queue.CompleteAsync(id);
@@ -95,8 +143,19 @@ public sealed class DatabaseJobQueueTests : IDisposable
     {
         var queue = new DatabaseJobQueue(_db, NullLogger<DatabaseJobQueue>.Instance);
         var id = Guid.NewGuid();
-        await queue.EnqueueAsync(new JobQueueEntry(id, "X", null, DateTimeOffset.UtcNow,
-            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow));
+        await queue.EnqueueAsync(
+            new JobQueueEntry(
+                id,
+                "X",
+                null,
+                DateTimeOffset.UtcNow,
+                JobQueueEntryState.Pending,
+                0,
+                null,
+                null,
+                DateTimeOffset.UtcNow
+            )
+        );
         await queue.DequeueAsync("worker-1");
 
         await queue.FailAsync(id, "boom");
@@ -111,8 +170,19 @@ public sealed class DatabaseJobQueueTests : IDisposable
     {
         var queue = new DatabaseJobQueue(_db, NullLogger<DatabaseJobQueue>.Instance);
         var id = Guid.NewGuid();
-        await queue.EnqueueAsync(new JobQueueEntry(id, "X", null, DateTimeOffset.UtcNow,
-            JobQueueEntryState.Pending, 0, null, null, DateTimeOffset.UtcNow));
+        await queue.EnqueueAsync(
+            new JobQueueEntry(
+                id,
+                "X",
+                null,
+                DateTimeOffset.UtcNow,
+                JobQueueEntryState.Pending,
+                0,
+                null,
+                null,
+                DateTimeOffset.UtcNow
+            )
+        );
         await queue.DequeueAsync("worker-1");
 
         // Manually backdate ClaimedAt to simulate a stall
