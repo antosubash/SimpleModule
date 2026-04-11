@@ -85,15 +85,6 @@ public static class GeneratorTestHelper
         );
     }
 
-    public static CSharpCompilation CreateCompilationWithAssemblyName(
-        string assemblyName,
-        params string[] sources
-    )
-    {
-        var compilation = CreateCompilation(sources);
-        return compilation.WithAssemblyName(assemblyName);
-    }
-
     public static CSharpCompilation CreateCompilationWithEfCore(params string[] sources)
     {
         var compilation = CreateCompilation(sources);
@@ -142,14 +133,6 @@ public static class GeneratorTestHelper
             efCoreReferences.Add(MetadataReference.CreateFromFile(identityStoresPath));
 
         return compilation.AddReferences(efCoreReferences);
-    }
-
-    public static CSharpCompilation CreateEfCoreCompilationWithAssemblyName(
-        string assemblyName,
-        params string[] sources
-    )
-    {
-        return CreateCompilationWithEfCore(sources).WithAssemblyName(assemblyName);
     }
 
     public static GeneratorDriverRunResult RunGenerator(CSharpCompilation compilation)

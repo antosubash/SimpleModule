@@ -7,6 +7,35 @@ using Microsoft.CodeAnalysis;
 
 namespace SimpleModule.Generator;
 
+/// <summary>
+/// Naming conventions for SimpleModule assemblies. Centralised so the same
+/// string literals don't drift between discovery code and diagnostic emission.
+/// </summary>
+internal static class AssemblyConventions
+{
+    internal const string FrameworkPrefix = "SimpleModule.";
+    internal const string ContractsSuffix = ".Contracts";
+    internal const string ModuleSuffix = ".Module";
+
+    /// <summary>
+    /// Derives the `.Contracts` sibling assembly name for a SimpleModule
+    /// implementation assembly. Strips a trailing <c>.Module</c> suffix first
+    /// so <c>SimpleModule.Agents.Module</c> maps to
+    /// <c>SimpleModule.Agents.Contracts</c> instead of
+    /// <c>SimpleModule.Agents.Module.Contracts</c>.
+    /// </summary>
+    internal static string GetExpectedContractsAssemblyName(string implementationAssemblyName)
+    {
+        var baseName = implementationAssemblyName.EndsWith(ModuleSuffix, StringComparison.Ordinal)
+            ? implementationAssemblyName.Substring(
+                0,
+                implementationAssemblyName.Length - ModuleSuffix.Length
+            )
+            : implementationAssemblyName;
+        return baseName + ContractsSuffix;
+    }
+}
+
 internal sealed class DiagnosticEmitter : IEmitter
 {
     internal static readonly DiagnosticDescriptor DuplicateDbSetPropertyName = new(
@@ -471,42 +500,39 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0055: Entity classes must live in a .Contracts assembly.
-        // Reported once per (entity, DbContext) pair so the author sees the
-        // offending DbSet in their editor. Only warns for entities the author
-        // can actually move — source-declared, inside a SimpleModule.* module,
-        // and NOT an Identity/OpenIddict external type.
+        // Walks every DbSet in the same pass that also collects EntityFqns
+        // for SM0006 below, so we only iterate data.DbContexts once.
+        var allEntityFqns = new HashSet<string>();
         foreach (var ctx in data.DbContexts)
         {
-            // IdentityDbContext uses external Identity entity types we can't move.
-            if (ctx.IsIdentityDbContext)
-                continue;
-
             foreach (var dbSet in ctx.DbSets)
             {
-                if (string.IsNullOrEmpty(dbSet.EntityAssemblyName))
-                    continue;
+                allEntityFqns.Add(dbSet.EntityFqn);
 
-                // Skip entities that aren't source-declared in a SimpleModule.* project.
-                // External libraries (OpenIddict, etc.) have no source location and shouldn't
-                // be reported even if the user can't physically move them.
+                // Skip entities we can't flag: IdentityDbContext external types,
+                // metadata-only symbols (no source location), and anything that
+                // lives outside the SimpleModule.* assembly family.
+                if (ctx.IsIdentityDbContext)
+                    continue;
                 if (dbSet.EntityLocation is null)
                     continue;
-
-                if (!dbSet.EntityAssemblyName.StartsWith("SimpleModule.", StringComparison.Ordinal))
-                    continue;
-
-                if (dbSet.EntityAssemblyName.EndsWith(".Contracts", StringComparison.Ordinal))
-                    continue;
-
-                var expectedContractsAssembly = dbSet.EntityAssemblyName.EndsWith(
-                    ".Module",
-                    StringComparison.Ordinal
+                if (
+                    !dbSet.EntityAssemblyName.StartsWith(
+                        AssemblyConventions.FrameworkPrefix,
+                        StringComparison.Ordinal
+                    )
                 )
-                    ? dbSet.EntityAssemblyName.Substring(
-                        0,
-                        dbSet.EntityAssemblyName.Length - ".Module".Length
-                    ) + ".Contracts"
-                    : dbSet.EntityAssemblyName + ".Contracts";
+                    continue;
+                if (
+                    dbSet.EntityAssemblyName.EndsWith(
+                        AssemblyConventions.ContractsSuffix,
+                        StringComparison.Ordinal
+                    )
+                )
+                    continue;
+
+                var expectedContractsAssembly =
+                    AssemblyConventions.GetExpectedContractsAssemblyName(dbSet.EntityAssemblyName);
 
                 context.ReportDiagnostic(
                     Diagnostic.Create(
@@ -523,13 +549,7 @@ internal sealed class DiagnosticEmitter : IEmitter
         }
 
         // SM0006: Entity config for entity not in any DbSet
-        var allEntityFqns = new HashSet<string>();
-        foreach (var ctx in data.DbContexts)
-        {
-            foreach (var dbSet in ctx.DbSets)
-                allEntityFqns.Add(dbSet.EntityFqn);
-        }
-
+        // (allEntityFqns was populated above during the SM0055 pass)
         foreach (var config in data.EntityConfigs)
         {
             if (!allEntityFqns.Contains(config.EntityFqn))

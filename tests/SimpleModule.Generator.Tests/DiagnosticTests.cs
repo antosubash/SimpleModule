@@ -1224,10 +1224,9 @@ public class DiagnosticTests
             }
             """;
 
-        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
-            "SimpleModule.Products",
-            source
-        );
+        var compilation = GeneratorTestHelper
+            .CreateCompilationWithEfCore(source)
+            .WithAssemblyName("SimpleModule.Products");
         var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
 
         diagnostics.Should().Contain(d => d.Id == "SM0055");
@@ -1268,10 +1267,9 @@ public class DiagnosticTests
             }
             """;
 
-        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
-            "SimpleModule.Products.Contracts",
-            source
-        );
+        var compilation = GeneratorTestHelper
+            .CreateCompilationWithEfCore(source)
+            .WithAssemblyName("SimpleModule.Products.Contracts");
         var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
 
         diagnostics.Should().NotContain(d => d.Id == "SM0055");
@@ -1309,10 +1307,9 @@ public class DiagnosticTests
             }
             """;
 
-        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
-            "SimpleModule.Agents.Module",
-            source
-        );
+        var compilation = GeneratorTestHelper
+            .CreateCompilationWithEfCore(source)
+            .WithAssemblyName("SimpleModule.Agents.Module");
         var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
 
         diagnostics.Should().Contain(d => d.Id == "SM0055");
@@ -1352,10 +1349,9 @@ public class DiagnosticTests
             }
             """;
 
-        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
-            "Contoso.Widgets",
-            source
-        );
+        var compilation = GeneratorTestHelper
+            .CreateCompilationWithEfCore(source)
+            .WithAssemblyName("Contoso.Widgets");
         var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
 
         diagnostics.Should().NotContain(d => d.Id == "SM0055");
