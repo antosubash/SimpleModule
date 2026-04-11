@@ -148,7 +148,28 @@ public static class SimpleModuleHostExtensions
         }
 
         app.UseForwardedHeaders();
-        app.UseExceptionHandler();
+        app.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                // If GlobalExceptionHandler already wrote the response, do nothing
+                if (context.Response.HasStarted)
+                    return;
+
+                // Fallback: serve static error.html for catastrophic failures
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "text/html";
+                var errorPage = Path.Combine(app.Environment.WebRootPath, "error.html");
+                if (File.Exists(errorPage))
+                {
+                    await context.Response.SendFileAsync(errorPage);
+                }
+                else
+                {
+                    await context.Response.WriteAsync("<h1>500 Internal Server Error</h1>");
+                }
+            });
+        });
         app.UseStatusCodePagesWithReExecute("/error/{0}");
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();
