@@ -165,16 +165,52 @@ RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
     -p:JsBuildCommand=echo
 
 # =============================================================================
-# Stage 5: Runtime (slim image, non-root user)
+# Stage 5: Tippecanoe builder (felt/tippecanoe is not in Debian repos so we
+# build it from source. Output is ~5 MB of static-ish binaries that depend
+# only on libsqlite3-0 + zlib1g, both present in the runtime image.)
+# =============================================================================
+FROM debian:bookworm-slim AS tippecanoe-builder
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        git \
+        libsqlite3-dev \
+        zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && git clone --depth 1 https://github.com/felt/tippecanoe.git /tmp/tippecanoe \
+    && make -C /tmp/tippecanoe -j"$(nproc)" \
+    && make -C /tmp/tippecanoe install PREFIX=/opt/tippecanoe
+
+# =============================================================================
+# Stage 6: Runtime (slim image, non-root user)
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# Native GIS tooling required by the Datasets module's background jobs:
+#   gdal-bin                   → gdal_translate, gdalwarp, ogr2ogr, ogrinfo
+#                                (raster → COG, vector reprojection,
+#                                 Shapefile / KML / GeoPackage ↔ GeoJSON)
+#   libsqlite3-mod-spatialite  → SpatiaLite extension for GeoPackage reads
+#   unzip                      → extracting .kmz and zipped Shapefile bundles
+# gdal-bin is large (~300 MB with deps: libproj, libgeos, libnetcdf, etc.)
+# but is the standard toolchain for every non-GeoJSON dataset format.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends \
+        curl \
+        gdal-bin \
+        libsqlite3-mod-spatialite \
+        unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 1001 appgroup \
     && useradd --system --uid 1001 --gid appgroup --create-home appuser
+
+# Tippecanoe CLI (vector → PMTiles / MBTiles) from the builder stage above.
+# Copying the whole staging bin/ picks up every binary felt/tippecanoe ships
+# (tippecanoe, tippecanoe-decode, tippecanoe-overzoom, tippecanoe-enumerate,
+# tippecanoe-json-tool, tile-join) without hard-coding names.
+COPY --from=tippecanoe-builder /opt/tippecanoe/bin/ /usr/local/bin/
 
 COPY --from=build --chown=appuser:appgroup /app/publish .
 
