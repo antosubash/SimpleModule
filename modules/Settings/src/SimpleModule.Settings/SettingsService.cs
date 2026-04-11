@@ -1,10 +1,13 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
+using SimpleModule.Settings.Contracts.Events;
 using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings;
@@ -13,6 +16,7 @@ public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
     ICacheStore cache,
+    IServiceProvider serviceProvider,
     IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
@@ -89,6 +93,8 @@ public sealed partial class SettingsService(
             && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
         );
 
+        var oldValue = existing?.Value;
+
         if (existing is not null)
         {
             existing.Value = value;
@@ -111,6 +117,11 @@ public sealed partial class SettingsService(
         await db.SaveChangesAsync();
         await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
         LogSettingUpdated(key, scope);
+
+        // Resolve IEventBus lazily to avoid a circular dependency when it's decorated
+        // by AuditingEventBus (which itself depends on ISettingsContracts).
+        var eventBus = serviceProvider.GetRequiredService<IEventBus>();
+        await eventBus.PublishAsync(new SettingChangedEvent(key, oldValue, value, scope));
     }
 
     public async Task DeleteSettingAsync(string key, SettingScope scope, string? userId = null)
@@ -127,6 +138,9 @@ public sealed partial class SettingsService(
             await db.SaveChangesAsync();
             await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
             LogSettingDeleted(key, scope);
+
+            var eventBus = serviceProvider.GetRequiredService<IEventBus>();
+            eventBus.PublishInBackground(new SettingDeletedEvent(key, scope));
         }
     }
 

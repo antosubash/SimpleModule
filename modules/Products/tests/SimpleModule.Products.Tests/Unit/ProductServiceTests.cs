@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Products;
@@ -31,7 +32,7 @@ public sealed class ProductServiceTests : IDisposable
         _db = new ProductsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new ProductService(_db, NullLogger<ProductService>.Instance);
+        _sut = new ProductService(_db, new TestEventBus(), NullLogger<ProductService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
@@ -123,5 +124,14 @@ public sealed class ProductServiceTests : IDisposable
         var act = () => _sut.DeleteProductAsync(ProductId.From(99999));
 
         await act.Should().ThrowAsync<NotFoundException>().WithMessage("*Product*99999*not found*");
+    }
+
+    private sealed class TestEventBus : IEventBus
+    {
+        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
+            where T : IEvent => Task.CompletedTask;
+
+        public void PublishInBackground<T>(T @event)
+            where T : IEvent { }
     }
 }

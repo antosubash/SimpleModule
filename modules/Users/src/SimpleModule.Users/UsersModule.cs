@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
@@ -43,6 +44,11 @@ public class UsersModule : IModule
 
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
+    }
+
+    public void ConfigurePermissions(PermissionRegistryBuilder builder)
+    {
+        builder.AddPermissions<UsersPermissions>();
     }
 
     public void ConfigureSettings(ISettingsBuilder settings)

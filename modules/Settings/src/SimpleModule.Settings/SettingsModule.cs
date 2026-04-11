@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
@@ -36,6 +37,11 @@ public class SettingsModule : IModule
                 Section = MenuSection.AppSidebar,
             }
         );
+    }
+
+    public void ConfigurePermissions(PermissionRegistryBuilder builder)
+    {
+        builder.AddPermissions<SettingsPermissions>();
     }
 
     public void ConfigureSettings(ISettingsBuilder settings)

@@ -129,7 +129,7 @@ See [docs/CONSTITUTION.md](docs/CONSTITUTION.md) for the authoritative reference
 - Module boundaries, dependencies, and data ownership
 - Communication patterns (contracts and events)
 - Endpoint, frontend, and authorization rules
-- Compiler-enforced diagnostics (SM0001-SM0044)
+- Compiler-enforced diagnostics (SM0001-SM0054)
 - Framework contributor guidelines
 
 ## Key Constraints

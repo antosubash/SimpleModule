@@ -1,9 +1,11 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Settings;
@@ -41,10 +43,16 @@ public sealed class SettingsServiceTests : IDisposable
 
         _cache = new MemoryCache(new MemoryCacheOptions());
         _cacheStore = new MemoryCacheStore(_cache);
+
+        var services = new ServiceCollection();
+        services.AddSingleton<IEventBus>(new TestEventBus());
+        var serviceProvider = services.BuildServiceProvider();
+
         _service = new SettingsService(
             _db,
             registry,
             _cacheStore,
+            serviceProvider,
             Options.Create(new SettingsModuleOptions()),
             NullLogger<SettingsService>.Instance
         );
@@ -146,5 +154,14 @@ public sealed class SettingsServiceTests : IDisposable
         _cache.Dispose();
         _db.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private sealed class TestEventBus : IEventBus
+    {
+        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
+            where T : IEvent => Task.CompletedTask;
+
+        public void PublishInBackground<T>(T @event)
+            where T : IEvent { }
     }
 }

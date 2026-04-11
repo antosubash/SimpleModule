@@ -118,6 +118,29 @@ router.on('httpException', (event) => {
   showErrorToast(message);
 });
 
+// Handle network errors (fetch failures, timeouts, offline requests)
+router.on('exception', (event) => {
+  event.preventDefault();
+  showErrorToast('Network error. Please check your connection and try again.');
+});
+
+// Offline / online detection — show a persistent warning when the browser
+// loses connectivity and dismiss it automatically when it reconnects.
+let offlineToast: HTMLDivElement | null = null;
+
+window.addEventListener('offline', () => {
+  if (offlineToast) return;
+  offlineToast = showPersistentWarningToast('You are offline. Some features may be unavailable.');
+});
+
+window.addEventListener('online', () => {
+  if (offlineToast) {
+    offlineToast.remove();
+    offlineToast = null;
+  }
+  showSuccessToast('You are back online.');
+});
+
 function showErrorToast(message: string) {
   const container = document.createElement('div');
   container.role = 'alert';
@@ -139,6 +162,55 @@ function showErrorToast(message: string) {
   container.querySelector('button')?.addEventListener('click', () => container.remove());
   document.body.appendChild(container);
   setTimeout(() => container.remove(), 8000);
+}
+
+function showPersistentWarningToast(message: string): HTMLDivElement {
+  const container = document.createElement('div');
+  container.role = 'alert';
+  container.className =
+    'fixed bottom-4 right-4 z-[100] max-w-md rounded-xl border border-warning/20 bg-warning-bg p-4 text-warning-text shadow-lg animate-in slide-in-from-bottom-full';
+  container.innerHTML = `
+    <div class="flex items-start gap-3">
+      <div class="flex-1">
+        <p class="text-sm font-semibold">Warning</p>
+        <p class="text-sm opacity-90"></p>
+      </div>
+      <button class="rounded-lg p-1 text-warning-text/60 hover:text-warning-text" aria-label="Close">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
+      </button>
+    </div>
+  `;
+  const msg = container.querySelector('p.opacity-90');
+  if (msg) msg.textContent = message;
+  container.querySelector('button')?.addEventListener('click', () => {
+    container.remove();
+    if (offlineToast === container) offlineToast = null;
+  });
+  document.body.appendChild(container);
+  return container;
+}
+
+function showSuccessToast(message: string) {
+  const container = document.createElement('div');
+  container.role = 'status';
+  container.className =
+    'fixed bottom-4 right-4 z-[100] max-w-md rounded-xl border border-success/20 bg-success-bg p-4 text-success-text shadow-lg animate-in slide-in-from-bottom-full';
+  container.innerHTML = `
+    <div class="flex items-start gap-3">
+      <div class="flex-1">
+        <p class="text-sm font-semibold">Success</p>
+        <p class="text-sm opacity-90"></p>
+      </div>
+      <button class="rounded-lg p-1 text-success-text/60 hover:text-success-text" aria-label="Close">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
+      </button>
+    </div>
+  `;
+  const msg = container.querySelector('p.opacity-90');
+  if (msg) msg.textContent = message;
+  container.querySelector('button')?.addEventListener('click', () => container.remove());
+  document.body.appendChild(container);
+  setTimeout(() => container.remove(), 5000);
 }
 
 createInertiaApp({

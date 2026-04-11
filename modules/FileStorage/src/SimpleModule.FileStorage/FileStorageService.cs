@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Events;
 using SimpleModule.FileStorage.Contracts;
+using SimpleModule.FileStorage.Contracts.Events;
 using SimpleModule.Storage;
 
 namespace SimpleModule.FileStorage;
@@ -8,6 +10,7 @@ namespace SimpleModule.FileStorage;
 public sealed partial class FileStorageService(
     FileStorageDbContext db,
     IStorageProvider storageProvider,
+    IEventBus eventBus,
     ILogger<FileStorageService> logger
 ) : IFileStorageContracts
 {
@@ -77,6 +80,16 @@ public sealed partial class FileStorageService(
             await db.SaveChangesAsync();
 
             LogFileUploaded(logger, storedFile.Id, storedFile.FileName);
+
+            await eventBus.PublishAsync(
+                new FileUploadedEvent(
+                    storedFile.Id,
+                    storedFile.FileName,
+                    storedFile.Size,
+                    storedFile.ContentType
+                )
+            );
+
             return storedFile;
         }
         catch
@@ -115,6 +128,8 @@ public sealed partial class FileStorageService(
         }
 
         LogFileDeleted(logger, file.Id, file.FileName);
+
+        eventBus.PublishInBackground(new FileDeletedEvent(file.Id, file.FileName));
     }
 
     public async Task<Stream?> DownloadFileAsync(FileStorageId id)

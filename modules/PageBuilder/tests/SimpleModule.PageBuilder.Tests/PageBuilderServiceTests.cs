@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.PageBuilder;
@@ -31,7 +32,11 @@ public sealed class PageBuilderServiceTests : IDisposable
         _db = new PageBuilderDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new PageBuilderService(_db, NullLogger<PageBuilderService>.Instance);
+        _sut = new PageBuilderService(
+            _db,
+            new TestEventBus(),
+            NullLogger<PageBuilderService>.Instance
+        );
     }
 
     public void Dispose() => _db.Dispose();
@@ -311,5 +316,14 @@ public sealed class PageBuilderServiceTests : IDisposable
 
         var updatedPage = await _sut.GetPageByIdAsync(page.Id);
         updatedPage!.Tags.Should().BeEmpty();
+    }
+
+    private sealed class TestEventBus : IEventBus
+    {
+        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
+            where T : IEvent => Task.CompletedTask;
+
+        public void PublishInBackground<T>(T @event)
+            where T : IEvent { }
     }
 }

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using SimpleModule.Core.Events;
 using SimpleModule.Database;
 using SimpleModule.FileStorage.Contracts;
 
@@ -36,6 +37,7 @@ public sealed class FileStorageServiceTests : IDisposable
         _service = new FileStorageService(
             _db,
             _storageProvider,
+            new TestEventBus(),
             NullLogger<FileStorageService>.Instance
         );
     }
@@ -352,6 +354,7 @@ public sealed class FileStorageServiceTests : IDisposable
         var failingService = new FileStorageService(
             _db,
             failingProvider,
+            new TestEventBus(),
             NullLogger<FileStorageService>.Instance
         );
 
@@ -374,4 +377,13 @@ public sealed class FileStorageServiceTests : IDisposable
     }
 
     public void Dispose() => _db.Dispose();
+
+    private sealed class TestEventBus : IEventBus
+    {
+        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
+            where T : IEvent => Task.CompletedTask;
+
+        public void PublishInBackground<T>(T @event)
+            where T : IEvent { }
+    }
 }

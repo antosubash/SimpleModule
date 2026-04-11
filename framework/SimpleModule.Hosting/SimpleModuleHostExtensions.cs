@@ -12,6 +12,7 @@ using SimpleModule.Core.Caching;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Health;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.RateLimiting;
@@ -106,7 +107,8 @@ public static class SimpleModuleHostExtensions
                 .AddCheck<DatabaseHealthCheck>(
                     HealthCheckConstants.DatabaseCheckName,
                     tags: [HealthCheckConstants.ReadyTag]
-                );
+                )
+                .AddCheck<ModuleHealthCheck>("modules", tags: [HealthCheckConstants.ReadyTag]);
         }
 
         if (options.EnableDevTools && builder.Environment.IsDevelopment())
@@ -329,5 +331,32 @@ public static class SimpleModuleHostExtensions
                 await next();
             }
         );
+    }
+
+    private static async Task WriteHealthCheckResponse(
+        HttpContext context,
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport report
+    )
+    {
+        context.Response.ContentType = "application/json";
+
+        var entries = report
+            .Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                data = e.Value.Data,
+            })
+            .ToList();
+
+        var response = new
+        {
+            status = report.Status.ToString(),
+            totalDuration = report.TotalDuration.TotalMilliseconds,
+            checks = entries,
+        };
+
+        await context.Response.WriteAsJsonAsync(response);
     }
 }

@@ -1,11 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Events;
 using SimpleModule.Products.Contracts;
+using SimpleModule.Products.Contracts.Events;
 
 namespace SimpleModule.Products;
 
-public partial class ProductService(ProductsDbContext db, ILogger<ProductService> logger)
-    : IProductContracts
+public partial class ProductService(
+    ProductsDbContext db,
+    IEventBus eventBus,
+    ILogger<ProductService> logger
+) : IProductContracts
 {
     public async Task<IEnumerable<Product>> GetAllProductsAsync() =>
         await db.Products.AsNoTracking().ToListAsync();
@@ -36,6 +41,10 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
 
         LogProductCreated(logger, product.Id, product.Name);
 
+        await eventBus.PublishAsync(
+            new ProductCreatedEvent(product.Id, product.Name, product.Price)
+        );
+
         return product;
     }
 
@@ -54,6 +63,10 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
 
         LogProductUpdated(logger, product.Id, product.Name);
 
+        await eventBus.PublishAsync(
+            new ProductUpdatedEvent(product.Id, product.Name, product.Price)
+        );
+
         return product;
     }
 
@@ -69,6 +82,8 @@ public partial class ProductService(ProductsDbContext db, ILogger<ProductService
         await db.SaveChangesAsync();
 
         LogProductDeleted(logger, id);
+
+        eventBus.PublishInBackground(new ProductDeletedEvent(id));
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Product with ID {ProductId} not found")]

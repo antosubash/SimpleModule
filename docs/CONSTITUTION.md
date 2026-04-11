@@ -447,14 +447,23 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 |------------|----------|------|
 | SM0039 | Warning | Interceptor has transitive DbContext dependency (resolve at interception time) |
 
-### Localization
+### Feature Flags
 
 | Diagnostic | Severity | Rule |
 |------------|----------|------|
-| SM0049 | Warning | Module has `IStringLocalizer` injection but no `Locales/en.json` embedded resource |
-| SM0050 | Warning | `Locales/en.json` exists but is not marked as `EmbeddedResource` in `.csproj` |
+| SM0045 | Error | Feature class must be sealed |
+| SM0046 | Warning | Feature field must follow `ModuleName.FeatureName` pattern |
+| SM0047 | Error | No duplicate feature names across modules |
+| SM0048 | Error | Feature field must be a public const string |
 
-### Module Structure
+### Endpoints
+
+| Diagnostic | Severity | Rule |
+|------------|----------|------|
+| SM0049 | Error | Each endpoint must be in its own file |
+| SM0054 | Info | Endpoint should declare a `public const string Route` field |
+
+### Module Metadata
 
 | Diagnostic | Severity | Rule |
 |------------|----------|------|
@@ -491,6 +500,22 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 - `ModuleDbContextOptionsBuilder` handles provider detection and routing.
 - Interceptors are resolved lazily to avoid circular DI.
 - `ApplyModuleSchema` must handle PostgreSQL, SQL Server, and SQLite.
+
+### Database Migrations
+
+- One migration history shared by all modules. Run `dotnet ef migrations add <Name> --project template/SimpleModule.Host` to create a migration.
+- The unified `HostDbContext` (source-generated) owns all DbSets across modules. Migrations target this context.
+- When two modules add migrations concurrently, resolve conflicts by regenerating the later migration against the merged model snapshot.
+- SQLite uses table prefixes (`{ModuleName}_`) for logical isolation. PostgreSQL and SQL Server use schema isolation (`{ModuleName}.`).
+- Never modify or delete existing migrations that have been applied in production. Add corrective migrations instead.
+
+### Logging Conventions
+
+- Inject `ILogger<T>` via primary constructor. Use the module's service class as the type parameter.
+- Use source-generated logging via `[LoggerMessage]` attribute for all log messages. This is required by the `partial class` pattern and produces high-performance, zero-allocation log calls.
+- **Log levels**: `Debug` for lifecycle events (module started/stopped). `Information` for successful operations (entity created/updated/deleted). `Warning` for expected failures (not found, validation). `Error` for unexpected failures (exceptions, infrastructure).
+- **Structured fields**: Always include entity IDs and names as named parameters (e.g., `{ProductId}`, `{ProductName}`). The runtime logging infrastructure adds correlation IDs via `System.Diagnostics.Activity.Current.TraceId`.
+- Do not log sensitive data (passwords, tokens, PII). The AuditLogs module handles redaction for audit trails separately.
 
 ### Core Framework
 
