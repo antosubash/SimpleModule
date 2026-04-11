@@ -21,7 +21,7 @@ public class UpdateMenuItemEndpoint : IEndpoint
                     PublicMenuService service
                 ) =>
                 {
-                    var entity = await service.UpdateAsync(id, request);
+                    var entity = await service.UpdateAsync(PublicMenuItemId.From(id), request);
                     return entity is not null ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )

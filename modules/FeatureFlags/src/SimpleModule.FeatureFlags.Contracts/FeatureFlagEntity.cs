@@ -1,8 +1,10 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
 
-namespace SimpleModule.FeatureFlags.Entities;
+namespace SimpleModule.FeatureFlags.Contracts;
 
-public class FeatureFlagEntity : Entity<int>
+[NoDtoGeneration]
+public class FeatureFlagEntity : Entity<FeatureFlagId>
 {
     public string Name { get; set; } = string.Empty;
     public bool IsEnabled { get; set; }

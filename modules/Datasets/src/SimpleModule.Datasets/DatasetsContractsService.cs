@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core.Settings;
 using SimpleModule.Datasets.Contracts;
-using SimpleModule.Datasets.Entities;
 using SimpleModule.Datasets.Jobs;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Storage;
@@ -114,6 +113,11 @@ public sealed partial class DatasetsContractsService(
         row.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
         LogDatasetDeleted(logger, id.Value);
+
+        await jobs.EnqueueAsync<PurgeDatasetJob>(
+            new PurgeDatasetJobData { DatasetId = id.Value },
+            ct
+        );
     }
 
     public async Task<Stream?> GetOriginalAsync(DatasetId id, CancellationToken ct = default)

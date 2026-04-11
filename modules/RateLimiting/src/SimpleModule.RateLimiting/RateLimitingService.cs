@@ -39,7 +39,6 @@ public partial class RateLimitingService(
             QueueLimit = request.QueueLimit,
             EndpointPattern = request.EndpointPattern,
             IsEnabled = request.IsEnabled,
-            CreatedAt = DateTime.UtcNow,
         };
 
         db.Rules.Add(rule);
@@ -72,7 +71,6 @@ public partial class RateLimitingService(
         rule.QueueLimit = request.QueueLimit;
         rule.EndpointPattern = request.EndpointPattern;
         rule.IsEnabled = request.IsEnabled;
-        rule.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
 

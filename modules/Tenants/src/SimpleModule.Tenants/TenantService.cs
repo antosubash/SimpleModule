@@ -4,7 +4,6 @@ using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Tenants.Contracts;
 using SimpleModule.Tenants.Contracts.Events;
-using SimpleModule.Tenants.Entities;
 
 namespace SimpleModule.Tenants;
 

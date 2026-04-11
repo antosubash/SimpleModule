@@ -1,3 +1,5 @@
+using SimpleModule.Agents.Contracts;
+
 namespace SimpleModule.Agents.Module;
 
 public interface IAgentSessionStore

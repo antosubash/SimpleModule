@@ -5,13 +5,14 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.FileStorage.Contracts;
 using SimpleModule.Tests.Shared.Fakes;
+using SimpleModule.Tests.Shared.Storage;
 
 namespace SimpleModule.FileStorage.Tests;
 
 public sealed class FileStorageServiceTests : IDisposable
 {
     private readonly FileStorageDbContext _db;
-    private readonly InMemoryStorageProvider _storageProvider;
+    private readonly InMemoryStorage _storageProvider;
     private readonly FileStorageService _service;
 
     public FileStorageServiceTests()
@@ -33,7 +34,7 @@ public sealed class FileStorageServiceTests : IDisposable
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
 
-        _storageProvider = new InMemoryStorageProvider();
+        _storageProvider = new InMemoryStorage();
         _service = new FileStorageService(
             _db,
             _storageProvider,

@@ -9,7 +9,6 @@ using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
-using SimpleModule.FeatureFlags.Entities;
 
 namespace FeatureFlags.Tests.Unit;
 

@@ -47,7 +47,7 @@ public partial class SendEmailJob(
             context.Log($"Sending email {message.Id} to {message.To}");
             await emailProvider.SendAsync(envelope, cancellationToken);
             message.Status = EmailStatus.Sent;
-            message.SentAt = DateTime.UtcNow;
+            message.SentAt = DateTimeOffset.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
 
             LogEmailSent(logger, message.Id, message.To);

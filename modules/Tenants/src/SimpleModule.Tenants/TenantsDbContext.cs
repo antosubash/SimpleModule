@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Tenants.Contracts;
-using SimpleModule.Tenants.Entities;
 using SimpleModule.Tenants.EntityConfigurations;
 
 namespace SimpleModule.Tenants;

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 
 namespace SimpleModule.BackgroundJobs.Services;
 
@@ -87,7 +86,7 @@ public sealed partial class ProgressFlushService(
 
         // Group by JobId — take latest progress per job
         var grouped = batch
-            .GroupBy(e => e.JobId)
+            .GroupBy(e => JobId.From(e.JobId))
             .Select(g => new
             {
                 JobId = g.Key,
@@ -136,8 +135,6 @@ public sealed partial class ProgressFlushService(
 
                 existing.Logs = JsonSerializer.Serialize(logs);
             }
-
-            existing.UpdatedAt = DateTimeOffset.UtcNow;
         }
 
         await db.SaveChangesAsync(ct);

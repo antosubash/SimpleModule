@@ -109,11 +109,12 @@ public sealed class PageBuilderServiceTests : IDisposable
 
         await _sut.DeletePageAsync(page.Id);
 
-        // Soft deleted — not in normal queries
-        var found = await _sut.GetPageByIdAsync(page.Id);
-        found.Should().BeNull();
+        // The soft-deleted row stays in storage with IsDeleted=true.
+        var row = await _db.Pages.IgnoreQueryFilters().SingleAsync(p => p.Id == page.Id);
+        row.IsDeleted.Should().BeTrue();
+        row.DeletedAt.Should().NotBeNull();
 
-        // But in trash
+        // And the trash list surfaces it.
         var trashed = await _sut.GetTrashedPagesAsync();
         trashed.Should().ContainSingle().Which.Title.Should().Be("To Soft Delete");
     }

@@ -17,11 +17,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public BackgroundJobsServiceTests()
     {
         _db = _factory.Create();
-        _sut = new BackgroundJobsService(
-            _queue,
-            _db,
-            NullLogger<BackgroundJobsService>.Instance
-        );
+        _sut = new BackgroundJobsService(_queue, _db, NullLogger<BackgroundJobsService>.Instance);
     }
 
     public void Dispose()
@@ -35,12 +31,17 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     [Fact]
     public async Task EnqueueAsync_EnqueuesViaQueueAndCreatesProgress()
     {
-        var jobId = await _sut.EnqueueAsync<TestJob>(new TestData("import", 100), CancellationToken.None);
+        var jobId = await _sut.EnqueueAsync<TestJob>(
+            new TestData("import", 100),
+            CancellationToken.None
+        );
 
         jobId.Value.Should().NotBeEmpty();
-        await _queue.Received(1).EnqueueAsync(Arg.Any<JobQueueEntry>(), Arg.Any<CancellationToken>());
+        await _queue
+            .Received(1)
+            .EnqueueAsync(Arg.Any<JobQueueEntry>(), Arg.Any<CancellationToken>());
 
-        var progress = await _db.JobProgress.FindAsync(jobId.Value);
+        var progress = await _db.JobProgress.FindAsync(jobId);
         progress.Should().NotBeNull();
         progress!.ProgressPercentage.Should().Be(0);
         progress.JobTypeName.Should().Contain("TestJob");
@@ -50,7 +51,10 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public async Task EnqueueAsync_WithNullData_SerializesNullPayloadData()
     {
         JobQueueEntry? capturedEntry = null;
-        _ = _queue.EnqueueAsync(Arg.Do<JobQueueEntry>(e => capturedEntry = e), Arg.Any<CancellationToken>());
+        _ = _queue.EnqueueAsync(
+            Arg.Do<JobQueueEntry>(e => capturedEntry = e),
+            Arg.Any<CancellationToken>()
+        );
 
         await _sut.EnqueueAsync<TestJob>(null, CancellationToken.None);
 
@@ -65,7 +69,7 @@ public sealed class BackgroundJobsServiceTests : IDisposable
 
         var jobId = await _sut.EnqueueAsync<TestJob>(data, CancellationToken.None);
 
-        var progress = await _db.JobProgress.FindAsync(jobId.Value);
+        var progress = await _db.JobProgress.FindAsync(jobId);
         progress!.Data.Should().NotBeNull();
         progress.Data.Should().Contain("import-csv");
     }
@@ -77,13 +81,20 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     {
         var executeAt = DateTimeOffset.UtcNow.AddHours(2);
         JobQueueEntry? capturedEntry = null;
-        _ = _queue.EnqueueAsync(Arg.Do<JobQueueEntry>(e => capturedEntry = e), Arg.Any<CancellationToken>());
+        _ = _queue.EnqueueAsync(
+            Arg.Do<JobQueueEntry>(e => capturedEntry = e),
+            Arg.Any<CancellationToken>()
+        );
 
-        var jobId = await _sut.ScheduleAsync<TestJob>(executeAt, new TestData("scheduled", 1), CancellationToken.None);
+        var jobId = await _sut.ScheduleAsync<TestJob>(
+            executeAt,
+            new TestData("scheduled", 1),
+            CancellationToken.None
+        );
 
         jobId.Value.Should().NotBeEmpty();
         capturedEntry!.ScheduledAt.Should().BeCloseTo(executeAt, TimeSpan.FromSeconds(1));
-        var progress = await _db.JobProgress.FindAsync(jobId.Value);
+        var progress = await _db.JobProgress.FindAsync(jobId);
         progress.Should().NotBeNull();
     }
 
@@ -95,7 +106,9 @@ public sealed class BackgroundJobsServiceTests : IDisposable
         var jobId = await _sut.ScheduleAsync<TestJob>(executeAt, null, CancellationToken.None);
 
         jobId.Value.Should().NotBeEmpty();
-        await _queue.Received(1).EnqueueAsync(Arg.Any<JobQueueEntry>(), Arg.Any<CancellationToken>());
+        await _queue
+            .Received(1)
+            .EnqueueAsync(Arg.Any<JobQueueEntry>(), Arg.Any<CancellationToken>());
     }
 
     // --- AddRecurringAsync ---
@@ -104,9 +117,17 @@ public sealed class BackgroundJobsServiceTests : IDisposable
     public async Task AddRecurringAsync_EnqueuesWithCronFields()
     {
         JobQueueEntry? capturedEntry = null;
-        _ = _queue.EnqueueAsync(Arg.Do<JobQueueEntry>(e => capturedEntry = e), Arg.Any<CancellationToken>());
+        _ = _queue.EnqueueAsync(
+            Arg.Do<JobQueueEntry>(e => capturedEntry = e),
+            Arg.Any<CancellationToken>()
+        );
 
-        var id = await _sut.AddRecurringAsync<TestJob>("cleanup", "0 2 * * *", null, CancellationToken.None);
+        var id = await _sut.AddRecurringAsync<TestJob>(
+            "cleanup",
+            "0 2 * * *",
+            null,
+            CancellationToken.None
+        );
 
         id.Value.Should().NotBeEmpty();
         capturedEntry.Should().NotBeNull();

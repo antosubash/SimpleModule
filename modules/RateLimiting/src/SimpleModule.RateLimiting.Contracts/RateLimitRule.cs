@@ -1,10 +1,10 @@
+using SimpleModule.Core.Entities;
 using SimpleModule.Core.RateLimiting;
 
 namespace SimpleModule.RateLimiting.Contracts;
 
-public class RateLimitRule
+public class RateLimitRule : Entity<RateLimitRuleId>
 {
-    public RateLimitRuleId Id { get; set; }
     public string PolicyName { get; set; } = string.Empty;
     public RateLimitPolicyType PolicyType { get; set; } = RateLimitPolicyType.FixedWindow;
     public RateLimitTarget Target { get; set; } = RateLimitTarget.Ip;
@@ -17,6 +17,4 @@ public class RateLimitRule
     public int QueueLimit { get; set; }
     public string? EndpointPattern { get; set; }
     public bool IsEnabled { get; set; } = true;
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 }

@@ -17,7 +17,7 @@ public class SetHomePageEndpoint : IEndpoint
                 Route,
                 async (int id, PublicMenuService service) =>
                 {
-                    await service.SetHomePageAsync(id);
+                    await service.SetHomePageAsync(PublicMenuItemId.From(id));
                     return TypedResults.NoContent();
                 }
             )

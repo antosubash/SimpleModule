@@ -13,5 +13,6 @@ public class PageTemplateConfiguration : IEntityTypeConfiguration<PageTemplate>
         builder.Property(t => t.Name).IsRequired().HasMaxLength(200);
         builder.HasIndex(t => t.Name).IsUnique();
         builder.Property(t => t.Content).IsRequired();
+        builder.Property(t => t.ConcurrencyStamp).HasMaxLength(64);
     }
 }

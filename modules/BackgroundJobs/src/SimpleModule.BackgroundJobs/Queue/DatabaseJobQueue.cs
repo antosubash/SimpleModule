@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 
 namespace SimpleModule.BackgroundJobs.Queue;
 
@@ -15,7 +14,7 @@ public sealed partial class DatabaseJobQueue(
     {
         var row = new JobQueueEntryEntity
         {
-            Id = entry.Id == Guid.Empty ? Guid.NewGuid() : entry.Id,
+            Id = JobId.From(entry.Id == Guid.Empty ? Guid.NewGuid() : entry.Id),
             JobTypeName = entry.JobTypeName,
             SerializedData = entry.SerializedData,
             ScheduledAt = entry.ScheduledAt,
@@ -28,12 +27,14 @@ public sealed partial class DatabaseJobQueue(
 
         db.JobQueueEntries.Add(row);
         await db.SaveChangesAsync(ct);
-        LogEnqueued(logger, row.Id, row.JobTypeName);
+        LogEnqueued(logger, row.Id.Value, row.JobTypeName);
     }
 
     public async Task<JobQueueEntry?> DequeueAsync(string workerId, CancellationToken ct = default)
     {
-        var isPostgres = db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+        var isPostgres =
+            db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase)
+            == true;
         var now = DateTimeOffset.UtcNow;
 
         await using var tx = await db.Database.BeginTransactionAsync(ct);
@@ -49,15 +50,17 @@ public sealed partial class DatabaseJobQueue(
                 LIMIT 1
                 FOR UPDATE SKIP LOCKED
                 """;
-            candidate = await db.JobQueueEntries
-                .FromSqlRaw(sql, now)
+            candidate = await db
+                .JobQueueEntries.FromSqlRaw(sql, now)
                 .AsTracking()
                 .FirstOrDefaultAsync(ct);
         }
         else
         {
-            candidate = await db.JobQueueEntries
-                .Where(e => e.State == JobQueueEntryState.Pending && e.ScheduledAt <= now)
+            candidate = await db
+                .JobQueueEntries.Where(e =>
+                    e.State == JobQueueEntryState.Pending && e.ScheduledAt <= now
+                )
                 .OrderBy(e => e.ScheduledAt)
                 .FirstOrDefaultAsync(ct);
         }
@@ -75,10 +78,10 @@ public sealed partial class DatabaseJobQueue(
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);
 
-        LogClaimed(logger, candidate.Id, workerId);
+        LogClaimed(logger, candidate.Id.Value, workerId);
 
         return new JobQueueEntry(
-            candidate.Id,
+            candidate.Id.Value,
             candidate.JobTypeName,
             candidate.SerializedData,
             candidate.ScheduledAt,
@@ -92,8 +95,10 @@ public sealed partial class DatabaseJobQueue(
 
     public async Task CompleteAsync(Guid entryId, CancellationToken ct = default)
     {
-        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == entryId, ct);
-        if (row is null) return;
+        var id = JobId.From(entryId);
+        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == id, ct);
+        if (row is null)
+            return;
         row.State = JobQueueEntryState.Completed;
         row.CompletedAt = DateTimeOffset.UtcNow;
         row.Error = null;
@@ -103,8 +108,10 @@ public sealed partial class DatabaseJobQueue(
 
     public async Task FailAsync(Guid entryId, string error, CancellationToken ct = default)
     {
-        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == entryId, ct);
-        if (row is null) return;
+        var id = JobId.From(entryId);
+        var row = await db.JobQueueEntries.FirstOrDefaultAsync(e => e.Id == id, ct);
+        if (row is null)
+            return;
         row.State = JobQueueEntryState.Failed;
         row.CompletedAt = DateTimeOffset.UtcNow;
         row.Error = error;
@@ -115,8 +122,10 @@ public sealed partial class DatabaseJobQueue(
     public async Task<int> RequeueStalledAsync(TimeSpan timeout, CancellationToken ct = default)
     {
         var cutoff = DateTimeOffset.UtcNow - timeout;
-        var stalled = await db.JobQueueEntries
-            .Where(e => e.State == JobQueueEntryState.Claimed && e.ClaimedAt != null && e.ClaimedAt < cutoff)
+        var stalled = await db
+            .JobQueueEntries.Where(e =>
+                e.State == JobQueueEntryState.Claimed && e.ClaimedAt != null && e.ClaimedAt < cutoff
+            )
             .ToListAsync(ct);
 
         foreach (var row in stalled)

@@ -3,8 +3,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
     <Description>Contracts for the SimpleModule Agents module. Events and shared types for cross-module use.</Description>
+    <DefineConstants>$(DefineConstants);VOGEN_NO_VALIDATION</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Vogen" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
   </ItemGroup>
 </Project>

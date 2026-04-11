@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.FeatureFlags;
-using SimpleModule.FeatureFlags.Entities;
+using SimpleModule.FeatureFlags.Contracts;
 
 namespace SimpleModule.FeatureFlags;
 

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
-using SimpleModule.Permissions.Entities;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Permissions.EntityConfigurations;
 
 namespace SimpleModule.Permissions;

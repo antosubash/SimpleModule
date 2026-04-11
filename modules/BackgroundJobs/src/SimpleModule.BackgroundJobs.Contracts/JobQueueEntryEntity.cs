@@ -1,10 +1,11 @@
-using SimpleModule.BackgroundJobs.Contracts;
+using SimpleModule.Core;
+using SimpleModule.Core.Entities;
 
-namespace SimpleModule.BackgroundJobs.Entities;
+namespace SimpleModule.BackgroundJobs.Contracts;
 
-public class JobQueueEntryEntity
+[NoDtoGeneration]
+public class JobQueueEntryEntity : Entity<JobId>
 {
-    public Guid Id { get; set; }
     public string JobTypeName { get; set; } = string.Empty;
     public string? SerializedData { get; set; }
     public DateTimeOffset ScheduledAt { get; set; }
@@ -13,7 +14,6 @@ public class JobQueueEntryEntity
     public DateTimeOffset? ClaimedAt { get; set; }
     public int AttemptCount { get; set; }
     public string? Error { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
     public string? CronExpression { get; set; }
     public string? RecurringName { get; set; }
