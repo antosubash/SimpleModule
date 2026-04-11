@@ -12,6 +12,13 @@ services:
       # Set to your public URL so OpenIddict registers correct redirect URIs.
       # Examples: https://app.simplemodule.dev, http://localhost:8080
       OpenIddict__BaseUrl: ${APP_BASE_URL:-http://localhost:8080}
+      # api stays in Producer mode — it enqueues jobs but never runs them.
+      # All IModuleJob execution lives in the worker service below.
+      BackgroundJobs__WorkerMode: Producer
+    volumes:
+      # Shared with the worker so uploaded dataset blobs are visible to
+      # both producer (web upload path) and consumer (background job path).
+      - storage_data:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -21,6 +28,23 @@ services:
       timeout: 5s
       start_period: 15s
       retries: 3
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
+      Database__Provider: PostgreSQL
+      # Forced to Consumer by AddSimpleModuleWorker, set here for visibility.
+      BackgroundJobs__WorkerMode: Consumer
+    volumes:
+      - storage_data:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:
@@ -42,3 +66,4 @@ services:
 
 volumes:
   pgdata:
+  storage_data:
