@@ -1,10 +1,11 @@
 using SimpleModule.Core.Entities;
+using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Settings.Entities;
 
-public class PublicMenuItemEntity : Entity<int>
+public class PublicMenuItemEntity : Entity<PublicMenuItemId>
 {
-    public int? ParentId { get; set; }
+    public PublicMenuItemId? ParentId { get; set; }
     public PublicMenuItemEntity? Parent { get; set; }
     public List<PublicMenuItemEntity> Children { get; set; } = [];
 

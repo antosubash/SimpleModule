@@ -9,6 +9,7 @@ public class PublicMenuItemEntityConfiguration : IEntityTypeConfiguration<Public
     public void Configure(EntityTypeBuilder<PublicMenuItemEntity> builder)
     {
         builder.HasKey(m => m.Id);
+        builder.Property(m => m.Id).ValueGeneratedOnAdd();
         builder.Property(m => m.Label).IsRequired().HasMaxLength(200);
         builder.Property(m => m.Url).HasMaxLength(2048);
         builder.Property(m => m.PageRoute).HasMaxLength(256);

@@ -3,7 +3,7 @@ using SimpleModule.Core.Entities;
 
 namespace SimpleModule.BackgroundJobs.Entities;
 
-public class JobQueueEntryEntity : Entity<Guid>
+public class JobQueueEntryEntity : Entity<JobId>
 {
     public string JobTypeName { get; set; } = string.Empty;
     public string? SerializedData { get; set; }

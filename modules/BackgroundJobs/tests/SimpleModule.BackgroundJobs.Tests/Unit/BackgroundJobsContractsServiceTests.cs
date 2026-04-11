@@ -52,24 +52,28 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobsAsync_ExcludesRecurringJobs()
     {
-        _db.JobQueueEntries.Add(new JobQueueEntryEntity
-        {
-            Id = Guid.NewGuid(),
-            JobTypeName = "TestJob",
-            ScheduledAt = DateTimeOffset.UtcNow,
-            State = JobQueueEntryState.Pending,
-            RecurringName = "my-recurring",
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
-        _db.JobQueueEntries.Add(new JobQueueEntryEntity
-        {
-            Id = Guid.NewGuid(),
-            JobTypeName = "TestJob",
-            ScheduledAt = DateTimeOffset.UtcNow,
-            State = JobQueueEntryState.Pending,
-            RecurringName = null,
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
+        _db.JobQueueEntries.Add(
+            new JobQueueEntryEntity
+            {
+                Id = JobId.From(Guid.NewGuid()),
+                JobTypeName = "TestJob",
+                ScheduledAt = DateTimeOffset.UtcNow,
+                State = JobQueueEntryState.Pending,
+                RecurringName = "my-recurring",
+                CreatedAt = DateTimeOffset.UtcNow,
+            }
+        );
+        _db.JobQueueEntries.Add(
+            new JobQueueEntryEntity
+            {
+                Id = JobId.From(Guid.NewGuid()),
+                JobTypeName = "TestJob",
+                ScheduledAt = DateTimeOffset.UtcNow,
+                State = JobQueueEntryState.Pending,
+                RecurringName = null,
+                CreatedAt = DateTimeOffset.UtcNow,
+            }
+        );
         await _db.SaveChangesAsync();
 
         var result = await _sut.GetJobsAsync(new JobFilter(), CancellationToken.None);
@@ -82,7 +86,10 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     [Fact]
     public async Task GetJobDetailAsync_NonExistentId_ReturnsNull()
     {
-        var result = await _sut.GetJobDetailAsync(JobId.From(Guid.NewGuid()), CancellationToken.None);
+        var result = await _sut.GetJobDetailAsync(
+            JobId.From(Guid.NewGuid()),
+            CancellationToken.None
+        );
 
         result.Should().BeNull();
     }
@@ -117,7 +124,7 @@ public sealed class BackgroundJobsContractsServiceTests : IDisposable
     {
         return new JobProgress
         {
-            Id = id,
+            Id = JobId.From(id),
             JobTypeName = jobType,
             ModuleName = module,
             ProgressPercentage = 0,

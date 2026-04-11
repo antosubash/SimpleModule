@@ -35,7 +35,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(1500);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(40);
         updated.ProgressMessage.Should().Be("Pre-queued");
     }
@@ -57,7 +57,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(1500);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(60);
         updated.ProgressMessage.Should().Be("Post-start");
     }
@@ -104,7 +104,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await service.StopAsync(CancellationToken.None);
 
         // The drain-on-shutdown path should have flushed
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(90);
     }
 
@@ -130,9 +130,15 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await service.StopAsync(CancellationToken.None);
 
         var verifyDb = _factory.Create();
-        (await verifyDb.JobProgress.FindAsync(job1))!.ProgressPercentage.Should().Be(10);
-        (await verifyDb.JobProgress.FindAsync(job2))!.ProgressPercentage.Should().Be(20);
-        (await verifyDb.JobProgress.FindAsync(job3))!.ProgressPercentage.Should().Be(30);
+        (await verifyDb.JobProgress.FindAsync(JobId.From(job1)))!
+            .ProgressPercentage.Should()
+            .Be(10);
+        (await verifyDb.JobProgress.FindAsync(JobId.From(job2)))!
+            .ProgressPercentage.Should()
+            .Be(20);
+        (await verifyDb.JobProgress.FindAsync(JobId.From(job3)))!
+            .ProgressPercentage.Should()
+            .Be(30);
     }
 
     [Fact]
@@ -167,7 +173,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(200);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.Logs.Should().NotBeNull();
         var logs = JsonSerializer.Deserialize<List<JobLogEntry>>(updated.Logs!);
         logs.Should().ContainSingle().Which.Message.Should().Be("Log before shutdown");
@@ -192,7 +198,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(1500);
         await service.StopAsync(CancellationToken.None);
 
-        var afterFirst = await _factory.Create().JobProgress.FindAsync(jobId);
+        var afterFirst = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         afterFirst!.ProgressPercentage.Should().Be(25);
 
         // Restart with a new service instance (same channel)
@@ -202,7 +208,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(1500);
         await service2.StopAsync(CancellationToken.None);
 
-        var afterRestart = await _factory.Create().JobProgress.FindAsync(jobId);
+        var afterRestart = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         afterRestart!.ProgressPercentage.Should().Be(80);
         afterRestart.ProgressMessage.Should().Be("After restart");
     }
@@ -234,7 +240,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(1500);
         await service2.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(50);
         updated.ProgressMessage.Should().Be("Enqueued while stopped");
     }
@@ -267,7 +273,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
         await Task.Delay(1500);
         await service2.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         var logs = JsonSerializer.Deserialize<List<JobLogEntry>>(updated!.Logs!);
         logs.Should().HaveCount(2);
         logs![0].Message.Should().Be("Log from run 1");
@@ -301,7 +307,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
             await service.StopAsync(CancellationToken.None);
         }
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(90);
         updated.ProgressMessage.Should().Be("Cycle 3");
 
@@ -315,7 +321,7 @@ public sealed class ProgressFlushServiceLifecycleTests : IDisposable
     {
         return new JobProgress
         {
-            Id = id,
+            Id = JobId.From(id),
             JobTypeName = "TestJob",
             ModuleName = "Test",
             ProgressPercentage = 0,

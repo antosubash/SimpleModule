@@ -192,7 +192,7 @@ public sealed partial class FeatureFlagService(
         };
     }
 
-    public async Task DeleteOverrideAsync(int overrideId)
+    public async Task DeleteOverrideAsync(FeatureFlagOverrideId overrideId)
     {
         var entity = await db.FeatureFlagOverrides.FindAsync(overrideId);
         if (entity is not null)

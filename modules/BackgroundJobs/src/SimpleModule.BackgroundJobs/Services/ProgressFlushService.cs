@@ -87,7 +87,7 @@ public sealed partial class ProgressFlushService(
 
         // Group by JobId — take latest progress per job
         var grouped = batch
-            .GroupBy(e => e.JobId)
+            .GroupBy(e => JobId.From(e.JobId))
             .Select(g => new
             {
                 JobId = g.Key,

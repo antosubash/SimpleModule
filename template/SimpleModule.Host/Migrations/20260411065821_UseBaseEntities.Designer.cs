@@ -11,7 +11,7 @@ using SimpleModule.Host;
 namespace SimpleModule.Host.Migrations
 {
     [DbContext(typeof(HostDbContext))]
-    [Migration("20260411055822_UseBaseEntities")]
+    [Migration("20260411065821_UseBaseEntities")]
     partial class UseBaseEntities
     {
         /// <inheritdoc />

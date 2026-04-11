@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
+using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings;
@@ -23,6 +24,16 @@ public class SettingsDbContext(
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
+        configurationBuilder
+            .Properties<SettingId>()
+            .HaveConversion<SettingId.EfCoreValueConverter, SettingId.EfCoreValueComparer>();
+        configurationBuilder
+            .Properties<PublicMenuItemId>()
+            .HaveConversion<
+                PublicMenuItemId.EfCoreValueConverter,
+                PublicMenuItemId.EfCoreValueComparer
+            >();
+
         // SQLite cannot ORDER BY or compare DateTimeOffset expressions natively.
         // Store as long (binary ticks) only when running against SQLite.
         if (dbOptions.Value.DetectProvider("Settings") == DatabaseProvider.Sqlite)

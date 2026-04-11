@@ -38,6 +38,17 @@ namespace SimpleModule.Host.Migrations
                 )
                 .OldAnnotation("Sqlite:Autoincrement", true);
 
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "Settings_Settings",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .OldAnnotation("Sqlite:Autoincrement", true);
+
             migrationBuilder.AddColumn<string>(
                 name: "ConcurrencyStamp",
                 table: "Settings_Settings",
@@ -57,6 +68,17 @@ namespace SimpleModule.Host.Migrations
                     new TimeSpan(0, 0, 0, 0, 0)
                 )
             );
+
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "Settings_PublicMenuItems",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .OldAnnotation("Sqlite:Autoincrement", true);
 
             migrationBuilder.AddColumn<string>(
                 name: "ConcurrencyStamp",
@@ -317,6 +339,28 @@ namespace SimpleModule.Host.Migrations
                     new TimeSpan(0, 0, 0, 0, 0)
                 )
             );
+
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "FeatureFlags_FeatureFlags",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .OldAnnotation("Sqlite:Autoincrement", true);
+
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "FeatureFlags_FeatureFlagOverrides",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .OldAnnotation("Sqlite:Autoincrement", true);
 
             migrationBuilder.AlterColumn<DateTimeOffset>(
                 name: "UpdatedAt",
@@ -782,6 +826,28 @@ namespace SimpleModule.Host.Migrations
                 )
                 .Annotation("Sqlite:Autoincrement", true);
 
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "Settings_Settings",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .Annotation("Sqlite:Autoincrement", true);
+
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "Settings_PublicMenuItems",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .Annotation("Sqlite:Autoincrement", true);
+
             migrationBuilder.AlterColumn<DateTime>(
                 name: "UpdatedAt",
                 table: "RateLimiting_Rules",
@@ -861,6 +927,28 @@ namespace SimpleModule.Host.Migrations
                 .AlterColumn<int>(
                     name: "Id",
                     table: "FileStorage_StoredFiles",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .Annotation("Sqlite:Autoincrement", true);
+
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "FeatureFlags_FeatureFlags",
+                    type: "INTEGER",
+                    nullable: false,
+                    oldClrType: typeof(int),
+                    oldType: "INTEGER"
+                )
+                .Annotation("Sqlite:Autoincrement", true);
+
+            migrationBuilder
+                .AlterColumn<int>(
+                    name: "Id",
+                    table: "FeatureFlags_FeatureFlagOverrides",
                     type: "INTEGER",
                     nullable: false,
                     oldClrType: typeof(int),

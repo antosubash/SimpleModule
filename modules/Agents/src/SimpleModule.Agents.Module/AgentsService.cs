@@ -42,7 +42,7 @@ public sealed class AgentsService(IAgentSessionStore sessionStore) : IAgentsCont
     private static AgentSessionDto ToDto(AgentSession session) =>
         new()
         {
-            Id = session.Id,
+            Id = session.Id.Value,
             AgentName = session.AgentName,
             UserId = session.UserId,
             CreatedAt = session.CreatedAt,
@@ -52,8 +52,8 @@ public sealed class AgentsService(IAgentSessionStore sessionStore) : IAgentsCont
     private static AgentMessageDto ToDto(AgentMessage message) =>
         new()
         {
-            Id = message.Id,
-            SessionId = message.SessionId,
+            Id = message.Id.Value,
+            SessionId = message.SessionId.Value,
             Role = message.Role,
             Content = message.Content,
             Timestamp = message.Timestamp,

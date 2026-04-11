@@ -1,8 +1,9 @@
+using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core.Entities;
 
 namespace SimpleModule.BackgroundJobs.Entities;
 
-public class JobProgress : Entity<Guid>
+public class JobProgress : Entity<JobId>
 {
     public string JobTypeName { get; set; } = string.Empty;
     public string ModuleName { get; set; } = string.Empty;

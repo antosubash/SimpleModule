@@ -37,7 +37,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         await Task.Delay(3000);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(75);
         updated.ProgressMessage.Should().Be("Processing");
     }
@@ -61,7 +61,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         await Task.Delay(3000);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.Logs.Should().NotBeNull();
         var logs = JsonSerializer.Deserialize<List<JobLogEntry>>(updated.Logs!);
         logs.Should().HaveCount(2);
@@ -105,7 +105,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         await Task.Delay(3000);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         var logs = JsonSerializer.Deserialize<List<JobLogEntry>>(updated!.Logs!);
         logs.Should().HaveCount(1000);
         // Oldest entries should be dropped
@@ -144,7 +144,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
         await Task.Delay(3000);
         await service.StopAsync(CancellationToken.None);
 
-        var updated = await _factory.Create().JobProgress.FindAsync(jobId);
+        var updated = await _factory.Create().JobProgress.FindAsync(JobId.From(jobId));
         updated!.ProgressPercentage.Should().Be(75);
         updated.ProgressMessage.Should().Be("Three quarters");
     }
@@ -192,8 +192,8 @@ public sealed class ProgressFlushServiceTests : IDisposable
         await service.StopAsync(CancellationToken.None);
 
         var verifyDb = _factory.Create();
-        var p1 = await verifyDb.JobProgress.FindAsync(job1);
-        var p2 = await verifyDb.JobProgress.FindAsync(job2);
+        var p1 = await verifyDb.JobProgress.FindAsync(JobId.From(job1));
+        var p2 = await verifyDb.JobProgress.FindAsync(JobId.From(job2));
         p1!.ProgressPercentage.Should().Be(30);
         p2!.ProgressPercentage.Should().Be(60);
     }
@@ -204,7 +204,7 @@ public sealed class ProgressFlushServiceTests : IDisposable
     {
         return new JobProgress
         {
-            Id = id,
+            Id = JobId.From(id),
             JobTypeName = "TestJob",
             ModuleName = "Test",
             ProgressPercentage = 0,

@@ -2,8 +2,8 @@ namespace SimpleModule.Settings.Contracts;
 
 public class PublicMenuItemDto
 {
-    public int Id { get; set; }
-    public int? ParentId { get; set; }
+    public PublicMenuItemId Id { get; set; }
+    public PublicMenuItemId? ParentId { get; set; }
     public string Label { get; set; } = "";
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage(

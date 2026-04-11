@@ -1,12 +1,13 @@
+using SimpleModule.Agents.Contracts;
 using SimpleModule.Core.Entities;
 
 namespace SimpleModule.Agents.Module;
 
-public sealed class AgentSession : Entity<string>
+public sealed class AgentSession : Entity<AgentSessionId>
 {
     public AgentSession()
     {
-        Id = Guid.NewGuid().ToString();
+        Id = AgentSessionId.From(Guid.NewGuid().ToString());
     }
 
     public string AgentName { get; set; } = "";
