@@ -20,13 +20,14 @@ public class PageConfiguration : IEntityTypeConfiguration<Page>
         builder.Property(p => p.OgImage).IsRequired(false).HasMaxLength(500);
         builder.Property(p => p.IsPublished).HasDefaultValue(false);
         builder.Property(p => p.Order).HasDefaultValue(0);
-        builder.Property(p => p.DeletedAt).IsRequired(false);
+        builder.Property(p => p.ConcurrencyStamp).HasMaxLength(64);
 
         builder.HasMany(p => p.Tags).WithOne().HasForeignKey("PageId");
 
         builder.HasIndex(p => p.IsPublished);
-        builder.HasIndex(p => p.DeletedAt);
-
-        builder.HasQueryFilter(p => p.DeletedAt == null);
+        builder.HasIndex(p => new { p.IsDeleted, p.DeletedAt });
+        // Soft-delete query filter is applied by ApplyEntityConventions via the
+        // named filter key; do not add a local anonymous filter which would
+        // conflict with it (EF Core disallows mixing anonymous and named filters).
     }
 }

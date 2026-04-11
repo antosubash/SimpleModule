@@ -17,7 +17,7 @@ public class DeleteOverrideEndpoint : IEndpoint
                 Route,
                 async (int id, IFeatureFlagContracts featureFlags) =>
                 {
-                    await featureFlags.DeleteOverrideAsync(id);
+                    await featureFlags.DeleteOverrideAsync(FeatureFlagOverrideId.From(id));
                     return TypedResults.NoContent();
                 }
             )

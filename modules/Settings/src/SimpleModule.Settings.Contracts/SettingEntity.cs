@@ -1,13 +1,14 @@
+using SimpleModule.Core;
+using SimpleModule.Core.Entities;
 using SimpleModule.Core.Settings;
 
-namespace SimpleModule.Settings.Entities;
+namespace SimpleModule.Settings.Contracts;
 
-public class SettingEntity
+[NoDtoGeneration]
+public class SettingEntity : Entity<SettingId>
 {
-    public int Id { get; set; }
     public string Key { get; set; } = string.Empty;
     public string? Value { get; set; }
     public SettingScope Scope { get; set; }
     public string? UserId { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

@@ -5,9 +5,12 @@ export interface CreateProductRequest {
 }
 
 export interface Product {
-  id: number;
   name: string;
   price: number;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface UpdateProductRequest {

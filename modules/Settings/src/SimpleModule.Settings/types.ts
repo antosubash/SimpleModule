@@ -1,6 +1,6 @@
 // Auto-generated from [Dto] types — do not edit
 export interface CreateMenuItemRequest {
-  parentId: number | null;
+  parentId: any | null;
   label: string;
   url: string;
   pageRoute: string;
@@ -13,7 +13,7 @@ export interface CreateMenuItemRequest {
 
 export interface PublicMenuItemDto {
   id: number;
-  parentId: number | null;
+  parentId: any | null;
   label: string;
   url: string;
   pageRoute: string;
@@ -32,7 +32,7 @@ export interface ReorderMenuItemsRequest {
 
 export interface ReorderItem {
   id: number;
-  parentId: number | null;
+  parentId: any | null;
   sortOrder: number;
 }
 

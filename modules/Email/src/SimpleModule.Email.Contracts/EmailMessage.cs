@@ -1,11 +1,11 @@
 using SimpleModule.Core;
+using SimpleModule.Core.Entities;
 
 namespace SimpleModule.Email.Contracts;
 
 [Dto]
-public class EmailMessage
+public class EmailMessage : Entity<EmailMessageId>
 {
-    public EmailMessageId Id { get; set; }
     public string To { get; set; } = string.Empty;
     public string? Cc { get; set; }
     public string? Bcc { get; set; }
@@ -18,6 +18,5 @@ public class EmailMessage
     public int RetryCount { get; set; }
     public string? TemplateSlug { get; set; }
     public string? Provider { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? SentAt { get; set; }
+    public DateTimeOffset? SentAt { get; set; }
 }

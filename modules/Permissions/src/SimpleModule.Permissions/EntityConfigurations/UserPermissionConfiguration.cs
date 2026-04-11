@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SimpleModule.Permissions.Entities;
+using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Permissions.EntityConfigurations;

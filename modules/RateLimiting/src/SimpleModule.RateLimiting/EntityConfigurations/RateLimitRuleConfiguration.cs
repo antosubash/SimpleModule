@@ -15,5 +15,6 @@ public class RateLimitRuleConfiguration : IEntityTypeConfiguration<RateLimitRule
         builder.Property(r => r.EndpointPattern).HasMaxLength(500);
         builder.Property(r => r.PolicyType).HasConversion<string>().HasMaxLength(50);
         builder.Property(r => r.Target).HasConversion<string>().HasMaxLength(50);
+        builder.Property(r => r.ConcurrencyStamp).HasMaxLength(64);
     }
 }

@@ -5,11 +5,15 @@ export interface CreateOrderRequest {
 }
 
 export interface Order {
-  id: number;
   userId: string;
   items: OrderItem[];
   total: number;
+  createdBy: string;
+  updatedBy: string;
+  id: number;
   createdAt: string;
+  updatedAt: string;
+  concurrencyStamp: string;
 }
 
 export interface OrderItem {

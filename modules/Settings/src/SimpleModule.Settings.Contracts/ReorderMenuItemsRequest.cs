@@ -7,7 +7,7 @@ public class ReorderMenuItemsRequest
 
 public class ReorderItem
 {
-    public int Id { get; set; }
-    public int? ParentId { get; set; }
+    public PublicMenuItemId Id { get; set; }
+    public PublicMenuItemId? ParentId { get; set; }
     public int SortOrder { get; set; }
 }

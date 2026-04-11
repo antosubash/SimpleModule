@@ -202,7 +202,6 @@ public sealed class EmailServiceTests : IDisposable
 
         updated.Name.Should().Be("Updated");
         updated.Subject.Should().Be("Updated Subject");
-        updated.UpdatedAt.Should().NotBeNull();
     }
 
     [Fact]
@@ -424,8 +423,8 @@ public sealed class EmailServiceTests : IDisposable
                 Subject = "A",
                 Body = "B",
                 Status = EmailStatus.Sent,
-                CreatedAt = DateTime.UtcNow,
-                SentAt = DateTime.UtcNow,
+                CreatedAt = DateTimeOffset.UtcNow,
+                SentAt = DateTimeOffset.UtcNow,
             },
             new EmailMessage
             {
@@ -433,8 +432,8 @@ public sealed class EmailServiceTests : IDisposable
                 Subject = "B",
                 Body = "B",
                 Status = EmailStatus.Sent,
-                CreatedAt = DateTime.UtcNow,
-                SentAt = DateTime.UtcNow,
+                CreatedAt = DateTimeOffset.UtcNow,
+                SentAt = DateTimeOffset.UtcNow,
             },
             new EmailMessage
             {
@@ -443,7 +442,7 @@ public sealed class EmailServiceTests : IDisposable
                 Body = "B",
                 Status = EmailStatus.Failed,
                 ErrorMessage = "Timeout",
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTimeOffset.UtcNow,
             }
         );
         await _db.SaveChangesAsync();

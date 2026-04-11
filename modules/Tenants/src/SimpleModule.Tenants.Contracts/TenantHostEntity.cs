@@ -1,8 +1,9 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
-using SimpleModule.Tenants.Contracts;
 
-namespace SimpleModule.Tenants.Entities;
+namespace SimpleModule.Tenants.Contracts;
 
+[NoDtoGeneration]
 public sealed class TenantHostEntity : Entity<TenantHostId>
 {
     public TenantId TenantId { get; set; }

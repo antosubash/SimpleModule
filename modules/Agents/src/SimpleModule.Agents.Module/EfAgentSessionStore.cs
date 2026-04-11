@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SimpleModule.Agents.Contracts;
 
 namespace SimpleModule.Agents.Module;
 
@@ -9,7 +10,8 @@ public sealed class EfAgentSessionStore(AgentsDbContext db) : IAgentSessionStore
         CancellationToken cancellationToken = default
     )
     {
-        return await db.Sessions.FindAsync([sessionId], cancellationToken);
+        var id = AgentSessionId.From(sessionId);
+        return await db.Sessions.FindAsync([id], cancellationToken);
     }
 
     public async Task<AgentSession> CreateSessionAsync(
@@ -30,10 +32,11 @@ public sealed class EfAgentSessionStore(AgentsDbContext db) : IAgentSessionStore
         CancellationToken cancellationToken = default
     )
     {
-        message.SessionId = sessionId;
+        var id = AgentSessionId.From(sessionId);
+        message.SessionId = id;
         db.Messages.Add(message);
 
-        var session = await db.Sessions.FindAsync([sessionId], cancellationToken);
+        var session = await db.Sessions.FindAsync([id], cancellationToken);
         if (session is not null)
         {
             session.LastMessageAt = DateTimeOffset.UtcNow;
@@ -48,7 +51,8 @@ public sealed class EfAgentSessionStore(AgentsDbContext db) : IAgentSessionStore
         CancellationToken cancellationToken = default
     )
     {
-        var query = db.Messages.Where(m => m.SessionId == sessionId);
+        var id = AgentSessionId.From(sessionId);
+        var query = db.Messages.Where(m => m.SessionId == id);
 
         if (maxMessages.HasValue)
         {

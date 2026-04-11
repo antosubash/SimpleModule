@@ -10,8 +10,8 @@ public class QueryEmailMessagesRequest
     public EmailStatus? Status { get; set; }
     public string? To { get; set; }
     public string? Subject { get; set; }
-    public DateTime? DateFrom { get; set; }
-    public DateTime? DateTo { get; set; }
+    public DateTimeOffset? DateFrom { get; set; }
+    public DateTimeOffset? DateTo { get; set; }
     public string? SortBy { get; set; }
     public bool? SortDescending { get; set; }
 

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Datasets.Contracts;
-using SimpleModule.Datasets.Entities;
 using SimpleModule.Datasets.EntityConfigurations;
 
 namespace SimpleModule.Datasets;

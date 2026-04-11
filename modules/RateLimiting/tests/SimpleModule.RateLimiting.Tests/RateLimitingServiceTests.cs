@@ -104,7 +104,6 @@ public sealed class RateLimitingServiceTests : IDisposable
         updated.PermitLimit.Should().Be(200);
         updated.PolicyType.Should().Be(RateLimitPolicyType.SlidingWindow);
         updated.Target.Should().Be(RateLimitTarget.User);
-        updated.UpdatedAt.Should().NotBeNull();
     }
 
     [Fact]
