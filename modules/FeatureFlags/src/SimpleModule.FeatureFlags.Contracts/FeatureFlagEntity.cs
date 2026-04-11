@@ -1,8 +1,9 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
-using SimpleModule.FeatureFlags.Contracts;
 
-namespace SimpleModule.FeatureFlags.Entities;
+namespace SimpleModule.FeatureFlags.Contracts;
 
+[NoDtoGeneration]
 public class FeatureFlagEntity : Entity<FeatureFlagId>
 {
     public string Name { get; set; } = string.Empty;

@@ -1,7 +1,8 @@
-using SimpleModule.Agents.Contracts;
+using SimpleModule.Core;
 
-namespace SimpleModule.Agents.Module;
+namespace SimpleModule.Agents.Contracts;
 
+[NoDtoGeneration]
 public sealed class AgentMessage
 {
     public AgentMessageId Id { get; set; } = AgentMessageId.From(Guid.NewGuid().ToString());

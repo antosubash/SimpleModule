@@ -6,7 +6,6 @@ using SimpleModule.Core.Caching;
 using SimpleModule.Database;
 using SimpleModule.Settings;
 using SimpleModule.Settings.Contracts;
-using SimpleModule.Settings.Entities;
 using SimpleModule.Settings.Services;
 
 namespace Settings.Tests.Unit;

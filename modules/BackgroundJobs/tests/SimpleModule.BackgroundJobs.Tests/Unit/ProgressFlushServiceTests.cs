@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 using SimpleModule.BackgroundJobs.Services;
 
 namespace BackgroundJobs.Tests.Unit;

@@ -1192,4 +1192,174 @@ public class DiagnosticTests
     }
 
     #endregion
+
+    #region SM0055: Entity class must live in a Contracts assembly
+
+    [Fact]
+    public void SM0055_EntityInImplementationAssembly_ReportsError()
+    {
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.EntityFrameworkCore;
+            using Microsoft.Extensions.Options;
+            using SimpleModule.Database;
+
+            namespace TestApp.Products
+            {
+                // Entity declared in an implementation (non-Contracts) assembly.
+                public class Product { public int Id { get; set; } }
+
+                [Module("Products")]
+                public class ProductsModule : IModule { }
+
+                public class ProductsDbContext : DbContext
+                {
+                    public ProductsDbContext(
+                        DbContextOptions<ProductsDbContext> options,
+                        IOptions<DatabaseOptions> dbOptions
+                    ) : base(options) { }
+
+                    public DbSet<Product> Products => Set<Product>();
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
+            "SimpleModule.Products",
+            source
+        );
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().Contain(d => d.Id == "SM0055");
+        var diag = diagnostics.First(d => d.Id == "SM0055");
+        var message = diag.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().Contain("Product");
+        message.Should().Contain("Products");
+        message.Should().Contain("SimpleModule.Products");
+        message.Should().Contain("SimpleModule.Products.Contracts");
+    }
+
+    [Fact]
+    public void SM0055_EntityInContractsAssembly_NoDiagnostic()
+    {
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.EntityFrameworkCore;
+            using Microsoft.Extensions.Options;
+            using SimpleModule.Database;
+
+            namespace TestApp.Products
+            {
+                // Entity declared in the Contracts assembly — compliant.
+                public class Product { public int Id { get; set; } }
+
+                [Module("Products")]
+                public class ProductsModule : IModule { }
+
+                public class ProductsDbContext : DbContext
+                {
+                    public ProductsDbContext(
+                        DbContextOptions<ProductsDbContext> options,
+                        IOptions<DatabaseOptions> dbOptions
+                    ) : base(options) { }
+
+                    public DbSet<Product> Products => Set<Product>();
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
+            "SimpleModule.Products.Contracts",
+            source
+        );
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().NotContain(d => d.Id == "SM0055");
+    }
+
+    [Fact]
+    public void SM0055_EntityInModuleSuffixedAssembly_SuggestsContractsSibling()
+    {
+        // When the implementation assembly has the '.Module' suffix (e.g.
+        // SimpleModule.Agents.Module), the suggested replacement is the
+        // '.Contracts' sibling (SimpleModule.Agents.Contracts), not a
+        // double-suffixed '.Module.Contracts' assembly.
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.EntityFrameworkCore;
+            using Microsoft.Extensions.Options;
+            using SimpleModule.Database;
+
+            namespace TestApp.Agents
+            {
+                public class AgentSession { public int Id { get; set; } }
+
+                [Module("Agents")]
+                public class AgentsModule : IModule { }
+
+                public class AgentsDbContext : DbContext
+                {
+                    public AgentsDbContext(
+                        DbContextOptions<AgentsDbContext> options,
+                        IOptions<DatabaseOptions> dbOptions
+                    ) : base(options) { }
+
+                    public DbSet<AgentSession> Sessions => Set<AgentSession>();
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
+            "SimpleModule.Agents.Module",
+            source
+        );
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().Contain(d => d.Id == "SM0055");
+        var diag = diagnostics.First(d => d.Id == "SM0055");
+        var message = diag.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().Contain("SimpleModule.Agents.Contracts");
+        message.Should().NotContain("SimpleModule.Agents.Module.Contracts");
+    }
+
+    [Fact]
+    public void SM0055_NonSimpleModuleAssembly_NoDiagnostic()
+    {
+        // External entities (e.g. OpenIddict) live outside SimpleModule.* and
+        // cannot be moved by the author, so we don't flag them.
+        var source = """
+            using SimpleModule.Core;
+            using Microsoft.EntityFrameworkCore;
+            using Microsoft.Extensions.Options;
+            using SimpleModule.Database;
+
+            namespace TestApp.Widgets
+            {
+                public class Widget { public int Id { get; set; } }
+
+                [Module("Widgets")]
+                public class WidgetsModule : IModule { }
+
+                public class WidgetsDbContext : DbContext
+                {
+                    public WidgetsDbContext(
+                        DbContextOptions<WidgetsDbContext> options,
+                        IOptions<DatabaseOptions> dbOptions
+                    ) : base(options) { }
+
+                    public DbSet<Widget> Widgets => Set<Widget>();
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateEfCoreCompilationWithAssemblyName(
+            "Contoso.Widgets",
+            source
+        );
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().NotContain(d => d.Id == "SM0055");
+    }
+
+    #endregion
 }

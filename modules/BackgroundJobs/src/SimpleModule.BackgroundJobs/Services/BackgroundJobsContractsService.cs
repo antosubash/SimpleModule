@@ -3,7 +3,6 @@ using System.Text.Json;
 using Cronos;
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 using SimpleModule.Core;
 using static SimpleModule.BackgroundJobs.BackgroundJobsInternalConstants;
 

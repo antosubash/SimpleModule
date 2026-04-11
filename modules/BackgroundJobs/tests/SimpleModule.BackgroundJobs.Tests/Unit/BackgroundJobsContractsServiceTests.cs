@@ -2,7 +2,6 @@ using BackgroundJobs.Tests.Helpers;
 using FluentAssertions;
 using NSubstitute;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 using SimpleModule.BackgroundJobs.Services;
 
 namespace BackgroundJobs.Tests.Unit;

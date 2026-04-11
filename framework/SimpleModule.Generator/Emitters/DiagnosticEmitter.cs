@@ -342,6 +342,15 @@ internal sealed class DiagnosticEmitter : IEmitter
         isEnabledByDefault: true
     );
 
+    internal static readonly DiagnosticDescriptor EntityNotInContractsAssembly = new(
+        id: "SM0055",
+        title: "Entity class must live in a Contracts assembly",
+        messageFormat: "Entity '{0}' is exposed as DbSet '{1}' on '{2}' but is declared in assembly '{3}'. Entity classes must be declared in a '.Contracts' assembly so other modules can reference them type-safely through contracts. Move '{0}' to assembly '{4}' (or another '.Contracts' assembly that the module references).",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void Emit(SourceProductionContext context, DiscoveryData data)
     {
         // SM0002: Empty module name
@@ -456,6 +465,58 @@ internal sealed class DiagnosticEmitter : IEmitter
                         Strip(ctx.FullyQualifiedName),
                         ctx.ModuleName,
                         0
+                    )
+                );
+            }
+        }
+
+        // SM0055: Entity classes must live in a .Contracts assembly.
+        // Reported once per (entity, DbContext) pair so the author sees the
+        // offending DbSet in their editor. Only warns for entities the author
+        // can actually move — source-declared, inside a SimpleModule.* module,
+        // and NOT an Identity/OpenIddict external type.
+        foreach (var ctx in data.DbContexts)
+        {
+            // IdentityDbContext uses external Identity entity types we can't move.
+            if (ctx.IsIdentityDbContext)
+                continue;
+
+            foreach (var dbSet in ctx.DbSets)
+            {
+                if (string.IsNullOrEmpty(dbSet.EntityAssemblyName))
+                    continue;
+
+                // Skip entities that aren't source-declared in a SimpleModule.* project.
+                // External libraries (OpenIddict, etc.) have no source location and shouldn't
+                // be reported even if the user can't physically move them.
+                if (dbSet.EntityLocation is null)
+                    continue;
+
+                if (!dbSet.EntityAssemblyName.StartsWith("SimpleModule.", StringComparison.Ordinal))
+                    continue;
+
+                if (dbSet.EntityAssemblyName.EndsWith(".Contracts", StringComparison.Ordinal))
+                    continue;
+
+                var expectedContractsAssembly = dbSet.EntityAssemblyName.EndsWith(
+                    ".Module",
+                    StringComparison.Ordinal
+                )
+                    ? dbSet.EntityAssemblyName.Substring(
+                        0,
+                        dbSet.EntityAssemblyName.Length - ".Module".Length
+                    ) + ".Contracts"
+                    : dbSet.EntityAssemblyName + ".Contracts";
+
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        EntityNotInContractsAssembly,
+                        LocationHelper.ToLocation(dbSet.EntityLocation),
+                        Strip(dbSet.EntityFqn),
+                        dbSet.PropertyName,
+                        Strip(ctx.FullyQualifiedName),
+                        dbSet.EntityAssemblyName,
+                        expectedContractsAssembly
                     )
                 );
             }

@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Contracts;
-using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings.Services;
 

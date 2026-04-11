@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimpleModule.Tenants.Contracts;
-using SimpleModule.Tenants.Entities;
 
 namespace SimpleModule.Tenants.EntityConfigurations;
 

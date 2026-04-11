@@ -1,9 +1,10 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.Settings;
-using SimpleModule.Settings.Contracts;
 
-namespace SimpleModule.Settings.Entities;
+namespace SimpleModule.Settings.Contracts;
 
+[NoDtoGeneration]
 public class SettingEntity : Entity<SettingId>
 {
     public string Key { get; set; } = string.Empty;

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Settings.Contracts;
-using SimpleModule.Settings.Entities;
 
 namespace SimpleModule.Settings;
 

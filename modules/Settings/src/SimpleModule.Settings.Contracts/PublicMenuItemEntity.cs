@@ -1,8 +1,9 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
-using SimpleModule.Settings.Contracts;
 
-namespace SimpleModule.Settings.Entities;
+namespace SimpleModule.Settings.Contracts;
 
+[NoDtoGeneration]
 public class PublicMenuItemEntity : Entity<PublicMenuItemId>
 {
     public PublicMenuItemId? ParentId { get; set; }

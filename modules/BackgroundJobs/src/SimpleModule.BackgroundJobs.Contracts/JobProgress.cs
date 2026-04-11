@@ -1,7 +1,6 @@
-using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core.Entities;
 
-namespace SimpleModule.BackgroundJobs.Entities;
+namespace SimpleModule.BackgroundJobs.Contracts;
 
 public class JobProgress : Entity<JobId>
 {

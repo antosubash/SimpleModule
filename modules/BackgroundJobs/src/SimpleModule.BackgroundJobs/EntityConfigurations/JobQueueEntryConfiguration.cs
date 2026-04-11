@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SimpleModule.BackgroundJobs.Entities;
+using SimpleModule.BackgroundJobs.Contracts;
 
 namespace SimpleModule.BackgroundJobs.EntityConfigurations;
 

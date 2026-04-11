@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 using SimpleModule.BackgroundJobs.EntityConfigurations;
 using SimpleModule.Database;
 

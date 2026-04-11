@@ -1,8 +1,9 @@
-using SimpleModule.BackgroundJobs.Contracts;
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
 
-namespace SimpleModule.BackgroundJobs.Entities;
+namespace SimpleModule.BackgroundJobs.Contracts;
 
+[NoDtoGeneration]
 public class JobQueueEntryEntity : Entity<JobId>
 {
     public string JobTypeName { get; set; } = string.Empty;

@@ -1,8 +1,9 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
-using SimpleModule.Tenants.Contracts;
 
-namespace SimpleModule.Tenants.Entities;
+namespace SimpleModule.Tenants.Contracts;
 
+[NoDtoGeneration]
 public sealed class TenantEntity : AuditableEntity<TenantId>
 {
     public string Name { get; set; } = string.Empty;

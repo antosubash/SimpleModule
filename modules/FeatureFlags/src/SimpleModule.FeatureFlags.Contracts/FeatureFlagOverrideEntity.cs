@@ -1,8 +1,9 @@
+using SimpleModule.Core;
 using SimpleModule.Core.Entities;
-using SimpleModule.FeatureFlags.Contracts;
 
-namespace SimpleModule.FeatureFlags.Entities;
+namespace SimpleModule.FeatureFlags.Contracts;
 
+[NoDtoGeneration]
 public class FeatureFlagOverrideEntity : Entity<FeatureFlagOverrideId>
 {
     public string FlagName { get; set; } = string.Empty;

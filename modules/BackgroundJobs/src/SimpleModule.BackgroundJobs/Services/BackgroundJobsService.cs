@@ -4,7 +4,6 @@ using Cronos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.BackgroundJobs.Entities;
 using static SimpleModule.BackgroundJobs.BackgroundJobsInternalConstants;
 
 namespace SimpleModule.BackgroundJobs.Services;

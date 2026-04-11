@@ -1,7 +1,6 @@
-using SimpleModule.Agents.Contracts;
 using SimpleModule.Core.Entities;
 
-namespace SimpleModule.Agents.Module;
+namespace SimpleModule.Agents.Contracts;
 
 public sealed class AgentSession : Entity<AgentSessionId>
 {

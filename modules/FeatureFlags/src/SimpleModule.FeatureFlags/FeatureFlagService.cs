@@ -5,7 +5,6 @@ using SimpleModule.Core.Caching;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
-using SimpleModule.FeatureFlags.Entities;
 
 namespace SimpleModule.FeatureFlags;
 

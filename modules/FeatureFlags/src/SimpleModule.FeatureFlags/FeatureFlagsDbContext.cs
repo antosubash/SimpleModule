@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags.Contracts;
-using SimpleModule.FeatureFlags.Entities;
 
 namespace SimpleModule.FeatureFlags;
 
