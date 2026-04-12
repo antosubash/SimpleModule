@@ -4,9 +4,11 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core.Caching;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Settings;
+using SimpleModule.Tests.Shared.Fakes;
 
 namespace Settings.Tests.Unit;
 
@@ -41,10 +43,12 @@ public sealed class SettingsServiceTests : IDisposable
 
         _cache = new MemoryCache(new MemoryCacheOptions());
         _cacheStore = new MemoryCacheStore(_cache);
+
         _service = new SettingsService(
             _db,
             registry,
             _cacheStore,
+            new Lazy<IEventBus>(() => new TestEventBus()),
             Options.Create(new SettingsModuleOptions()),
             NullLogger<SettingsService>.Instance
         );

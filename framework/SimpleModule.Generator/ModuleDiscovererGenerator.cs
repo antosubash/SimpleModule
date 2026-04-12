@@ -21,6 +21,7 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new HostDbContextEmitter(),
         new ValueConverterConventionsEmitter(),
         new DbContextRegistryEmitter(),
+        new ContractRegistryEmitter(),
         new AgentExtensionsEmitter(),
         new LocalizationExtensionsEmitter(),
         new RoutesEmitter(),

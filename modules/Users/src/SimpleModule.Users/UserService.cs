@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Events;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Contracts.Events;
 
 namespace SimpleModule.Users;
 
 public partial class UserService(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
+    IEventBus eventBus,
     ILogger<UserService> logger
 ) : IUserContracts
 {
@@ -62,6 +65,10 @@ public partial class UserService(
 
         LogUserCreated(logger, user.Id, user.Email);
 
+        await eventBus.PublishAsync(
+            new UserCreatedEvent(UserId.From(user.Id), user.Email ?? string.Empty, user.DisplayName)
+        );
+
         return MapToDto(user);
     }
 
@@ -81,6 +88,10 @@ public partial class UserService(
 
         LogUserUpdated(logger, user.Id);
 
+        await eventBus.PublishAsync(
+            new UserUpdatedEvent(UserId.From(user.Id), user.Email ?? string.Empty, user.DisplayName)
+        );
+
         return MapToDto(user);
     }
 
@@ -95,6 +106,8 @@ public partial class UserService(
         await userManager.DeleteAsync(user);
 
         LogUserDeleted(logger, id);
+
+        eventBus.PublishInBackground(new UserDeletedEvent(id));
     }
 
     public async Task<IReadOnlyDictionary<string, string>> GetRoleIdsByNamesAsync(

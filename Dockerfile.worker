@@ -1,0 +1,161 @@
+# SimpleModule.Worker — background-job consumer.
+#
+# Kept separate from the main Dockerfile (which builds the Host / ASP.NET
+# process). The Worker is the only image that runs IModuleJob handlers, so
+# it's the only image that needs native GIS tooling (GDAL, SpatiaLite,
+# tippecanoe) required by the Datasets module's jobs.
+#
+# Build from the repo root:
+#   docker build -f Dockerfile.worker -t simplemodule-worker .
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
+WORKDIR /src
+
+# Node is needed in the build stage (not at runtime) because the
+# ExtractDtoTypeScript / ExtractRoutes targets in SimpleModule.Hosting.targets
+# shell out to `node tools/extract-*.mjs` after CoreCompile. The scripts only
+# use Node stdlib, so no `npm ci` — just the node binary.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+FROM base AS restore
+WORKDIR /src
+
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
+COPY *.slnx ./
+
+# Framework projects
+COPY framework/SimpleModule.Core/*.csproj framework/SimpleModule.Core/
+COPY framework/SimpleModule.Database/*.csproj framework/SimpleModule.Database/
+COPY framework/SimpleModule.Generator/*.csproj framework/SimpleModule.Generator/
+COPY framework/SimpleModule.Hosting/*.csproj framework/SimpleModule.Hosting/
+COPY framework/SimpleModule.DevTools/*.csproj framework/SimpleModule.DevTools/
+COPY framework/SimpleModule.Storage/*.csproj framework/SimpleModule.Storage/
+COPY framework/SimpleModule.Storage.Local/*.csproj framework/SimpleModule.Storage.Local/
+COPY framework/SimpleModule.Storage.Azure/*.csproj framework/SimpleModule.Storage.Azure/
+COPY framework/SimpleModule.Storage.S3/*.csproj framework/SimpleModule.Storage.S3/
+COPY framework/SimpleModule.Agents/*.csproj framework/SimpleModule.Agents/
+COPY framework/SimpleModule.AI.Anthropic/*.csproj framework/SimpleModule.AI.Anthropic/
+COPY framework/SimpleModule.AI.AzureOpenAI/*.csproj framework/SimpleModule.AI.AzureOpenAI/
+COPY framework/SimpleModule.AI.Ollama/*.csproj framework/SimpleModule.AI.Ollama/
+COPY framework/SimpleModule.AI.OpenAI/*.csproj framework/SimpleModule.AI.OpenAI/
+COPY framework/SimpleModule.Rag/*.csproj framework/SimpleModule.Rag/
+COPY framework/SimpleModule.Rag.StructuredRag/*.csproj framework/SimpleModule.Rag.StructuredRag/
+COPY framework/SimpleModule.Rag.VectorStore.InMemory/*.csproj framework/SimpleModule.Rag.VectorStore.InMemory/
+COPY framework/SimpleModule.Rag.VectorStore.Postgres/*.csproj framework/SimpleModule.Rag.VectorStore.Postgres/
+
+# ServiceDefaults
+COPY SimpleModule.ServiceDefaults/*.csproj SimpleModule.ServiceDefaults/
+
+# Worker
+COPY template/SimpleModule.Worker/*.csproj template/SimpleModule.Worker/
+
+# Modules (Contracts + Implementation).
+# Superset of what the Worker strictly needs — kept aligned with the Host
+# Dockerfile so csproj-layer caching and maintenance stay simple.
+COPY modules/Dashboard/src/SimpleModule.Dashboard.Contracts/*.csproj modules/Dashboard/src/SimpleModule.Dashboard.Contracts/
+COPY modules/Dashboard/src/SimpleModule.Dashboard/*.csproj modules/Dashboard/src/SimpleModule.Dashboard/
+COPY modules/Users/src/SimpleModule.Users.Contracts/*.csproj modules/Users/src/SimpleModule.Users.Contracts/
+COPY modules/Users/src/SimpleModule.Users/*.csproj modules/Users/src/SimpleModule.Users/
+COPY modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/*.csproj modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/
+COPY modules/OpenIddict/src/SimpleModule.OpenIddict/*.csproj modules/OpenIddict/src/SimpleModule.OpenIddict/
+COPY modules/Permissions/src/SimpleModule.Permissions.Contracts/*.csproj modules/Permissions/src/SimpleModule.Permissions.Contracts/
+COPY modules/Permissions/src/SimpleModule.Permissions/*.csproj modules/Permissions/src/SimpleModule.Permissions/
+COPY modules/Products/src/SimpleModule.Products.Contracts/*.csproj modules/Products/src/SimpleModule.Products.Contracts/
+COPY modules/Products/src/SimpleModule.Products/*.csproj modules/Products/src/SimpleModule.Products/
+COPY modules/Orders/src/SimpleModule.Orders.Contracts/*.csproj modules/Orders/src/SimpleModule.Orders.Contracts/
+COPY modules/Orders/src/SimpleModule.Orders/*.csproj modules/Orders/src/SimpleModule.Orders/
+COPY modules/Admin/src/SimpleModule.Admin.Contracts/*.csproj modules/Admin/src/SimpleModule.Admin.Contracts/
+COPY modules/Admin/src/SimpleModule.Admin/*.csproj modules/Admin/src/SimpleModule.Admin/
+COPY modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/*.csproj modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/
+COPY modules/PageBuilder/src/SimpleModule.PageBuilder/*.csproj modules/PageBuilder/src/SimpleModule.PageBuilder/
+COPY modules/Settings/src/SimpleModule.Settings.Contracts/*.csproj modules/Settings/src/SimpleModule.Settings.Contracts/
+COPY modules/Settings/src/SimpleModule.Settings/*.csproj modules/Settings/src/SimpleModule.Settings/
+COPY modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/*.csproj modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/
+COPY modules/AuditLogs/src/SimpleModule.AuditLogs/*.csproj modules/AuditLogs/src/SimpleModule.AuditLogs/
+COPY modules/Marketplace/src/SimpleModule.Marketplace.Contracts/*.csproj modules/Marketplace/src/SimpleModule.Marketplace.Contracts/
+COPY modules/Marketplace/src/SimpleModule.Marketplace/*.csproj modules/Marketplace/src/SimpleModule.Marketplace/
+COPY modules/FileStorage/src/SimpleModule.FileStorage.Contracts/*.csproj modules/FileStorage/src/SimpleModule.FileStorage.Contracts/
+COPY modules/FileStorage/src/SimpleModule.FileStorage/*.csproj modules/FileStorage/src/SimpleModule.FileStorage/
+COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/*.csproj modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/
+COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags/*.csproj modules/FeatureFlags/src/SimpleModule.FeatureFlags/
+COPY modules/Tenants/src/SimpleModule.Tenants.Contracts/*.csproj modules/Tenants/src/SimpleModule.Tenants.Contracts/
+COPY modules/Tenants/src/SimpleModule.Tenants/*.csproj modules/Tenants/src/SimpleModule.Tenants/
+COPY modules/Agents/src/SimpleModule.Agents.Contracts/*.csproj modules/Agents/src/SimpleModule.Agents.Contracts/
+COPY modules/Agents/src/SimpleModule.Agents.Module/*.csproj modules/Agents/src/SimpleModule.Agents.Module/
+COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/
+COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
+COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modules/Localization/src/SimpleModule.Localization.Contracts/
+COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
+COPY modules/Rag/src/SimpleModule.Rag.Contracts/*.csproj modules/Rag/src/SimpleModule.Rag.Contracts/
+COPY modules/Rag/src/SimpleModule.Rag.Module/*.csproj modules/Rag/src/SimpleModule.Rag.Module/
+COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/SimpleModule.Email.Contracts/
+COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/
+COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
+COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
+COPY modules/Datasets/src/SimpleModule.Datasets.Contracts/*.csproj modules/Datasets/src/SimpleModule.Datasets.Contracts/
+COPY modules/Datasets/src/SimpleModule.Datasets/*.csproj modules/Datasets/src/SimpleModule.Datasets/
+
+RUN dotnet restore template/SimpleModule.Worker/SimpleModule.Worker.csproj
+
+FROM restore AS build
+WORKDIR /src
+
+COPY . .
+
+RUN dotnet publish template/SimpleModule.Worker/SimpleModule.Worker.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore \
+    -p:ErrorOnDuplicatePublishOutputFiles=false
+
+# felt/tippecanoe is not in Debian repos, so build it from source. Output is
+# ~5 MB of binaries depending only on libsqlite3-0 + zlib1g — both present in
+# the runtime image.
+FROM debian:bookworm-slim AS tippecanoe-builder
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        git \
+        libsqlite3-dev \
+        zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && git clone --depth 1 https://github.com/felt/tippecanoe.git /tmp/tippecanoe \
+    && make -C /tmp/tippecanoe -j"$(nproc)" \
+    && make -C /tmp/tippecanoe install PREFIX=/opt/tippecanoe
+
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+WORKDIR /app
+
+# Native GIS tooling for the Datasets module's background jobs:
+#   gdal-bin                   → gdal_translate, gdalwarp, ogr2ogr, ogrinfo
+#   libsqlite3-mod-spatialite  → SpatiaLite extension for GeoPackage reads
+#   unzip                      → .kmz and zipped Shapefile bundles
+# gdal-bin pulls libproj / libgeos / libnetcdf (~300 MB), unavoidable for
+# real GIS support.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        gdal-bin \
+        libsqlite3-mod-spatialite \
+        unzip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 1001 workergroup \
+    && useradd --system --uid 1001 --gid workergroup --create-home workeruser
+
+# Copy the whole staging bin/ to pick up every binary felt/tippecanoe ships
+# (tippecanoe, tippecanoe-decode, tippecanoe-overzoom, tippecanoe-enumerate,
+# tippecanoe-json-tool, tile-join) without hard-coding names.
+COPY --from=tippecanoe-builder /opt/tippecanoe/bin/ /usr/local/bin/
+
+COPY --from=build --chown=workeruser:workergroup /app/publish .
+
+RUN mkdir -p /app/data /app/storage && chown workeruser:workergroup /app/data /app/storage
+
+USER workeruser
+
+ENTRYPOINT ["dotnet", "SimpleModule.Worker.dll"]

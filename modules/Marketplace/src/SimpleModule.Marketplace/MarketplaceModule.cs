@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 
 namespace SimpleModule.Marketplace;
@@ -27,6 +28,11 @@ public class MarketplaceModule : IModule
         );
 
         services.AddSingleton<InstalledPackageDetector>();
+    }
+
+    public void ConfigurePermissions(PermissionRegistryBuilder builder)
+    {
+        builder.AddPermissions<MarketplacePermissions>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
+using SimpleModule.Tests.Shared.Fakes;
 using SimpleModule.Users;
 using SimpleModule.Users.Contracts;
 
@@ -33,7 +34,12 @@ public sealed class UserServiceTests
             null,
             null
         );
-        _sut = new UserService(_userManager, _roleManager, NullLogger<UserService>.Instance);
+        _sut = new UserService(
+            _userManager,
+            _roleManager,
+            new TestEventBus(),
+            NullLogger<UserService>.Instance
+        );
     }
 
     [Fact]

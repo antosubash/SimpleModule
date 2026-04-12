@@ -2,13 +2,16 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.PageBuilder.Contracts;
+using SimpleModule.PageBuilder.Contracts.Events;
 
 namespace SimpleModule.PageBuilder;
 
 public sealed partial class PageBuilderService(
     PageBuilderDbContext db,
+    IEventBus eventBus,
     ILogger<PageBuilderService> logger
 ) : IPageBuilderContracts, IPageBuilderTemplateContracts, IPageBuilderTagContracts
 {
@@ -95,6 +98,9 @@ public sealed partial class PageBuilderService(
         await db.SaveChangesAsync();
 
         LogPageCreated(logger, page.Id, page.Title);
+
+        await eventBus.PublishAsync(new PageCreatedEvent(page.Id, page.Title, page.Slug));
+
         return page;
     }
 
@@ -150,6 +156,8 @@ public sealed partial class PageBuilderService(
         await db.SaveChangesAsync();
 
         LogPageDeleted(logger, id);
+
+        eventBus.PublishInBackground(new PageDeletedEvent(id));
     }
 
     public async Task<Page> PublishPageAsync(PageId id)
@@ -167,6 +175,9 @@ public sealed partial class PageBuilderService(
         await db.SaveChangesAsync();
 
         LogPagePublished(logger, page.Id, page.Title);
+
+        await eventBus.PublishAsync(new PagePublishedEvent(page.Id, page.Title));
+
         return page;
     }
 
@@ -179,6 +190,9 @@ public sealed partial class PageBuilderService(
         await db.SaveChangesAsync();
 
         LogPageUnpublished(logger, page.Id, page.Title);
+
+        await eventBus.PublishAsync(new PageUnpublishedEvent(page.Id, page.Title));
+
         return page;
     }
 
