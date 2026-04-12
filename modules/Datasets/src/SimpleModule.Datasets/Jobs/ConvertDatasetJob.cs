@@ -42,12 +42,32 @@ public sealed partial class ConvertDatasetJob(
         try
         {
             var converter = converters.Resolve(row.Format, target);
+
+            // For non-GeoJSON vector sources, read the normalized GeoJSON cache
+            // produced during processing instead of the raw original file.
+            string sourcePath;
+            DatasetFormat sourceFormat;
+            if (
+                row.Format != DatasetFormat.GeoJson
+                && row.Format.IsVector()
+                && !string.IsNullOrWhiteSpace(row.NormalizedPath)
+            )
+            {
+                sourcePath = row.NormalizedPath;
+                sourceFormat = DatasetFormat.GeoJson;
+            }
+            else
+            {
+                sourcePath = row.StoragePath;
+                sourceFormat = row.Format;
+            }
+
             await using var source =
-                await storage.GetAsync(row.StoragePath, cancellationToken)
-                ?? throw new InvalidOperationException($"Source blob missing: {row.StoragePath}");
+                await storage.GetAsync(sourcePath, cancellationToken)
+                ?? throw new InvalidOperationException($"Source blob missing: {sourcePath}");
             await using var output = await converter.ConvertAsync(
                 source,
-                row.Format,
+                sourceFormat,
                 cancellationToken
             );
             output.Position = 0;
