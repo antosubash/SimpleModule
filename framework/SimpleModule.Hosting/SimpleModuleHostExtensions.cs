@@ -181,15 +181,18 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-                    // In development, allow WebSocket connections for live reload
-                    var connectSrc = isDevelopment ? "'self' ws: wss:" : "'self'";
+                    // In development, allow WebSocket connections for live reload.
+                    // Map module requires https: for external tile servers, blob: for
+                    // MapLibre web workers, and data: for generated tile imagery.
+                    var connectSrc = isDevelopment ? "'self' ws: wss: https:" : "'self' https:";
                     var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
                         + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me; "
                         + $"font-src 'self' fonts.gstatic.com rsms.me; "
+                        + $"worker-src 'self' blob:; "
                         + $"connect-src {connectSrc}; "
-                        + $"img-src 'self' data:; "
+                        + $"img-src 'self' data: https:; "
                         + $"object-src 'none'; "
                         + $"base-uri 'self'; "
                         + $"form-action 'self'; "
