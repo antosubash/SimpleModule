@@ -15,6 +15,12 @@ public class SimpleModuleOptions
     public bool EnableDevTools { get; set; } = true;
 
     /// <summary>
+    /// Content Security Policy overrides. Modules can append extra origins for
+    /// directives like <c>connect-src</c>, <c>img-src</c>, etc.
+    /// </summary>
+    public CspOptions Csp { get; } = new();
+
+    /// <summary>
     /// The detected database provider, set during startup validation.
     /// </summary>
     internal DatabaseProvider DatabaseProvider { get; set; }

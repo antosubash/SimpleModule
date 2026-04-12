@@ -169,6 +169,7 @@ public static class SimpleModuleHostExtensions
 
         app.UseHttpsRedirection();
         var isDevelopment = app.Environment.IsDevelopment();
+        var cspOptions = options.Csp;
         app.Use(
             async (context, next) =>
             {
@@ -181,18 +182,25 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-                    // In development, allow WebSocket connections for live reload.
-                    // Map module requires https: for external tile servers, blob: for
-                    // MapLibre web workers, and data: for generated tile imagery.
-                    var connectSrc = isDevelopment ? "'self' ws: wss: https:" : "'self' https:";
+
+                    var extraConnect = JoinCspSources(cspOptions.ConnectSources);
+                    var extraImg = JoinCspSources(cspOptions.ImgSources);
+                    var extraWorker = JoinCspSources(cspOptions.WorkerSources);
+                    var extraFont = JoinCspSources(cspOptions.FontSources);
+                    var extraStyle = JoinCspSources(cspOptions.StyleSources);
+
+                    var connectSrc = isDevelopment
+                        ? $"'self' ws: wss: https: {extraConnect}"
+                        : $"'self' https: {extraConnect}";
+
                     var csp =
                         $"default-src 'none'; "
                         + $"script-src 'self' 'nonce-{nonce}'; "
-                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me; "
-                        + $"font-src 'self' fonts.gstatic.com rsms.me; "
-                        + $"worker-src 'self' blob:; "
+                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me {extraStyle}; "
+                        + $"font-src 'self' fonts.gstatic.com rsms.me {extraFont}; "
+                        + $"worker-src 'self' blob: {extraWorker}; "
                         + $"connect-src {connectSrc}; "
-                        + $"img-src 'self' data: https:; "
+                        + $"img-src 'self' data: https: {extraImg}; "
                         + $"object-src 'none'; "
                         + $"base-uri 'self'; "
                         + $"form-action 'self'; "
@@ -284,6 +292,9 @@ public static class SimpleModuleHostExtensions
 
         return DatabaseProviderDetector.Detect(connString, dbOptions.Provider);
     }
+
+    private static string JoinCspSources(List<string> sources) =>
+        sources.Count > 0 ? string.Join(' ', sources) : string.Empty;
 
     private static void UseStaticFileCaching(WebApplication app)
     {
