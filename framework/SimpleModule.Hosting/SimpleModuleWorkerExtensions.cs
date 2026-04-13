@@ -35,6 +35,11 @@ public static class SimpleModuleWorkerExtensions
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();
         builder.Services.AddScoped<IEventBus, EventBus>();
+        // Lazy<IEventBus> lets services break factory-lambda cycles
+        // (e.g. SettingsService ↔ AuditingEventBus via ISettingsContracts).
+        builder.Services.AddScoped(sp => new Lazy<IEventBus>(() =>
+            sp.GetRequiredService<IEventBus>()
+        ));
 
         // HttpContextAccessor is required by EntityInterceptor even in a worker
         // (it returns null in non-HTTP contexts, which the interceptor handles gracefully).

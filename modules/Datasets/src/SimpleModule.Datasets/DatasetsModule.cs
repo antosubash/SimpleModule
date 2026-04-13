@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Agents;
 using SimpleModule.Core.Authorization;
@@ -42,11 +43,10 @@ public class DatasetsModule : IModule
         services.AddScoped<IDatasetConverter, RasterToCogConverter>();
         services.AddScoped<DatasetConverterRegistry>();
 
-        // Background jobs are resolved by type via IBackgroundJobs.EnqueueAsync<T>;
-        // register so DI can construct them.
-        services.AddScoped<ProcessDatasetJob>();
-        services.AddScoped<ConvertDatasetJob>();
-        services.AddScoped<PurgeDatasetJob>();
+        // Background jobs
+        services.AddModuleJob<ProcessDatasetJob>();
+        services.AddModuleJob<ConvertDatasetJob>();
+        services.AddModuleJob<PurgeDatasetJob>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)
