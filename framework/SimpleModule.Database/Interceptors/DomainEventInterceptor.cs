@@ -1,26 +1,20 @@
-using System.Collections.Concurrent;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.Events;
+using Wolverine;
 
 namespace SimpleModule.Database.Interceptors;
 
 /// <summary>
 /// Interceptor that collects domain events from <see cref="IHasDomainEvents"/> entities
-/// before SaveChanges and dispatches them via <see cref="IEventBus"/> after a successful save.
-/// Events are cleared from entities after dispatch to prevent re-processing.
+/// before SaveChanges and dispatches them via Wolverine's <see cref="IMessageBus"/> after
+/// a successful save. Events are cleared from entities after dispatch to prevent re-processing.
 /// Registered as scoped — each DbContext gets its own instance, so instance fields are safe.
 /// </summary>
 public sealed class DomainEventInterceptor(IServiceProvider serviceProvider)
     : SaveChangesInterceptor
 {
-    private static readonly MethodInfo PublishAsyncMethod = typeof(IEventBus).GetMethod(
-        nameof(IEventBus.PublishAsync)
-    )!;
-    private static readonly ConcurrentDictionary<Type, MethodInfo> PublishMethodCache = new();
-
     private List<IEvent>? _collectedEvents;
 
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -60,20 +54,15 @@ public sealed class DomainEventInterceptor(IServiceProvider serviceProvider)
 
         if (events is { Count: > 0 })
         {
-            var eventBus = serviceProvider.GetService<IEventBus>();
-            if (eventBus is not null)
+            var bus = serviceProvider.GetService<IMessageBus>();
+            if (bus is not null)
             {
                 foreach (var domainEvent in events)
                 {
-                    // Invoke PublishAsync<T> with the concrete event type so that
-                    // IEventHandler<T> registrations are resolved correctly.
-                    // A static call to PublishAsync(IEvent) would resolve T as IEvent,
-                    // missing all concrete handlers.
-                    var concreteMethod = PublishMethodCache.GetOrAdd(
-                        domainEvent.GetType(),
-                        static type => PublishAsyncMethod.MakeGenericMethod(type)
-                    );
-                    await (Task)concreteMethod.Invoke(eventBus, [domainEvent, cancellationToken])!;
+                    // Wolverine's PublishAsync dispatches by the runtime type of the
+                    // message via its non-generic overload internally, so passing the
+                    // boxed IEvent resolves the correct handler chain.
+                    await bus.PublishAsync(domainEvent);
                 }
             }
         }
