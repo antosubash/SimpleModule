@@ -94,6 +94,12 @@ internal static class DtoFinder
 
             if (member is INamespaceSymbol childNs)
             {
+                // Skip walking into System.*, Microsoft.*, or Vogen.* trees — they never contain
+                // convention DTOs and traversing them adds zero value while inflating symbol-tree walks.
+                var childName = childNs.Name;
+                if (childName == "System" || childName == "Microsoft" || childName == "Vogen")
+                    continue;
+
                 FindConventionDtoTypes(
                     childNs,
                     noDtoAttrSymbol,
