@@ -185,6 +185,7 @@ internal static class DbContextFinder
     internal static void Discover(
         List<ModuleInfo> modules,
         Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        SymbolHelpers.ModuleNamespaceIndex moduleNsIndex,
         List<DbContextInfo> dbContexts,
         List<EntityConfigInfo> entityConfigs,
         CancellationToken cancellationToken
@@ -217,14 +218,14 @@ internal static class DbContextFinder
             foreach (var ctx in rawDbContexts)
             {
                 var ctxNs = TypeMappingHelpers.StripGlobalPrefix(ctx.FullyQualifiedName);
-                ctx.ModuleName = SymbolHelpers.FindClosestModuleName(ctxNs, modules);
+                ctx.ModuleName = SymbolHelpers.FindClosestModuleNameFast(ctxNs, moduleNsIndex);
                 dbContexts.Add(ctx);
             }
 
             foreach (var cfg in rawEntityConfigs)
             {
                 var cfgNs = TypeMappingHelpers.StripGlobalPrefix(cfg.ConfigFqn);
-                cfg.ModuleName = SymbolHelpers.FindClosestModuleName(cfgNs, modules);
+                cfg.ModuleName = SymbolHelpers.FindClosestModuleNameFast(cfgNs, moduleNsIndex);
                 entityConfigs.Add(cfg);
             }
         }

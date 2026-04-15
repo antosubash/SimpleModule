@@ -79,8 +79,18 @@ internal static class SymbolDiscovery
                 modulesByName[module.ModuleName] = module;
         }
 
+        // Pre-built namespace index for O(1)-amortised module attribution across all finders.
+        var moduleNsIndex = SymbolHelpers.BuildModuleNamespaceIndex(modules);
+
         // Discover IEndpoint and IViewEndpoint implementors per module assembly
-        EndpointFinder.Discover(modules, moduleSymbols, modulesByName, s, cancellationToken);
+        EndpointFinder.Discover(
+            modules,
+            moduleSymbols,
+            modulesByName,
+            moduleNsIndex,
+            s,
+            cancellationToken
+        );
 
         // Discover DbContext subclasses and IEntityTypeConfiguration<T> per module assembly
         var dbContexts = new List<DbContextInfo>();
@@ -88,6 +98,7 @@ internal static class SymbolDiscovery
         DbContextFinder.Discover(
             modules,
             moduleSymbols,
+            moduleNsIndex,
             dbContexts,
             entityConfigs,
             cancellationToken

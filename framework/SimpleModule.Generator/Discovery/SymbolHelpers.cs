@@ -89,27 +89,49 @@ internal static class SymbolHelpers
         }
     }
 
-    internal static string FindClosestModuleName(string typeFqn, List<ModuleInfo> modules)
+    /// <summary>
+    /// Pre-computed namespace → module-name index used by
+    /// <see cref="FindClosestModuleNameFast"/>. Entries are sorted by namespace
+    /// length descending so the first <c>StartsWith</c> match wins (longest
+    /// namespace wins over shorter prefix matches).
+    /// </summary>
+    internal readonly struct ModuleNamespaceIndex
     {
-        // Match by longest shared namespace prefix between the type and each module class.
-        var bestMatch = "";
-        var bestLength = -1;
-        foreach (var module in modules)
-        {
-            var moduleFqn = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
-            var moduleNs = TypeMappingHelpers.ExtractNamespace(moduleFqn);
+        internal readonly (string Namespace, string ModuleName)[] Entries;
+        internal readonly string FirstModuleName;
 
-            if (
-                typeFqn.StartsWith(moduleNs, StringComparison.Ordinal)
-                && moduleNs.Length > bestLength
-            )
-            {
-                bestLength = moduleNs.Length;
-                bestMatch = module.ModuleName;
-            }
+        internal ModuleNamespaceIndex(
+            (string Namespace, string ModuleName)[] entries,
+            string firstModuleName
+        )
+        {
+            Entries = entries;
+            FirstModuleName = firstModuleName;
+        }
+    }
+
+    internal static ModuleNamespaceIndex BuildModuleNamespaceIndex(List<ModuleInfo> modules)
+    {
+        var entries = new (string Namespace, string ModuleName)[modules.Count];
+        for (var i = 0; i < modules.Count; i++)
+        {
+            var moduleFqn = TypeMappingHelpers.StripGlobalPrefix(modules[i].FullyQualifiedName);
+            entries[i] = (TypeMappingHelpers.ExtractNamespace(moduleFqn), modules[i].ModuleName);
         }
 
-        return bestMatch.Length > 0 ? bestMatch : modules[0].ModuleName;
+        System.Array.Sort(entries, (a, b) => b.Namespace.Length.CompareTo(a.Namespace.Length));
+
+        return new ModuleNamespaceIndex(entries, modules[0].ModuleName);
+    }
+
+    internal static string FindClosestModuleNameFast(string typeFqn, ModuleNamespaceIndex index)
+    {
+        foreach (var (ns, moduleName) in index.Entries)
+        {
+            if (typeFqn.StartsWith(ns, StringComparison.Ordinal))
+                return moduleName;
+        }
+        return index.FirstModuleName;
     }
 
     /// <summary>

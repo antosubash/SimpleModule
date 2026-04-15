@@ -165,6 +165,7 @@ internal static class EndpointFinder
         List<ModuleInfo> modules,
         Dictionary<string, INamedTypeSymbol> moduleSymbols,
         Dictionary<string, ModuleInfo> modulesByName,
+        SymbolHelpers.ModuleNamespaceIndex moduleNsIndex,
         CoreSymbols symbols,
         CancellationToken cancellationToken
     )
@@ -209,7 +210,7 @@ internal static class EndpointFinder
             foreach (var ep in rawEndpoints)
             {
                 var epFqn = TypeMappingHelpers.StripGlobalPrefix(ep.FullyQualifiedName);
-                var ownerName = SymbolHelpers.FindClosestModuleName(epFqn, modules);
+                var ownerName = SymbolHelpers.FindClosestModuleNameFast(epFqn, moduleNsIndex);
                 modulesByName.TryGetValue(ownerName, out var owner);
                 if (owner is not null)
                     owner.Endpoints.Add(ep);
@@ -218,7 +219,7 @@ internal static class EndpointFinder
             foreach (var v in rawViews)
             {
                 var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
-                var ownerName = SymbolHelpers.FindClosestModuleName(vFqn, modules);
+                var ownerName = SymbolHelpers.FindClosestModuleNameFast(vFqn, moduleNsIndex);
                 modulesByName.TryGetValue(ownerName, out var owner);
                 if (owner is not null)
                 {
