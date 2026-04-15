@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -251,73 +250,6 @@ public sealed partial class PageBuilderService(
         LogPagePermanentlyDeleted(logger, id);
     }
 
-    public async Task<IEnumerable<PageTemplate>> GetAllTemplatesAsync() =>
-        await db.Templates.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
-
-    public async Task<PageTemplate> CreateTemplateAsync(CreatePageTemplateRequest request)
-    {
-        var template = new PageTemplate { Name = request.Name, Content = request.Content };
-
-        db.Templates.Add(template);
-        await db.SaveChangesAsync();
-
-        return template;
-    }
-
-    public async Task DeleteTemplateAsync(PageTemplateId id)
-    {
-        var template =
-            await db.Templates.FindAsync(id) ?? throw new NotFoundException("PageTemplate", id);
-
-        db.Templates.Remove(template);
-        await db.SaveChangesAsync();
-    }
-
-    public async Task<IEnumerable<PageTag>> GetAllTagsAsync() =>
-        await db.Tags.AsNoTracking().OrderBy(t => t.Name).ToListAsync();
-
-    public async Task<PageTag> GetOrCreateTagAsync(string name)
-    {
-        var slugName = Slugify(name);
-        var tag = await db.Tags.FirstOrDefaultAsync(t => t.Name == slugName);
-        if (tag is not null)
-            return tag;
-
-        tag = new PageTag { Name = slugName };
-        db.Tags.Add(tag);
-        await db.SaveChangesAsync();
-        return tag;
-    }
-
-    public async Task AddTagToPageAsync(PageId pageId, string tagName)
-    {
-        var page =
-            await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
-            ?? throw new NotFoundException("Page", pageId);
-
-        var tag = await GetOrCreateTagAsync(tagName);
-
-        if (!page.Tags.Any(t => t.Id == tag.Id))
-        {
-            page.Tags.Add(tag);
-            await db.SaveChangesAsync();
-        }
-    }
-
-    public async Task RemoveTagFromPageAsync(PageId pageId, PageTagId tagId)
-    {
-        var page =
-            await db.Pages.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == pageId)
-            ?? throw new NotFoundException("Page", pageId);
-
-        var tag = page.Tags.FirstOrDefault(t => t.Id == tagId);
-        if (tag is not null)
-        {
-            page.Tags.Remove(tag);
-            await db.SaveChangesAsync();
-        }
-    }
-
     internal static string Slugify(string text)
     {
 #pragma warning disable CA1308 // URL slugs are conventionally lowercase
@@ -340,9 +272,6 @@ public sealed partial class PageBuilderService(
         return null;
     }
 
-    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*$")]
-    private static partial Regex SlugValidRegex();
-
     private async Task<string> EnsureUniqueSlugAsync(string slug)
     {
         var baseSlug = slug;
@@ -357,39 +286,12 @@ public sealed partial class PageBuilderService(
         return slug;
     }
 
+    [GeneratedRegex(@"^[a-z0-9]+(-[a-z0-9]+)*$")]
+    private static partial Regex SlugValidRegex();
+
     [GeneratedRegex(@"[^a-z0-9\s-]")]
     private static partial Regex SlugInvalidCharsRegex();
 
     [GeneratedRegex(@"[\s-]+")]
     private static partial Regex SlugWhitespaceRegex();
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Page with ID {PageId} not found")]
-    private static partial void LogPageNotFound(ILogger logger, PageId pageId);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} created: {PageTitle}")]
-    private static partial void LogPageCreated(ILogger logger, PageId pageId, string pageTitle);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} updated: {PageTitle}")]
-    private static partial void LogPageUpdated(ILogger logger, PageId pageId, string pageTitle);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} content updated")]
-    private static partial void LogPageContentUpdated(ILogger logger, PageId pageId);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} deleted")]
-    private static partial void LogPageDeleted(ILogger logger, PageId pageId);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} published: {PageTitle}")]
-    private static partial void LogPagePublished(ILogger logger, PageId pageId, string pageTitle);
-
-    [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Page {PageId} unpublished: {PageTitle}"
-    )]
-    private static partial void LogPageUnpublished(ILogger logger, PageId pageId, string pageTitle);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} restored: {PageTitle}")]
-    private static partial void LogPageRestored(ILogger logger, PageId pageId, string pageTitle);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Page {PageId} permanently deleted")]
-    private static partial void LogPagePermanentlyDeleted(ILogger logger, PageId pageId);
 }

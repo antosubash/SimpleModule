@@ -17,21 +17,7 @@ import { useCallback, useState } from 'react';
 import MenuItemEditor from '@/components/MenuItemEditor';
 import MenuTree from '@/components/MenuTree';
 import { SettingsKeys } from '@/Locales/keys';
-
-interface MenuItemDto {
-  id: number;
-  parentId: number | null;
-  label: string;
-  url: string | null;
-  pageRoute: string | null;
-  icon: string;
-  cssClass: string | null;
-  openInNewTab: boolean;
-  isVisible: boolean;
-  isHomePage: boolean;
-  sortOrder: number;
-  children: MenuItemDto[];
-}
+import { countItems, findItem, getDepth, type MenuItemDto } from './components/menu-helpers';
 
 interface AvailablePage {
   pageRoute: string;
@@ -42,32 +28,6 @@ interface AvailablePage {
 interface MenuManagerProps {
   menuItems: MenuItemDto[];
   availablePages: AvailablePage[];
-}
-
-function findItem(items: MenuItemDto[], id: number): MenuItemDto | null {
-  for (const item of items) {
-    if (item.id === id) return item;
-    const found = findItem(item.children, id);
-    if (found) return found;
-  }
-  return null;
-}
-
-function getDepth(items: MenuItemDto[], id: number, depth = 0): number {
-  for (const item of items) {
-    if (item.id === id) return depth;
-    const found = getDepth(item.children, id, depth + 1);
-    if (found >= 0) return found;
-  }
-  return -1;
-}
-
-function countItems(items: MenuItemDto[]): number {
-  let count = 0;
-  for (const item of items) {
-    count += 1 + countItems(item.children);
-  }
-  return count;
 }
 
 export default function MenuManager({ menuItems: initial, availablePages }: MenuManagerProps) {
