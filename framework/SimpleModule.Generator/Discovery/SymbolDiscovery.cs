@@ -308,55 +308,13 @@ internal static class SymbolDiscovery
             featureClasses
         );
 
-        // Step 3e: Find ISaveChangesInterceptor implementors in module assemblies
+        // Step 3e: ISaveChangesInterceptor implementors
         var interceptors = new List<InterceptorInfo>();
-        if (s.SaveChangesInterceptor is not null)
-        {
-            SymbolHelpers.ScanModuleAssemblies(
-                modules,
-                moduleSymbols,
-                (assembly, module) =>
-                {
-                    InterceptorFinder.FindInterceptorTypes(
-                        assembly.GlobalNamespace,
-                        s.SaveChangesInterceptor,
-                        module.ModuleName,
-                        interceptors
-                    );
-                }
-            );
-        }
+        InterceptorFinder.Discover(modules, moduleSymbols, s, interceptors);
 
-        // Step 3e: Discover Vogen value objects with EF Core value converters.
-        // Scan Contracts assemblies and module assemblies only.
+        // Step 3e': Vogen value objects with EF Core value converters
         var vogenValueObjects = new List<VogenValueObjectRecord>();
-        var voScannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
-
-        foreach (var kvp in contractsAssemblySymbols)
-        {
-            if (voScannedAssemblies.Add(kvp.Value))
-            {
-                VogenFinder.FindVogenValueObjectsWithEfConverters(
-                    kvp.Value.GlobalNamespace,
-                    vogenValueObjects
-                );
-            }
-        }
-
-        SymbolHelpers.ScanModuleAssemblies(
-            modules,
-            moduleSymbols,
-            (assembly, _) =>
-            {
-                if (voScannedAssemblies.Add(assembly))
-                {
-                    VogenFinder.FindVogenValueObjectsWithEfConverters(
-                        assembly.GlobalNamespace,
-                        vogenValueObjects
-                    );
-                }
-            }
-        );
+        VogenFinder.Discover(modules, moduleSymbols, contractsAssemblySymbols, vogenValueObjects);
 
         // Step 3f: Find IModuleOptions implementors in module and contracts assemblies
         var moduleOptionsList = new List<ModuleOptionsRecord>();
@@ -369,55 +327,18 @@ internal static class SymbolDiscovery
             moduleOptionsList
         );
 
-        // Step 3g: Find IAgentDefinition, IAgentToolProvider, and IKnowledgeSource implementors
+        // Step 3g: Agent definitions, tool providers, knowledge sources
         var agentDefinitions = new List<DiscoveredTypeInfo>();
         var agentToolProviders = new List<DiscoveredTypeInfo>();
         var knowledgeSources = new List<DiscoveredTypeInfo>();
-
-        if (s.AgentDefinition is not null)
-        {
-            SymbolHelpers.ScanModuleAssemblies(
-                modules,
-                moduleSymbols,
-                (assembly, module) =>
-                    AgentFinder.FindImplementors(
-                        assembly.GlobalNamespace,
-                        s.AgentDefinition,
-                        module.ModuleName,
-                        agentDefinitions
-                    )
-            );
-        }
-
-        if (s.AgentToolProvider is not null)
-        {
-            SymbolHelpers.ScanModuleAssemblies(
-                modules,
-                moduleSymbols,
-                (assembly, module) =>
-                    AgentFinder.FindImplementors(
-                        assembly.GlobalNamespace,
-                        s.AgentToolProvider,
-                        module.ModuleName,
-                        agentToolProviders
-                    )
-            );
-        }
-
-        if (s.KnowledgeSource is not null)
-        {
-            SymbolHelpers.ScanModuleAssemblies(
-                modules,
-                moduleSymbols,
-                (assembly, module) =>
-                    AgentFinder.FindImplementors(
-                        assembly.GlobalNamespace,
-                        s.KnowledgeSource,
-                        module.ModuleName,
-                        knowledgeSources
-                    )
-            );
-        }
+        AgentFinder.DiscoverAll(
+            modules,
+            moduleSymbols,
+            s,
+            agentDefinitions,
+            agentToolProviders,
+            knowledgeSources
+        );
 
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();

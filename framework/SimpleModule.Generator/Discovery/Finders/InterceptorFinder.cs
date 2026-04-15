@@ -56,4 +56,33 @@ internal static class InterceptorFinder
             }
         }
     }
+
+    /// <summary>
+    /// Scans every module's implementation assembly for ISaveChangesInterceptor
+    /// implementors. No-op when SaveChangesInterceptor isn't resolvable.
+    /// </summary>
+    internal static void Discover(
+        List<ModuleInfo> modules,
+        Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        CoreSymbols symbols,
+        List<InterceptorInfo> interceptors
+    )
+    {
+        if (symbols.SaveChangesInterceptor is not null)
+        {
+            SymbolHelpers.ScanModuleAssemblies(
+                modules,
+                moduleSymbols,
+                (assembly, module) =>
+                {
+                    FindInterceptorTypes(
+                        assembly.GlobalNamespace,
+                        symbols.SaveChangesInterceptor,
+                        module.ModuleName,
+                        interceptors
+                    );
+                }
+            );
+        }
+    }
 }

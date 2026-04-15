@@ -56,6 +56,44 @@ internal static class VogenFinder
     }
 
     /// <summary>
+    /// Scans every contracts assembly and every module's implementation assembly
+    /// for Vogen value objects with EF Core value converters. Dedups on
+    /// IAssemblySymbol so a shared assembly is only walked once.
+    /// </summary>
+    internal static void Discover(
+        List<ModuleInfo> modules,
+        Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        Dictionary<string, IAssemblySymbol> contractsAssemblySymbols,
+        List<VogenValueObjectRecord> vogenValueObjects
+    )
+    {
+        var voScannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+
+        foreach (var kvp in contractsAssemblySymbols)
+        {
+            if (voScannedAssemblies.Add(kvp.Value))
+            {
+                FindVogenValueObjectsWithEfConverters(kvp.Value.GlobalNamespace, vogenValueObjects);
+            }
+        }
+
+        SymbolHelpers.ScanModuleAssemblies(
+            modules,
+            moduleSymbols,
+            (assembly, _) =>
+            {
+                if (voScannedAssemblies.Add(assembly))
+                {
+                    FindVogenValueObjectsWithEfConverters(
+                        assembly.GlobalNamespace,
+                        vogenValueObjects
+                    );
+                }
+            }
+        );
+    }
+
+    /// <summary>
     /// If the type is a Vogen value object, returns the FQN of its underlying primitive type.
     /// Otherwise returns the type's own FQN.
     /// </summary>
