@@ -9,29 +9,6 @@ namespace SimpleModule.Generator;
 
 internal static class SymbolDiscovery
 {
-    /// <summary>
-    /// Extracts a serializable source location from a symbol, if available.
-    /// Returns null for symbols only available in metadata (compiled DLLs).
-    /// </summary>
-    private static SourceLocationRecord? GetSourceLocation(ISymbol symbol)
-    {
-        foreach (var loc in symbol.Locations)
-        {
-            if (loc.IsInSource)
-            {
-                var span = loc.GetLineSpan();
-                return new SourceLocationRecord(
-                    span.Path,
-                    span.StartLinePosition.Line,
-                    span.StartLinePosition.Character,
-                    span.EndLinePosition.Line,
-                    span.EndLinePosition.Character
-                );
-            }
-        }
-        return null;
-    }
-
     internal static DiscoveryData Extract(
         Compilation compilation,
         CancellationToken cancellationToken
@@ -126,7 +103,7 @@ internal static class SymbolDiscovery
                 foreach (var ep in rawEndpoints)
                 {
                     var epFqn = TypeMappingHelpers.StripGlobalPrefix(ep.FullyQualifiedName);
-                    var ownerName = FindClosestModuleName(epFqn, modules);
+                    var ownerName = SymbolHelpers.FindClosestModuleName(epFqn, modules);
                     var owner = modules.Find(m => m.ModuleName == ownerName);
                     if (owner is not null)
                         owner.Endpoints.Add(ep);
@@ -146,7 +123,7 @@ internal static class SymbolDiscovery
                 foreach (var v in rawViews)
                 {
                     var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
-                    var ownerName = FindClosestModuleName(vFqn, modules);
+                    var ownerName = SymbolHelpers.FindClosestModuleName(vFqn, modules);
                     var owner = modules.Find(m => m.ModuleName == ownerName);
                     if (owner is not null)
                     {
@@ -219,14 +196,14 @@ internal static class SymbolDiscovery
             foreach (var ctx in rawDbContexts)
             {
                 var ctxNs = TypeMappingHelpers.StripGlobalPrefix(ctx.FullyQualifiedName);
-                ctx.ModuleName = FindClosestModuleName(ctxNs, modules);
+                ctx.ModuleName = SymbolHelpers.FindClosestModuleName(ctxNs, modules);
                 dbContexts.Add(ctx);
             }
 
             foreach (var cfg in rawEntityConfigs)
             {
                 var cfgNs = TypeMappingHelpers.StripGlobalPrefix(cfg.ConfigFqn);
-                cfg.ModuleName = FindClosestModuleName(cfgNs, modules);
+                cfg.ModuleName = SymbolHelpers.FindClosestModuleName(cfgNs, modules);
                 entityConfigs.Add(cfg);
             }
         }
@@ -444,7 +421,7 @@ internal static class SymbolDiscovery
         var interceptors = new List<InterceptorInfo>();
         if (s.SaveChangesInterceptor is not null)
         {
-            ScanModuleAssemblies(
+            SymbolHelpers.ScanModuleAssemblies(
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
@@ -472,7 +449,7 @@ internal static class SymbolDiscovery
             }
         }
 
-        ScanModuleAssemblies(
+        SymbolHelpers.ScanModuleAssemblies(
             modules,
             moduleSymbols,
             (assembly, _) =>
@@ -491,7 +468,7 @@ internal static class SymbolDiscovery
         var moduleOptionsList = new List<ModuleOptionsRecord>();
         if (s.ModuleOptions is not null)
         {
-            ScanModuleAssemblies(
+            SymbolHelpers.ScanModuleAssemblies(
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
@@ -525,7 +502,7 @@ internal static class SymbolDiscovery
 
         if (s.AgentDefinition is not null)
         {
-            ScanModuleAssemblies(
+            SymbolHelpers.ScanModuleAssemblies(
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
@@ -540,7 +517,7 @@ internal static class SymbolDiscovery
 
         if (s.AgentToolProvider is not null)
         {
-            ScanModuleAssemblies(
+            SymbolHelpers.ScanModuleAssemblies(
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
@@ -555,7 +532,7 @@ internal static class SymbolDiscovery
 
         if (s.KnowledgeSource is not null)
         {
-            ScanModuleAssemblies(
+            SymbolHelpers.ScanModuleAssemblies(
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
@@ -841,50 +818,65 @@ internal static class SymbolDiscovery
                                 ),
                                 ModuleName = moduleName,
                                 HasConfigureServices =
-                                    DeclaresMethod(typeSymbol, "ConfigureServices")
+                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureServices")
                                     || (
                                         moduleServicesSymbol is not null
-                                        && ImplementsInterface(typeSymbol, moduleServicesSymbol)
+                                        && SymbolHelpers.ImplementsInterface(
+                                            typeSymbol,
+                                            moduleServicesSymbol
+                                        )
                                     ),
-                                HasConfigureEndpoints = DeclaresMethod(
+                                HasConfigureEndpoints = SymbolHelpers.DeclaresMethod(
                                     typeSymbol,
                                     "ConfigureEndpoints"
                                 ),
                                 HasConfigureMenu =
-                                    DeclaresMethod(typeSymbol, "ConfigureMenu")
+                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureMenu")
                                     || (
                                         moduleMenuSymbol is not null
-                                        && ImplementsInterface(typeSymbol, moduleMenuSymbol)
+                                        && SymbolHelpers.ImplementsInterface(
+                                            typeSymbol,
+                                            moduleMenuSymbol
+                                        )
                                     ),
                                 HasConfigureMiddleware =
-                                    DeclaresMethod(typeSymbol, "ConfigureMiddleware")
+                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureMiddleware")
                                     || (
                                         moduleMiddlewareSymbol is not null
-                                        && ImplementsInterface(typeSymbol, moduleMiddlewareSymbol)
+                                        && SymbolHelpers.ImplementsInterface(
+                                            typeSymbol,
+                                            moduleMiddlewareSymbol
+                                        )
                                     ),
-                                HasConfigurePermissions = DeclaresMethod(
+                                HasConfigurePermissions = SymbolHelpers.DeclaresMethod(
                                     typeSymbol,
                                     "ConfigurePermissions"
                                 ),
                                 HasConfigureSettings =
-                                    DeclaresMethod(typeSymbol, "ConfigureSettings")
+                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureSettings")
                                     || (
                                         moduleSettingsSymbol is not null
-                                        && ImplementsInterface(typeSymbol, moduleSettingsSymbol)
+                                        && SymbolHelpers.ImplementsInterface(
+                                            typeSymbol,
+                                            moduleSettingsSymbol
+                                        )
                                     ),
-                                HasConfigureFeatureFlags = DeclaresMethod(
+                                HasConfigureFeatureFlags = SymbolHelpers.DeclaresMethod(
                                     typeSymbol,
                                     "ConfigureFeatureFlags"
                                 ),
-                                HasConfigureAgents = DeclaresMethod(typeSymbol, "ConfigureAgents"),
-                                HasConfigureRateLimits = DeclaresMethod(
+                                HasConfigureAgents = SymbolHelpers.DeclaresMethod(
+                                    typeSymbol,
+                                    "ConfigureAgents"
+                                ),
+                                HasConfigureRateLimits = SymbolHelpers.DeclaresMethod(
                                     typeSymbol,
                                     "ConfigureRateLimits"
                                 ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
                                 AssemblyName = typeSymbol.ContainingAssembly.Name,
-                                Location = GetSourceLocation(typeSymbol),
+                                Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                             }
                         );
                         break;
@@ -926,7 +918,10 @@ internal static class SymbolDiscovery
 
                     if (
                         viewEndpointInterfaceSymbol is not null
-                        && ImplementsInterface(typeSymbol, viewEndpointInterfaceSymbol)
+                        && SymbolHelpers.ImplementsInterface(
+                            typeSymbol,
+                            viewEndpointInterfaceSymbol
+                        )
                     )
                     {
                         // Infer class name for deferred page name computation
@@ -943,14 +938,14 @@ internal static class SymbolDiscovery
                         {
                             FullyQualifiedName = fqn,
                             InferredClassName = className,
-                            Location = GetSourceLocation(typeSymbol),
+                            Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                         };
 
                         var (viewRoute, _) = ReadRouteConstFields(typeSymbol);
                         viewInfo.RouteTemplate = viewRoute;
                         views.Add(viewInfo);
                     }
-                    else if (ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
+                    else if (SymbolHelpers.ImplementsInterface(typeSymbol, endpointInterfaceSymbol))
                     {
                         var info = new EndpointInfo { FullyQualifiedName = fqn };
 
@@ -1016,58 +1011,6 @@ internal static class SymbolDiscovery
             }
         }
         return (route, method);
-    }
-
-    private static bool ImplementsInterface(
-        INamedTypeSymbol typeSymbol,
-        INamedTypeSymbol interfaceSymbol
-    )
-    {
-        foreach (var iface in typeSymbol.AllInterfaces)
-        {
-            if (SymbolEqualityComparer.Default.Equals(iface, interfaceSymbol))
-                return true;
-        }
-        return false;
-    }
-
-    private static void ScanModuleAssemblies(
-        List<ModuleInfo> modules,
-        Dictionary<string, INamedTypeSymbol> moduleSymbols,
-        Action<IAssemblySymbol, ModuleInfo> action
-    )
-    {
-        var scanned = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
-        foreach (var module in modules)
-        {
-            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                continue;
-
-            if (scanned.Add(typeSymbol.ContainingAssembly))
-                action(typeSymbol.ContainingAssembly, module);
-        }
-    }
-
-    private static bool DeclaresMethod(INamedTypeSymbol typeSymbol, string methodName)
-    {
-        foreach (var member in typeSymbol.GetMembers(methodName))
-        {
-            if (member is IMethodSymbol method)
-            {
-                // Source types: method has syntax in source code
-                if (method.DeclaringSyntaxReferences.Length > 0)
-                    return true;
-
-                // Metadata types: method exists in compiled IL (not synthesized)
-                // IsImplicitlyDeclared filters out compiler-synthesized stubs for
-                // default interface method dispatch
-                if (
-                    !method.IsImplicitlyDeclared && method.Locations.Any(static l => l.IsInMetadata)
-                )
-                    return true;
-            }
-        }
-        return false;
     }
 
     private static void FindDtoTypes(
@@ -1142,18 +1085,6 @@ internal static class SymbolDiscovery
         }
     }
 
-    private static bool InheritsFrom(INamedTypeSymbol typeSymbol, INamedTypeSymbol baseType)
-    {
-        var current = typeSymbol.BaseType;
-        while (current is not null)
-        {
-            if (SymbolEqualityComparer.Default.Equals(current, baseType))
-                return true;
-            current = current.BaseType;
-        }
-        return false;
-    }
-
     /// <summary>
     /// Reads [ContractLifetime(ServiceLifetime.X)] from the type.
     /// Returns 1 (Scoped) if the attribute is not present.
@@ -1210,29 +1141,6 @@ internal static class SymbolDiscovery
         }
 
         return false;
-    }
-
-    private static string FindClosestModuleName(string typeFqn, List<ModuleInfo> modules)
-    {
-        // Match by longest shared namespace prefix between the type and each module class.
-        var bestMatch = "";
-        var bestLength = -1;
-        foreach (var module in modules)
-        {
-            var moduleFqn = TypeMappingHelpers.StripGlobalPrefix(module.FullyQualifiedName);
-            var moduleNs = TypeMappingHelpers.ExtractNamespace(moduleFqn);
-
-            if (
-                typeFqn.StartsWith(moduleNs, StringComparison.Ordinal)
-                && moduleNs.Length > bestLength
-            )
-            {
-                bestLength = moduleNs.Length;
-                bestMatch = module.ModuleName;
-            }
-        }
-
-        return bestMatch.Length > 0 ? bestMatch : modules[0].ModuleName;
     }
 
     private static void FindDbContextTypes(
@@ -1314,7 +1222,7 @@ internal static class SymbolDiscovery
                     IdentityUserTypeFqn = identityUserFqn,
                     IdentityRoleTypeFqn = identityRoleFqn,
                     IdentityKeyTypeFqn = identityKeyFqn,
-                    Location = GetSourceLocation(typeSymbol),
+                    Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                 };
 
                 // Collect DbSet<T> properties
@@ -1343,7 +1251,7 @@ internal static class SymbolDiscovery
                                 PropertyName = prop.Name,
                                 EntityFqn = entityFqn,
                                 EntityAssemblyName = entityAssemblyName,
-                                EntityLocation = GetSourceLocation(entityType),
+                                EntityLocation = SymbolHelpers.GetSourceLocation(entityType),
                             }
                         );
                     }
@@ -1396,7 +1304,7 @@ internal static class SymbolDiscovery
                                 ),
                                 EntityFqn = entityFqn,
                                 ModuleName = moduleName,
-                                Location = GetSourceLocation(typeSymbol),
+                                Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                             }
                         );
                         break;
@@ -1436,7 +1344,7 @@ internal static class SymbolDiscovery
                         assemblyName,
                         typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         methodCount,
-                        GetSourceLocation(typeSymbol)
+                        SymbolHelpers.GetSourceLocation(typeSymbol)
                     )
                 );
             }
@@ -1481,7 +1389,7 @@ internal static class SymbolDiscovery
                                 IsPublic = typeSymbol.DeclaredAccessibility == Accessibility.Public,
                                 IsAbstract = typeSymbol.IsAbstract,
                                 DependsOnDbContext = HasDbContextConstructorParam(typeSymbol),
-                                Location = GetSourceLocation(typeSymbol),
+                                Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                                 Lifetime = GetContractLifetime(typeSymbol),
                             }
                         );
@@ -1507,7 +1415,7 @@ internal static class SymbolDiscovery
             else if (
                 member is INamedTypeSymbol typeSymbol
                 && typeSymbol.TypeKind == TypeKind.Class
-                && ImplementsInterface(typeSymbol, modulePermissionsSymbol)
+                && SymbolHelpers.ImplementsInterface(typeSymbol, modulePermissionsSymbol)
             )
             {
                 var info = new PermissionClassInfo
@@ -1517,7 +1425,7 @@ internal static class SymbolDiscovery
                     ),
                     ModuleName = moduleName,
                     IsSealed = typeSymbol.IsSealed,
-                    Location = GetSourceLocation(typeSymbol),
+                    Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                 };
 
                 // Collect public const string fields
@@ -1539,7 +1447,7 @@ internal static class SymbolDiscovery
                                 IsConstString =
                                     field.IsConst
                                     && field.Type.SpecialType == SpecialType.System_String,
-                                Location = GetSourceLocation(field),
+                                Location = SymbolHelpers.GetSourceLocation(field),
                             }
                         );
                     }
@@ -1566,7 +1474,7 @@ internal static class SymbolDiscovery
             else if (
                 member is INamedTypeSymbol typeSymbol
                 && typeSymbol.TypeKind == TypeKind.Class
-                && ImplementsInterface(typeSymbol, moduleFeaturesSymbol)
+                && SymbolHelpers.ImplementsInterface(typeSymbol, moduleFeaturesSymbol)
             )
             {
                 var info = new FeatureClassInfo
@@ -1576,7 +1484,7 @@ internal static class SymbolDiscovery
                     ),
                     ModuleName = moduleName,
                     IsSealed = typeSymbol.IsSealed,
-                    Location = GetSourceLocation(typeSymbol),
+                    Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                 };
 
                 // Collect public const string fields
@@ -1598,7 +1506,7 @@ internal static class SymbolDiscovery
                                 IsConstString =
                                     field.IsConst
                                     && field.Type.SpecialType == SpecialType.System_String,
-                                Location = GetSourceLocation(field),
+                                Location = SymbolHelpers.GetSourceLocation(field),
                             }
                         );
                     }
@@ -1616,7 +1524,7 @@ internal static class SymbolDiscovery
         List<ModuleOptionsRecord> results
     )
     {
-        FindConcreteClassesImplementing(
+        SymbolHelpers.FindConcreteClassesImplementing(
             namespaceSymbol,
             moduleOptionsSymbol,
             typeSymbol =>
@@ -1624,39 +1532,10 @@ internal static class SymbolDiscovery
                     new ModuleOptionsRecord(
                         typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         moduleName,
-                        GetSourceLocation(typeSymbol)
+                        SymbolHelpers.GetSourceLocation(typeSymbol)
                     )
                 )
         );
-    }
-
-    /// <summary>
-    /// Recursively walks namespaces and invokes <paramref name="onMatch"/> for each
-    /// concrete (non-abstract, non-static) class that implements the given interface.
-    /// </summary>
-    private static void FindConcreteClassesImplementing(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol interfaceSymbol,
-        Action<INamedTypeSymbol> onMatch
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            if (member is INamespaceSymbol childNs)
-            {
-                FindConcreteClassesImplementing(childNs, interfaceSymbol, onMatch);
-            }
-            else if (
-                member is INamedTypeSymbol typeSymbol
-                && typeSymbol.TypeKind == TypeKind.Class
-                && !typeSymbol.IsAbstract
-                && !typeSymbol.IsStatic
-                && ImplementsInterface(typeSymbol, interfaceSymbol)
-            )
-            {
-                onMatch(typeSymbol);
-            }
-        }
     }
 
     private static void FindInterceptorTypes(
@@ -1677,7 +1556,7 @@ internal static class SymbolDiscovery
                 && typeSymbol.TypeKind == TypeKind.Class
                 && !typeSymbol.IsAbstract
                 && !typeSymbol.IsStatic
-                && ImplementsInterface(typeSymbol, saveChangesInterceptorSymbol)
+                && SymbolHelpers.ImplementsInterface(typeSymbol, saveChangesInterceptorSymbol)
             )
             {
                 var info = new InterceptorInfo
@@ -1686,7 +1565,7 @@ internal static class SymbolDiscovery
                         SymbolDisplayFormat.FullyQualifiedFormat
                     ),
                     ModuleName = moduleName,
-                    Location = GetSourceLocation(typeSymbol),
+                    Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                 };
 
                 // Extract constructor parameter type FQNs
@@ -1996,7 +1875,7 @@ internal static class SymbolDiscovery
                 member is INamedTypeSymbol typeSymbol
                 && !typeSymbol.IsAbstract
                 && typeSymbol.TypeKind == TypeKind.Class
-                && ImplementsInterface(typeSymbol, interfaceSymbol)
+                && SymbolHelpers.ImplementsInterface(typeSymbol, interfaceSymbol)
             )
             {
                 results.Add(
