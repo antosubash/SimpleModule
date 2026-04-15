@@ -1,30 +1,27 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.Email.Contracts;
 
 namespace SimpleModule.Email.Validators;
 
-public static class UpdateEmailTemplateRequestValidator
+public sealed class UpdateEmailTemplateRequestValidator
+    : AbstractValidator<UpdateEmailTemplateRequest>
 {
-    public static ValidationResult Validate(UpdateEmailTemplateRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Name is required.")
-            .AddErrorIf(request.Name?.Length > 200, "Name", "Name must not exceed 200 characters.")
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.Subject),
-                "Subject",
-                "Subject is required."
-            )
-            .AddErrorIf(
-                request.Subject?.Length > 500,
-                "Subject",
-                "Subject must not exceed 500 characters."
-            )
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Body), "Body", "Body is required.")
-            .AddErrorIf(
-                !string.IsNullOrWhiteSpace(request.DefaultReplyTo)
-                    && !SendEmailRequestValidator.EmailPattern().IsMatch(request.DefaultReplyTo),
-                "DefaultReplyTo",
-                "Invalid email format."
-            )
-            .Build();
+    public UpdateEmailTemplateRequestValidator()
+    {
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .WithMessage("Name is required.")
+            .MaximumLength(200)
+            .WithMessage("Name must not exceed 200 characters.");
+        RuleFor(x => x.Subject)
+            .NotEmpty()
+            .WithMessage("Subject is required.")
+            .MaximumLength(500)
+            .WithMessage("Subject must not exceed 500 characters.");
+        RuleFor(x => x.Body).NotEmpty().WithMessage("Body is required.");
+        RuleFor(x => x.DefaultReplyTo)
+            .EmailAddress()
+            .When(x => !string.IsNullOrWhiteSpace(x.DefaultReplyTo))
+            .WithMessage("Invalid email format.");
+    }
 }

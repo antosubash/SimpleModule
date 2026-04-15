@@ -1,22 +1,17 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.Map.Contracts;
 
 namespace SimpleModule.Map.Endpoints.Basemaps;
 
-public static class UpdateBasemapRequestValidator
+public sealed class UpdateBasemapRequestValidator : AbstractValidator<UpdateBasemapRequest>
 {
-    public static ValidationResult Validate(UpdateBasemapRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Name is required.")
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.StyleUrl),
-                "StyleUrl",
-                "StyleUrl is required."
-            )
-            .AddErrorIf(
-                request.StyleUrl?.Length > 2048,
-                "StyleUrl",
-                "StyleUrl must be 2048 characters or fewer."
-            )
-            .Build();
+    public UpdateBasemapRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+        RuleFor(x => x.StyleUrl)
+            .NotEmpty()
+            .WithMessage("StyleUrl is required.")
+            .MaximumLength(2048)
+            .WithMessage("StyleUrl must be 2048 characters or fewer.");
+    }
 }

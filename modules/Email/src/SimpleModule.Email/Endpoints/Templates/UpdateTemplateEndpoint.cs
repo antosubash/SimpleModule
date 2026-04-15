@@ -1,10 +1,11 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
+using SimpleModule.Core.Validation;
 using SimpleModule.Email.Contracts;
-using SimpleModule.Email.Validators;
 
 namespace SimpleModule.Email.Endpoints.Templates;
 
@@ -16,13 +17,20 @@ public class UpdateTemplateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                (int id, UpdateEmailTemplateRequest request, IEmailContracts emailContracts) =>
+                async (
+                    int id,
+                    UpdateEmailTemplateRequest request,
+                    IValidator<UpdateEmailTemplateRequest> validator,
+                    IEmailContracts emailContracts
+                ) =>
                 {
-                    var validation = UpdateEmailTemplateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
-                        throw new Core.Exceptions.ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
 
-                    return CrudEndpoints.Update(() =>
+                    return await CrudEndpoints.Update(() =>
                         emailContracts.UpdateTemplateAsync(EmailTemplateId.From(id), request)
                     );
                 }

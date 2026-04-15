@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
@@ -20,6 +21,7 @@ public class RateLimitingModule : IModule
             configuration,
             RateLimitingConstants.ModuleName
         );
+        services.AddValidatorsFromAssemblyContaining<RateLimitingModule>();
     }
 
     public void ConfigureRateLimits(IRateLimitBuilder builder)

@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Orders.Contracts;
 using OrdersConstants = SimpleModule.Orders.Contracts.OrdersConstants;
 
@@ -17,15 +18,21 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                (CreateOrderRequest request, IOrderContracts orderContracts) =>
+                async (
+                    CreateOrderRequest request,
+                    IValidator<CreateOrderRequest> validator,
+                    IOrderContracts orderContracts
+                ) =>
                 {
-                    var validation = CreateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => orderContracts.CreateOrderAsync(request),
                         o => $"{OrdersConstants.RoutePrefix}/{o.Id}"
                     );

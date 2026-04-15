@@ -1,18 +1,16 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.Tenants.Contracts;
 
 namespace SimpleModule.Tenants.Endpoints.Tenants;
 
-public static class UpdateRequestValidator
+public sealed class UpdateRequestValidator : AbstractValidator<UpdateTenantRequest>
 {
-    public static ValidationResult Validate(UpdateTenantRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Tenant name is required.")
-            .AddErrorIf(
-                !string.IsNullOrWhiteSpace(request.AdminEmail)
-                    && !request.AdminEmail.Contains('@', StringComparison.Ordinal),
-                "AdminEmail",
-                "Invalid email format."
-            )
-            .Build();
+    public UpdateRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Tenant name is required.");
+        RuleFor(x => x.AdminEmail)
+            .EmailAddress()
+            .When(x => !string.IsNullOrWhiteSpace(x.AdminEmail))
+            .WithMessage("Invalid email format.");
+    }
 }

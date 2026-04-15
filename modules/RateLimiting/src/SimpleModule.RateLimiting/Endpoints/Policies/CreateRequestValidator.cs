@@ -1,21 +1,15 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.RateLimiting.Contracts;
 
 namespace SimpleModule.RateLimiting.Endpoints.Policies;
 
-public static class CreateRequestValidator
+public sealed class CreateRequestValidator : AbstractValidator<CreateRateLimitRuleRequest>
 {
-    public static ValidationResult Validate(CreateRateLimitRuleRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.PolicyName),
-                "PolicyName",
-                "Policy name is required."
-            )
-            .AddErrorIf(
-                request.PermitLimit <= 0,
-                "PermitLimit",
-                "Permit limit must be greater than zero."
-            )
-            .Build();
+    public CreateRequestValidator()
+    {
+        RuleFor(x => x.PolicyName).NotEmpty().WithMessage("Policy name is required.");
+        RuleFor(x => x.PermitLimit)
+            .GreaterThan(0)
+            .WithMessage("Permit limit must be greater than zero.");
+    }
 }

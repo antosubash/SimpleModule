@@ -6,12 +6,14 @@ namespace Products.Tests.Unit;
 
 public class UpdateRequestValidatorTests
 {
+    private readonly UpdateRequestValidator _validator = new();
+
     [Fact]
     public void Validate_WithValidRequest_ReturnsSuccess()
     {
         var request = new UpdateProductRequest { Name = "Widget", Price = 9.99m };
 
-        var result = UpdateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeTrue();
     }
@@ -21,10 +23,10 @@ public class UpdateRequestValidatorTests
     {
         var request = new UpdateProductRequest { Name = "", Price = 9.99m };
 
-        var result = UpdateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Name");
+        result.Errors.Should().Contain(e => e.PropertyName == "Name");
     }
 
     [Fact]
@@ -32,10 +34,10 @@ public class UpdateRequestValidatorTests
     {
         var request = new UpdateProductRequest { Name = "   ", Price = 9.99m };
 
-        var result = UpdateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Name");
+        result.Errors.Should().Contain(e => e.PropertyName == "Name");
     }
 
     [Fact]
@@ -43,10 +45,10 @@ public class UpdateRequestValidatorTests
     {
         var request = new UpdateProductRequest { Name = "Widget", Price = 0m };
 
-        var result = UpdateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Price");
+        result.Errors.Should().Contain(e => e.PropertyName == "Price");
     }
 
     [Fact]
@@ -54,9 +56,9 @@ public class UpdateRequestValidatorTests
     {
         var request = new UpdateProductRequest { Name = "Widget", Price = -5.00m };
 
-        var result = UpdateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Price");
+        result.Errors.Should().Contain(e => e.PropertyName == "Price");
     }
 }

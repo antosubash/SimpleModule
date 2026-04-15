@@ -1,10 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Map.Contracts;
 
 namespace SimpleModule.Map.Endpoints.DefaultMap;
@@ -17,22 +17,21 @@ public class UpdateDefaultMapEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                (
+                async (
                     UpdateDefaultMapRequest request,
-                    IMapContracts map,
-                    IOptions<MapModuleOptions> options
+                    IValidator<UpdateDefaultMapRequest> validator,
+                    IMapContracts map
                 ) =>
                 {
-                    var validation = UpdateDefaultMapRequestValidator.Validate(
-                        request,
-                        options.Value.MaxLayersPerMap
-                    );
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Update(() => map.UpdateDefaultMapAsync(request));
+                    return await CrudEndpoints.Update(() => map.UpdateDefaultMapAsync(request));
                 }
             )
             .RequirePermission(MapPermissions.Update);
