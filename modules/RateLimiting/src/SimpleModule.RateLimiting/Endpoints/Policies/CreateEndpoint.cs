@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.RateLimiting.Contracts;
 
 namespace SimpleModule.RateLimiting.Endpoints.Policies;
@@ -16,15 +17,21 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                (CreateRateLimitRuleRequest request, IRateLimitingContracts contracts) =>
+                async (
+                    CreateRateLimitRuleRequest request,
+                    IValidator<CreateRateLimitRuleRequest> validator,
+                    IRateLimitingContracts contracts
+                ) =>
                 {
-                    var validation = CreateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => contracts.CreateRuleAsync(request),
                         r => $"{RateLimitingConstants.RoutePrefix}/{r.Id}"
                     );

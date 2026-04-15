@@ -1,17 +1,13 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Endpoints.Products;
 
-public static class UpdateRequestValidator
+public sealed class UpdateRequestValidator : AbstractValidator<UpdateProductRequest>
 {
-    public static ValidationResult Validate(UpdateProductRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.Name),
-                "Name",
-                "Product name is required."
-            )
-            .AddErrorIf(request.Price <= 0, "Price", "Price must be greater than zero.")
-            .Build();
+    public UpdateRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+    }
 }

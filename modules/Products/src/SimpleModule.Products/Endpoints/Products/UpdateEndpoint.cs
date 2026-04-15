@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Products.Contracts;
 
 namespace SimpleModule.Products.Endpoints.Products;
@@ -16,15 +17,22 @@ public class UpdateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                (ProductId id, UpdateProductRequest request, IProductContracts productContracts) =>
+                async (
+                    ProductId id,
+                    UpdateProductRequest request,
+                    IValidator<UpdateProductRequest> validator,
+                    IProductContracts productContracts
+                ) =>
                 {
-                    var validation = UpdateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Update(() =>
+                    return await CrudEndpoints.Update(() =>
                         productContracts.UpdateProductAsync(id, request)
                     );
                 }

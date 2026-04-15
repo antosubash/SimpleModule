@@ -277,11 +277,7 @@ public sealed class FeatureTemplates
                 var newBody = new List<string>
                 {
                     resultLines[braceStart], // opening brace
-                    "        var errors = new Dictionary<string, string[]>();",
-                    "",
-                    "        // TODO: add validation rules",
-                    "",
-                    "        return errors.Count > 0 ? ValidationResult.WithErrors(errors) : ValidationResult.Success;",
+                    "        // TODO: add validation rules via RuleFor(x => x.Prop)...",
                 };
 
                 // Keep the closing brace
@@ -369,20 +365,16 @@ public sealed class FeatureTemplates
         string singularName
     ) =>
         $$"""
-            using SimpleModule.Core.Validation;
+            using FluentValidation;
             using SimpleModule.{{moduleName}}.Contracts;
 
             namespace SimpleModule.{{moduleName}}.Endpoints.{{moduleName}};
 
-            public static class {{featureName}}RequestValidator
+            public sealed class {{featureName}}RequestValidator : AbstractValidator<{{singularName}}>
             {
-                public static ValidationResult Validate({{singularName}} request)
+                public {{featureName}}RequestValidator()
                 {
-                    var errors = new Dictionary<string, string[]>();
-
-                    // TODO: add validation rules
-
-                    return errors.Count > 0 ? ValidationResult.WithErrors(errors) : ValidationResult.Success;
+                    // TODO: add validation rules via RuleFor(x => x.Prop)...
                 }
             }
             """;

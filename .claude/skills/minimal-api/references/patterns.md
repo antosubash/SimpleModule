@@ -363,24 +363,37 @@ public static class ProductsPermissions
 
 ## Validation Classes
 
+Use FluentValidation `AbstractValidator<T>`. The framework provides a `ToValidationErrors()` extension that converts FluentValidation's `ValidationResult` to the `Dictionary<string, string[]>` shape consumed by `ValidationException` and the RFC 7807 response writer.
+
 ```csharp
-public static class CreateRequestValidator
+public sealed class CreateRequestValidator : AbstractValidator<CreateProductRequest>
 {
-    public static ValidationResult Validate(CreateProductRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.Name),
-                "Name",
-                "Product name is required."
-            )
-            .AddErrorIf(request.Price <= 0, "Price", "Price must be greater than zero.")
-            .Build();
+    public CreateRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+    }
 }
 ```
 
-Usage in endpoint:
+Register once per module in `ConfigureServices`:
+
 ```csharp
-var validation = CreateRequestValidator.Validate(request);
-if (!validation.IsValid)
-    throw new ValidationException(validation.Errors);
+services.AddValidatorsFromAssemblyContaining<ThisModule>();
+```
+
+Usage in endpoint (async lambda, inject `IValidator<TRequest>`):
+
+```csharp
+async (
+    CreateProductRequest request,
+    IValidator<CreateProductRequest> validator,
+    IProductContracts contracts
+) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+        throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
+    // ...
+}
 ```

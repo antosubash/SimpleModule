@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Tenants.Contracts;
 
 namespace SimpleModule.Tenants.Endpoints.Tenants;
@@ -16,12 +17,19 @@ public class AddHostEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                async (TenantId id, AddTenantHostRequest request, ITenantContracts contracts) =>
+                async (
+                    TenantId id,
+                    AddTenantHostRequest request,
+                    IValidator<AddTenantHostRequest> validator,
+                    ITenantContracts contracts
+                ) =>
                 {
-                    var validation = AddHostRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
                     var host = await contracts.AddHostAsync(id, request);

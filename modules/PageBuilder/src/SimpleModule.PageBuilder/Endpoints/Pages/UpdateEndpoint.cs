@@ -1,9 +1,9 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Validation;
 using SimpleModule.PageBuilder.Contracts;
 
@@ -17,27 +17,24 @@ public class UpdateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                (PageId id, UpdatePageRequest request, IPageBuilderContracts pageBuilder) =>
+                async (
+                    PageId id,
+                    UpdatePageRequest request,
+                    IValidator<UpdatePageRequest> validator,
+                    IPageBuilderContracts pageBuilder
+                ) =>
                 {
-                    var validation = new ValidationBuilder()
-                        .AddErrorIf(
-                            string.IsNullOrWhiteSpace(request.Title),
-                            "Title",
-                            "Page title is required."
-                        )
-                        .AddErrorIf(
-                            string.IsNullOrWhiteSpace(request.Slug),
-                            "Slug",
-                            "Page slug is required."
-                        )
-                        .Build();
-
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Update(() => pageBuilder.UpdatePageAsync(id, request));
+                    return await CrudEndpoints.Update(() =>
+                        pageBuilder.UpdatePageAsync(id, request)
+                    );
                 }
             )
             .RequirePermission(PageBuilderPermissions.Update);

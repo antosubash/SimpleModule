@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Map.Contracts;
 
 namespace SimpleModule.Map.Endpoints.LayerSources;
@@ -16,15 +17,21 @@ public class CreateLayerSourceEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                (CreateLayerSourceRequest request, IMapContracts map) =>
+                async (
+                    CreateLayerSourceRequest request,
+                    IValidator<CreateLayerSourceRequest> validator,
+                    IMapContracts map
+                ) =>
                 {
-                    var validation = CreateLayerSourceRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => map.CreateLayerSourceAsync(request),
                         s => $"{MapConstants.RoutePrefix}/sources/{s.Id}"
                     );

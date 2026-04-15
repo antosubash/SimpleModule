@@ -1,42 +1,54 @@
 using System.Globalization;
 using System.Text;
-using SimpleModule.Core.Validation;
+using FluentValidation;
+using FluentValidation.Results;
 using SimpleModule.Orders.Contracts;
 
 namespace SimpleModule.Orders.Endpoints.Orders;
 
-public static class CreateRequestValidator
+public sealed class CreateRequestValidator : AbstractValidator<CreateOrderRequest>
 {
     private static readonly CompositeFormat QuantityMustBePositiveFormat = CompositeFormat.Parse(
         OrdersConstants.ValidationMessages.QuantityMustBePositiveFormat
     );
 
-    public static ValidationResult Validate(CreateOrderRequest request)
+    public CreateRequestValidator()
     {
-        var builder = new ValidationBuilder()
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.UserId),
-                OrdersConstants.Fields.UserId,
-                OrdersConstants.ValidationMessages.UserIdRequired
+        RuleFor(x => x.UserId)
+            .NotEmpty()
+            .WithName(OrdersConstants.Fields.UserId)
+            .WithMessage(OrdersConstants.ValidationMessages.UserIdRequired);
+
+        RuleFor(x => x.Items)
+            .NotEmpty()
+            .WithName(OrdersConstants.Fields.Items)
+            .WithMessage(OrdersConstants.ValidationMessages.AtLeastOneItemRequired);
+
+        // Items[i].Quantity > 0 — emitted under the "Items" field so callers see
+        // a single aggregated errors-by-field dictionary, matching the prior
+        // ValidationBuilder shape.
+        RuleFor(x => x.Items)
+            .Custom(
+                (items, context) =>
+                {
+                    for (var i = 0; i < items.Count; i++)
+                    {
+                        if (items[i].Quantity <= 0)
+                        {
+                            context.AddFailure(
+                                new ValidationFailure(
+                                    OrdersConstants.Fields.Items,
+                                    string.Format(
+                                        CultureInfo.InvariantCulture,
+                                        QuantityMustBePositiveFormat,
+                                        i
+                                    )
+                                )
+                            );
+                        }
+                    }
+                }
             )
-            .AddErrorIf(
-                request.Items is null || request.Items.Count == 0,
-                OrdersConstants.Fields.Items,
-                OrdersConstants.ValidationMessages.AtLeastOneItemRequired
-            );
-
-        if (request.Items is { Count: > 0 })
-        {
-            for (var i = 0; i < request.Items.Count; i++)
-            {
-                builder.AddErrorIf(
-                    request.Items[i].Quantity <= 0,
-                    OrdersConstants.Fields.Items,
-                    string.Format(CultureInfo.InvariantCulture, QuantityMustBePositiveFormat, i)
-                );
-            }
-        }
-
-        return builder.Build();
+            .When(x => x.Items is { Count: > 0 });
     }
 }

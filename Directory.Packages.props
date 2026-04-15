@@ -60,6 +60,9 @@
     <PackageVersion Include="Cronos" Version="0.8.4" />
     <!-- Caching -->
     <PackageVersion Include="ZiggyCreatures.FusionCache" Version="2.6.0" />
+    <!-- Validation -->
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <!-- Email -->
     <PackageVersion Include="MailKit" Version="4.15.1" />
     <!-- CLI -->

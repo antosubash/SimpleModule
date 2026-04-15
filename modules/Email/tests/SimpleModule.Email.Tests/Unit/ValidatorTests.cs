@@ -6,6 +6,10 @@ namespace SimpleModule.Email.Tests.Unit;
 
 public sealed class ValidatorTests
 {
+    private readonly SendEmailRequestValidator _sendValidator = new();
+    private readonly CreateEmailTemplateRequestValidator _createValidator = new();
+    private readonly UpdateEmailTemplateRequestValidator _updateValidator = new();
+
     [Fact]
     public void SendEmailRequestValidator_WithValidRequest_ReturnsSuccess()
     {
@@ -15,7 +19,7 @@ public sealed class ValidatorTests
             Subject = "Test",
             Body = "Hello",
         };
-        var result = SendEmailRequestValidator.Validate(request);
+        var result = _sendValidator.Validate(request);
         result.IsValid.Should().BeTrue();
     }
 
@@ -28,9 +32,9 @@ public sealed class ValidatorTests
             Subject = "Test",
             Body = "Hello",
         };
-        var result = SendEmailRequestValidator.Validate(request);
+        var result = _sendValidator.Validate(request);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("To");
+        result.Errors.Should().Contain(e => e.PropertyName == "To");
     }
 
     [Fact]
@@ -42,9 +46,9 @@ public sealed class ValidatorTests
             Subject = "Test",
             Body = "Hello",
         };
-        var result = SendEmailRequestValidator.Validate(request);
+        var result = _sendValidator.Validate(request);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("To");
+        result.Errors.Should().Contain(e => e.PropertyName == "To");
     }
 
     [Fact]
@@ -57,9 +61,9 @@ public sealed class ValidatorTests
             Subject = "Test",
             Body = "Hello",
         };
-        var result = SendEmailRequestValidator.Validate(request);
+        var result = _sendValidator.Validate(request);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("ReplyTo");
+        result.Errors.Should().Contain(e => e.PropertyName == "ReplyTo");
     }
 
     [Fact]
@@ -72,7 +76,7 @@ public sealed class ValidatorTests
             Subject = "Welcome {{name}}",
             Body = "Hello!",
         };
-        var result = CreateEmailTemplateRequestValidator.Validate(request);
+        var result = _createValidator.Validate(request);
         result.IsValid.Should().BeTrue();
     }
 
@@ -86,9 +90,9 @@ public sealed class ValidatorTests
             Subject = "Welcome",
             Body = "Hello!",
         };
-        var result = CreateEmailTemplateRequestValidator.Validate(request);
+        var result = _createValidator.Validate(request);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Slug");
+        result.Errors.Should().Contain(e => e.PropertyName == "Slug");
     }
 
     [Fact]
@@ -100,8 +104,8 @@ public sealed class ValidatorTests
             Subject = "Test",
             Body = "Hello!",
         };
-        var result = UpdateEmailTemplateRequestValidator.Validate(request);
+        var result = _updateValidator.Validate(request);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Name");
+        result.Errors.Should().Contain(e => e.PropertyName == "Name");
     }
 }

@@ -1,21 +1,16 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.Tenants.Contracts;
 
 namespace SimpleModule.Tenants.Endpoints.Tenants;
 
-public static class AddHostRequestValidator
+public sealed class AddHostRequestValidator : AbstractValidator<AddTenantHostRequest>
 {
-    public static ValidationResult Validate(AddTenantHostRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(
-                string.IsNullOrWhiteSpace(request.HostName),
-                "HostName",
-                "Host name is required."
-            )
-            .AddErrorIf(
-                !string.IsNullOrWhiteSpace(request.HostName) && request.HostName.Length > 512,
-                "HostName",
-                "Host name must not exceed 512 characters."
-            )
-            .Build();
+    public AddHostRequestValidator()
+    {
+        RuleFor(x => x.HostName)
+            .NotEmpty()
+            .WithMessage("Host name is required.")
+            .MaximumLength(512)
+            .WithMessage("Host name must not exceed 512 characters.");
+    }
 }

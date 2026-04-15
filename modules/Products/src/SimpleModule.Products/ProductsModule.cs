@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
@@ -18,6 +19,7 @@ public class ProductsModule : IModule, IModuleServices, IModuleMenu
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<ProductsDbContext>(configuration, ProductsConstants.ModuleName);
+        services.AddValidatorsFromAssemblyContaining<ProductsModule>();
     }
 
     public void ConfigureFeatureFlags(IFeatureFlagBuilder builder)

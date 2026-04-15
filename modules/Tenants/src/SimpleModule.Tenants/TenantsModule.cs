@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,7 @@ public class TenantsModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<TenantsDbContext>(configuration, TenantsConstants.ModuleName);
+        services.AddValidatorsFromAssemblyContaining<TenantsModule>();
         services.AddScoped<ITenantContracts, TenantService>();
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());

@@ -150,14 +150,29 @@ var body = await JsonSerializer.DeserializeAsync<MyType>(context.Request.Body);
 
 ## Validation
 
+Use FluentValidation `AbstractValidator<T>`. Register via `services.AddValidatorsFromAssemblyContaining<YourModule>()` in `ConfigureServices`. Inject `IValidator<TRequest>` into the endpoint handler.
+
 ```csharp
-public static class CreateRequestValidator
+public sealed class CreateRequestValidator : AbstractValidator<CreateProductRequest>
 {
-    public static ValidationResult Validate(CreateProductRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Product name is required.")
-            .AddErrorIf(request.Price <= 0, "Price", "Price must be greater than zero.")
-            .Build();
+    public CreateRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+    }
+}
+
+// In the endpoint lambda:
+async (
+    CreateProductRequest request,
+    IValidator<CreateProductRequest> validator,
+    IProductContracts products
+) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+        throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
+    // ...
 }
 ```
 
