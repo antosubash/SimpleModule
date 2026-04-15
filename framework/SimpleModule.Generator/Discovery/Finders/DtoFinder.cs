@@ -169,7 +169,7 @@ internal static class DtoFinder
 
                 // Skip Vogen value objects — they have their own JsonConverter
                 // and must not be treated as regular DTOs in the JSON resolver
-                if (SymbolDiscovery.IsVogenValueObject(typeSymbol))
+                if (VogenFinder.IsVogenValueObject(typeSymbol))
                     continue;
 
                 var safeName = TypeMappingHelpers.StripGlobalPrefix(fqn).Replace(".", "_");
@@ -230,7 +230,7 @@ internal static class DtoFinder
                     && seen.Add(prop.Name)
                 )
                 {
-                    var resolvedType = SymbolDiscovery.ResolveUnderlyingType(prop.Type);
+                    var resolvedType = VogenFinder.ResolveUnderlyingType(prop.Type);
                     var actualType = prop.Type.ToDisplayString(
                         SymbolDisplayFormat.FullyQualifiedFormat
                     );

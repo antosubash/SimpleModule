@@ -422,7 +422,7 @@ internal static class SymbolDiscovery
                 moduleSymbols,
                 (assembly, module) =>
                 {
-                    FindInterceptorTypes(
+                    InterceptorFinder.FindInterceptorTypes(
                         assembly.GlobalNamespace,
                         s.SaveChangesInterceptor,
                         module.ModuleName,
@@ -441,7 +441,10 @@ internal static class SymbolDiscovery
         {
             if (voScannedAssemblies.Add(kvp.Value))
             {
-                FindVogenValueObjectsWithEfConverters(kvp.Value.GlobalNamespace, vogenValueObjects);
+                VogenFinder.FindVogenValueObjectsWithEfConverters(
+                    kvp.Value.GlobalNamespace,
+                    vogenValueObjects
+                );
             }
         }
 
@@ -452,7 +455,7 @@ internal static class SymbolDiscovery
             {
                 if (voScannedAssemblies.Add(assembly))
                 {
-                    FindVogenValueObjectsWithEfConverters(
+                    VogenFinder.FindVogenValueObjectsWithEfConverters(
                         assembly.GlobalNamespace,
                         vogenValueObjects
                     );
@@ -502,7 +505,7 @@ internal static class SymbolDiscovery
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
-                    FindImplementors(
+                    AgentFinder.FindImplementors(
                         assembly.GlobalNamespace,
                         s.AgentDefinition,
                         module.ModuleName,
@@ -517,7 +520,7 @@ internal static class SymbolDiscovery
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
-                    FindImplementors(
+                    AgentFinder.FindImplementors(
                         assembly.GlobalNamespace,
                         s.AgentToolProvider,
                         module.ModuleName,
@@ -532,7 +535,7 @@ internal static class SymbolDiscovery
                 modules,
                 moduleSymbols,
                 (assembly, module) =>
-                    FindImplementors(
+                    AgentFinder.FindImplementors(
                         assembly.GlobalNamespace,
                         s.KnowledgeSource,
                         module.ModuleName,
@@ -741,169 +744,5 @@ internal static class SymbolDiscovery
             s.HasAgentsAssembly,
             hostAssemblyName
         );
-    }
-
-    private static void FindInterceptorTypes(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol saveChangesInterceptorSymbol,
-        string moduleName,
-        List<InterceptorInfo> results
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            if (member is INamespaceSymbol childNs)
-            {
-                FindInterceptorTypes(childNs, saveChangesInterceptorSymbol, moduleName, results);
-            }
-            else if (
-                member is INamedTypeSymbol typeSymbol
-                && typeSymbol.TypeKind == TypeKind.Class
-                && !typeSymbol.IsAbstract
-                && !typeSymbol.IsStatic
-                && SymbolHelpers.ImplementsInterface(typeSymbol, saveChangesInterceptorSymbol)
-            )
-            {
-                var info = new InterceptorInfo
-                {
-                    FullyQualifiedName = typeSymbol.ToDisplayString(
-                        SymbolDisplayFormat.FullyQualifiedFormat
-                    ),
-                    ModuleName = moduleName,
-                    Location = SymbolHelpers.GetSourceLocation(typeSymbol),
-                };
-
-                // Extract constructor parameter type FQNs
-                foreach (var ctor in typeSymbol.Constructors)
-                {
-                    if (ctor.DeclaredAccessibility != Accessibility.Public)
-                        continue;
-
-                    foreach (var param in ctor.Parameters)
-                    {
-                        info.ConstructorParamTypeFqns.Add(
-                            param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
-                        );
-                    }
-
-                    // Only process the first public constructor
-                    break;
-                }
-
-                results.Add(info);
-            }
-        }
-    }
-
-    private static void FindVogenValueObjectsWithEfConverters(
-        INamespaceSymbol ns,
-        List<VogenValueObjectRecord> results
-    )
-    {
-        foreach (var type in ns.GetTypeMembers())
-        {
-            if (!IsVogenValueObject(type))
-                continue;
-
-            var converterMembers = type.GetTypeMembers("EfCoreValueConverter");
-            var comparerMembers = type.GetTypeMembers("EfCoreValueComparer");
-
-            if (converterMembers.Length == 0 || comparerMembers.Length == 0)
-                continue;
-
-            var typeFqn = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            var converterFqn = converterMembers[0]
-                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            var comparerFqn = comparerMembers[0]
-                .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-            results.Add(new VogenValueObjectRecord(typeFqn, converterFqn, comparerFqn));
-        }
-
-        foreach (var childNs in ns.GetNamespaceMembers())
-        {
-            FindVogenValueObjectsWithEfConverters(childNs, results);
-        }
-    }
-
-    internal static bool IsVogenValueObject(INamedTypeSymbol typeSymbol)
-    {
-        foreach (var attr in typeSymbol.GetAttributes())
-        {
-            var attrClass = attr.AttributeClass;
-            if (
-                attrClass is not null
-                && attrClass.IsGenericType
-                && attrClass.Name == "ValueObjectAttribute"
-                && attrClass.ContainingNamespace.ToDisplayString() == "Vogen"
-            )
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// If the type is a Vogen value object, returns the FQN of its underlying primitive type.
-    /// Otherwise returns the type's own FQN.
-    /// </summary>
-    internal static string ResolveUnderlyingType(ITypeSymbol typeSymbol)
-    {
-        foreach (var attr in typeSymbol.GetAttributes())
-        {
-            var attrClass = attr.AttributeClass;
-            if (attrClass is null)
-                continue;
-
-            // Vogen uses generic attribute ValueObjectAttribute<T>
-            if (
-                attrClass.IsGenericType
-                && attrClass.Name == "ValueObjectAttribute"
-                && attrClass.ContainingNamespace.ToDisplayString() == "Vogen"
-                && attrClass.TypeArguments.Length == 1
-            )
-            {
-                return attrClass
-                    .TypeArguments[0]
-                    .ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            }
-        }
-
-        return typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-    }
-
-    private static void FindImplementors(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol interfaceSymbol,
-        string moduleName,
-        List<DiscoveredTypeInfo> results
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            if (member is INamespaceSymbol childNamespace)
-            {
-                FindImplementors(childNamespace, interfaceSymbol, moduleName, results);
-            }
-            else if (
-                member is INamedTypeSymbol typeSymbol
-                && !typeSymbol.IsAbstract
-                && typeSymbol.TypeKind == TypeKind.Class
-                && SymbolHelpers.ImplementsInterface(typeSymbol, interfaceSymbol)
-            )
-            {
-                results.Add(
-                    new DiscoveredTypeInfo
-                    {
-                        FullyQualifiedName = typeSymbol.ToDisplayString(
-                            SymbolDisplayFormat.FullyQualifiedFormat
-                        ),
-                        ModuleName = moduleName,
-                    }
-                );
-            }
-        }
     }
 }
