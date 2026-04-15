@@ -343,59 +343,14 @@ internal static class SymbolDiscovery
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
         var illegalReferences = new List<IllegalModuleReferenceRecord>();
-
-        foreach (var module in modules)
-        {
-            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                continue;
-
-            var moduleAssembly = typeSymbol.ContainingAssembly;
-            var thisModuleName = module.ModuleName;
-
-            foreach (var asmModule in moduleAssembly.Modules)
-            {
-                foreach (var referencedAsm in asmModule.ReferencedAssemblySymbols)
-                {
-                    var refName = referencedAsm.Name;
-
-                    // Check for illegal direct module-to-module reference
-                    if (
-                        moduleAssemblyMap.TryGetValue(refName, out var referencedModuleName)
-                        && !string.Equals(
-                            referencedModuleName,
-                            thisModuleName,
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
-                    {
-                        illegalReferences.Add(
-                            new IllegalModuleReferenceRecord(
-                                thisModuleName,
-                                moduleAssembly.Name,
-                                referencedModuleName,
-                                refName,
-                                module.Location
-                            )
-                        );
-                    }
-
-                    // Check for dependency via contracts
-                    if (
-                        contractsAssemblyMap.TryGetValue(refName, out var depModuleName)
-                        && !string.Equals(
-                            depModuleName,
-                            thisModuleName,
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
-                    {
-                        dependencies.Add(
-                            new ModuleDependencyRecord(thisModuleName, depModuleName, refName)
-                        );
-                    }
-                }
-            }
-        }
+        DependencyAnalyzer.Analyze(
+            modules,
+            moduleSymbols,
+            moduleAssemblyMap,
+            contractsAssemblyMap,
+            dependencies,
+            illegalReferences
+        );
 
         return new DiscoveryData(
             modules
