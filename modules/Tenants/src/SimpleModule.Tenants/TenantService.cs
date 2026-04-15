@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Tenants.Contracts;
 using SimpleModule.Tenants.Contracts.Events;
+using Wolverine;
 
 namespace SimpleModule.Tenants;
 
 public sealed partial class TenantService(
     TenantsDbContext db,
-    IEventBus eventBus,
+    IMessageBus bus,
     ILogger<TenantService> logger
 ) : ITenantContracts
 {
@@ -82,7 +82,7 @@ public sealed partial class TenantService(
         await db.SaveChangesAsync();
 
         LogTenantCreated(logger, entity.Id, entity.Name);
-        await eventBus.PublishAsync(new TenantCreatedEvent(entity.Id, entity.Name, entity.Slug));
+        await bus.PublishAsync(new TenantCreatedEvent(entity.Id, entity.Name, entity.Slug));
 
         return MapToDto(entity);
     }
@@ -104,7 +104,7 @@ public sealed partial class TenantService(
         await db.SaveChangesAsync();
 
         LogTenantUpdated(logger, entity.Id, entity.Name);
-        await eventBus.PublishAsync(new TenantUpdatedEvent(entity.Id, entity.Name));
+        await bus.PublishAsync(new TenantUpdatedEvent(entity.Id, entity.Name));
 
         return (await GetTenantByIdAsync(id))!;
     }
@@ -136,7 +136,7 @@ public sealed partial class TenantService(
         await db.SaveChangesAsync();
 
         LogTenantStatusChanged(logger, id, oldStatus, status);
-        await eventBus.PublishAsync(new TenantStatusChangedEvent(id, oldStatus, status));
+        await bus.PublishAsync(new TenantStatusChangedEvent(id, oldStatus, status));
 
         return (await GetTenantByIdAsync(id))!;
     }
@@ -155,7 +155,7 @@ public sealed partial class TenantService(
         await db.SaveChangesAsync();
 
         LogHostAdded(logger, tenantId, request.HostName);
-        await eventBus.PublishAsync(new TenantHostAddedEvent(tenantId, request.HostName));
+        await bus.PublishAsync(new TenantHostAddedEvent(tenantId, request.HostName));
 
         return MapHostToDto(hostEntity);
     }
@@ -175,7 +175,7 @@ public sealed partial class TenantService(
         await db.SaveChangesAsync();
 
         LogHostRemoved(logger, tenantId, hostName);
-        await eventBus.PublishAsync(new TenantHostRemovedEvent(tenantId, hostName));
+        await bus.PublishAsync(new TenantHostRemovedEvent(tenantId, hostName));
     }
 
     private static Tenant MapToDto(TenantEntity entity) =>

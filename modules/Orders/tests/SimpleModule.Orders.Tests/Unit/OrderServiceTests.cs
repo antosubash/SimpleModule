@@ -3,13 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Orders;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Users.Contracts;
+using Wolverine;
 
 namespace Orders.Tests.Unit;
 
@@ -18,7 +18,7 @@ public sealed class OrderServiceTests : IDisposable
     private readonly OrdersDbContext _db;
     private readonly IUserContracts _users = Substitute.For<IUserContracts>();
     private readonly IProductContracts _products = Substitute.For<IProductContracts>();
-    private readonly IEventBus _eventBus = Substitute.For<IEventBus>();
+    private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
     private readonly OrderService _sut;
 
     public OrderServiceTests()
@@ -38,13 +38,7 @@ public sealed class OrderServiceTests : IDisposable
         _db = new OrdersDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new OrderService(
-            _db,
-            _users,
-            _products,
-            _eventBus,
-            NullLogger<OrderService>.Instance
-        );
+        _sut = new OrderService(_db, _users, _products, _bus, NullLogger<OrderService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();

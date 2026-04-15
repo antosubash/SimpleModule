@@ -2,11 +2,12 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Events;
+using NSubstitute;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Tenants;
 using SimpleModule.Tenants.Contracts;
+using Wolverine;
 
 namespace Tenants.Tests.Unit;
 
@@ -14,7 +15,7 @@ public sealed class TenantServiceTests : IDisposable
 {
     private readonly TenantsDbContext _db;
     private readonly TenantService _sut;
-    private readonly TestEventBus _eventBus = new();
+    private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
 
     public TenantServiceTests()
     {
@@ -33,7 +34,7 @@ public sealed class TenantServiceTests : IDisposable
         _db = new TenantsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new TenantService(_db, _eventBus, NullLogger<TenantService>.Instance);
+        _sut = new TenantService(_db, _bus, NullLogger<TenantService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
@@ -85,9 +86,11 @@ public sealed class TenantServiceTests : IDisposable
         tenant.Status.Should().Be(TenantStatus.Active);
         tenant.Hosts.Should().HaveCount(1);
         tenant.Hosts[0].HostName.Should().Be("new.localhost");
-        _eventBus
-            .PublishedEvents.Should()
-            .ContainSingle(e => e is SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent);
+        await _bus.Received(1)
+            .PublishAsync(
+                Arg.Any<SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent>(),
+                Arg.Any<DeliveryOptions?>()
+            );
     }
 
     [Fact]
@@ -97,9 +100,11 @@ public sealed class TenantServiceTests : IDisposable
         var updated = await _sut.UpdateTenantAsync(TenantId.From(1), request);
 
         updated.Name.Should().Be("Updated Acme");
-        _eventBus
-            .PublishedEvents.Should()
-            .Contain(e => e is SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent);
+        await _bus.Received()
+            .PublishAsync(
+                Arg.Any<SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent>(),
+                Arg.Any<DeliveryOptions?>()
+            );
     }
 
     [Fact]
@@ -129,9 +134,11 @@ public sealed class TenantServiceTests : IDisposable
         var result = await _sut.ChangeStatusAsync(TenantId.From(1), TenantStatus.Suspended);
 
         result.Status.Should().Be(TenantStatus.Suspended);
-        _eventBus
-            .PublishedEvents.Should()
-            .Contain(e => e is SimpleModule.Tenants.Contracts.Events.TenantStatusChangedEvent);
+        await _bus.Received()
+            .PublishAsync(
+                Arg.Any<SimpleModule.Tenants.Contracts.Events.TenantStatusChangedEvent>(),
+                Arg.Any<DeliveryOptions?>()
+            );
     }
 
     [Fact]
@@ -178,23 +185,5 @@ public sealed class TenantServiceTests : IDisposable
         var tenant = await _sut.GetTenantByHostNameAsync("unknown.example.com");
 
         tenant.Should().BeNull();
-    }
-
-    private sealed class TestEventBus : IEventBus
-    {
-        public List<IEvent> PublishedEvents { get; } = [];
-
-        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-            where T : IEvent
-        {
-            PublishedEvents.Add(@event);
-            return Task.CompletedTask;
-        }
-
-        public void PublishInBackground<T>(T @event)
-            where T : IEvent
-        {
-            PublishedEvents.Add(@event);
-        }
     }
 }

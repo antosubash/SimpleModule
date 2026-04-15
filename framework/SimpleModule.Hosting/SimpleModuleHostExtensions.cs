@@ -86,6 +86,11 @@ public static partial class SimpleModuleHostExtensions
         // Wolverine: in-process messaging only. Handlers are auto-discovered
         // from loaded assemblies. No external transports, no message persistence.
         builder.Host.UseWolverine(_ => { });
+        // Lazy<IMessageBus> lets services break factory-lambda cycles
+        // (e.g. SettingsService ↔ AuditingMessageBus via ISettingsContracts).
+        builder.Services.AddScoped(sp => new Lazy<IMessageBus>(() =>
+            sp.GetRequiredService<IMessageBus>()
+        ));
         builder.Services.AddScoped<InertiaSharedData>();
 
         // Required by EntityInterceptor to access the current HTTP context

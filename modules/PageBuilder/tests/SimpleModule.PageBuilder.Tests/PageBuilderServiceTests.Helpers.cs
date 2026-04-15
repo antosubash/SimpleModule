@@ -31,7 +31,7 @@ public sealed partial class PageBuilderServiceTests : IDisposable
         _db.Database.EnsureCreated();
         _sut = new PageBuilderService(
             _db,
-            new TestEventBus(),
+            new TestMessageBus(),
             NullLogger<PageBuilderService>.Instance
         );
     }

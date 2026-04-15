@@ -2,11 +2,11 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Core.Events;
 using SimpleModule.Datasets.Contracts;
 using SimpleModule.Datasets.Contracts.Events;
 using SimpleModule.Datasets.Converters;
 using SimpleModule.Storage;
+using Wolverine;
 
 namespace SimpleModule.Datasets.Jobs;
 
@@ -14,7 +14,7 @@ public sealed partial class ConvertDatasetJob(
     DatasetsDbContext db,
     IStorageProvider storage,
     DatasetConverterRegistry converters,
-    IEventBus eventBus,
+    IMessageBus bus,
     ILogger<ConvertDatasetJob> logger
 ) : IModuleJob
 {
@@ -102,10 +102,7 @@ public sealed partial class ConvertDatasetJob(
             await db.SaveChangesAsync(cancellationToken);
 
             LogDerivativeCreated(logger, payload.DatasetId, target);
-            await eventBus.PublishAsync(
-                new DatasetDerivativeCreated(datasetId, target),
-                cancellationToken
-            );
+            await bus.PublishAsync(new DatasetDerivativeCreated(datasetId, target));
         }
 #pragma warning disable CA1031
         catch (Exception ex)

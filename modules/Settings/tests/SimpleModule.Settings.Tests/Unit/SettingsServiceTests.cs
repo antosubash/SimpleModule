@@ -2,11 +2,12 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Events;
+using NSubstitute;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Settings;
 using SimpleModule.Tests.Shared.Fakes;
+using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace Settings.Tests.Unit;
@@ -45,7 +46,7 @@ public sealed class SettingsServiceTests : IDisposable
             _db,
             registry,
             _cache,
-            new Lazy<IEventBus>(() => new TestEventBus()),
+            new Lazy<IMessageBus>(() => Substitute.For<IMessageBus>()),
             Options.Create(new SettingsModuleOptions()),
             NullLogger<SettingsService>.Instance
         );

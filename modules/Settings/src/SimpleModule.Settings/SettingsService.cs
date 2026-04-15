@@ -2,10 +2,10 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Contracts.Events;
+using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Settings;
@@ -14,7 +14,7 @@ public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
     IFusionCache cache,
-    Lazy<IEventBus> eventBus,
+    Lazy<IMessageBus> bus,
     IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
 ) : ISettingsContracts
@@ -118,9 +118,9 @@ public sealed partial class SettingsService(
         await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
         LogSettingUpdated(key, scope);
 
-        // IEventBus is Lazy to break the SettingsService → IEventBus → AuditingEventBus
+        // IMessageBus is Lazy to break the SettingsService → IMessageBus → AuditingMessageBus
         // → ISettingsContracts → SettingsService cycle at construction time.
-        await eventBus.Value.PublishAsync(new SettingChangedEvent(key, oldValue, value, scope));
+        await bus.Value.PublishAsync(new SettingChangedEvent(key, oldValue, value, scope));
     }
 
     public async Task DeleteSettingAsync(string key, SettingScope scope, string? userId = null)
@@ -138,7 +138,7 @@ public sealed partial class SettingsService(
             await cache.RemoveAsync(BuildCacheKey(key, scope, userId));
             LogSettingDeleted(key, scope);
 
-            eventBus.Value.PublishInBackground(new SettingDeletedEvent(key, scope));
+            await bus.Value.PublishAsync(new SettingDeletedEvent(key, scope));
         }
     }
 

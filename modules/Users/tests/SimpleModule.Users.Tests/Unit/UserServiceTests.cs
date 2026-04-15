@@ -37,7 +37,7 @@ public sealed class UserServiceTests
         _sut = new UserService(
             _userManager,
             _roleManager,
-            new TestEventBus(),
+            new TestMessageBus(),
             NullLogger<UserService>.Instance
         );
     }

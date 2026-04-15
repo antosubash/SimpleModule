@@ -443,7 +443,7 @@ public sealed class ModuleTemplates
         // Keep only the DbContext param, remove cross-module and infrastructure deps
         var crossModuleTypes = _otherModuleNames
             .Select(m => $"I{GetSingularName(m)}")
-            .Append("IEventBus")
+            .Append("IMessageBus")
             .Append("ILogger<")
             .ToList();
 
