@@ -183,16 +183,6 @@ public static class SimpleModuleHostExtensions
                 }
             });
         });
-        // Status code pages render the Inertia error page for browser
-        // navigations (GET to non-API paths). API requests must keep their
-        // ProblemDetails body and bare status code — re-executing a POST to
-        // /error/{n} would return 405 from the GET error endpoint and replace
-        // JSON with HTML. /api, /connect, /swagger, /health are excluded.
-        app.UseWhen(
-            context =>
-                HttpMethods.IsGet(context.Request.Method) && !IsServiceRoute(context.Request.Path),
-            branch => branch.UseStatusCodePagesWithReExecute("/error/{0}")
-        );
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (options.EnableSwagger && app.Environment.IsDevelopment())
@@ -286,36 +276,44 @@ public static class SimpleModuleHostExtensions
                 .AllowAnonymous();
         }
 
-        app.MapGet(
-                "/error/{statusCode:int}",
-                (int statusCode) =>
-                {
-                    var (title, message) = statusCode switch
-                    {
-                        403 => (
-                            ErrorMessages.ForbiddenTitle,
-                            ErrorMessages.DefaultForbiddenMessage
-                        ),
-                        404 => (ErrorMessages.NotFoundTitle, ErrorMessages.DefaultNotFoundMessage),
-                        _ => (
-                            ErrorMessages.InternalServerErrorTitle,
-                            ErrorMessages.UnexpectedError
-                        ),
-                    };
+        app.MapGet("/error/{statusCode:int}", (int statusCode) => RenderErrorPage(statusCode))
+            .AllowAnonymous()
+            .ExcludeFromDescription();
 
-                    return SimpleModule.Core.Inertia.Inertia.Render(
-                        $"Error/{statusCode}",
-                        new
-                        {
-                            status = statusCode,
-                            title,
-                            message,
-                        }
-                    );
+        // Catch-all for unmatched GET requests — renders a 404 Inertia page
+        // for browser navigation to non-existent URLs. Does NOT fire on
+        // matched endpoints that return bare 401/403 from auth, so API tests
+        // that verify bare status codes remain unaffected.
+        app.MapFallback(
+                "{**catchAll}",
+                (HttpContext context) =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    return RenderErrorPage(404);
                 }
             )
             .AllowAnonymous()
             .ExcludeFromDescription();
+    }
+
+    private static IResult RenderErrorPage(int statusCode)
+    {
+        var (title, message) = statusCode switch
+        {
+            403 => (ErrorMessages.ForbiddenTitle, ErrorMessages.DefaultForbiddenMessage),
+            404 => (ErrorMessages.NotFoundTitle, ErrorMessages.DefaultNotFoundMessage),
+            _ => (ErrorMessages.InternalServerErrorTitle, ErrorMessages.UnexpectedError),
+        };
+
+        return SimpleModule.Core.Inertia.Inertia.Render(
+            $"Error/{statusCode}",
+            new
+            {
+                status = statusCode,
+                title,
+                message,
+            }
+        );
     }
 
     private static void BridgeAspireConnectionString(ConfigurationManager configuration)
@@ -405,31 +403,6 @@ public static class SimpleModuleHostExtensions
                 await next();
             }
         );
-    }
-
-    private static readonly string[] ServiceRoutePrefixes =
-    [
-        "/api/",
-        "/connect/",
-        "/swagger",
-        "/health",
-        "/_framework/",
-        "/_vite/",
-    ];
-
-    private static bool IsServiceRoute(PathString path)
-    {
-        if (!path.HasValue)
-            return false;
-
-        var value = path.Value!;
-        foreach (var prefix in ServiceRoutePrefixes)
-        {
-            if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-
-        return false;
     }
 
     private static async Task WriteHealthCheckResponse(
