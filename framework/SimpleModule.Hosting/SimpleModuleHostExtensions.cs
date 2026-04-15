@@ -183,7 +183,16 @@ public static class SimpleModuleHostExtensions
                 }
             });
         });
-        app.UseStatusCodePagesWithReExecute("/error/{0}");
+        // Status code pages render the Inertia error page for browser
+        // navigations (GET to non-API paths). API requests must keep their
+        // ProblemDetails body and bare status code — re-executing a POST to
+        // /error/{n} would return 405 from the GET error endpoint and replace
+        // JSON with HTML. /api, /connect, /swagger, /health are excluded.
+        app.UseWhen(
+            context =>
+                HttpMethods.IsGet(context.Request.Method) && !IsServiceRoute(context.Request.Path),
+            branch => branch.UseStatusCodePagesWithReExecute("/error/{0}")
+        );
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (options.EnableSwagger && app.Environment.IsDevelopment())
@@ -396,6 +405,31 @@ public static class SimpleModuleHostExtensions
                 await next();
             }
         );
+    }
+
+    private static readonly string[] ServiceRoutePrefixes =
+    [
+        "/api/",
+        "/connect/",
+        "/swagger",
+        "/health",
+        "/_framework/",
+        "/_vite/",
+    ];
+
+    private static bool IsServiceRoute(PathString path)
+    {
+        if (!path.HasValue)
+            return false;
+
+        var value = path.Value!;
+        foreach (var prefix in ServiceRoutePrefixes)
+        {
+            if (value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     private static async Task WriteHealthCheckResponse(
