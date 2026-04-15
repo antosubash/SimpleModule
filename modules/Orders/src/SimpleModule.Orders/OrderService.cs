@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Orders.Contracts;
 using SimpleModule.Orders.Contracts.Events;
 using SimpleModule.Products.Contracts;
 using SimpleModule.Users.Contracts;
+using Wolverine;
 
 namespace SimpleModule.Orders;
 
@@ -13,7 +13,7 @@ public sealed partial class OrderService(
     OrdersDbContext db,
     IUserContracts users,
     IProductContracts products,
-    IEventBus eventBus,
+    IMessageBus bus,
     ILogger<OrderService> logger
 ) : IOrderContracts
 {
@@ -70,7 +70,7 @@ public sealed partial class OrderService(
 
         LogOrderCreated(logger, order.Id, order.UserId, order.Total);
 
-        await eventBus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
+        await bus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
 
         return order;
     }

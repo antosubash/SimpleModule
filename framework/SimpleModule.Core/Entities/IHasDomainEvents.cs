@@ -4,7 +4,7 @@ namespace SimpleModule.Core.Entities;
 
 /// <summary>
 /// Entities implementing this interface can raise domain events that are automatically
-/// dispatched via <see cref="IEventBus"/> after a successful SaveChanges.
+/// dispatched via Wolverine's <c>IMessageBus</c> after a successful SaveChanges.
 /// </summary>
 public interface IHasDomainEvents
 {

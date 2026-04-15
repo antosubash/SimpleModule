@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Core.Events;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
+using Wolverine;
 
 namespace SimpleModule.Email.Jobs;
 
@@ -12,7 +12,7 @@ public partial class RetryFailedEmailsJob(
     EmailDbContext db,
     IBackgroundJobs backgroundJobs,
     IOptions<EmailModuleOptions> options,
-    IEventBus eventBus,
+    IMessageBus bus,
     ILogger<RetryFailedEmailsJob> logger
 ) : IModuleJob
 {
@@ -44,7 +44,7 @@ public partial class RetryFailedEmailsJob(
         foreach (var message in failedMessages)
         {
             LogRetryAttempt(logger, message.Id, message.To, message.RetryCount);
-            eventBus.PublishInBackground(
+            await bus.PublishAsync(
                 new EmailRetryAttemptEvent(message.Id, message.To, message.RetryCount)
             );
 

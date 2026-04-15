@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using NSubstitute;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Core.Events;
 using SimpleModule.Database;
 using SimpleModule.Email.Providers;
+using Wolverine;
 
 namespace SimpleModule.Email.Tests.Unit;
 
@@ -12,7 +13,7 @@ public sealed partial class EmailServiceTests : IDisposable
 {
     private readonly EmailDbContext _db;
     private readonly EmailService _sut;
-    private readonly TestEventBus _eventBus = new();
+    private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
     private readonly TestBackgroundJobs _backgroundJobs = new();
 
     public EmailServiceTests()
@@ -38,7 +39,7 @@ public sealed partial class EmailServiceTests : IDisposable
         _sut = new EmailService(
             _db,
             provider,
-            _eventBus,
+            _bus,
             _backgroundJobs,
             NullLogger<EmailService>.Instance
         );
@@ -82,23 +83,5 @@ public sealed partial class EmailServiceTests : IDisposable
 
         public Task<JobStatusDto?> GetStatusAsync(JobId jobId, CancellationToken ct = default) =>
             Task.FromResult<JobStatusDto?>(null);
-    }
-
-    private sealed class TestEventBus : IEventBus
-    {
-        public List<IEvent> PublishedEvents { get; } = [];
-
-        public Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-            where T : IEvent
-        {
-            PublishedEvents.Add(@event);
-            return Task.CompletedTask;
-        }
-
-        public void PublishInBackground<T>(T @event)
-            where T : IEvent
-        {
-            PublishedEvents.Add(@event);
-        }
     }
 }

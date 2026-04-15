@@ -32,7 +32,7 @@ public sealed class ProductServiceTests : IDisposable
         _db = new ProductsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new ProductService(_db, new TestEventBus(), NullLogger<ProductService>.Instance);
+        _sut = new ProductService(_db, new TestMessageBus(), NullLogger<ProductService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();

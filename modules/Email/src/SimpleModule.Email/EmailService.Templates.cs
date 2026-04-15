@@ -68,7 +68,7 @@ public partial class EmailService
         await db.SaveChangesAsync();
 
         LogTemplateCreated(logger, template.Id, template.Name);
-        eventBus.PublishInBackground(
+        await bus.PublishAsync(
             new EmailTemplateCreatedEvent(template.Id, template.Name, template.Slug)
         );
 
@@ -105,7 +105,7 @@ public partial class EmailService
         await db.SaveChangesAsync();
 
         LogTemplateUpdated(logger, template.Id, template.Name);
-        eventBus.PublishInBackground(
+        await bus.PublishAsync(
             new EmailTemplateUpdatedEvent(template.Id, template.Name, changedFields)
         );
 
@@ -123,7 +123,7 @@ public partial class EmailService
         await db.SaveChangesAsync();
 
         LogTemplateDeleted(logger, id);
-        eventBus.PublishInBackground(new EmailTemplateDeletedEvent(id, templateName));
+        await bus.PublishAsync(new EmailTemplateDeletedEvent(id, templateName));
     }
 
     [LoggerMessage(

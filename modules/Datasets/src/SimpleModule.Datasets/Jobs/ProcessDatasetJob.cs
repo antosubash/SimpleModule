@@ -3,13 +3,13 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Datasets.Contracts;
 using SimpleModule.Datasets.Contracts.Events;
 using SimpleModule.Datasets.Processing;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Storage;
+using Wolverine;
 
 namespace SimpleModule.Datasets.Jobs;
 
@@ -17,7 +17,7 @@ public sealed partial class ProcessDatasetJob(
     DatasetsDbContext db,
     IStorageProvider storage,
     DatasetProcessorRegistry processors,
-    IEventBus eventBus,
+    IMessageBus bus,
     IBackgroundJobs jobs,
     ISettingsContracts settings,
     ILogger<ProcessDatasetJob> logger
@@ -124,10 +124,7 @@ public sealed partial class ProcessDatasetJob(
             LogDatasetFailed(logger, payload.DatasetId, ex);
         }
 
-        await eventBus.PublishAsync(
-            new DatasetProcessed(datasetId, finalStatus),
-            cancellationToken
-        );
+        await bus.PublishAsync(new DatasetProcessed(datasetId, finalStatus));
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Dataset {Id} not found for processing")]

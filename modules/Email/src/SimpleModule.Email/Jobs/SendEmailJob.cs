@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Core.Events;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
 using SimpleModule.Email.Providers;
+using Wolverine;
 
 namespace SimpleModule.Email.Jobs;
 
@@ -12,7 +12,7 @@ public partial class SendEmailJob(
     EmailDbContext db,
     IEmailProvider emailProvider,
     IOptions<EmailModuleOptions> options,
-    IEventBus eventBus,
+    IMessageBus bus,
     ILogger<SendEmailJob> logger
 ) : IModuleJob
 {
@@ -51,9 +51,7 @@ public partial class SendEmailJob(
             await db.SaveChangesAsync(cancellationToken);
 
             LogEmailSent(logger, message.Id, message.To);
-            eventBus.PublishInBackground(
-                new EmailSentEvent(message.Id, message.To, message.Subject)
-            );
+            await bus.PublishAsync(new EmailSentEvent(message.Id, message.To, message.Subject));
         }
         catch (Exception ex)
             when (ex
@@ -70,7 +68,7 @@ public partial class SendEmailJob(
             await db.SaveChangesAsync(cancellationToken);
 
             LogEmailFailed(logger, message.Id, message.To, ex);
-            eventBus.PublishInBackground(
+            await bus.PublishAsync(
                 new EmailFailedEvent(message.Id, message.To, message.Subject, ex.Message)
             );
         }

@@ -2,19 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
-using SimpleModule.Core.Events;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
 using SimpleModule.Email.Jobs;
 using SimpleModule.Email.Providers;
 using SimpleModule.Email.Services;
+using Wolverine;
 
 namespace SimpleModule.Email;
 
 public partial class EmailService(
     EmailDbContext db,
     IEmailProvider emailProvider,
-    IEventBus eventBus,
+    IMessageBus bus,
     IBackgroundJobs backgroundJobs,
     ILogger<EmailService> logger
 ) : IEmailContracts

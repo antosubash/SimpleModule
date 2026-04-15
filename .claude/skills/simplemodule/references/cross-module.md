@@ -34,9 +34,11 @@ Other modules reference the Contracts project and inject `IProductContracts`:
 <ProjectReference Include="..\..\..\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
 ```
 
-## Event Bus
+## Event Bus (Wolverine)
 
-For decoupled cross-module communication without direct dependencies:
+For decoupled cross-module communication without direct dependencies. The
+framework uses [WolverineFx](https://wolverinefx.net/) for in-process
+messaging; inject `IMessageBus` from `Wolverine`.
 
 ### Define Events (in Contracts)
 
@@ -44,44 +46,57 @@ For decoupled cross-module communication without direct dependencies:
 public record OrderCreatedEvent(OrderId OrderId, UserId UserId, decimal Total) : IEvent;
 ```
 
+`IEvent` is a marker interface in `SimpleModule.Core.Events` — it costs
+nothing and makes "this type is a domain event" visible at the type level.
+
 ### Publish Events
 
 ```csharp
-public class OrderService
-{
-    private readonly IEventBus _eventBus;
+using Wolverine;
 
+public class OrderService(OrdersDbContext db, IMessageBus bus)
+{
     public async Task CreateOrderAsync(CreateOrderRequest request)
     {
         // ... create order ...
 
-        // Synchronous: waits for all handlers, collects exceptions
-        await _eventBus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
+        // Fire-and-forget: enqueues on the local queue, returns immediately.
+        // Handler failures are isolated per handler chain.
+        await bus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
 
-        // Fire-and-forget: returns immediately
-        _eventBus.PublishInBackground(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
+        // Inline with response: waits for the handler, propagates the first failure.
+        await bus.InvokeAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
     }
 }
 ```
 
 ### Handle Events
 
+Wolverine auto-discovers handlers by convention: class name ending in
+`Handler` or `Consumer`, method named `Handle`/`HandleAsync`/`Consume`/
+`ConsumeAsync`, first parameter is the message type, remaining parameters
+are resolved from DI.
+
 ```csharp
-public class OrderCreatedHandler : IEventHandler<OrderCreatedEvent>
+public class OrderCreatedHandler(ILogger<OrderCreatedHandler> logger)
 {
-    public async Task HandleAsync(OrderCreatedEvent @event, CancellationToken cancellationToken)
+    public Task Handle(OrderCreatedEvent evt, CancellationToken ct)
     {
         // React to the event (e.g., send notification, update stats)
+        return Task.CompletedTask;
     }
 }
 ```
 
+No DI registration needed — Wolverine scans loaded assemblies at startup.
+Non-conventional classes can opt in with `[WolverineHandler]`.
+
 ### Event Semantics
-- All handlers execute sequentially in registration order
-- Handler failures are isolated — other handlers still run
-- After all handlers, collected exceptions throw as `AggregateException`
-- Make handlers idempotent when possible
-- For long-running work, use background jobs instead
+- Wolverine routes by runtime type (`message.GetType()`), not the compile-time `T`
+- Each handler chain runs in its own scope with its own exception isolation
+- For retry/error-queue policies, use `[RetryNow(...)]` or `chain.OnException(...)`
+- Make handlers idempotent when possible — messages may be re-run
+- For long-running work, prefer `IBackgroundJobs` or Wolverine's scheduled send
 
 ## Permissions
 

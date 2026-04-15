@@ -4,7 +4,7 @@ namespace SimpleModule.Core.Entities;
 
 /// <summary>
 /// Aggregate root with audit tracking, soft delete, versioning, and domain events.
-/// Domain events are automatically dispatched via <see cref="IEventBus"/> after SaveChanges.
+/// Domain events are automatically dispatched via Wolverine's <c>IMessageBus</c> after SaveChanges.
 /// </summary>
 public abstract class AuditableAggregateRoot<TId> : FullAuditableEntity<TId>, IHasDomainEvents
 {

@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SimpleModule.Core;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Contracts.Events;
+using Wolverine;
 
 namespace SimpleModule.Users;
 
 public sealed class UserAdminService(
     UserManager<ApplicationUser> userManager,
     UsersDbContext db,
-    IEventBus eventBus
+    IMessageBus bus
 ) : IUserAdminContracts
 {
     public async Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(
@@ -141,7 +141,7 @@ public sealed class UserAdminService(
 
         var roles = await userManager.GetRolesAsync(user);
 
-        await eventBus.PublishAsync(
+        await bus.PublishAsync(
             new UserCreatedEvent(UserId.From(user.Id), user.Email ?? string.Empty, user.DisplayName)
         );
 
@@ -160,7 +160,7 @@ public sealed class UserAdminService(
 
         await userManager.UpdateAsync(user);
 
-        await eventBus.PublishAsync(
+        await bus.PublishAsync(
             new UserUpdatedEvent(UserId.From(user.Id), user.Email ?? string.Empty, user.DisplayName)
         );
     }
@@ -186,7 +186,7 @@ public sealed class UserAdminService(
             await userManager.AddToRolesAsync(user, toAdd);
         }
 
-        await eventBus.PublishAsync(new UserRolesChangedEvent(id, newRoles.ToList()));
+        await bus.PublishAsync(new UserRolesChangedEvent(id, newRoles.ToList()));
     }
 
     public async Task ResetPasswordAsync(UserId id, string newPassword)
