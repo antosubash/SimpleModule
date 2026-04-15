@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -5,8 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.Validation;
 using SimpleModule.Email.Contracts;
-using SimpleModule.Email.Validators;
 
 namespace SimpleModule.Email.Pages;
 
@@ -21,7 +22,11 @@ public class CreateTemplateEndpoint : IViewEndpoint
 
         app.MapPost(
                 "/templates",
-                async ([AsParameters] CreateTemplateForm form, IEmailContracts emailContracts) =>
+                async (
+                    [AsParameters] CreateTemplateForm form,
+                    IValidator<CreateEmailTemplateRequest> validator,
+                    IEmailContracts emailContracts
+                ) =>
                 {
                     var request = new CreateEmailTemplateRequest
                     {
@@ -31,9 +36,11 @@ public class CreateTemplateEndpoint : IViewEndpoint
                         Body = form.Body,
                         IsHtml = form.IsHtml,
                     };
-                    var validation = CreateEmailTemplateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
-                        throw new Core.Exceptions.ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
 
                     await emailContracts.CreateTemplateAsync(request);
                     return Results.Redirect(

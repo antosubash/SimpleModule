@@ -1,19 +1,20 @@
-using SimpleModule.Core.Validation;
+using FluentValidation;
 using SimpleModule.Map.Contracts;
 
 namespace SimpleModule.Map.Endpoints.LayerSources;
 
-public static class UpdateLayerSourceRequestValidator
+public sealed class UpdateLayerSourceRequestValidator : AbstractValidator<UpdateLayerSourceRequest>
 {
-    public static ValidationResult Validate(UpdateLayerSourceRequest request) =>
-        new ValidationBuilder()
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Name), "Name", "Name is required.")
-            .AddErrorIf(string.IsNullOrWhiteSpace(request.Url), "Url", "Url is required.")
-            .AddErrorIf(request.Url?.Length > 2048, "Url", "Url must be 2048 characters or fewer.")
-            .AddErrorIf(
-                !Enum.IsDefined(request.Type),
-                "Type",
-                "Type must be a known LayerSourceType."
-            )
-            .Build();
+    public UpdateLayerSourceRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+        RuleFor(x => x.Url)
+            .NotEmpty()
+            .WithMessage("Url is required.")
+            .MaximumLength(2048)
+            .WithMessage("Url must be 2048 characters or fewer.");
+        RuleFor(x => x.Type)
+            .Must(t => Enum.IsDefined(t))
+            .WithMessage("Type must be a known LayerSourceType.");
+    }
 }

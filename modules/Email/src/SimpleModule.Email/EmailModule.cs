@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public class EmailModule : IModule, IModuleServices
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<EmailDbContext>(configuration, EmailConstants.ModuleName);
+        services.AddValidatorsFromAssemblyContaining<EmailModule>();
         var emailSection = configuration.GetSection("Email");
         services.Configure<EmailModuleOptions>(emailSection);
 

@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
@@ -17,6 +18,7 @@ public class OrdersModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<OrdersDbContext>(configuration, OrdersConstants.ModuleName);
+        services.AddValidatorsFromAssemblyContaining<OrdersModule>();
         services.AddHostedService<OrderSeedService>();
     }
 

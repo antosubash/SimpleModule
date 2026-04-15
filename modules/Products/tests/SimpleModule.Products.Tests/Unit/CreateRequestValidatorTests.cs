@@ -6,12 +6,14 @@ namespace Products.Tests.Unit;
 
 public class CreateRequestValidatorTests
 {
+    private readonly CreateRequestValidator _validator = new();
+
     [Fact]
     public void Validate_WithValidRequest_ReturnsSuccess()
     {
         var request = new CreateProductRequest { Name = "Widget", Price = 9.99m };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeTrue();
     }
@@ -21,10 +23,10 @@ public class CreateRequestValidatorTests
     {
         var request = new CreateProductRequest { Name = "", Price = 9.99m };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Name");
+        result.Errors.Should().Contain(e => e.PropertyName == "Name");
     }
 
     [Fact]
@@ -32,9 +34,9 @@ public class CreateRequestValidatorTests
     {
         var request = new CreateProductRequest { Name = "Widget", Price = 0 };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Price");
+        result.Errors.Should().Contain(e => e.PropertyName == "Price");
     }
 }

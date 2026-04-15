@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
@@ -32,6 +33,7 @@ public class MapModule : IModule, IModuleServices, IModuleMenu, IModuleSettings
             enableSpatial: enableSpatial
         );
         services.AddScoped<IMapContracts, MapService>();
+        services.AddValidatorsFromAssemblyContaining<MapModule>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

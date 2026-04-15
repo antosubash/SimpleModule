@@ -6,6 +6,8 @@ namespace Orders.Tests.Unit;
 
 public sealed class CreateRequestValidatorTests
 {
+    private readonly CreateRequestValidator _validator = new();
+
     [Fact]
     public void Validate_WithValidRequest_ReturnsSuccess()
     {
@@ -15,7 +17,7 @@ public sealed class CreateRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 2 }],
         };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeTrue();
         result.Errors.Should().BeEmpty();
@@ -29,10 +31,10 @@ public sealed class CreateRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 1 }],
         };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("UserId");
+        result.Errors.Should().Contain(e => e.PropertyName == "UserId");
     }
 
     [Fact]
@@ -40,10 +42,10 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest { UserId = "1", Items = [] };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Items");
+        result.Errors.Should().Contain(e => e.PropertyName == "Items");
     }
 
     [Fact]
@@ -55,10 +57,10 @@ public sealed class CreateRequestValidatorTests
             Items = [new OrderItem { ProductId = 1, Quantity = 0 }],
         };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Items");
+        result.Errors.Should().Contain(e => e.PropertyName == "Items");
     }
 
     [Fact]
@@ -66,10 +68,10 @@ public sealed class CreateRequestValidatorTests
     {
         var request = new CreateOrderRequest { Items = [] };
 
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("UserId");
-        result.Errors.Should().ContainKey("Items");
+        result.Errors.Should().Contain(e => e.PropertyName == "UserId");
+        result.Errors.Should().Contain(e => e.PropertyName == "Items");
     }
 }

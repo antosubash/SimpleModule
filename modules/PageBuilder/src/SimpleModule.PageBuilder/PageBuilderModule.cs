@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
@@ -20,6 +21,7 @@ public class PageBuilderModule : IModule
             configuration,
             PageBuilderConstants.ModuleName
         );
+        services.AddValidatorsFromAssemblyContaining<PageBuilderModule>();
     }
 
     public void ConfigureMenu(IMenuBuilder menus)

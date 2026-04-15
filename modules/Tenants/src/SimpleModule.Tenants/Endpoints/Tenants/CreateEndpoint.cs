@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Tenants.Contracts;
 
 namespace SimpleModule.Tenants.Endpoints.Tenants;
@@ -16,15 +17,21 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                (CreateTenantRequest request, ITenantContracts contracts) =>
+                async (
+                    CreateTenantRequest request,
+                    IValidator<CreateTenantRequest> validator,
+                    ITenantContracts contracts
+                ) =>
                 {
-                    var validation = CreateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => contracts.CreateTenantAsync(request),
                         t => $"{TenantsConstants.RoutePrefix}/{t.Id}"
                     );

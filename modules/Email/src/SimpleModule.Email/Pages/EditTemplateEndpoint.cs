@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -5,8 +6,8 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.Validation;
 using SimpleModule.Email.Contracts;
-using SimpleModule.Email.Validators;
 
 namespace SimpleModule.Email.Pages;
 
@@ -35,6 +36,7 @@ public class EditTemplateEndpoint : IViewEndpoint
                 async (
                     int id,
                     [AsParameters] UpdateTemplateForm form,
+                    IValidator<UpdateEmailTemplateRequest> validator,
                     IEmailContracts emailContracts
                 ) =>
                 {
@@ -45,9 +47,11 @@ public class EditTemplateEndpoint : IViewEndpoint
                         Body = form.Body,
                         IsHtml = form.IsHtml,
                     };
-                    var validation = UpdateEmailTemplateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
-                        throw new Core.Exceptions.ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
 
                     await emailContracts.UpdateTemplateAsync(EmailTemplateId.From(id), request);
                     return Results.Redirect(

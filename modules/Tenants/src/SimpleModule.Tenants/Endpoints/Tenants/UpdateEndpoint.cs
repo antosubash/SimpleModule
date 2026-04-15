@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Tenants.Contracts;
 
 namespace SimpleModule.Tenants.Endpoints.Tenants;
@@ -16,15 +17,24 @@ public class UpdateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                (TenantId id, UpdateTenantRequest request, ITenantContracts contracts) =>
+                async (
+                    TenantId id,
+                    UpdateTenantRequest request,
+                    IValidator<UpdateTenantRequest> validator,
+                    ITenantContracts contracts
+                ) =>
                 {
-                    var validation = UpdateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Update(() => contracts.UpdateTenantAsync(id, request));
+                    return await CrudEndpoints.Update(() =>
+                        contracts.UpdateTenantAsync(id, request)
+                    );
                 }
             )
             .RequirePermission(TenantsPermissions.Update);

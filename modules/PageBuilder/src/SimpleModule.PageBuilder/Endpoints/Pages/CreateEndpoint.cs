@@ -1,9 +1,9 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Validation;
 using SimpleModule.PageBuilder.Contracts;
 
@@ -17,22 +17,21 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                (CreatePageRequest request, IPageBuilderContracts pageBuilder) =>
+                async (
+                    CreatePageRequest request,
+                    IValidator<CreatePageRequest> validator,
+                    IPageBuilderContracts pageBuilder
+                ) =>
                 {
-                    var validation = new ValidationBuilder()
-                        .AddErrorIf(
-                            string.IsNullOrWhiteSpace(request.Title),
-                            "Title",
-                            "Page title is required."
-                        )
-                        .Build();
-
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => pageBuilder.CreatePageAsync(request),
                         p => $"{PageBuilderConstants.RoutePrefix}/{p.Id}"
                     );

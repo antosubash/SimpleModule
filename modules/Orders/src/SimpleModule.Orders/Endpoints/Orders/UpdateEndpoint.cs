@@ -1,9 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Exceptions;
+using SimpleModule.Core.Validation;
 using SimpleModule.Orders.Contracts;
 using OrdersConstants = SimpleModule.Orders.Contracts.OrdersConstants;
 
@@ -17,20 +18,29 @@ public class UpdateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                (OrderId id, UpdateOrderRequest request, IOrderContracts orderContracts) =>
+                async (
+                    OrderId id,
+                    UpdateOrderRequest request,
+                    IValidator<CreateOrderRequest> validator,
+                    IOrderContracts orderContracts
+                ) =>
                 {
                     var createRequest = new CreateOrderRequest
                     {
                         UserId = request.UserId,
                         Items = request.Items,
                     };
-                    var validation = CreateRequestValidator.Validate(createRequest);
+                    var validation = await validator.ValidateAsync(createRequest);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(
+                            validation.ToValidationErrors()
+                        );
                     }
 
-                    return CrudEndpoints.Update(() => orderContracts.UpdateOrderAsync(id, request));
+                    return await CrudEndpoints.Update(() =>
+                        orderContracts.UpdateOrderAsync(id, request)
+                    );
                 }
             )
             .RequirePermission(OrdersPermissions.Update);
