@@ -208,7 +208,8 @@ internal static class DtoFinder
     /// with <c>[Dto]</c>. No-op when the DtoAttribute symbol isn't resolvable.
     /// </summary>
     internal static void DiscoverAttributedDtos(
-        Compilation compilation,
+        IReadOnlyList<IAssemblySymbol> refAssemblies,
+        INamespaceSymbol hostGlobalNamespace,
         CoreSymbols symbols,
         List<DtoTypeInfo> dtoTypes,
         CancellationToken cancellationToken
@@ -217,16 +218,9 @@ internal static class DtoFinder
         if (symbols.DtoAttribute is null)
             return;
 
-        foreach (var reference in compilation.References)
+        foreach (var assemblySymbol in refAssemblies)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            if (
-                compilation.GetAssemblyOrModuleSymbol(reference)
-                is not IAssemblySymbol assemblySymbol
-            )
-                continue;
-
             FindDtoTypes(
                 assemblySymbol.GlobalNamespace,
                 symbols.DtoAttribute,
@@ -235,11 +229,6 @@ internal static class DtoFinder
             );
         }
 
-        FindDtoTypes(
-            compilation.Assembly.GlobalNamespace,
-            symbols.DtoAttribute,
-            dtoTypes,
-            cancellationToken
-        );
+        FindDtoTypes(hostGlobalNamespace, symbols.DtoAttribute, dtoTypes, cancellationToken);
     }
 }

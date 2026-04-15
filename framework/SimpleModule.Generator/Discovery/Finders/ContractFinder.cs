@@ -118,27 +118,21 @@ internal static class ContractFinder
     }
 
     /// <summary>
-    /// Finds every *.Contracts assembly referenced by the compilation and maps it
-    /// to the module it belongs to. Populates <paramref name="contractsAssemblyMap"/>
-    /// (name → module name) and <paramref name="contractsAssemblySymbols"/>
-    /// (name → IAssemblySymbol) for downstream scans.
+    /// Maps every pre-classified *.Contracts assembly to the module it belongs to.
+    /// Populates <paramref name="contractsAssemblyMap"/> (name → module name) and
+    /// <paramref name="contractsAssemblySymbols"/> (name → IAssemblySymbol) for
+    /// downstream scans.
     /// </summary>
     internal static void BuildContractsAssemblyMap(
-        Compilation compilation,
+        IReadOnlyList<IAssemblySymbol> contractsAssemblies,
         Dictionary<string, string> moduleAssemblyMap,
         Dictionary<string, string> contractsAssemblyMap,
         Dictionary<string, IAssemblySymbol> contractsAssemblySymbols
     )
     {
-        foreach (var reference in compilation.References)
+        foreach (var asm in contractsAssemblies)
         {
-            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
-                continue;
-
             var asmName = asm.Name;
-            if (!asmName.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
-                continue;
-
             var baseName = asmName.Substring(0, asmName.Length - ".Contracts".Length);
 
             // Try exact match on assembly name

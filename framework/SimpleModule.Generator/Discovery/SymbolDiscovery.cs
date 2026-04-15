@@ -19,17 +19,28 @@ internal static class SymbolDiscovery
             return DiscoveryData.Empty;
         var s = symbols.Value;
 
-        var modules = new List<ModuleInfo>();
-
+        // Single-pass reference classification. Every discovery phase that scans
+        // referenced assemblies gets to reuse these pre-classified lists instead
+        // of re-iterating compilation.References + re-calling GetAssemblyOrModuleSymbol.
+        var refAssemblies = new List<IAssemblySymbol>();
+        var contractsAssemblies = new List<IAssemblySymbol>();
         foreach (var reference in compilation.References)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (
-                compilation.GetAssemblyOrModuleSymbol(reference)
-                is not IAssemblySymbol assemblySymbol
-            )
+            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
                 continue;
+
+            refAssemblies.Add(asm);
+            if (asm.Name.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
+                contractsAssemblies.Add(asm);
+        }
+
+        var modules = new List<ModuleInfo>();
+
+        foreach (var assemblySymbol in refAssemblies)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
 
             ModuleFinder.FindModuleTypes(
                 assemblySymbol.GlobalNamespace,
@@ -74,7 +85,13 @@ internal static class SymbolDiscovery
         );
 
         var dtoTypes = new List<DtoTypeInfo>();
-        DtoFinder.DiscoverAttributedDtos(compilation, s, dtoTypes, cancellationToken);
+        DtoFinder.DiscoverAttributedDtos(
+            refAssemblies,
+            compilation.Assembly.GlobalNamespace,
+            s,
+            dtoTypes,
+            cancellationToken
+        );
 
         // --- Dependency inference ---
         cancellationToken.ThrowIfCancellationRequested();
@@ -97,7 +114,7 @@ internal static class SymbolDiscovery
             StringComparer.OrdinalIgnoreCase
         );
         ContractFinder.BuildContractsAssemblyMap(
-            compilation,
+            contractsAssemblies,
             moduleAssemblyMap,
             contractsAssemblyMap,
             contractsAssemblySymbols
