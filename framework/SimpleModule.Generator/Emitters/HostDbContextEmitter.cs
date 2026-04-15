@@ -92,7 +92,7 @@ internal sealed class HostDbContextEmitter : IEmitter
 
                     context.ReportDiagnostic(
                         Diagnostic.Create(
-                            DiagnosticEmitter.DuplicateDbSetPropertyName,
+                            DiagnosticDescriptors.DuplicateDbSetPropertyName,
                             LocationHelper.ToLocation(dbCtxLoc),
                             entry.PropertyName,
                             existing.ModuleName,
