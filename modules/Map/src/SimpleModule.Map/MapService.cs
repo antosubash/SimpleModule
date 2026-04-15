@@ -5,6 +5,7 @@ using NetTopologySuite.Geometries;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Datasets.Contracts;
 using SimpleModule.Map.Contracts;
+using SimpleModule.Map.EntityConfigurations;
 
 namespace SimpleModule.Map;
 
@@ -193,6 +194,33 @@ public partial class MapService(
             Pitch = Options.DefaultPitch,
             Bearing = Options.DefaultBearing,
             BaseStyleUrl = Options.BaseStyleUrl,
+            Basemaps = BasemapConfiguration
+                .SeedIds.All.Select((id, i) => new MapBasemap { BasemapId = id, Order = i })
+                .ToList(),
+            Layers =
+            [
+                new MapLayer
+                {
+                    LayerSourceId = LayerSourceConfiguration.SeedIds.OpenStreetMapXyz,
+                    Order = 0,
+                    Visible = true,
+                    Opacity = 1,
+                },
+                new MapLayer
+                {
+                    LayerSourceId = LayerSourceConfiguration.SeedIds.MapLibreEarthquakesGeoJson,
+                    Order = 1,
+                    Visible = true,
+                    Opacity = 1,
+                },
+                new MapLayer
+                {
+                    LayerSourceId = LayerSourceConfiguration.SeedIds.TerrestrisOsmWms,
+                    Order = 2,
+                    Visible = false,
+                    Opacity = 1,
+                },
+            ],
         };
 
         db.SavedMaps.Add(seed);

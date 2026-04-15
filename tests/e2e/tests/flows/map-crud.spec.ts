@@ -113,7 +113,7 @@ test.describe('Map CRUD flows', () => {
     // UI: browse page renders the default map shell
     const browse = new MapBrowsePage(page);
     await browse.goto();
-    await expect(browse.heading).toBeVisible();
+    await expect(browse.layersToggle).toBeVisible();
   });
 
   test('add layer source via UI dialog', async ({ page, request }) => {
