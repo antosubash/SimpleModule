@@ -39,45 +39,10 @@ internal static class SymbolDiscovery
     {
         var hostAssemblyName = compilation.Assembly.Name;
 
-        var moduleAttributeSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.ModuleAttribute"
-        );
-        if (moduleAttributeSymbol is null)
+        var symbols = CoreSymbols.TryResolve(compilation);
+        if (symbols is null)
             return DiscoveryData.Empty;
-
-        var dtoAttributeSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.DtoAttribute"
-        );
-
-        var endpointInterfaceSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.IEndpoint"
-        );
-
-        var viewEndpointInterfaceSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.IViewEndpoint"
-        );
-
-        var agentDefinitionSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.Agents.IAgentDefinition"
-        );
-        var agentToolProviderSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.Agents.IAgentToolProvider"
-        );
-        var knowledgeSourceSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.Rag.IKnowledgeSource"
-        );
-
-        // Resolve focused sub-interface symbols for module capability detection
-        var moduleServicesSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.IModuleServices"
-        );
-        var moduleMenuSymbol = compilation.GetTypeByMetadataName("SimpleModule.Core.IModuleMenu");
-        var moduleMiddlewareSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.IModuleMiddleware"
-        );
-        var moduleSettingsSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.IModuleSettings"
-        );
+        var s = symbols.Value;
 
         var modules = new List<ModuleInfo>();
 
@@ -93,11 +58,11 @@ internal static class SymbolDiscovery
 
             FindModuleTypes(
                 assemblySymbol.GlobalNamespace,
-                moduleAttributeSymbol,
-                moduleServicesSymbol,
-                moduleMenuSymbol,
-                moduleMiddlewareSymbol,
-                moduleSettingsSymbol,
+                s.ModuleAttribute,
+                s.ModuleServices,
+                s.ModuleMenu,
+                s.ModuleMiddleware,
+                s.ModuleSettings,
                 modules,
                 cancellationToken
             );
@@ -105,11 +70,11 @@ internal static class SymbolDiscovery
 
         FindModuleTypes(
             compilation.Assembly.GlobalNamespace,
-            moduleAttributeSymbol,
-            moduleServicesSymbol,
-            moduleMenuSymbol,
-            moduleMiddlewareSymbol,
-            moduleSettingsSymbol,
+            s.ModuleAttribute,
+            s.ModuleServices,
+            s.ModuleMenu,
+            s.ModuleMiddleware,
+            s.ModuleSettings,
             modules,
             cancellationToken
         );
@@ -130,7 +95,7 @@ internal static class SymbolDiscovery
         // Discover IEndpoint implementors per module assembly.
         // Classification is by interface type: IViewEndpoint -> view, IEndpoint -> API.
         // Scan each assembly once, then match endpoints to the closest module by namespace.
-        if (endpointInterfaceSymbol is not null)
+        if (s.EndpointInterface is not null)
         {
             var endpointScannedAssemblies = new HashSet<IAssemblySymbol>(
                 SymbolEqualityComparer.Default
@@ -150,8 +115,8 @@ internal static class SymbolDiscovery
                 var rawViews = new List<ViewInfo>();
                 FindEndpointTypes(
                     assembly.GlobalNamespace,
-                    endpointInterfaceSymbol,
-                    viewEndpointInterfaceSymbol,
+                    s.EndpointInterface,
+                    s.ViewEndpointInterface,
                     rawEndpoints,
                     rawViews,
                     cancellationToken
@@ -267,7 +232,7 @@ internal static class SymbolDiscovery
         }
 
         var dtoTypes = new List<DtoTypeInfo>();
-        if (dtoAttributeSymbol is not null)
+        if (s.DtoAttribute is not null)
         {
             foreach (var reference in compilation.References)
             {
@@ -281,7 +246,7 @@ internal static class SymbolDiscovery
 
                 FindDtoTypes(
                     assemblySymbol.GlobalNamespace,
-                    dtoAttributeSymbol,
+                    s.DtoAttribute,
                     dtoTypes,
                     cancellationToken
                 );
@@ -289,7 +254,7 @@ internal static class SymbolDiscovery
 
             FindDtoTypes(
                 compilation.Assembly.GlobalNamespace,
-                dtoAttributeSymbol,
+                s.DtoAttribute,
                 dtoTypes,
                 cancellationToken
             );
@@ -351,12 +316,6 @@ internal static class SymbolDiscovery
         }
 
         // Convention-based DTO discovery: all public types in *.Contracts assemblies
-        var noDtoAttrSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.NoDtoGenerationAttribute"
-        );
-        var eventInterfaceSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.Events.IEvent"
-        );
         var existingDtoFqns = new HashSet<string>();
         foreach (var d in dtoTypes)
             existingDtoFqns.Add(d.FullyQualifiedName);
@@ -366,8 +325,8 @@ internal static class SymbolDiscovery
             cancellationToken.ThrowIfCancellationRequested();
             FindConventionDtoTypes(
                 kvp.Value.GlobalNamespace,
-                noDtoAttrSymbol,
-                eventInterfaceSymbol,
+                s.NoDtoAttribute,
+                s.EventInterface,
                 existingDtoFqns,
                 dtoTypes,
                 cancellationToken
@@ -417,10 +376,7 @@ internal static class SymbolDiscovery
 
         // Step 3c: Find IModulePermissions implementors in module and contracts assemblies
         var permissionClasses = new List<PermissionClassInfo>();
-        var modulePermissionsSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.Authorization.IModulePermissions"
-        );
-        if (modulePermissionsSymbol is not null)
+        if (s.ModulePermissions is not null)
         {
             foreach (var module in modules)
             {
@@ -430,7 +386,7 @@ internal static class SymbolDiscovery
                 var moduleAssembly = typeSymbol.ContainingAssembly;
                 FindPermissionClasses(
                     moduleAssembly.GlobalNamespace,
-                    modulePermissionsSymbol,
+                    s.ModulePermissions,
                     module.ModuleName,
                     permissionClasses
                 );
@@ -443,7 +399,7 @@ internal static class SymbolDiscovery
                 {
                     FindPermissionClasses(
                         kvp.Value.GlobalNamespace,
-                        modulePermissionsSymbol,
+                        s.ModulePermissions,
                         moduleName,
                         permissionClasses
                     );
@@ -453,10 +409,7 @@ internal static class SymbolDiscovery
 
         // Step 3d: Find IModuleFeatures implementors in module and contracts assemblies
         var featureClasses = new List<FeatureClassInfo>();
-        var moduleFeaturesSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.FeatureFlags.IModuleFeatures"
-        );
-        if (moduleFeaturesSymbol is not null)
+        if (s.ModuleFeatures is not null)
         {
             foreach (var module in modules)
             {
@@ -466,7 +419,7 @@ internal static class SymbolDiscovery
                 var moduleAssembly = typeSymbol.ContainingAssembly;
                 FindFeatureClasses(
                     moduleAssembly.GlobalNamespace,
-                    moduleFeaturesSymbol,
+                    s.ModuleFeatures,
                     module.ModuleName,
                     featureClasses
                 );
@@ -479,7 +432,7 @@ internal static class SymbolDiscovery
                 {
                     FindFeatureClasses(
                         kvp.Value.GlobalNamespace,
-                        moduleFeaturesSymbol,
+                        s.ModuleFeatures,
                         moduleName,
                         featureClasses
                     );
@@ -489,10 +442,7 @@ internal static class SymbolDiscovery
 
         // Step 3e: Find ISaveChangesInterceptor implementors in module assemblies
         var interceptors = new List<InterceptorInfo>();
-        var saveChangesInterceptorSymbol = compilation.GetTypeByMetadataName(
-            "Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor"
-        );
-        if (saveChangesInterceptorSymbol is not null)
+        if (s.SaveChangesInterceptor is not null)
         {
             ScanModuleAssemblies(
                 modules,
@@ -501,7 +451,7 @@ internal static class SymbolDiscovery
                 {
                     FindInterceptorTypes(
                         assembly.GlobalNamespace,
-                        saveChangesInterceptorSymbol,
+                        s.SaveChangesInterceptor,
                         module.ModuleName,
                         interceptors
                     );
@@ -539,10 +489,7 @@ internal static class SymbolDiscovery
 
         // Step 3f: Find IModuleOptions implementors in module and contracts assemblies
         var moduleOptionsList = new List<ModuleOptionsRecord>();
-        var moduleOptionsSymbol = compilation.GetTypeByMetadataName(
-            "SimpleModule.Core.IModuleOptions"
-        );
-        if (moduleOptionsSymbol is not null)
+        if (s.ModuleOptions is not null)
         {
             ScanModuleAssemblies(
                 modules,
@@ -550,7 +497,7 @@ internal static class SymbolDiscovery
                 (assembly, module) =>
                     FindModuleOptionsClasses(
                         assembly.GlobalNamespace,
-                        moduleOptionsSymbol,
+                        s.ModuleOptions,
                         module.ModuleName,
                         moduleOptionsList
                     )
@@ -563,7 +510,7 @@ internal static class SymbolDiscovery
                 {
                     FindModuleOptionsClasses(
                         kvp.Value.GlobalNamespace,
-                        moduleOptionsSymbol,
+                        s.ModuleOptions,
                         moduleName,
                         moduleOptionsList
                     );
@@ -576,7 +523,7 @@ internal static class SymbolDiscovery
         var agentToolProviders = new List<DiscoveredTypeInfo>();
         var knowledgeSources = new List<DiscoveredTypeInfo>();
 
-        if (agentDefinitionSymbol is not null)
+        if (s.AgentDefinition is not null)
         {
             ScanModuleAssemblies(
                 modules,
@@ -584,14 +531,14 @@ internal static class SymbolDiscovery
                 (assembly, module) =>
                     FindImplementors(
                         assembly.GlobalNamespace,
-                        agentDefinitionSymbol,
+                        s.AgentDefinition,
                         module.ModuleName,
                         agentDefinitions
                     )
             );
         }
 
-        if (agentToolProviderSymbol is not null)
+        if (s.AgentToolProvider is not null)
         {
             ScanModuleAssemblies(
                 modules,
@@ -599,14 +546,14 @@ internal static class SymbolDiscovery
                 (assembly, module) =>
                     FindImplementors(
                         assembly.GlobalNamespace,
-                        agentToolProviderSymbol,
+                        s.AgentToolProvider,
                         module.ModuleName,
                         agentToolProviders
                     )
             );
         }
 
-        if (knowledgeSourceSymbol is not null)
+        if (s.KnowledgeSource is not null)
         {
             ScanModuleAssemblies(
                 modules,
@@ -614,7 +561,7 @@ internal static class SymbolDiscovery
                 (assembly, module) =>
                     FindImplementors(
                         assembly.GlobalNamespace,
-                        knowledgeSourceSymbol,
+                        s.KnowledgeSource,
                         module.ModuleName,
                         knowledgeSources
                     )
@@ -818,8 +765,7 @@ internal static class SymbolDiscovery
                 .Select(k => new KnowledgeSourceRecord(k.FullyQualifiedName, k.ModuleName))
                 .ToImmutableArray(),
             contractsAssemblyMap.Keys.ToImmutableArray(),
-            compilation.GetTypeByMetadataName("SimpleModule.Agents.SimpleModuleAgentExtensions")
-                is not null,
+            s.HasAgentsAssembly,
             hostAssemblyName
         );
     }
