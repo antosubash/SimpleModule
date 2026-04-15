@@ -164,6 +164,7 @@ internal static class EndpointFinder
     internal static void Discover(
         List<ModuleInfo> modules,
         Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        Dictionary<string, ModuleInfo> modulesByName,
         CoreSymbols symbols,
         CancellationToken cancellationToken
     )
@@ -197,7 +198,7 @@ internal static class EndpointFinder
             {
                 var epFqn = TypeMappingHelpers.StripGlobalPrefix(ep.FullyQualifiedName);
                 var ownerName = SymbolHelpers.FindClosestModuleName(epFqn, modules);
-                var owner = modules.Find(m => m.ModuleName == ownerName);
+                modulesByName.TryGetValue(ownerName, out var owner);
                 if (owner is not null)
                     owner.Endpoints.Add(ep);
             }
@@ -217,7 +218,7 @@ internal static class EndpointFinder
             {
                 var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
                 var ownerName = SymbolHelpers.FindClosestModuleName(vFqn, modules);
-                var owner = modules.Find(m => m.ModuleName == ownerName);
+                modulesByName.TryGetValue(ownerName, out var owner);
                 if (owner is not null)
                 {
                     // Derive page name from namespace segments between module NS and class name.

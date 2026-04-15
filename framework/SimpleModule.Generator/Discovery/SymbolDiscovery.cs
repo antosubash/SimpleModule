@@ -70,8 +70,17 @@ internal static class SymbolDiscovery
                 moduleSymbols[module.FullyQualifiedName] = typeSymbol;
         }
 
+        // Dictionary by module NAME for O(1) endpoint/view attribution inside EndpointFinder.
+        // Duplicate names are already caught by SM0040 — we just take the first entry.
+        var modulesByName = new Dictionary<string, ModuleInfo>(StringComparer.Ordinal);
+        foreach (var module in modules)
+        {
+            if (!modulesByName.ContainsKey(module.ModuleName))
+                modulesByName[module.ModuleName] = module;
+        }
+
         // Discover IEndpoint and IViewEndpoint implementors per module assembly
-        EndpointFinder.Discover(modules, moduleSymbols, s, cancellationToken);
+        EndpointFinder.Discover(modules, moduleSymbols, modulesByName, s, cancellationToken);
 
         // Discover DbContext subclasses and IEntityTypeConfiguration<T> per module assembly
         var dbContexts = new List<DbContextInfo>();
