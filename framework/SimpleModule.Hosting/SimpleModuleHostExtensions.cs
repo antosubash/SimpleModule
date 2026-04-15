@@ -169,6 +169,24 @@ public static class SimpleModuleHostExtensions
 
         app.UseHttpsRedirection();
         var isDevelopment = app.Environment.IsDevelopment();
+        var cspOptions = options.Csp;
+
+        // Directives never change after startup, so build everything except the
+        // per-request nonce once. Per request we only do a single concat.
+        var connectSrc = isDevelopment
+            ? $"'self' ws: wss: https: {string.Join(' ', cspOptions.ConnectSources)}"
+            : $"'self' https: {string.Join(' ', cspOptions.ConnectSources)}";
+
+        var cspPrefix = "default-src 'none'; script-src 'self' 'nonce-";
+        var cspSuffix =
+            $"'; style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me {string.Join(' ', cspOptions.StyleSources)}; "
+            + $"font-src 'self' fonts.gstatic.com rsms.me {string.Join(' ', cspOptions.FontSources)}; "
+            + $"worker-src 'self' blob: {string.Join(' ', cspOptions.WorkerSources)}; "
+            + $"connect-src {connectSrc}; "
+            + $"img-src 'self' data: https: {string.Join(' ', cspOptions.ImgSources)}; "
+            + "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';";
+        var cspSuffixHttps = cspSuffix + " upgrade-insecure-requests;";
+
         app.Use(
             async (context, next) =>
             {
@@ -181,25 +199,11 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-                    // In development, allow WebSocket connections for live reload
-                    var connectSrc = isDevelopment ? "'self' ws: wss:" : "'self'";
-                    var csp =
-                        $"default-src 'none'; "
-                        + $"script-src 'self' 'nonce-{nonce}'; "
-                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me; "
-                        + $"font-src 'self' fonts.gstatic.com rsms.me; "
-                        + $"connect-src {connectSrc}; "
-                        + $"img-src 'self' data:; "
-                        + $"object-src 'none'; "
-                        + $"base-uri 'self'; "
-                        + $"form-action 'self'; "
-                        + $"frame-ancestors 'none';";
-                    if (isHttps)
-                    {
-                        csp += " upgrade-insecure-requests;";
-                    }
-
-                    headers["Content-Security-Policy"] = csp;
+                    headers["Content-Security-Policy"] = string.Concat(
+                        cspPrefix,
+                        nonce,
+                        isHttps ? cspSuffixHttps : cspSuffix
+                    );
                     return Task.CompletedTask;
                 });
                 await next();

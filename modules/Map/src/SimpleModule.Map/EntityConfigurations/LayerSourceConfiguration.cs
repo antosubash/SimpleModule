@@ -9,6 +9,35 @@ namespace SimpleModule.Map.EntityConfigurations;
 public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
 {
     /// <summary>
+    /// Fixed ids for layer sources seeded via <see cref="EntityTypeBuilder.HasData"/>.
+    /// Reference these from other seeders that link back to this catalog.
+    /// </summary>
+    public static class SeedIds
+    {
+        public static readonly LayerSourceId OpenStreetMapXyz = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000001")
+        );
+        public static readonly LayerSourceId TerrestrisOsmWms = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000002")
+        );
+        public static readonly LayerSourceId TerrestrisTopoWms = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000003")
+        );
+        public static readonly LayerSourceId MapLibreDemotilesVector = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000004")
+        );
+        public static readonly LayerSourceId ProtomapsFirenzePmTiles = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000005")
+        );
+        public static readonly LayerSourceId GeomaticoKrigingCog = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000006")
+        );
+        public static readonly LayerSourceId MapLibreEarthquakesGeoJson = LayerSourceId.From(
+            new Guid("11111111-1111-1111-1111-000000000007")
+        );
+    }
+
+    /// <summary>
     /// Toggles mapping of the spatial <see cref="LayerSource.Coverage"/> column.
     /// Defaults to <c>false</c>; flipped on by <c>MapModule.ConfigureServices</c>
     /// when the host opts in via <c>Modules:Map:EnableSpatial = true</c> and the
@@ -84,7 +113,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             // ── Raster basemaps (XYZ) ────────────────────────────────────────────
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000001")),
+                Id = SeedIds.OpenStreetMapXyz,
                 Name = "OpenStreetMap (raster tiles)",
                 Description =
                     "Standard OSM raster tiles. Free for low-volume use; respect the OSMF tile usage policy.",
@@ -102,7 +131,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             // ── WMS (terrestris demo, used in the official MapLibre WMS example) ─
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000002")),
+                Id = SeedIds.TerrestrisOsmWms,
                 Name = "terrestris OSM-WMS",
                 Description =
                     "Public WMS by terrestris. Used in the official MapLibre 'Add a WMS source' example.",
@@ -124,7 +153,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             },
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000003")),
+                Id = SeedIds.TerrestrisTopoWms,
                 Name = "terrestris TOPO-WMS",
                 Description = "terrestris topographic WMS overlay layer (transparent).",
                 Type = LayerSourceType.Wms,
@@ -146,7 +175,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             // ── Vector tiles (MapLibre demotiles) ────────────────────────────────
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000004")),
+                Id = SeedIds.MapLibreDemotilesVector,
                 Name = "MapLibre demotiles (vector)",
                 Description = "Official MapLibre demo MVT vector tileset. Free for development.",
                 Type = LayerSourceType.VectorTile,
@@ -163,7 +192,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             // ── PMTiles (Protomaps demo archive used in MapLibre PMTiles example) ─
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000005")),
+                Id = SeedIds.ProtomapsFirenzePmTiles,
                 Name = "Protomaps Firenze (PMTiles)",
                 Description =
                     "Public PMTiles vector archive of Florence (ODbL). Used in the MapLibre PMTiles example.",
@@ -183,7 +212,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             // ── COG (geomatico demo Cloud-Optimized GeoTIFF) ─────────────────────
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000006")),
+                Id = SeedIds.GeomaticoKrigingCog,
                 Name = "Geomatico kriging COG (demo)",
                 Description =
                     "Public Cloud-Optimized GeoTIFF demo from the maplibre-cog-protocol sample viewer.",
@@ -199,7 +228,7 @@ public class LayerSourceConfiguration : IEntityTypeConfiguration<LayerSource>
             // ── GeoJSON (raw OSM Overpass-style demo: world airports subset) ─────
             new LayerSource
             {
-                Id = LayerSourceId.From(new Guid("11111111-1111-1111-1111-000000000007")),
+                Id = SeedIds.MapLibreEarthquakesGeoJson,
                 Name = "MapLibre demotiles point sample (GeoJSON)",
                 Description =
                     "Small public GeoJSON FeatureCollection from the MapLibre demo assets.",
