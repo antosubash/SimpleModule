@@ -1,21 +1,22 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Extensions;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Permissions;
 
 public sealed class PermissionClaimsTransformation(
     IPermissionContracts permissionContracts,
     IUserContracts userContracts,
-    ICacheStore cache
+    IFusionCache cache
 ) : IClaimsTransformation
 {
-    private static readonly CacheEntryOptions CacheOptions = CacheEntryOptions.Expires(
-        TimeSpan.FromMinutes(5)
-    );
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(5),
+    };
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
@@ -36,9 +37,9 @@ public sealed class PermissionClaimsTransformation(
         var cacheKey = $"permissions:{userId}:{rolesKey}";
 
         var permissions =
-            await cache.GetOrCreateAsync<IReadOnlySet<string>>(
+            await cache.GetOrSetAsync<IReadOnlySet<string>>(
                 cacheKey,
-                async _ =>
+                async (_, _) =>
                 {
                     var roleIdMap =
                         roles.Count > 0

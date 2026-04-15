@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using SimpleModule.Core.Caching;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Tenants.Resolvers;
 
-public sealed class HostNameTenantResolver(TenantsDbContext db, ICacheStore cache)
+public sealed class HostNameTenantResolver(TenantsDbContext db, IFusionCache cache)
 {
-    private static readonly CacheEntryOptions CacheOptions = CacheEntryOptions.Expires(
-        TimeSpan.FromMinutes(5)
-    );
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(5),
+    };
 
     public async Task<string?> ResolveAsync(HttpContext context)
     {
@@ -19,9 +20,9 @@ public sealed class HostNameTenantResolver(TenantsDbContext db, ICacheStore cach
         }
 
         var cacheKey = $"tenant:host:{host}";
-        return await cache.GetOrCreateAsync(
+        return await cache.GetOrSetAsync<string?>(
             cacheKey,
-            async ct =>
+            async (_, ct) =>
             {
                 var tenantHost = await db
                     .TenantHosts.AsNoTracking()

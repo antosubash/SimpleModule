@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Exceptions;
@@ -24,6 +23,7 @@ using SimpleModule.DevTools;
 using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Hosting;
 
@@ -67,8 +67,11 @@ public static partial class SimpleModuleHostExtensions
 
         builder.Services.AddSingleton<IInertiaPageRenderer, HtmlFileInertiaPageRenderer>();
 
-        // Unified caching abstraction (ICacheStore) shared across all modules.
-        builder.Services.AddSimpleModuleCaching();
+        // Unified caching abstraction (IFusionCache) shared across all modules.
+        // Stampede-safe GetOrSetAsync built in; five-minute default entry duration.
+        builder
+            .Services.AddFusionCache()
+            .WithDefaultEntryOptions(o => o.Duration = TimeSpan.FromMinutes(5));
 
         builder.Services.AddSingleton<BackgroundEventChannel>();
         builder.Services.AddHostedService<BackgroundEventDispatcher>();

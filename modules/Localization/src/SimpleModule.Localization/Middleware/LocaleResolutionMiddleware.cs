@@ -3,12 +3,12 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
 using SimpleModule.Localization.Contracts;
 using SimpleModule.Localization.Services;
 using SimpleModule.Settings.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Localization.Middleware;
 
@@ -16,14 +16,17 @@ public sealed class LocaleResolutionMiddleware(
     RequestDelegate next,
     IConfiguration configuration,
     TranslationLoader loader,
-    ICacheStore cache
+    IFusionCache cache
 )
 {
-    private static readonly CacheEntryOptions UserLocaleCacheOptions = CacheEntryOptions.Expires(
-        TimeSpan.FromMinutes(5)
-    );
-    private static readonly CacheEntryOptions AcceptLanguageCacheOptions =
-        CacheEntryOptions.Expires(TimeSpan.FromMinutes(30));
+    private static readonly FusionCacheEntryOptions UserLocaleCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(5),
+    };
+    private static readonly FusionCacheEntryOptions AcceptLanguageCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(30),
+    };
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -66,7 +69,7 @@ public sealed class LocaleResolutionMiddleware(
             // leaks to another browser for the same user.
             var cacheKey = UserLocaleKey(userId);
             var cachedHit = await cache.TryGetAsync<string>(cacheKey);
-            if (cachedHit.Hit && !string.IsNullOrEmpty(cachedHit.Value))
+            if (cachedHit.HasValue && !string.IsNullOrEmpty(cachedHit.Value))
             {
                 return cachedHit.Value;
             }
@@ -101,7 +104,7 @@ public sealed class LocaleResolutionMiddleware(
 
         var cacheKey = AcceptLanguageKey(rawHeader);
         var cachedHit = await cache.TryGetAsync<string>(cacheKey);
-        if (cachedHit.Hit && !string.IsNullOrEmpty(cachedHit.Value))
+        if (cachedHit.HasValue && !string.IsNullOrEmpty(cachedHit.Value))
         {
             return cachedHit.Value;
         }

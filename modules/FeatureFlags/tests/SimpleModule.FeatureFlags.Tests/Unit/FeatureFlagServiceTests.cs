@@ -1,14 +1,13 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.Database;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace FeatureFlags.Tests.Unit;
 
@@ -17,10 +16,8 @@ public sealed class FeatureFlagServiceTests : IDisposable
     private readonly FeatureFlagsDbContext _db;
     private readonly FeatureFlagService _sut;
     private readonly IFeatureFlagRegistry _registry;
-    private readonly MemoryCache _cache;
-    private readonly MemoryCacheStore _cacheStore;
-    private readonly List<MemoryCache> _freshCaches = [];
-    private readonly List<MemoryCacheStore> _freshCacheStores = [];
+    private readonly FusionCache _cache;
+    private readonly List<FusionCache> _freshCaches = [];
 
     public FeatureFlagServiceTests()
     {
@@ -52,12 +49,11 @@ public sealed class FeatureFlagServiceTests : IDisposable
         );
         _registry = builder.Build();
 
-        _cache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
-        _cacheStore = new MemoryCacheStore(_cache);
+        _cache = new FusionCache(new FusionCacheOptions());
         _sut = new FeatureFlagService(
             _db,
             _registry,
-            _cacheStore,
+            _cache,
             NullLogger<FeatureFlagService>.Instance,
             new ServiceCollection().BuildServiceProvider()
         );
@@ -65,17 +61,11 @@ public sealed class FeatureFlagServiceTests : IDisposable
 
     public void Dispose()
     {
-        foreach (var s in _freshCacheStores)
-        {
-            s.Dispose();
-        }
-
         foreach (var c in _freshCaches)
         {
             c.Dispose();
         }
 
-        _cacheStore.Dispose();
         _cache.Dispose();
         _db.Dispose();
     }
@@ -83,14 +73,12 @@ public sealed class FeatureFlagServiceTests : IDisposable
     private FeatureFlagService CreateFreshService()
     {
         // Create a new cache to bypass cached results
-        var freshCache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        var freshCache = new FusionCache(new FusionCacheOptions());
         _freshCaches.Add(freshCache);
-        var freshStore = new MemoryCacheStore(freshCache);
-        _freshCacheStores.Add(freshStore);
         return new FeatureFlagService(
             _db,
             _registry,
-            freshStore,
+            freshCache,
             NullLogger<FeatureFlagService>.Instance,
             new ServiceCollection().BuildServiceProvider()
         );

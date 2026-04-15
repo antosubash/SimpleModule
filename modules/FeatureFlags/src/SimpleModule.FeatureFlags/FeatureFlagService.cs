@@ -1,17 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.FeatureFlags;
 
 public sealed partial class FeatureFlagService(
     FeatureFlagsDbContext db,
     IFeatureFlagRegistry registry,
-    ICacheStore cache,
+    IFusionCache cache,
     ILogger<FeatureFlagService> logger,
     IServiceProvider serviceProvider
 ) : IFeatureFlagContracts, IFeatureFlagService
@@ -19,7 +19,10 @@ public sealed partial class FeatureFlagService(
     private readonly Lazy<ITenantContext?> _tenantContext = new(() =>
         serviceProvider.GetService<ITenantContext>()
     );
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromSeconds(30),
+    };
     private const string AllFlagDataCacheKey = "ff:all-data";
     private const string FlagDataKeyPrefix = "ff:data:";
 

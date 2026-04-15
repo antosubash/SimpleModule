@@ -2,8 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Caching;
 using SimpleModule.Marketplace.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Marketplace;
 
@@ -11,19 +11,27 @@ public class NuGetMarketplaceService(
     IHttpClientFactory httpClientFactory,
     IOptions<MarketplaceModuleOptions> options,
     InstalledPackageDetector installedPackageDetector,
-    ICacheStore cache
+    IFusionCache cache
 ) : IMarketplaceContracts
 {
+    private readonly FusionCacheEntryOptions _searchCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes),
+    };
+
+    private readonly FusionCacheEntryOptions _detailCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes),
+    };
+
     public async Task<MarketplaceSearchResult> SearchPackagesAsync(MarketplaceSearchRequest request)
     {
         var cacheKey = $"Marketplace:Search:{request.Query}";
 
-        var cached = await cache.GetOrCreateAsync(
+        var cached = await cache.GetOrSetAsync<MarketplaceSearchResult>(
             cacheKey,
-            async _ => await FetchAllPackagesAsync(request.Query),
-            CacheEntryOptions.Expires(
-                TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes)
-            )
+            async (_, _) => await FetchAllPackagesAsync(request.Query),
+            _searchCacheOptions
         );
 
         var result = cached ?? new MarketplaceSearchResult();
@@ -55,12 +63,10 @@ public class NuGetMarketplaceService(
     {
         var cacheKey = $"Marketplace:Detail:{packageId}";
 
-        return await cache.GetOrCreateAsync(
+        return await cache.GetOrSetAsync<MarketplacePackageDetail?>(
             cacheKey,
-            async _ => await FetchPackageDetailsAsync(packageId),
-            CacheEntryOptions.Expires(
-                TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes)
-            )
+            async (_, _) => await FetchPackageDetailsAsync(packageId),
+            _detailCacheOptions
         );
     }
 

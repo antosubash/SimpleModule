@@ -58,6 +58,8 @@
     <PackageVersion Include="AWSSDK.S3" Version="3.7.500.2" />
     <!-- Background Jobs -->
     <PackageVersion Include="Cronos" Version="0.8.4" />
+    <!-- Caching -->
+    <PackageVersion Include="ZiggyCreatures.FusionCache" Version="2.6.0" />
     <!-- Email -->
     <PackageVersion Include="MailKit" Version="4.15.1" />
     <!-- CLI -->
