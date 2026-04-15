@@ -10,5 +10,6 @@
     <PackageReference Include="ZiggyCreatures.FusionCache" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="WolverineFx" />
   </ItemGroup>
 </Project>

@@ -23,6 +23,7 @@ using SimpleModule.DevTools;
 using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
+using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Hosting;
@@ -81,6 +82,10 @@ public static partial class SimpleModuleHostExtensions
         builder.Services.AddScoped(sp => new Lazy<IEventBus>(() =>
             sp.GetRequiredService<IEventBus>()
         ));
+
+        // Wolverine: in-process messaging only. Handlers are auto-discovered
+        // from loaded assemblies. No external transports, no message persistence.
+        builder.Host.UseWolverine(_ => { });
         builder.Services.AddScoped<InertiaSharedData>();
 
         // Required by EntityInterceptor to access the current HTTP context

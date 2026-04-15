@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.AuditLogs.Contracts\SimpleModule.AuditLogs.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Settings\src\SimpleModule.Settings.Contracts\SimpleModule.Settings.Contracts.csproj" />
+    <PackageReference Include="Scrutor" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Views\*.tsx">

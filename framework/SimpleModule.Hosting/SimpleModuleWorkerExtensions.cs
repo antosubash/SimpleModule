@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.Core.Events;
 using SimpleModule.Database.Interceptors;
+using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Hosting;
@@ -42,6 +43,10 @@ public static class SimpleModuleWorkerExtensions
         builder.Services.AddScoped(sp => new Lazy<IEventBus>(() =>
             sp.GetRequiredService<IEventBus>()
         ));
+
+        // Wolverine: in-process messaging only. Handlers are auto-discovered
+        // from loaded assemblies. No external transports, no message persistence.
+        builder.UseWolverine(_ => { });
 
         // HttpContextAccessor is required by EntityInterceptor even in a worker
         // (it returns null in non-HTTP contexts, which the interceptor handles gracefully).
