@@ -6,6 +6,38 @@ namespace SimpleModule.Map.EntityConfigurations;
 
 public class BasemapConfiguration : IEntityTypeConfiguration<Basemap>
 {
+    /// <summary>
+    /// Fixed ids for the basemaps seeded via <see cref="EntityTypeBuilder.HasData"/>.
+    /// Reference these from other seeders that link back to this catalog.
+    /// </summary>
+    public static class SeedIds
+    {
+        public static readonly BasemapId MapLibreDemotiles = BasemapId.From(
+            new Guid("22222222-2222-2222-2222-000000000001")
+        );
+        public static readonly BasemapId OpenFreeMapLiberty = BasemapId.From(
+            new Guid("22222222-2222-2222-2222-000000000002")
+        );
+        public static readonly BasemapId OpenFreeMapPositron = BasemapId.From(
+            new Guid("22222222-2222-2222-2222-000000000003")
+        );
+        public static readonly BasemapId OpenFreeMapBright = BasemapId.From(
+            new Guid("22222222-2222-2222-2222-000000000004")
+        );
+        public static readonly BasemapId VersatilesColorful = BasemapId.From(
+            new Guid("22222222-2222-2222-2222-000000000005")
+        );
+
+        public static IReadOnlyList<BasemapId> All { get; } =
+        [
+            MapLibreDemotiles,
+            OpenFreeMapLiberty,
+            OpenFreeMapPositron,
+            OpenFreeMapBright,
+            VersatilesColorful,
+        ];
+    }
+
     public void Configure(EntityTypeBuilder<Basemap> builder)
     {
         builder.HasKey(b => b.Id);
@@ -30,7 +62,7 @@ public class BasemapConfiguration : IEntityTypeConfiguration<Basemap>
         [
             new Basemap
             {
-                Id = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000001")),
+                Id = SeedIds.MapLibreDemotiles,
                 Name = "MapLibre Demotiles",
                 Description = "Official MapLibre demo vector style. Free for development.",
                 StyleUrl = "https://demotiles.maplibre.org/style.json",
@@ -41,7 +73,7 @@ public class BasemapConfiguration : IEntityTypeConfiguration<Basemap>
             },
             new Basemap
             {
-                Id = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000002")),
+                Id = SeedIds.OpenFreeMapLiberty,
                 Name = "OpenFreeMap Liberty",
                 Description = "OpenFreeMap free vector basemap, Liberty style.",
                 StyleUrl = "https://tiles.openfreemap.org/styles/liberty",
@@ -52,7 +84,7 @@ public class BasemapConfiguration : IEntityTypeConfiguration<Basemap>
             },
             new Basemap
             {
-                Id = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000003")),
+                Id = SeedIds.OpenFreeMapPositron,
                 Name = "OpenFreeMap Positron",
                 Description = "OpenFreeMap free vector basemap, light Positron style.",
                 StyleUrl = "https://tiles.openfreemap.org/styles/positron",
@@ -63,7 +95,7 @@ public class BasemapConfiguration : IEntityTypeConfiguration<Basemap>
             },
             new Basemap
             {
-                Id = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000004")),
+                Id = SeedIds.OpenFreeMapBright,
                 Name = "OpenFreeMap Bright",
                 Description = "OpenFreeMap free vector basemap, Bright style.",
                 StyleUrl = "https://tiles.openfreemap.org/styles/bright",
@@ -74,7 +106,7 @@ public class BasemapConfiguration : IEntityTypeConfiguration<Basemap>
             },
             new Basemap
             {
-                Id = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000005")),
+                Id = SeedIds.VersatilesColorful,
                 Name = "Versatiles Colorful",
                 Description = "VersaTiles free OSM-based vector basemap, Colorful style.",
                 StyleUrl = "https://tiles.versatiles.org/assets/styles/colorful/style.json",

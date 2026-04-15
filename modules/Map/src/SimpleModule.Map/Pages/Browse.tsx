@@ -65,8 +65,10 @@ export default function Browse({
   const [datasetsLoaded, setDatasetsLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [layersPanelOpen, setLayersPanelOpen] = useState(false);
-  const [basemapsPanelOpen, setBasemapsPanelOpen] = useState(false);
+  // Single-value state enforces mutual exclusion — two panels cannot be open at once.
+  const [openPanel, setOpenPanel] = useState<'layers' | 'basemaps' | null>(null);
+  const layersPanelOpen = openPanel === 'layers';
+  const basemapsPanelOpen = openPanel === 'basemaps';
 
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
 
@@ -208,7 +210,7 @@ export default function Browse({
     <div
       style={{
         position: 'fixed',
-        top: '57px' /* nav height */,
+        top: '57px',
         left: 0,
         right: 0,
         bottom: 0,
@@ -228,7 +230,6 @@ export default function Browse({
         }}
       />
 
-      {/* Control overlay — sits above the entire MapLibre canvas */}
       <div className="absolute inset-0 z-[1000] pointer-events-none">
         {/* ── Top-left: panel toggle buttons ── */}
         <div className="absolute top-3 left-3 flex gap-2 pointer-events-auto">
@@ -236,10 +237,7 @@ export default function Browse({
             size="sm"
             variant={layersPanelOpen ? 'primary' : 'secondary'}
             className="shadow"
-            onClick={() => {
-              setLayersPanelOpen((v) => !v);
-              if (!layersPanelOpen) setBasemapsPanelOpen(false);
-            }}
+            onClick={() => setOpenPanel(layersPanelOpen ? null : 'layers')}
             data-testid="layers-toggle"
           >
             Layers ({visibleLayerCount}/{layers.length})
@@ -248,10 +246,7 @@ export default function Browse({
             size="sm"
             variant={basemapsPanelOpen ? 'primary' : 'secondary'}
             className="shadow"
-            onClick={() => {
-              setBasemapsPanelOpen((v) => !v);
-              if (!basemapsPanelOpen) setLayersPanelOpen(false);
-            }}
+            onClick={() => setOpenPanel(basemapsPanelOpen ? null : 'basemaps')}
             data-testid="basemaps-toggle"
           >
             Basemaps ({mapBasemaps.length})
@@ -269,7 +264,7 @@ export default function Browse({
             Manage catalog
           </Button>
           <Button size="sm" className="shadow" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving\u2026' : 'Save'}
+            {saving ? 'Saving…' : 'Save'}
           </Button>
         </div>
 
@@ -345,7 +340,7 @@ export default function Browse({
             <div className="flex gap-2 pt-1">
               <Select value={pickerSourceId} onValueChange={setPickerSourceId}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Add source\u2026" />
+                  <SelectValue placeholder="Add source…" />
                 </SelectTrigger>
                 <SelectContent>
                   {availableSources.map((s) => (
@@ -372,7 +367,7 @@ export default function Browse({
                 }}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Add from dataset\u2026" />
+                  <SelectValue placeholder="Add from dataset…" />
                 </SelectTrigger>
                 <SelectContent>
                   {datasets.map((d) => (
@@ -444,7 +439,7 @@ export default function Browse({
             <div className="flex gap-2 pt-1">
               <Select value={pickerBasemapId} onValueChange={setPickerBasemapId}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Add basemap\u2026" />
+                  <SelectValue placeholder="Add basemap…" />
                 </SelectTrigger>
                 <SelectContent>
                   {basemaps

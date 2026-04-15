@@ -5,6 +5,7 @@ using NetTopologySuite.Geometries;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Datasets.Contracts;
 using SimpleModule.Map.Contracts;
+using SimpleModule.Map.EntityConfigurations;
 
 namespace SimpleModule.Map;
 
@@ -193,59 +194,28 @@ public partial class MapService(
             Pitch = Options.DefaultPitch,
             Bearing = Options.DefaultBearing,
             BaseStyleUrl = Options.BaseStyleUrl,
-            Basemaps =
-            [
-                new MapBasemap
-                {
-                    BasemapId = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000001")),
-                    Order = 0,
-                },
-                new MapBasemap
-                {
-                    BasemapId = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000002")),
-                    Order = 1,
-                },
-                new MapBasemap
-                {
-                    BasemapId = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000003")),
-                    Order = 2,
-                },
-                new MapBasemap
-                {
-                    BasemapId = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000004")),
-                    Order = 3,
-                },
-                new MapBasemap
-                {
-                    BasemapId = BasemapId.From(new Guid("22222222-2222-2222-2222-000000000005")),
-                    Order = 4,
-                },
-            ],
+            Basemaps = BasemapConfiguration
+                .SeedIds.All.Select((id, i) => new MapBasemap { BasemapId = id, Order = i })
+                .ToList(),
             Layers =
             [
                 new MapLayer
                 {
-                    LayerSourceId = LayerSourceId.From(
-                        new Guid("11111111-1111-1111-1111-000000000001")
-                    ),
+                    LayerSourceId = LayerSourceConfiguration.SeedIds.OpenStreetMapXyz,
                     Order = 0,
                     Visible = true,
                     Opacity = 1,
                 },
                 new MapLayer
                 {
-                    LayerSourceId = LayerSourceId.From(
-                        new Guid("11111111-1111-1111-1111-000000000007")
-                    ),
+                    LayerSourceId = LayerSourceConfiguration.SeedIds.MapLibreEarthquakesGeoJson,
                     Order = 1,
                     Visible = true,
                     Opacity = 1,
                 },
                 new MapLayer
                 {
-                    LayerSourceId = LayerSourceId.From(
-                        new Guid("11111111-1111-1111-1111-000000000002")
-                    ),
+                    LayerSourceId = LayerSourceConfiguration.SeedIds.TerrestrisOsmWms,
                     Order = 2,
                     Visible = false,
                     Opacity = 1,

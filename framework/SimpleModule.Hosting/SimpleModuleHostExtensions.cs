@@ -170,6 +170,23 @@ public static class SimpleModuleHostExtensions
         app.UseHttpsRedirection();
         var isDevelopment = app.Environment.IsDevelopment();
         var cspOptions = options.Csp;
+
+        // Directives never change after startup, so build everything except the
+        // per-request nonce once. Per request we only do a single concat.
+        var connectSrc = isDevelopment
+            ? $"'self' ws: wss: https: {string.Join(' ', cspOptions.ConnectSources)}"
+            : $"'self' https: {string.Join(' ', cspOptions.ConnectSources)}";
+
+        var cspPrefix = "default-src 'none'; script-src 'self' 'nonce-";
+        var cspSuffix =
+            $"'; style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me {string.Join(' ', cspOptions.StyleSources)}; "
+            + $"font-src 'self' fonts.gstatic.com rsms.me {string.Join(' ', cspOptions.FontSources)}; "
+            + $"worker-src 'self' blob: {string.Join(' ', cspOptions.WorkerSources)}; "
+            + $"connect-src {connectSrc}; "
+            + $"img-src 'self' data: https: {string.Join(' ', cspOptions.ImgSources)}; "
+            + "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';";
+        var cspSuffixHttps = cspSuffix + " upgrade-insecure-requests;";
+
         app.Use(
             async (context, next) =>
             {
@@ -182,35 +199,11 @@ public static class SimpleModuleHostExtensions
                     headers["X-Frame-Options"] = "SAMEORIGIN";
                     headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
                     headers["X-Permitted-Cross-Domain-Policies"] = "none";
-
-                    var extraConnect = JoinCspSources(cspOptions.ConnectSources);
-                    var extraImg = JoinCspSources(cspOptions.ImgSources);
-                    var extraWorker = JoinCspSources(cspOptions.WorkerSources);
-                    var extraFont = JoinCspSources(cspOptions.FontSources);
-                    var extraStyle = JoinCspSources(cspOptions.StyleSources);
-
-                    var connectSrc = isDevelopment
-                        ? $"'self' ws: wss: https: {extraConnect}"
-                        : $"'self' https: {extraConnect}";
-
-                    var csp =
-                        $"default-src 'none'; "
-                        + $"script-src 'self' 'nonce-{nonce}'; "
-                        + $"style-src 'self' 'unsafe-inline' fonts.googleapis.com rsms.me {extraStyle}; "
-                        + $"font-src 'self' fonts.gstatic.com rsms.me {extraFont}; "
-                        + $"worker-src 'self' blob: {extraWorker}; "
-                        + $"connect-src {connectSrc}; "
-                        + $"img-src 'self' data: https: {extraImg}; "
-                        + $"object-src 'none'; "
-                        + $"base-uri 'self'; "
-                        + $"form-action 'self'; "
-                        + $"frame-ancestors 'none';";
-                    if (isHttps)
-                    {
-                        csp += " upgrade-insecure-requests;";
-                    }
-
-                    headers["Content-Security-Policy"] = csp;
+                    headers["Content-Security-Policy"] = string.Concat(
+                        cspPrefix,
+                        nonce,
+                        isHttps ? cspSuffixHttps : cspSuffix
+                    );
                     return Task.CompletedTask;
                 });
                 await next();
@@ -292,9 +285,6 @@ public static class SimpleModuleHostExtensions
 
         return DatabaseProviderDetector.Detect(connString, dbOptions.Provider);
     }
-
-    private static string JoinCspSources(List<string> sources) =>
-        sources.Count > 0 ? string.Join(' ', sources) : string.Empty;
 
     private static void UseStaticFileCaching(WebApplication app)
     {
