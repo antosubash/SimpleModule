@@ -9,6 +9,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Events;
 using SimpleModule.Host;
 using SimpleModule.Tests.Shared.Fixtures;
+using Wolverine;
 
 namespace SimpleModule.Core.Tests.Infrastructure;
 
@@ -155,9 +156,10 @@ public class WebApplicationFactoryTests
 
     // Defends against runtime circular dependencies that SM0010 can't catch:
     // the generator only sees module-level project references and cannot analyze
-    // factory lambdas like AddScoped<IEventBus>(sp => new AuditingEventBus(..., sp.GetService<ISettingsContracts>())).
-    // .NET DI can't detect re-entry through factory lambdas, so such cycles hang
-    // the whole test run instead of throwing. These timeout tests fail fast instead.
+    // factory lambdas like services.Decorate<IMessageBus, AuditingMessageBus>()
+    // with an optional ISettingsContracts parameter. .NET DI can't detect re-entry
+    // through factory lambdas, so such cycles hang the whole test run instead of
+    // throwing. These timeout tests fail fast instead.
 
     private static readonly TimeSpan ResolutionTimeout = TimeSpan.FromSeconds(5);
 
@@ -167,19 +169,19 @@ public class WebApplicationFactoryTests
         AssertResolvesWithinTimeout(contractType);
 
     [Fact]
-    public Task EventBus_CanBeResolved_WithoutHanging() =>
-        AssertResolvesWithinTimeout(typeof(IEventBus));
+    public Task MessageBus_CanBeResolved_WithoutHanging() =>
+        AssertResolvesWithinTimeout(typeof(IMessageBus));
 
     [Fact]
-    public async Task EventBus_CanPublishEvent_WithoutHanging()
+    public async Task MessageBus_CanPublishEvent_WithoutHanging()
     {
         var rootProvider = _factory.Services;
 
         var publishTask = Task.Run(async () =>
         {
             using var scope = rootProvider.CreateScope();
-            var bus = scope.ServiceProvider.GetRequiredService<IEventBus>();
-            await bus.PublishAsync(new NoopEvent(), CancellationToken.None);
+            var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
+            await bus.PublishAsync(new NoopEvent());
         });
 
         try
@@ -189,7 +191,7 @@ public class WebApplicationFactoryTests
         catch (TimeoutException)
         {
             throw new InvalidOperationException(
-                $"IEventBus.PublishAsync hung for over {ResolutionTimeout.TotalSeconds}s. "
+                $"IMessageBus.PublishAsync hung for over {ResolutionTimeout.TotalSeconds}s. "
                     + "A handler, decorator, or service in the resolution chain likely has a circular dependency."
             );
         }
@@ -217,7 +219,7 @@ public class WebApplicationFactoryTests
             throw new InvalidOperationException(
                 $"Resolving '{serviceType.FullName}' hung for over {ResolutionTimeout.TotalSeconds}s. "
                     + "Likely a circular dependency introduced through a decorator factory "
-                    + "(see IEventBus → AuditingEventBus → ISettingsContracts pattern)."
+                    + "(see IMessageBus → AuditingMessageBus → ISettingsContracts pattern)."
             );
         }
     }

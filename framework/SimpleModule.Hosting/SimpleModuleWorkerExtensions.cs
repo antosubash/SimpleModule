@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SimpleModule.Core.Events;
 using SimpleModule.Database.Interceptors;
 using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
@@ -35,14 +34,6 @@ public static class SimpleModuleWorkerExtensions
         builder
             .Services.AddFusionCache()
             .WithDefaultEntryOptions(o => o.Duration = TimeSpan.FromMinutes(5));
-        builder.Services.AddSingleton<BackgroundEventChannel>();
-        builder.Services.AddHostedService<BackgroundEventDispatcher>();
-        builder.Services.AddScoped<IEventBus, EventBus>();
-        // Lazy<IEventBus> lets services break factory-lambda cycles
-        // (e.g. SettingsService ↔ AuditingEventBus via ISettingsContracts).
-        builder.Services.AddScoped(sp => new Lazy<IEventBus>(() =>
-            sp.GetRequiredService<IEventBus>()
-        ));
 
         // Wolverine: in-process messaging only. Handlers are auto-discovered
         // from loaded assemblies. No external transports, no message persistence.

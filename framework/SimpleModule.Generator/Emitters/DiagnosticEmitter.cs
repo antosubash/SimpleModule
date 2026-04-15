@@ -95,7 +95,7 @@ internal sealed class DiagnosticEmitter : IEmitter
     internal static readonly DiagnosticDescriptor CircularModuleDependency = new(
         id: "SM0010",
         title: "Circular module dependency detected",
-        messageFormat: "Circular module dependency detected. Cycle: {0}. {1}To break this cycle, identify which direction is the primary dependency and reverse the other using IEventBus. For example, if {2} is the primary consumer of {3}: (1) Keep {2} \u2192 {3}.Contracts. (2) Remove {3} \u2192 {2}.Contracts. (3) In {3}, publish events via IEventBus instead of calling {2} directly. (4) In {2}, implement IEventHandler<T> to handle those events. Learn more: https://docs.simplemodule.dev/module-dependencies.",
+        messageFormat: "Circular module dependency detected. Cycle: {0}. {1}To break this cycle, identify which direction is the primary dependency and reverse the other using IMessageBus. For example, if {2} is the primary consumer of {3}: (1) Keep {2} \u2192 {3}.Contracts. (2) Remove {3} \u2192 {2}.Contracts. (3) In {3}, publish events via IMessageBus instead of calling {2} directly. (4) In {2}, add a Wolverine message handler to react to those events. Learn more: https://docs.simplemodule.dev/module-dependencies.",
         category: "SimpleModule.Generator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true

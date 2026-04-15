@@ -8,7 +8,6 @@ using SimpleModule.AuditLogs.Middleware;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.AuditLogs.Retention;
 using SimpleModule.Core;
-using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Settings.Contracts;
@@ -34,16 +33,6 @@ public class AuditLogsModule : IModule
         services.AddSingleton<AuditChannel>();
         services.AddHostedService<AuditWriterService>();
         services.AddHostedService<AuditRetentionService>();
-
-        // Decorate IEventBus with auditing
-        services.AddScoped<IEventBus>(sp =>
-        {
-            var innerBus = ActivatorUtilities.CreateInstance<SimpleModule.Core.Events.EventBus>(sp);
-            var auditCtx = sp.GetRequiredService<IAuditContext>();
-            var auditChan = sp.GetRequiredService<AuditChannel>();
-            var settingsContracts = sp.GetService<ISettingsContracts>();
-            return new AuditingEventBus(innerBus, auditCtx, auditChan, settingsContracts);
-        });
 
         // Decorate Wolverine's IMessageBus so domain events published via Wolverine
         // are captured in the audit log. Uses Scrutor because Wolverine owns the
