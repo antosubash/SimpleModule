@@ -61,173 +61,22 @@ internal static class SymbolDiscovery
                 moduleSymbols[module.FullyQualifiedName] = typeSymbol;
         }
 
-        // Discover IEndpoint implementors per module assembly.
-        // Classification is by interface type: IViewEndpoint -> view, IEndpoint -> API.
-        // Scan each assembly once, then match endpoints to the closest module by namespace.
-        var endpointScannedAssemblies = new HashSet<IAssemblySymbol>(
-            SymbolEqualityComparer.Default
-        );
-        foreach (var module in modules)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+        // Discover IEndpoint and IViewEndpoint implementors per module assembly
+        EndpointFinder.Discover(modules, moduleSymbols, s, cancellationToken);
 
-            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                continue;
-
-            var assembly = typeSymbol.ContainingAssembly;
-            if (!endpointScannedAssemblies.Add(assembly))
-                continue;
-
-            var rawEndpoints = new List<EndpointInfo>();
-            var rawViews = new List<ViewInfo>();
-            EndpointFinder.FindEndpointTypes(
-                assembly.GlobalNamespace,
-                s,
-                rawEndpoints,
-                rawViews,
-                cancellationToken
-            );
-
-            // Match each endpoint/view to the module whose namespace is closest
-            foreach (var ep in rawEndpoints)
-            {
-                var epFqn = TypeMappingHelpers.StripGlobalPrefix(ep.FullyQualifiedName);
-                var ownerName = SymbolHelpers.FindClosestModuleName(epFqn, modules);
-                var owner = modules.Find(m => m.ModuleName == ownerName);
-                if (owner is not null)
-                    owner.Endpoints.Add(ep);
-            }
-
-            // Pre-compute module namespace per module name for page inference
-            var moduleNsByName = new Dictionary<string, string>();
-            foreach (var m in modules)
-            {
-                if (!moduleNsByName.ContainsKey(m.ModuleName))
-                {
-                    var mFqn = TypeMappingHelpers.StripGlobalPrefix(m.FullyQualifiedName);
-                    moduleNsByName[m.ModuleName] = TypeMappingHelpers.ExtractNamespace(mFqn);
-                }
-            }
-
-            foreach (var v in rawViews)
-            {
-                var vFqn = TypeMappingHelpers.StripGlobalPrefix(v.FullyQualifiedName);
-                var ownerName = SymbolHelpers.FindClosestModuleName(vFqn, modules);
-                var owner = modules.Find(m => m.ModuleName == ownerName);
-                if (owner is not null)
-                {
-                    // Derive page name from namespace segments between module NS and class name.
-                    // e.g. SimpleModule.Users.Pages.Account.LoginEndpoint → Users/Account/Login
-                    if (v.Page is null)
-                    {
-                        var moduleNs = moduleNsByName[ownerName];
-                        var typeNs = TypeMappingHelpers.ExtractNamespace(vFqn);
-
-                        // Extract segments after the module namespace, stripping Views/Pages
-                        var remaining =
-                            typeNs.Length > moduleNs.Length
-                                ? typeNs.Substring(moduleNs.Length).TrimStart('.')
-                                : "";
-
-                        var segments = remaining.Split('.');
-                        var pathParts = new List<string>();
-                        foreach (var seg in segments)
-                        {
-                            if (
-                                seg.Length > 0
-                                && !seg.Equals("Views", StringComparison.Ordinal)
-                                && !seg.Equals("Pages", StringComparison.Ordinal)
-                            )
-                            {
-                                pathParts.Add(seg);
-                            }
-                        }
-
-                        var subPath = pathParts.Count > 0 ? string.Join("/", pathParts) + "/" : "";
-                        v.Page = ownerName + "/" + subPath + v.InferredClassName;
-                    }
-
-                    owner.Views.Add(v);
-                }
-            }
-        }
-
-        // Discover DbContext subclasses and IEntityTypeConfiguration<T> per module assembly.
-        // Scan each assembly once, then match DbContexts/configs to the nearest module by namespace.
+        // Discover DbContext subclasses and IEntityTypeConfiguration<T> per module assembly
         var dbContexts = new List<DbContextInfo>();
         var entityConfigs = new List<EntityConfigInfo>();
-        var scannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
-        foreach (var module in modules)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                continue;
-
-            var assembly = typeSymbol.ContainingAssembly;
-            if (!scannedAssemblies.Add(assembly))
-                continue;
-
-            // Collect unmatched items from this assembly
-            var rawDbContexts = new List<DbContextInfo>();
-            var rawEntityConfigs = new List<EntityConfigInfo>();
-            DbContextFinder.FindDbContextTypes(
-                assembly.GlobalNamespace,
-                "",
-                rawDbContexts,
-                cancellationToken
-            );
-            DbContextFinder.FindEntityConfigTypes(
-                assembly.GlobalNamespace,
-                "",
-                rawEntityConfigs,
-                cancellationToken
-            );
-
-            // Match each DbContext to the module whose namespace is closest
-            foreach (var ctx in rawDbContexts)
-            {
-                var ctxNs = TypeMappingHelpers.StripGlobalPrefix(ctx.FullyQualifiedName);
-                ctx.ModuleName = SymbolHelpers.FindClosestModuleName(ctxNs, modules);
-                dbContexts.Add(ctx);
-            }
-
-            foreach (var cfg in rawEntityConfigs)
-            {
-                var cfgNs = TypeMappingHelpers.StripGlobalPrefix(cfg.ConfigFqn);
-                cfg.ModuleName = SymbolHelpers.FindClosestModuleName(cfgNs, modules);
-                entityConfigs.Add(cfg);
-            }
-        }
+        DbContextFinder.Discover(
+            modules,
+            moduleSymbols,
+            dbContexts,
+            entityConfigs,
+            cancellationToken
+        );
 
         var dtoTypes = new List<DtoTypeInfo>();
-        if (s.DtoAttribute is not null)
-        {
-            foreach (var reference in compilation.References)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (
-                    compilation.GetAssemblyOrModuleSymbol(reference)
-                    is not IAssemblySymbol assemblySymbol
-                )
-                    continue;
-
-                DtoFinder.FindDtoTypes(
-                    assemblySymbol.GlobalNamespace,
-                    s.DtoAttribute,
-                    dtoTypes,
-                    cancellationToken
-                );
-            }
-
-            DtoFinder.FindDtoTypes(
-                compilation.Assembly.GlobalNamespace,
-                s.DtoAttribute,
-                dtoTypes,
-                cancellationToken
-            );
-        }
+        DtoFinder.DiscoverAttributedDtos(compilation, s, dtoTypes, cancellationToken);
 
         // --- Dependency inference ---
         cancellationToken.ThrowIfCancellationRequested();

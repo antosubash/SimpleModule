@@ -252,6 +252,46 @@ internal static class DtoFinder
     }
 
     /// <summary>
+    /// Scans every referenced assembly AND the host assembly for types decorated
+    /// with <c>[Dto]</c>. No-op when the DtoAttribute symbol isn't resolvable.
+    /// </summary>
+    internal static void DiscoverAttributedDtos(
+        Compilation compilation,
+        CoreSymbols symbols,
+        List<DtoTypeInfo> dtoTypes,
+        CancellationToken cancellationToken
+    )
+    {
+        if (symbols.DtoAttribute is null)
+            return;
+
+        foreach (var reference in compilation.References)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (
+                compilation.GetAssemblyOrModuleSymbol(reference)
+                is not IAssemblySymbol assemblySymbol
+            )
+                continue;
+
+            FindDtoTypes(
+                assemblySymbol.GlobalNamespace,
+                symbols.DtoAttribute,
+                dtoTypes,
+                cancellationToken
+            );
+        }
+
+        FindDtoTypes(
+            compilation.Assembly.GlobalNamespace,
+            symbols.DtoAttribute,
+            dtoTypes,
+            cancellationToken
+        );
+    }
+
+    /// <summary>
     /// Returns true if the property is decorated with <c>[System.Text.Json.Serialization.JsonIgnore]</c>.
     /// Properties marked this way are excluded from generated JSON metadata, mirroring
     /// runtime System.Text.Json behavior.

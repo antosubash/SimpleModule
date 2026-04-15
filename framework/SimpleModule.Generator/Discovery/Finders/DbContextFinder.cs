@@ -177,6 +177,59 @@ internal static class DbContextFinder
         }
     }
 
+    /// <summary>
+    /// For each module, scans the module's own assembly (once per unique
+    /// assembly) and distributes every discovered DbContext / EntityTypeConfiguration
+    /// to the module whose namespace is closest.
+    /// </summary>
+    internal static void Discover(
+        List<ModuleInfo> modules,
+        Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        List<DbContextInfo> dbContexts,
+        List<EntityConfigInfo> entityConfigs,
+        CancellationToken cancellationToken
+    )
+    {
+        var scannedAssemblies = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
+        foreach (var module in modules)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
+                continue;
+
+            var assembly = typeSymbol.ContainingAssembly;
+            if (!scannedAssemblies.Add(assembly))
+                continue;
+
+            // Collect unmatched items from this assembly
+            var rawDbContexts = new List<DbContextInfo>();
+            var rawEntityConfigs = new List<EntityConfigInfo>();
+            FindDbContextTypes(assembly.GlobalNamespace, "", rawDbContexts, cancellationToken);
+            FindEntityConfigTypes(
+                assembly.GlobalNamespace,
+                "",
+                rawEntityConfigs,
+                cancellationToken
+            );
+
+            // Match each DbContext to the module whose namespace is closest
+            foreach (var ctx in rawDbContexts)
+            {
+                var ctxNs = TypeMappingHelpers.StripGlobalPrefix(ctx.FullyQualifiedName);
+                ctx.ModuleName = SymbolHelpers.FindClosestModuleName(ctxNs, modules);
+                dbContexts.Add(ctx);
+            }
+
+            foreach (var cfg in rawEntityConfigs)
+            {
+                var cfgNs = TypeMappingHelpers.StripGlobalPrefix(cfg.ConfigFqn);
+                cfg.ModuleName = SymbolHelpers.FindClosestModuleName(cfgNs, modules);
+                entityConfigs.Add(cfg);
+            }
+        }
+    }
+
     internal static bool HasDbContextConstructorParam(INamedTypeSymbol typeSymbol)
     {
         foreach (var ctor in typeSymbol.Constructors)
