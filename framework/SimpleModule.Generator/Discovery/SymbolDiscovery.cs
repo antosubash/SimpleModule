@@ -33,25 +33,17 @@ internal static class SymbolDiscovery
             )
                 continue;
 
-            FindModuleTypes(
+            ModuleFinder.FindModuleTypes(
                 assemblySymbol.GlobalNamespace,
-                s.ModuleAttribute,
-                s.ModuleServices,
-                s.ModuleMenu,
-                s.ModuleMiddleware,
-                s.ModuleSettings,
+                s,
                 modules,
                 cancellationToken
             );
         }
 
-        FindModuleTypes(
+        ModuleFinder.FindModuleTypes(
             compilation.Assembly.GlobalNamespace,
-            s.ModuleAttribute,
-            s.ModuleServices,
-            s.ModuleMenu,
-            s.ModuleMiddleware,
-            s.ModuleSettings,
+            s,
             modules,
             cancellationToken
         );
@@ -745,145 +737,6 @@ internal static class SymbolDiscovery
             s.HasAgentsAssembly,
             hostAssemblyName
         );
-    }
-
-    private static void FindModuleTypes(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol moduleAttributeSymbol,
-        INamedTypeSymbol? moduleServicesSymbol,
-        INamedTypeSymbol? moduleMenuSymbol,
-        INamedTypeSymbol? moduleMiddlewareSymbol,
-        INamedTypeSymbol? moduleSettingsSymbol,
-        List<ModuleInfo> modules,
-        CancellationToken cancellationToken
-    )
-    {
-        foreach (var member in namespaceSymbol.GetMembers())
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (member is INamespaceSymbol childNamespace)
-            {
-                FindModuleTypes(
-                    childNamespace,
-                    moduleAttributeSymbol,
-                    moduleServicesSymbol,
-                    moduleMenuSymbol,
-                    moduleMiddlewareSymbol,
-                    moduleSettingsSymbol,
-                    modules,
-                    cancellationToken
-                );
-            }
-            else if (member is INamedTypeSymbol typeSymbol)
-            {
-                foreach (var attr in typeSymbol.GetAttributes())
-                {
-                    if (
-                        SymbolEqualityComparer.Default.Equals(
-                            attr.AttributeClass,
-                            moduleAttributeSymbol
-                        )
-                    )
-                    {
-                        var moduleName =
-                            attr.ConstructorArguments.Length > 0
-                                ? attr.ConstructorArguments[0].Value as string ?? ""
-                                : "";
-                        var routePrefix = "";
-                        var viewPrefix = "";
-                        foreach (var namedArg in attr.NamedArguments)
-                        {
-                            if (
-                                namedArg.Key == "RoutePrefix"
-                                && namedArg.Value.Value is string prefix
-                            )
-                            {
-                                routePrefix = prefix;
-                            }
-                            else if (
-                                namedArg.Key == "ViewPrefix"
-                                && namedArg.Value.Value is string vPrefix
-                            )
-                            {
-                                viewPrefix = vPrefix;
-                            }
-                        }
-
-                        modules.Add(
-                            new ModuleInfo
-                            {
-                                FullyQualifiedName = typeSymbol.ToDisplayString(
-                                    SymbolDisplayFormat.FullyQualifiedFormat
-                                ),
-                                ModuleName = moduleName,
-                                HasConfigureServices =
-                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureServices")
-                                    || (
-                                        moduleServicesSymbol is not null
-                                        && SymbolHelpers.ImplementsInterface(
-                                            typeSymbol,
-                                            moduleServicesSymbol
-                                        )
-                                    ),
-                                HasConfigureEndpoints = SymbolHelpers.DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureEndpoints"
-                                ),
-                                HasConfigureMenu =
-                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureMenu")
-                                    || (
-                                        moduleMenuSymbol is not null
-                                        && SymbolHelpers.ImplementsInterface(
-                                            typeSymbol,
-                                            moduleMenuSymbol
-                                        )
-                                    ),
-                                HasConfigureMiddleware =
-                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureMiddleware")
-                                    || (
-                                        moduleMiddlewareSymbol is not null
-                                        && SymbolHelpers.ImplementsInterface(
-                                            typeSymbol,
-                                            moduleMiddlewareSymbol
-                                        )
-                                    ),
-                                HasConfigurePermissions = SymbolHelpers.DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigurePermissions"
-                                ),
-                                HasConfigureSettings =
-                                    SymbolHelpers.DeclaresMethod(typeSymbol, "ConfigureSettings")
-                                    || (
-                                        moduleSettingsSymbol is not null
-                                        && SymbolHelpers.ImplementsInterface(
-                                            typeSymbol,
-                                            moduleSettingsSymbol
-                                        )
-                                    ),
-                                HasConfigureFeatureFlags = SymbolHelpers.DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureFeatureFlags"
-                                ),
-                                HasConfigureAgents = SymbolHelpers.DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureAgents"
-                                ),
-                                HasConfigureRateLimits = SymbolHelpers.DeclaresMethod(
-                                    typeSymbol,
-                                    "ConfigureRateLimits"
-                                ),
-                                RoutePrefix = routePrefix,
-                                ViewPrefix = viewPrefix,
-                                AssemblyName = typeSymbol.ContainingAssembly.Name,
-                                Location = SymbolHelpers.GetSourceLocation(typeSymbol),
-                            }
-                        );
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     private static void FindEndpointTypes(
