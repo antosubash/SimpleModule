@@ -172,6 +172,18 @@ internal static class EndpointFinder
         var endpointScannedAssemblies = new HashSet<IAssemblySymbol>(
             SymbolEqualityComparer.Default
         );
+
+        // Pre-compute module namespace per module name for page inference (built once, outside per-module loop)
+        var moduleNsByName = new Dictionary<string, string>();
+        foreach (var m in modules)
+        {
+            if (!moduleNsByName.ContainsKey(m.ModuleName))
+            {
+                var mFqn = TypeMappingHelpers.StripGlobalPrefix(m.FullyQualifiedName);
+                moduleNsByName[m.ModuleName] = TypeMappingHelpers.ExtractNamespace(mFqn);
+            }
+        }
+
         foreach (var module in modules)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -201,17 +213,6 @@ internal static class EndpointFinder
                 modulesByName.TryGetValue(ownerName, out var owner);
                 if (owner is not null)
                     owner.Endpoints.Add(ep);
-            }
-
-            // Pre-compute module namespace per module name for page inference
-            var moduleNsByName = new Dictionary<string, string>();
-            foreach (var m in modules)
-            {
-                if (!moduleNsByName.ContainsKey(m.ModuleName))
-                {
-                    var mFqn = TypeMappingHelpers.StripGlobalPrefix(m.FullyQualifiedName);
-                    moduleNsByName[m.ModuleName] = TypeMappingHelpers.ExtractNamespace(mFqn);
-                }
             }
 
             foreach (var v in rawViews)
