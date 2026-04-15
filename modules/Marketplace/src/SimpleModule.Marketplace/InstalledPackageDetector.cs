@@ -13,14 +13,17 @@ public partial class InstalledPackageDetector(
 )
 {
     private const string CacheKey = "Marketplace:InstalledPackages";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(1);
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(1),
+    };
 
     public async Task<HashSet<string>> GetInstalledPackageIdsAsync()
     {
         var result = await cache.GetOrSetAsync<HashSet<string>>(
             CacheKey,
             (_, _) => Task.FromResult(ReadInstalledPackages()),
-            opts => opts.Duration = CacheDuration
+            CacheOptions
         );
         return result ?? [];
     }

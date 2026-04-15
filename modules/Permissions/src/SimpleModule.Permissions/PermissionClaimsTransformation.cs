@@ -13,7 +13,10 @@ public sealed class PermissionClaimsTransformation(
     IFusionCache cache
 ) : IClaimsTransformation
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(5),
+    };
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
@@ -48,7 +51,7 @@ public sealed class PermissionClaimsTransformation(
                         roleIdMap.Values.Select(id => RoleId.From(id))
                     );
                 },
-                opts => opts.Duration = CacheDuration
+                CacheOptions
             ) ?? new HashSet<string>();
 
         var identity = new ClaimsIdentity();

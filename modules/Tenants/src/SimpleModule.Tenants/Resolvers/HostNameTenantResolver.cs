@@ -6,7 +6,10 @@ namespace SimpleModule.Tenants.Resolvers;
 
 public sealed class HostNameTenantResolver(TenantsDbContext db, IFusionCache cache)
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(5),
+    };
 
     public async Task<string?> ResolveAsync(HttpContext context)
     {
@@ -29,7 +32,7 @@ public sealed class HostNameTenantResolver(TenantsDbContext db, IFusionCache cac
 
                 return tenantHost?.ToString(System.Globalization.CultureInfo.InvariantCulture);
             },
-            opts => opts.Duration = CacheDuration
+            CacheOptions
         );
     }
 }

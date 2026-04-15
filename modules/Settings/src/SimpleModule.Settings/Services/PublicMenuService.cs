@@ -15,9 +15,13 @@ public sealed class PublicMenuService(
     private const string MenuTreeCacheKey = "PublicMenu_Tree";
     private const string HomePageCacheKey = "PublicMenu_Home";
 
+    private readonly FusionCacheEntryOptions _cacheOptions = new()
+    {
+        Duration = moduleOptions.Value.CacheDuration,
+    };
+
     public async Task<IReadOnlyList<PublicMenuItem>> GetMenuTreeAsync()
     {
-        var duration = moduleOptions.Value.CacheDuration;
         var result = await cache.GetOrSetAsync<IReadOnlyList<PublicMenuItem>>(
             MenuTreeCacheKey,
             async (_, ct) =>
@@ -28,7 +32,7 @@ public sealed class PublicMenuService(
                     .ToListAsync(ct);
                 return BuildPublicTree(entities, parentId: null);
             },
-            options => options.Duration = duration
+            _cacheOptions
         );
         return result ?? [];
     }
@@ -40,7 +44,6 @@ public sealed class PublicMenuService(
     )]
     public async Task<string?> GetHomePageUrlAsync()
     {
-        var duration = moduleOptions.Value.CacheDuration;
         return await cache.GetOrSetAsync<string?>(
             HomePageCacheKey,
             async (_, ct) =>
@@ -50,7 +53,7 @@ public sealed class PublicMenuService(
                     .FirstOrDefaultAsync(ct);
                 return entity is not null ? (entity.Url ?? entity.PageRoute) : null;
             },
-            options => options.Duration = duration
+            _cacheOptions
         );
     }
 

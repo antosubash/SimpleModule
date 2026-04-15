@@ -19,6 +19,11 @@ public sealed partial class SettingsService(
     ILogger<SettingsService> logger
 ) : ISettingsContracts
 {
+    private readonly FusionCacheEntryOptions _cacheOptions = new()
+    {
+        Duration = moduleOptions.Value.CacheDuration,
+    };
+
     public async Task<string?> GetSettingAsync(
         string key,
         SettingScope scope,
@@ -26,7 +31,6 @@ public sealed partial class SettingsService(
     )
     {
         var cacheKey = BuildCacheKey(key, scope, userId);
-        var duration = moduleOptions.Value.CacheDuration;
 
         return await cache.GetOrSetAsync<string?>(
             cacheKey,
@@ -43,7 +47,7 @@ public sealed partial class SettingsService(
                     );
                 return entity?.Value;
             },
-            options => options.Duration = duration
+            _cacheOptions
         );
     }
 

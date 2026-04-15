@@ -19,8 +19,14 @@ public sealed class LocaleResolutionMiddleware(
     IFusionCache cache
 )
 {
-    private static readonly TimeSpan UserLocaleCacheDuration = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan AcceptLanguageCacheDuration = TimeSpan.FromMinutes(30);
+    private static readonly FusionCacheEntryOptions UserLocaleCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(5),
+    };
+    private static readonly FusionCacheEntryOptions AcceptLanguageCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(30),
+    };
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -78,11 +84,7 @@ public sealed class LocaleResolutionMiddleware(
                 );
                 if (!string.IsNullOrEmpty(userLocale))
                 {
-                    await cache.SetAsync(
-                        cacheKey,
-                        userLocale,
-                        options => options.Duration = UserLocaleCacheDuration
-                    );
+                    await cache.SetAsync(cacheKey, userLocale, UserLocaleCacheOptions);
                     return userLocale;
                 }
             }
@@ -117,22 +119,14 @@ public sealed class LocaleResolutionMiddleware(
 
                 if (supportedLocales.Contains(tag))
                 {
-                    await cache.SetAsync(
-                        cacheKey,
-                        tag,
-                        options => options.Duration = AcceptLanguageCacheDuration
-                    );
+                    await cache.SetAsync(cacheKey, tag, AcceptLanguageCacheOptions);
                     return tag;
                 }
 
                 var twoLetter = tag.Split('-')[0];
                 if (supportedLocales.Contains(twoLetter))
                 {
-                    await cache.SetAsync(
-                        cacheKey,
-                        twoLetter,
-                        options => options.Duration = AcceptLanguageCacheDuration
-                    );
+                    await cache.SetAsync(cacheKey, twoLetter, AcceptLanguageCacheOptions);
                     return twoLetter;
                 }
             }

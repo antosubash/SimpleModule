@@ -19,7 +19,10 @@ public sealed partial class FeatureFlagService(
     private readonly Lazy<ITenantContext?> _tenantContext = new(() =>
         serviceProvider.GetService<ITenantContext>()
     );
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
+    private static readonly FusionCacheEntryOptions CacheOptions = new()
+    {
+        Duration = TimeSpan.FromSeconds(30),
+    };
     private const string AllFlagDataCacheKey = "ff:all-data";
     private const string FlagDataKeyPrefix = "ff:data:";
 
@@ -239,17 +242,12 @@ public sealed partial class FeatureFlagService(
                     var data = BuildFlagData(isEnabled, flagOverrides);
 
                     allData[def.Name] = data;
-                    await cache.SetAsync(
-                        FlagDataCacheKey(def.Name),
-                        data,
-                        options => options.Duration = CacheDuration,
-                        token: ct
-                    );
+                    await cache.SetAsync(FlagDataCacheKey(def.Name), data, CacheOptions, token: ct);
                 }
 
                 return allData;
             },
-            options => options.Duration = CacheDuration
+            CacheOptions
         );
         return result ?? [];
     }
@@ -274,7 +272,7 @@ public sealed partial class FeatureFlagService(
 
                 return BuildFlagData(isEnabled, overrides);
             },
-            options => options.Duration = CacheDuration
+            CacheOptions
         );
         return result ?? BuildFlagData(false, []);
     }

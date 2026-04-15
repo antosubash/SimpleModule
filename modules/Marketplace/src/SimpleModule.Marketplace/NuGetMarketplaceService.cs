@@ -14,15 +14,24 @@ public class NuGetMarketplaceService(
     IFusionCache cache
 ) : IMarketplaceContracts
 {
+    private readonly FusionCacheEntryOptions _searchCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes),
+    };
+
+    private readonly FusionCacheEntryOptions _detailCacheOptions = new()
+    {
+        Duration = TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes),
+    };
+
     public async Task<MarketplaceSearchResult> SearchPackagesAsync(MarketplaceSearchRequest request)
     {
         var cacheKey = $"Marketplace:Search:{request.Query}";
-        var duration = TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes);
 
         var cached = await cache.GetOrSetAsync<MarketplaceSearchResult>(
             cacheKey,
             async (_, _) => await FetchAllPackagesAsync(request.Query),
-            opts => opts.Duration = duration
+            _searchCacheOptions
         );
 
         var result = cached ?? new MarketplaceSearchResult();
@@ -53,12 +62,11 @@ public class NuGetMarketplaceService(
     public async Task<MarketplacePackageDetail?> GetPackageDetailsAsync(string packageId)
     {
         var cacheKey = $"Marketplace:Detail:{packageId}";
-        var duration = TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes);
 
         return await cache.GetOrSetAsync<MarketplacePackageDetail?>(
             cacheKey,
             async (_, _) => await FetchPackageDetailsAsync(packageId),
-            opts => opts.Duration = duration
+            _detailCacheOptions
         );
     }
 
