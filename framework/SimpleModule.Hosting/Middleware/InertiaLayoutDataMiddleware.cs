@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.Core.Extensions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
 
@@ -45,7 +46,13 @@ public sealed class InertiaLayoutDataMiddleware(RequestDelegate next)
                     }
 
                     return items
-                        .Where(m => m.Roles.Count == 0 || m.Roles.Any(r => user.IsInRole(r)))
+                        .Where(m =>
+                            (m.Roles.Count == 0 || m.Roles.Any(r => user.IsInRole(r)))
+                            && (
+                                m.RequiredPermission is null
+                                || user.HasPermission(m.RequiredPermission)
+                            )
+                        )
                         .ToList();
                 }
 
