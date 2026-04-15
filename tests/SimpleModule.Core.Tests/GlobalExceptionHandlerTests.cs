@@ -129,6 +129,25 @@ public class GlobalExceptionHandlerTests
     }
 
     [Fact]
+    public async Task ForbiddenException_Returns403()
+    {
+        var context = CreateHttpContext();
+        var exception = new ForbiddenException("Access denied to admin panel");
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(403);
+
+        var doc = await ReadResponseBodyAsync(context);
+        doc.RootElement.GetProperty("title").GetString().Should().Be("Forbidden");
+        doc.RootElement.GetProperty("detail")
+            .GetString()
+            .Should()
+            .Be("Access denied to admin panel");
+    }
+
+    [Fact]
     public async Task Handler_AlwaysReturnsTrue()
     {
         var context = CreateHttpContext();
@@ -147,5 +166,70 @@ public class GlobalExceptionHandlerTests
 
         result1.Should().BeTrue();
         result2.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task InertiaRequest_NotFoundException_ReturnsInertiaErrorPage()
+    {
+        var context = CreateHttpContext();
+        context.Request.Headers["X-Inertia"] = "true";
+        context.Request.Headers["X-Inertia-Version"] = "1";
+        var exception = new NotFoundException("Product", 42);
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(404);
+        context.Response.Headers["X-Inertia"].ToString().Should().Be("true");
+        context.Response.ContentType.Should().Contain("application/json");
+
+        var doc = await ReadResponseBodyAsync(context);
+        doc.RootElement.GetProperty("component").GetString().Should().Be("Error/404");
+        doc.RootElement.GetProperty("props").GetProperty("status").GetInt32().Should().Be(404);
+        doc.RootElement.GetProperty("props")
+            .GetProperty("title")
+            .GetString()
+            .Should()
+            .Be("Not Found");
+    }
+
+    [Fact]
+    public async Task NonInertiaRequest_NotFoundException_ReturnsJsonProblemDetails()
+    {
+        var context = CreateHttpContext();
+        var exception = new NotFoundException("Product", 42);
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(404);
+
+        var doc = await ReadResponseBodyAsync(context);
+        doc.RootElement.GetProperty("title").GetString().Should().Be("Not Found");
+        doc.RootElement.TryGetProperty("component", out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task InertiaRequest_UnhandledException_ReturnsInertia500_WithoutSensitiveDetails()
+    {
+        var context = CreateHttpContext();
+        context.Request.Headers["X-Inertia"] = "true";
+        context.Request.Headers["X-Inertia-Version"] = "1";
+        var exception = new InvalidOperationException("Sensitive DB error");
+
+        var handled = await _handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        handled.Should().BeTrue();
+        context.Response.StatusCode.Should().Be(500);
+
+        var doc = await ReadResponseBodyAsync(context);
+        doc.RootElement.GetProperty("component").GetString().Should().Be("Error/500");
+        var props = doc.RootElement.GetProperty("props");
+        props.GetProperty("message").GetString().Should().NotContain("Sensitive DB error");
+        props
+            .GetProperty("message")
+            .GetString()
+            .Should()
+            .Be("An unexpected error occurred. Please try again later.");
     }
 }

@@ -3,10 +3,11 @@ import { MapBrowsePage } from '../../pages/map/browse.page';
 import { MapLayersPage } from '../../pages/map/layers.page';
 
 test.describe('Map pages', () => {
-  test('browse page loads', async ({ page }) => {
+  test('browse page loads with layer and basemap toggles', async ({ page }) => {
     const browse = new MapBrowsePage(page);
     await browse.goto();
-    await expect(browse.heading).toBeVisible();
+    await expect(browse.layersToggle).toBeVisible();
+    await expect(browse.basemapsToggle).toBeVisible();
   });
 
   test('browse page shows manage-catalog and save actions', async ({ page }) => {
@@ -16,10 +17,18 @@ test.describe('Map pages', () => {
     await expect(browse.saveButton).toBeVisible();
   });
 
-  test('browse page shows configuration side panel', async ({ page }) => {
+  test('clicking layers toggle opens the layers panel', async ({ page }) => {
     const browse = new MapBrowsePage(page);
     await browse.goto();
-    await expect(browse.sidePanel).toBeVisible();
+    await browse.layersToggle.click();
+    await expect(browse.layersPanel).toBeVisible();
+  });
+
+  test('clicking basemaps toggle opens the basemaps panel', async ({ page }) => {
+    const browse = new MapBrowsePage(page);
+    await browse.goto();
+    await browse.basemapsToggle.click();
+    await expect(browse.basemapsPanel).toBeVisible();
   });
 
   test('layers page loads', async ({ page }) => {

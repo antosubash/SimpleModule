@@ -23,6 +23,11 @@ export type BuiltLayer = {
   layer: LayerSpecification;
 };
 
+/** Build a partial object, omitting keys whose values are null or undefined. */
+function defined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v != null)) as Partial<T>;
+}
+
 function buildWmsTileUrl(base: string, meta: Record<string, string>): string {
   const sep = base.includes('?') ? '&' : '?';
   const params = new URLSearchParams({
@@ -65,9 +70,11 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
           type: 'raster',
           tiles: [tileUrl],
           tileSize: 256,
-          attribution: source.attribution ?? undefined,
-          minzoom: source.minZoom ?? undefined,
-          maxzoom: source.maxZoom ?? undefined,
+          ...defined({
+            attribution: source.attribution,
+            minzoom: source.minZoom,
+            maxzoom: source.maxZoom,
+          }),
         } as SourceSpecification,
         layer: {
           id: layerId,
@@ -86,9 +93,11 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
           type: 'raster',
           tiles: [source.url],
           tileSize: 256,
-          attribution: source.attribution ?? undefined,
-          minzoom: source.minZoom ?? undefined,
-          maxzoom: source.maxZoom ?? undefined,
+          ...defined({
+            attribution: source.attribution,
+            minzoom: source.minZoom,
+            maxzoom: source.maxZoom,
+          }),
         } as SourceSpecification,
         layer: {
           id: layerId,
@@ -105,9 +114,11 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
         source: {
           type: 'vector',
           tiles: [source.url],
-          attribution: source.attribution ?? undefined,
-          minzoom: source.minZoom ?? undefined,
-          maxzoom: source.maxZoom ?? undefined,
+          ...defined({
+            attribution: source.attribution,
+            minzoom: source.minZoom,
+            maxzoom: source.maxZoom,
+          }),
         } as SourceSpecification,
         layer: {
           id: layerId,
@@ -127,7 +138,7 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
         source: {
           type: 'geojson',
           data: source.url,
-          attribution: source.attribution ?? undefined,
+          ...defined({ attribution: source.attribution }),
         } as SourceSpecification,
         layer: {
           id: layerId,
@@ -149,7 +160,7 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
         source: {
           type: isVector ? 'vector' : 'raster',
           url: `pmtiles://${source.url}`,
-          attribution: source.attribution ?? undefined,
+          ...defined({ attribution: source.attribution }),
         } as SourceSpecification,
         layer: isVector
           ? ({
@@ -176,7 +187,7 @@ export function buildMapLibreLayer(source: LayerSource, composition: MapLayer): 
           type: 'raster',
           url: `cog://${source.url}`,
           tileSize: 256,
-          attribution: source.attribution ?? undefined,
+          ...defined({ attribution: source.attribution }),
         } as SourceSpecification,
         layer: {
           id: layerId,
