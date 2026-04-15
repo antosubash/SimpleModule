@@ -205,7 +205,15 @@ export default function Browse({
   const visibleLayerCount = layers.filter((l) => l.visible).length;
 
   return (
-    <div className="relative w-full" style={{ height: 'calc(100vh - 64px)' }}>
+    <div
+      style={{
+        position: 'fixed',
+        top: '57px' /* nav height */,
+        left: 0,
+        right: 0,
+        bottom: 0,
+      }}
+    >
       <MapCanvas
         styleUrl={resolvedStyleUrl}
         center={[map.centerLng, map.centerLat]}
