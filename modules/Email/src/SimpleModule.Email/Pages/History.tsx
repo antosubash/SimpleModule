@@ -5,13 +5,7 @@ import {
   Button,
   Card,
   CardContent,
-  Input,
   PageShell,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Table,
   TableBody,
   TableCell,
@@ -22,6 +16,8 @@ import {
 import { type FormEvent, useState } from 'react';
 import { EmailKeys } from '../Locales/keys';
 import type { EmailMessage } from '../types';
+import { HistoryFilters } from './components/HistoryFilters';
+import { HistoryPagination } from './components/HistoryPagination';
 
 type EmailStatus = 'Queued' | 'Sending' | 'Sent' | 'Failed' | 'Retrying';
 
@@ -57,8 +53,6 @@ interface Props {
   };
 }
 
-const STATUS_OPTIONS: EmailStatus[] = ['Queued', 'Sending', 'Sent', 'Failed', 'Retrying'];
-
 function buildFilterParams(f: Props['filters'], page?: number): Record<string, string> {
   const params: Record<string, string> = {};
   if (f.status) params.status = f.status;
@@ -68,36 +62,6 @@ function buildFilterParams(f: Props['filters'], page?: number): Record<string, s
   if (f.dateTo) params.dateTo = f.dateTo;
   if (page && page > 1) params.page = String(page);
   return params;
-}
-
-function ChevronLeft() {
-  return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path d="m15 18-6-6 6-6" />
-    </svg>
-  );
-}
-
-function ChevronRight() {
-  return (
-    <svg
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
-  );
 }
 
 export default function History({ result, filters }: Props) {
@@ -136,7 +100,7 @@ export default function History({ result, filters }: Props) {
     });
   }
 
-  const hasActiveFilters = status !== '__all__' || to || subject || dateFrom || dateTo;
+  const hasActiveFilters = Boolean(status !== '__all__' || to || subject || dateFrom || dateTo);
 
   const startItem = (currentPage - 1) * result.pageSize + 1;
   const endItem = Math.min(currentPage * result.pageSize, result.totalCount);
@@ -147,87 +111,22 @@ export default function History({ result, filters }: Props) {
       title={t(EmailKeys.History.Title)}
       description={t(EmailKeys.History.Description)}
     >
-      {/* Filter Panel */}
-      <Card>
-        <CardContent>
-          <form onSubmit={applyFilters}>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-text-muted">
-                  {t(EmailKeys.History.FilterStatus)}
-                </span>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger aria-label={t(EmailKeys.History.FilterStatus)}>
-                    <SelectValue placeholder={t(EmailKeys.History.AllStatuses)} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">{t(EmailKeys.History.AllStatuses)}</SelectItem>
-                    {STATUS_OPTIONS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <label htmlFor="filter-to" className="text-xs font-medium text-text-muted">
-                  {t(EmailKeys.History.FilterTo)}
-                </label>
-                <Input
-                  id="filter-to"
-                  placeholder={t(EmailKeys.History.FilterTo)}
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label htmlFor="filter-subject" className="text-xs font-medium text-text-muted">
-                  {t(EmailKeys.History.FilterSubject)}
-                </label>
-                <Input
-                  id="filter-subject"
-                  placeholder={t(EmailKeys.History.FilterSubject)}
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label htmlFor="filter-date-from" className="text-xs font-medium text-text-muted">
-                  {t(EmailKeys.History.FilterDateFrom)}
-                </label>
-                <Input
-                  id="filter-date-from"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label htmlFor="filter-date-to" className="text-xs font-medium text-text-muted">
-                  {t(EmailKeys.History.FilterDateTo)}
-                </label>
-                <Input
-                  id="filter-date-to"
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <Button type="submit">{t(EmailKeys.History.FilterApply)}</Button>
-                {hasActiveFilters && (
-                  <Button variant="ghost" onClick={clearFilters}>
-                    {t(EmailKeys.History.FilterClear)}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <HistoryFilters
+        status={status}
+        to={to}
+        subject={subject}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        hasActiveFilters={hasActiveFilters}
+        onStatusChange={setStatus}
+        onToChange={setTo}
+        onSubjectChange={setSubject}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        onApplyFilters={applyFilters}
+        onClearFilters={clearFilters}
+      />
 
-      {/* Results Table */}
       {result.items.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -283,71 +182,19 @@ export default function History({ result, filters }: Props) {
         </Card>
       )}
 
-      {/* Server-side Pagination */}
       {result.totalCount > 0 && (
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
           <span className="text-sm text-text-muted">
             {t(EmailKeys.History.Showing)} {startItem}-{endItem} {t(EmailKeys.History.Of)}{' '}
             {result.totalCount.toLocaleString()}
           </span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => goToPage(currentPage - 1)}
-              >
-                <ChevronLeft />
-              </Button>
-              {paginationRange(currentPage, totalPages).map((p) =>
-                p === 'ellipsis-start' || p === 'ellipsis-end' ? (
-                  <span key={p} className="px-1 text-sm text-text-muted">
-                    ...
-                  </span>
-                ) : (
-                  <Button
-                    key={p}
-                    variant={p === currentPage ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => goToPage(p as number)}
-                  >
-                    {p}
-                  </Button>
-                ),
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => goToPage(currentPage + 1)}
-              >
-                <ChevronRight />
-              </Button>
-            </div>
-          )}
+          <HistoryPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onGoToPage={goToPage}
+          />
         </div>
       )}
     </PageShell>
   );
-}
-
-/** Build a compact pagination range: 1 ... 4 5 [6] 7 8 ... 20 */
-function paginationRange(
-  current: number,
-  total: number,
-): (number | 'ellipsis-start' | 'ellipsis-end')[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = [];
-  pages.push(1);
-  if (current > 3) pages.push('ellipsis-start');
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-  if (current < total - 2) pages.push('ellipsis-end');
-  pages.push(total);
-  return pages;
 }

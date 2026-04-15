@@ -1,17 +1,6 @@
 import { router } from '@inertiajs/react';
-import {
-  Button,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Switch,
-} from '@simplemodule/ui';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useMemo, useRef, useState } from 'react';
 import type {
   Basemap,
   LayerSource,
@@ -20,7 +9,13 @@ import type {
   SavedMap,
   UpdateDefaultMapRequest,
 } from '@/types';
+import { BasemapsPanel } from './components/BasemapsPanel';
+import { LayersPanel } from './components/LayersPanel';
+import { removeAt } from './components/layer-utils';
+import { MapBottomControls } from './components/MapBottomControls';
 import MapCanvas from './components/MapCanvas';
+import { MapTopControls } from './components/MapTopControls';
+import { useViewportInsets } from './components/useViewportInsets';
 
 // Inline styles for positioning — deliberately NOT Tailwind utility classes.
 // The Tailwind utilities top-3/bottom-3/right-3/etc. aren't always generated
@@ -41,18 +36,6 @@ const floatingControlStyle: CSSProperties = {
 const floatingPanelStyle: CSSProperties = {
   ...floatingControlStyle,
 };
-
-function reorder<T extends { order: number }>(items: T[], idx: number, delta: number): T[] {
-  const target = idx + delta;
-  if (target < 0 || target >= items.length) return items;
-  const next = [...items];
-  [next[idx], next[target]] = [next[target], next[idx]];
-  return next.map((item, i) => ({ ...item, order: i }));
-}
-
-function removeAt<T extends { order: number }>(items: T[], idx: number): T[] {
-  return items.filter((_, i) => i !== idx).map((item, i) => ({ ...item, order: i }));
-}
 
 interface Props {
   map: SavedMap;
@@ -91,35 +74,7 @@ export default function Browse({
   const basemapsPanelOpen = openPanel === 'basemaps';
 
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
-
-  // The map fills the viewport minus whatever the current layout puts around it:
-  // the public layout has only a top nav; the authenticated layout adds a left
-  // sidebar that can be collapsed. Re-measure on resize and sidebar transitions.
-  const [insets, setInsets] = useState({ top: 0, left: 0 });
-  useEffect(() => {
-    const measure = () => {
-      const nav = document.querySelector('nav.sticky') as HTMLElement | null;
-      const mobileHeader = document.querySelector('.app-mobile-header') as HTMLElement | null;
-      const sidebar = document.querySelector('.app-sidebar') as HTMLElement | null;
-      const sidebarRect = sidebar?.getBoundingClientRect();
-      setInsets((prev) => {
-        const next = {
-          top: nav?.offsetHeight ?? mobileHeader?.offsetHeight ?? 0,
-          left: sidebarRect && sidebarRect.right > 0 ? sidebarRect.right : 0,
-        };
-        return prev.top === next.top && prev.left === next.left ? prev : next;
-      });
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    const sidebar = document.querySelector('.app-sidebar');
-    const observer = sidebar ? new ResizeObserver(measure) : null;
-    if (sidebar && observer) observer.observe(sidebar);
-    return () => {
-      window.removeEventListener('resize', measure);
-      observer?.disconnect();
-    };
-  }, []);
+  const insets = useViewportInsets();
 
   const basemapById = useMemo(() => new Map(basemaps.map((b) => [b.id, b])), [basemaps]);
   const sourceById = useMemo(
@@ -186,10 +141,6 @@ export default function Browse({
       },
     ]);
     setPickerSourceId('');
-  }
-
-  function patchLayer(idx: number, patch: Partial<MapLayer>) {
-    setLayers(layers.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
   }
 
   function addBasemap() {
@@ -280,274 +231,64 @@ export default function Browse({
       />
 
       <div style={controlOverlayStyle}>
-        <div style={{ ...floatingControlStyle, top: 12, left: 12 }} className="flex gap-2">
-          <Button
-            size="sm"
-            variant={layersPanelOpen ? 'primary' : 'secondary'}
-            className="shadow"
-            onClick={() => setOpenPanel(layersPanelOpen ? null : 'layers')}
-            data-testid="layers-toggle"
-          >
-            Layers ({visibleLayerCount}/{layers.length})
-          </Button>
-          <Button
-            size="sm"
-            variant={basemapsPanelOpen ? 'primary' : 'secondary'}
-            className="shadow"
-            onClick={() => setOpenPanel(basemapsPanelOpen ? null : 'basemaps')}
-            data-testid="basemaps-toggle"
-          >
-            Basemaps ({mapBasemaps.length})
-          </Button>
-        </div>
+        <MapTopControls
+          floatingControlStyle={floatingControlStyle}
+          layersPanelOpen={layersPanelOpen}
+          basemapsPanelOpen={basemapsPanelOpen}
+          visibleLayerCount={visibleLayerCount}
+          totalLayers={layers.length}
+          basemapsCount={mapBasemaps.length}
+          saving={saving}
+          onToggleLayers={() => setOpenPanel(layersPanelOpen ? null : 'layers')}
+          onToggleBasemaps={() => setOpenPanel(basemapsPanelOpen ? null : 'basemaps')}
+          onSave={handleSave}
+        />
 
-        <div style={{ ...floatingControlStyle, top: 12, right: 12 }} className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="shadow"
-            onClick={() => router.visit('/map/layers')}
-          >
-            Manage catalog
-          </Button>
-          <Button size="sm" className="shadow" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
-        </div>
-
-        {/* ── Layers floating panel ── */}
         {layersPanelOpen && (
-          <div
+          <LayersPanel
             style={{ ...floatingPanelStyle, top: 56, left: 12 }}
-            className="w-80 max-h-[60vh] overflow-y-auto bg-surface/95 backdrop-blur rounded-lg shadow-lg border border-border p-3 space-y-2"
-            data-testid="layers-panel"
-          >
-            <div className="font-medium text-sm">Layers ({layers.length})</div>
-            {layers.length === 0 && (
-              <div className="text-xs text-text-muted">No layers yet. Add one below.</div>
-            )}
-            {layers.map((layer, idx) => {
-              const src = sourceById.get(layer.layerSourceId);
-              return (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: layer order is the stable identity here
-                  key={`${layer.layerSourceId}-${idx}`}
-                  className="border border-border rounded p-2 space-y-1"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium text-sm truncate min-w-0">
-                      {src?.name ?? 'Unknown source'}
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setLayers(reorder(layers, idx, -1))}
-                      >
-                        ↑
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setLayers(reorder(layers, idx, 1))}
-                      >
-                        ↓
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => setLayers(removeAt(layers, idx))}
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs">
-                    <Switch
-                      checked={layer.visible}
-                      onCheckedChange={(v) => patchLayer(idx, { visible: v })}
-                    />
-                    <span>Visible</span>
-                    <Label htmlFor={`opacity-${idx}`} className="ml-auto">
-                      Opacity
-                    </Label>
-                    <Input
-                      id={`opacity-${idx}`}
-                      type="number"
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      value={layer.opacity}
-                      onChange={(e) => patchLayer(idx, { opacity: Number(e.currentTarget.value) })}
-                      className="w-16"
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            <div className="flex gap-2 pt-1">
-              <Select value={pickerSourceId} onValueChange={setPickerSourceId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Add source…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableSources.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                size="sm"
-                onClick={addLayer}
-                disabled={!pickerSourceId || layers.length >= maxLayers}
-              >
-                Add
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Select
-                value={pickerDatasetId}
-                onValueChange={setPickerDatasetId}
-                onOpenChange={(open) => {
-                  if (open) loadDatasets();
-                }}
-              >
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Add from dataset…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {datasets.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                size="sm"
-                onClick={addFromDataset}
-                disabled={!pickerDatasetId || layers.length >= maxLayers}
-              >
-                Add
-              </Button>
-            </div>
-          </div>
+            layers={layers}
+            setLayers={setLayers}
+            sourceById={sourceById}
+            availableSources={availableSources}
+            datasets={datasets}
+            pickerSourceId={pickerSourceId}
+            setPickerSourceId={setPickerSourceId}
+            pickerDatasetId={pickerDatasetId}
+            setPickerDatasetId={setPickerDatasetId}
+            maxLayers={maxLayers}
+            loadDatasets={loadDatasets}
+            addLayer={addLayer}
+            addFromDataset={addFromDataset}
+          />
         )}
 
-        {/* ── Basemaps floating panel ── */}
         {basemapsPanelOpen && (
-          <div
+          <BasemapsPanel
             style={{ ...floatingPanelStyle, top: 56, left: 12 }}
-            className="w-80 max-h-[60vh] overflow-y-auto bg-surface/95 backdrop-blur rounded-lg shadow-lg border border-border p-3 space-y-2"
-            data-testid="basemaps-panel"
-          >
-            <div className="font-medium text-sm">Basemaps ({mapBasemaps.length})</div>
-            {mapBasemaps.length === 0 && (
-              <div className="text-xs text-text-muted">
-                No basemaps yet. The fallback style URL will be used.
-              </div>
-            )}
-            {mapBasemaps.map((mb, idx) => {
-              const def = basemapById.get(mb.basemapId);
-              const isActive = def?.id === activeBasemapId;
-              return (
-                <div
-                  key={mb.basemapId}
-                  className={`border rounded p-2 flex items-center justify-between ${
-                    isActive ? 'border-primary bg-primary/5' : 'border-border'
-                  }`}
-                >
-                  <div className="font-medium text-sm truncate min-w-0">
-                    {def?.name ?? 'Unknown basemap'}
-                    {idx === 0 && <span className="ml-2 text-xs text-text-muted">(default)</span>}
-                  </div>
-                  <div className="flex gap-1 shrink-0">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setMapBasemaps(reorder(mapBasemaps, idx, -1))}
-                    >
-                      ↑
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setMapBasemaps(reorder(mapBasemaps, idx, 1))}
-                    >
-                      ↓
-                    </Button>
-                    <Button size="sm" variant="danger" onClick={() => removeBasemap(idx)}>
-                      ×
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="flex gap-2 pt-1">
-              <Select value={pickerBasemapId} onValueChange={setPickerBasemapId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Add basemap…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {basemaps
-                    .filter((b) => !mapBasemaps.some((mb) => mb.basemapId === b.id))
-                    .map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <Button size="sm" onClick={addBasemap} disabled={!pickerBasemapId}>
-                Add
-              </Button>
-            </div>
-
-            <div className="border-t border-border pt-2 mt-2">
-              <Label htmlFor="fallback-style" className="text-xs text-text-muted">
-                Fallback style URL
-              </Label>
-              <Input
-                id="fallback-style"
-                value={styleUrl}
-                onChange={(e) => setStyleUrl(e.currentTarget.value)}
-                className="mt-1"
-              />
-            </div>
-          </div>
+            mapBasemaps={mapBasemaps}
+            setMapBasemaps={setMapBasemaps}
+            basemaps={basemaps}
+            basemapById={basemapById}
+            activeBasemapId={activeBasemapId}
+            pickerBasemapId={pickerBasemapId}
+            setPickerBasemapId={setPickerBasemapId}
+            styleUrl={styleUrl}
+            setStyleUrl={setStyleUrl}
+            addBasemap={addBasemap}
+            removeBasemap={removeBasemap}
+          />
         )}
 
-        {/* ── Bottom-left: basemap switcher chips ── */}
-        {availableBasemaps.length > 1 && (
-          <div
-            style={{ ...floatingControlStyle, bottom: 12, left: 12 }}
-            className="bg-surface/90 backdrop-blur rounded-md shadow border border-border p-1.5 flex gap-1 flex-wrap max-w-[60%]"
-          >
-            {availableBasemaps.map((b) => (
-              <Button
-                key={b.id}
-                size="sm"
-                variant={b.id === activeBasemap?.id ? 'primary' : 'secondary'}
-                onClick={() => setActiveBasemapId(b.id)}
-              >
-                {b.name}
-              </Button>
-            ))}
-          </div>
-        )}
-
-        {/* ── Bottom-right: export ── */}
-        {enableExportPng && (
-          <div style={{ ...floatingControlStyle, bottom: 12, right: 12 }}>
-            <Button size="sm" variant="secondary" onClick={exportPng} className="shadow">
-              Export PNG
-            </Button>
-          </div>
-        )}
+        <MapBottomControls
+          floatingControlStyle={floatingControlStyle}
+          availableBasemaps={availableBasemaps}
+          activeBasemapId={activeBasemap?.id}
+          setActiveBasemapId={setActiveBasemapId}
+          enableExportPng={enableExportPng}
+          onExportPng={exportPng}
+        />
       </div>
-      {/* end control overlay */}
     </div>
   );
 }

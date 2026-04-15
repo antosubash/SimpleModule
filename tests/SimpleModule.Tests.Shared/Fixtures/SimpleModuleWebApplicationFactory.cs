@@ -1,15 +1,8 @@
-﻿using System.Security.Claims;
-using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
 using SimpleModule.BackgroundJobs;
@@ -34,7 +27,7 @@ using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
 
-public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
+public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 {
     public const string TestAuthScheme = "TestScheme";
 
@@ -125,143 +118,6 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
-    private bool _dbInitialized;
-
-    private void EnsureDatabasesInitialized()
-    {
-        if (_dbInitialized)
-            return;
-        _dbInitialized = true;
-        EnsureModuleDatabasesCreated();
-    }
-
-    public HttpClient CreateAuthenticatedClient(
-        string[] permissions,
-        params Claim[] additionalClaims
-    )
-    {
-        var claims = new List<Claim>(additionalClaims);
-        foreach (var permission in permissions)
-        {
-            claims.Add(new Claim("permission", permission));
-        }
-        return CreateAuthenticatedClient(claims.ToArray());
-    }
-
-    public HttpClient CreateAuthenticatedClient(params Claim[] claims)
-    {
-        EnsureDatabasesInitialized();
-        var client = CreateClient();
-        var claimsList = new List<Claim>(claims);
-
-        // Ensure there's always a Subject claim
-        if (!claimsList.Exists(c => c.Type == ClaimTypes.NameIdentifier))
-        {
-            claimsList.Add(new Claim(ClaimTypes.NameIdentifier, "test-user-id"));
-        }
-
-        // Encode claims as a header the test handler will read
-        var claimsValue = string.Join(";", claimsList.Select(c => $"{c.Type}={c.Value}"));
-        client.DefaultRequestHeaders.Add("X-Test-Claims", claimsValue);
-
-        return client;
-    }
-
-    private void EnsureModuleDatabasesCreated()
-    {
-        using var scope = Services.CreateScope();
-        var sp = scope.ServiceProvider;
-        // HostDbContext includes all entities with module prefixes — it creates all tables.
-        sp.GetRequiredService<HostDbContext>().Database.EnsureCreated();
-        // Some module contexts may need explicit table creation if EnsureCreated
-        // returns false (database already has tables from HostDbContext startup).
-        EnsureTablesCreated<UsersDbContext>(sp);
-        EnsureTablesCreated<OrdersDbContext>(sp);
-        EnsureTablesCreated<ProductsDbContext>(sp);
-        EnsureTablesCreated<MapDbContext>(sp);
-        EnsureTablesCreated<PageBuilderDbContext>(sp);
-        EnsureTablesCreated<PermissionsDbContext>(sp);
-        EnsureTablesCreated<SettingsDbContext>(sp);
-        EnsureTablesCreated<AuditLogsDbContext>(sp);
-        EnsureTablesCreated<FileStorageDbContext>(sp);
-        EnsureTablesCreated<FeatureFlagsDbContext>(sp);
-        EnsureTablesCreated<TenantsDbContext>(sp);
-        EnsureTablesCreated<RagDbContext>(sp);
-        EnsureTablesCreated<AgentsDbContext>(sp);
-        EnsureTablesCreated<ChatDbContext>(sp);
-        EnsureTablesCreated<BackgroundJobsDbContext>(sp);
-        EnsureTablesCreated<RateLimitingDbContext>(sp);
-        EnsureTablesCreated<EmailDbContext>(sp);
-        EnsureTablesCreated<OpenIddictAppDbContext>(sp);
-    }
-
-    private static void EnsureTablesCreated<TContext>(IServiceProvider sp)
-        where TContext : DbContext
-    {
-        var db = sp.GetRequiredService<TContext>();
-        if (!db.Database.EnsureCreated())
-        {
-            // DB already exists but tables for this context may not.
-            // Force table creation via the relational creator.
-            try
-            {
-                db.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalDatabaseCreator>()
-                    ?.CreateTables();
-            }
-            catch (Microsoft.Data.Sqlite.SqliteException)
-            {
-                // Tables already exist — ignore
-            }
-        }
-    }
-
-    private static void RemoveHostedService<TService>(IServiceCollection services)
-        where TService : class
-    {
-        var descriptor = services.SingleOrDefault(d =>
-            d.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)
-            && d.ImplementationType == typeof(TService)
-        );
-        if (descriptor is not null)
-        {
-            services.Remove(descriptor);
-        }
-    }
-
-    private void ReplaceDbContext<TContext>(IServiceCollection services, bool useOpenIddict = false)
-        where TContext : DbContext
-    {
-        // Remove ALL descriptors related to this DbContext's options
-        var toRemove = services
-            .Where(d =>
-                d.ServiceType == typeof(DbContextOptions<TContext>)
-                || (
-                    d.ServiceType == typeof(DbContextOptions) && d.ImplementationFactory is not null
-                )
-            )
-            .ToList();
-        foreach (var descriptor in toRemove)
-        {
-            services.Remove(descriptor);
-        }
-
-        // Register fresh options that use the shared in-memory SQLite connection.
-        // UseApplicationServiceProvider is required so that IdentityDbContext can resolve
-        // IdentityOptions (e.g. SchemaVersion = Version3) during OnModelCreating.
-        services.AddScoped(sp =>
-        {
-            var builder = new DbContextOptionsBuilder<TContext>();
-            builder.UseSqlite(_connection);
-            builder.UseApplicationServiceProvider(sp);
-            builder.ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning));
-            if (useOpenIddict)
-            {
-                builder.UseOpenIddict();
-            }
-            return (DbContextOptions<TContext>)builder.Options;
-        });
-    }
-
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
@@ -270,52 +126,5 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
         {
             _connection.Dispose();
         }
-    }
-}
-
-public class TestAuthHandler(
-    IOptionsMonitor<AuthenticationSchemeOptions> options,
-    ILoggerFactory logger,
-    UrlEncoder encoder
-) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
-{
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-    {
-        // Authenticate only test requests that include explicit test claims.
-        if (!Request.Headers.ContainsKey("X-Test-Claims"))
-        {
-            return Task.FromResult(AuthenticateResult.NoResult());
-        }
-
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, "test-user-id"),
-            new(ClaimTypes.Name, "Test User"),
-            new(ClaimTypes.Email, "test@example.com"),
-        };
-
-        // Parse custom claims from header
-        if (Request.Headers.TryGetValue("X-Test-Claims", out var claimsHeader))
-        {
-            claims.Clear();
-            var parts = claimsHeader.ToString().Split(';');
-            foreach (var part in parts)
-            {
-                var kvp = part.Split('=', 2);
-                if (kvp.Length == 2)
-                {
-                    claims.Add(new Claim(kvp[0], kvp[1]));
-                }
-            }
-        }
-
-        var identity = new ClaimsIdentity(claims, SimpleModuleWebApplicationFactory.TestAuthScheme);
-        var principal = new ClaimsPrincipal(identity);
-        var ticket = new AuthenticationTicket(
-            principal,
-            SimpleModuleWebApplicationFactory.TestAuthScheme
-        );
-
-        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }

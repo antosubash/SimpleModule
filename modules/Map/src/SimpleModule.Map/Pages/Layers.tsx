@@ -1,27 +1,9 @@
 import { router } from '@inertiajs/react';
-import {
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Field,
-  FieldGroup,
-  Input,
-  Label,
-  PageShell,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from '@simplemodule/ui';
+import { Button, Card, CardContent, PageShell } from '@simplemodule/ui';
 import { useState } from 'react';
 import type { Basemap, CreateBasemapRequest, CreateLayerSourceRequest, LayerSource } from '@/types';
+import { AddBasemapDialog } from './components/AddBasemapDialog';
+import { AddLayerSourceDialog, TYPE_LABELS } from './components/AddLayerSourceDialog';
 import { LayerSourceType } from './lib/layer-builders';
 
 interface Props {
@@ -35,18 +17,6 @@ const blankBasemap: CreateBasemapRequest = {
   styleUrl: '',
   attribution: '',
   thumbnailUrl: '',
-};
-
-const TYPE_LABELS: Record<number, string> = {
-  [LayerSourceType.Wms]: 'WMS',
-  [LayerSourceType.Wmts]: 'WMTS',
-  [LayerSourceType.Wfs]: 'WFS',
-  [LayerSourceType.Xyz]: 'XYZ tiles',
-  [LayerSourceType.VectorTile]: 'Vector tiles',
-  [LayerSourceType.PmTiles]: 'PMTiles',
-  [LayerSourceType.Cog]: 'COG (cloud-optimized GeoTIFF)',
-  [LayerSourceType.GeoJson]: 'GeoJSON',
-  [LayerSourceType.Dataset]: 'Dataset',
 };
 
 const blankRequest: CreateLayerSourceRequest = {
@@ -206,137 +176,27 @@ export default function Layers({ sources, basemaps }: Props) {
         ))}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add layer source</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.currentTarget.value })}
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  value={String(form.type)}
-                  onValueChange={(v) => setForm({ ...form, type: Number(v) as never })}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(TYPE_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <Label htmlFor="url">URL</Label>
-                <Input
-                  id="url"
-                  required
-                  value={form.url}
-                  onChange={(e) => setForm({ ...form, url: e.currentTarget.value })}
-                  placeholder="https://example.com/wms"
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="attribution">Attribution</Label>
-                <Input
-                  id="attribution"
-                  value={form.attribution ?? ''}
-                  onChange={(e) => setForm({ ...form, attribution: e.currentTarget.value })}
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="metadata">Metadata (JSON)</Label>
-                <Textarea
-                  id="metadata"
-                  rows={4}
-                  value={metaText}
-                  onChange={(e) => setMetaText(e.currentTarget.value)}
-                  placeholder='{"layers":"OSM-WMS","format":"image/png","crs":"EPSG:3857"}'
-                />
-              </Field>
-              {error && <div className="text-sm text-danger">{error}</div>}
-            </FieldGroup>
-            <DialogFooter className="mt-4">
-              <Button variant="secondary" type="button" onClick={() => setOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Saving…' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddLayerSourceDialog
+        open={open}
+        onOpenChange={setOpen}
+        form={form}
+        setForm={setForm}
+        metaText={metaText}
+        setMetaText={setMetaText}
+        submitting={submitting}
+        error={error}
+        onSubmit={handleSubmit}
+      />
 
-      <Dialog open={bmOpen} onOpenChange={setBmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add basemap</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleBasemapSubmit}>
-            <FieldGroup>
-              <Field>
-                <Label htmlFor="bm-name">Name</Label>
-                <Input
-                  id="bm-name"
-                  required
-                  value={bmForm.name}
-                  onChange={(e) => setBmForm({ ...bmForm, name: e.currentTarget.value })}
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="bm-style">MapLibre style URL</Label>
-                <Input
-                  id="bm-style"
-                  required
-                  value={bmForm.styleUrl}
-                  onChange={(e) => setBmForm({ ...bmForm, styleUrl: e.currentTarget.value })}
-                  placeholder="https://demotiles.maplibre.org/style.json"
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="bm-attr">Attribution</Label>
-                <Input
-                  id="bm-attr"
-                  value={bmForm.attribution ?? ''}
-                  onChange={(e) => setBmForm({ ...bmForm, attribution: e.currentTarget.value })}
-                />
-              </Field>
-              <Field>
-                <Label htmlFor="bm-thumb">Thumbnail URL</Label>
-                <Input
-                  id="bm-thumb"
-                  value={bmForm.thumbnailUrl ?? ''}
-                  onChange={(e) => setBmForm({ ...bmForm, thumbnailUrl: e.currentTarget.value })}
-                />
-              </Field>
-              {bmError && <div className="text-sm text-danger">{bmError}</div>}
-            </FieldGroup>
-            <DialogFooter className="mt-4">
-              <Button variant="secondary" type="button" onClick={() => setBmOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={bmSubmitting}>
-                {bmSubmitting ? 'Saving…' : 'Save'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddBasemapDialog
+        open={bmOpen}
+        onOpenChange={setBmOpen}
+        form={bmForm}
+        setForm={setBmForm}
+        submitting={bmSubmitting}
+        error={bmError}
+        onSubmit={handleBasemapSubmit}
+      />
     </PageShell>
   );
 }

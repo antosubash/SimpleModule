@@ -5,13 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using SimpleModule.Core.Entities;
 using SimpleModule.Database.Interceptors;
 
 namespace SimpleModule.Database.Tests;
 
-public sealed class EntityInterceptorTests
+public sealed partial class EntityInterceptorTests
 {
     private const string TestUserId = "user-123";
 
@@ -177,54 +176,6 @@ public sealed class EntityInterceptorTests
         entity.ConcurrencyStamp.Should().NotBe(originalStamp);
     }
 
-    [Fact]
-    public async Task MultiTenant_Entity_Gets_TenantId_On_Add()
-    {
-        await using var fixture = CreateFixture(tenantId: "tenant-abc");
-        var entity = new MultiTenantTestEntity { Name = "Test" };
-
-        fixture.Context.MultiTenantEntities.Add(entity);
-        await fixture.Context.SaveChangesAsync();
-
-        entity.TenantId.Should().Be("tenant-abc");
-    }
-
-    [Fact]
-    public async Task MultiTenant_Query_Filter_Restricts_To_Current_Tenant()
-    {
-        // Uses a dedicated DbContext type to avoid EF Core model caching issues
-        // with the main EntityTestDbContext (which may be built without tenant context).
-        var tenantContext = new TestTenantContext("tenant-a");
-        await using var fixture = CreateMultiTenantFixture(tenantContext);
-
-        // Insert tenant-a entity via the interceptor
-        var entityA = new MultiTenantTestEntity { Name = "A" };
-        fixture.Context.MultiTenantEntities.Add(entityA);
-        await fixture.Context.SaveChangesAsync();
-
-        // Insert tenant-b entity directly via SQL to bypass the interceptor.
-        // The table name is from EF Core metadata, not user input.
-#pragma warning disable EF1003 // Test-only raw SQL with no user input
-        var tableName = fixture
-            .Context.Model.FindEntityType(typeof(MultiTenantTestEntity))!
-            .GetTableName();
-        await fixture.Context.Database.ExecuteSqlRawAsync(
-            "INSERT INTO \"" + tableName + "\" (\"Name\", \"TenantId\") VALUES ('B', 'tenant-b')"
-        );
-#pragma warning restore EF1003
-
-        // Query should only return tenant-a's entities
-        var results = await fixture.Context.MultiTenantEntities.ToListAsync();
-        results.Should().HaveCount(1);
-        results[0].Name.Should().Be("A");
-
-        // IgnoreQueryFilters should return all
-        var allResults = await fixture
-            .Context.MultiTenantEntities.IgnoreQueryFilters()
-            .ToListAsync();
-        allResults.Should().HaveCount(2);
-    }
-
     private static TestFixture<MultiTenantTestDbContext> CreateMultiTenantFixture(
         TestTenantContext tenantContext
     )
@@ -254,24 +205,6 @@ public sealed class EntityInterceptorTests
         context.Database.EnsureCreated();
 
         return new TestFixture<MultiTenantTestDbContext>(provider, context);
-    }
-
-    [Fact]
-    public async Task FullAuditableEntity_BaseClass_Works()
-    {
-        await using var fixture = CreateFixture(TestUserId);
-        var entity = new FullAuditableTestEntity { Name = "Test" };
-
-        fixture.Context.FullAuditableEntities.Add(entity);
-        await fixture.Context.SaveChangesAsync();
-
-        entity.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
-        entity.UpdatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
-        entity.CreatedBy.Should().Be(TestUserId);
-        entity.UpdatedBy.Should().Be(TestUserId);
-        entity.Version.Should().Be(1);
-        entity.ConcurrencyStamp.Should().NotBeNullOrEmpty();
-        entity.IsDeleted.Should().BeFalse();
     }
 
     private static TestFixture CreateFixture(
@@ -345,118 +278,4 @@ public sealed class EntityInterceptorTests
     }
 
     private sealed record TestTenantContext(string? TenantId) : ITenantContext;
-}
-
-// --- Test entities ---
-
-public class TimestampedTestEntity : IHasCreationTime, IHasModificationTime
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
-}
-
-public class AuditableTestEntity : IAuditable
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
-    public string? CreatedBy { get; set; }
-    public string? UpdatedBy { get; set; }
-}
-
-public class SoftDeleteTestEntity : ISoftDelete, IHasCreationTime
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTimeOffset? DeletedAt { get; set; }
-    public string? DeletedBy { get; set; }
-}
-
-public class VersionedTestEntity : IVersioned
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public int Version { get; set; }
-}
-
-public class ConcurrencyTestEntity : IHasConcurrencyStamp
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string ConcurrencyStamp { get; set; } = string.Empty;
-}
-
-public class MultiTenantTestEntity : IMultiTenant
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string TenantId { get; set; } = string.Empty;
-}
-
-public class FullAuditableTestEntity : FullAuditableEntity<int>
-{
-    public string Name { get; set; } = string.Empty;
-}
-
-public class EntityTestDbContext(
-    DbContextOptions<EntityTestDbContext> options,
-    IOptions<DatabaseOptions> dbOptions,
-    ITenantContext? tenantContext = null
-) : DbContext(options)
-{
-    public DbSet<TimestampedTestEntity> TimestampedEntities => Set<TimestampedTestEntity>();
-    public DbSet<AuditableTestEntity> AuditableEntities => Set<AuditableTestEntity>();
-    public DbSet<SoftDeleteTestEntity> SoftDeleteEntities => Set<SoftDeleteTestEntity>();
-    public DbSet<VersionedTestEntity> VersionedEntities => Set<VersionedTestEntity>();
-    public DbSet<ConcurrencyTestEntity> ConcurrencyEntities => Set<ConcurrencyTestEntity>();
-    public DbSet<MultiTenantTestEntity> MultiTenantEntities => Set<MultiTenantTestEntity>();
-    public DbSet<FullAuditableTestEntity> FullAuditableEntities => Set<FullAuditableTestEntity>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<TimestampedTestEntity>(e => e.HasKey(x => x.Id));
-        modelBuilder.Entity<AuditableTestEntity>(e => e.HasKey(x => x.Id));
-        modelBuilder.Entity<SoftDeleteTestEntity>(e => e.HasKey(x => x.Id));
-        modelBuilder.Entity<VersionedTestEntity>(e => e.HasKey(x => x.Id));
-        modelBuilder.Entity<ConcurrencyTestEntity>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.ConcurrencyStamp).HasMaxLength(50);
-        });
-        modelBuilder.Entity<MultiTenantTestEntity>(e => e.HasKey(x => x.Id));
-        modelBuilder.Entity<FullAuditableTestEntity>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Id).ValueGeneratedOnAdd();
-            e.Property(x => x.ConcurrencyStamp).HasMaxLength(50);
-        });
-
-        modelBuilder.ApplyModuleSchema("EntityTest", dbOptions.Value);
-
-        if (tenantContext is not null)
-        {
-            modelBuilder.ApplyMultiTenantFilters(tenantContext);
-        }
-    }
-}
-
-public class MultiTenantTestDbContext(
-    DbContextOptions<MultiTenantTestDbContext> options,
-    IOptions<DatabaseOptions> dbOptions,
-    ITenantContext tenantContext
-) : DbContext(options)
-{
-    public DbSet<MultiTenantTestEntity> MultiTenantEntities => Set<MultiTenantTestEntity>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<MultiTenantTestEntity>(e => e.HasKey(x => x.Id));
-        modelBuilder.ApplyModuleSchema("MultiTenantTest", dbOptions.Value);
-        modelBuilder.ApplyMultiTenantFilters(tenantContext);
-    }
 }
