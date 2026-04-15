@@ -3,12 +3,12 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Settings;
 using SimpleModule.Localization.Contracts;
 using SimpleModule.Localization.Services;
 using SimpleModule.Settings.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Localization.Middleware;
 
@@ -16,14 +16,11 @@ public sealed class LocaleResolutionMiddleware(
     RequestDelegate next,
     IConfiguration configuration,
     TranslationLoader loader,
-    ICacheStore cache
+    IFusionCache cache
 )
 {
-    private static readonly CacheEntryOptions UserLocaleCacheOptions = CacheEntryOptions.Expires(
-        TimeSpan.FromMinutes(5)
-    );
-    private static readonly CacheEntryOptions AcceptLanguageCacheOptions =
-        CacheEntryOptions.Expires(TimeSpan.FromMinutes(30));
+    private static readonly TimeSpan UserLocaleCacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan AcceptLanguageCacheDuration = TimeSpan.FromMinutes(30);
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -66,7 +63,7 @@ public sealed class LocaleResolutionMiddleware(
             // leaks to another browser for the same user.
             var cacheKey = UserLocaleKey(userId);
             var cachedHit = await cache.TryGetAsync<string>(cacheKey);
-            if (cachedHit.Hit && !string.IsNullOrEmpty(cachedHit.Value))
+            if (cachedHit.HasValue && !string.IsNullOrEmpty(cachedHit.Value))
             {
                 return cachedHit.Value;
             }
@@ -81,7 +78,11 @@ public sealed class LocaleResolutionMiddleware(
                 );
                 if (!string.IsNullOrEmpty(userLocale))
                 {
-                    await cache.SetAsync(cacheKey, userLocale, UserLocaleCacheOptions);
+                    await cache.SetAsync(
+                        cacheKey,
+                        userLocale,
+                        options => options.Duration = UserLocaleCacheDuration
+                    );
                     return userLocale;
                 }
             }
@@ -101,7 +102,7 @@ public sealed class LocaleResolutionMiddleware(
 
         var cacheKey = AcceptLanguageKey(rawHeader);
         var cachedHit = await cache.TryGetAsync<string>(cacheKey);
-        if (cachedHit.Hit && !string.IsNullOrEmpty(cachedHit.Value))
+        if (cachedHit.HasValue && !string.IsNullOrEmpty(cachedHit.Value))
         {
             return cachedHit.Value;
         }
@@ -116,14 +117,22 @@ public sealed class LocaleResolutionMiddleware(
 
                 if (supportedLocales.Contains(tag))
                 {
-                    await cache.SetAsync(cacheKey, tag, AcceptLanguageCacheOptions);
+                    await cache.SetAsync(
+                        cacheKey,
+                        tag,
+                        options => options.Duration = AcceptLanguageCacheDuration
+                    );
                     return tag;
                 }
 
                 var twoLetter = tag.Split('-')[0];
                 if (supportedLocales.Contains(twoLetter))
                 {
-                    await cache.SetAsync(cacheKey, twoLetter, AcceptLanguageCacheOptions);
+                    await cache.SetAsync(
+                        cacheKey,
+                        twoLetter,
+                        options => options.Duration = AcceptLanguageCacheDuration
+                    );
                     return twoLetter;
                 }
             }

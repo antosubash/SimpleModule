@@ -2,8 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Caching;
 using SimpleModule.Marketplace.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Marketplace;
 
@@ -11,19 +11,18 @@ public class NuGetMarketplaceService(
     IHttpClientFactory httpClientFactory,
     IOptions<MarketplaceModuleOptions> options,
     InstalledPackageDetector installedPackageDetector,
-    ICacheStore cache
+    IFusionCache cache
 ) : IMarketplaceContracts
 {
     public async Task<MarketplaceSearchResult> SearchPackagesAsync(MarketplaceSearchRequest request)
     {
         var cacheKey = $"Marketplace:Search:{request.Query}";
+        var duration = TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes);
 
-        var cached = await cache.GetOrCreateAsync(
+        var cached = await cache.GetOrSetAsync<MarketplaceSearchResult>(
             cacheKey,
-            async _ => await FetchAllPackagesAsync(request.Query),
-            CacheEntryOptions.Expires(
-                TimeSpan.FromMinutes(options.Value.SearchCacheDurationMinutes)
-            )
+            async (_, _) => await FetchAllPackagesAsync(request.Query),
+            opts => opts.Duration = duration
         );
 
         var result = cached ?? new MarketplaceSearchResult();
@@ -54,13 +53,12 @@ public class NuGetMarketplaceService(
     public async Task<MarketplacePackageDetail?> GetPackageDetailsAsync(string packageId)
     {
         var cacheKey = $"Marketplace:Detail:{packageId}";
+        var duration = TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes);
 
-        return await cache.GetOrCreateAsync(
+        return await cache.GetOrSetAsync<MarketplacePackageDetail?>(
             cacheKey,
-            async _ => await FetchPackageDetailsAsync(packageId),
-            CacheEntryOptions.Expires(
-                TimeSpan.FromMinutes(options.Value.DetailCacheDurationMinutes)
-            )
+            async (_, _) => await FetchPackageDetailsAsync(packageId),
+            opts => opts.Duration = duration
         );
     }
 

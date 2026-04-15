@@ -1,17 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Entities;
 using SimpleModule.Core.FeatureFlags;
 using SimpleModule.FeatureFlags.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.FeatureFlags;
 
 public sealed partial class FeatureFlagService(
     FeatureFlagsDbContext db,
     IFeatureFlagRegistry registry,
-    ICacheStore cache,
+    IFusionCache cache,
     ILogger<FeatureFlagService> logger,
     IServiceProvider serviceProvider
 ) : IFeatureFlagContracts, IFeatureFlagService
@@ -204,9 +204,9 @@ public sealed partial class FeatureFlagService(
 
     private async Task<Dictionary<string, FlagData>> GetAllFlagDataAsync()
     {
-        var result = await cache.GetOrCreateAsync<Dictionary<string, FlagData>>(
+        var result = await cache.GetOrSetAsync<Dictionary<string, FlagData>>(
             AllFlagDataCacheKey,
-            async ct =>
+            async (_, ct) =>
             {
                 var definitions = registry.GetAllDefinitions();
                 var flagNames = definitions.Select(d => d.Name).ToList();
@@ -242,23 +242,23 @@ public sealed partial class FeatureFlagService(
                     await cache.SetAsync(
                         FlagDataCacheKey(def.Name),
                         data,
-                        CacheEntryOptions.Expires(CacheDuration),
-                        ct
+                        options => options.Duration = CacheDuration,
+                        token: ct
                     );
                 }
 
                 return allData;
             },
-            CacheEntryOptions.Expires(CacheDuration)
+            options => options.Duration = CacheDuration
         );
         return result ?? [];
     }
 
     private async Task<FlagData> GetFlagDataAsync(string flagName)
     {
-        var result = await cache.GetOrCreateAsync<FlagData>(
+        var result = await cache.GetOrSetAsync<FlagData>(
             FlagDataCacheKey(flagName),
-            async ct =>
+            async (_, ct) =>
             {
                 var flag = await db
                     .FeatureFlags.AsNoTracking()
@@ -274,7 +274,7 @@ public sealed partial class FeatureFlagService(
 
                 return BuildFlagData(isEnabled, overrides);
             },
-            CacheEntryOptions.Expires(CacheDuration)
+            options => options.Duration = CacheDuration
         );
         return result ?? BuildFlagData(false, []);
     }

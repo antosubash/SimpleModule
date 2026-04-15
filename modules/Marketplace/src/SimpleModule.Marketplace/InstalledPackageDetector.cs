@@ -2,27 +2,25 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
-using SimpleModule.Core.Caching;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Marketplace;
 
 public partial class InstalledPackageDetector(
     IWebHostEnvironment environment,
-    ICacheStore cache,
+    IFusionCache cache,
     ILogger<InstalledPackageDetector> logger
 )
 {
     private const string CacheKey = "Marketplace:InstalledPackages";
-    private static readonly CacheEntryOptions CacheOptions = CacheEntryOptions.Expires(
-        TimeSpan.FromMinutes(1)
-    );
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(1);
 
     public async Task<HashSet<string>> GetInstalledPackageIdsAsync()
     {
-        var result = await cache.GetOrCreateAsync<HashSet<string>>(
+        var result = await cache.GetOrSetAsync<HashSet<string>>(
             CacheKey,
-            _ => new ValueTask<HashSet<string>?>(ReadInstalledPackages()),
-            CacheOptions
+            (_, _) => Task.FromResult(ReadInstalledPackages()),
+            opts => opts.Duration = CacheDuration
         );
         return result ?? [];
     }

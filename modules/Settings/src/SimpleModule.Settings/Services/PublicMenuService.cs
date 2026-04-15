@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Settings.Services;
 
 public sealed class PublicMenuService(
     SettingsDbContext db,
-    ICacheStore cache,
+    IFusionCache cache,
     IOptions<SettingsModuleOptions> moduleOptions
 ) : IPublicMenuProvider
 {
@@ -17,9 +17,10 @@ public sealed class PublicMenuService(
 
     public async Task<IReadOnlyList<PublicMenuItem>> GetMenuTreeAsync()
     {
-        var result = await cache.GetOrCreateAsync<IReadOnlyList<PublicMenuItem>>(
+        var duration = moduleOptions.Value.CacheDuration;
+        var result = await cache.GetOrSetAsync<IReadOnlyList<PublicMenuItem>>(
             MenuTreeCacheKey,
-            async ct =>
+            async (_, ct) =>
             {
                 var entities = await db
                     .PublicMenuItems.Where(e => e.IsVisible)
@@ -27,7 +28,7 @@ public sealed class PublicMenuService(
                     .ToListAsync(ct);
                 return BuildPublicTree(entities, parentId: null);
             },
-            CacheEntryOptions.Expires(moduleOptions.Value.CacheDuration)
+            options => options.Duration = duration
         );
         return result ?? [];
     }
@@ -39,16 +40,17 @@ public sealed class PublicMenuService(
     )]
     public async Task<string?> GetHomePageUrlAsync()
     {
-        return await cache.GetOrCreateAsync<string?>(
+        var duration = moduleOptions.Value.CacheDuration;
+        return await cache.GetOrSetAsync<string?>(
             HomePageCacheKey,
-            async ct =>
+            async (_, ct) =>
             {
                 var entity = await db
                     .PublicMenuItems.Where(e => e.IsVisible && e.IsHomePage)
                     .FirstOrDefaultAsync(ct);
                 return entity is not null ? (entity.Url ?? entity.PageRoute) : null;
             },
-            CacheEntryOptions.Expires(moduleOptions.Value.CacheDuration)
+            options => options.Duration = duration
         );
     }
 

@@ -2,18 +2,18 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SimpleModule.Core.Caching;
 using SimpleModule.Core.Events;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Contracts.Events;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Settings;
 
 public sealed partial class SettingsService(
     SettingsDbContext db,
     ISettingsDefinitionRegistry definitions,
-    ICacheStore cache,
+    IFusionCache cache,
     Lazy<IEventBus> eventBus,
     IOptions<SettingsModuleOptions> moduleOptions,
     ILogger<SettingsService> logger
@@ -26,25 +26,25 @@ public sealed partial class SettingsService(
     )
     {
         var cacheKey = BuildCacheKey(key, scope, userId);
+        var duration = moduleOptions.Value.CacheDuration;
 
-        var hit = await cache.TryGetAsync<string?>(cacheKey);
-        if (hit.Hit)
-            return hit.Value;
-
-        var entity = await db
-            .Settings.AsNoTracking()
-            .FirstOrDefaultAsync(s =>
-                s.Key == key
-                && s.Scope == scope
-                && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null)
-            );
-
-        await cache.SetAsync(
+        return await cache.GetOrSetAsync<string?>(
             cacheKey,
-            entity?.Value,
-            CacheEntryOptions.Expires(moduleOptions.Value.CacheDuration)
+            async (_, ct) =>
+            {
+                var entity = await db
+                    .Settings.AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        s =>
+                            s.Key == key
+                            && s.Scope == scope
+                            && (scope == SettingScope.User ? s.UserId == userId : s.UserId == null),
+                        ct
+                    );
+                return entity?.Value;
+            },
+            options => options.Duration = duration
         );
-        return entity?.Value;
     }
 
     public async Task<T?> GetSettingAsync<T>(string key, SettingScope scope, string? userId = null)
@@ -187,5 +187,5 @@ public sealed partial class SettingsService(
     private partial void LogDeserializationError(string key, string type, string error);
 
     private static string BuildCacheKey(string key, SettingScope scope, string? userId) =>
-        CacheKey.Compose("setting", scope.ToString(), userId, key);
+        string.IsNullOrEmpty(userId) ? $"setting:{scope}:{key}" : $"setting:{scope}:{userId}:{key}";
 }
