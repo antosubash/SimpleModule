@@ -425,6 +425,7 @@ modules/**/wwwroot/*
 template/SimpleModule.Host/wwwroot/*
 !template/SimpleModule.Host/wwwroot/favicon.svg
 !template/SimpleModule.Host/wwwroot/index.html
+!template/SimpleModule.Host/wwwroot/error.html
 
 # Tailwind CSS module scan directory
 template/SimpleModule.Host/Styles/_scan/

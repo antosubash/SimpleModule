@@ -158,7 +158,31 @@ public static class SimpleModuleHostExtensions
         }
 
         app.UseForwardedHeaders();
-        app.UseExceptionHandler();
+
+        var errorHtmlPath = Path.Combine(app.Environment.WebRootPath, "error.html");
+        var errorHtmlBytes = File.Exists(errorHtmlPath)
+            ? await File.ReadAllBytesAsync(errorHtmlPath)
+            : null;
+
+        app.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                if (context.Response.HasStarted)
+                    return;
+
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "text/html";
+                if (errorHtmlBytes is not null)
+                {
+                    await context.Response.Body.WriteAsync(errorHtmlBytes);
+                }
+                else
+                {
+                    await context.Response.WriteAsync("<h1>500 Internal Server Error</h1>");
+                }
+            });
+        });
 
         var options = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (options.EnableSwagger && app.Environment.IsDevelopment())
@@ -255,6 +279,45 @@ public static class SimpleModuleHostExtensions
                 )
                 .AllowAnonymous();
         }
+
+        app.MapGet("/error/{statusCode:int}", (int statusCode) => RenderErrorPage(statusCode))
+            .AllowAnonymous()
+            .ExcludeFromDescription();
+
+        // Catch-all for unmatched GET requests — renders a 404 Inertia page
+        // for browser navigation to non-existent URLs. Does NOT fire on
+        // matched endpoints that return bare 401/403 from auth, so API tests
+        // that verify bare status codes remain unaffected.
+        app.MapFallback(
+                "{**catchAll}",
+                (HttpContext context) =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                    return RenderErrorPage(404);
+                }
+            )
+            .AllowAnonymous()
+            .ExcludeFromDescription();
+    }
+
+    private static IResult RenderErrorPage(int statusCode)
+    {
+        var (title, message) = statusCode switch
+        {
+            403 => (ErrorMessages.ForbiddenTitle, ErrorMessages.DefaultForbiddenMessage),
+            404 => (ErrorMessages.NotFoundTitle, ErrorMessages.DefaultNotFoundMessage),
+            _ => (ErrorMessages.InternalServerErrorTitle, ErrorMessages.UnexpectedError),
+        };
+
+        return SimpleModule.Core.Inertia.Inertia.Render(
+            $"Error/{statusCode}",
+            new
+            {
+                status = statusCode,
+                title,
+                message,
+            }
+        );
     }
 
     private static void BridgeAspireConnectionString(ConfigurationManager configuration)
