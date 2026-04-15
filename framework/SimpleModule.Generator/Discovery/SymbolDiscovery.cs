@@ -288,69 +288,25 @@ internal static class SymbolDiscovery
 
         // Step 3c: Find IModulePermissions implementors in module and contracts assemblies
         var permissionClasses = new List<PermissionClassInfo>();
-        if (s.ModulePermissions is not null)
-        {
-            foreach (var module in modules)
-            {
-                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                    continue;
-
-                var moduleAssembly = typeSymbol.ContainingAssembly;
-                PermissionFeatureFinder.FindPermissionClasses(
-                    moduleAssembly.GlobalNamespace,
-                    s.ModulePermissions,
-                    module.ModuleName,
-                    permissionClasses
-                );
-            }
-
-            // Also scan contracts assemblies for permission classes
-            foreach (var kvp in contractsAssemblySymbols)
-            {
-                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
-                {
-                    PermissionFeatureFinder.FindPermissionClasses(
-                        kvp.Value.GlobalNamespace,
-                        s.ModulePermissions,
-                        moduleName,
-                        permissionClasses
-                    );
-                }
-            }
-        }
+        PermissionFeatureFinder.DiscoverPermissions(
+            modules,
+            moduleSymbols,
+            contractsAssemblySymbols,
+            contractsAssemblyMap,
+            s,
+            permissionClasses
+        );
 
         // Step 3d: Find IModuleFeatures implementors in module and contracts assemblies
         var featureClasses = new List<FeatureClassInfo>();
-        if (s.ModuleFeatures is not null)
-        {
-            foreach (var module in modules)
-            {
-                if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                    continue;
-
-                var moduleAssembly = typeSymbol.ContainingAssembly;
-                PermissionFeatureFinder.FindFeatureClasses(
-                    moduleAssembly.GlobalNamespace,
-                    s.ModuleFeatures,
-                    module.ModuleName,
-                    featureClasses
-                );
-            }
-
-            // Also scan contracts assemblies for feature classes
-            foreach (var kvp in contractsAssemblySymbols)
-            {
-                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
-                {
-                    PermissionFeatureFinder.FindFeatureClasses(
-                        kvp.Value.GlobalNamespace,
-                        s.ModuleFeatures,
-                        moduleName,
-                        featureClasses
-                    );
-                }
-            }
-        }
+        PermissionFeatureFinder.DiscoverFeatures(
+            modules,
+            moduleSymbols,
+            contractsAssemblySymbols,
+            contractsAssemblyMap,
+            s,
+            featureClasses
+        );
 
         // Step 3e: Find ISaveChangesInterceptor implementors in module assemblies
         var interceptors = new List<InterceptorInfo>();
@@ -404,34 +360,14 @@ internal static class SymbolDiscovery
 
         // Step 3f: Find IModuleOptions implementors in module and contracts assemblies
         var moduleOptionsList = new List<ModuleOptionsRecord>();
-        if (s.ModuleOptions is not null)
-        {
-            SymbolHelpers.ScanModuleAssemblies(
-                modules,
-                moduleSymbols,
-                (assembly, module) =>
-                    PermissionFeatureFinder.FindModuleOptionsClasses(
-                        assembly.GlobalNamespace,
-                        s.ModuleOptions,
-                        module.ModuleName,
-                        moduleOptionsList
-                    )
-            );
-
-            // Also scan contracts assemblies for module options classes
-            foreach (var kvp in contractsAssemblySymbols)
-            {
-                if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
-                {
-                    PermissionFeatureFinder.FindModuleOptionsClasses(
-                        kvp.Value.GlobalNamespace,
-                        s.ModuleOptions,
-                        moduleName,
-                        moduleOptionsList
-                    );
-                }
-            }
-        }
+        PermissionFeatureFinder.DiscoverModuleOptions(
+            modules,
+            moduleSymbols,
+            contractsAssemblySymbols,
+            contractsAssemblyMap,
+            s,
+            moduleOptionsList
+        );
 
         // Step 3g: Find IAgentDefinition, IAgentToolProvider, and IKnowledgeSource implementors
         var agentDefinitions = new List<DiscoveredTypeInfo>();
