@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
@@ -114,5 +115,108 @@ internal static class ContractFinder
             }
         }
         return 1; // Default: Scoped
+    }
+
+    /// <summary>
+    /// Finds every *.Contracts assembly referenced by the compilation and maps it
+    /// to the module it belongs to. Populates <paramref name="contractsAssemblyMap"/>
+    /// (name → module name) and <paramref name="contractsAssemblySymbols"/>
+    /// (name → IAssemblySymbol) for downstream scans.
+    /// </summary>
+    internal static void BuildContractsAssemblyMap(
+        Compilation compilation,
+        Dictionary<string, string> moduleAssemblyMap,
+        Dictionary<string, string> contractsAssemblyMap,
+        Dictionary<string, IAssemblySymbol> contractsAssemblySymbols
+    )
+    {
+        foreach (var reference in compilation.References)
+        {
+            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
+                continue;
+
+            var asmName = asm.Name;
+            if (!asmName.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var baseName = asmName.Substring(0, asmName.Length - ".Contracts".Length);
+
+            // Try exact match on assembly name
+            if (moduleAssemblyMap.TryGetValue(baseName, out var moduleName))
+            {
+                contractsAssemblyMap[asmName] = moduleName;
+                contractsAssemblySymbols[asmName] = asm;
+                continue;
+            }
+
+            // Try matching last segment of baseName to module names (case-insensitive)
+            var lastDot = baseName.LastIndexOf('.');
+            var lastSegment = lastDot >= 0 ? baseName.Substring(lastDot + 1) : baseName;
+
+            foreach (var kvp in moduleAssemblyMap)
+            {
+                if (string.Equals(lastSegment, kvp.Value, StringComparison.OrdinalIgnoreCase))
+                {
+                    contractsAssemblyMap[asmName] = kvp.Value;
+                    contractsAssemblySymbols[asmName] = asm;
+                    break;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Walks every contracts assembly and records its public interfaces; then walks
+    /// each module's own assembly and records classes that implement any of those
+    /// interfaces. Populates <paramref name="contractInterfaces"/> and
+    /// <paramref name="contractImplementations"/>.
+    /// </summary>
+    internal static void DiscoverInterfacesAndImplementations(
+        List<ModuleInfo> modules,
+        Dictionary<string, INamedTypeSymbol> moduleSymbols,
+        Dictionary<string, IAssemblySymbol> contractsAssemblySymbols,
+        Compilation compilation,
+        List<ContractInterfaceInfoRecord> contractInterfaces,
+        List<ContractImplementationInfo> contractImplementations
+    )
+    {
+        // Step 3: Scan contract interfaces
+        foreach (var kvp in contractsAssemblySymbols)
+        {
+            ScanContractInterfaces(kvp.Value.GlobalNamespace, kvp.Key, contractInterfaces);
+        }
+
+        // Step 3b: Find implementations of contract interfaces in module assemblies
+        foreach (var module in modules)
+        {
+            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
+                continue;
+
+            var moduleAssembly = typeSymbol.ContainingAssembly;
+
+            // Find which contracts assembly this module owns
+            var expectedContractsAsm = moduleAssembly.Name + ".Contracts";
+            if (!contractsAssemblySymbols.ContainsKey(expectedContractsAsm))
+                continue;
+
+            // Get the interface FQNs from this module's contracts
+            var moduleContractInterfaceFqns = new HashSet<string>();
+            foreach (var ci in contractInterfaces)
+            {
+                if (ci.ContractsAssemblyName == expectedContractsAsm)
+                    moduleContractInterfaceFqns.Add(ci.InterfaceName);
+            }
+            if (moduleContractInterfaceFqns.Count == 0)
+                continue;
+
+            // Scan module assembly for implementations
+            FindContractImplementations(
+                moduleAssembly.GlobalNamespace,
+                moduleContractInterfaceFqns,
+                module.ModuleName,
+                compilation,
+                contractImplementations
+            );
+        }
     }
 }

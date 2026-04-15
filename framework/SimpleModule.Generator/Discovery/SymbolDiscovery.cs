@@ -249,40 +249,12 @@ internal static class SymbolDiscovery
         var contractsAssemblySymbols = new Dictionary<string, IAssemblySymbol>(
             StringComparer.OrdinalIgnoreCase
         );
-
-        foreach (var reference in compilation.References)
-        {
-            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
-                continue;
-
-            var asmName = asm.Name;
-            if (!asmName.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var baseName = asmName.Substring(0, asmName.Length - ".Contracts".Length);
-
-            // Try exact match on assembly name
-            if (moduleAssemblyMap.TryGetValue(baseName, out var moduleName))
-            {
-                contractsAssemblyMap[asmName] = moduleName;
-                contractsAssemblySymbols[asmName] = asm;
-                continue;
-            }
-
-            // Try matching last segment of baseName to module names (case-insensitive)
-            var lastDot = baseName.LastIndexOf('.');
-            var lastSegment = lastDot >= 0 ? baseName.Substring(lastDot + 1) : baseName;
-
-            foreach (var kvp in moduleAssemblyMap)
-            {
-                if (string.Equals(lastSegment, kvp.Value, StringComparison.OrdinalIgnoreCase))
-                {
-                    contractsAssemblyMap[asmName] = kvp.Value;
-                    contractsAssemblySymbols[asmName] = asm;
-                    break;
-                }
-            }
-        }
+        ContractFinder.BuildContractsAssemblyMap(
+            compilation,
+            moduleAssemblyMap,
+            contractsAssemblyMap,
+            contractsAssemblySymbols
+        );
 
         // Convention-based DTO discovery: all public types in *.Contracts assemblies
         var existingDtoFqns = new HashSet<string>();
@@ -302,50 +274,17 @@ internal static class SymbolDiscovery
             );
         }
 
-        // Step 3: Scan contract interfaces
+        // Step 3/3b: Contract interfaces and implementations
         var contractInterfaces = new List<ContractInterfaceInfoRecord>();
-        foreach (var kvp in contractsAssemblySymbols)
-        {
-            ContractFinder.ScanContractInterfaces(
-                kvp.Value.GlobalNamespace,
-                kvp.Key,
-                contractInterfaces
-            );
-        }
-
-        // Step 3b: Find implementations of contract interfaces in module assemblies
         var contractImplementations = new List<ContractImplementationInfo>();
-        foreach (var module in modules)
-        {
-            if (!moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                continue;
-
-            var moduleAssembly = typeSymbol.ContainingAssembly;
-
-            // Find which contracts assembly this module owns
-            var expectedContractsAsm = moduleAssembly.Name + ".Contracts";
-            if (!contractsAssemblySymbols.ContainsKey(expectedContractsAsm))
-                continue;
-
-            // Get the interface FQNs from this module's contracts
-            var moduleContractInterfaceFqns = new HashSet<string>();
-            foreach (var ci in contractInterfaces)
-            {
-                if (ci.ContractsAssemblyName == expectedContractsAsm)
-                    moduleContractInterfaceFqns.Add(ci.InterfaceName);
-            }
-            if (moduleContractInterfaceFqns.Count == 0)
-                continue;
-
-            // Scan module assembly for implementations
-            ContractFinder.FindContractImplementations(
-                moduleAssembly.GlobalNamespace,
-                moduleContractInterfaceFqns,
-                module.ModuleName,
-                compilation,
-                contractImplementations
-            );
-        }
+        ContractFinder.DiscoverInterfacesAndImplementations(
+            modules,
+            moduleSymbols,
+            contractsAssemblySymbols,
+            compilation,
+            contractInterfaces,
+            contractImplementations
+        );
 
         // Step 3c: Find IModulePermissions implementors in module and contracts assemblies
         var permissionClasses = new List<PermissionClassInfo>();
