@@ -11,7 +11,7 @@ import {
   Switch,
 } from '@simplemodule/ui';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   Basemap,
   LayerSource,
@@ -21,6 +21,26 @@ import type {
   UpdateDefaultMapRequest,
 } from '@/types';
 import MapCanvas from './components/MapCanvas';
+
+// Inline styles for positioning — deliberately NOT Tailwind utility classes.
+// The Tailwind utilities top-3/bottom-3/right-3/etc. aren't always generated
+// by the host's CSS pipeline when only module .tsx sources change, so the map
+// layout regressed in CI. Inline styles make the positioning survive that.
+const controlOverlayStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  zIndex: 1000,
+  pointerEvents: 'none',
+};
+
+const floatingControlStyle: CSSProperties = {
+  position: 'absolute',
+  pointerEvents: 'auto',
+};
+
+const floatingPanelStyle: CSSProperties = {
+  ...floatingControlStyle,
+};
 
 function reorder<T extends { order: number }>(items: T[], idx: number, delta: number): T[] {
   const target = idx + delta;
@@ -259,9 +279,8 @@ export default function Browse({
         }}
       />
 
-      <div className="absolute inset-0 z-[1000] pointer-events-none">
-        {/* ── Top-left: panel toggle buttons ── */}
-        <div className="absolute top-3 left-3 flex gap-2 pointer-events-auto">
+      <div style={controlOverlayStyle}>
+        <div style={{ ...floatingControlStyle, top: 12, left: 12 }} className="flex gap-2">
           <Button
             size="sm"
             variant={layersPanelOpen ? 'primary' : 'secondary'}
@@ -282,8 +301,7 @@ export default function Browse({
           </Button>
         </div>
 
-        {/* ── Top-right: action buttons ── */}
-        <div className="absolute top-3 right-3 flex gap-2 pointer-events-auto">
+        <div style={{ ...floatingControlStyle, top: 12, right: 12 }} className="flex gap-2">
           <Button
             variant="secondary"
             size="sm"
@@ -300,7 +318,8 @@ export default function Browse({
         {/* ── Layers floating panel ── */}
         {layersPanelOpen && (
           <div
-            className="absolute top-14 left-3 w-80 max-h-[60vh] overflow-y-auto bg-surface/95 backdrop-blur rounded-lg shadow-lg border border-border p-3 space-y-2 pointer-events-auto"
+            style={{ ...floatingPanelStyle, top: 56, left: 12 }}
+            className="w-80 max-h-[60vh] overflow-y-auto bg-surface/95 backdrop-blur rounded-lg shadow-lg border border-border p-3 space-y-2"
             data-testid="layers-panel"
           >
             <div className="font-medium text-sm">Layers ({layers.length})</div>
@@ -420,7 +439,8 @@ export default function Browse({
         {/* ── Basemaps floating panel ── */}
         {basemapsPanelOpen && (
           <div
-            className="absolute top-14 left-3 w-80 max-h-[60vh] overflow-y-auto bg-surface/95 backdrop-blur rounded-lg shadow-lg border border-border p-3 space-y-2 pointer-events-auto"
+            style={{ ...floatingPanelStyle, top: 56, left: 12 }}
+            className="w-80 max-h-[60vh] overflow-y-auto bg-surface/95 backdrop-blur rounded-lg shadow-lg border border-border p-3 space-y-2"
             data-testid="basemaps-panel"
           >
             <div className="font-medium text-sm">Basemaps ({mapBasemaps.length})</div>
@@ -501,7 +521,10 @@ export default function Browse({
 
         {/* ── Bottom-left: basemap switcher chips ── */}
         {availableBasemaps.length > 1 && (
-          <div className="absolute bottom-3 left-3 bg-surface/90 backdrop-blur rounded-md shadow border border-border p-1.5 flex gap-1 flex-wrap max-w-[60%] pointer-events-auto">
+          <div
+            style={{ ...floatingControlStyle, bottom: 12, left: 12 }}
+            className="bg-surface/90 backdrop-blur rounded-md shadow border border-border p-1.5 flex gap-1 flex-wrap max-w-[60%]"
+          >
             {availableBasemaps.map((b) => (
               <Button
                 key={b.id}
@@ -517,7 +540,7 @@ export default function Browse({
 
         {/* ── Bottom-right: export ── */}
         {enableExportPng && (
-          <div className="absolute bottom-3 right-3 pointer-events-auto">
+          <div style={{ ...floatingControlStyle, bottom: 12, right: 12 }}>
             <Button size="sm" variant="secondary" onClick={exportPng} className="shadow">
               Export PNG
             </Button>
