@@ -30,7 +30,7 @@ interface HomeProps {
 
 export default function Home({ isAuthenticated, displayName, isDevelopment }: HomeProps) {
   return isAuthenticated ? (
-    <DashboardView displayName={displayName} />
+    <DashboardView displayName={displayName} isDevelopment={isDevelopment} />
   ) : (
     <LandingView isDevelopment={isDevelopment} />
   );
@@ -38,7 +38,13 @@ export default function Home({ isAuthenticated, displayName, isDevelopment }: Ho
 
 // --- Dashboard View ---
 
-function DashboardView({ displayName }: { displayName: string }) {
+function DashboardView({
+  displayName,
+  isDevelopment,
+}: {
+  displayName: string;
+  isDevelopment: boolean;
+}) {
   const { t } = useTranslation('Dashboard');
   return (
     <PageShell
@@ -73,32 +79,34 @@ function DashboardView({ displayName }: { displayName: string }) {
             </CardContent>
           </Card>
         </a>
-        <a href="/swagger" className="no-underline">
-          <Card className="h-full group">
-            <CardContent>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="w-9 h-9 rounded-xl flex items-center justify-center text-accent bg-success-bg">
-                  <svg
-                    className="w-[18px] h-[18px]"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                  </svg>
-                </span>
-                <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
-                  {t(DashboardKeys.Home.ApiDocsCardTitle)}
-                </span>
-              </div>
-              <p className="text-xs text-text-muted">
-                {t(DashboardKeys.Home.ApiDocsCardDescription)}
-              </p>
-            </CardContent>
-          </Card>
-        </a>
+        {isDevelopment && (
+          <a href="/swagger" className="no-underline">
+            <Card className="h-full group">
+              <CardContent>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center text-accent bg-success-bg">
+                    <svg
+                      className="w-[18px] h-[18px]"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </span>
+                  <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
+                    {t(DashboardKeys.Home.ApiDocsCardTitle)}
+                  </span>
+                </div>
+                <p className="text-xs text-text-muted">
+                  {t(DashboardKeys.Home.ApiDocsCardDescription)}
+                </p>
+              </CardContent>
+            </Card>
+          </a>
+        )}
         <a href="/health/live" className="no-underline">
           <Card className="h-full group">
             <CardContent>
@@ -569,13 +577,17 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
         )}
 
         <div className="flex gap-5 justify-center mt-8 text-sm">
-          <a
-            href="/swagger"
-            className="text-text-muted no-underline hover:text-primary transition-colors"
-          >
-            {t(DashboardKeys.Home.LandingApiDocs)}
-          </a>
-          <span className="text-border">&middot;</span>
+          {isDevelopment && (
+            <>
+              <a
+                href="/swagger"
+                className="text-text-muted no-underline hover:text-primary transition-colors"
+              >
+                {t(DashboardKeys.Home.LandingApiDocs)}
+              </a>
+              <span className="text-border">&middot;</span>
+            </>
+          )}
           <a
             href="/health/live"
             className="text-text-muted no-underline hover:text-primary transition-colors"

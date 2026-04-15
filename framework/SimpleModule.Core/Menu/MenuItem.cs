@@ -22,4 +22,11 @@ public sealed class MenuItem
     /// An empty list means visible to all authenticated users.
     /// </summary>
     public IReadOnlyList<string> Roles { get; init; } = [];
+
+    /// <summary>
+    /// When set, this menu item is only visible to users whose permission claims
+    /// satisfy the requirement (supports wildcards via PermissionMatcher).
+    /// Admin role bypasses this check. Null means no permission gating.
+    /// </summary>
+    public string? RequiredPermission { get; init; }
 }
