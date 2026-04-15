@@ -1,6 +1,3 @@
-using System.Globalization;
-using System.Text;
-using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,12 +13,6 @@ public sealed partial class AuditLogService(
     ILogger<AuditLogService> logger
 ) : IAuditLogContracts
 {
-    private static readonly JsonSerializerOptions s_exportJsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
-
     public async Task<PagedResult<AuditEntry>> QueryAsync(AuditQueryRequest request)
     {
         var query = BuildQuery(request);
@@ -79,165 +70,11 @@ public sealed partial class AuditLogService(
             .AsNoTracking()
             .ToListAsync();
 
-    public async Task<Stream> ExportAsync(AuditExportRequest request)
-    {
-        var query = BuildQuery(request);
-        var entries = await query.OrderByDescending(e => e.Id).AsNoTracking().ToListAsync();
-
-        return request.EffectiveFormat.Equals("json", StringComparison.OrdinalIgnoreCase)
-            ? ExportAsJson(entries)
-            : ExportAsCsv(entries);
-    }
-
-    public async Task<AuditStats> GetStatsAsync(DateTimeOffset from, DateTimeOffset to)
-    {
-        var dashboard = await GetDashboardStatsAsync(from, to);
-        return new AuditStats
-        {
-            TotalEntries = dashboard.TotalEntries,
-            UniqueUsers = dashboard.UniqueUsers,
-            ByModule = dashboard.ByModule,
-            ByAction = dashboard.ByAction,
-            ByStatusCode = dashboard.ByStatusCategory,
-        };
-    }
-
     public async Task WriteBatchAsync(IReadOnlyList<AuditEntry> entries)
     {
         db.AuditEntries.AddRange(entries);
         await db.SaveChangesAsync();
         LogBatchWritten(logger, entries.Count);
-    }
-
-    public async Task<DashboardStats> GetDashboardStatsAsync(
-        DateTimeOffset from,
-        DateTimeOffset to,
-        string? userId = null
-    )
-    {
-        var entries = await QueryByTimeRangeAsync(from, to, userId);
-
-        var totalEntries = entries.Count;
-        var uniqueUsers = entries
-            .Where(e => e.UserId is not null)
-            .Select(e => e.UserId)
-            .Distinct()
-            .Count();
-
-        long durationSum = 0;
-        int durationCount = 0;
-        int statusTotal = 0;
-        int statusErrors = 0;
-        foreach (var e in entries)
-        {
-            if (e.DurationMs.HasValue)
-            {
-                durationSum += e.DurationMs.Value;
-                durationCount++;
-            }
-            if (e.StatusCode.HasValue)
-            {
-                statusTotal++;
-                if (e.StatusCode.Value >= 400)
-                    statusErrors++;
-            }
-        }
-        var averageDuration = durationCount > 0 ? (double)durationSum / durationCount : 0;
-        var errorRate = statusTotal > 0 ? (double)statusErrors / statusTotal * 100 : 0;
-
-        var bySource = entries
-            .GroupBy(e => e.Source)
-            .ToDictionary(g => g.Key.ToString(), g => g.Count());
-
-        var byAction = entries
-            .Where(e => e.Action.HasValue)
-            .GroupBy(e => e.Action!.Value)
-            .ToDictionary(g => g.Key.ToString(), g => g.Count());
-
-        var byModule = entries
-            .Where(e => e.Module is not null)
-            .GroupBy(e => e.Module!)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var byStatusCategory = entries
-            .Where(e => e.StatusCode.HasValue)
-            .GroupBy(e =>
-                e.StatusCode!.Value switch
-                {
-                    >= 200 and < 300 => "2xx",
-                    >= 300 and < 400 => "3xx",
-                    >= 400 and < 500 => "4xx",
-                    >= 500 => "5xx",
-                    _ => "Other",
-                }
-            )
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var byEntityType = entries
-            .Where(e => e.EntityType is not null)
-            .GroupBy(e => e.EntityType!)
-            .OrderByDescending(g => g.Count())
-            .Take(10)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var topUsers = entries
-            .Where(e => e.UserId is not null)
-            .GroupBy(e => e.UserName ?? e.UserId!)
-            .OrderByDescending(g => g.Count())
-            .Take(10)
-            .Select(g => new NamedCount { Name = g.Key, Count = g.Count() })
-            .ToList();
-
-        var topPaths = entries
-            .Where(e => e.Path is not null)
-            .GroupBy(e => e.Path!)
-            .OrderByDescending(g => g.Count())
-            .Take(10)
-            .Select(g => new NamedCount { Name = g.Key, Count = g.Count() })
-            .ToList();
-
-        var timeline = entries
-            .GroupBy(e => e.Timestamp.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => new TimelinePoint
-            {
-                Date = g.Key.ToString(
-                    "yyyy-MM-dd",
-                    System.Globalization.CultureInfo.InvariantCulture
-                ),
-                Http = g.Count(e => e.Source == AuditSource.Http),
-                Domain = g.Count(e => e.Source == AuditSource.Domain),
-                Changes = g.Count(e => e.Source == AuditSource.ChangeTracker),
-            })
-            .ToList();
-
-        var hourlyDistribution = entries
-            .GroupBy(e => e.Timestamp.Hour)
-            .OrderBy(g => g.Key)
-            .Select(g => new NamedCount
-            {
-                Name =
-                    g.Key.ToString("D2", System.Globalization.CultureInfo.InvariantCulture) + ":00",
-                Count = g.Count(),
-            })
-            .ToList();
-
-        return new DashboardStats
-        {
-            TotalEntries = totalEntries,
-            UniqueUsers = uniqueUsers,
-            AverageDurationMs = Math.Round(averageDuration, 1),
-            ErrorRate = Math.Round(errorRate, 1),
-            BySource = bySource,
-            ByAction = byAction,
-            ByModule = byModule,
-            ByStatusCategory = byStatusCategory,
-            ByEntityType = byEntityType,
-            TopUsers = topUsers,
-            TopPaths = topPaths,
-            Timeline = timeline,
-            HourlyDistribution = hourlyDistribution,
-        };
     }
 
     public async Task<int> PurgeOlderThanAsync(DateTimeOffset cutoff)
@@ -327,51 +164,6 @@ public sealed partial class AuditLogService(
         }
 
         return query;
-    }
-
-    private static MemoryStream ExportAsCsv(List<AuditEntry> entries)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine(
-            "Timestamp,Source,UserId,UserName,HttpMethod,Path,StatusCode,DurationMs,Module,EntityType,EntityId,Action,Changes"
-        );
-        foreach (var e in entries)
-        {
-            sb.Append(CultureInfo.InvariantCulture, $"{e.Timestamp:O},");
-            sb.Append(CultureInfo.InvariantCulture, $"{e.Source},");
-            sb.Append(CultureInfo.InvariantCulture, $"{CsvEscape(e.UserId)},");
-            sb.Append(CultureInfo.InvariantCulture, $"{CsvEscape(e.UserName)},");
-            sb.Append(CultureInfo.InvariantCulture, $"{e.HttpMethod},");
-            sb.Append(CultureInfo.InvariantCulture, $"{CsvEscape(e.Path)},");
-            sb.Append(CultureInfo.InvariantCulture, $"{e.StatusCode},");
-            sb.Append(CultureInfo.InvariantCulture, $"{e.DurationMs},");
-            sb.Append(CultureInfo.InvariantCulture, $"{CsvEscape(e.Module)},");
-            sb.Append(CultureInfo.InvariantCulture, $"{CsvEscape(e.EntityType)},");
-            sb.Append(CultureInfo.InvariantCulture, $"{CsvEscape(e.EntityId)},");
-            sb.Append(CultureInfo.InvariantCulture, $"{e.Action},");
-            sb.AppendLine(CsvEscape(e.Changes));
-        }
-        return new MemoryStream(Encoding.UTF8.GetBytes(sb.ToString()));
-    }
-
-    private static MemoryStream ExportAsJson(List<AuditEntry> entries)
-    {
-        var json = JsonSerializer.SerializeToUtf8Bytes(entries, s_exportJsonOptions);
-        return new MemoryStream(json);
-    }
-
-    private static string CsvEscape(string? value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return "";
-        if (
-            value.Contains('"', StringComparison.Ordinal)
-            || value.Contains(',', StringComparison.Ordinal)
-            || value.Contains('\n', StringComparison.Ordinal)
-            || value.Contains('\r', StringComparison.Ordinal)
-        )
-            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
-        return value;
     }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Wrote batch of {Count} audit entries")]

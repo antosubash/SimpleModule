@@ -1,38 +1,24 @@
 import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  DatePicker,
-  PageShell,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@simplemodule/ui';
+import { type ChartConfig, PageShell } from '@simplemodule/ui';
 import { useState } from 'react';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { AuditLogsKeys } from '@/Locales/keys';
 import type { DashboardStats, NamedCount } from '@/types';
+import { DonutCard, HBarCard } from './components/DashboardCharts';
+import { DashboardFilters } from './components/DashboardFilters';
+import {
+  dictToChartData,
+  formatDate,
+  PALETTE,
+  SOURCE_COLORS,
+  STATUS_COLORS,
+} from './components/dashboard-constants';
+import {
+  EntityTypesChart,
+  HourlyDistributionChart,
+  TimelineAreaChart,
+} from './components/InlineCharts';
+import { KpiCard } from './components/KpiCard';
 
 interface Props {
   stats: DashboardStats;
@@ -41,197 +27,6 @@ interface Props {
   userId: string;
   users: NamedCount[];
 }
-
-// ---- Chart color palette ----
-
-const PALETTE = [
-  'var(--color-primary)',
-  'var(--color-info)',
-  'var(--color-warning)',
-  'var(--color-danger)',
-  'var(--color-success-light)',
-  'var(--color-accent)',
-  'var(--color-muted)',
-  'var(--color-primary-light)',
-];
-
-const SOURCE_COLORS: Record<string, string> = {
-  Http: 'var(--color-info)',
-  Domain: 'var(--color-primary)',
-  ChangeTracker: 'var(--color-warning)',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  '2xx': 'var(--color-success)',
-  '3xx': 'var(--color-info)',
-  '4xx': 'var(--color-warning)',
-  '5xx': 'var(--color-danger)',
-  Other: 'var(--color-muted)',
-};
-
-const DATE_PRESETS = [
-  { label: 'Last 24h', hours: 24 },
-  { label: 'Last 7 days', hours: 168 },
-  { label: 'Last 30 days', hours: 720 },
-  { label: 'Last 90 days', hours: 2160 },
-];
-
-// ---- Helpers ----
-
-function dictToChartData(dict: Record<string, number>): { name: string; value: number }[] {
-  return Object.entries(dict)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-}
-
-function formatDate(iso: string): string {
-  return iso.slice(0, 10);
-}
-
-// ---- KPI Card ----
-
-function KpiCard({
-  title,
-  value,
-  subtitle,
-  accent,
-  onClick,
-}: {
-  title: string;
-  value: string;
-  subtitle?: string;
-  accent?: 'default' | 'danger';
-  onClick?: () => void;
-}) {
-  return (
-    <Card className={onClick ? 'cursor-pointer transition-shadow hover:shadow-md' : ''}>
-      <CardContent className="p-4 sm:p-5" onClick={onClick}>
-        <p className="text-xs font-medium tracking-wide text-text-muted uppercase">{title}</p>
-        <p
-          className={`mt-1 text-xl sm:text-2xl font-bold tabular-nums ${
-            accent === 'danger' ? 'text-danger' : 'text-text'
-          }`}
-        >
-          {value}
-        </p>
-        {subtitle && <p className="mt-0.5 text-xs text-text-muted">{subtitle}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-// ---- Reusable chart cards ----
-
-function DonutCard({
-  title,
-  data,
-  colors,
-  config,
-}: {
-  title: string;
-  data: { name: string; value: number }[];
-  colors: Record<string, string>;
-  config: ChartConfig;
-}) {
-  return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-center p-4 sm:p-6">
-        <ChartContainer
-          config={config}
-          className="min-h-[180px] sm:min-h-[220px]"
-          style={{ maxWidth: 300, margin: '0 auto' }}
-        >
-          <PieChart>
-            <ChartTooltip content={<ChartTooltipContent nameKey="name" hideLabel />} />
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={90}
-              strokeWidth={2}
-              stroke="var(--color-surface)"
-            >
-              {data.map((d) => (
-                <Cell key={d.name} fill={colors[d.name] || PALETTE[0]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-        <div className="mt-3 flex justify-center gap-4 text-xs">
-          {data.map((d) => (
-            <div key={d.name} className="flex items-center gap-1.5">
-              <div
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: colors[d.name] || PALETTE[0] }}
-              />
-              <span className="text-text-muted">{d.name}</span>
-              <span className="font-medium tabular-nums">{d.value.toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function HBarCard({
-  title,
-  data,
-  dataKey,
-  config,
-  fill,
-  yAxisWidth = 100,
-}: {
-  title: string;
-  data: readonly { name: string; count?: number; value?: number }[];
-  dataKey: string;
-  config: ChartConfig;
-  fill?: string;
-  yAxisWidth?: number;
-}) {
-  return (
-    <Card className="flex flex-col">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 p-4 sm:p-6">
-        <ChartContainer config={config} className="min-h-[220px] sm:min-h-[280px]">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
-          >
-            <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-            <YAxis
-              dataKey="name"
-              type="category"
-              tickLine={false}
-              axisLine={false}
-              width={yAxisWidth}
-              tick={{ fontSize: 11 }}
-            />
-            <XAxis type="number" tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey={dataKey} fill={fill} radius={[0, 4, 4, 0]}>
-              {!fill &&
-                data.map((d, i) => (
-                  <Cell key={d.name as string} fill={PALETTE[i % PALETTE.length]} />
-                ))}
-            </Bar>
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ---- Main Dashboard ----
 
 export default function Dashboard({ stats, from, to, userId, users }: Props) {
   const { t } = useTranslation('AuditLogs');
@@ -321,61 +116,17 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
       title={t(AuditLogsKeys.Dashboard.Title)}
       description={t(AuditLogsKeys.Dashboard.Description)}
       actions={
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2">
-          {/* Quick date presets */}
-          {DATE_PRESETS.map((preset) => (
-            <Button
-              key={preset.hours}
-              variant="ghost"
-              size="sm"
-              onClick={() => applyDatePreset(preset.hours)}
-            >
-              {preset.label}
-            </Button>
-          ))}
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-text-muted">
-              {t(AuditLogsKeys.Dashboard.FilterFrom)}
-            </span>
-            <DatePicker
-              value={dateFrom}
-              onChange={setDateFrom}
-              placeholder={t(AuditLogsKeys.Dashboard.FilterFromPlaceholder)}
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-text-muted">
-              {t(AuditLogsKeys.Dashboard.FilterTo)}
-            </span>
-            <DatePicker
-              value={dateTo}
-              onChange={setDateTo}
-              placeholder={t(AuditLogsKeys.Dashboard.FilterToPlaceholder)}
-            />
-          </div>
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-text-muted">
-              {t(AuditLogsKeys.Dashboard.FilterUser)}
-            </span>
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger
-                className="w-full sm:w-[180px]"
-                aria-label={t(AuditLogsKeys.Dashboard.FilterUser)}
-              >
-                <SelectValue placeholder={t(AuditLogsKeys.Dashboard.FilterUserAll)} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">{t(AuditLogsKeys.Dashboard.FilterUserAll)}</SelectItem>
-                {users.map((u) => (
-                  <SelectItem key={u.name} value={u.name}>
-                    {u.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button onClick={applyFilters}>{t(AuditLogsKeys.Dashboard.FilterApply)}</Button>
-        </div>
+        <DashboardFilters
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateFromChange={setDateFrom}
+          onDateToChange={setDateTo}
+          selectedUser={selectedUser}
+          onSelectedUserChange={setSelectedUser}
+          users={users}
+          onApplyFilters={applyFilters}
+          onApplyDatePreset={applyDatePreset}
+        />
       }
     >
       {/* KPI Cards */}
@@ -407,67 +158,11 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
 
       {/* Timeline Area Chart */}
       {stats.timeline.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t(AuditLogsKeys.Dashboard.ActivityTimeline)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <ChartContainer config={timelineConfig} className="min-h-[200px] sm:min-h-[250px]">
-              <AreaChart data={stats.timeline} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                <defs>
-                  <linearGradient id="fillHttp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-http)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="var(--color-http)" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="fillDomain" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-domain)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="var(--color-domain)" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="fillChanges" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-changes)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="var(--color-changes)" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={(v: string) => v.slice(5)}
-                />
-                <YAxis tickLine={false} axisLine={false} tickMargin={4} width={40} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  dataKey="http"
-                  type="monotone"
-                  fill="url(#fillHttp)"
-                  stroke="var(--color-http)"
-                  strokeWidth={2}
-                  stackId="a"
-                />
-                <Area
-                  dataKey="domain"
-                  type="monotone"
-                  fill="url(#fillDomain)"
-                  stroke="var(--color-domain)"
-                  strokeWidth={2}
-                  stackId="a"
-                />
-                <Area
-                  dataKey="changes"
-                  type="monotone"
-                  fill="url(#fillChanges)"
-                  stroke="var(--color-changes)"
-                  strokeWidth={2}
-                  stackId="a"
-                />
-              </AreaChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        <TimelineAreaChart
+          title={t(AuditLogsKeys.Dashboard.ActivityTimeline)}
+          data={stats.timeline}
+          config={timelineConfig}
+        />
       )}
 
       {/* Row: Source Pie + Action Bar */}
@@ -534,55 +229,20 @@ export default function Dashboard({ stats, from, to, userId, users }: Props) {
         )}
       </div>
 
-      {/* Entity Types */}
       {entityData.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t(AuditLogsKeys.Dashboard.EntityTypes)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <ChartContainer config={entityConfig} className="min-h-[180px] sm:min-h-[200px]">
-              <BarChart data={entityData} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
-                <YAxis tickLine={false} axisLine={false} width={40} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {entityData.map((d, i) => (
-                    <Cell key={d.name} fill={PALETTE[i % PALETTE.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        <EntityTypesChart
+          title={t(AuditLogsKeys.Dashboard.EntityTypes)}
+          data={entityData}
+          config={entityConfig}
+        />
       )}
 
-      {/* Hourly Distribution */}
       {stats.hourlyDistribution.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              {t(AuditLogsKeys.Dashboard.HourlyDistribution)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <ChartContainer config={hourlyConfig} className="min-h-[180px] sm:min-h-[200px]">
-              <BarChart
-                data={stats.hourlyDistribution}
-                margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
-              >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-                <YAxis tickLine={false} axisLine={false} width={40} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+        <HourlyDistributionChart
+          title={t(AuditLogsKeys.Dashboard.HourlyDistribution)}
+          data={stats.hourlyDistribution}
+          config={hourlyConfig}
+        />
       )}
     </PageShell>
   );
