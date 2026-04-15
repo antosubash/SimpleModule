@@ -11,7 +11,7 @@ import {
   Switch,
 } from '@simplemodule/ui';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   Basemap,
   LayerSource,
@@ -71,6 +71,35 @@ export default function Browse({
   const basemapsPanelOpen = openPanel === 'basemaps';
 
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
+
+  // The map fills the viewport minus whatever the current layout puts around it:
+  // the public layout has only a top nav; the authenticated layout adds a left
+  // sidebar that can be collapsed. Re-measure on resize and sidebar transitions.
+  const [insets, setInsets] = useState({ top: 0, left: 0 });
+  useEffect(() => {
+    const measure = () => {
+      const nav = document.querySelector('nav.sticky') as HTMLElement | null;
+      const mobileHeader = document.querySelector('.app-mobile-header') as HTMLElement | null;
+      const sidebar = document.querySelector('.app-sidebar') as HTMLElement | null;
+      const sidebarRect = sidebar?.getBoundingClientRect();
+      setInsets((prev) => {
+        const next = {
+          top: nav?.offsetHeight ?? mobileHeader?.offsetHeight ?? 0,
+          left: sidebarRect && sidebarRect.right > 0 ? sidebarRect.right : 0,
+        };
+        return prev.top === next.top && prev.left === next.left ? prev : next;
+      });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    const sidebar = document.querySelector('.app-sidebar');
+    const observer = sidebar ? new ResizeObserver(measure) : null;
+    if (sidebar && observer) observer.observe(sidebar);
+    return () => {
+      window.removeEventListener('resize', measure);
+      observer?.disconnect();
+    };
+  }, []);
 
   const basemapById = useMemo(() => new Map(basemaps.map((b) => [b.id, b])), [basemaps]);
   const sourceById = useMemo(
@@ -210,8 +239,8 @@ export default function Browse({
     <div
       style={{
         position: 'fixed',
-        top: '57px',
-        left: 0,
+        top: insets.top,
+        left: insets.left,
         right: 0,
         bottom: 0,
       }}
