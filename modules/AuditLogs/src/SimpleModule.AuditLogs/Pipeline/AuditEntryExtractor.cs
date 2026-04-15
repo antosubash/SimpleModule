@@ -8,9 +8,8 @@ namespace SimpleModule.AuditLogs.Pipeline;
 
 /// <summary>
 /// Reflects over an <see cref="IEvent"/> instance to produce a matching
-/// <see cref="AuditEntry"/>. Shared by <see cref="AuditingEventBus"/> and
-/// <see cref="AuditingMessageBus"/> so the extraction rules don't diverge
-/// during the migration from the custom event bus to Wolverine.
+/// <see cref="AuditEntry"/>. Used by <see cref="AuditingMessageBus"/>
+/// to build audit entries for every published domain event.
 /// </summary>
 internal static partial class AuditEntryExtractor
 {
