@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Extracts TypeScript interfaces from per-module DtoTypeScript_*.g.cs files
-// Usage: node tools/extract-ts-types.mjs <generated-dir> <modules-dir>
+// Usage: node scripts/extract-ts-types.mjs <generated-dir> <modules-dir>
 
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { resolve, join } from 'path';

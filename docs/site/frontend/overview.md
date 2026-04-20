@@ -107,7 +107,7 @@ The `@simplemodule/client` package (`packages/SimpleModule.Client/`) provides th
 
 ## Type Safety
 
-The source generator discovers C# types marked with the `[Dto]` attribute and embeds TypeScript interface definitions. The `tools/extract-ts-types.mjs` script extracts these into `.ts` files under `ClientApp/types/`, giving React components full type safety over server-provided props:
+The source generator discovers C# types marked with the `[Dto]` attribute and embeds TypeScript interface definitions. The `scripts/extract-ts-types.mjs` script extracts these into `.ts` files under `ClientApp/types/`, giving React components full type safety over server-provided props:
 
 ```tsx
 import type { Product } from '../types';

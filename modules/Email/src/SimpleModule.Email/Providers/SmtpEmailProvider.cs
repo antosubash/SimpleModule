@@ -23,7 +23,7 @@ public partial class SmtpEmailProvider(
         using var client = new SmtpClient();
         await client.ConnectAsync(smtp.Host, smtp.Port, smtp.UseSsl, cancellationToken);
 
-        if (!string.IsNullOrWhiteSpace(smtp.Username))
+        if (!string.IsNullOrWhiteSpace(smtp.Username) && !string.IsNullOrWhiteSpace(smtp.Password))
         {
             await client.AuthenticateAsync(smtp.Username, smtp.Password, cancellationToken);
         }

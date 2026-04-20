@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generates TypeScript key constants from i18n en.json files.
-// Usage: node tools/generate-i18n-keys.mjs [modules-dir]
+// Usage: node scripts/generate-i18n-keys.mjs [modules-dir]
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';

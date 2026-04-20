@@ -1,0 +1,17 @@
+SimpleModule.AI.Anthropic
+SimpleModule.AI.AzureOpenAI
+SimpleModule.AI.Ollama
+SimpleModule.AI.OpenAI
+SimpleModule.Agents
+SimpleModule.Core
+SimpleModule.Database
+SimpleModule.Generator
+SimpleModule.Hosting
+SimpleModule.Rag
+SimpleModule.Rag.StructuredRag
+SimpleModule.Rag.VectorStore.InMemory
+SimpleModule.Rag.VectorStore.Postgres
+SimpleModule.Storage
+SimpleModule.Storage.Azure
+SimpleModule.Storage.Local
+SimpleModule.Storage.S3

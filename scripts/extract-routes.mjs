@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Extracts TypeScript route definitions from TypeScriptRoutes.g.cs
-// Usage: node tools/extract-routes.mjs <generated-dir> <output-path>
+// Usage: node scripts/extract-routes.mjs <generated-dir> <output-path>
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { resolve, dirname, join } from 'path';

@@ -544,3 +544,40 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 - `AnalysisLevel=latest-all`, `AnalysisMode=All`.
 - Suppressed rules live in `.editorconfig`.
 - Tests run against both SQLite and PostgreSQL in CI.
+
+---
+
+## 13. Framework Scope
+
+The `framework/` directory contains foundational plumbing: module lifecycle, source generation, DbContext infrastructure, and host bootstrap. Nothing else.
+
+Framework projects are explicitly allowlisted in `framework/.allowed-projects`. The target list contains exactly: `SimpleModule.Core`, `SimpleModule.Database`, `SimpleModule.Generator`, `SimpleModule.Hosting`. During the in-flight migration, the list is temporarily permissive and shrinks as projects migrate.
+
+### Adding a project to `framework/`
+
+Requires:
+
+1. Justification that the project is foundational — referenced by the host bootstrap or by every module, with no domain or provider semantics.
+2. A PR that updates `.allowed-projects`, names the reviewer, and documents why a module or `tools/` project is insufficient.
+
+### `tools/` category
+
+The `tools/` directory holds non-module .NET utilities consumed by the host, the framework bootstrap, or other tools. Rules:
+
+- Flat layout: `tools/SimpleModule.{Name}/{Name}.csproj` — no `src/` subdirectory, no Contracts split.
+- Tools never declare `[Module]`.
+- Modules (anything under `modules/`) never reference a `tools/` project. The host and `framework/SimpleModule.Hosting` may.
+
+### Sub-projects
+
+A sub-project is an additional assembly inside a module, used when a module owns multiple optional providers (e.g., `SimpleModule.Agents.AI.Anthropic`). Rules:
+
+- Lives at `modules/{Name}/src/SimpleModule.{Name}.{Suffix}/`.
+- Name matches `SimpleModule.{Name}.{Suffix}`.
+- Does not declare `[Module]` — only the main module assembly owns lifecycle.
+- May not own a `DbContext`.
+- Follows the same dependency rules as its module (Section 3).
+
+### Enforcement
+
+`scripts/validate-framework-scope.mjs` runs in CI and in `npm run check`. It fails on any violation of the rules above.
