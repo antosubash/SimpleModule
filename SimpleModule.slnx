@@ -8,7 +8,6 @@
     <Project Path="framework/SimpleModule.Core/SimpleModule.Core.csproj" />
     <Project Path="framework/SimpleModule.Generator/SimpleModule.Generator.csproj" />
     <Project Path="framework/SimpleModule.Database/SimpleModule.Database.csproj" />
-    <Project Path="framework/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
     <Project Path="framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
     <Project Path="framework/SimpleModule.Storage/SimpleModule.Storage.csproj" />
     <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
@@ -26,6 +25,9 @@
   </Folder>
   <Folder Name="/cli/">
     <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
   </Folder>
   <Folder Name="/modules/" />
   <Folder Name="/modules/Dashboard/">

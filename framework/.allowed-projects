@@ -5,7 +5,6 @@ SimpleModule.AI.OpenAI
 SimpleModule.Agents
 SimpleModule.Core
 SimpleModule.Database
-SimpleModule.DevTools
 SimpleModule.Generator
 SimpleModule.Hosting
 SimpleModule.Rag
