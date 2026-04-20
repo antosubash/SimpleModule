@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Extracts auto-generated Pages/index.ts from ViewPages_*.g.cs files
-// Usage: node tools/extract-view-pages.mjs <generated-cs-file> <output-dir>
-// Example: node tools/extract-view-pages.mjs obj/Debug/.../ViewPages_Products.g.cs src/modules/Products/src/Products/Pages
+// Usage: node scripts/extract-view-pages.mjs <generated-cs-file> <output-dir>
+// Example: node scripts/extract-view-pages.mjs obj/Debug/.../ViewPages_Products.g.cs src/modules/Products/src/Products/Pages
 
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { dirname, resolve } from 'path';

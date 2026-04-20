@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Validates i18n locale files across modules.
-// Usage: node tools/validate-i18n.mjs [modules-dir]
+// Usage: node scripts/validate-i18n.mjs [modules-dir]
 //
 // Checks:
 // 1. Every module with Locales/ has an en.json (base locale)

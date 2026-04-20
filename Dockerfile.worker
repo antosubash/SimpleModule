@@ -13,7 +13,7 @@ WORKDIR /src
 
 # Node is needed in the build stage (not at runtime) because the
 # ExtractDtoTypeScript / ExtractRoutes targets in SimpleModule.Hosting.targets
-# shell out to `node tools/extract-*.mjs` after CoreCompile. The scripts only
+# shell out to `node scripts/extract-*.mjs` after CoreCompile. The scripts only
 # use Node stdlib, so no `npm ci` — just the node binary.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \

@@ -114,7 +114,7 @@ HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant
 
 - **ClientApp** (`template/SimpleModule.Host/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Products/Browse` → imports `/_content/Products/Products.pages.js`).
 - **Module pages** — Each module builds its React pages via Vite in library mode → `{ModuleName}.pages.js` in module's `wwwroot/`. Entry point: `Pages/index.ts` exporting a `pages` record mapping route names to components.
-- **Type generation** — `[Dto]` types → source generator embeds TS interfaces → `tools/extract-ts-types.mjs` writes `.ts` files to `ClientApp/types/`.
+- **Type generation** — `[Dto]` types → source generator embeds TS interfaces → `scripts/extract-ts-types.mjs` writes `.ts` files to `ClientApp/types/`.
 
 ### Request Flow
 

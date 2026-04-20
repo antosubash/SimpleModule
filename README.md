@@ -76,7 +76,7 @@ template/
 cli/
   SimpleModule.Cli             # `sm` CLI tool for scaffolding and validation
 tests/                         # Framework tests, shared test infrastructure, and e2e tests
-tools/                         # Build/dev orchestrators, type extraction, component scaffolding
+scripts/                       # Build/dev orchestrators, type extraction, component scaffolding
 ```
 
 ### Request Flow

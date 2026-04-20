@@ -139,7 +139,7 @@ Three scripts are standard:
 
 ### `npm run dev`
 
-The `npm run dev` command starts the complete development environment using the **dev orchestrator** (`tools/dev-orchestrator.mjs`). It launches three types of processes in parallel:
+The `npm run dev` command starts the complete development environment using the **dev orchestrator** (`scripts/dev-orchestrator.mjs`). It launches three types of processes in parallel:
 
 1. **`dotnet run`** -- The ASP.NET backend on `https://localhost:5001`
 2. **Module watches** -- `vite build --watch` for every module with a `vite.config.ts`
@@ -197,7 +197,7 @@ npm run build
 
 ## Build Orchestrator
 
-The production build uses the **build orchestrator** (`tools/build-orchestrator.mjs`) which:
+The production build uses the **build orchestrator** (`scripts/build-orchestrator.mjs`) which:
 
 1. Discovers all buildable workspaces (modules + ClientApp)
 2. Builds all workspaces **in parallel** for performance

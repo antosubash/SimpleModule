@@ -90,12 +90,12 @@
   <Target
     Name="ExtractDtoTypeScript"
     AfterTargets="CoreCompile"
-    Condition="Exists('$(RepoRoot)tools/extract-ts-types.mjs')"
+    Condition="Exists('$(RepoRoot)scripts/extract-ts-types.mjs')"
     Inputs="$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/**/*"
     Outputs="$(ExtractDtoStamp)"
   >
     <Exec
-      Command="node &quot;$(RepoRoot)tools/extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
+      Command="node &quot;$(RepoRoot)scripts/extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
     <Touch Files="$(ExtractDtoStamp)" AlwaysCreate="true" />
@@ -104,12 +104,12 @@
   <Target
     Name="ExtractRoutes"
     AfterTargets="CoreCompile"
-    Condition="Exists('$(RepoRoot)tools/extract-routes.mjs')"
+    Condition="Exists('$(RepoRoot)scripts/extract-routes.mjs')"
     Inputs="$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator/**/*"
     Outputs="$(ExtractRoutesStamp)"
   >
     <Exec
-      Command="node &quot;$(RepoRoot)tools/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)packages/SimpleModule.Client/src/routes.ts&quot;"
+      Command="node &quot;$(RepoRoot)scripts/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)packages/SimpleModule.Client/src/routes.ts&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
     <Touch Files="$(ExtractRoutesStamp)" AlwaysCreate="true" />
