@@ -70,6 +70,13 @@ function walkCsFiles(dir) {
 
 function readAllowlist() {
   const path = join(repoRoot, 'framework', '.allowed-projects');
+  if (!exists(path)) {
+    errors.push(
+      `framework/.allowed-projects is missing. Create it and list the ` +
+        `projects currently under framework/ (one per line).`,
+    );
+    return [];
+  }
   return readFileSync(path, 'utf8')
     .split('\n')
     .map((line) => line.trim())
