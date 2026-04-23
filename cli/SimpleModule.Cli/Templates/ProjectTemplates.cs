@@ -707,11 +707,13 @@ public sealed class ProjectTemplates
         string frameworkVersion
     )
     {
-        var name = projectName.ToLowerInvariant();
+        // npm 'name' field must be lowercase; workspace glob uses actual project casing.
+        var npmName = projectName.ToLowerInvariant();
 
         string clientDep;
         string uiDep;
         string themeDep;
+        string tsconfigDep;
 
         if (frameworkPackagesPath is not null)
         {
@@ -719,22 +721,24 @@ public sealed class ProjectTemplates
             clientDep = $"\"file:{pkgPath}/SimpleModule.Client\"";
             uiDep = $"\"file:{pkgPath}/SimpleModule.UI\"";
             themeDep = $"\"file:{pkgPath}/SimpleModule.Theme.Default\"";
+            tsconfigDep = $"\"file:{pkgPath}/SimpleModule.TsConfig\"";
         }
         else
         {
             clientDep = $"\"^{frameworkVersion}\"";
             uiDep = $"\"^{frameworkVersion}\"";
             themeDep = $"\"^{frameworkVersion}\"";
+            tsconfigDep = $"\"^{frameworkVersion}\"";
         }
 
         return $$"""
             {
               "private": true,
-              "name": "{{name}}",
+              "name": "{{npmName}}",
               "version": "0.0.0",
               "workspaces": [
                 "src/modules/*/src/*",
-                "src/{{name}}.Host/ClientApp"
+                "src/{{projectName}}.Host/ClientApp"
               ],
               "scripts": {
                 "lint": "biome lint .",
@@ -745,23 +749,25 @@ public sealed class ProjectTemplates
                 "build:dev": "cross-env VITE_MODE=dev npm run build --workspaces --if-present"
               },
               "devDependencies": {
-                "@biomejs/biome": "^2.4.6",
-                "@tailwindcss/vite": "^4.2.1",
+                "@biomejs/biome": "^2.4.10",
+                "@tailwindcss/vite": "^4.2.2",
                 "@types/react": "^19.0.0",
                 "@types/react-dom": "^19.0.0",
-                "@vitejs/plugin-react": "^4.4.0",
-                "cross-env": "^7.0.3",
-                "typescript": "^5.8.0",
-                "vite": "^6.2.0"
+                "@vitejs/plugin-react": "^6.0.1",
+                "cross-env": "^10.1.0",
+                "typescript": "^6.0.2",
+                "vite": "^8.0.3"
               },
               "dependencies": {
-                "@inertiajs/react": "^2.0.0",
+                "@inertiajs/react": "^3.0.0",
                 "@simplemodule/client": {{clientDep}},
                 "@simplemodule/ui": {{uiDep}},
                 "@simplemodule/theme-default": {{themeDep}},
+                "@simplemodule/tsconfig": {{tsconfigDep}},
+                "esbuild": "^0.27.0",
                 "react": "^19.0.0",
                 "react-dom": "^19.0.0",
-                "tailwindcss": "^4.2.1"
+                "tailwindcss": "^4.2.2"
               }
             }
             """;

@@ -491,7 +491,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         """
             import { defineModuleConfig } from '@simplemodule/client/module';
 
-            export default defineModuleConfig(__dirname);
+            export default defineModuleConfig(import.meta.dirname);
             """;
 
     private static string StarterPackageJson(string projectName) =>
@@ -501,9 +501,9 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
               "name": "@{{projectName.ToLowerInvariant()}}/items",
               "version": "0.0.0",
               "scripts": {
-                "build": "vite build",
-                "build:dev": "cross-env VITE_MODE=dev vite build",
-                "watch": "cross-env VITE_MODE=dev vite build --watch"
+                "build": "cross-env VITE_MODE=prod vite build --configLoader runner",
+                "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+                "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch"
               },
               "peerDependencies": {
                 "react": "^19.0.0",

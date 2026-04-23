@@ -31,6 +31,7 @@ internal static class DiscoveryDataBuilder
         List<DiscoveredTypeInfo> knowledgeSources,
         Dictionary<string, string> contractsAssemblyMap,
         bool hasAgentsAssembly,
+        bool hasRagAssembly,
         string hostAssemblyName
     )
     {
@@ -175,6 +176,7 @@ internal static class DiscoveryDataBuilder
                 .ToImmutableArray(),
             contractsAssemblyMap.Keys.ToImmutableArray(),
             hasAgentsAssembly,
+            hasRagAssembly,
             hostAssemblyName
         );
     }
