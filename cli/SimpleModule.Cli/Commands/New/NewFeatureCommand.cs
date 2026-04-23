@@ -61,7 +61,7 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
 
         if (settings.DryRun)
         {
-            RenderDryRunTree(ops);
+            FileTreeRenderer.Render("Would create/modify", ops, isDryRun: true);
             return 0;
         }
 
@@ -103,20 +103,5 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
     {
         File.WriteAllText(path, content);
         AnsiConsole.MarkupLine($"[green]  + {Markup.Escape(Path.GetFileName(path))}[/]");
-    }
-
-    private static void RenderDryRunTree(List<(string Path, FileAction Action)> ops)
-    {
-        AnsiConsole.MarkupLine("[dim]Dry run — no files written[/]\n");
-        var tree = new Tree("[dim]Would create/modify:[/]");
-        foreach (var (path, action) in ops)
-        {
-            var label =
-                action == FileAction.Modify
-                    ? $"[yellow]{Markup.Escape(Path.GetFileName(path))}[/] [dim](modify)[/]"
-                    : $"[green]{Markup.Escape(Path.GetFileName(path))}[/] [dim](create)[/]";
-            tree.AddNode(label);
-        }
-        AnsiConsole.Write(tree);
     }
 }
