@@ -18,8 +18,7 @@ public sealed class DoctorCommand : Command<DoctorSettings>
             return 1;
         }
 
-        AnsiConsole.MarkupLine("[blue]Running project health checks...[/]");
-        AnsiConsole.MarkupLine("");
+        AnsiConsole.Write(new Rule("[blue]Project health check[/]").LeftJustified());
 
         IDoctorCheck[] checks =
         [
@@ -43,25 +42,49 @@ public sealed class DoctorCommand : Command<DoctorSettings>
             results.AddRange(check.Run(solution));
         }
 
-        // Auto-fix if requested
+        var fixedCount = 0;
         if (settings.Fix)
         {
+            var beforeFail = results.Count(r => r.Status == CheckStatus.Fail);
             AutoFix(solution, results);
-            // Re-run checks after fix
             results.Clear();
             foreach (var check in checks)
             {
                 results.AddRange(check.Run(solution));
             }
+            fixedCount = beforeFail - results.Count(r => r.Status == CheckStatus.Fail);
         }
 
-        // Display results table
-        var table = new Table();
+        RenderResults(results);
+
+        var failCount = results.Count(r => r.Status == CheckStatus.Fail);
+        var warnCount = results.Count(r => r.Status == CheckStatus.Warning);
+        var passCount = results.Count(r => r.Status == CheckStatus.Pass);
+
+        AnsiConsole.WriteLine();
+        AnsiConsole.Write(
+            BuildSummaryPanel(passCount, warnCount, failCount, fixedCount, settings.Fix)
+        );
+
+        return failCount > 0 ? 1 : 0;
+    }
+
+    private static void RenderResults(IReadOnlyList<CheckResult> results)
+    {
+        // Failures first so they're the first thing the user sees, then warnings,
+        // then passes. Preserve discovery order within each status bucket.
+        var ordered = results
+            .Select((r, i) => (Result: r, Index: i))
+            .OrderBy(x => StatusPriority(x.Result.Status))
+            .ThenBy(x => x.Index)
+            .Select(x => x.Result);
+
+        var table = new Table().RoundedBorder();
         table.AddColumn("Status");
         table.AddColumn("Check");
         table.AddColumn("Details");
 
-        foreach (var result in results)
+        foreach (var result in ordered)
         {
             var statusMarkup = result.Status switch
             {
@@ -74,38 +97,67 @@ public sealed class DoctorCommand : Command<DoctorSettings>
         }
 
         AnsiConsole.Write(table);
+    }
 
-        var failCount = results.Count(r => r.Status == CheckStatus.Fail);
-        var warnCount = results.Count(r => r.Status == CheckStatus.Warning);
-
-        AnsiConsole.MarkupLine("");
-        if (failCount > 0)
+    private static int StatusPriority(CheckStatus status) =>
+        status switch
         {
-            AnsiConsole.MarkupLine(
-                $"[red]{failCount} failure(s)[/], [yellow]{warnCount} warning(s)[/]"
-            );
-            if (!settings.Fix)
-            {
-                AnsiConsole.MarkupLine(
-                    "[dim]Run with --fix to auto-fix missing slnx entries, project references, Pages registry entries, and npm workspace globs.[/]"
-                );
-            }
+            CheckStatus.Fail => 0,
+            CheckStatus.Warning => 1,
+            CheckStatus.Pass => 2,
+            _ => 3,
+        };
 
-            return 1;
+    private static Panel BuildSummaryPanel(
+        int passCount,
+        int warnCount,
+        int failCount,
+        int fixedCount,
+        bool fixRequested
+    )
+    {
+        var total = passCount + warnCount + failCount;
+        var lines = new List<string>
+        {
+            $"[green]{passCount} pass[/]  ·  [yellow]{warnCount} warn[/]  ·  [red]{failCount} fail[/]  [dim](of {total})[/]",
+        };
+
+        if (fixRequested && fixedCount > 0)
+        {
+            lines.Add($"[green]✓[/] Auto-fixed [green]{fixedCount}[/] issue(s)");
         }
 
-        if (warnCount > 0)
+        if (failCount > 0)
         {
-            AnsiConsole.MarkupLine(
-                $"[green]All checks passed[/] with [yellow]{warnCount} warning(s)[/]"
+            lines.Add(
+                fixRequested
+                    ? "[red]Some failures could not be auto-fixed.[/] See table above for details."
+                    : "[dim]Run with --fix to auto-fix slnx entries, project references, Pages registry, and npm workspace globs.[/]"
             );
+        }
+        else if (warnCount > 0)
+        {
+            lines.Add("[green]All failures resolved.[/] Warnings are non-blocking.");
         }
         else
         {
-            AnsiConsole.MarkupLine("[green]All checks passed![/]");
+            lines.Add("[green]All checks passed.[/]");
         }
 
-        return 0;
+        var color =
+            failCount > 0 ? Color.Red
+            : warnCount > 0 ? Color.Yellow
+            : Color.Green;
+        var header =
+            failCount > 0 ? "Failing"
+            : warnCount > 0 ? "Passing with warnings"
+            : "Healthy";
+
+        return new Panel(string.Join("\n", lines))
+            .Header($"[bold]{header}[/]")
+            .Border(BoxBorder.Rounded)
+            .BorderColor(color)
+            .Expand();
     }
 
     private static void AutoFix(SolutionContext solution, List<CheckResult> results)
