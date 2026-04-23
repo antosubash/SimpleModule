@@ -15,7 +15,6 @@ MyApp/
 │   ├── SimpleModule.Generator/
 │   ├── SimpleModule.Database/
 │   ├── SimpleModule.Hosting/
-│   ├── SimpleModule.DevTools/
 │   ├── SimpleModule.Agents/       # AI agent runtime and registry
 │   ├── SimpleModule.AI.Anthropic/ # Claude API provider
 │   ├── SimpleModule.AI.OpenAI/    # OpenAI API provider
@@ -59,6 +58,8 @@ MyApp/
 │       └── wwwroot/
 ├── cli/
 │   └── SimpleModule.Cli/         # The sm CLI tool
+├── tools/                        # Non-module .NET utilities (dev-time tooling)
+│   └── SimpleModule.DevTools/
 ├── tests/                        # Framework-level test projects
 ├── SimpleModule.slnx             # Solution file
 ├── package.json                  # Root npm workspace config
@@ -78,8 +79,7 @@ The foundation. Defines all the interfaces and attributes that modules implement
 - **`IEndpoint` / `IViewEndpoint`** -- endpoint contracts. `IEndpoint` for API routes, `IViewEndpoint` for pages that render React views.
 - **`[Dto]` attribute** -- marks types for source generator processing (JSON serialization, TypeScript extraction).
 - **`IMenuRegistry`** -- register navigation menu items from your module.
-- **`IEventBus`** -- publish events for cross-module communication.
-- **`IEventHandler<T>`** -- handle events from other modules.
+- **`IEvent`** -- marker interface for events used in cross-module communication (publishing uses Wolverine's `IMessageBus`; see [Events](/guide/events)).
 - **`Inertia`** -- server-side helpers for rendering React pages with props.
 
 ### SimpleModule.Generator
@@ -117,10 +117,6 @@ Multi-provider database support built on EF Core. Handles:
 
 Module registration infrastructure and Inertia page rendering. Provides the runtime plumbing that the generated `AddModules()` and `MapModuleEndpoints()` methods call into. Handles service collection extensions, endpoint routing integration, module lifecycle management, and renders the static HTML shell with embedded JSON props for React hydration.
 
-### SimpleModule.DevTools
-
-Development utilities including hot reload support, diagnostic middleware, and developer experience tooling that is excluded from production builds.
-
 ### SimpleModule.Agents
 
 AI agent runtime and orchestration. Provides `IAgentRegistry` for agent discovery, `AgentChatService` for chat (streaming and non-streaming), `IAgentToolProvider` with `[AgentTool]` attribute for tool discovery, and middleware for rate limiting, token tracking, and guardrails (PII redaction, prompt injection detection).
@@ -149,6 +145,14 @@ File storage abstraction with `IStorageProvider` interface (save, get, delete, e
 - **SimpleModule.Storage.Local** -- local filesystem storage
 - **SimpleModule.Storage.S3** -- AWS S3 and S3-compatible services
 - **SimpleModule.Storage.Azure** -- Azure Blob Storage
+
+## Tools
+
+The `tools/` directory holds non-module .NET utilities consumed by the host or the framework bootstrap. They are not modules and do not go under `modules/`.
+
+### SimpleModule.DevTools
+
+Development utilities including hot reload support, diagnostic middleware, and developer experience tooling. Wired into the host only when `builder.Environment.IsDevelopment()` is true, so it is excluded from production.
 
 ## Module Structure
 
@@ -388,25 +392,21 @@ public sealed class CreateOrder : IEndpoint
 
 ### Events (Asynchronous)
 
-For loose coupling, modules publish events through `IEventBus`:
+For loose coupling, modules publish events through Wolverine's `IMessageBus`:
 
 ```csharp
 // Publisher (in Orders module)
-await eventBus.PublishAsync(new OrderCreatedEvent(order.Id, order.ProductId));
+await bus.PublishAsync(new OrderCreatedEvent(order.Id, order.ProductId));
 
-// Handler (in Products module, or any module)
-public sealed class UpdateStockOnOrderCreated : IEventHandler<OrderCreatedEvent>
+// Handler (in Products module, or any module) -- discovered by naming convention
+public sealed class UpdateStockOnOrderCreated(IProductContracts products)
 {
-    public async Task HandleAsync(
-        OrderCreatedEvent @event,
-        CancellationToken cancellationToken)
-    {
-        // Reduce stock for the ordered product
-    }
+    public Task Handle(OrderCreatedEvent evt, CancellationToken ct) =>
+        products.ReduceStockAsync(evt.ProductId, ct);
 }
 ```
 
-Event handlers run sequentially and failures are isolated -- if one handler throws, the others still execute.
+Wolverine discovers handlers by naming convention (`*Handler`/`*Consumer` class with a `Handle`/`Consume` method). See [Events](/guide/events) for delivery semantics and best practices.
 
 ## Solution File
 

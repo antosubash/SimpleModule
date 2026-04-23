@@ -241,7 +241,7 @@ The source generator performs a topological sort of modules based on their depen
 The lifecycle during application startup:
 
 1. **`AddSimpleModule()`** is called on the `WebApplicationBuilder`
-2. Infrastructure services are registered (event bus, Blazor, etc.)
+2. Infrastructure services are registered (Wolverine messaging, FusionCache, Inertia, etc.)
 3. **`AddModules()`** calls `ConfigureServices` on each module in dependency order
 4. Contract implementations are auto-registered as scoped services
 5. Permissions are collected from all modules

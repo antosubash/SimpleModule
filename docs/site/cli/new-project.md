@@ -50,7 +50,7 @@ MyApp/
 ## Project Details
 
 - **Api** -- the host application that calls generated `AddModules()` and `MapModuleEndpoints()` extension methods
-- **Core** -- defines the `IModule` interface, `[Module]` attribute, `IEndpoint`, `[Dto]`, event bus, and menu system
+- **Core** -- defines the `IModule` interface, `[Module]` attribute, `IEndpoint`, `[Dto]`, events (`IEvent` + Wolverine), and menu system
 - **Database** -- multi-provider database support with schema isolation per module
 - **Generator** -- Roslyn incremental source generator targeting `netstandard2.0` for compile-time module discovery
 - **Tests.Shared** -- `WebApplicationFactory` base class, fake data generators, and test authentication

@@ -127,13 +127,13 @@ Dependencies flow one way: **implementation --> contracts --> core**. Never side
 
 ### Resolving Circular Dependencies
 
-- Use the event bus: module B publishes an event, module A handles it. No reference needed.
+- Use events: module B publishes via `IMessageBus`, module A handles it. No reference needed.
 - Extract shared concepts into a third Contracts project, or rethink ownership.
 
 ### DI Injection Rules
 
 - Inject contract interfaces, never concrete services.
-- Framework services (`IEventBus`, `ISettingsContracts`) are injected directly.
+- Framework services (Wolverine's `IMessageBus`, `ISettingsContracts`, `IFusionCache`) are injected directly.
 - DbContext is injected only within the owning module's implementation.
 
 ---
@@ -194,17 +194,12 @@ This is cosmetic organization -- all modules share one connection.
 
 ### Events
 
-- Cross-module notifications use `IEventBus.PublishAsync<T>()`
-- Events are defined in the publishing module's Contracts project
-- Any module can handle any event via `IEventHandler<T>`
-- Handlers currently execute sequentially in registration order; all run even if some fail. Design handlers as order-independent for forward compatibility.
-- Failures are collected into `AggregateException`
+- Cross-module notifications use Wolverine's `IMessageBus.PublishAsync<T>()`
+- Events are records implementing the `IEvent` marker, defined in the publishing module's Contracts project
+- Any module can handle any event by declaring a class with a `Handle` / `Consume` / `HandleAsync` method taking the event as its first parameter — Wolverine discovers handlers by naming convention
+- In-process only: no external transports, no durable outbox, no cross-restart persistence. For durable work use the Background Jobs module.
 - Handlers should be stateless, independent, and idempotent
-
-### PublishAsync vs PublishInBackground
-
-- **`PublishAsync<T>()`** -- synchronous dispatch. The caller blocks until all handlers complete. Exceptions propagate to the caller.
-- **`PublishInBackground<T>()`** -- fire-and-forget. Failures are logged, not thrown. No cancellation token is accepted, so callers cannot cancel in-flight background work, and handlers may be interrupted on host shutdown. Use for notifications where the caller must not block or fail (audit logging, cache invalidation).
+- Non-critical handlers (audit, metrics, cache invalidation) should catch their own exceptions so they never break the primary operation
 
 ### When to Use Which Communication Pattern
 

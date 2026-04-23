@@ -6,8 +6,8 @@ Analysis of cross-cutting concerns not yet covered by the framework.
 
 - Exception handling (`GlobalExceptionHandler`)
 - Authorization & permissions (`PermissionRegistry`, `IPermissionContracts`)
-- Event bus (`IEventBus`)
-- Validation (`ValidationBuilder`)
+- Event bus (Wolverine `IMessageBus`)
+- Validation (FluentValidation + `ValidationResultExtensions`)
 - Settings (`ISettingsContracts`, `SettingDefinitionRegistry`)
 - Menu system (`IMenuRegistry`)
 - Health checks (`DatabaseHealthCheck`, `/health/live`, `/health/ready`)
