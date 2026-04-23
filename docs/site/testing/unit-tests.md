@@ -177,25 +177,26 @@ var service = new OrderService(fakeProducts, db, logger);
 
 ## Testing Event Handlers
 
-Event handlers are tested by invoking `HandleAsync` directly and asserting on side effects:
+Wolverine handlers are plain classes — instantiate them directly and call `Handle` / `HandleAsync`:
 
 ```csharp
 [Fact]
-public async Task HandleAsync_LogsEvent()
+public async Task Handle_LogsEvent()
 {
-    var handler = new AuditLogEventHandler(logger);
-    var @event = new OrderCreatedEvent { OrderId = OrderId.From(1) };
+    var audit = Substitute.For<IAuditContext>();
+    var handler = new OrderCreatedAuditHandler(audit);
+    var evt = new OrderCreatedEvent(OrderId.From(1), UserId.From(42), 99.99m);
 
-    await handler.HandleAsync(@event, CancellationToken.None);
+    await handler.Handle(evt, CancellationToken.None);
 
-    // Assert on side effects (e.g., logger calls, database writes)
+    await audit.Received().LogAsync("Order created", "1", Arg.Any<CancellationToken>());
 }
 ```
 
-For testing the `EventBus` itself, including partial failure semantics, see the `EventBusPartialFailureTests` in the core test project.
+To verify a service publishes the right event, substitute `IMessageBus` and assert on the recorded calls — see [Events](/guide/events#testing-events) for a full example.
 
 ## Next Steps
 
 - [Integration Tests](/testing/integration-tests) -- test HTTP endpoints through the full pipeline
 - [E2E Tests](/testing/e2e-tests) -- browser-based testing with Playwright
-- [Event Bus](/guide/events) -- understand event handler patterns and partial failure
+- [Events](/guide/events) -- handler conventions and delivery semantics

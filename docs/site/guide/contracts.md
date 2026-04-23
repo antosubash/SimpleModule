@@ -308,7 +308,7 @@ public sealed record OrderCreatedEvent(
     OrderId OrderId, UserId UserId, decimal Total) : IEvent;
 ```
 
-Any module can implement `IEventHandler<OrderCreatedEvent>` to react when an order is created, without depending on the Orders implementation.
+Any module can handle `OrderCreatedEvent` by declaring a handler class with a `Handle` method — Wolverine discovers it by naming convention — without depending on the Orders implementation.
 
 ## Summary
 
@@ -324,5 +324,5 @@ Any module can implement `IEventHandler<OrderCreatedEvent>` to react when an ord
 ## Next Steps
 
 - [Database](/guide/database) -- configure per-module database contexts and schema isolation
-- [Event Bus](/guide/events) -- publish and handle cross-module events
+- [Events](/guide/events) -- publish and handle cross-module events
 - [Type Generation](/advanced/type-generation) -- how DTOs become TypeScript interfaces

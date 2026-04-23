@@ -363,6 +363,6 @@ Full `Database` configuration section:
 
 ## Next Steps
 
-- [Event Bus](/guide/events) -- cross-module communication via events
+- [Events](/guide/events) -- cross-module communication via events
 - [EF Core Interceptors](/advanced/interceptors) -- safe dependency injection patterns for interceptors
 - [Deployment](/advanced/deployment) -- production database configuration and migrations

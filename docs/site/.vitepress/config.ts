@@ -48,7 +48,7 @@ export default defineConfig({
         {
           text: 'Communication',
           items: [
-            { text: 'Event Bus', link: '/guide/events' },
+            { text: 'Events', link: '/guide/events' },
             { text: 'Permissions', link: '/guide/permissions' },
             { text: 'Menus', link: '/guide/menus' },
             { text: 'Settings', link: '/guide/settings' },
@@ -61,6 +61,7 @@ export default defineConfig({
             { text: 'Background Jobs', link: '/guide/background-jobs' },
             { text: 'File Storage', link: '/guide/file-storage' },
             { text: 'Localization', link: '/guide/localization' },
+            { text: 'Error Pages', link: '/guide/error-pages' },
             { text: 'AI Agents & RAG', link: '/guide/ai-agents' },
           ],
         },

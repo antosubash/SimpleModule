@@ -124,7 +124,7 @@ Every `IViewEndpoint` must have a corresponding entry in the module's `Pages/ind
 
 ### IEvent
 
-Marker interface for event types. All events published through the event bus must implement this interface.
+Marker interface for event types. All events published through `IMessageBus` should implement this interface.
 
 ```csharp
 namespace SimpleModule.Core.Events;
@@ -140,69 +140,39 @@ public sealed record OrderCreatedEvent(int OrderId, string CustomerName) : IEven
 
 ---
 
-### IEventBus
+### IMessageBus (Wolverine)
 
-Publishes events to all registered handlers with exception isolation semantics.
-
-```csharp
-namespace SimpleModule.Core.Events;
-
-public interface IEventBus
-{
-    Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-        where T : IEvent;
-}
-```
-
-**Behavior:**
-- Handlers execute **sequentially** in registration order
-- Handler failures are **isolated** -- if one handler throws, the others still run
-- After all handlers execute, any exceptions are rethrown as `AggregateException`
-
-**Usage:**
+Publishing is provided by **[Wolverine](https://wolverinefx.net/)**'s `IMessageBus` (namespace `Wolverine`), registered by `AddSimpleModuleInfrastructure()`. Inject it like any other scoped service.
 
 ```csharp
+using Wolverine;
+
 public sealed class CreateOrder : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapPost("/", async (CreateOrderRequest request,
-            IOrderContracts orders, IEventBus eventBus) =>
+            IOrderContracts orders, IMessageBus bus) =>
         {
             var order = await orders.CreateAsync(request);
-            await eventBus.PublishAsync(new OrderCreatedEvent(order.Id, request.CustomerName));
+            await bus.PublishAsync(new OrderCreatedEvent(order.Id, request.CustomerName));
             return TypedResults.Created($"/{order.Id}", order);
         });
     }
 }
 ```
 
----
-
-### IEventHandler\<T\>
-
-Handles a specific event type. Implementations are registered in DI and invoked by the event bus.
+Handlers are discovered by Wolverine's naming convention — a class with a `Handle` / `Consume` / `HandleAsync` method taking the event as its first parameter. See [Events](/guide/events) for the full guide.
 
 ```csharp
-namespace SimpleModule.Core.Events;
-
-public interface IEventHandler<in T> where T : IEvent
+public sealed class OrderCreatedAuditHandler(IAuditContext audit)
 {
-    Task HandleAsync(T @event, CancellationToken cancellationToken);
+    public Task Handle(OrderCreatedEvent evt, CancellationToken ct) =>
+        audit.LogAsync("Order created", evt.OrderId.ToString(), ct);
 }
 ```
 
-**Usage:**
-
-```csharp
-public sealed class OrderCreatedAuditHandler : IEventHandler<OrderCreatedEvent>
-{
-    public async Task HandleAsync(OrderCreatedEvent @event, CancellationToken cancellationToken)
-    {
-        // Log the order creation for audit purposes
-    }
-}
-```
+`Lazy<IMessageBus>` is also registered to let services break factory-lambda cycles.
 
 ---
 
