@@ -28,8 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
           fetch-depth: 0
-          persist-credentials: true
 
       - name: Bump version
         id: bump
