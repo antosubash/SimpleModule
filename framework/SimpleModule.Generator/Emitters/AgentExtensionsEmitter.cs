@@ -30,6 +30,18 @@ internal sealed class AgentExtensionsEmitter : IEmitter
         );
         sb.AppendLine("    {");
 
+        if (!data.HasAgentsAssembly)
+        {
+            sb.AppendLine("        return services;");
+            sb.AppendLine("    }");
+            sb.AppendLine("}");
+            context.AddSource(
+                "AgentExtensions.g.cs",
+                SourceText.From(sb.ToString(), Encoding.UTF8)
+            );
+            return;
+        }
+
         // Register agent definitions
         foreach (var agent in data.AgentDefinitions)
         {

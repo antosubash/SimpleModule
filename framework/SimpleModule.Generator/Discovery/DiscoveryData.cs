@@ -49,6 +49,7 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
     ImmutableArray<string> ContractsAssemblyNames,
     bool HasAgentsAssembly,
+    bool HasRagAssembly,
     string HostAssemblyName
 )
 {
@@ -80,6 +81,7 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<KnowledgeSourceRecord>.Empty,
         ImmutableArray<string>.Empty,
         false,
+        false,
         ""
     );
 
@@ -103,6 +105,7 @@ internal readonly record struct DiscoveryData(
             && KnowledgeSources.SequenceEqual(other.KnowledgeSources)
             && ContractsAssemblyNames.SequenceEqual(other.ContractsAssemblyNames)
             && HasAgentsAssembly == other.HasAgentsAssembly
+            && HasRagAssembly == other.HasRagAssembly
             && HostAssemblyName == other.HostAssemblyName;
     }
 
@@ -127,6 +130,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, KnowledgeSources);
         hash = HashHelper.HashArray(hash, ContractsAssemblyNames);
         hash = HashHelper.Combine(hash, HasAgentsAssembly.GetHashCode());
+        hash = HashHelper.Combine(hash, HasRagAssembly.GetHashCode());
         hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
         return hash;
     }
