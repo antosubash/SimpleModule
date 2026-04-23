@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
+import { AbsoluteFill } from 'remotion';
 import { GradientBackground } from '../components/GradientBackground';
 import { TechBadge } from '../components/TechBadge';
 import { BigNumber } from '../components/BigNumber';
@@ -7,16 +7,8 @@ import { techStack, stats } from '../data/techStack';
 import { colors, fonts } from '../theme';
 
 export const SceneTechStats: React.FC = () => {
-  const frame = useCurrentFrame();
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 170, 180],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
-
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="dark" />
       <AbsoluteFill
         style={{

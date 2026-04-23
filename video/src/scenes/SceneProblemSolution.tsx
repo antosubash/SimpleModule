@@ -7,13 +7,6 @@ export const SceneProblemSolution: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 140, 150],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
-
   const problem1 = interpolate(frame, [0, 18], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -34,7 +27,7 @@ export const SceneProblemSolution: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="dark" />
       <AbsoluteFill
         style={{

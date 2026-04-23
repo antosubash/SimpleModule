@@ -8,13 +8,6 @@ export const SceneCTA: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 100, 120],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
-
   const ctaSpring = spring({
     frame: frame - 20,
     fps,
@@ -27,7 +20,7 @@ export const SceneCTA: React.FC = () => {
   });
 
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="hero" />
       <AbsoluteFill
         style={{

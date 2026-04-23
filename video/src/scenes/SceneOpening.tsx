@@ -18,15 +18,8 @@ export const SceneOpening: React.FC = () => {
     extrapolateRight: 'clamp',
   });
 
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 110, 120],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
-
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="hero" />
       <AbsoluteFill
         style={{

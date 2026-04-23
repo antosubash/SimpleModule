@@ -14,7 +14,7 @@ export const techStack: readonly Tech[] = [
 ] as const;
 
 export const stats = [
-  { value: 20, label: 'Modules', suffix: '' },
-  { value: 115, label: 'Thousand LOC', suffix: 'k' },
+  { value: 10, label: 'Core Modules', suffix: '' },
+  { value: 55, label: 'Compile-time Checks', suffix: '' },
   { value: 129, label: 'Test Files', suffix: '' },
 ] as const;

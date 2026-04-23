@@ -1,4 +1,6 @@
 node_modules/
 out/
+.tmp-narration/
+.piper-voices/
 *.log
 .DS_Store

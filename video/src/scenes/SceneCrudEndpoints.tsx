@@ -10,20 +10,13 @@ export const SceneCrudEndpoints: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 200, 210],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
-
-  const captionOpacity = interpolate(frame, [170, 190], [0, 1], {
+  const captionOpacity = interpolate(frame, [150, 170], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="dark" />
       <AbsoluteFill
         style={{

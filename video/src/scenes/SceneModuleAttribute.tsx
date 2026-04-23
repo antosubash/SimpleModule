@@ -8,20 +8,14 @@ import { colors, fonts } from '../theme';
 
 export const SceneModuleAttribute: React.FC = () => {
   const frame = useCurrentFrame();
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 170, 180],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
 
-  const captionOpacity = interpolate(frame, [130, 150], [0, 1], {
+  const captionOpacity = interpolate(frame, [120, 140], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="dark" />
       <AbsoluteFill
         style={{

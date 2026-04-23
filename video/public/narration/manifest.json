@@ -1,0 +1,47 @@
+[
+  {
+    "id": "s1",
+    "durationS": 3.160816,
+    "text": "SimpleModule — the modular monolith for .NET."
+  },
+  {
+    "id": "s2",
+    "durationS": 3.866122,
+    "text": "Monoliths tangle. Microservices complicate. There's a better way."
+  },
+  {
+    "id": "s3",
+    "durationS": 4.362449,
+    "text": "Mark a class with Module, and the Roslyn generator wires it up at compile time."
+  },
+  {
+    "id": "s4",
+    "durationS": 3.866122,
+    "text": "Write one IEndpoint class. Routes and permissions register themselves."
+  },
+  {
+    "id": "s5",
+    "durationS": 3.239184,
+    "text": "MapCrud turns a single line into five REST endpoints."
+  },
+  {
+    "id": "s6",
+    "durationS": 4.257959,
+    "text": "Render React pages with Inertia, and broadcast events across modules."
+  },
+  {
+    "id": "s7",
+    "durationS": 3.056327,
+    "text": "Ten production-ready core modules ship in the box."
+  },
+  {
+    "id": "s8",
+    "durationS": 5.067755,
+    "text": "Built on .NET 10 and React 19, with fifty-five compile-time safety checks."
+  },
+  {
+    "id": "s9",
+    "durationS": 2.76898,
+    "text": "Start building today. You'll find us on GitHub."
+  }
+]

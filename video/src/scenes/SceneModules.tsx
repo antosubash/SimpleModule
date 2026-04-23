@@ -7,20 +7,14 @@ import { colors, fonts } from '../theme';
 
 export const SceneModules: React.FC = () => {
   const frame = useCurrentFrame();
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 170, 180],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
 
-  const captionOpacity = interpolate(frame, [130, 150], [0, 1], {
+  const captionOpacity = interpolate(frame, [95, 115], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="hero" />
       <AbsoluteFill
         style={{
@@ -37,7 +31,7 @@ export const SceneModules: React.FC = () => {
             fontWeight: 700,
             color: colors.ink,
             letterSpacing: -0.8,
-            marginBottom: 44,
+            marginBottom: 48,
             textAlign: 'center',
           }}
         >
@@ -48,20 +42,20 @@ export const SceneModules: React.FC = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-            gap: 18,
+            gap: 24,
             width: '100%',
             maxWidth: 1500,
             justifyItems: 'center',
           }}
         >
           {modules.map((name, i) => (
-            <ModuleChip key={name} name={name} delay={10 + i * 4} />
+            <ModuleChip key={name} name={name} delay={10 + i * 5} />
           ))}
         </div>
 
         <div
           style={{
-            marginTop: 44,
+            marginTop: 52,
             opacity: captionOpacity,
             fontFamily: fonts.sans,
             fontSize: 28,
@@ -70,7 +64,7 @@ export const SceneModules: React.FC = () => {
             letterSpacing: 0.4,
           }}
         >
-          20 production-ready modules shipped today.
+          10 production-ready core modules.
         </div>
       </AbsoluteFill>
     </AbsoluteFill>

@@ -9,13 +9,6 @@ export const SceneInertiaEvents: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const sceneOpacity = interpolate(
-    frame,
-    [0, 10, 170, 180],
-    [0, 1, 1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
-
   const listeners = [0, 1, 2].map((i) =>
     spring({
       frame: frame - (95 + i * 7),
@@ -30,13 +23,13 @@ export const SceneInertiaEvents: React.FC = () => {
     config: { damping: 13, mass: 0.6, stiffness: 170 },
   });
 
-  const captionOpacity = interpolate(frame, [130, 150], [0, 1], {
+  const captionOpacity = interpolate(frame, [120, 140], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   return (
-    <AbsoluteFill style={{ opacity: sceneOpacity }}>
+    <AbsoluteFill>
       <GradientBackground variant="dark" />
       <AbsoluteFill
         style={{
