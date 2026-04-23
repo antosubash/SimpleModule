@@ -28,6 +28,7 @@
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
+    <Project Path="tools/SimpleModule.PerfSeeder/SimpleModule.PerfSeeder.csproj" />
   </Folder>
   <Folder Name="/modules/" />
   <Folder Name="/modules/Dashboard/">

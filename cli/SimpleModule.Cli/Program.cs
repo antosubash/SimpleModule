@@ -2,6 +2,7 @@
 using SimpleModule.Cli.Commands.Doctor;
 using SimpleModule.Cli.Commands.Install;
 using SimpleModule.Cli.Commands.New;
+using SimpleModule.Cli.Commands.Seed;
 using Spectre.Console.Cli;
 
 var app = new CommandApp();
@@ -43,6 +44,12 @@ app.Configure(config =>
     config
         .AddCommand<DoctorCommand>("doctor")
         .WithDescription("Validate project structure and conventions");
+
+    config
+        .AddCommand<SeedCommand>("seed")
+        .WithDescription(
+            "Seed the configured database with bulk test data for perf testing (Products, Orders, AuditLogs)"
+        );
 });
 
 return app.Run(args);
