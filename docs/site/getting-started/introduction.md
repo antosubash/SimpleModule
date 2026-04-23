@@ -41,16 +41,16 @@ SimpleModule includes a Roslyn incremental source generator that scans your asse
 - Endpoint classes implementing `IEndpoint` or `IViewEndpoint`
 - Data transfer objects marked with `[Dto]`
 
-The generator emits extension methods -- `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()` -- that your host app calls in `Program.cs`. There is no reflection at runtime. The generated code is plain C# that you can inspect in your IDE.
+The generator emits extension methods -- `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()` -- which the framework's `AddSimpleModule()` and `UseSimpleModule()` helpers call for you. There is no reflection at runtime. The generated code is plain C# that you can inspect in your IDE.
 
 ```csharp
-// Program.cs — calls generated extension methods
+// Program.cs — two calls wire everything up
 var builder = WebApplication.CreateBuilder(args);
-builder.AddModules();         // registers all module services
+builder.AddSimpleModule();    // registers framework services + all modules
 
 var app = builder.Build();
-app.MapModuleEndpoints();     // maps all discovered endpoints
-app.CollectModuleMenuItems(); // builds the navigation menu
+await app.UseSimpleModule();  // configures middleware, maps endpoints, Inertia.js
+await app.RunAsync();
 ```
 
 ### React + Inertia.js Frontend
@@ -64,11 +64,11 @@ This means:
 - **Full React ecosystem** -- use any React library. The framework doesn't limit what you can do on the client.
 
 ```typescript
-// modules/Products/src/Products/Pages/index.ts
-export const pages: Record<string, any> = {
-  'Products/Browse': () => import('../Views/Browse'),
-  'Products/Manage': () => import('../Views/Manage'),
-  'Products/Create': () => import('../Views/Create'),
+// modules/Products/src/SimpleModule.Products/Pages/index.ts
+export const pages: Record<string, unknown> = {
+  'Products/Browse': () => import('./Browse'),
+  'Products/Manage': () => import('./Manage'),
+  'Products/Create': () => import('./Create'),
 };
 ```
 
@@ -179,7 +179,7 @@ The Roslyn source generator runs during compilation. It discovers `ProductsModul
 
 **4. Everything is registered**
 
-The generated `AddModules()` method calls `ProductsModule.ConfigureServices()`. The generated `MapModuleEndpoints()` method maps `BrowseProducts` under the `/products` route prefix. The generated `CollectModuleMenuItems()` method gathers any menu items the module registered. All at compile time. All type-safe.
+When you call `AddSimpleModule()`, the generated `AddModules()` runs and invokes `ProductsModule.ConfigureServices()`. When you call `UseSimpleModule()`, the generated `MapModuleEndpoints()` maps `BrowseProducts` under the `/products` route prefix, and `CollectModuleMenuItems()` gathers any menu items the module registered. All at compile time. All type-safe.
 
 ::: tip Zero Configuration
 You don't write registration code, startup configuration, or reflection-based discovery logic. Add a class, implement an interface, build. The generator handles the rest.
@@ -191,7 +191,7 @@ You don't write registration code, startup configuration, or reflection-based di
 |-------|-----------|
 | Runtime | .NET 10 |
 | Frontend | React 19, Inertia.js |
-| Server rendering | Blazor SSR |
+| Server rendering | Inertia.js (static HTML shell with embedded JSON props) |
 | Build tooling | Vite, Tailwind CSS 4 |
 | Source generation | Roslyn incremental generators |
 | Component library | Radix UI |
