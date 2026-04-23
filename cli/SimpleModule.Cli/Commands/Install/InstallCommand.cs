@@ -5,9 +5,9 @@ using Spectre.Console.Cli;
 
 namespace SimpleModule.Cli.Commands.Install;
 
-public sealed class InstallCommand : Command<InstallSettings>
+public sealed class InstallCommand : AsyncCommand<InstallSettings>
 {
-    public override int Execute(CommandContext context, InstallSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, InstallSettings settings)
     {
         var solution = SolutionContext.Discover();
         if (solution is null)
@@ -53,9 +53,9 @@ public sealed class InstallCommand : Command<InstallSettings>
         process.Start();
         var outputTask = process.StandardOutput.ReadToEndAsync();
         var errorTask = process.StandardError.ReadToEndAsync();
-        process.WaitForExit();
-        var output = outputTask.GetAwaiter().GetResult();
-        var error = errorTask.GetAwaiter().GetResult();
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        var output = await outputTask.ConfigureAwait(false);
+        var error = await errorTask.ConfigureAwait(false);
 
         if (process.ExitCode != 0)
         {

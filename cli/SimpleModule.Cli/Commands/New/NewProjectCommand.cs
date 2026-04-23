@@ -35,7 +35,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         if (settings.DryRun)
         {
             var ops = PlanFiles(projectName, rootDir);
-            RenderDryRunTree(projectName, ops, rootDir);
+            FileTreeRenderer.Render($"{projectName}/", ops, rootDir, isDryRun: true);
             return 0;
         }
 
@@ -52,7 +52,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             );
 
         var allOps = PlanFiles(projectName, rootDir);
-        RenderFileTree(projectName, allOps, rootDir);
+        FileTreeRenderer.Render($"{projectName}/", allOps, rootDir);
 
         AnsiConsole.MarkupLine($"\n[green]Project '{Markup.Escape(projectName)}' created![/]");
         AnsiConsole.MarkupLine("[dim]Next steps:[/]");
@@ -357,16 +357,6 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
                 </Folder>
             </Solution>
             """;
-    }
-
-    private static void RenderDryRunTree(
-        string projectName,
-        List<(string Path, FileAction Action)> ops,
-        string rootDir
-    )
-    {
-        AnsiConsole.MarkupLine("[dim]Dry run — no files written[/]\n");
-        RenderFileTree(projectName, ops, rootDir, isDryRun: true);
     }
 
     private static string StarterModuleClass(string moduleName, string singularName) =>
@@ -727,28 +717,4 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             .min-w-\[160px\] { min-width: 160px; }
             .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1); }
             """;
-
-    private static void RenderFileTree(
-        string projectName,
-        List<(string Path, FileAction Action)> ops,
-        string rootDir,
-        bool isDryRun = false
-    )
-    {
-        AnsiConsole.MarkupLine("");
-        var tree = new Tree($"[blue]{Markup.Escape(projectName)}/[/]");
-
-        foreach (var (path, action) in ops)
-        {
-            var relativePath = Path.GetRelativePath(rootDir, path).Replace('\\', '/');
-            var label =
-                action == FileAction.Modify
-                    ? $"[yellow]{Markup.Escape(relativePath)}[/] [dim]({(isDryRun ? "modify" : "modified")})[/]"
-                : isDryRun ? $"[green]{Markup.Escape(relativePath)}[/] [dim](create)[/]"
-                : $"[green]{Markup.Escape(relativePath)}[/]";
-            tree.AddNode(label);
-        }
-
-        AnsiConsole.Write(tree);
-    }
 }
