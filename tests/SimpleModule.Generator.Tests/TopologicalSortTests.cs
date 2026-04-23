@@ -249,6 +249,7 @@ public class TopologicalSortTests
             ImmutableArray<KnowledgeSourceRecord>.Empty,
             ImmutableArray<string>.Empty,
             false,
+            false,
             "SimpleModule.Host"
         );
 
@@ -323,6 +324,7 @@ public class TopologicalSortTests
             ImmutableArray<AgentToolProviderRecord>.Empty,
             ImmutableArray<KnowledgeSourceRecord>.Empty,
             ImmutableArray<string>.Empty,
+            false,
             false,
             "SimpleModule.Host"
         );
@@ -414,6 +416,7 @@ public class TopologicalSortTests
             ImmutableArray<AgentToolProviderRecord>.Empty,
             ImmutableArray<KnowledgeSourceRecord>.Empty,
             ImmutableArray<string>.Empty,
+            false,
             false,
             "SimpleModule.Host"
         );

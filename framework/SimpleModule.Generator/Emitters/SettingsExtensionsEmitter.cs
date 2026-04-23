@@ -34,11 +34,14 @@ internal sealed class SettingsExtensionsEmitter : IEmitter
             );
         }
 
-        sb.AppendLine();
-        sb.AppendLine("        // RAG settings definitions");
-        sb.AppendLine(
-            "        global::SimpleModule.Rag.RagSettingsDefinitions.Register(settings);"
-        );
+        if (data.HasRagAssembly)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        // RAG settings definitions");
+            sb.AppendLine(
+                "        global::SimpleModule.Rag.RagSettingsDefinitions.Register(settings);"
+            );
+        }
 
         sb.AppendLine();
         sb.AppendLine(
