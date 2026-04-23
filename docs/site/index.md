@@ -4,7 +4,7 @@ layout: home
 hero:
     name: SimpleModule
     text: Modular Monolith Framework for .NET
-    tagline: Compile-time module discovery via Roslyn source generators. React 19 + Inertia.js frontend served via Blazor SSR.
+    tagline: Compile-time module discovery via Roslyn source generators. React 19 + Inertia.js frontend served by ASP.NET Core.
     actions:
         - theme: brand
           text: Get Started

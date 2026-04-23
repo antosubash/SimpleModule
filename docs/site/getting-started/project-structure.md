@@ -6,10 +6,47 @@ outline: deep
 
 A SimpleModule solution follows a consistent directory layout that separates the framework, your feature modules, frontend packages, and the host application.
 
-## Top-Level Layout
+::: info Two layouts
+This page shows two different directory layouts:
+
+- **CLI-scaffolded projects** (what `sm new project` generates for you) use `src/modules/` for feature modules.
+- **The SimpleModule framework repository** itself uses `modules/` at the repo root.
+
+The examples below are labelled so you know which is which. If you are building an application with SimpleModule, the CLI-scaffolded layout is the one that matters.
+:::
+
+## Top-Level Layout (CLI-scaffolded project)
+
+When you run `sm new project MyApp`, the resulting solution looks like this:
 
 ```
 MyApp/
+├── src/
+│   ├── modules/                    # Your feature modules
+│   │   ├── SimpleModule.Products/
+│   │   │   ├── src/
+│   │   │   │   ├── SimpleModule.Products/
+│   │   │   │   └── SimpleModule.Products.Contracts/
+│   │   │   └── tests/
+│   │   │       └── SimpleModule.Products.Tests/
+│   │   └── ...
+│   └── MyApp.Host/                 # Host application
+│       ├── ClientApp/
+│       ├── Program.cs
+│       └── wwwroot/
+├── MyApp.slnx                      # Solution file
+├── package.json                    # Root npm workspace config
+└── Directory.Build.props           # Shared MSBuild properties
+```
+
+The CLI consumes the framework packages from NuGet, so `framework/`, `packages/`, and `cli/` are not present in a scaffolded app.
+
+## Top-Level Layout (framework repository)
+
+The SimpleModule framework repository itself lays the source out differently, because it hosts the framework packages alongside a reference host and demo modules:
+
+```
+SimpleModule/
 ├── framework/                    # Core framework packages
 │   ├── SimpleModule.Core/
 │   ├── SimpleModule.Generator/
@@ -28,15 +65,19 @@ MyApp/
 │   ├── SimpleModule.Storage.Local/ # Local filesystem storage
 │   ├── SimpleModule.Storage.S3/    # AWS S3 storage
 │   └── SimpleModule.Storage.Azure/ # Azure Blob storage
-├── modules/                      # Your feature modules
+├── modules/                      # Demo / built-in modules (framework repo only)
 │   ├── Admin/
 │   ├── Agents/
 │   ├── AuditLogs/
 │   ├── BackgroundJobs/
+│   ├── Chat/
 │   ├── Dashboard/
+│   ├── Datasets/
+│   ├── Email/
 │   ├── FeatureFlags/
 │   ├── FileStorage/
 │   ├── Localization/
+│   ├── Map/
 │   ├── Marketplace/
 │   ├── OpenIddict/
 │   ├── Orders/
@@ -44,15 +85,17 @@ MyApp/
 │   ├── Permissions/
 │   ├── Products/
 │   ├── Rag/
+│   ├── RateLimiting/
 │   ├── Settings/
 │   ├── Tenants/
 │   └── Users/
 ├── packages/                     # Frontend npm packages
 │   ├── SimpleModule.Client/
 │   ├── SimpleModule.UI/
-│   └── SimpleModule.Theme.Default/
+│   ├── SimpleModule.Theme.Default/
+│   └── SimpleModule.TsConfig/
 ├── template/
-│   └── SimpleModule.Host/        # The host application
+│   └── SimpleModule.Host/        # Reference host application
 │       ├── ClientApp/
 │       ├── Program.cs
 │       └── wwwroot/
@@ -94,12 +137,16 @@ It generates:
 
 | Generated method | Purpose |
 |-----------------|---------|
-| `AddModules()` | Calls each module's `ConfigureServices` |
-| `MapModuleEndpoints()` | Maps all discovered endpoints with route prefixes |
-| `CollectModuleMenuItems()` | Builds the navigation menu from module registrations |
+| `AddModules()` | Calls each module's `ConfigureServices`. Invoked by `builder.AddSimpleModule()`. |
+| `MapModuleEndpoints()` | Maps all discovered endpoints with route prefixes. Invoked by `app.UseSimpleModule()`. |
+| `CollectModuleMenuItems()` | Builds the navigation menu from module registrations. Invoked by `app.UseSimpleModule()`. |
 | JSON serializer contexts | AOT-friendly serialization for `[Dto]` types |
 | TypeScript interfaces | Embedded TS definitions extracted by build tooling |
 | View page registry | Maps view endpoints to React components |
+
+::: tip User-facing entrypoints
+You call `builder.AddSimpleModule()` and `await app.UseSimpleModule()` from your host. These wrappers in `SimpleModule.Hosting` delegate to the generated methods above, so you do not invoke `AddModules()`, `MapModuleEndpoints()`, or `CollectModuleMenuItems()` directly.
+:::
 
 ::: tip Inspecting Generated Code
 In Visual Studio or Rider, expand **Dependencies > Analyzers > SimpleModule.Generator** to see exactly what code the generator produces. This is useful for debugging registration issues.
@@ -115,7 +162,7 @@ Multi-provider database support built on EF Core. Handles:
 
 ### SimpleModule.Hosting
 
-Module registration infrastructure and Inertia page rendering. Provides the runtime plumbing that the generated `AddModules()` and `MapModuleEndpoints()` methods call into. Handles service collection extensions, endpoint routing integration, module lifecycle management, and renders the static HTML shell with embedded JSON props for React hydration.
+Module registration infrastructure and Inertia page rendering. Exposes the two user-facing entry points that your host's `Program.cs` calls -- `builder.AddSimpleModule()` and `await app.UseSimpleModule()` -- which in turn invoke the generated `AddModules()`, `MapModuleEndpoints()`, and `CollectModuleMenuItems()` methods. Handles service collection extensions, endpoint routing integration, module lifecycle management, and renders the static HTML shell with embedded JSON props for React hydration.
 
 ### SimpleModule.Agents
 
@@ -152,59 +199,67 @@ The `tools/` directory holds non-module .NET utilities consumed by the host or t
 
 ### SimpleModule.DevTools
 
-Development utilities including hot reload support, diagnostic middleware, and developer experience tooling. Wired into the host only when `builder.Environment.IsDevelopment()` is true, so it is excluded from production.
+Development utilities including hot reload support, diagnostic middleware, and developer experience tooling. The host does not need explicit dev-only wiring in `Program.cs` -- DevTools is imported via the `SimpleModule.Hosting.targets` MSBuild import in the host's csproj and activates automatically in development builds.
 
 ## Module Structure
 
-Every module follows a **three-project pattern**: implementation, contracts, and tests.
+Every module follows a **three-project pattern**: implementation, contracts, and tests. Project directories and assembly names use the `SimpleModule.{Name}` prefix (enforced by diagnostic SM0052).
 
 ```
-modules/Products/
+modules/Products/                        # (framework repo layout -- use src/modules/SimpleModule.Products/ in a CLI-scaffolded app)
 ├── src/
-│   ├── Products/                        # Implementation (private)
-│   │   ├── Products.csproj
-│   │   ├── ProductsModule.cs            # Module class with [Module] attribute
-│   │   ├── Data/
-│   │   │   ├── ProductsDbContext.cs      # EF Core DbContext
-│   │   │   └── Entities/                # Database entities (internal)
+│   ├── SimpleModule.Products/                        # Implementation (private)
+│   │   ├── SimpleModule.Products.csproj
+│   │   ├── ProductsModule.cs                         # Module class with [Module] attribute
+│   │   ├── ProductsDbContext.cs                      # EF Core DbContext (module root)
+│   │   ├── ProductService.cs                         # IProductContracts implementation (module root)
+│   │   ├── EntityConfigurations/                     # IEntityTypeConfiguration<T> classes
 │   │   ├── Endpoints/
 │   │   │   └── Products/
-│   │   │       ├── BrowseProducts.cs    # GET /products
-│   │   │       ├── CreateProduct.cs     # POST /products/create
-│   │   │       └── ManageProduct.cs     # GET /products/{id}
-│   │   ├── Services/
-│   │   │   └── ProductService.cs        # IProductContracts implementation
-│   │   ├── Pages/
-│   │   │   └── index.ts                 # React page registry
-│   │   ├── Views/
-│   │   │   ├── Browse.tsx               # React page components
+│   │   │       ├── BrowseProducts.cs                 # GET /products
+│   │   │       ├── CreateProduct.cs                  # POST /products/create
+│   │   │       └── ManageProduct.cs                  # GET /products/{id}
+│   │   ├── Pages/                                    # React components live alongside their view endpoints
+│   │   │   ├── index.ts                              # React page registry
+│   │   │   ├── Browse.tsx                            # React page component
+│   │   │   ├── BrowseEndpoint.cs                     # Matching IViewEndpoint
 │   │   │   ├── Create.tsx
-│   │   │   └── Manage.tsx
-│   │   ├── vite.config.ts               # Vite library mode config
-│   │   └── package.json                 # npm package with peer deps
-│   └── Products.Contracts/              # Public API (shared)
-│       ├── Products.Contracts.csproj
-│       ├── IProductContracts.cs          # Contract interface
-│       └── Dtos/
-│           └── ProductDto.cs             # [Dto] types
+│   │   │   ├── CreateEndpoint.cs
+│   │   │   ├── Edit.tsx
+│   │   │   ├── EditEndpoint.cs
+│   │   │   ├── Manage.tsx
+│   │   │   └── ManageEndpoint.cs
+│   │   ├── vite.config.ts                            # Vite library mode config
+│   │   └── package.json                              # npm package with peer deps
+│   └── SimpleModule.Products.Contracts/              # Public API (shared)
+│       ├── SimpleModule.Products.Contracts.csproj
+│       ├── IProductContracts.cs                      # Contract interface
+│       ├── Product.cs                                # [Dto] public record
+│       ├── CreateProductRequest.cs                   # [Dto] request shape
+│       ├── UpdateProductRequest.cs                   # [Dto] request shape
+│       ├── ProductId.cs                              # Strongly-typed id
+│       ├── ProductsConstants.cs                      # Shared constants
+│       └── Events/                                   # Cross-module event records
 └── tests/
-    └── Products.Tests/                  # Test project
-        ├── Products.Tests.csproj
+    └── SimpleModule.Products.Tests/                  # Test project
+        ├── SimpleModule.Products.Tests.csproj
         └── Endpoints/
             └── BrowseProductsTests.cs
 ```
 
-### Implementation Project (`Products/`)
+There is no separate `Views/` directory -- React components (`*.tsx`) live directly in `Pages/` next to their matching `*Endpoint.cs` view endpoints. Likewise the DbContext and the contracts service implementation sit at the module root rather than inside `Data/` or `Services/` folders.
+
+### Implementation Project (`SimpleModule.Products/`)
 
 This is the private implementation. No other module should reference this project directly. It contains:
 
 - **Module class** -- the `[Module]`-decorated class that registers services
 - **Endpoints** -- classes implementing `IEndpoint` or `IViewEndpoint`, auto-discovered by the generator
-- **Data layer** -- EF Core DbContext, entities, and migrations (all `internal`)
-- **Services** -- implementations of the contract interface
+- **Data layer** -- EF Core DbContext at the module root with `EntityConfigurations/` for `IEntityTypeConfiguration<T>` classes (all `internal`)
+- **Services** -- implementation of the contract interface, kept at the module root
 - **Frontend** -- React pages, Vite config, and the page registry
 
-The `.csproj` file uses `Microsoft.NET.Sdk` with a framework reference to ASP.NET:
+The `.csproj` file uses `Microsoft.NET.Sdk` with a framework reference to ASP.NET and references `SimpleModule.Hosting` (which transitively brings in `SimpleModule.Core`). Real modules reference `SimpleModule.Hosting` rather than `SimpleModule.Core` directly:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -214,34 +269,36 @@ The `.csproj` file uses `Microsoft.NET.Sdk` with a framework reference to ASP.NE
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <ProjectReference Include="../../framework/SimpleModule.Core/SimpleModule.Core.csproj" />
-    <ProjectReference Include="../Products.Contracts/Products.Contracts.csproj" />
+    <ProjectReference Include="../../../../framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
+    <ProjectReference Include="../SimpleModule.Products.Contracts/SimpleModule.Products.Contracts.csproj" />
   </ItemGroup>
 </Project>
 ```
 
-### Contracts Project (`Products.Contracts/`)
+### Contracts Project (`SimpleModule.Products.Contracts/`)
 
-The public face of the module. Other modules depend on this project when they need to interact with Products. It contains only:
+The public face of the module. Other modules depend on this project when they need to interact with Products. Types live at the root of the contracts project (no `Dtos/` folder). It contains:
 
 - **Contract interface** (`IProductContracts`) -- methods other modules can call
-- **DTO types** marked with `[Dto]` -- data shapes shared across module boundaries
+- **Public record types** marked with `[Dto]` -- `Product`, `CreateProductRequest`, `UpdateProductRequest`, strongly-typed ids such as `ProductId`, and shared constants in `ProductsConstants`
+- **`Events/`** -- cross-module event records published through the event bus
 
 ```csharp
 // IProductContracts.cs
 public interface IProductContracts
 {
-    Task<List<ProductDto>> GetAllAsync(CancellationToken cancellationToken);
-    Task<ProductDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-    Task<ProductDto> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken);
+    Task<List<Product>> GetAllAsync(CancellationToken cancellationToken);
+    Task<Product?> GetByIdAsync(ProductId id, CancellationToken cancellationToken);
+    Task<Product> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken);
 }
 ```
 
 ```csharp
-// Dtos/ProductDto.cs
+// Product.cs
 [Dto]
-public sealed record ProductDto(int Id, string Name, decimal Price, string? Description);
+public sealed record Product(ProductId Id, string Name, decimal Price, string? Description);
 
+// CreateProductRequest.cs
 [Dto]
 public sealed record CreateProductRequest(string Name, decimal Price, string? Description);
 ```
@@ -250,7 +307,7 @@ public sealed record CreateProductRequest(string Name, decimal Price, string? De
 The contracts project must never reference the implementation project. It depends only on `SimpleModule.Core`. This ensures that modules cannot access each other's internals -- the compiler enforces the boundary.
 :::
 
-### Test Project (`Products.Tests/`)
+### Test Project (`SimpleModule.Products.Tests/`)
 
 An xUnit.v3 test project with access to the shared test infrastructure:
 
@@ -282,26 +339,24 @@ The host app lives at `template/SimpleModule.Host/` and is the entry point that 
 
 ### Program.cs
 
-The host's `Program.cs` calls the generated extension methods:
+The host's `Program.cs` calls two user-facing entry points provided by `SimpleModule.Hosting`:
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
-// Generated: registers all module services
-builder.AddModules();
+// Registers all module services (calls the generated AddModules() internally)
+builder.AddSimpleModule();
 
 var app = builder.Build();
 
-// Generated: maps all discovered endpoints with route prefixes
-app.MapModuleEndpoints();
-
-// Generated: collects menu items from all modules
-app.CollectModuleMenuItems();
+// Maps all discovered endpoints and collects module menu items
+// (calls the generated MapModuleEndpoints() and CollectModuleMenuItems() internally)
+await app.UseSimpleModule();
 
 app.Run();
 ```
 
-These three method calls replace what would otherwise be dozens of manual registration lines. The source generator produces them based on what it discovers in your module assemblies.
+`AddSimpleModule` and `UseSimpleModule` wrap the generated `AddModules()`, `MapModuleEndpoints()`, and `CollectModuleMenuItems()` methods, so these two calls replace what would otherwise be dozens of manual registration lines. The source generator produces the underlying methods based on what it discovers in your module assemblies.
 
 ### ClientApp
 
@@ -354,6 +409,10 @@ Provides pre-built, accessible components: buttons, dialogs, tables, forms, drop
 
 The default Tailwind CSS theme. Provides base styles, color tokens, and design system foundations that the UI components and your module pages consume.
 
+### @simplemodule/tsconfig
+
+Shared TypeScript base configuration (`packages/SimpleModule.TsConfig`) that modules and the host app extend from. Keeps compiler options consistent across every workspace.
+
 ## Cross-Module Communication
 
 Modules communicate through two mechanisms:
@@ -363,8 +422,8 @@ Modules communicate through two mechanisms:
 Module A depends on Module B's contracts project and calls its interface methods:
 
 ```
-modules/Orders/src/Orders.csproj
-  └── references → modules/Products/src/Products.Contracts/
+modules/Orders/src/SimpleModule.Orders/SimpleModule.Orders.csproj
+  └── references → modules/Products/src/SimpleModule.Products.Contracts/
 ```
 
 ```csharp
@@ -430,11 +489,18 @@ Shared MSBuild properties applied to all projects in the solution:
 
 ### npm Workspaces
 
-The root `package.json` defines npm workspaces covering:
+The root `package.json` enumerates workspaces explicitly rather than using a blanket `packages/*` glob. In the framework repo the list is:
 
 - `modules/*/src/*` -- module frontend code
-- `packages/*` -- shared frontend packages
+- `packages/SimpleModule.Client`
+- `packages/SimpleModule.Theme.Default`
+- `packages/SimpleModule.TsConfig`
+- `packages/SimpleModule.UI`
 - `template/SimpleModule.Host/ClientApp` -- the host app's React entry point
+- `tests/e2e`
+- `tests/k6`
+- `docs/site`
+- `website`
 
 This allows a single `npm install` at the root to resolve all dependencies, and commands like `npm run build` to build everything.
 
@@ -442,10 +508,10 @@ This allows a single `npm install` at the root to resolve all dependencies, and 
 
 If you prefer not to use the CLI, here are the steps:
 
-1. Create the directory structure under `modules/<Name>/`
-2. Create the contracts project (`<Name>.Contracts.csproj`) referencing only `SimpleModule.Core`
-3. Create the implementation project (`<Name>.csproj`) referencing Core and Contracts, with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
-4. Create the test project (`<Name>.Tests.csproj`)
+1. Create the directory structure under `src/modules/SimpleModule.<Name>/` (CLI-scaffolded app) or `modules/<Name>/` (framework repo)
+2. Create the contracts project (`SimpleModule.<Name>.Contracts.csproj`) referencing only `SimpleModule.Core`
+3. Create the implementation project (`SimpleModule.<Name>.csproj`) referencing `SimpleModule.Hosting` and the contracts project, with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
+4. Create the test project (`SimpleModule.<Name>.Tests.csproj`)
 5. Add a `[Module]` class implementing `IModule`
 6. Add endpoints implementing `IEndpoint` or `IViewEndpoint`
 7. Set up the frontend: `package.json`, `vite.config.ts`, `Pages/index.ts`, React components

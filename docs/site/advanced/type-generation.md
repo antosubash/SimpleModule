@@ -26,7 +26,7 @@ extract-ts-types.mjs (build tool)
     │  Writes types.ts into each module's src/ directory
     │
     ▼
-modules/{Module}/src/{Module}/types.ts
+modules/{Module}/src/SimpleModule.{Module}/types.ts
     Ready for import in React components
 ```
 
@@ -127,13 +127,13 @@ You must build the .NET project before running type generation, since the tool r
 Each module gets its own `types.ts` file at:
 
 ```
-modules/{ModuleName}/src/{ModuleName}/types.ts
+modules/{ModuleName}/src/SimpleModule.{ModuleName}/types.ts
 ```
 
 For example, the Products module produces:
 
 ```
-modules/Products/src/Products/types.ts
+modules/Products/src/SimpleModule.Products/types.ts
 ```
 
 The file is marked as auto-generated and should not be edited manually:

@@ -20,6 +20,8 @@ If you omit the name, the CLI prompts you interactively.
 |--------|-------------|
 | `[name]` | Project name in PascalCase (e.g., `MyApp`). Prompted if omitted. |
 | `-o, --output <dir>` | Output directory. Defaults to the current directory. |
+| `--dry-run` | Preview the files that would be created without writing anything to disk. |
+| `--framework-version <version>` | Override the auto-resolved SimpleModule NuGet package version. |
 
 ## What Gets Created
 
@@ -27,40 +29,50 @@ Running `sm new project MyApp` generates the following structure:
 
 ```
 MyApp/
-  MyApp.slnx                      # Solution file
-  Directory.Build.props            # Shared MSBuild properties
-  Directory.Packages.props         # Central package management
-  global.json                      # SDK version pinning
+  MyApp.slnx                         # Solution file
+  Directory.Build.props              # Shared MSBuild properties
+  Directory.Packages.props           # Central package management
+  global.json                        # SDK version pinning
+  nuget.config                       # NuGet feed configuration
+  package.json                       # npm workspace root
+  biome.json                         # Biome lint + format config
+  tsconfig.json                      # Shared TypeScript config
+  .editorconfig                      # Editor/style rules
   src/
-    MyApp.Api/
-      MyApp.Api.csproj             # Host/API project
-      Program.cs                   # Entry point with generated extensions
-    MyApp.Core/
-      MyApp.Core.csproj            # Core framework (IModule, IEndpoint, etc.)
-    MyApp.Database/
-      MyApp.Database.csproj        # Database infrastructure
-    MyApp.Generator/
-      MyApp.Generator.csproj       # Roslyn source generator (netstandard2.0)
-    modules/                       # Empty directory for modules
+    MyApp.Host/
+      MyApp.Host.csproj              # Host project (references framework NuGet packages)
+      Program.cs                     # Entry point with generated extensions
+      ClientApp/                     # React + Inertia bootstrap
+      Styles/                        # Tailwind entry
+      Properties/launchSettings.json
+      wwwroot/index.html             # Inertia static shell
+    modules/
+      Items/                         # Starter module scaffolded by default
+        src/
+          Items.Contracts/
+          Items/                     # Module, DbContext, service, endpoints, Views, Pages, vite.config, package.json
+        tests/
+          Items.Tests/
   tests/
     MyApp.Tests.Shared/
-      MyApp.Tests.Shared.csproj    # Shared test infrastructure
+      MyApp.Tests.Shared.csproj      # Shared test infrastructure
 ```
 
 ## Project Details
 
-- **Api** -- the host application that calls generated `AddModules()` and `MapModuleEndpoints()` extension methods
-- **Core** -- defines the `IModule` interface, `[Module]` attribute, `IEndpoint`, `[Dto]`, events (`IEvent` + Wolverine), and menu system
-- **Database** -- multi-provider database support with schema isolation per module
-- **Generator** -- Roslyn incremental source generator targeting `netstandard2.0` for compile-time module discovery
+- **Host** -- the host application that calls generated `AddModules()` and `MapModuleEndpoints()` extension methods; serves the Inertia + React frontend
+- **Items module** -- a starter module under `src/modules/Items/` demonstrating the three-project pattern (contracts, implementation, tests) plus the frontend conventions (`Views/`, `Pages/index.ts`, `vite.config.ts`, `package.json`)
 - **Tests.Shared** -- `WebApplicationFactory` base class, fake data generators, and test authentication
+
+Framework code (`Core`, `Database`, `Generator`) is consumed from NuGet packages rather than scaffolded into your repo.
 
 ## After Scaffolding
 
 ```bash
 cd MyApp
-sm new module Products        # create your first module
+sm new module Products        # add another module under src/modules/
 dotnet build                  # build the solution
+dotnet run --project src/MyApp.Host
 ```
 
 ::: warning

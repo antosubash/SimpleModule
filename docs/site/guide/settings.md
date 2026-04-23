@@ -30,7 +30,7 @@ public class SettingsModule : IModule
                 DisplayName = "Application Title",
                 Group = "General",
                 Scope = SettingScope.Application,
-                DefaultValue = "\"SimpleModule\"",
+                DefaultValue = "SimpleModule",
                 Type = SettingType.Text,
             })
             .Add(new SettingDefinition
@@ -40,7 +40,7 @@ public class SettingsModule : IModule
                 Description = "Default color theme for the application",
                 Group = "Appearance",
                 Scope = SettingScope.User,
-                DefaultValue = "\"light\"",
+                DefaultValue = "light",
                 Type = SettingType.Text,
             });
     }
@@ -71,7 +71,7 @@ Each setting is described by a `SettingDefinition`:
 | `Description` | `string?` | Optional help text |
 | `Group` | `string?` | Groups related settings in the UI |
 | `Scope` | `SettingScope` | Where the setting applies |
-| `DefaultValue` | `string?` | Default value (as a string) |
+| `DefaultValue` | `string?` | Default value stored as a raw string (e.g. `"90"`, `"true"`, `"SimpleModule"`) — it does not need to be JSON-encoded |
 | `Type` | `SettingType` | Value type for UI rendering |
 
 ### SettingScope

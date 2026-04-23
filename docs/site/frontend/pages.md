@@ -11,12 +11,12 @@ Every module that renders UI must maintain a **pages registry** -- a `Pages/inde
 Each module exports a `pages` record from `Pages/index.ts`:
 
 ```ts
-// modules/Products/src/Products/Pages/index.ts
+// modules/Products/src/SimpleModule.Products/Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('../Views/Browse'),
-  'Products/Manage': () => import('../Views/Manage'),
-  'Products/Create': () => import('../Views/Create'),
-  'Products/Edit': () => import('../Views/Edit'),
+  'Products/Browse': () => import('./Browse'),
+  'Products/Manage': () => import('./Manage'),
+  'Products/Create': () => import('./Create'),
+  'Products/Edit': () => import('./Edit'),
 };
 ```
 
@@ -27,7 +27,7 @@ Each key matches the component name passed to `Inertia.Render()` on the server s
 On the backend, view endpoints call `Inertia.Render` with a component name:
 
 ```csharp
-// modules/Products/src/Products/Views/BrowseEndpoint.cs
+// modules/Products/src/SimpleModule.Products/Pages/BrowseEndpoint.cs
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
@@ -45,16 +45,17 @@ public class BrowseEndpoint : IViewEndpoint
 }
 ```
 
-The string `"Products/Browse"` is the key that `resolvePage` looks up in the module's `pages` record. If the key does not exist, the page silently fails to load.
+The string `"Products/Browse"` is the key that `resolvePage` looks up in the module's `pages` record. If the key does not exist, `resolvePage` throws an explicit error and the ClientApp surfaces a toast notification.
 
-::: danger Missing entries cause silent 404s
+::: danger Missing entries throw an explicit error
 If you add a new `IViewEndpoint` with `Inertia.Render("Products/Something")` but forget to add a matching entry in `Pages/index.ts`:
 
 - The endpoint compiles and runs fine on the server
-- Navigating to that page results in a **silent client-side 404** -- no error in the console, no error response shown to the user
-- This can go unnoticed for hours until QA or a user discovers it
+- Navigating to that page causes `resolvePage` to throw:
+  `Error: Page "Products/Something" not found in module "Products". Available pages: ...`
+- The ClientApp surfaces this via a toast notification (not a silent 404), and the error is logged to the browser console
 
-**Always add the pages registry entry immediately when creating a new view endpoint.**
+**Always add the pages registry entry immediately when creating a new view endpoint** -- the error is visible, but it still breaks navigation for users.
 :::
 
 ## The Rule
@@ -62,7 +63,7 @@ If you add a new `IViewEndpoint` with `Inertia.Render("Products/Something")` but
 For every `IViewEndpoint` that calls `Inertia.Render("ModuleName/PageName", ...)`, there must be a matching entry in that module's `Pages/index.ts`:
 
 ```ts
-'ModuleName/PageName': () => import('../Views/PageName'),
+'ModuleName/PageName': () => import('./PageName'),
 ```
 
 ## Adding a New Page Step-by-Step
@@ -80,10 +81,10 @@ For every `IViewEndpoint` that calls `Inertia.Render("ModuleName/PageName", ...)
    }
    ```
 
-2. **Create the React component** in the module's `Views/` directory:
+2. **Create the React component** in the module's `Pages/` directory:
 
    ```tsx
-   // modules/Products/src/Products/Views/Details.tsx
+   // modules/Products/src/SimpleModule.Products/Pages/Details.tsx
    import { PageShell } from '@simplemodule/ui';
    import type { Product } from '../types';
 
@@ -100,11 +101,11 @@ For every `IViewEndpoint` that calls `Inertia.Render("ModuleName/PageName", ...)
 
    ```ts
    export const pages: Record<string, unknown> = {
-     'Products/Browse': () => import('../Views/Browse'),
-     'Products/Manage': () => import('../Views/Manage'),
-     'Products/Create': () => import('../Views/Create'),
-     'Products/Edit': () => import('../Views/Edit'),
-     'Products/Details': () => import('../Views/Details'), // [!code ++]
+     'Products/Browse': () => import('./Browse'),
+     'Products/Manage': () => import('./Manage'),
+     'Products/Create': () => import('./Create'),
+     'Products/Edit': () => import('./Edit'),
+     'Products/Details': () => import('./Details'), // [!code ++]
    };
    ```
 
@@ -169,7 +170,7 @@ The pages registry supports both lazy and eager component imports:
 
 ```ts
 // Lazy (recommended) -- component is loaded on demand
-'Products/Browse': () => import('../Views/Browse'),
+'Products/Browse': () => import('./Browse'),
 
 // Eager -- component is bundled into the pages.js file
 'Products/Browse': Browse,

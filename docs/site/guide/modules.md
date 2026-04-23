@@ -269,23 +269,23 @@ If you prefer to create a module by hand, follow this structure:
 ```
 modules/Products/
   src/
-    Products.Contracts/
-      Products.Contracts.csproj     # References Core only
-      IProductContracts.cs          # Public API interface
-      Product.cs                    # Shared DTO types
-      ProductId.cs                  # Strongly-typed ID
-    Products/
-      Products.csproj               # References Core + Contracts + Database
-      ProductsModule.cs             # Module class with [Module] attribute
-      ProductsConstants.cs          # Module name and route prefix
-      ProductsDbContext.cs          # EF Core DbContext
-      Endpoints/Products/           # IEndpoint implementations
-      Views/                        # IViewEndpoint implementations
-      Pages/index.ts                # React page registry
-      vite.config.ts                # Vite library mode build
-      package.json                  # npm package with peer dependencies
+    SimpleModule.Products.Contracts/
+      SimpleModule.Products.Contracts.csproj  # References Core only
+      IProductContracts.cs                    # Public API interface
+      Product.cs                              # Shared DTO types
+      ProductId.cs                            # Strongly-typed ID
+    SimpleModule.Products/
+      SimpleModule.Products.csproj            # References Core + Contracts + Database
+      ProductsModule.cs                       # Module class with [Module] attribute
+      ProductsConstants.cs                    # Module name and route prefix
+      ProductsDbContext.cs                    # EF Core DbContext
+      Endpoints/Products/                     # IEndpoint implementations
+      Pages/                                  # IViewEndpoint classes next to React .tsx pages
+      Pages/index.ts                          # React page registry
+      vite.config.ts                          # Vite library mode build
+      package.json                            # npm package with peer dependencies
   tests/
-    Products.Tests/                 # xUnit test project
+    SimpleModule.Products.Tests/              # xUnit test project
 ```
 
 Key project file requirements:
@@ -299,17 +299,21 @@ Key project file requirements:
 </Project>
 ```
 
-**Module project** (`Microsoft.NET.Sdk.Razor`):
+**Module project** (`Microsoft.NET.Sdk` with an explicit ASP.NET Core framework reference):
 ```xml
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
-    <ProjectReference Include="..\Products.Contracts\Products.Contracts.csproj" />
+    <ProjectReference Include="..\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
   </ItemGroup>
 </Project>
 ```
+
+::: info
+Project and folder names **must** begin with `SimpleModule.` (e.g. `SimpleModule.Products`, `SimpleModule.Products.Contracts`). This convention is enforced by source generator diagnostic **SM0052**. Modules ship static web assets via `Microsoft.NET.Sdk.StaticWebAssets` when they include JS/CSS, but plain `Microsoft.NET.Sdk` works for modules without frontend assets — no Razor SDK is required.
+:::
 
 ::: warning
 Modules **must** include `<FrameworkReference Include="Microsoft.AspNetCore.App" />` in their project file. Without it, ASP.NET types like `IEndpointRouteBuilder` will not be available.

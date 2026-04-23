@@ -16,11 +16,24 @@ sm doctor [--fix]
 
 | Option | Description |
 |--------|-------------|
-| `--fix` | Auto-fix missing `.slnx` entries and project references |
+| `--fix` | Auto-fix missing `.slnx` entries, host project references, `Pages/index.ts` entries, and root `package.json` npm workspace globs |
 
 ## Checks Performed
 
-The doctor command runs five categories of checks:
+The doctor command runs twelve checks, grouped below by concern:
+
+- **SolutionStructure** -- foundational directories and the `.slnx` solution file
+- **ProjectReference** -- host project references each module's implementation
+- **SlnxEntries** -- `.slnx` contains every module's contracts, implementation, and tests
+- **CsprojConvention** -- `.csproj` files follow SimpleModule conventions
+- **ContractsIsolation** -- contracts projects do not reference other modules
+- **ModulePattern** -- module directory layout matches the expected pattern
+- **ModuleAttribute** -- module class is decorated with `[Module]`
+- **ViewEndpointNaming** -- view endpoints follow naming conventions
+- **PagesRegistry** -- every view endpoint has an entry in `Pages/index.ts`
+- **ViteConfig** -- module has a valid `vite.config.ts`
+- **PackageJson** -- module has a valid `package.json`
+- **NpmWorkspace** -- the root `package.json` workspaces array includes each module
 
 ### 1. Solution Structure
 
@@ -76,6 +89,8 @@ When you pass `--fix`, the doctor attempts to repair the following issues:
 
 - **Missing `.slnx` entries** -- adds folder entries for the module's three projects
 - **Missing project references** -- adds a `<ProjectReference>` in the host `.csproj` pointing to the module
+- **Missing `Pages/index.ts` entries** -- adds a registry entry for each view endpoint that lacks one
+- **Missing npm workspace globs** -- adds the module's workspace paths to the root `package.json`
 
 After auto-fixing, all checks are re-run and the results table reflects the current state.
 
@@ -87,7 +102,7 @@ sm doctor --fix
 ```
 
 ::: info
-Auto-fix only handles structural wiring (slnx entries and project references). It does not create missing files like `Module.cs` or `DbContext.cs` -- use `sm new module` for that.
+Auto-fix handles structural wiring: `.slnx` entries, host project references, `Pages/index.ts` registry entries for view endpoints, and npm workspace globs in the root `package.json`. It does not create missing files like `Module.cs` or `DbContext.cs` -- use `sm new module` for that.
 :::
 
 ## Output

@@ -19,6 +19,7 @@ If you omit the name, the CLI prompts you interactively.
 | Option | Description |
 |--------|-------------|
 | `[name]` | Module name in PascalCase (e.g., `Invoices`). Must start with an uppercase letter. Prompted if omitted. |
+| `--dry-run` | Preview the files that would be created without writing anything to disk. |
 
 ## What Gets Created
 
@@ -27,7 +28,7 @@ Running `sm new module Invoices` generates the following structure. The CLI auto
 ### Contracts Project
 
 ```
-modules/Invoices/src/Invoices.Contracts/
+src/modules/Invoices/src/Invoices.Contracts/
   Invoices.Contracts.csproj        # References Core only
   IInvoiceContracts.cs             # Public contract interface
   Invoice.cs                       # [Dto] type for cross-module use
@@ -38,12 +39,13 @@ modules/Invoices/src/Invoices.Contracts/
 ### Implementation Project
 
 ```
-modules/Invoices/src/Invoices/
+src/modules/Invoices/src/Invoices/
   Invoices.csproj                  # References Core + Contracts
   InvoicesModule.cs                # IModule with [Module("Invoices")]
   InvoicesConstants.cs             # Module constants (permissions, etc.)
   InvoicesDbContext.cs             # EF Core DbContext
   InvoiceService.cs                # Service implementing IInvoiceContracts
+  tsconfig.json                    # TypeScript config for Views/Pages
   Endpoints/Invoices/
     GetAllEndpoint.cs              # IEndpoint (auto-discovered)
 ```
@@ -51,7 +53,7 @@ modules/Invoices/src/Invoices/
 ### Test Project
 
 ```
-modules/Invoices/tests/Invoices.Tests/
+src/modules/Invoices/tests/Invoices.Tests/
   Invoices.Tests.csproj            # xUnit test project
   GlobalUsings.cs                  # Common test usings
   Unit/
@@ -87,7 +89,7 @@ After the CLI finishes:
 
 ```bash
 dotnet build                  # source generator discovers the new module
-dotnet run --project src/MyApp.Api
+dotnet run --project src/MyApp.Host
 ```
 
 ::: tip

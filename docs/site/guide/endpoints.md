@@ -438,7 +438,7 @@ if (!validation.IsValid)
 By convention, endpoints are organized in the module's directory structure:
 
 ```
-modules/Products/src/Products/
+modules/Products/src/SimpleModule.Products/
   Endpoints/
     Products/
       GetAllEndpoint.cs
@@ -448,15 +448,20 @@ modules/Products/src/Products/
       UpdateEndpoint.cs
       UpdateRequestValidator.cs    # AbstractValidator<UpdateProductRequest>
       DeleteEndpoint.cs
-  Views/
-    BrowseEndpoint.cs
+  Pages/
+    BrowseEndpoint.cs              # IViewEndpoint — sits next to Browse.tsx
+    Browse.tsx
     ManageEndpoint.cs
+    Manage.tsx
     CreateEndpoint.cs
+    Create.tsx
     EditEndpoint.cs
+    Edit.tsx
+    index.ts                       # Pages registry
 ```
 
 - `Endpoints/` contains `IEndpoint` classes (API), organized by resource
-- `Views/` contains `IViewEndpoint` classes (Inertia pages)
+- `Pages/` contains `IViewEndpoint` classes (Inertia pages) alongside their React `.tsx` components — there is no separate `Views/` directory
 - Validators sit alongside their corresponding endpoint
 
 ## Next Steps

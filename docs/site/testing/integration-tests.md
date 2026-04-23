@@ -64,15 +64,15 @@ If no `NameIdentifier` claim is provided, a default `"test-user-id"` is added au
 
 ```csharp
 var client = factory.CreateAuthenticatedClient(
-    permissions: [ProductsPermissions.View, ProductsPermissions.Create]
+    [ProductsPermissions.View, ProductsPermissions.Create]
 );
 ```
 
-This overload converts each permission string into a `permission` claim. You can also pass additional claims:
+This overload converts each permission string into a `permission` claim. You can also pass additional claims positionally after the permissions array:
 
 ```csharp
 var client = factory.CreateAuthenticatedClient(
-    permissions: [ProductsPermissions.View],
+    [ProductsPermissions.View],
     new Claim(ClaimTypes.NameIdentifier, "custom-user-id")
 );
 ```

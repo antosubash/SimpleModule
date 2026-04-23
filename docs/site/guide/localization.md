@@ -123,6 +123,10 @@ The `LocaleResolutionMiddleware` determines the user's locale using this priorit
 3. **Configuration default** -- `Localization:DefaultLocale` from `appsettings.json`
 4. **Hardcoded fallback** -- `"en"`
 
+::: tip Claim lookup
+The middleware reads the user ID from `ClaimTypes.NameIdentifier` only. If your auth pipeline issues just the OpenIddict `sub` claim without also mapping it to `NameIdentifier`, the user-setting lookup is skipped and locale resolution falls through to Accept-Language / the configured default.
+:::
+
 ## Backend Usage
 
 The localization system integrates with .NET's `IStringLocalizer`:
@@ -138,7 +142,9 @@ public class MyService(IStringLocalizer<MyService> localizer)
 ## Fallback Behavior
 
 - If a key is missing for the requested locale, the system falls back to English (`"en"`)
-- If the key is missing in English too, the raw key string is returned
+- If the key is missing in English too, behavior depends on where the lookup runs:
+  - **React (`useTranslation`)** returns the **un-prefixed** key you passed in (e.g. `t('Browse.Title')` returns `"Browse.Title"`, not `"Products.Browse.Title"`)
+  - **.NET (`TranslationLoader.GetTranslation`)** returns `null`. Code paths that go through `IStringLocalizer` may wrap that into a `LocalizedString` whose `Name` is the key and whose `ResourceNotFound` is `true`
 
 ## Configuration
 

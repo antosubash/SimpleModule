@@ -13,7 +13,7 @@ SimpleModule uses a layered testing strategy: unit tests for isolated logic, int
 | [xUnit.v3](https://xunit.net/) | Test framework |
 | [FluentAssertions](https://fluentassertions.com/) | Expressive assertions |
 | [Bogus](https://github.com/bchavez/Bogus) | Fake data generation |
-| [NSubstitute](https://nsubstitute.github.io/) | Mocking / test doubles |
+| [NSubstitute](https://nsubstitute.github.io/) | Mocking / test doubles (used in select modules, e.g. BackgroundJobs, Settings) |
 | [Microsoft.AspNetCore.Mvc.Testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests) | In-process integration testing |
 | [Playwright](https://playwright.dev/) | Browser-based E2E testing |
 
