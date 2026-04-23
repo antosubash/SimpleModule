@@ -2,15 +2,15 @@
 outline: deep
 ---
 
-# Event Bus
+# Events
 
-The event bus enables decoupled communication between modules. Instead of modules referencing each other directly, they publish events that any module can subscribe to. This keeps modules independent while allowing cross-cutting behavior like audit logging, notifications, or cache invalidation.
+Modules communicate without direct references by publishing events. SimpleModule builds on **[Wolverine](https://wolverinefx.net/)** for in-process messaging: handlers are discovered by convention and invoked through `IMessageBus`.
 
 ## Core Concepts
 
 ### IEvent
 
-`IEvent` is a marker interface. Any record or class implementing it can be published through the event bus:
+`IEvent` is a marker interface. Any record or class implementing it is treated as a domain event by the framework (audit capture, domain-event dispatch from `AuditableAggregateRoot`, etc.). Events are typically defined in a module's **Contracts** project so other modules can reference them without depending on the implementation.
 
 ```csharp
 using SimpleModule.Core.Events;
@@ -18,286 +18,165 @@ using SimpleModule.Core.Events;
 public sealed record OrderCreatedEvent(OrderId OrderId, UserId UserId, decimal Total) : IEvent;
 ```
 
-Events are typically defined in a module's **Contracts** project so other modules can reference them without depending on the implementation.
+### Publishing with IMessageBus
 
-### IEventBus
-
-`IEventBus` exposes a single method for publishing events to all registered handlers:
+Inject Wolverine's `IMessageBus` and call `PublishAsync`:
 
 ```csharp
-public interface IEventBus
-{
-    Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-        where T : IEvent;
-}
-```
+using Wolverine;
 
-Inject `IEventBus` into any service and call `PublishAsync`:
-
-```csharp
 public sealed partial class OrderService(
     OrdersDbContext db,
-    IEventBus eventBus,
+    IMessageBus bus,
     ILogger<OrderService> logger
 ) : IOrderContracts
 {
     public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
     {
-        // ... create the order ...
+        var order = new Order { UserId = request.UserId, Total = request.Total };
 
         db.Orders.Add(order);
         await db.SaveChangesAsync();
 
-        await eventBus.PublishAsync(
-            new OrderCreatedEvent(order.Id, order.UserId, order.Total)
-        );
+        await bus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
 
         return order;
     }
 }
 ```
 
-### IEventHandler\<T\>
+`IMessageBus` is registered as scoped by `AddSimpleModuleInfrastructure()` — no per-module wiring needed.
 
-Implement `IEventHandler<T>` to react to a specific event type. Register handlers in DI and they are automatically discovered by the event bus:
-
-```csharp
-public sealed class OrderCreatedNotificationHandler : IEventHandler<OrderCreatedEvent>
-{
-    public async Task HandleAsync(
-        OrderCreatedEvent @event,
-        CancellationToken cancellationToken
-    )
-    {
-        // Send notification, update cache, etc.
-    }
-}
-```
-
-Register in your module's `ConfigureServices`:
-
-```csharp
-services.AddScoped<IEventHandler<OrderCreatedEvent>, OrderCreatedNotificationHandler>();
-```
-
-## Partial Success Semantics
-
-The event bus guarantees that **all handlers execute even if some fail**. This is the most important design decision in the event system.
-
-### How It Works
-
-1. Handlers execute **sequentially** in registration order
-2. If a handler throws, the exception is **caught and logged**
-3. Execution **continues** to the next handler
-4. After all handlers complete, any collected exceptions are thrown as a single `AggregateException`
-
-```
-Handler A  ──→ ✅ Success (side effects preserved)
-Handler B  ──→ ❌ Throws (exception caught and logged)
-Handler C  ──→ ✅ Success (still executes despite B's failure)
-
-Result: AggregateException containing B's exception
-```
-
-::: warning
-Side effects from successful handlers are **preserved** even when the `AggregateException` is thrown. Design your error handling accordingly.
+::: tip Breaking factory cycles
+If two services form a cycle through the bus (for example, a settings service whose decorator also needs the bus), inject `Lazy<IMessageBus>` instead. The framework registers it out of the box.
 :::
 
-### Handling AggregateException
+### Writing a Handler
 
-The caller is responsible for handling the aggregate exception. Inspect `InnerExceptions` to see which handlers failed:
+Wolverine discovers handlers by **naming convention**: a public class whose type or name ends with `Handler` / `Consumer`, with a method named `Handle` / `Consume` / `HandleAsync` that takes the event as its first parameter. No interface, no DI registration.
 
 ```csharp
-try
+public sealed class OrderCreatedNotificationHandler(INotificationService notifications)
 {
-    await eventBus.PublishAsync(new OrderCreatedEvent(orderId, userId, total));
+    public Task Handle(OrderCreatedEvent evt, CancellationToken ct) =>
+        notifications.SendAsync(evt.UserId, $"Order {evt.OrderId} confirmed", ct);
 }
-catch (AggregateException ex)
+```
+
+Handlers resolve through the request scope, so injected services (DbContext, loggers, contracts) behave exactly as they would inside an endpoint.
+
+## Dispatching Domain Events from Aggregates
+
+Entities that derive from `AuditableAggregateRoot` (or implement `IHasDomainEvents`) can queue events that are flushed via `IMessageBus` after `SaveChangesAsync()` succeeds. This keeps write logic transactional: events only fire if the save commits.
+
+```csharp
+public sealed class Order : AuditableAggregateRoot<OrderId>
 {
-    foreach (var inner in ex.InnerExceptions)
+    public decimal Total { get; set; }
+    public OrderStatus Status { get; set; }
+
+    public void Confirm()
     {
-        logger.LogError(inner, "Handler failed for OrderCreatedEvent");
+        Status = OrderStatus.Confirmed;
+        AddDomainEvent(new OrderConfirmedEvent(Id, Total));
     }
 }
 ```
+
+The `DomainEventInterceptor` (registered by the hosting layer) picks up queued events after a successful save and publishes them through the bus.
+
+## Delivery Semantics
+
+Wolverine routes `PublishAsync` to **every matching handler** in the process:
+
+- **In-process only.** The framework configures Wolverine with no external transports and no durable outbox — events are not persisted and are not retried across process restarts.
+- **Handler isolation.** Each handler runs in its own dispatch. A failing handler does not stop dispatch to the others.
+- **Exceptions surface.** By default, handler exceptions are logged and rethrown once all handlers have been attempted. If you need finer control, configure Wolverine policies in `builder.Host.UseWolverine(opts => ...)`.
+- **Audit capture.** The AuditLogs module wraps `IMessageBus` with `AuditingMessageBus`, which records an audit entry for every published `IEvent`. Audit failures are swallowed and logged — they never break the primary operation.
+
+::: warning Not a durable queue
+Wolverine is running in-memory here. For work that must survive a restart, use the [Background Jobs](/guide/background-jobs) module instead of relying on events.
+:::
 
 ## Handler Best Practices
 
-### Be Stateless
+### Keep Handlers Focused
 
-Handlers may be called concurrently in future versions. Avoid mutable state:
-
-```csharp
-// Good: stateless, uses injected services
-public sealed class AuditHandler(IAuditContext audit) : IEventHandler<OrderCreatedEvent>
-{
-    public async Task HandleAsync(OrderCreatedEvent @event, CancellationToken ct)
-    {
-        await audit.LogAsync("Order created", @event.OrderId.ToString());
-    }
-}
-```
-
-### Be Independent
-
-Do not rely on side effects from other handlers. They may execute in any order or be skipped in future versions.
+A handler should do one thing. If `OrderCreatedEvent` needs to send an email, update a search index, and invalidate caches, write three handlers. Wolverine invokes them independently.
 
 ### Be Idempotent
 
-The same event may be reprocessed in retry scenarios. Design handlers to handle duplicate calls gracefully.
+An event may be replayed (retry logic, re-run of a background job). Handlers should tolerate seeing the same event twice — check for existing state before writing.
 
-### Don't Throw for Expected Failures
+### Don't Throw for Non-Critical Work
 
-For non-critical work like audit logging, catch exceptions inside the handler rather than letting them propagate:
+Audit logging, metrics, cache invalidation, and similar cross-cutting concerns should catch their own exceptions. Reserve rethrown exceptions for failures the caller actually needs to know about.
 
 ```csharp
-public sealed class AuditLogEventHandler(
-    IAuditContext audit,
-    ILogger<AuditLogEventHandler> logger
-) : IEventHandler<OrderCreatedEvent>
+public sealed class OrderMetricsHandler(IMetrics metrics, ILogger<OrderMetricsHandler> logger)
 {
-    public async Task HandleAsync(
-        OrderCreatedEvent @event,
-        CancellationToken cancellationToken
-    )
+    public Task Handle(OrderCreatedEvent evt, CancellationToken ct)
     {
         try
         {
-            await audit.LogAsync("Order created", @event.OrderId.ToString());
+            metrics.Increment("orders.created", tags: new { evt.UserId });
         }
+#pragma warning disable CA1031
         catch (Exception ex)
         {
-            // Don't throw: audit logging must never disrupt the primary operation
-            logger.LogError(ex, "Failed to log event");
+            logger.LogWarning(ex, "Failed to record order metrics");
         }
+#pragma warning restore CA1031
+        return Task.CompletedTask;
     }
 }
 ```
 
-### Avoid Long-Running Work
+### Offload Long-Running Work
 
-For expensive operations, queue work for a background service instead of blocking the event bus:
-
-```csharp
-public sealed class EmailHandler(EmailChannel channel) : IEventHandler<OrderCreatedEvent>
-{
-    public Task HandleAsync(OrderCreatedEvent @event, CancellationToken ct)
-    {
-        // Queue for background processing instead of sending synchronously
-        return channel.EnqueueAsync(new OrderConfirmationEmail(@event.OrderId));
-    }
-}
-```
+Handlers run inline with the publishing scope. For anything expensive (external HTTP, PDF rendering, batch writes), enqueue a background job instead of blocking the caller.
 
 ## Testing Events
 
-### Basic Handler Test
+### Unit-Testing a Handler
+
+Instantiate the handler directly. No DI container is required.
 
 ```csharp
 [Fact]
-public async Task Handler_processes_event()
+public async Task OrderCreatedNotificationHandler_sends_confirmation()
 {
-    var handler = new OrderCreatedNotificationHandler();
-    var @event = new OrderCreatedEvent(OrderId.From(1), UserId.From(1), 99.99m);
+    var notifications = Substitute.For<INotificationService>();
+    var handler = new OrderCreatedNotificationHandler(notifications);
 
-    await handler.HandleAsync(@event, CancellationToken.None);
-
-    // Assert side effects
-}
-```
-
-### Testing Partial Failure
-
-Verify that successful handlers complete their work even when other handlers fail:
-
-```csharp
-[Fact]
-public async Task Successful_handlers_complete_when_others_fail()
-{
-    var services = new ServiceCollection();
-    services.AddScoped<IEventHandler<TestEvent>, SuccessfulHandler>();
-    services.AddScoped<IEventHandler<TestEvent>, FailingHandler>();
-    services.AddScoped<IEventHandler<TestEvent>, AnotherSuccessfulHandler>();
-
-    var provider = services.BuildServiceProvider();
-    var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
-
-    var ex = await Assert.ThrowsAsync<AggregateException>(
-        () => bus.PublishAsync(new TestEvent("value"))
+    await handler.Handle(
+        new OrderCreatedEvent(OrderId.From(1), UserId.From(42), 99.99m),
+        CancellationToken.None
     );
 
-    ex.InnerExceptions.Should().HaveCount(1);
-    // Verify successful handlers completed their work
+    await notifications.Received().SendAsync(UserId.From(42), Arg.Any<string>(), Arg.Any<CancellationToken>());
 }
 ```
 
-### Testing Handler Execution Order
+### Verifying Publishes in a Service Test
 
-Handlers run in registration order. You can verify this:
+In service-level tests, substitute `IMessageBus` and assert on the recorded calls:
 
 ```csharp
 [Fact]
-public async Task Handlers_execute_in_registration_order()
+public async Task CreateOrder_publishes_order_created_event()
 {
-    var order = new List<string>();
+    var bus = Substitute.For<IMessageBus>();
+    var service = new OrderService(db, bus, NullLogger<OrderService>.Instance);
 
-    var services = new ServiceCollection();
-    services.AddScoped<IEventHandler<TestEvent>>(_ => new OrderTrackingHandler("A", order));
-    services.AddScoped<IEventHandler<TestEvent>>(_ => new OrderTrackingHandler("B", order));
+    var order = await service.CreateOrderAsync(new CreateOrderRequest(UserId.From(42), 99.99m));
 
-    var provider = services.BuildServiceProvider();
-    var bus = new EventBus(provider, NullLogger<EventBus>.Instance);
-
-    await bus.PublishAsync(new TestEvent("value"));
-
-    order.Should().ContainInOrder("A", "B");
+    await bus.Received().PublishAsync(Arg.Is<OrderCreatedEvent>(e => e.OrderId == order.Id));
 }
 ```
-
-## EventBus Internals
-
-The `EventBus` implementation resolves all `IEventHandler<T>` instances from `IServiceProvider` and iterates through them:
-
-```csharp
-public async Task PublishAsync<T>(T @event, CancellationToken cancellationToken = default)
-    where T : IEvent
-{
-    var handlers = serviceProvider.GetServices<IEventHandler<T>>();
-    List<Exception>? exceptions = null;
-
-    foreach (var handler in handlers)
-    {
-        try
-        {
-            await handler.HandleAsync(@event, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            LogHandlerFailed(logger, handler.GetType().Name, typeof(T).Name, ex);
-            exceptions ??= [];
-            exceptions.Add(ex);
-        }
-    }
-
-    if (exceptions is { Count: > 0 })
-    {
-        throw new AggregateException(
-            $"One or more event handlers for {typeof(T).Name} failed.",
-            exceptions
-        );
-    }
-}
-```
-
-Key implementation details:
-
-- Handlers are resolved via `GetServices<IEventHandler<T>>()`, so registration order matters
-- Failed handlers are logged with structured logging (`[LoggerMessage]` source generator)
-- The `CancellationToken` is passed to every handler, allowing cooperative cancellation
-- The `EventBus` is registered as scoped, so handlers share the same DI scope as the request
 
 ## Next Steps
 
-- [Permissions](/guide/permissions) -- claims-based authorization for endpoints
-- [Database](/guide/database) -- persistence patterns commonly paired with events
-- [Unit Tests](/testing/unit-tests) -- how to test event handlers and partial failure scenarios
+- [Permissions](/guide/permissions) — claims-based authorization for endpoints
+- [Database](/guide/database) — persistence patterns commonly paired with events
+- [Unit Tests](/testing/unit-tests) — how to test event handlers and service-level publishing

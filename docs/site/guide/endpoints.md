@@ -62,15 +62,19 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/",
-                (CreateProductRequest request, IProductContracts productContracts) =>
+                async (
+                    CreateProductRequest request,
+                    IValidator<CreateProductRequest> validator,
+                    IProductContracts productContracts
+                ) =>
                 {
-                    var validation = CreateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new ValidationException(validation.ToValidationErrors());
                     }
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => productContracts.CreateProductAsync(request),
                         p => $"{ProductsConstants.RoutePrefix}/{p.Id}"
                     );
@@ -88,16 +92,20 @@ public class UpdateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 "/{id}",
-                (ProductId id, UpdateProductRequest request,
-                 IProductContracts productContracts) =>
+                async (
+                    ProductId id,
+                    UpdateProductRequest request,
+                    IValidator<UpdateProductRequest> validator,
+                    IProductContracts productContracts
+                ) =>
                 {
-                    var validation = UpdateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
                     {
-                        throw new ValidationException(validation.Errors);
+                        throw new ValidationException(validation.ToValidationErrors());
                     }
 
-                    return CrudEndpoints.Update(
+                    return await CrudEndpoints.Update(
                         () => productContracts.UpdateProductAsync(id, request));
                 }
             )
@@ -390,6 +398,41 @@ app.MapGet("/", ([FromServices] IProductContracts products) => ...);
 app.MapGet("/", (IProductContracts products) => ...);
 ```
 
+## Validation
+
+Request validation uses **[FluentValidation](https://docs.fluentvalidation.net/)**. Write an `AbstractValidator<T>` for every request DTO that needs validation.
+
+```csharp
+using FluentValidation;
+
+public sealed class CreateRequestValidator : AbstractValidator<CreateProductRequest>
+{
+    public CreateRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+    }
+}
+```
+
+Register validators once in your module's `ConfigureServices`:
+
+```csharp
+services.AddValidatorsFromAssemblyContaining<ProductsModule>();
+```
+
+Endpoints inject `IValidator<T>`, call `ValidateAsync`, and convert failures to the framework's `ValidationException`:
+
+```csharp
+var validation = await validator.ValidateAsync(request);
+if (!validation.IsValid)
+{
+    throw new ValidationException(validation.ToValidationErrors());
+}
+```
+
+`ToValidationErrors()` (in `SimpleModule.Core.Validation`) converts FluentValidation failures into the shape `GlobalExceptionHandler` expects. See [Error Pages](/guide/error-pages) for the response format.
+
 ## File Organization
 
 By convention, endpoints are organized in the module's directory structure:
@@ -401,9 +444,9 @@ modules/Products/src/Products/
       GetAllEndpoint.cs
       GetByIdEndpoint.cs
       CreateEndpoint.cs
-      CreateRequestValidator.cs
+      CreateRequestValidator.cs    # AbstractValidator<CreateProductRequest>
       UpdateEndpoint.cs
-      UpdateRequestValidator.cs
+      UpdateRequestValidator.cs    # AbstractValidator<UpdateProductRequest>
       DeleteEndpoint.cs
   Views/
     BrowseEndpoint.cs

@@ -23,7 +23,12 @@ Once installed, the `sm` command is available globally from any terminal.
 | `sm new project [name]` | Scaffold a new SimpleModule solution |
 | `sm new module [name]` | Create a module with contracts, endpoints, and tests |
 | `sm new feature [name]` | Add a feature endpoint to an existing module |
+| `sm new agent [name]` | Add an AI agent to an existing module |
+| `sm dev` | Start the full dev environment (dotnet watch + Vite HMR) |
+| `sm list` | List discovered modules in the current project with their route prefixes |
+| `sm install <package>` | Install a SimpleModule package from NuGet |
 | `sm doctor [--fix]` | Validate project structure and conventions |
+| `sm version` | Print the `sm` CLI version (also `sm --version`) |
 
 All `sm new` commands support interactive prompts. If you omit required arguments, the CLI will ask for them using an interactive selection UI powered by [Spectre.Console](https://spectreconsole.net/).
 

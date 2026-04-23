@@ -57,6 +57,9 @@ The generator scans both referenced assemblies and the current compilation for:
 | **Entity Configurations** | Classes implementing `IEntityTypeConfiguration<T>` |
 | **Contract Interfaces** | Interfaces in `*.Contracts` assemblies with implementations |
 | **Permission Classes** | Sealed classes implementing `IModulePermissions` |
+| **Feature Flag Classes** | Classes implementing `IModuleFeatures` |
+| **Module Options** | `[ModuleOptions]`-annotated classes |
+| **Agents** | `[Agent]` classes, `IAgentToolProvider` implementations, knowledge sources |
 | **Interceptors** | Classes implementing `ISaveChangesInterceptor` |
 | **Vogen Value Objects** | Types with Vogen value object markers |
 
@@ -73,10 +76,46 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<ContractInterfaceInfoRecord> ContractInterfaces,
     ImmutableArray<ContractImplementationRecord> ContractImplementations,
     ImmutableArray<PermissionClassRecord> PermissionClasses,
+    ImmutableArray<FeatureClassRecord> FeatureClasses,
     ImmutableArray<InterceptorInfoRecord> Interceptors,
-    ImmutableArray<VogenValueObjectRecord> VogenValueObjects
+    ImmutableArray<VogenValueObjectRecord> VogenValueObjects,
+    ImmutableArray<ModuleOptionsRecord> ModuleOptions,
+    ImmutableArray<AgentDefinitionRecord> AgentDefinitions,
+    ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
+    ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
+    ImmutableArray<string> ContractsAssemblyNames,
+    bool HasAgentsAssembly,
+    string HostAssemblyName
 );
 ```
+
+### Discovery Files
+
+Discovery logic is split across focused files under `Discovery/`:
+
+```
+Discovery/
+├── SymbolDiscovery.cs          # orchestrator — calls the finders
+├── DiscoveryDataBuilder.cs     # assembles the final DiscoveryData record
+├── DependencyAnalyzer.cs       # computes module dependencies + illegal references
+├── CoreSymbols.cs              # one-shot resolution of framework symbols (IEndpoint, [Module], ...)
+├── AssemblyConventions.cs      # "is this a *.Contracts assembly?" etc.
+├── SymbolHelpers.cs
+├── TopologicalSort.cs          # orders modules by dependency
+├── Finders/
+│   ├── ModuleFinder.cs
+│   ├── EndpointFinder.cs
+│   ├── DtoFinder.cs
+│   ├── ContractFinder.cs
+│   ├── PermissionFeatureFinder.cs
+│   ├── DbContextFinder.cs
+│   ├── InterceptorFinder.cs
+│   ├── VogenFinder.cs
+│   └── AgentFinder.cs
+└── Records/                    # equatable value-type records used in DiscoveryData
+```
+
+`CoreSymbols` resolves framework symbols (`IEndpoint`, `[Module]`, `IModulePermissions`, ...) once per compilation and passes them into each finder, avoiding repeated `Compilation.GetTypeByMetadataName` lookups in hot paths.
 
 ## What It Generates
 
@@ -90,6 +129,12 @@ The generator feeds `DiscoveryData` through a pipeline of **emitters**, each res
 | `EndpointExtensionsEmitter` | `EndpointExtensions.g.cs` | `MapModuleEndpoints()` -- maps all `IEndpoint` and `IViewEndpoint` implementations with route groups and authorization |
 | `MenuExtensionsEmitter` | `MenuExtensions.g.cs` | `CollectModuleMenuItems()` -- collects menu items from all modules that implement `ConfigureMenu` |
 | `SettingsExtensionsEmitter` | `SettingsExtensions.g.cs` | Collects settings definitions from modules that implement `ConfigureSettings` |
+| `ModuleOptionsEmitter` | `ModuleOptionsExtensions.g.cs` | Binds `[ModuleOptions]` classes to configuration sections |
+| `ContractRegistryEmitter` | `ContractRegistry.g.cs` | Registers each `I{Name}Contracts` against its implementation |
+| `AgentExtensionsEmitter` | `AgentExtensions.g.cs` | Registers agents, tool providers, and knowledge sources (when the Agents framework assembly is referenced) |
+| `LocalizationExtensionsEmitter` | `LocalizationExtensions.g.cs` | Aggregates localization resources across modules |
+| `RoutesEmitter` | `ModuleRoutes.g.cs` | Strongly-typed C# route constants |
+| `TypeScriptRoutesEmitter` | `TypeScriptRoutes.g.cs` | Embedded TypeScript route constants for the ClientApp |
 | `HostingExtensionsEmitter` | `HostingExtensions.g.cs` | Top-level `AddSimpleModule()` that orchestrates all registrations |
 
 ### Frontend Integration
@@ -141,7 +186,7 @@ Emitters[].Emit(context, data)
     │  ModuleExtensionsEmitter → ModuleExtensions.g.cs
     │  EndpointExtensionsEmitter → EndpointExtensions.g.cs
     │  TypeScriptDefinitionsEmitter → DtoTypeScript_*.g.cs
-    │  ... (14 emitters total)
+    │  ... (19 emitters total)
     │
     ▼
 Generated source added to compilation
@@ -165,9 +210,15 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new JsonResolverEmitter(),
         new TypeScriptDefinitionsEmitter(),
         new HostingExtensionsEmitter(),
+        new ModuleOptionsEmitter(),
         new HostDbContextEmitter(),
         new ValueConverterConventionsEmitter(),
         new DbContextRegistryEmitter(),
+        new ContractRegistryEmitter(),
+        new AgentExtensionsEmitter(),
+        new LocalizationExtensionsEmitter(),
+        new RoutesEmitter(),
+        new TypeScriptRoutesEmitter(),
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
