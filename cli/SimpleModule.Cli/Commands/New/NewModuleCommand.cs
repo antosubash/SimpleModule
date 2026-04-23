@@ -59,7 +59,7 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
 
         if (settings.DryRun)
         {
-            RenderDryRunTree(moduleName, ops);
+            FileTreeRenderer.Render(moduleName, ops, isDryRun: true);
             return 0;
         }
 
@@ -147,7 +147,7 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
                 }
             );
 
-        RenderCreatedTree(moduleName, ops);
+        FileTreeRenderer.Render(moduleName, ops);
 
         AnsiConsole.MarkupLine($"\n[green]Module '{Markup.Escape(moduleName)}' created![/]");
         AnsiConsole.MarkupLine("[dim]Next steps:[/]");
@@ -156,41 +156,5 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         );
         AnsiConsole.MarkupLine("[dim]  dotnet build[/]");
         return 0;
-    }
-
-    private static void RenderDryRunTree(
-        string moduleName,
-        List<(string Path, FileAction Action)> ops
-    )
-    {
-        AnsiConsole.MarkupLine("[dim]Dry run — no files written[/]\n");
-        var tree = new Tree($"[blue]{Markup.Escape(moduleName)}[/]");
-        foreach (var (path, action) in ops)
-        {
-            var label =
-                action == FileAction.Modify
-                    ? $"[yellow]{Markup.Escape(Path.GetFileName(path))}[/] [dim](modify)[/]"
-                    : $"[green]{Markup.Escape(Path.GetFileName(path))}[/] [dim](create)[/]";
-            tree.AddNode(label);
-        }
-        AnsiConsole.Write(tree);
-    }
-
-    private static void RenderCreatedTree(
-        string moduleName,
-        List<(string Path, FileAction Action)> ops
-    )
-    {
-        AnsiConsole.MarkupLine("");
-        var tree = new Tree($"[blue]{Markup.Escape(moduleName)}[/]");
-        foreach (var (path, action) in ops)
-        {
-            var label =
-                action == FileAction.Modify
-                    ? $"[yellow]{Markup.Escape(Path.GetFileName(path))}[/] [dim](modified)[/]"
-                    : $"[green]{Markup.Escape(Path.GetFileName(path))}[/]";
-            tree.AddNode(label);
-        }
-        AnsiConsole.Write(tree);
     }
 }
