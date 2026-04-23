@@ -27,7 +27,8 @@ internal readonly record struct CoreSymbols(
     INamedTypeSymbol? ModuleFeatures,
     INamedTypeSymbol? SaveChangesInterceptor,
     INamedTypeSymbol? ModuleOptions,
-    bool HasAgentsAssembly
+    bool HasAgentsAssembly,
+    bool HasRagAssembly
 )
 {
     /// <summary>
@@ -81,6 +82,10 @@ internal readonly record struct CoreSymbols(
             ModuleOptions: compilation.GetTypeByMetadataName("SimpleModule.Core.IModuleOptions"),
             HasAgentsAssembly: compilation.GetTypeByMetadataName(
                 "SimpleModule.Agents.SimpleModuleAgentExtensions"
+            )
+                is not null,
+            HasRagAssembly: compilation.GetTypeByMetadataName(
+                "SimpleModule.Rag.RagSettingsDefinitions"
             )
                 is not null
         );

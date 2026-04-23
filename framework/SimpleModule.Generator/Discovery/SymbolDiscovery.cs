@@ -255,6 +255,7 @@ internal static class SymbolDiscovery
             knowledgeSources,
             contractsAssemblyMap,
             s.HasAgentsAssembly,
+            s.HasRagAssembly,
             hostAssemblyName
         );
     }

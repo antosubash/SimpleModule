@@ -145,12 +145,23 @@ public static partial class SimpleModuleHostExtensions
 
             foreach (var info in infos)
             {
-                if (info.ModuleName != DatabaseConstants.HostModuleName)
+                if (scope.ServiceProvider.GetService(info.DbContextType) is not DbContext db)
                     continue;
 
-                if (scope.ServiceProvider.GetService(info.DbContextType) is DbContext db)
+                // DbContexts with EF migrations use MigrateAsync; those without (e.g. scaffolded
+                // module contexts that ship no migrations) fall back to EnsureCreatedAsync so
+                // their tables exist on first run. Only the Host context typically ships
+                // migrations; module contexts rely on the unified HostDbContext for schema.
+                if (info.ModuleName == DatabaseConstants.HostModuleName)
                 {
-                    await db.Database.MigrateAsync();
+                    if (db.Database.GetMigrations().Any())
+                    {
+                        await db.Database.MigrateAsync();
+                    }
+                    else
+                    {
+                        await db.Database.EnsureCreatedAsync();
+                    }
                 }
             }
         }
