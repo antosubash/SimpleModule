@@ -1,8 +1,10 @@
+using System.Data.Common;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using SimpleModule.AuditLogs;
 using SimpleModule.Database;
 using SimpleModule.Orders;
 using SimpleModule.PerfSeeder.Seeders;
@@ -16,7 +18,6 @@ public sealed class SeedCommand : AsyncCommand<SeedSettings>
 {
     private const int DefaultProductsCount = 1_000_000;
     private const int DefaultOrdersCount = 100_000;
-    private const int DefaultAuditLogsCount = 500_000;
 
     public override async Task<int> ExecuteAsync(CommandContext context, SeedSettings settings)
     {
@@ -63,16 +64,11 @@ public sealed class SeedCommand : AsyncCommand<SeedSettings>
         var runAll = module.Length == 0 || module.Equals("all", StringComparison.OrdinalIgnoreCase);
         var runProducts = runAll || module.Equals("products", StringComparison.OrdinalIgnoreCase);
         var runOrders = runAll || module.Equals("orders", StringComparison.OrdinalIgnoreCase);
-        var runAuditLogs =
-            runAll
-            || module.Equals("auditlogs", StringComparison.OrdinalIgnoreCase)
-            || module.Equals("audit-logs", StringComparison.OrdinalIgnoreCase)
-            || module.Equals("audit_logs", StringComparison.OrdinalIgnoreCase);
 
-        if (!runProducts && !runOrders && !runAuditLogs)
+        if (!runProducts && !runOrders)
         {
             AnsiConsole.MarkupLine(
-                $"[red]Unknown module '{module.EscapeMarkup()}'. Valid: products, orders, auditlogs, all.[/]"
+                $"[red]Unknown module '{module.EscapeMarkup()}'. Valid: products, orders, all.[/]"
             );
             return 1;
         }
@@ -85,7 +81,7 @@ public sealed class SeedCommand : AsyncCommand<SeedSettings>
             using var db = BuildContext<ProductsDbContext>(dbOptions, provider);
             if (settings.CreateSchema)
             {
-                await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
+                EnsureTablesCreated(db);
             }
             await new ProductsSeeder(db, provider)
                 .RunAsync(count, settings.BatchSize, settings.RandomSeed, settings.Truncate)
@@ -98,22 +94,9 @@ public sealed class SeedCommand : AsyncCommand<SeedSettings>
             using var db = BuildContext<OrdersDbContext>(dbOptions, provider);
             if (settings.CreateSchema)
             {
-                await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
+                EnsureTablesCreated(db);
             }
             await new OrdersSeeder(db, provider)
-                .RunAsync(count, settings.BatchSize, settings.RandomSeed, settings.Truncate)
-                .ConfigureAwait(false);
-        }
-
-        if (runAuditLogs)
-        {
-            var count = settings.Count ?? DefaultAuditLogsCount;
-            using var db = BuildContext<AuditLogsDbContext>(dbOptions, provider);
-            if (settings.CreateSchema)
-            {
-                await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
-            }
-            await new AuditLogsSeeder(db, provider)
                 .RunAsync(count, settings.BatchSize, settings.RandomSeed, settings.Truncate)
                 .ConfigureAwait(false);
         }
@@ -212,6 +195,28 @@ public sealed class SeedCommand : AsyncCommand<SeedSettings>
         ctx.ChangeTracker.AutoDetectChangesEnabled = false;
         ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         return ctx;
+    }
+
+    /// <summary>
+    /// Creates the target DbContext's tables even when the physical DB already exists
+    /// (EnsureCreated skips table creation when any tables are present). Swallows
+    /// duplicate-table errors so it's safe to call across multiple module contexts
+    /// sharing the same database.
+    /// </summary>
+    private static void EnsureTablesCreated(DbContext db)
+    {
+        if (db.Database.EnsureCreated())
+        {
+            return;
+        }
+        try
+        {
+            db.GetService<IRelationalDatabaseCreator>().CreateTables();
+        }
+        catch (DbException)
+        {
+            // Some/all tables already exist — fine.
+        }
     }
 
     private static string Redact(string connectionString)

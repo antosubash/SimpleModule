@@ -6,13 +6,13 @@ namespace SimpleModule.Cli.Commands.Seed;
 public sealed class SeedSettings : CommandSettings
 {
     [CommandOption("-m|--module <MODULE>")]
-    [Description("Target module: products, orders, auditlogs, or all. Default: all.")]
+    [Description("Target module: products, orders, or all. Default: all.")]
     public string Module { get; set; } = "all";
 
     [CommandOption("-c|--count <COUNT>")]
     [Description(
         "Row count override applied to each target module. "
-            + "Defaults: products=1,000,000, orders=100,000, auditlogs=500,000."
+            + "Defaults: products=1,000,000, orders=100,000."
     )]
     public int? Count { get; set; }
 

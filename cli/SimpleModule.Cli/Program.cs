@@ -48,7 +48,7 @@ app.Configure(config =>
     config
         .AddCommand<SeedCommand>("seed")
         .WithDescription(
-            "Seed the configured database with bulk test data for perf testing (Products, Orders, AuditLogs)"
+            "Seed the configured database with bulk test data for perf testing (Products, Orders). AuditLogs are populated automatically by the audit interceptor on real operations."
         );
 });
 

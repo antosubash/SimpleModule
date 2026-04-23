@@ -22,7 +22,5 @@
     <ProjectReference Include="..\..\modules\Products\src\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders\SimpleModule.Orders.csproj" />
     <ProjectReference Include="..\..\modules\Orders\src\SimpleModule.Orders.Contracts\SimpleModule.Orders.Contracts.csproj" />
-    <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs\SimpleModule.AuditLogs.csproj" />
-    <ProjectReference Include="..\..\modules\AuditLogs\src\SimpleModule.AuditLogs.Contracts\SimpleModule.AuditLogs.Contracts.csproj" />
   </ItemGroup>
 </Project>

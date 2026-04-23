@@ -6,13 +6,12 @@ namespace SimpleModule.PerfSeeder;
 public sealed class SeedSettings : CommandSettings
 {
     [CommandOption("-m|--module <MODULE>")]
-    [Description("Target module: products, orders, auditlogs, or all. Default: all.")]
+    [Description("Target module: products, orders, or all. Default: all.")]
     public string Module { get; set; } = "all";
 
     [CommandOption("-c|--count <COUNT>")]
     [Description(
-        "Row count override. Applied per module. "
-            + "Defaults: products=1000000, orders=100000, auditlogs=500000."
+        "Row count override. Applied per module. " + "Defaults: products=1000000, orders=100000."
     )]
     public int? Count { get; set; }
 
