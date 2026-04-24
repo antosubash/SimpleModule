@@ -1,0 +1,197 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+charset = utf-8-bom
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{csproj,props,targets,xml,json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+
+# ---- Naming conventions ----
+
+# Interfaces must start with I
+dotnet_naming_rule.interface_should_begin_with_i.severity = error
+dotnet_naming_rule.interface_should_begin_with_i.symbols = interface
+dotnet_naming_rule.interface_should_begin_with_i.style = begins_with_i
+dotnet_naming_symbols.interface.applicable_kinds = interface
+dotnet_naming_style.begins_with_i.required_prefix = I
+dotnet_naming_style.begins_with_i.capitalization = pascal_case
+
+# Public members — PascalCase
+dotnet_naming_rule.public_members_pascal.severity = error
+dotnet_naming_rule.public_members_pascal.symbols = public_symbols
+dotnet_naming_rule.public_members_pascal.style = pascal_style
+dotnet_naming_symbols.public_symbols.applicable_kinds = property, method, event, delegate, class, struct, enum
+dotnet_naming_symbols.public_symbols.applicable_accessibilities = public, internal, protected, protected_internal
+dotnet_naming_style.pascal_style.capitalization = pascal_case
+
+# Private fields — _camelCase
+dotnet_naming_rule.private_fields_underscore.severity = error
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, private_protected
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+
+# Local variables and parameters — camelCase
+dotnet_naming_rule.locals_camel.severity = error
+dotnet_naming_rule.locals_camel.symbols = locals
+dotnet_naming_rule.locals_camel.style = camel_style
+dotnet_naming_symbols.locals.applicable_kinds = parameter, local
+dotnet_naming_style.camel_style.capitalization = camel_case
+
+# Constants — PascalCase
+dotnet_naming_rule.constants_pascal.severity = error
+dotnet_naming_rule.constants_pascal.symbols = constants
+dotnet_naming_rule.constants_pascal.style = pascal_style
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.required_modifiers = const
+
+# ---- Code style ----
+
+# var preferences
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = false:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+csharp_style_expression_bodied_lambdas = true:suggestion
+
+# Pattern matching
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+
+# Null checking
+csharp_style_throw_expression = true:suggestion
+csharp_style_conditional_delegate_call = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+
+# Using directives
+csharp_using_directive_placement = outside_namespace:error
+
+# Namespace declarations
+csharp_style_namespace_declarations = file_scoped:error
+
+# ---- Formatting ----
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_space_after_cast = false
+csharp_space_after_keywords_in_control_flow_statements = true
+
+# ---- Suppressed rules ----
+
+# IDE0058 — expression value never used (noisy in tests and endpoint handlers)
+dotnet_diagnostic.IDE0058.severity = none
+
+# IDE0130 — namespace does not match folder structure
+dotnet_diagnostic.IDE0130.severity = none
+
+# CA1062 — validate arguments of public methods (redundant with nullable reference types)
+dotnet_diagnostic.CA1062.severity = none
+
+# CA1848 — use LoggerMessage delegates (over-engineering for a small project)
+dotnet_diagnostic.CA1848.severity = none
+
+# CA1034 — nested types should not be visible (common pattern for DTOs)
+dotnet_diagnostic.CA1034.severity = none
+
+# CA1515 — public types in exe should be internal (conflicts with module pattern)
+dotnet_diagnostic.CA1515.severity = none
+
+# CA1050 — declare types in namespaces (Program.cs top-level)
+dotnet_diagnostic.CA1050.severity = none
+
+# CA1724 — type names should not match namespaces
+dotnet_diagnostic.CA1724.severity = none
+
+# CA2007 — consider calling ConfigureAwait (not needed in ASP.NET Core)
+dotnet_diagnostic.CA2007.severity = none
+
+# CA1711 — identifiers should not have incorrect suffix (xUnit collections, EventHandler, Permission)
+dotnet_diagnostic.CA1711.severity = none
+
+# CA1716 — identifiers should not match keywords
+dotnet_diagnostic.CA1716.severity = none
+
+# RCS1090 — add ConfigureAwait (not needed in ASP.NET Core)
+dotnet_diagnostic.RCS1090.severity = none
+
+# RCS1194 — implement exception constructors (over-engineering)
+dotnet_diagnostic.RCS1194.severity = none
+
+# CA2227 — collection properties should be read-only (DTOs need setters for deserialization)
+dotnet_diagnostic.CA2227.severity = none
+
+# CA1002 — do not expose List<T> (DTOs are simple data containers)
+dotnet_diagnostic.CA1002.severity = none
+
+# IDE0046 — convert to conditional expression (reduces readability)
+dotnet_diagnostic.IDE0046.severity = none
+
+# IDE0010 — add missing cases to switch (noisy for enums)
+dotnet_diagnostic.IDE0010.severity = none
+
+# IDE0072 — add missing cases to switch expression
+dotnet_diagnostic.IDE0072.severity = none
+
+# Generated code
+[*.Generated.cs]
+generated_code = true
+
+# EF Core migrations (auto-generated — suppress strict analysis)
+[**/Migrations/*.cs]
+generated_code = true
+
+[*.g.cs]
+generated_code = true
+
+# ---- Endpoint relaxations ----
+[**/Endpoints/**/*.cs]
+
+# CA1812 — internal payload classes instantiated by ASP.NET model binding
+dotnet_diagnostic.CA1812.severity = none
+
+[**/Pages/**/*Endpoint.cs]
+
+# CA1812 — internal payload classes instantiated by ASP.NET model binding
+dotnet_diagnostic.CA1812.severity = none
+
+[**/Pages/*Endpoint.cs]
+
+# CA1812 — internal payload classes instantiated by ASP.NET model binding
+dotnet_diagnostic.CA1812.severity = none
+
+# ---- Test project relaxations ----
+[{tests,src/modules/*/tests}/**/*.cs]
+
+# CA1707 — underscore in test method names (standard convention)
+dotnet_diagnostic.CA1707.severity = none
+
+# CA1812 — internal class never instantiated (test helper classes)
+dotnet_diagnostic.CA1812.severity = none
+
+# CA2234 — use Uri overload (test HTTP clients use string paths)
+dotnet_diagnostic.CA2234.severity = none
+
+# xUnit1051 — use CancellationToken (over-engineering for test methods)
+dotnet_diagnostic.xUnit1051.severity = none

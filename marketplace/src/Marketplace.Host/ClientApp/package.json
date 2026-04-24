@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "@marketplace/app",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "vite build --configLoader runner",
+    "build:dev": "cross-env VITE_MODE=dev vite build --configLoader runner",
+    "watch": "cross-env VITE_MODE=dev vite build --configLoader runner --watch",
+    "validate-pages": "node ClientApp/validate-pages.mjs"
+  },
+  "dependencies": {
+    "@inertiajs/react": "^3.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  }
+}

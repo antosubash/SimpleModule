@@ -1,0 +1,9 @@
+{
+  "extends": "@simplemodule/tsconfig/base",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./template/SimpleModule.Host/ClientApp/*"]
+    }
+  },
+  "exclude": ["node_modules", "**/wwwroot/**", "packages/SimpleModule.UI/registry/templates"]
+}
