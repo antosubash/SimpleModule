@@ -1,4 +1,4 @@
-﻿{
+{
   "version": 1,
   "isRoot": true,
   "tools": {
@@ -6,7 +6,15 @@
       "version": "1.2.6",
       "commands": [
         "csharpier"
-      ]
+      ],
+      "rollForward": false
+    },
+    "simplemodule.cli": {
+      "version": "0.0.33",
+      "commands": [
+        "sm"
+      ],
+      "rollForward": false
     }
   }
 }
