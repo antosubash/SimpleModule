@@ -247,9 +247,9 @@ The TypeScript generation pipeline converts C# DTO types into TypeScript interfa
 
 1. **Source generator** scans for `[Dto]` types and public types in `*.Contracts` assemblies
 2. **TypeScript definitions are embedded** in the generated source as string resources
-3. **`extract-ts-types.mjs`** extracts the definitions and writes `.ts` files to each module
+3. **`extract-ts-types.mjs`** extracts the definitions and writes a single `types.ts` per module
 
-The generated TypeScript files are placed in each module's source directory as `types.ts`:
+The generated TypeScript files are placed in each module's primary source project (e.g. `modules/Products/src/SimpleModule.Products/types.ts`):
 
 ```typescript
 // Auto-generated from [Dto] types -- do not edit

@@ -4,7 +4,7 @@ outline: deep
 
 # Vite Configuration
 
-SimpleModule uses **Vite 6** in library mode to build each module's frontend as a standalone ES module. This page covers the build configuration, the development workflow, and the orchestrators that coordinate everything.
+SimpleModule uses **Vite 8** (with the Rolldown bundler) in library mode to build each module's frontend as a standalone ES module. This page covers the build configuration, the development workflow, and the orchestrators that coordinate everything.
 
 ## Library Mode for Modules
 
@@ -23,10 +23,10 @@ In a modular monolith, each module is independently deployable. If every module 
 Every module uses the `defineModuleConfig` helper from `@simplemodule/client/module`:
 
 ```ts
-// modules/Products/src/Products/vite.config.ts
+// modules/Products/src/SimpleModule.Products/vite.config.ts
 import { defineModuleConfig } from '@simplemodule/client/module';
 
-export default defineModuleConfig(__dirname);
+export default defineModuleConfig(import.meta.dirname);
 ```
 
 This single line generates a complete Vite configuration. The helper derives everything from the module directory:
@@ -34,10 +34,10 @@ This single line generates a complete Vite configuration. The helper derives eve
 | Setting | Value | Source |
 |---|---|---|
 | Entry point | `Pages/index.ts` | Convention |
-| Output file | `{Name}.pages.js` | Directory name |
+| Output file | `SimpleModule.{Name}.pages.js` | Directory name |
 | Output directory | `wwwroot/` | Convention |
 | Format | ES module | Fixed |
-| Externals | React, React-DOM, Inertia | `defaultVendors` |
+| Externals | `react`, `react-dom`, `react/jsx-runtime`, `react-dom/client`, `@inertiajs/react` | `defaultVendors` |
 | Source maps | Enabled in dev, disabled in prod | `VITE_MODE` env var |
 | Minification | Disabled in dev, esbuild in prod | `VITE_MODE` env var |
 
@@ -65,7 +65,7 @@ function defineModuleConfig(dir: string): UserConfig {
       minify: isDev ? false : 'esbuild',
       outDir: 'wwwroot',
       emptyOutDir: false,
-      rollupOptions: {
+      rolldownOptions: {
         external: defaultVendors.map((v) => v.pkg),
         output: {
           assetFileNames: `${name.toLowerCase()}[extname]`,
@@ -84,7 +84,7 @@ For non-standard requirements, use Vite's `mergeConfig`:
 import { mergeConfig } from 'vite';
 import { defineModuleConfig } from '@simplemodule/client/module';
 
-export default mergeConfig(defineModuleConfig(__dirname), {
+export default mergeConfig(defineModuleConfig(import.meta.dirname), {
   // Custom overrides here
 });
 ```
@@ -130,10 +130,14 @@ Each module declares React and React-DOM as **peer dependencies** since they are
 }
 ```
 
-Three scripts are standard:
+Three scripts are standard at the module level:
 - **`build`** -- Production build (minified, no source maps)
 - **`build:dev`** -- Development build (unminified, with source maps)
 - **`watch`** -- Development build with file watching
+
+::: info Repo-level vs module-level scripts
+The `dev:build` script only exists at the **repo root** (it invokes the build orchestrator to build every module in dev mode). Inside a module, use `build:dev` -- `npm run dev:build` at the module level will fail.
+:::
 
 ## Development Workflow
 
@@ -149,9 +153,9 @@ The `npm run dev` command starts the complete development environment using the 
 npm run dev
   |
   ├── dotnet run --project template/SimpleModule.Host
-  ├── npm run watch  (in modules/Products/src/Products/)
-  ├── npm run watch  (in modules/Orders/src/Orders/)
-  ├── npm run watch  (in modules/Users/src/Users/)
+  ├── npm run watch  (in modules/Products/src/SimpleModule.Products/)
+  ├── npm run watch  (in modules/Orders/src/SimpleModule.Orders/)
+  ├── npm run watch  (in modules/Users/src/SimpleModule.Users/)
   └── npm run watch  (in template/SimpleModule.Host/ClientApp/)
 ```
 
@@ -218,12 +222,12 @@ npm run dev:build
 After building, each module's `wwwroot/` directory contains:
 
 ```
-modules/Products/src/Products/wwwroot/
-  Products.pages.js        # The module's page bundle
-  products.css             # Any CSS assets (named from module)
+modules/Products/src/SimpleModule.Products/wwwroot/
+  SimpleModule.Products.pages.js   # The module's page bundle
+  simplemodule.products.css        # Any CSS assets (named from module)
 ```
 
-These files are served as static content via ASP.NET's `_content/{ModuleName}/` path, which is how `resolvePage` finds them at `/_content/Products/Products.pages.js`.
+These files are served as static content via ASP.NET's `_content/SimpleModule.{ModuleName}/` path, which is how `resolvePage` finds them at `/_content/SimpleModule.Products/SimpleModule.Products.pages.js`.
 
 ## Next Steps
 

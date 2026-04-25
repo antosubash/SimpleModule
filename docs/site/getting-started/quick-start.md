@@ -86,32 +86,40 @@ sm new module Products
 This creates three projects following the standard module pattern:
 
 ```
-modules/Products/
+src/modules/Products/
 ├── src/
-│   ├── Products/                    # Module implementation
+│   ├── Products/                       # Module implementation
 │   │   ├── Products.csproj
-│   │   ├── ProductsModule.cs        # [Module] class with ConfigureServices
-│   │   ├── Endpoints/               # API and view endpoints
-│   │   ├── Pages/
-│   │   │   └── index.ts             # React page registry
-│   │   ├── Views/                   # React page components
-│   │   ├── vite.config.ts           # Vite library mode build
-│   │   └── package.json
-│   └── Products.Contracts/          # Public interface for other modules
+│   │   ├── ProductsModule.cs           # [Module] class with ConfigureServices
+│   │   ├── ProductsConstants.cs        # Module constants
+│   │   ├── ProductsDbContext.cs        # EF Core DbContext
+│   │   ├── ProductService.cs           # Default IProductContracts implementation
+│   │   ├── Endpoints/
+│   │   │   └── Products/
+│   │   │       └── GetAllEndpoint.cs   # Starter endpoint
+│   │   └── tsconfig.json
+│   └── Products.Contracts/             # Public interface for other modules
 │       ├── Products.Contracts.csproj
-│       ├── IProductContracts.cs      # Contract interface
-│       └── ProductDto.cs             # Shared DTOs with [Dto] attribute
+│       ├── IProductContracts.cs        # Contract interface
+│       ├── Product.cs                  # Shared DTO with [Dto] attribute
+│       └── Events/
+│           └── ProductCreatedEvent.cs  # Contract-level event
 └── tests/
-    └── Products.Tests/              # xUnit test project
-        └── Products.Tests.csproj
+    └── Products.Tests/                 # xUnit test project
+        ├── Products.Tests.csproj
+        ├── GlobalUsings.cs
+        ├── Unit/ProductServiceTests.cs
+        └── Integration/ProductsEndpointTests.cs
 ```
 
 The CLI also:
 
 - Adds `ProjectReference` entries to the host app
 - Registers all projects in `SimpleModule.slnx`
-- Sets up the Vite build configuration
-- Creates a starter endpoint and React page
+
+::: info Frontend files are added on first feature
+`sm new module` creates only the C# backend and test projects. `Pages/index.ts`, `Views/`, and the frontend wiring are created the first time you run `sm new feature` against the module.
+:::
 
 ### The Generated Module Class
 
@@ -150,19 +158,21 @@ Marking a type with `[Dto]` tells the source generator to include it in JSON ser
 Add a browsing feature to the Products module:
 
 ```bash
-sm new feature Products/Browse
+sm new feature Browse --module Products
 ```
+
+Run `sm new feature` with no arguments for an interactive prompt that asks for the feature name, module, HTTP method, and route.
 
 This scaffolds:
 
-- A C# endpoint class (`Endpoints/Products/BrowseProducts.cs`)
+- A C# endpoint class (`Endpoints/Products/BrowseEndpoint.cs`)
 - A React page component (`Views/Browse.tsx`)
 - An entry in the page registry (`Pages/index.ts`)
 
 ### The Endpoint
 
 ```csharp
-public sealed class BrowseProducts : IViewEndpoint
+public sealed class BrowseEndpoint : IViewEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapGet("/", Handler);
@@ -210,9 +220,9 @@ export default function Browse({ products }: Props) {
 ### The Page Registry
 
 ```typescript
-// modules/Products/src/Products/Pages/index.ts
-export const pages: Record<string, any> = {
-    "Products/Browse": () => import("../Views/Browse"),
+// src/modules/Products/src/Products/Pages/index.ts
+export const pages: Record<string, unknown> = {
+    "Products/Browse": () => import("@/Views/Browse"),
 };
 ```
 

@@ -23,15 +23,21 @@ If you omit required options, the CLI prompts you interactively with selection m
 | `--method <method>` | HTTP method: `GET`, `POST`, `PUT`, or `DELETE`. Prompted if omitted. |
 | `-r, --route <pattern>` | Route pattern (e.g., `/{id}`). Defaults to `/{id}` when prompted. |
 | `--validator` | Include a request validator class alongside the endpoint. |
+| `--no-view` | Skip creating the React view component and its `Pages/index.ts` entry. |
+| `--dry-run` | Preview the files that would be created or modified without writing anything to disk. |
 
 ## What Gets Created
 
 Running `sm new feature UpdateInvoice --module Invoices --method PUT --route /{id} --validator` generates:
 
 ```
-modules/Invoices/src/Invoices/Endpoints/Invoices/
-  UpdateInvoiceEndpoint.cs             # IEndpoint implementation
-  UpdateInvoiceRequestValidator.cs     # Request validator (when --validator is used)
+src/modules/Invoices/src/Invoices/
+  Endpoints/Invoices/
+    UpdateInvoiceEndpoint.cs           # IEndpoint implementation
+    UpdateInvoiceRequestValidator.cs   # Request validator (when --validator is used)
+  Views/
+    UpdateInvoice.tsx                  # React view component (unless --no-view)
+  Pages/index.ts                       # Updated with a new entry mapping "Invoices/UpdateInvoice" to the view
 ```
 
 ### Endpoint Auto-Discovery
@@ -41,6 +47,16 @@ The generated endpoint implements `IEndpoint`, which the Roslyn source generator
 ### Validator (Optional)
 
 When you pass `--validator`, the CLI generates a companion validator class that validates the request before the endpoint logic runs.
+
+### View + Pages Registry (Default)
+
+By default the CLI also creates `Views/{Feature}.tsx` and appends an entry to the module's `Pages/index.ts`, e.g.:
+
+```ts
+'Invoices/UpdateInvoice': () => import('@/Views/UpdateInvoice'),
+```
+
+Pass `--no-view` to skip both steps (useful for pure API endpoints that never render a page).
 
 ## Interactive Mode
 
@@ -61,7 +77,7 @@ sm new feature
 - At least one module must exist. If no modules are found, the CLI directs you to run `sm new module` first
 
 ::: tip View Endpoints
-If your feature is a page (view endpoint using `Inertia.Render`), remember to add a corresponding entry in your module's `Pages/index.ts`. See the [Pages Registry Pattern](/guide/modules#pages-registry) for details.
+`sm new feature` automatically adds the `Pages/index.ts` entry for the view it scaffolds. If you later add an `IViewEndpoint` by hand (or pass `--no-view`), you must register it yourself. See the [Pages Registry Pattern](/guide/modules#pages-registry) for details.
 :::
 
 ## Example

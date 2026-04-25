@@ -122,14 +122,7 @@ public sealed class PermissionAuthorizationHandler
         PermissionRequirement requirement
     )
     {
-        // Admin role bypasses all permission checks
-        if (context.User.IsInRole("Admin"))
-        {
-            context.Succeed(requirement);
-            return Task.CompletedTask;
-        }
-
-        if (context.User.HasClaim("permission", requirement.Permission))
+        if (context.User.HasPermission(requirement.Permission))
         {
             context.Succeed(requirement);
         }
@@ -139,10 +132,10 @@ public sealed class PermissionAuthorizationHandler
 }
 ```
 
-Key behaviors:
+The handler delegates to `ClaimsPrincipalExtensions.HasPermission`, which is where the real policy lives:
 
 - Users with the **Admin role** bypass all permission checks
-- For other users, the handler looks for a `permission` claim matching the requirement string
+- For other users, each `permission` claim is tested against the requirement via `PermissionMatcher.IsMatch`, which supports **wildcard matching**: a claim value of `"Products.*"` satisfies any `Products.X` requirement, and a bare `"*"` claim satisfies any requirement. Only trailing wildcards (`prefix.*` or `*`) are supported.
 - If no matching claim is found, the requirement fails (returns 403 Forbidden)
 
 ### RequirePermission Extension

@@ -10,42 +10,80 @@ SimpleModule applications deploy as standard ASP.NET applications. This guide co
 
 ### Dockerfile
 
-The project includes a multi-stage Dockerfile that produces a minimal runtime image:
+The project includes a multi-stage Dockerfile that produces a minimal runtime image. The snippet below is a simplified reference — see the repository's actual `Dockerfile` for the full script, which lists every module's `.csproj` and workspace `package.json` explicitly for optimal layer caching:
 
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# Stage 1: Base — .NET SDK + Node.js 22
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /src
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy project files and restore (layer caching)
-COPY Directory.Build.props Directory.Packages.props ./
+# Stage 2: .NET restore (cached unless .csproj / props files change)
+FROM base AS restore
+WORKDIR /src
+COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY *.slnx ./
-COPY framework/SimpleModule.Core/*.csproj framework/SimpleModule.Core/
-COPY framework/SimpleModule.Database/*.csproj framework/SimpleModule.Database/
-COPY framework/SimpleModule.Generator/*.csproj framework/SimpleModule.Generator/
-COPY template/SimpleModule.Host/*.csproj template/SimpleModule.Host/
-# ... module project files ...
+# Copy every framework/module/package .csproj individually for layer caching
+# ... (see real Dockerfile for the full list) ...
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
-# Build and publish
-COPY . .
-RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
-    -c Release -o /app/publish
+# Stage 3: npm restore (cached unless package.json / lockfile changes)
+FROM restore AS npm-restore
+WORKDIR /src
+COPY package.json package-lock.json ./
+# Copy every workspace package.json individually for layer caching
+# ... (see real Dockerfile for the full list) ...
+RUN npm ci
 
+# Stage 4: Frontend build + .NET publish
+FROM npm-restore AS build
+WORKDIR /src
+COPY . .
+RUN npm run build \
+    && npx @tailwindcss/cli \
+       -i template/SimpleModule.Host/Styles/app.css \
+       -o template/SimpleModule.Host/wwwroot/css/app.css \
+       --minify
+RUN dotnet publish template/SimpleModule.Host/SimpleModule.Host.csproj \
+    -c Release -o /app/publish --no-restore \
+    -p:ErrorOnDuplicatePublishOutputFiles=false \
+    -p:JsBuildCommand=echo
+
+# Stage 5: Runtime (slim image, non-root user)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/publish .
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system --gid 1001 appgroup \
+    && useradd --system --uid 1001 --gid appgroup --create-home appuser
+COPY --from=build --chown=appuser:appgroup /app/publish .
+RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
+
+# DEPLOY_VERSION feeds Inertia's asset-version header; if empty, the framework
+# falls back to the entry assembly's last-write timestamp.
+ARG DEPLOY_VERSION=
+ENV DEPLOYMENT_VERSION=${DEPLOY_VERSION}
+
+USER appuser
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "SimpleModule.Host.dll"]
 ```
 
 Key points:
-- **Multi-stage build** -- the SDK image is only used for building; the final image uses the smaller `aspnet` runtime image
-- **Layer caching** -- project files are copied and restored before the full source copy, so NuGet restore is cached across builds
+- **Five stages** -- `base` (SDK + Node 22), `restore` (.NET restore), `npm-restore` (workspace npm ci), `build` (frontend + dotnet publish), `runtime` (slim aspnet image)
+- **Non-root runtime** -- creates `appuser` (UID 1001) and runs the container as that user; owns `/app/data` (SQLite) and `/app/storage` (local files)
+- **Per-project COPY for layer caching** -- every `.csproj` and workspace `package.json` is copied individually so `dotnet restore` and `npm ci` only re-run when those manifests change
+- **`DEPLOY_VERSION` build arg** -- feeds `DEPLOYMENT_VERSION` for Inertia cache-busting; override with `--build-arg DEPLOY_VERSION=$(git rev-parse --short HEAD)` for deterministic versions
 - The runtime container exposes port **8080**
 
 ### Docker Compose
 
-For local testing or simple deployments, use `docker-compose.yml`:
+For local testing or simple deployments, use `docker-compose.yml`. The real compose file defines three services — `api`, `worker`, and `postgres` — so background jobs run in a dedicated consumer process while the web tier stays in producer mode:
 
 ```yaml
 services:
@@ -54,17 +92,46 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - Database__DefaultConnection=Host=postgres;Database=simplemodule;Username=simplemodule;Password=simplemodule
+      ASPNETCORE_ENVIRONMENT: Development
+      Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
+      Database__Provider: PostgreSQL
+      OpenIddict__BaseUrl: ${APP_BASE_URL:-http://localhost:8080}
+      # api enqueues jobs but never executes them — the worker does.
+      BackgroundJobs__WorkerMode: Producer
+    volumes:
+      - storage_data:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/live || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
+      Database__Provider: PostgreSQL
+      BackgroundJobs__WorkerMode: Consumer
+    volumes:
+      - storage_data:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   postgres:
-    image: postgres:16
+    image: postgres:17
     environment:
       POSTGRES_USER: simplemodule
-      POSTGRES_PASSWORD: simplemodule
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-simplemodule}
       POSTGRES_DB: simplemodule
     ports:
       - "5432:5432"
@@ -75,9 +142,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   pgdata:
+  storage_data:
 ```
 
 Start with:
@@ -86,7 +155,7 @@ Start with:
 docker compose up -d
 ```
 
-The API service waits for PostgreSQL to pass its health check before starting.
+The API service waits for PostgreSQL to pass its health check before starting. The `storage_data` volume is shared between `api` and `worker` so uploaded files are visible from both the web upload path and the background job path.
 
 ## CI/CD Pipeline
 
@@ -190,6 +259,8 @@ For production, always use environment variables or a secrets manager for connec
 | `ASPNETCORE_ENVIRONMENT` | Runtime environment | `Production`, `Development` |
 | `Database__DefaultConnection` | Database connection string | `Host=...;Database=...` |
 | `Database__Provider` | Database provider | `Sqlite`, `PostgreSQL` |
+| `OpenIddict__BaseUrl` | Public base URL used to register OpenIddict redirect URIs | `https://app.example.com` |
+| `BackgroundJobs__WorkerMode` | Role in the background-job pipeline | `Producer` (web tier) or `Consumer` (worker tier) |
 
 ### Docker Environment
 
@@ -205,7 +276,7 @@ docker run -d \
 
 ## Database Initialization
 
-SimpleModule uses `EnsureCreated()` by default, which creates the database schema if it does not exist. For production environments with evolving schemas, use EF Core migrations per module:
+SimpleModule relies on EF Core migrations per module — there is no `EnsureCreated()` bootstrap in the framework. Generate and apply migrations for each module's DbContext:
 
 ```bash
 # Add a migration for a specific module's DbContext

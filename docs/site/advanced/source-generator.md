@@ -135,7 +135,7 @@ The generator feeds `DiscoveryData` through a pipeline of **emitters**, each res
 | `LocalizationExtensionsEmitter` | `LocalizationExtensions.g.cs` | Aggregates localization resources across modules |
 | `RoutesEmitter` | `ModuleRoutes.g.cs` | Strongly-typed C# route constants |
 | `TypeScriptRoutesEmitter` | `TypeScriptRoutes.g.cs` | Embedded TypeScript route constants for the ClientApp |
-| `HostingExtensionsEmitter` | `HostingExtensions.g.cs` | Top-level `AddSimpleModule()` that orchestrates all registrations |
+| `HostingExtensionsEmitter` | `HostingExtensions.g.cs` | Top-level `AddSimpleModule()` (service registration) and `UseSimpleModule()` (middleware + endpoint mapping) that orchestrate all framework wiring |
 
 ### Frontend Integration
 
@@ -158,7 +158,6 @@ The generator feeds `DiscoveryData` through a pipeline of **emitters**, each res
 | Emitter | Generated File | Purpose |
 |---------|---------------|---------|
 | `JsonResolverEmitter` | `ModulesJsonResolver.g.cs` | AOT-compatible JSON type info resolver for all DTO types |
-| `ViewPagesEmitter` | `ViewPages.g.cs` | Maps view endpoints to React component names |
 | `DiagnosticEmitter` | _(diagnostics only)_ | Reports compiler warnings/errors for illegal module references and other issues |
 
 ## The Discovery-Emit Pipeline
@@ -224,7 +223,8 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var dataProvider = context.CompilationProvider.Select(
-            static (compilation, _) => SymbolDiscovery.Extract(compilation)
+            static (compilation, cancellationToken) =>
+                SymbolDiscovery.Extract(compilation, cancellationToken)
         );
 
         context.RegisterSourceOutput(

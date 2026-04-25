@@ -4,7 +4,7 @@ outline: deep
 
 # Frontend Overview
 
-SimpleModule's frontend is built on **React 19** served through **Inertia.js** with a **Blazor SSR** shell. Each module ships its own self-contained page bundle, and the ClientApp bootstraps Inertia to dynamically load pages from any module at runtime.
+SimpleModule's frontend is built on **React 19** served through **Inertia.js** with a static HTML shell served by ASP.NET Core + Inertia.js middleware. Each module ships its own self-contained page bundle, and the ClientApp bootstraps Inertia to dynamically load pages from any module at runtime.
 
 ## Architecture
 
@@ -13,8 +13,8 @@ The frontend architecture follows a modular pattern that mirrors the backend:
 ```
 Browser Request
   --> ASP.NET route handler calls Inertia.Render("Products/Browse", props)
-  --> Inertia middleware renders Blazor SSR shell with JSON props
-  --> React ClientApp dynamically imports Products.pages.js
+  --> Inertia middleware renders static HTML shell with embedded JSON props
+  --> React ClientApp dynamically imports SimpleModule.Products.pages.js
   --> Component hydrates with server-provided props
 ```
 
@@ -36,12 +36,12 @@ Each module compiles its React pages into a single ES module bundle (`{ModuleNam
 Every module that has a UI builds a `{ModuleName}.pages.js` file into its `wwwroot/` directory. This file exports a `pages` record that maps route names to React components:
 
 ```ts
-// modules/Products/src/Products/Pages/index.ts
+// modules/Products/src/SimpleModule.Products/Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('../Views/Browse'),
-  'Products/Manage': () => import('../Views/Manage'),
-  'Products/Create': () => import('../Views/Create'),
-  'Products/Edit': () => import('../Views/Edit'),
+  'Products/Browse': () => import('./Browse'),
+  'Products/Manage': () => import('./Manage'),
+  'Products/Create': () => import('./Create'),
+  'Products/Edit': () => import('./Edit'),
 };
 ```
 
@@ -74,8 +74,23 @@ When Inertia needs to render a page, `resolvePage` splits the route name to dete
 // @simplemodule/client/resolve-page.ts
 export async function resolvePage(name: string) {
   const moduleName = name.split('/')[0];
-  const mod = await import(`/_content/${moduleName}/${moduleName}.pages.js`);
+  const assemblyName = `SimpleModule.${moduleName}`;
+  const mod = await import(`/_content/${assemblyName}/${assemblyName}.pages.js`);
+
+  if (!mod.pages) {
+    throw new Error(
+      `Module "${moduleName}" does not export a "pages" record. Check ${assemblyName}.pages.js.`,
+    );
+  }
+
   const page = mod.pages[name];
+
+  if (!page) {
+    const available = Object.keys(mod.pages).join(', ');
+    throw new Error(
+      `Page "${name}" not found in module "${moduleName}". Available pages: ${available}.`,
+    );
+  }
 
   // Support lazy page entries: () => import('./SomePage')
   if (typeof page === 'function') {
@@ -89,7 +104,7 @@ export async function resolvePage(name: string) {
 
 For a route name like `Products/Browse`:
 1. The module name `Products` is extracted from the first segment
-2. The bundle `/_content/Products/Products.pages.js` is dynamically imported
+2. The bundle `/_content/SimpleModule.Products/SimpleModule.Products.pages.js` is dynamically imported
 3. The `pages` record is looked up for the key `Products/Browse`
 4. Lazy entries (functions) are resolved, eager entries are returned directly
 

@@ -33,7 +33,7 @@ public sealed class ProductServiceTests : IDisposable
         _db = new ProductsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new ProductService(_db, NullLogger<ProductService>.Instance);
+        _sut = new ProductService(_db, new TestMessageBus(), NullLogger<ProductService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
@@ -119,8 +119,8 @@ public static class FakeDataGenerators
     public static Faker<Order> OrderFaker { get; } =
         new Faker<Order>()
             .RuleFor(o => o.Id, f => OrderId.From(f.IndexFaker + 1))
-            .RuleFor(o => o.UserId, f => UserId.From(
-                f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture)))
+            .RuleFor(o => o.UserId, f =>
+                f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture))
             .RuleFor(o => o.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)))
             .RuleFor(o => o.Total, f => f.Finance.Amount(10, 500))
             .RuleFor(o => o.CreatedAt, f => f.Date.Recent());
@@ -177,23 +177,21 @@ var service = new OrderService(fakeProducts, db, logger);
 
 ## Testing Event Handlers
 
-Wolverine handlers are plain classes — instantiate them directly and call `Handle` / `HandleAsync`:
+Wolverine handlers are plain classes — instantiate them directly and call `Handle` / `HandleAsync`. To verify a service publishes the right event, substitute `IMessageBus` and assert on the recorded calls:
 
 ```csharp
 [Fact]
-public async Task Handle_LogsEvent()
+public async Task CreateOrderAsync_PublishesOrderCreatedEvent()
 {
-    var audit = Substitute.For<IAuditContext>();
-    var handler = new OrderCreatedAuditHandler(audit);
-    var evt = new OrderCreatedEvent(OrderId.From(1), UserId.From(42), 99.99m);
+    var bus = Substitute.For<IMessageBus>();
+    var service = new OrderService(_db, _users, _products, bus, _logger);
+    var request = FakeDataGenerators.CreateOrderRequestFaker.Generate();
 
-    await handler.Handle(evt, CancellationToken.None);
+    await service.CreateOrderAsync(request);
 
-    await audit.Received().LogAsync("Order created", "1", Arg.Any<CancellationToken>());
+    await bus.Received().PublishAsync(Arg.Any<OrderCreatedEvent>());
 }
 ```
-
-To verify a service publishes the right event, substitute `IMessageBus` and assert on the recorded calls — see [Events](/guide/events#testing-events) for a full example.
 
 ## Next Steps
 
