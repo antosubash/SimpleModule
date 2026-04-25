@@ -26,7 +26,7 @@ public interface IMenuBuilder
 }
 ```
 
-The builder collects items from all modules, then sorts them by `Order` to produce the final list.
+The builder collects items from all modules into a flat list. Items are grouped by `Section` at registration time; it is the consumer's responsibility to sort by `Order` when rendering.
 
 ### Configuring Menu Items
 
@@ -71,6 +71,8 @@ public class ProductsModule : IModule
 | `Section` | `MenuSection` | `Navbar` | Which UI section this item belongs to |
 | `RequiresAuth` | `bool` | `true` | Whether the user must be authenticated |
 | `Group` | `string?` | `null` | Optional group label for visual grouping |
+| `Roles` | `IReadOnlyList<string>` | `[]` | If non-empty, item is only visible to users with at least one of these roles |
+| `RequiredPermission` | `string?` | `null` | If set, item is only visible when the user satisfies this permission (wildcards supported; Admin bypasses) |
 
 ### Menu Sections
 
@@ -140,7 +142,7 @@ Items with the same `Group` value are rendered together under a group header.
 
 ### Ordering
 
-Menu items are sorted globally by `Order` within each section. Use consistent ranges per module to keep items together:
+Menu items carry an `Order` value that renderers use to sort within a section. `MenuRegistry` itself does not sort — it simply groups by `Section` — so sorting happens in the component (or API endpoint) that consumes `GetItems`. Use consistent ranges per module to keep items together:
 
 | Range | Module |
 |-------|--------|
@@ -165,7 +167,7 @@ public interface IMenuRegistry
 }
 ```
 
-The `MenuRegistry` groups items by section and returns them sorted by `Order`:
+The `MenuRegistry` groups items by section at construction and returns each section's items in registration order — sort by `Order` in the caller if ordered output is required:
 
 ```csharp
 app.MapGet("/api/menu", (IMenuRegistry registry) =>
@@ -221,7 +223,7 @@ The framework uses `IPublicMenuProvider.GetHomePageUrlAsync()` to redirect the r
 
 ## Frontend Rendering
 
-Menu data is typically shared with the frontend via Inertia shared data or API endpoints. The Blazor layout components (`ModuleNav`, `UserDropdown`, sidebar components) read from `IMenuRegistry` to render navigation:
+Menu data is typically shared with the frontend via Inertia shared data or API endpoints. The React layout components (`ModuleNav`, `UserDropdown`, sidebar components) read from `IMenuRegistry` to render navigation:
 
 - **`ModuleNav`** renders `MenuSection.Navbar` items
 - **Sidebar components** render `MenuSection.AppSidebar` and `MenuSection.AdminSidebar` items

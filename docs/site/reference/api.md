@@ -383,6 +383,15 @@ public sealed class MenuItem
     public MenuSection Section { get; init; } = MenuSection.Navbar;
     public bool RequiresAuth { get; init; } = true;
     public string? Group { get; init; }
+
+    // When set, only users with at least one of these roles see the item.
+    // Empty list means visible to all authenticated users.
+    public IReadOnlyList<string> Roles { get; init; } = [];
+
+    // When set, only users whose permission claims satisfy the requirement
+    // see the item (supports wildcards via PermissionMatcher). Admin role
+    // bypasses this check. Null means no permission gating.
+    public string? RequiredPermission { get; init; }
 }
 ```
 

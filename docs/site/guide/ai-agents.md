@@ -35,6 +35,10 @@ builder.Services.AddAnthropicAI(builder.Configuration);
 }
 ```
 
+::: warning Model selection not yet wired
+`AnthropicOptions.Model` is bound from configuration, but `AddAnthropicAI` currently constructs the client with only the API key and returns `client.Messages` as the `IChatClient`. The configured `Model` value is not passed to the client today — model selection happens at call time or is left to the SDK default. Track this if you rely on the configured model taking effect.
+:::
+
 ### OpenAI
 
 ```csharp
@@ -80,8 +84,8 @@ builder.Services.AddOllamaAI(builder.Configuration);
 {
   "AI": {
     "Ollama": {
-      "BaseUrl": "http://localhost:11434",
-      "Model": "llama3"
+      "Endpoint": "http://localhost:11434",
+      "Model": "llama3.2"
     }
   }
 }
@@ -93,12 +97,16 @@ builder.Services.AddOllamaAI(builder.Configuration);
 builder.Services.AddSimpleModuleAgents(builder.Configuration);
 ```
 
-This registers:
+`AddSimpleModuleAgents` itself registers only:
+
+- `AgentOptions` -- bound from the `Agents:` configuration section
 - `AgentChatService` -- handles chat requests (streaming and non-streaming)
-- `IAgentRegistry` -- discovers and serves agent definitions
-- `IAgentSessionStore` -- persists conversation history
-- Middleware pipeline: logging, rate limiting, token tracking, retry
-- Guardrails: content length limits, PII redaction, prompt injection detection
+
+The rest of the stack is wired in separately:
+
+- **`IAgentRegistry`** and concrete `IAgentDefinition` implementations are registered by the source generator (`AgentExtensionsEmitter`) when it discovers agents in referenced assemblies.
+- **`IAgentSessionStore`** lives in the separate `SimpleModule.Agents.Module` package; add that module if you need persisted conversation history.
+- **`IAgentMiddleware`** and **`IAgentGuardrail`** are contracts only. `AgentMiddlewarePipeline` runs whatever implementations you register in DI — no middleware or guardrails ship as defaults. Register your own (for logging, rate limiting, PII redaction, etc.) explicitly.
 
 ## Defining an Agent
 
@@ -116,7 +124,7 @@ public class ProductAssistant : IAgentDefinition
 
     // Optional overrides
     public int? MaxTokens => 2048;
-    public double? Temperature => 0.5;
+    public float? Temperature => 0.5f;
     public bool? EnableRag => true;
     public string? RagCollectionName => "products";
 }
@@ -203,19 +211,39 @@ builder.Services.AddInMemoryVectorStore();
 builder.Services.AddPostgresVectorStore(builder.Configuration);
 ```
 
-## Agent Settings
+## Agent Configuration
 
-The module registers these settings (manageable via the admin UI):
+`AddSimpleModuleAgents` binds `AgentOptions` from the `Agents:` configuration section. These are plain `IOptions<AgentOptions>` values — **not** admin-UI `SettingDefinition`s — so they are configured via `appsettings.json` (or any standard configuration source) and only take effect on app start / options reload.
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `Agents.Enabled` | `true` | Global kill switch |
-| `Agents.MaxTokens` | `4096` | Default max tokens per response |
-| `Agents.Temperature` | `0.7` | Default sampling temperature |
-| `Agents.EnableRag` | `true` | Enable RAG context injection |
-| `Agents.EnableStreaming` | `true` | Allow streaming responses |
-| `Agents.RateLimit.RequestsPerMinute` | `60` | Rate limit per user |
-| `Agents.RateLimit.TokensPerMinute` | `100000` | Token rate limit per user |
+| Key | Default | Description |
+|-----|---------|-------------|
+| `Agents:Enabled` | `true` | Global kill switch |
+| `Agents:MaxTokens` | `4096` | Default max tokens per response |
+| `Agents:Temperature` | `0.7` | Default sampling temperature (`float`) |
+| `Agents:EnableRag` | `true` | Enable RAG context injection |
+| `Agents:EnableStreaming` | `true` | Allow streaming responses |
+| `Agents:SessionTimeout` | `00:30:00` | Idle timeout for agent sessions |
+| `Agents:RateLimit:RequestsPerMinute` | `60` | Rate limit per user |
+| `Agents:RateLimit:TokensPerMinute` | `100000` | Token rate limit per user |
+
+Example:
+
+```json
+{
+  "Agents": {
+    "Enabled": true,
+    "MaxTokens": 4096,
+    "Temperature": 0.7,
+    "EnableRag": true,
+    "EnableStreaming": true,
+    "SessionTimeout": "00:30:00",
+    "RateLimit": {
+      "RequestsPerMinute": 60,
+      "TokensPerMinute": 100000
+    }
+  }
+}
+```
 
 ## Next Steps
 

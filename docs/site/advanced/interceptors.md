@@ -6,6 +6,16 @@ outline: deep
 
 SimpleModule supports EF Core `SaveChangesInterceptor` for cross-cutting concerns like audit logging, soft deletes, and timestamp management. The source generator auto-discovers interceptors and wires them into the DbContext pipeline.
 
+## Shipped Interceptors
+
+The framework ships three interceptors under `framework/SimpleModule.Database/Interceptors/`, all auto-registered:
+
+| Interceptor | Purpose |
+|-------------|---------|
+| `EntityInterceptor` | Populates `CreatedAt`/`UpdatedAt`, audit user fields, concurrency stamps, versioning, tenant IDs, and converts hard deletes into soft deletes based on the interfaces an entity implements (`IHasCreationTime`, `IHasModificationTime`, `IAuditable`, `IHasConcurrencyStamp`, `IVersioned`, `IMultiTenant`, `ISoftDelete`). |
+| `DomainEventInterceptor` | Collects events from `IHasDomainEvents` entities before save and dispatches them via Wolverine's `IMessageBus` after a successful save. |
+| `EntityChangeInterceptor` | Captures entity changes before save and dispatches them to typed `IEntityChangeHandler<T>` implementations after save. |
+
 ## Overview
 
 A `SaveChangesInterceptor` hooks into the EF Core save pipeline, allowing you to inspect or modify entities before or after they are persisted. Common use cases include:
@@ -33,7 +43,7 @@ This happens because:
 
 ## The Solution: Lazy Resolution
 
-Inject `IServiceProvider?` as an optional parameter and resolve dependencies at interception time -- not at construction time.
+Inject `IServiceProvider` and resolve dependencies at interception time -- not at construction time. The framework's own interceptors do exactly this: `DomainEventInterceptor` and `EntityChangeInterceptor` take a non-optional `IServiceProvider` and resolve services (like Wolverine's `IMessageBus` or typed change handlers) inside `SavingChangesAsync`/`SavedChangesAsync`. `EntityInterceptor` takes `IHttpContextAccessor` and an optional `ITenantContext?` directly — both are safe because they don't depend on a DbContext.
 
 ### Correct Pattern
 
@@ -83,9 +93,11 @@ public sealed class BadInterceptor(
 
 ### Constructor Parameters
 
-- **Never** inject services that transitively depend on a DbContext into the interceptor constructor
-- **Do** inject `IServiceProvider?` as an optional dependency when runtime service resolution is needed
-- **Do** inject simple services (like `ILogger<T>`, `TimeProvider`) that have no DbContext dependency
+- **Never** inject services that transitively depend on a DbContext into the interceptor constructor — that's what causes the deadlock
+- **Do** inject `IServiceProvider` (optional via `IServiceProvider? = null` if you want the interceptor to work without DI in unit tests) when runtime service resolution is needed
+- **Do** inject simple services (like `ILogger<T>`, `TimeProvider`, `IHttpContextAccessor`) that have no DbContext dependency — the framework's `EntityInterceptor` does this with `IHttpContextAccessor` and `ITenantContext?`
+
+The `SM0039` diagnostic flags interceptors whose constructor parameters transitively depend on a DbContext, so you'll see a compile-time warning before you hit the runtime deadlock.
 
 ### Service Resolution Timing
 
@@ -114,12 +126,12 @@ public sealed class TimestampInterceptor(
 
         foreach (var entry in eventData.Context.ChangeTracker.Entries())
         {
-            if (entry.State == EntityState.Added && entry.Entity is IHasCreatedAt created)
+            if (entry.State == EntityState.Added && entry.Entity is IHasCreationTime created)
             {
                 created.CreatedAt = now;
             }
 
-            if (entry.State == EntityState.Modified && entry.Entity is IHasUpdatedAt updated)
+            if (entry.State == EntityState.Modified && entry.Entity is IHasModificationTime updated)
             {
                 updated.UpdatedAt = now;
             }

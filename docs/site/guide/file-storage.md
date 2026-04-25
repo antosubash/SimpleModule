@@ -15,11 +15,17 @@ All providers implement a common interface:
 ```csharp
 public interface IStorageProvider
 {
-    Task<StorageResult> SaveAsync(string path, Stream content, string contentType);
-    Task<Stream?> GetAsync(string path);
-    Task<bool> DeleteAsync(string path);
-    Task<bool> ExistsAsync(string path);
-    Task<IReadOnlyList<StorageEntry>> ListAsync(string prefix);
+    Task<StorageResult> SaveAsync(
+        string path,
+        Stream content,
+        string contentType,
+        CancellationToken cancellationToken = default);
+    Task<Stream?> GetAsync(string path, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(string path, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(string path, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<StorageEntry>> ListAsync(
+        string prefix,
+        CancellationToken cancellationToken = default);
 }
 ```
 
@@ -57,14 +63,14 @@ builder.Services.AddS3Storage(builder.Configuration);
       "AccessKey": "your-access-key",
       "SecretKey": "your-secret-key",
       "Region": "us-east-1",
-      "ServiceUrl": "",
+      "ServiceUrl": null,
       "ForcePathStyle": false
     }
   }
 }
 ```
 
-Set `ServiceUrl` for S3-compatible services (MinIO, DigitalOcean Spaces). Set `ForcePathStyle` to `true` for path-style URL access.
+`ServiceUrl` is typed as `Uri?` — supply a valid URI (e.g., `"https://nyc3.digitaloceanspaces.com"`) or leave it as `null` to use the default AWS endpoint for the region. An empty string will not bind. Set `ForcePathStyle` to `true` for path-style URL access on S3-compatible services (MinIO, DigitalOcean Spaces).
 
 ### Azure Blob Storage
 
@@ -101,7 +107,7 @@ The FileStorage module provides HTTP endpoints and a database-backed file regist
 
 ### Browse UI
 
-A file browser view at `/files/browse` lets users navigate folders, upload files, and download or delete existing files.
+A file browser view at `/files/` lets users navigate folders, upload files, and download or delete existing files. (The module uses `ViewPrefix = "/files"` with the browse endpoint mounted at `/`.)
 
 ### Module Settings
 
@@ -117,13 +123,19 @@ Inject `IFileStorageContracts` to interact with file storage from any module:
 ```csharp
 public interface IFileStorageContracts
 {
-    Task<IEnumerable<StoredFile>> GetFilesAsync(string? folder = null);
+    Task<IEnumerable<StoredFile>> GetFilesAsync(string? folder = null, string? userId = null);
     Task<StoredFile?> GetFileByIdAsync(FileStorageId id);
     Task<StoredFile> UploadFileAsync(
-        Stream content, string fileName, string contentType, string? folder = null);
+        Stream content,
+        string fileName,
+        string contentType,
+        string? folder = null,
+        string? userId = null);
     Task DeleteFileAsync(FileStorageId id);
+    Task DeleteFileAsync(StoredFile file);
     Task<Stream?> DownloadFileAsync(FileStorageId id);
-    Task<IEnumerable<string>> GetFoldersAsync(string? parentFolder = null);
+    Task<Stream?> DownloadFileAsync(StoredFile file);
+    Task<IEnumerable<string>> GetFoldersAsync(string? parentFolder = null, string? userId = null);
 }
 ```
 

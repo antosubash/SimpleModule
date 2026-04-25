@@ -11,7 +11,7 @@ SimpleModule uses [Inertia.js](https://inertiajs.com/) to bridge the server-side
 The Inertia integration in SimpleModule has three layers:
 
 1. **ASP.NET endpoints** call `Inertia.Render()` to specify a component name and props
-2. **Blazor SSR** renders the HTML shell with the serialized page data
+2. **`IInertiaPageRenderer`** — the built-in `HtmlFileInertiaPageRenderer` reads a static `wwwroot/index.html` shell and substitutes placeholders (page JSON, CSP nonce, deploy version, module CSS links). No Blazor or server-side component rendering is involved.
 3. **React ClientApp** hydrates the page by dynamically importing the correct module's page bundle
 
 ## Request Flow
@@ -30,9 +30,12 @@ InertiaResult.ExecuteAsync()
     → Serializes page data (component, props, url, version) as JSON
     → Delegates to IInertiaPageRenderer
     ↓
-InertiaPageRenderer (Blazor SSR)
-    → Renders InertiaShell component with page JSON
-    → Returns full HTML document
+HtmlFileInertiaPageRenderer (default IInertiaPageRenderer)
+    → Loads wwwroot/index.html once at startup and splits it around
+      the <!--INERTIA_PAGE_DATA--> placeholder
+    → Writes the pre-split HTML, injecting page JSON into
+      <script data-page="app" type="application/json">
+    → Also substitutes the CSP nonce, deploy version, and module CSS links
     ↓
 Browser receives HTML
     → React's createInertiaApp hydrates the page
@@ -151,11 +154,13 @@ The middleware:
 
 The version is determined by:
 1. `DEPLOYMENT_VERSION` environment variable (for rolling deployments)
-2. Assembly version as fallback
+2. Build timestamp as fallback — the entry assembly's last-write time formatted as `yyyyMMddHHmmss`, so every recompile/publish invalidates stale clients automatically
 
-## Blazor SSR Shell
+## HTML File Shell
 
-The `InertiaShell` Blazor component renders the HTML document with embedded page data:
+The default `IInertiaPageRenderer` is `HtmlFileInertiaPageRenderer` (in `SimpleModule.Hosting.Inertia`). It reads a single static `wwwroot/index.html` file at startup and substitutes placeholders at request time — there is no Blazor, no `HtmlRenderer`, and no server-side component tree.
+
+The host's `wwwroot/index.html` contains these placeholders:
 
 ```html
 <!DOCTYPE html>
@@ -163,65 +168,40 @@ The `InertiaShell` Blazor component renders the HTML document with embedded page
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="cache-buster" content="@CacheBuster" />
-    <script type="importmap">
+    <!--MODULE_CSS_LINKS-->
+    <script type="importmap" nonce="<!--CSP_NONCE-->">
     {
         "imports": {
-            "react": "/js/vendor/react.js",
-            "react-dom": "/js/vendor/react-dom.js",
-            "react/jsx-runtime": "/js/vendor/react-jsx-runtime.js",
-            "react-dom/client": "/js/vendor/react-dom-client.js",
-            "@inertiajs/react": "/js/vendor/inertiajs-react.js"
+            "react": "/js/vendor/react.js?v=<!--DEPLOY_VERSION-->",
+            "react-dom": "/js/vendor/react-dom.js?v=<!--DEPLOY_VERSION-->",
+            "@inertiajs/react": "/js/vendor/inertiajs-react.js?v=<!--DEPLOY_VERSION-->"
         }
     }
     </script>
 </head>
 <body>
-    <!-- Blazor layout wraps the Inertia page data -->
-    <InertiaPage PageJson="@PageJson" />
+    <!--INERTIA_PAGE_DATA-->
+    <script src="/js/app.js?v=<!--DEPLOY_VERSION-->" nonce="<!--CSP_NONCE-->"></script>
 </body>
 </html>
 ```
 
-The `InertiaPageRenderer` uses Blazor's `HtmlRenderer` to produce static HTML server-side:
+At startup the renderer:
 
-```csharp
-public sealed class InertiaPageRenderer(
-    IServiceProvider services,
-    ILoggerFactory loggerFactory,
-    IOptions<InertiaOptions> options
-) : IInertiaPageRenderer
-{
-    public async Task RenderPageAsync(HttpContext httpContext, string pageJson)
-    {
-        await using var renderer = new HtmlRenderer(services, loggerFactory);
-        var html = await renderer.Dispatcher.InvokeAsync(async () =>
-        {
-            var output = await renderer.RenderComponentAsync(
-                options.Value.ShellComponent,
-                ParameterView.FromDictionary(new Dictionary<string, object?>
-                {
-                    ["PageJson"] = pageJson,
-                    ["HttpContext"] = httpContext,
-                })
-            );
-            return output.ToHtmlString();
-        });
+1. Reads `index.html` once.
+2. Replaces `<!--DEPLOY_VERSION-->` with `InertiaMiddleware.Version` for cache-busting.
+3. Injects `<link rel="stylesheet">` tags for each module RCL that ships a `{assembly}.css` asset (replacing `<!--MODULE_CSS_LINKS-->`).
+4. Splits the template around `<!--INERTIA_PAGE_DATA-->` into `before` / `after` buffers — so every request only concatenates three strings.
 
-        httpContext.Response.ContentType = "text/html; charset=utf-8";
-        await httpContext.Response.WriteAsync(html);
-    }
-}
+At request time, `RenderPageAsync` writes:
+
+```text
+before + <script data-page="app" type="application/json" nonce="…">{pageJson}</script> + after
 ```
 
-You can customize the shell component via `InertiaOptions`:
+and swaps `<!--CSP_NONCE-->` with the per-request nonce from `ICspNonce`. In development it also strips the import map and app.js script tag and injects Vite's `/@vite/client` and `/app.tsx` entries when the Vite dev server is active (via `DevToolsConstants.ViteDevServerKey`).
 
-```csharp
-builder.Services.AddSimpleModuleBlazor(options =>
-{
-    options.ShellComponent = typeof(MyCustomShell);
-});
-```
+To swap the renderer, replace the `IInertiaPageRenderer` registration with your own implementation — there is no `InertiaOptions.ShellComponent` or `AddSimpleModuleBlazor` hook.
 
 ## Client Side
 
@@ -280,12 +260,12 @@ For a component name like `"Products/Browse"`:
 Each module exports a `pages` record in `Pages/index.ts`:
 
 ```typescript
-// modules/Products/src/Products/Pages/index.ts
-export const pages: Record<string, any> = {
-  'Products/Browse': () => import('../Views/Browse'),
-  'Products/Manage': () => import('../Views/Manage'),
-  'Products/Create': () => import('../Views/Create'),
-  'Products/Edit': () => import('../Views/Edit'),
+// modules/Products/src/SimpleModule.Products/Pages/index.ts
+export const pages: Record<string, unknown> = {
+  'Products/Browse': () => import('./Browse'),
+  'Products/Manage': () => import('./Manage'),
+  'Products/Create': () => import('./Create'),
+  'Products/Edit': () => import('./Edit'),
 };
 ```
 
@@ -361,15 +341,15 @@ public class BrowseEndpoint : IViewEndpoint
 
 ```typescript
 // Pages/index.ts
-export const pages: Record<string, any> = {
-  'Products/Browse': () => import('../Views/Browse'),
+export const pages: Record<string, unknown> = {
+  'Products/Browse': () => import('./Browse'),
 };
 ```
 
 **3. Page component (React):**
 
 ```tsx
-// Views/Browse.tsx
+// Pages/Browse.tsx
 export default function Browse({ products }: { products: Product[] }) {
   return (
     <div>
@@ -388,7 +368,7 @@ export default function Browse({ products }: { products: Product[] }) {
 2. ASP.NET matches the route, calls the endpoint handler
 3. `IProductContracts.GetAllProductsAsync()` fetches products from the database
 4. `Inertia.Render("Products/Browse", { products })` serializes the page data
-5. On initial load: Blazor SSR renders the full HTML shell with embedded JSON
+5. On initial load: `HtmlFileInertiaPageRenderer` writes the pre-split `index.html` shell with the JSON injected into `<script data-page="app">`
 6. React hydrates, `resolvePage("Products/Browse")` imports `Products.pages.js`
 7. The Browse component renders with the server-provided products array
 8. On subsequent navigation: only JSON is returned, React swaps the component

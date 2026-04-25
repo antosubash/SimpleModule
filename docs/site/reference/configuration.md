@@ -16,6 +16,48 @@ The default `appsettings.json` for the host application:
     "DefaultConnection": "Data Source=app.db",
     "Provider": "Sqlite"
   },
+  "Storage": {
+    "Provider": "Local",
+    "Local": {
+      "BasePath": "./storage"
+    }
+  },
+  "AI": {
+    "Ollama": {
+      "Endpoint": "http://localhost:11434",
+      "Model": "llama3.2",
+      "EmbeddingModel": "nomic-embed-text"
+    }
+  },
+  "Agents": {
+    "Enabled": true,
+    "MaxTokens": 4096,
+    "Temperature": 0.7,
+    "EnableRag": true,
+    "EnableStreaming": true,
+    "SessionTimeout": "00:30:00",
+    "RateLimit": {
+      "RequestsPerMinute": 60,
+      "TokensPerMinute": 100000
+    }
+  },
+  "Rag": {
+    "DefaultTopK": 5,
+    "MinScore": 0.7,
+    "EmbeddingDimension": 1536,
+    "IndexOnStartup": true,
+    "StructuredRag": {
+      "EnableRouter": true,
+      "DefaultStructure": "Chunk",
+      "StructurizerMaxTokens": 4096
+    }
+  },
+  "Localization": {
+    "DefaultLocale": "en"
+  },
+  "Passkeys": {
+    "ServerDomain": "yourdomain.com"
+  },
   "Logging": {
     "LogLevel": {
       "Default": "Information",
@@ -143,6 +185,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - Database__DefaultConnection=Host=postgres;Database=simplemodule;Username=app;Password=secret
+      - OpenIddict__BaseUrl=https://app.example.com
+      - BackgroundJobs__WorkerMode=Producer
 ```
 
 ### Docker Run
@@ -250,12 +294,19 @@ SimpleModule supports multiple AI providers. Configure one in `appsettings.json`
 {
   "AI": {
     "Ollama": {
-      "BaseUrl": "http://localhost:11434",
-      "Model": "llama3"
+      "Endpoint": "http://localhost:11434",
+      "Model": "llama3.2",
+      "EmbeddingModel": "nomic-embed-text"
     }
   }
 }
 ```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `AI:Ollama:Endpoint` | `http://localhost:11434` | Base URL of the Ollama server |
+| `AI:Ollama:Model` | `llama3.2` | Chat completion model |
+| `AI:Ollama:EmbeddingModel` | `nomic-embed-text` | Model used for embedding generation |
 
 ::: tip
 Use environment variables for API keys in production: `AI__Anthropic__ApiKey`, `AI__OpenAI__ApiKey`, etc.
@@ -375,6 +426,48 @@ Never commit storage credentials to source control. Use environment variables: `
 ```
 
 The default locale is used when no user setting or Accept-Language header matches a supported locale.
+
+## OpenIddict Configuration
+
+```json
+{
+  "OpenIddict": {
+    "BaseUrl": "https://app.example.com",
+    "AllowPasswordGrant": false
+  }
+}
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `OpenIddict:BaseUrl` | _(empty)_ | Public base URL used when registering redirect URIs. Set to your deployed URL (e.g. `https://app.example.com`) so OAuth flows round-trip correctly behind a reverse proxy. |
+| `OpenIddict:AllowPasswordGrant` | `false` | Enables the OAuth 2.0 Resource Owner Password Credentials (ROPC) grant. Development-only — `appsettings.Development.json` turns this on so load/integration tests can obtain bearer tokens without a browser. |
+
+## Passkeys Configuration
+
+```json
+{
+  "Passkeys": {
+    "ServerDomain": "yourdomain.com"
+  }
+}
+```
+
+The `Passkeys:ServerDomain` is the WebAuthn relying-party ID. Use your production host name (e.g. `app.example.com`) in production and `localhost` in development.
+
+## Background Jobs Configuration
+
+```json
+{
+  "BackgroundJobs": {
+    "WorkerMode": "Producer"
+  }
+}
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `BackgroundJobs:WorkerMode` | `Producer` | Role of the current process in the job pipeline. `Producer` enqueues jobs but does not execute them; `Consumer` dequeues and executes them. In the reference Docker Compose setup the `api` service runs as `Producer` and the `worker` service runs as `Consumer`. |
 
 ## Next Steps
 

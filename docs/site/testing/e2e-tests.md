@@ -24,7 +24,7 @@ E2E tests live in `tests/e2e/` and are a separate npm workspace with their own `
   },
   "devDependencies": {
     "@faker-js/faker": "^10.4.0",
-    "@playwright/test": "^1.52.0"
+    "@playwright/test": "^1.58.2"
   }
 }
 ```
@@ -45,12 +45,6 @@ npm run test:e2e
 
 # Run with Playwright UI (interactive mode)
 npm run test:e2e:ui
-
-# Run only smoke tests
-npm run test:e2e -- -- tests/smoke/
-
-# Run only flow tests
-npm run test:e2e -- -- tests/flows/
 ```
 
 Or from within the `tests/e2e/` directory:
@@ -69,15 +63,20 @@ npm run report                    # view last test report
 Playwright is configured in `tests/e2e/playwright.config.ts`:
 
 ```typescript
+const isCI = !!process.env.CI;
+const baseURL = isCI ? 'http://localhost:5000' : 'https://localhost:5001';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [['html'], ...(process.env.CI ? [['github']] : [])],
+  forbidOnly: isCI,
+  retries: 0,
+  workers: isCI ? 1 : undefined,
+  timeout: 15_000,
+  expect: { timeout: 3_000 },
+  reporter: [['html', {}], ...(isCI ? [['github', {}] as const] : [])],
   use: {
-    baseURL: 'https://localhost:5001',
+    baseURL,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
     screenshot: 'only-on-failure',
@@ -89,16 +88,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
       dependencies: ['setup'],
     },
-    // Firefox and WebKit are added in CI only
   ],
   webServer: {
-    command: 'dotnet run --project ../../template/SimpleModule.Host',
-    url: 'https://localhost:5001/health/live',
+    command: isCI
+      ? 'dotnet run --project ../../template/SimpleModule.Host --launch-profile http --no-build'
+      : 'dotnet run --project ../../template/SimpleModule.Host',
+    url: `${baseURL}/health/live`,
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
-    timeout: 60_000,
+    timeout: 120_000,
     env: {
-      ASPNETCORE_URLS: 'https://localhost:5001',
+      ASPNETCORE_URLS: baseURL,
       Database__DefaultConnection: 'Data Source=e2e-test.db',
     },
   },
@@ -107,10 +107,10 @@ export default defineConfig({
 
 Key points:
 
-- **`webServer`** -- Playwright automatically starts the .NET host if it is not already running, using the health endpoint to detect readiness
+- **`webServer`** -- Playwright automatically starts the .NET host if it is not already running, using the health endpoint to detect readiness. In CI the command switches to `--launch-profile http --no-build` against `http://localhost:5000`; locally it uses the default HTTPS profile on `https://localhost:5001`
 - **`reuseExistingServer: true`** -- if you already have the app running (e.g., via `npm run dev`), Playwright uses it directly
-- **Browser matrix** -- locally tests run on Chromium only; CI adds Firefox and WebKit
-- **Retries** -- CI retries failed tests twice; local runs have zero retries
+- **Browser matrix** -- tests run on Chromium only (no Firefox or WebKit projects are configured)
+- **Retries** -- retries are disabled (`0`) in both local and CI runs; failures surface immediately
 - **Traces and screenshots** -- captured on first retry and on failure for debugging
 
 ## Authentication
@@ -123,8 +123,7 @@ The `tests/auth/auth.setup.ts` file logs in as the admin user and saves the brow
 
 ```typescript
 setup('authenticate as admin', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: 'Log in' }).click();
+  await page.goto('/Identity/Account/Login');
   await page.waitForURL('**/Identity/Account/Login**');
 
   await page.getByPlaceholder('you@example.com')
@@ -251,29 +250,13 @@ Page objects are available for all module pages under `tests/e2e/pages/`:
 ```
 pages/
   dashboard.page.ts
-  products/
-    browse.page.ts
-    create.page.ts
-    edit.page.ts
-    manage.page.ts
-  orders/
-    create.page.ts
-    edit.page.ts
-    list.page.ts
-  settings/
-    admin.page.ts
-    user.page.ts
-    menu-manager.page.ts
-  pagebuilder/
-    editor.page.ts
-    manage.page.ts
-    pages-list.page.ts
-    viewer.page.ts
-  openiddict/
-    clients.page.ts
   admin/
     roles.page.ts
+    roles-create.page.ts
+    roles-edit.page.ts
     users.page.ts
+    users-create.page.ts
+    users-edit.page.ts
   audit-logs/
     browse.page.ts
     dashboard.page.ts
@@ -281,8 +264,35 @@ pages/
     dashboard.page.ts
     list.page.ts
     recurring.page.ts
+  chat/
+  datasets/
+  email/
+  feature-flags/
+  filestorage/
+  map/
   marketplace/
     browse.page.ts
+  openiddict/
+    clients.page.ts
+  orders/
+    create.page.ts
+    edit.page.ts
+    list.page.ts
+  pagebuilder/
+    editor.page.ts
+    manage.page.ts
+    pages-list.page.ts
+    viewer.page.ts
+  products/
+    browse.page.ts
+    create.page.ts
+    edit.page.ts
+    manage.page.ts
+  rate-limiting/
+  settings/
+    admin.page.ts
+    user.page.ts
+    menu-manager.page.ts
   tenants/
     list.page.ts
   users/
@@ -294,8 +304,7 @@ pages/
 
 In CI, the Playwright configuration automatically:
 
-- Expands the browser matrix to include Firefox and WebKit
-- Sets retries to 2
+- Switches `baseURL` to `http://localhost:5000` and launches the host with `--launch-profile http --no-build`
 - Limits to 1 worker for stability
 - Adds the `github` reporter alongside HTML
 

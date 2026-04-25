@@ -140,6 +140,7 @@ public static void ApplyModuleSchema(
     if (hasOwnConnection)
         return; // Module has its own database, no prefix needed
 
+    var connectionString = dbOptions.DefaultConnection;
     var provider = DatabaseProviderDetector.Detect(connectionString);
 
     if (provider == DatabaseProvider.Sqlite)
@@ -163,8 +164,12 @@ public static void ApplyModuleSchema(
             entity.SetSchema(schema);
         }
     }
+
+    ApplyEntityConventions(modelBuilder, provider);
 }
 ```
+
+After partitioning tables, `ApplyModuleSchema` calls a private `ApplyEntityConventions(modelBuilder, provider)` helper that walks every entity type and wires up framework conventions: soft-delete query filters for `ISoftDelete`, concurrency tokens for `IHasConcurrencyStamp` and `IVersioned`, and a provider-appropriate column type for `IHasExtraProperties` (`jsonb` on PostgreSQL, `nvarchar(max)` on SQL Server, `TEXT` on SQLite). The helper is guarded against re-entry so it runs at most once per model.
 
 ## Entity Configurations
 

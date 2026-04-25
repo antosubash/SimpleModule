@@ -4,7 +4,7 @@ outline: deep
 
 # Background Jobs
 
-SimpleModule provides a background job system built on [TickerQ](https://github.com/nickofc/TickerQ) for scheduling and executing long-running tasks outside the HTTP request pipeline. Jobs support progress reporting, structured logging, retries, and CRON-based recurring schedules.
+SimpleModule provides a background job system for scheduling and executing long-running tasks outside the HTTP request pipeline. It is built in-house on top of a database-backed queue (`DatabaseJobQueue`), a worker hosted service (`JobProcessorService`), a stalled-job sweeper (`StalledJobSweeperService`), and [Cronos](https://github.com/HangfireIO/Cronos) for CRON expression parsing. Jobs support progress reporting, structured logging, retries, and CRON-based recurring schedules.
 
 ## Defining a Job
 
@@ -110,15 +110,17 @@ Progress updates are batched and flushed to the database periodically (configura
 
 All endpoints require `BackgroundJobs.ViewJobs` or `BackgroundJobs.ManageJobs` permissions.
 
+The module mounts its endpoints under `RoutePrefix = "/api/jobs"`. Route IDs are `guid`-constrained.
+
 | Method | Route | Description |
 |--------|-------|-------------|
 | `GET` | `/api/jobs/` | List jobs with optional state/type filters |
-| `GET` | `/api/jobs/{id}` | Job detail with logs and progress |
-| `POST` | `/api/jobs/{id}/cancel` | Cancel a pending or running job |
-| `POST` | `/api/jobs/{id}/retry` | Retry a failed job |
+| `GET` | `/api/jobs/{id:guid}` | Job detail with logs and progress |
+| `POST` | `/api/jobs/{id:guid}/cancel` | Cancel a pending or running job |
+| `POST` | `/api/jobs/{id:guid}/retry` | Retry a failed job |
 | `GET` | `/api/jobs/recurring` | List all recurring jobs |
-| `POST` | `/api/jobs/recurring/{id}/toggle` | Enable/disable a recurring job |
-| `DELETE` | `/api/jobs/recurring/{id}` | Delete a recurring job |
+| `POST` | `/api/jobs/recurring/{id:guid}/toggle` | Enable/disable a recurring job |
+| `DELETE` | `/api/jobs/recurring/{id:guid}` | Delete a recurring job |
 
 ## Admin UI
 
@@ -132,14 +134,30 @@ The module includes four admin pages at `/admin/jobs`:
 ## Configuration
 
 ```csharp
+public enum BackgroundJobsWorkerMode
+{
+    Producer = 0,
+    Consumer = 1,
+}
+
 public class BackgroundJobsModuleOptions : IModuleOptions
 {
+    public BackgroundJobsWorkerMode WorkerMode { get; set; } = BackgroundJobsWorkerMode.Producer;
     public int MaxConcurrency { get; set; } = Environment.ProcessorCount;
     public int ProgressFlushBatchSize { get; set; } = 50;
     public TimeSpan ProgressFlushInterval { get; set; } = TimeSpan.FromSeconds(2);
     public int MaxLogEntries { get; set; } = 1000;
 }
 ```
+
+### Worker Mode and Split Deployments
+
+`WorkerMode` controls whether this host actually executes jobs. This matters for split deployments where the web tier enqueues work but a separate worker tier processes it.
+
+- **`Producer`** (default) — the host can enqueue, schedule, and query jobs, but does **not** run `JobProcessorService` or `StalledJobSweeperService`. Use this for web-only instances.
+- **`Consumer`** — the host registers the worker identity and runs `JobProcessorService` + `StalledJobSweeperService`, picking up and executing queued jobs. Use this for dedicated worker processes.
+
+`ProgressFlushService` runs in both modes so that any host owning the module can flush queued progress updates.
 
 ## Contract Interface
 
@@ -148,10 +166,11 @@ Query job data from other modules via `IBackgroundJobsContracts`:
 ```csharp
 public interface IBackgroundJobsContracts
 {
-    Task<PagedResult<JobSummaryDto>> GetJobsAsync(JobFilter filter, CancellationToken ct);
-    Task<JobDetailDto?> GetJobDetailAsync(JobId id, CancellationToken ct);
-    Task<IReadOnlyList<RecurringJobDto>> GetRecurringJobsAsync(CancellationToken ct);
-    Task RetryAsync(JobId id, CancellationToken ct);
+    Task<PagedResult<JobSummaryDto>> GetJobsAsync(JobFilter filter, CancellationToken ct = default);
+    Task<JobDetailDto?> GetJobDetailAsync(JobId id, CancellationToken ct = default);
+    Task<IReadOnlyList<RecurringJobDto>> GetRecurringJobsAsync(CancellationToken ct = default);
+    Task<int> GetRecurringCountAsync(CancellationToken ct = default);
+    Task RetryAsync(JobId id, CancellationToken ct = default);
 }
 ```
 

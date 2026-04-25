@@ -19,7 +19,7 @@ The global stylesheet lives at `template/SimpleModule.Host/Styles/app.css` and i
 @source "../../../modules/**/Pages/**/*.tsx";
 ```
 
-The `@source` directives tell Tailwind where to scan for class usage, ensuring that utility classes used in module components, UI package files, and Blazor Razor components are all included in the final CSS output.
+The `@source` directives tell Tailwind where to scan for class usage, ensuring that utility classes used in module components, UI package files, and React TSX components are all included in the final CSS output.
 
 ## The Default Theme
 
@@ -31,11 +31,11 @@ The `@simplemodule/theme-default` package (`packages/SimpleModule.Theme.Default/
 
 | Token | Light | Purpose |
 |---|---|---|
-| `--color-primary` | `#16a34a` | Primary actions, links, focus rings |
-| `--color-primary-hover` | `#15803d` | Primary hover state |
-| `--color-primary-light` | `#4ade80` | Light primary variant |
-| `--color-primary-subtle` | `rgba(22, 163, 74, 0.08)` | Subtle backgrounds |
-| `--color-accent` | `#166534` | Gradient endpoints, deep emphasis |
+| `--color-primary` | `#059669` | Primary actions, links, focus rings |
+| `--color-primary-hover` | `#047857` | Primary hover state |
+| `--color-primary-light` | `#34d399` | Light primary variant |
+| `--color-primary-subtle` | `rgba(5, 150, 105, 0.08)` | Subtle backgrounds |
+| `--color-accent` | `#0f766e` | Gradient endpoints, deep emphasis (teal) |
 
 #### Semantic Colors
 
@@ -64,8 +64,8 @@ All tokens are accessible as Tailwind utilities. For example, `bg-surface`, `tex
 The theme defines themeable shadows used by button components:
 
 ```css
---shadow-primary: 0 4px 14px rgba(22, 163, 74, 0.35);
---shadow-primary-hover: 0 6px 20px rgba(22, 163, 74, 0.5);
+--shadow-primary: 0 4px 14px rgba(5, 150, 105, 0.35);
+--shadow-primary-hover: 0 6px 20px rgba(5, 150, 105, 0.5);
 --shadow-danger: 0 4px 14px rgba(225, 29, 72, 0.25);
 --shadow-danger-hover: 0 6px 20px rgba(225, 29, 72, 0.4);
 ```
