@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="SimpleModule.Core" />
+    <PackageReference Include="SimpleModule.Database" />
+    <ProjectReference Include="..\Items.Contracts\Items.Contracts.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <TargetFramework>net10.0</TargetFramework>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <!-- IModuleJob is a cross-module extension point — no implementation required in BackgroundJobs module -->
+    <!-- IModuleJob/IJobExecutionContext are cross-module extension points -->
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SimpleModule.Hosting" />
+    <PackageReference Include="SimpleModule.Generator" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\modules\Items\src\Items\Items.csproj" />
+  </ItemGroup>
+</Project>

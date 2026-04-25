@@ -1,0 +1,19 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+        <Platform Name="x64" />
+        <Platform Name="x86" />
+    </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/Marketplace.Host/Marketplace.Host.csproj" />
+    </Folder>
+    <Folder Name="/modules/" />
+    <Folder Name="/modules/Items/">
+        <Project Path="src/modules/Items/src/Items.Contracts/Items.Contracts.csproj" />
+        <Project Path="src/modules/Items/src/Items/Items.csproj" />
+        <Project Path="src/modules/Items/tests/Items.Tests/Items.Tests.csproj" />
+    </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/Marketplace.Tests.Shared/Marketplace.Tests.Shared.csproj" />
+    </Folder>
+</Solution>

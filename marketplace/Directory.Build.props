@@ -1,0 +1,55 @@
+<Project>
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- SM0012: contract interface size warning — keep as warning, don't promote to error -->
+    <!-- SM0039: interceptor DbContext dependency — keep as warning, runtime fix handles it -->
+    <!-- NU5104: NetEscapades.EnumGenerators is a prerelease source generator (PrivateAssets=all, not shipped) -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039;NU5104</WarningsNotAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <RunAnalyzers>true</RunAnalyzers>
+    <!-- Reference assemblies: downstream projects skip recompile when only method bodies change -->
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <!-- Static graph restore: faster NuGet evaluation in multi-project solutions -->
+    <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
+    <!-- Hardlinks instead of file copies where possible -->
+    <CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>true</CreateHardLinksForCopyFilesToOutputDirectoryIfPossible>
+    <!-- Auto-discover runsettings for parallel test execution -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)test.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+  <!-- NuGet package metadata (version injected by CI via -p:Version) -->
+  <PropertyGroup>
+    <Authors>SimpleModule</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/antosubash/SimpleModule</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/antosubash/SimpleModule</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>simplemodule;modular-monolith;aspnetcore;blazor;react;inertia</PackageTags>
+    <Copyright>Copyright (c) SimpleModule contributors</Copyright>
+  </PropertyGroup>
+  <!-- Static web asset optimizations: fingerprinting + build/publish-time compression -->
+  <PropertyGroup>
+    <StaticWebAssetsFingerprintContent>true</StaticWebAssetsFingerprintContent>
+    <StaticWebAssetFingerprintingEnabled>true</StaticWebAssetFingerprintingEnabled>
+    <StaticWebAssetBuildCompressAllAssets>true</StaticWebAssetBuildCompressAllAssets>
+    <StaticWebAssetPublishCompressAllAssets>true</StaticWebAssetPublishCompressAllAssets>
+  </PropertyGroup>
+  <!-- Register .mjs (ES module chunks emitted by Vite code-splitting) so
+       Microsoft.NET.Sdk.StaticWebAssets generates an endpoint for each one
+       in the MapStaticAssets manifest. Without this, .mjs files silently
+       drop out of the manifest and MapStaticAssets returns 404 for them. -->
+  <ItemGroup>
+    <StaticWebAssetContentTypeMapping
+      Include="text/javascript"
+      Cache="$(StaticWebAssetEndpointDefaultMediaCacheControlHeader)"
+      Pattern="*.mjs"
+      Priority="1" />
+  </ItemGroup>
+  <!-- .NET SDK analyzers only work on net5.0+ -->
+  <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <AnalysisMode>All</AnalysisMode>
+  </PropertyGroup>
+</Project>

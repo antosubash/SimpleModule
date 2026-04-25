@@ -1,0 +1,7 @@
+# Tailwind + Vite build outputs
+src/Marketplace.Host/wwwroot/css/app.css
+src/Marketplace.Host/wwwroot/js/
+src/Marketplace.Host/Styles/_scan/
+
+# Module frontend build outputs
+src/modules/*/src/*/wwwroot/

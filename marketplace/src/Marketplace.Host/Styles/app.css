@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@simplemodule/theme-default/theme.css";
+@source "../../../node_modules/@simplemodule/ui/";
+@source "../../../node_modules/@simplemodule/client/";
+@source "../../modules/**/Views/**/*.tsx";
+@source "../../modules/**/Pages/**/*.tsx";
