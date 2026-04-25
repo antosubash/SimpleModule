@@ -88,6 +88,11 @@ public sealed class LocaleResolutionMiddleware(
                     return userLocale;
                 }
             }
+
+            // Cache the absence so subsequent requests skip the per-request settings
+            // probe. The cachedHit check above treats empty as "no value" and falls
+            // through, so this short-circuits only the inner DB/cache lookup.
+            await cache.SetAsync(cacheKey, string.Empty, UserLocaleCacheOptions);
         }
 
         // No explicit user setting — resolve from Accept-Language header or default

@@ -6,14 +6,20 @@ using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.AuditLogs.Enrichment;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.Settings.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.AuditLogs.Middleware;
 
 public sealed class AuditMiddleware(RequestDelegate next)
 {
+    private const string AuditConfigCacheKey = "auditlogs:request-config";
     private static readonly string[] ExcludedMethodsForBody = ["HEAD", "OPTIONS"];
+    private static readonly FusionCacheEntryOptions AuditConfigCacheOptions = new()
+    {
+        Duration = TimeSpan.FromSeconds(60),
+    };
 
-    private sealed record AuditRequestSettings(
+    public sealed record AuditRequestSettings(
         bool CaptureHttp,
         bool CaptureRequestBodies,
         bool CaptureQueryStrings,
@@ -30,9 +36,11 @@ public sealed class AuditMiddleware(RequestDelegate next)
             return;
         }
 
-        // Load all settings once at the start (parallel batch loading)
+        // Load all settings once at the start. Result is cached as a single
+        // composite entry to avoid 5 separate FusionCache lookups per request.
         var settings = context.RequestServices.GetService<ISettingsContracts>();
-        var auditSettings = await LoadSettingsAsync(settings);
+        var cache = context.RequestServices.GetService<IFusionCache>();
+        var auditSettings = await LoadSettingsAsync(settings, cache);
 
         // Check if HTTP capture is enabled
         if (!auditSettings.CaptureHttp)
@@ -115,7 +123,10 @@ public sealed class AuditMiddleware(RequestDelegate next)
         channel.Enqueue(entry);
     }
 
-    private static async Task<AuditRequestSettings> LoadSettingsAsync(ISettingsContracts? settings)
+    private static async Task<AuditRequestSettings> LoadSettingsAsync(
+        ISettingsContracts? settings,
+        IFusionCache? cache
+    )
     {
         if (settings is null)
         {
@@ -128,7 +139,20 @@ public sealed class AuditMiddleware(RequestDelegate next)
             );
         }
 
-        // Fetch all settings in parallel
+        if (cache is null)
+        {
+            return await BuildSettingsAsync(settings);
+        }
+
+        return await cache.GetOrSetAsync<AuditRequestSettings>(
+            AuditConfigCacheKey,
+            async (_, _) => await BuildSettingsAsync(settings),
+            AuditConfigCacheOptions
+        );
+    }
+
+    private static async Task<AuditRequestSettings> BuildSettingsAsync(ISettingsContracts settings)
+    {
         var (captureHttp, captureBody, captureQs, captureUa, excludedPathsRaw) =
             await LoadAllSettingsAsync(settings);
 

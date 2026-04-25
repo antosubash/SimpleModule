@@ -23,24 +23,62 @@ public sealed partial class AuditWriterService(
         {
             try
             {
-                if (await channel.Reader.WaitToReadAsync(stoppingToken))
+                if (!await channel.Reader.WaitToReadAsync(stoppingToken))
                 {
-                    batch.Clear();
-                    var deadline = DateTimeOffset.UtcNow.Add(opts.WriterFlushInterval);
+                    break;
+                }
+
+                batch.Clear();
+                var deadline = DateTimeOffset.UtcNow + opts.WriterFlushInterval;
+
+                // Drain whatever is currently available
+                while (
+                    batch.Count < opts.WriterBatchSize
+                    && channel.Reader.TryRead(out var entry)
+                )
+                {
+                    batch.Add(entry);
+                }
+
+                // Linger: wait for more entries up to the flush deadline so we batch
+                // INSERTs instead of writing one row per audit event.
+                while (batch.Count < opts.WriterBatchSize)
+                {
+                    var remaining = deadline - DateTimeOffset.UtcNow;
+                    if (remaining <= TimeSpan.Zero)
+                    {
+                        break;
+                    }
+
+                    using var linger = CancellationTokenSource.CreateLinkedTokenSource(
+                        stoppingToken
+                    );
+                    linger.CancelAfter(remaining);
+                    try
+                    {
+                        if (!await channel.Reader.WaitToReadAsync(linger.Token))
+                        {
+                            break;
+                        }
+                    }
+                    catch (OperationCanceledException)
+                        when (!stoppingToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
 
                     while (
                         batch.Count < opts.WriterBatchSize
-                        && DateTimeOffset.UtcNow < deadline
                         && channel.Reader.TryRead(out var entry)
                     )
                     {
                         batch.Add(entry);
                     }
+                }
 
-                    if (batch.Count > 0)
-                    {
-                        await FlushBatchAsync(batch, stoppingToken);
-                    }
+                if (batch.Count > 0)
+                {
+                    await FlushBatchAsync(batch, stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
