@@ -29,56 +29,47 @@ public sealed partial class AuditWriterService(
                 }
 
                 batch.Clear();
-                var deadline = DateTimeOffset.UtcNow + opts.WriterFlushInterval;
 
-                // Drain whatever is currently available
-                while (
-                    batch.Count < opts.WriterBatchSize
-                    && channel.Reader.TryRead(out var entry)
-                )
+                while (batch.Count < opts.WriterBatchSize && channel.Reader.TryRead(out var entry))
                 {
                     batch.Add(entry);
                 }
 
-                // Linger: wait for more entries up to the flush deadline so we batch
-                // INSERTs instead of writing one row per audit event.
-                while (batch.Count < opts.WriterBatchSize)
+                if (batch.Count < opts.WriterBatchSize)
                 {
-                    var remaining = deadline - DateTimeOffset.UtcNow;
-                    if (remaining <= TimeSpan.Zero)
-                    {
-                        break;
-                    }
-
                     using var linger = CancellationTokenSource.CreateLinkedTokenSource(
                         stoppingToken
                     );
-                    linger.CancelAfter(remaining);
+                    linger.CancelAfter(opts.WriterFlushInterval);
+
                     try
                     {
-                        if (!await channel.Reader.WaitToReadAsync(linger.Token))
+                        while (batch.Count < opts.WriterBatchSize)
                         {
-                            break;
+                            if (!await channel.Reader.WaitToReadAsync(linger.Token))
+                            {
+                                break;
+                            }
+
+                            while (
+                                batch.Count < opts.WriterBatchSize
+                                && channel.Reader.TryRead(out var entry)
+                            )
+                            {
+                                batch.Add(entry);
+                            }
                         }
                     }
                     catch (OperationCanceledException)
-                        when (!stoppingToken.IsCancellationRequested)
                     {
-                        break;
-                    }
-
-                    while (
-                        batch.Count < opts.WriterBatchSize
-                        && channel.Reader.TryRead(out var entry)
-                    )
-                    {
-                        batch.Add(entry);
+                        // Linger deadline OR shutdown — fall through and persist
+                        // whatever was already drained instead of dropping it.
                     }
                 }
 
                 if (batch.Count > 0)
                 {
-                    await FlushBatchAsync(batch, stoppingToken);
+                    await FlushBatchAsync(batch);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -102,13 +93,13 @@ public sealed partial class AuditWriterService(
         }
         if (batch.Count > 0)
         {
-            await FlushBatchAsync(batch, CancellationToken.None);
+            await FlushBatchAsync(batch);
         }
 
         LogStopped(logger);
     }
 
-    private async Task FlushBatchAsync(List<AuditEntry> batch, CancellationToken ct)
+    private async Task FlushBatchAsync(List<AuditEntry> batch)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var contracts = scope.ServiceProvider.GetRequiredService<IAuditLogContracts>();
