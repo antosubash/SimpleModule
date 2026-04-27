@@ -23,24 +23,53 @@ public sealed partial class AuditWriterService(
         {
             try
             {
-                if (await channel.Reader.WaitToReadAsync(stoppingToken))
+                if (!await channel.Reader.WaitToReadAsync(stoppingToken))
                 {
-                    batch.Clear();
-                    var deadline = DateTimeOffset.UtcNow.Add(opts.WriterFlushInterval);
+                    break;
+                }
 
-                    while (
-                        batch.Count < opts.WriterBatchSize
-                        && DateTimeOffset.UtcNow < deadline
-                        && channel.Reader.TryRead(out var entry)
-                    )
-                    {
-                        batch.Add(entry);
-                    }
+                batch.Clear();
 
-                    if (batch.Count > 0)
+                while (batch.Count < opts.WriterBatchSize && channel.Reader.TryRead(out var entry))
+                {
+                    batch.Add(entry);
+                }
+
+                if (batch.Count < opts.WriterBatchSize)
+                {
+                    using var linger = CancellationTokenSource.CreateLinkedTokenSource(
+                        stoppingToken
+                    );
+                    linger.CancelAfter(opts.WriterFlushInterval);
+
+                    try
                     {
-                        await FlushBatchAsync(batch, stoppingToken);
+                        while (batch.Count < opts.WriterBatchSize)
+                        {
+                            if (!await channel.Reader.WaitToReadAsync(linger.Token))
+                            {
+                                break;
+                            }
+
+                            while (
+                                batch.Count < opts.WriterBatchSize
+                                && channel.Reader.TryRead(out var entry)
+                            )
+                            {
+                                batch.Add(entry);
+                            }
+                        }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        // Linger deadline OR shutdown — fall through and persist
+                        // whatever was already drained instead of dropping it.
+                    }
+                }
+
+                if (batch.Count > 0)
+                {
+                    await FlushBatchAsync(batch);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -64,13 +93,13 @@ public sealed partial class AuditWriterService(
         }
         if (batch.Count > 0)
         {
-            await FlushBatchAsync(batch, CancellationToken.None);
+            await FlushBatchAsync(batch);
         }
 
         LogStopped(logger);
     }
 
-    private async Task FlushBatchAsync(List<AuditEntry> batch, CancellationToken ct)
+    private async Task FlushBatchAsync(List<AuditEntry> batch)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var contracts = scope.ServiceProvider.GetRequiredService<IAuditLogContracts>();

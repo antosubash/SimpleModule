@@ -1,15 +1,22 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using SimpleModule.AuditLogs.Middleware;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
+using ZiggyCreatures.Caching.Fusion;
+using ZiggyCreatures.Caching.Fusion.NullObjects;
 
 namespace AuditLogs.Tests.Unit;
 
-public class AuditMiddlewareTests
+public sealed class AuditMiddlewareTests : IDisposable
 {
+    private readonly NullFusionCache _cache = new(Options.Create(new FusionCacheOptions()));
+
+    public void Dispose() => _cache.Dispose();
+
     [Fact]
     public async Task InvokeAsync_LoadsSettingsOnce_AndCachesForRequest()
     {
@@ -24,7 +31,7 @@ public class AuditMiddlewareTests
         // Configure settings to return default values
         settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -69,7 +76,7 @@ public class AuditMiddlewareTests
             .Returns("false");
         settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -95,7 +102,7 @@ public class AuditMiddlewareTests
 
         settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -134,7 +141,7 @@ public class AuditMiddlewareTests
             .GetSettingAsync("auditlogs.excluded.paths", Arg.Any<SettingScope>())
             .Returns("/api/custom-exclude");
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -171,7 +178,7 @@ public class AuditMiddlewareTests
             .GetSettingAsync("auditlogs.excluded.paths", Arg.Any<SettingScope>())
             .Returns("/api/internal");
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act - test hardcoded /health path
         await middleware.InvokeAsync(context);
@@ -195,7 +202,7 @@ public class AuditMiddlewareTests
 
         settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns("true");
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -216,7 +223,7 @@ public class AuditMiddlewareTests
         context.Request.Method = "GET";
         context.RequestServices = CreateServiceProviderWithoutSettings(channel);
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -240,7 +247,7 @@ public class AuditMiddlewareTests
 
         settings.GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>()).Returns((string?)null); // Simulate no setting found
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act
         await middleware.InvokeAsync(context);
@@ -261,7 +268,7 @@ public class AuditMiddlewareTests
         context.Request.Method = "POST";
         context.RequestServices = CreateServiceProviderWithoutSettings(channel);
 
-        var middleware = new AuditMiddleware(next);
+        var middleware = new AuditMiddleware(next, _cache);
 
         // Act & Assert - should not throw
         var action = () => middleware.InvokeAsync(context);
