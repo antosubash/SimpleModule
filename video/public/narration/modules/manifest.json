@@ -1,0 +1,52 @@
+[
+  {
+    "id": "Users",
+    "durationS": 9.16898,
+    "text": "The Users module handles identity — registration, login, profiles, and roles. Backed by OpenIddict, so OAuth and OpenID Connect work out of the box."
+  },
+  {
+    "id": "Permissions",
+    "durationS": 7.288163,
+    "text": "Permissions is the authorization layer. Define rules once, and every endpoint enforces them — checked at compile time by the source generator."
+  },
+  {
+    "id": "Settings",
+    "durationS": 8.097959,
+    "text": "Settings gives every module typed, cached configuration that you can edit at runtime. No redeploy needed to flip a flag or tune a limit."
+  },
+  {
+    "id": "Admin",
+    "durationS": 7.836735,
+    "text": "Admin is the built-in control panel. Manage users, roles, and every module from one React dashboard — no extra setup required."
+  },
+  {
+    "id": "Dashboard",
+    "durationS": 7.47102,
+    "text": "Dashboard is your home screen. It shows health, metrics, and every module active in your application, updated in real time."
+  },
+  {
+    "id": "AuditLogs",
+    "durationS": 6.896327,
+    "text": "AuditLogs captures every significant change — who did what, when, to which entity. Fully queryable and ready for compliance."
+  },
+  {
+    "id": "FileStorage",
+    "durationS": 8.228571,
+    "text": "FileStorage abstracts local disk, Azure Blob, and S3 behind one interface. Swap providers with a single line of configuration."
+  },
+  {
+    "id": "Email",
+    "durationS": 7.288163,
+    "text": "Email ships with templates, queuing, and retries. Send from any module through one contract — delivery details stay out of your way."
+  },
+  {
+    "id": "BackgroundJobs",
+    "durationS": 7.340408,
+    "text": "BackgroundJobs runs work off the request path. Scheduled jobs, durable queues, and automatic retries — powered by TickerQ."
+  },
+  {
+    "id": "FeatureFlags",
+    "durationS": 8.646531,
+    "text": "FeatureFlags gates code behind runtime toggles. Percentage rollouts, staff-only previews, or classic A/B — all flippable without a deploy."
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "name": "simplemodule-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion showcase video for the SimpleModule framework",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render SimpleModule out/simplemodule.mp4 --codec=h264",
+    "render": "remotion render SimpleModule out/simplemodule.mp4 --codec=h264",
+    "render:all": "node scripts/render-all.mjs",
+    "narrate": "node scripts/generate-narration.mjs",
+    "verify": "node scripts/verify-narration.mjs",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.380",
+    "@remotion/cli": "4.0.380",
+    "@remotion/google-fonts": "4.0.380",
+    "@remotion/renderer": "4.0.380",
+    "@remotion/shapes": "4.0.380",
+    "@remotion/transitions": "^4.0.380",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.380"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.0",
+    "@types/react": "19.0.0",
+    "typescript": "5.6.3"
+  }
+}
