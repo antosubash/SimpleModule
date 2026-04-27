@@ -6,19 +6,43 @@ using SimpleModule.AuditLogs.Contracts;
 using SimpleModule.AuditLogs.Enrichment;
 using SimpleModule.AuditLogs.Pipeline;
 using SimpleModule.Settings.Contracts;
+using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.AuditLogs.Middleware;
 
-public sealed class AuditMiddleware(RequestDelegate next)
+public sealed class AuditMiddleware(RequestDelegate next, IFusionCache cache)
 {
     private static readonly string[] ExcludedMethodsForBody = ["HEAD", "OPTIONS"];
+
+    private static readonly string[] DefaultExcludedPaths =
+    [
+        "/health",
+        "/metrics",
+        "/_content",
+        "/js/",
+        "/css/",
+        "/favicon",
+    ];
+
+    private static readonly FusionCacheEntryOptions AuditConfigCacheOptions = new()
+    {
+        Duration = TimeSpan.FromSeconds(60),
+    };
+
+    private static readonly AuditRequestSettings FallbackSettings = new(
+        CaptureHttp: true,
+        CaptureRequestBodies: true,
+        CaptureQueryStrings: true,
+        CaptureUserAgent: false,
+        ExcludedPaths: DefaultExcludedPaths
+    );
 
     private sealed record AuditRequestSettings(
         bool CaptureHttp,
         bool CaptureRequestBodies,
         bool CaptureQueryStrings,
         bool CaptureUserAgent,
-        IReadOnlyList<string> ExcludedPaths
+        string[] ExcludedPaths
     );
 
     public async Task InvokeAsync(HttpContext context)
@@ -30,9 +54,9 @@ public sealed class AuditMiddleware(RequestDelegate next)
             return;
         }
 
-        // Load all settings once at the start (parallel batch loading)
-        var settings = context.RequestServices.GetService<ISettingsContracts>();
-        var auditSettings = await LoadSettingsAsync(settings);
+        // Single composite cache entry — avoids 5 separate FusionCache lookups per
+        // request and resolves the scoped ISettingsContracts only on cache miss.
+        var auditSettings = await LoadSettingsAsync(context.RequestServices, cache);
 
         // Check if HTTP capture is enabled
         if (!auditSettings.CaptureHttp)
@@ -115,20 +139,24 @@ public sealed class AuditMiddleware(RequestDelegate next)
         channel.Enqueue(entry);
     }
 
-    private static async Task<AuditRequestSettings> LoadSettingsAsync(ISettingsContracts? settings)
+    private static async Task<AuditRequestSettings> LoadSettingsAsync(
+        IServiceProvider services,
+        IFusionCache cache
+    )
     {
-        if (settings is null)
-        {
-            return new AuditRequestSettings(
-                CaptureHttp: true,
-                CaptureRequestBodies: true,
-                CaptureQueryStrings: true,
-                CaptureUserAgent: false,
-                ExcludedPaths: GetDefaultExcludedPaths()
-            );
-        }
+        return await cache.GetOrSetAsync<AuditRequestSettings>(
+            AuditCacheKeys.RequestConfig,
+            async (_, _) =>
+            {
+                var settings = services.GetService<ISettingsContracts>();
+                return settings is null ? FallbackSettings : await BuildSettingsAsync(settings);
+            },
+            AuditConfigCacheOptions
+        );
+    }
 
-        // Fetch all settings in parallel
+    private static async Task<AuditRequestSettings> BuildSettingsAsync(ISettingsContracts settings)
+    {
         var (captureHttp, captureBody, captureQs, captureUa, excludedPathsRaw) =
             await LoadAllSettingsAsync(settings);
 
@@ -175,29 +203,29 @@ public sealed class AuditMiddleware(RequestDelegate next)
         return (captureHttp, captureBody, captureQs, captureUa, results[4]);
     }
 
-    private static List<string> ParseExcludedPaths(string? rawPaths)
+    private static string[] ParseExcludedPaths(string? rawPaths)
     {
-        var paths = GetDefaultExcludedPaths();
-
         if (string.IsNullOrWhiteSpace(rawPaths))
         {
-            return paths;
+            return DefaultExcludedPaths;
         }
 
-        var configured = rawPaths
-            .Split(',')
-            .Select(p => p.Trim())
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .ToList();
+        var configured = rawPaths.Split(
+            ',',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+        );
+        if (configured.Length == 0)
+        {
+            return DefaultExcludedPaths;
+        }
 
-        paths.AddRange(configured);
-        return paths;
+        var merged = new string[DefaultExcludedPaths.Length + configured.Length];
+        DefaultExcludedPaths.CopyTo(merged, 0);
+        configured.CopyTo(merged, DefaultExcludedPaths.Length);
+        return merged;
     }
 
-    private static List<string> GetDefaultExcludedPaths() =>
-        ["/health", "/metrics", "/_content", "/js/", "/css/", "/favicon"];
-
-    private static bool IsExcludedPath(string path, IEnumerable<string> configuredPaths)
+    private static bool IsExcludedPath(string path, string[] configuredPaths)
     {
         foreach (var prefix in configuredPaths)
         {

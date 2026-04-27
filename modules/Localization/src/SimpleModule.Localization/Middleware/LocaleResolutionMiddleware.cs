@@ -19,6 +19,9 @@ public sealed class LocaleResolutionMiddleware(
     IFusionCache cache
 )
 {
+    // Bound cache-key size: a hostile client could otherwise pin multi-KB strings.
+    private const int MaxAcceptLanguageKeyLength = 256;
+
     private static readonly FusionCacheEntryOptions UserLocaleCacheOptions = new()
     {
         Duration = TimeSpan.FromMinutes(5),
@@ -88,6 +91,11 @@ public sealed class LocaleResolutionMiddleware(
                     return userLocale;
                 }
             }
+
+            // Cache the absence so subsequent requests skip the per-request settings
+            // probe. The cachedHit check above treats empty as "no value" and falls
+            // through, so this short-circuits only the inner DB/cache lookup.
+            await cache.SetAsync(cacheKey, string.Empty, UserLocaleCacheOptions);
         }
 
         // No explicit user setting — resolve from Accept-Language header or default
@@ -142,6 +150,9 @@ public sealed class LocaleResolutionMiddleware(
 
     private static string UserLocaleKey(string userId) => string.Concat("locale:user:", userId);
 
-    private static string AcceptLanguageKey(string headerValue) =>
-        string.Concat("locale:accept:", headerValue);
+    private static string AcceptLanguageKey(string headerValue)
+    {
+        var len = Math.Min(headerValue.Length, MaxAcceptLanguageKeyLength);
+        return string.Concat("locale:accept:", headerValue.AsSpan(0, len));
+    }
 }
