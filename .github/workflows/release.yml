@@ -87,6 +87,7 @@ jobs:
           cache: 'npm'
 
       - run: npm ci
+      - run: npm run build
       - run: dotnet restore
       - run: dotnet pack -c Release -p:Version=${{ needs.release.outputs.version }} --no-restore -o ./nupkgs
       - run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
