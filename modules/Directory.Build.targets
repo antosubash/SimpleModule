@@ -23,9 +23,20 @@
   >
     <Warning Text="node_modules not found. Frontend JavaScript will not be compiled. Run 'npm install' in the repository root." />
   </Target>
+  <!--
+    Run BEFORE the targets that enumerate static web assets so the wwwroot/
+    contents Vite emits are visible to:
+      - Build (runtime path)
+      - ResolveStaticWebAssetsConfiguration / ResolveProjectStaticWebAssets (build-time manifest)
+      - GetCopyToOutputDirectoryItems (consumers via ProjectReference)
+      - GenerateNuspec (Pack — packaged staticwebassets/ tree)
+    Hooking only into Build leaves a hole for `dotnet pack` invoked with
+    no-build, and has historically produced .nupkg files with an empty
+    wwwroot in CI.
+  -->
   <Target
     Name="JsBuild"
-    BeforeTargets="Build"
+    BeforeTargets="Build;ResolveStaticWebAssetsConfiguration;ResolveProjectStaticWebAssets;GetCopyToOutputDirectoryItems;GenerateNuspec"
     Condition="Exists('package.json') And (Exists('node_modules') Or Exists('$(RepoRoot)node_modules')) And '@(JsSourceFiles)' != ''"
     Inputs="@(JsSourceFiles)"
     Outputs="$(JsBuildStamp)"
@@ -33,5 +44,29 @@
     <Exec Command="$(JsBuildCommand)" WorkingDirectory="$(MSBuildProjectDirectory)" />
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <Touch Files="$(JsBuildStamp)" AlwaysCreate="true" />
+  </Target>
+  <!--
+    The StaticWebAssets SDK evaluates `Content Include="wwwroot\**"` during
+    MSBuild item evaluation, which runs BEFORE any target executes. On a
+    clean checkout wwwroot/ doesn't exist yet, so Content has no entries by
+    the time ResolveProjectStaticWebAssets enumerates @(Content). Even if
+    JsBuild later populates wwwroot/ via Vite, the static-web-asset chain
+    has already locked in an empty file list.
+
+    Re-include wwwroot files into @(Content) after JsBuild has run, before
+    ResolveProjectStaticWebAssets fires, so the SDK sees the actual built
+    output. Mirrors the wildcard from the SDK's StaticAssets.ProjectSystem
+    props (Content Include="wwwroot\**").
+  -->
+  <Target
+    Name="ReincludeWwwrootContent"
+    AfterTargets="JsBuild"
+    BeforeTargets="ResolveProjectStaticWebAssets"
+    Condition="Exists('$(MSBuildProjectDirectory)\wwwroot')"
+  >
+    <ItemGroup>
+      <_WwwrootFiles Include="wwwroot\**" Exclude="@(Content);$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+      <Content Include="@(_WwwrootFiles)" ExcludeFromSingleFile="true" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
   </Target>
 </Project>

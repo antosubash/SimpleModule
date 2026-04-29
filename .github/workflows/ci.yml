@@ -72,6 +72,29 @@ jobs:
           path: tests/e2e/playwright-report/
           retention-days: 14
 
+  pack-smoke:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run build
+      - run: dotnet restore
+      - run: dotnet pack -c Release -p:Version=0.0.0-ci --no-restore -o ./nupkgs
+
+      - name: Verify module .nupkgs contain static web assets
+        run: node scripts/verify-nupkg-static-assets.mjs ./nupkgs
+
   docker:
     runs-on: ubuntu-latest
     needs: lint
