@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,23 @@ namespace SimpleModule.Email;
 )]
 public class EmailModule : IModule, IModuleServices
 {
+    public void ConfigureMiddleware(IApplicationBuilder app)
+    {
+        // EmailService and the job-registration hosted service inject IBackgroundJobs,
+        // whose implementation lives in SimpleModule.BackgroundJobs (not its Contracts
+        // assembly). Without that module installed, the host crashes at first resolution
+        // with "Unable to resolve service for type 'IBackgroundJobs'" — fail fast here
+        // with a directive message instead.
+        if (app.ApplicationServices.GetService<IBackgroundJobs>() is null)
+        {
+            throw new InvalidOperationException(
+                "SimpleModule.Email requires SimpleModule.BackgroundJobs to be installed. "
+                    + "Add a reference to the SimpleModule.BackgroundJobs package (or project) "
+                    + "so IBackgroundJobs can be resolved by Email's send/retry jobs."
+            );
+        }
+    }
+
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddModuleDbContext<EmailDbContext>(configuration, EmailConstants.ModuleName);
