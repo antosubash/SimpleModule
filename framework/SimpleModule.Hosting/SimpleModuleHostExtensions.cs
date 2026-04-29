@@ -264,7 +264,11 @@ public static partial class SimpleModuleHostExtensions
 
         app.UseInertia();
         UseStaticFileCaching(app);
-        app.MapStaticAssets();
+        // MapStaticAssets registers endpoints, which would otherwise inherit the
+        // RequireAuthenticatedUser fallback policy — that breaks JS bundle / CSS /
+        // favicon loads on anonymous pages like /Identity/Account/Login. Static
+        // files are intentionally public.
+        app.MapStaticAssets().AllowAnonymous();
 
         app.UseAuthentication();
         app.UseAuthorization();
