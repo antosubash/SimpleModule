@@ -43,11 +43,11 @@ test.describe('FileStorage smoke', () => {
       expect(response?.url()).toContain('/Account/Login');
     });
 
-    test('API endpoint returns 302', async ({ request }) => {
+    test('API endpoint returns 401', async ({ request }) => {
       const response = await request.get('/api/files', {
         maxRedirects: 0,
       });
-      expect(response.status()).toBe(302);
+      expect(response.status()).toBe(401);
     });
   });
 });

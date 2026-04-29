@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,41 @@ public class UsersModule : IModule
             options.LoginPath = "/Identity/Account/Login";
             options.LogoutPath = "/Identity/Account/Logout";
             options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+
+            // /api/* clients (JS, CLI, integration tests) want a bare 401 — not a
+            // 302 to /Identity/Account/Login. The default cookie handler sniffs the
+            // Accept header but inconsistently, leading to 401 for some routes and
+            // 302 for others. Force 401 for any unauthenticated /api request.
+            options.Events.OnRedirectToLogin = context =>
+            {
+                if (
+                    context.Request.Path.StartsWithSegments(
+                        "/api",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied = context =>
+            {
+                if (
+                    context.Request.Path.StartsWithSegments(
+                        "/api",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
         });
 
         // Bridge UsersModuleOptions into ASP.NET Identity options

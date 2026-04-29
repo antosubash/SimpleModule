@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
+using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.Admin;
 
@@ -12,6 +14,27 @@ public class AdminModule : IModule
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IAdminContracts, AdminService>();
+    }
+
+    public void ConfigureMiddleware(IApplicationBuilder app)
+    {
+        // Admin's session-management endpoints inject IOpenIddictSessionContracts, whose
+        // implementation lives in SimpleModule.OpenIddict (not its Contracts assembly).
+        // Without that module installed, minimal-API parameter binding falls through to
+        // body-binding and the host crashes at MapModuleEndpoints with the misleading
+        // "Body was inferred but the method does not allow inferred body parameters."
+        // Fail fast here with a directive a human can act on.
+        // Use IServiceProviderIsService so we don't actually instantiate the (scoped)
+        // service from the root provider.
+        var probe = app.ApplicationServices.GetRequiredService<IServiceProviderIsService>();
+        if (!probe.IsService(typeof(IOpenIddictSessionContracts)))
+        {
+            throw new InvalidOperationException(
+                "SimpleModule.Admin requires SimpleModule.OpenIddict to be installed. "
+                    + "Add a reference to the SimpleModule.OpenIddict package (or project) "
+                    + "so IOpenIddictSessionContracts can be resolved by Admin's session endpoints."
+            );
+        }
     }
 
     public void ConfigureMenu(IMenuBuilder menus)
