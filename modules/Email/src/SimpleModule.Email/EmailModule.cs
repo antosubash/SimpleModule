@@ -29,7 +29,10 @@ public class EmailModule : IModule, IModuleServices
         // assembly). Without that module installed, the host crashes at first resolution
         // with "Unable to resolve service for type 'IBackgroundJobs'" — fail fast here
         // with a directive message instead.
-        if (app.ApplicationServices.GetService<IBackgroundJobs>() is null)
+        // Use IServiceProviderIsService so we don't actually instantiate the (scoped)
+        // service from the root provider.
+        var probe = app.ApplicationServices.GetRequiredService<IServiceProviderIsService>();
+        if (!probe.IsService(typeof(IBackgroundJobs)))
         {
             throw new InvalidOperationException(
                 "SimpleModule.Email requires SimpleModule.BackgroundJobs to be installed. "

@@ -24,7 +24,10 @@ public class AdminModule : IModule
         // body-binding and the host crashes at MapModuleEndpoints with the misleading
         // "Body was inferred but the method does not allow inferred body parameters."
         // Fail fast here with a directive a human can act on.
-        if (app.ApplicationServices.GetService<IOpenIddictSessionContracts>() is null)
+        // Use IServiceProviderIsService so we don't actually instantiate the (scoped)
+        // service from the root provider.
+        var probe = app.ApplicationServices.GetRequiredService<IServiceProviderIsService>();
+        if (!probe.IsService(typeof(IOpenIddictSessionContracts)))
         {
             throw new InvalidOperationException(
                 "SimpleModule.Admin requires SimpleModule.OpenIddict to be installed. "
