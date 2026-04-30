@@ -124,7 +124,19 @@ function CardIcon({ icon }: { icon: string }) {
   );
 }
 
-export default function Hub() {
+interface HubProps {
+  availableUrls?: string[];
+}
+
+export default function Hub({ availableUrls }: HubProps) {
+  const available = new Set((availableUrls ?? []).map((u) => u.toLowerCase()));
+  const visibleGroups = groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((i) => available.has(i.url.toLowerCase())),
+    }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <PageShell
       title="Administration"
@@ -132,7 +144,7 @@ export default function Hub() {
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Admin' }]}
     >
       <div className="space-y-8">
-        {groups.map((group) => (
+        {visibleGroups.map((group) => (
           <section key={group.title}>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-text-muted mb-3">
               {group.title}
