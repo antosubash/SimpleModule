@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Health;
@@ -85,6 +87,7 @@ public static partial class SimpleModuleHostExtensions
 
         // Required by EntityInterceptor to access the current HTTP context
         builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
         // Entity framework interceptors for automatic entity field population
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
@@ -95,7 +98,16 @@ public static partial class SimpleModuleHostExtensions
         // (e.g., OpenIddict registers SmartAuth policy scheme).
         // Register a baseline so the middleware pipeline works even without an auth module.
         builder.Services.AddAuthentication();
-        builder.Services.AddAuthorization();
+        // Authenticated-by-default. Endpoints that genuinely need to be public
+        // (login, health probes, error/404 fallbacks) opt out with .AllowAnonymous().
+        // Without a fallback policy, plain app.MapGet(...) outside a module group
+        // is silently public — the wrong default for a business app.
+        builder.Services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
         builder.Services.AddAntiforgery();
 
         // Register default IPublicMenuProvider if no module provides one
@@ -252,7 +264,11 @@ public static partial class SimpleModuleHostExtensions
 
         app.UseInertia();
         UseStaticFileCaching(app);
-        app.MapStaticAssets();
+        // MapStaticAssets registers endpoints, which would otherwise inherit the
+        // RequireAuthenticatedUser fallback policy — that breaks JS bundle / CSS /
+        // favicon loads on anonymous pages like /Identity/Account/Login. Static
+        // files are intentionally public.
+        app.MapStaticAssets().AllowAnonymous();
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -272,6 +288,10 @@ public static partial class SimpleModuleHostExtensions
 
         if (options.EnableHealthChecks)
         {
+            // Health probes are intentionally anonymous so kubelet / load balancers
+            // can hit them without credentials. The framework owns these — do not
+            // remove the .AllowAnonymous() calls when sweeping anonymous routes
+            // out of an application.
             app.MapHealthChecks(
                     RouteConstants.HealthLive,
                     new HealthCheckOptions { Predicate = _ => false }

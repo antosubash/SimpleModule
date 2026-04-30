@@ -1,14 +1,37 @@
 export async function resolvePage(name: string) {
   const moduleName = name.split('/')[0];
-  const assemblyName = `SimpleModule.${moduleName}`;
   const cacheBuster = (document.querySelector('meta[name="cache-buster"]') as HTMLMetaElement)
     ?.content;
   const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
 
-  const mod = await import(
-    /* @vite-ignore */
-    `/_content/${assemblyName}/${assemblyName}.pages.js${suffix}`
-  );
+  // Downstream apps frequently ship modules under a bare assembly name
+  // (e.g. "Customers", "Invoices") rather than the framework's "SimpleModule.X"
+  // convention. Try the bare name first, then fall back to the prefixed form
+  // so framework modules continue to resolve.
+  const candidates = [moduleName, `SimpleModule.${moduleName}`];
+  // biome-ignore lint/suspicious/noExplicitAny: matches existing dynamic-import shape
+  let mod: any;
+  let assemblyName = candidates[0];
+  let lastError: unknown;
+  for (const candidate of candidates) {
+    try {
+      mod = await import(
+        /* @vite-ignore */
+        `/_content/${candidate}/${candidate}.pages.js${suffix}`
+      );
+      assemblyName = candidate;
+      break;
+    } catch (err) {
+      lastError = err;
+    }
+  }
+
+  if (!mod) {
+    throw new Error(
+      `Could not load pages bundle for module "${moduleName}". ` +
+        `Tried ${candidates.join(', ')}. Last error: ${String(lastError)}`,
+    );
+  }
 
   if (!mod.pages) {
     throw new Error(
