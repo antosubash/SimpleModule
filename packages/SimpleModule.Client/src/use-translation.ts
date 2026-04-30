@@ -27,10 +27,29 @@ interface SharedProps {
  * <p>{t(ProductsKeys.Manage.DeleteConfirm, { name: product.name })}</p>
  * ```
  */
+const warnedNamespaces = new Set<string>();
+
 export function useTranslation(namespace: string): TranslationResult {
   const { props } = usePage<SharedProps>();
   const locale = props.locale ?? 'en';
   const translations = props.translations ?? {};
+
+  // If translations were never populated, the SimpleModule.Localization module
+  // is probably not installed (its middleware is what writes props.translations).
+  // Without it, every t(...) call falls back to the bare key and the UI renders
+  // raw identifiers like "Users.Title". Warn loudly in dev once per namespace.
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    props.translations === undefined &&
+    !warnedNamespaces.has(namespace)
+  ) {
+    warnedNamespaces.add(namespace);
+    console.warn(
+      `[useTranslation] Module "${namespace}" is asking for translations but ` +
+        'Inertia shared data has no "translations" key. Is SimpleModule.Localization installed? ' +
+        'Without it, translation keys will render as-is.',
+    );
+  }
 
   const t = useMemo(() => {
     const prefix = `${namespace}.`;
