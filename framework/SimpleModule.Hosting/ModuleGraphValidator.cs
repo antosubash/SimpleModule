@@ -18,19 +18,19 @@ internal sealed class ModuleGraphValidator : IHostedService
     private const string SimpleModulePrefix = "SimpleModule.";
     private const string ContractsSuffix = ".Contracts";
 
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProviderIsService _isService;
     private readonly ILogger<ModuleGraphValidator> _logger;
     private readonly SimpleModuleOptions _options;
     private readonly IHostEnvironment _environment;
 
     public ModuleGraphValidator(
-        IServiceProvider serviceProvider,
+        IServiceProviderIsService isService,
         ILogger<ModuleGraphValidator> logger,
         SimpleModuleOptions options,
         IHostEnvironment environment
     )
     {
-        _serviceProvider = serviceProvider;
+        _isService = isService;
         _logger = logger;
         _options = options;
         _environment = environment;
@@ -74,9 +74,6 @@ internal sealed class ModuleGraphValidator : IHostedService
     {
         var unsatisfied = new List<(string Contract, string Package)>();
 
-        using var scope = _serviceProvider.CreateScope();
-        var sp = scope.ServiceProvider;
-
         foreach (var assembly in EnumerateContractsAssemblies())
         {
             var assemblyName = assembly.GetName().Name!;
@@ -84,7 +81,7 @@ internal sealed class ModuleGraphValidator : IHostedService
 
             foreach (var iface in EnumerateContractInterfaces(assembly))
             {
-                if (sp.GetService(iface) is null)
+                if (!_isService.IsService(iface))
                 {
                     unsatisfied.Add((iface.FullName ?? iface.Name, implPackage));
                 }

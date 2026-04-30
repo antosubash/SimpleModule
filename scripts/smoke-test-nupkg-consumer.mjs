@@ -74,7 +74,14 @@ if (uiModules.length === 0) {
 }
 
 const consumerDir = mkdtempSync(join(tmpdir(), 'sm-smoke-consumer-'));
-const cleanup = () => rmSync(consumerDir, { recursive: true, force: true });
+// Keep the global-packages folder *outside* the project tree so the SDK's
+// default **/*.cs glob can't reach into it (e.g. ImTools ships content/*.cs
+// that would otherwise duplicate-compile into the consumer).
+const packagesDir = mkdtempSync(join(tmpdir(), 'sm-smoke-packages-'));
+const cleanup = () => {
+  rmSync(consumerDir, { recursive: true, force: true });
+  rmSync(packagesDir, { recursive: true, force: true });
+};
 process.on('exit', cleanup);
 process.on('SIGINT', () => {
   cleanup();
@@ -101,11 +108,6 @@ writeFileSync(
          AddSimpleModule, so generator diagnostics that require runtime wiring
          (DB, auth, etc.) would be noise here. -->
     <NoWarn>$(NoWarn);SM0001;SM0002;SM0003;SM0025;SM0028</NoWarn>
-    <!-- The Web SDK's default **/*.cs glob would otherwise pick up content
-         files from the local global-packages folder (e.g. ImTools.cs ships
-         multiple copies via content/ and contentFiles/, which duplicate when
-         the project root contains them). -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);packages/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
 ${packageRefs}
@@ -128,7 +130,7 @@ writeFileSync(
   `<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <config>
-    <add key="globalPackagesFolder" value="./packages" />
+    <add key="globalPackagesFolder" value="${packagesDir}" />
   </config>
   <packageSources>
     <clear />

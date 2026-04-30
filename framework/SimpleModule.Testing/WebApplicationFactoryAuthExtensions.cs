@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.Testing;
+using SimpleModule.Core.Authorization;
 
 namespace SimpleModule.Testing;
 
@@ -27,7 +28,7 @@ public static class WebApplicationFactoryAuthExtensions
 
     /// <summary>
     /// Convenience overload that adds each entry of <paramref name="permissions"/>
-    /// as a <c>permission</c> claim before applying any
+    /// as a <see cref="WellKnownClaims.Permission"/> claim before applying any
     /// <paramref name="additionalClaims"/>.
     /// </summary>
     public static HttpClient CreateAuthenticatedClient<TEntryPoint>(
@@ -44,7 +45,7 @@ public static class WebApplicationFactoryAuthExtensions
         combined.AddRange(additionalClaims);
         foreach (var permission in permissions)
         {
-            combined.Add(new Claim("permission", permission));
+            combined.Add(new Claim(WellKnownClaims.Permission, permission));
         }
         return factory.CreateAuthenticatedClient(combined.ToArray());
     }

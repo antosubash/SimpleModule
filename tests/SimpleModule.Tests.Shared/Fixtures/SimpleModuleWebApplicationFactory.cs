@@ -30,8 +30,6 @@ namespace SimpleModule.Tests.Shared.Fixtures;
 
 public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 {
-    public const string TestAuthScheme = TestAuthDefaults.AuthenticationScheme;
-
     // Shared in-memory SQLite connection kept open for the lifetime of the factory
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
 
@@ -104,7 +102,7 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
                     options.ForwardDefaultSelector = context =>
                     {
                         if (context.Request.Headers.ContainsKey(TestAuthDefaults.ClaimsHeader))
-                            return TestAuthScheme;
+                            return TestAuthDefaults.AuthenticationScheme;
 
                         return fallbackSelector?.Invoke(context);
                     };
