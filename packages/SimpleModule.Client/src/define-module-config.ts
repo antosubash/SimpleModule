@@ -1,8 +1,68 @@
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import type { UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import { defaultVendors } from './vite-plugin-vendor.ts';
+
+/**
+ * Detect the case-insensitive filesystem trap where `Pages/index.ts` (the
+ * framework-required barrel) sits next to a page like `Pages/Index.tsx` and
+ * the barrel uses an extension-less dynamic import (`() => import('./Index')`).
+ *
+ * On macOS/Windows, Rolldown resolves `./Index` back to `./index.ts` (the
+ * barrel itself), producing a self-referential chunk that throws at runtime
+ * with `Cannot assign to property 'layout' of [object Module]`.
+ *
+ * Throw early with a clear, actionable error.
+ */
+function assertNoBarrelCollision(dir: string): void {
+  const pagesDir = resolve(dir, 'Pages');
+  const barrelPath = resolve(pagesDir, 'index.ts');
+  if (!existsSync(barrelPath)) return;
+
+  let entries: string[];
+  try {
+    entries = readdirSync(pagesDir);
+  } catch {
+    return;
+  }
+
+  // Page filenames whose stem case-insensitively equals 'index' would collide
+  // with the barrel on case-insensitive filesystems.
+  const colliding = entries.filter((f) => /^index\.(tsx|jsx|js)$/i.test(f) && f !== 'index.ts');
+  if (colliding.length === 0) return;
+
+  let barrel: string;
+  try {
+    barrel = readFileSync(barrelPath, 'utf8');
+  } catch {
+    return;
+  }
+
+  // Look for extension-less dynamic imports whose specifier case-insensitively
+  // resolves to the barrel itself (`import('./Index')` next to `index.ts`).
+  // On case-insensitive filesystems Rolldown silently picks `./index.ts`
+  // (the barrel) rather than the sibling `./Index.tsx`, producing a chunk
+  // that re-exports the barrel and crashes at runtime.
+  const importRe = /import\(\s*['"]\.\/([A-Za-z0-9_-]+)['"]\s*\)/g;
+  for (const match of barrel.matchAll(importRe)) {
+    const specifier = match[1];
+    if (specifier.toLowerCase() !== 'index') continue;
+    const offending = colliding.find(
+      (f) => f.replace(/\.(tsx|jsx|js)$/i, '').toLowerCase() === specifier.toLowerCase(),
+    );
+    if (!offending) continue;
+    throw new Error(
+      `[@simplemodule/client] Pages/index.ts contains \`import('./${specifier}')\` which collides ` +
+        `with the barrel on case-insensitive filesystems (macOS/Windows). Rolldown will silently ` +
+        `emit a self-referential chunk and the page will fail at runtime with ` +
+        `"Cannot assign to property 'layout' of [object Module]".\n\n` +
+        `Fix: use the explicit file extension, e.g. \`import('./${offending}')\`, or rename ` +
+        `Pages/${offending} to a name that does not case-insensitively match 'index'.`,
+    );
+  }
+}
 
 /**
  * Unified Vite config for SimpleModule modules.
@@ -20,6 +80,8 @@ import { defaultVendors } from './vite-plugin-vendor.ts';
  * ```
  */
 export function defineModuleConfig(dir: string): UserConfig {
+  assertNoBarrelCollision(dir);
+
   const name = basename(dir);
   const isDev = process.env.VITE_MODE !== 'prod';
 
