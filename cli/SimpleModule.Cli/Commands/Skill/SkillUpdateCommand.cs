@@ -48,18 +48,25 @@ public sealed class SkillUpdateCommand : AsyncCommand<SkillUpdateSettings>
             targets = [name];
         }
 
-        using var http = new HttpClient();
-        var fetcher = new SkillFetcher(http);
+        var fetcher = new SkillFetcher();
 
         var changed = 0;
         var unchanged = 0;
         var failed = 0;
 
+        var refOverride = !string.IsNullOrWhiteSpace(settings.Name) ? settings.Ref : null;
+
         foreach (var name in targets)
         {
             var entry = lockFile.Skills[name];
 
-            if (string.Equals(entry.SourceType, "scaffold", StringComparison.OrdinalIgnoreCase))
+            if (
+                string.Equals(
+                    entry.SourceType,
+                    SkillSource.TypeIdScaffold,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             {
                 AnsiConsole.MarkupLine(
                     $"  [yellow]SKIP[/] {Markup.Escape(name)} (scaffolded; no remote source to update)"
@@ -81,43 +88,21 @@ public sealed class SkillUpdateCommand : AsyncCommand<SkillUpdateSettings>
                 continue;
             }
 
-            if (
-                source.Type == SkillSourceType.GitHub
-                && !string.IsNullOrWhiteSpace(settings.Ref)
-                && !string.IsNullOrWhiteSpace(settings.Name)
-            )
+            // CanonicalSource strips @ref, so source.Ref is null after Parse — restore it
+            // from the explicit --ref override (when targeting one skill) or the lock entry.
+            if (source.Type == SkillSourceType.GitHub)
             {
-                source = source with { Ref = settings.Ref };
-            }
-            else if (
-                source.Type == SkillSourceType.GitHub
-                && string.IsNullOrEmpty(source.Ref)
-                && !string.IsNullOrEmpty(entry.Ref)
-            )
-            {
-                source = source with { Ref = entry.Ref };
+                var resolvedRef = !string.IsNullOrWhiteSpace(refOverride) ? refOverride : entry.Ref;
+                if (!string.IsNullOrEmpty(resolvedRef))
+                {
+                    source = source with { Ref = resolvedRef };
+                }
             }
 
             FetchedSkill fetched;
             try
             {
                 fetched = await fetcher.FetchAsync(source).ConfigureAwait(false);
-            }
-            catch (HttpRequestException ex)
-            {
-                AnsiConsole.MarkupLine(
-                    $"  [red]FAIL[/] {Markup.Escape(name)} — {Markup.Escape(ex.Message)}"
-                );
-                failed++;
-                continue;
-            }
-            catch (IOException ex)
-            {
-                AnsiConsole.MarkupLine(
-                    $"  [red]FAIL[/] {Markup.Escape(name)} — {Markup.Escape(ex.Message)}"
-                );
-                failed++;
-                continue;
             }
             catch (InvalidOperationException ex)
             {

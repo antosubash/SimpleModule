@@ -19,6 +19,10 @@ public sealed partial record SkillSource(
     string? LocalPath = null
 )
 {
+    public const string TypeIdGitHub = "github";
+    public const string TypeIdLocal = "local";
+    public const string TypeIdScaffold = "scaffold";
+
     [GeneratedRegex(
         @"^(?<owner>[A-Za-z0-9][A-Za-z0-9-_.]*)/(?<repo>[A-Za-z0-9][A-Za-z0-9-_.]*)(?:/(?<path>[^@\s]+?))?(?:@(?<ref>[^\s]+))?$",
         RegexOptions.Singleline,
@@ -29,9 +33,9 @@ public sealed partial record SkillSource(
     public string SourceTypeId =>
         Type switch
         {
-            SkillSourceType.GitHub => "github",
-            SkillSourceType.Local => "local",
-            SkillSourceType.Scaffold => "scaffold",
+            SkillSourceType.GitHub => TypeIdGitHub,
+            SkillSourceType.Local => TypeIdLocal,
+            SkillSourceType.Scaffold => TypeIdScaffold,
             _ => "unknown",
         };
 

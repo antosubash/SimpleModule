@@ -46,23 +46,7 @@ public sealed class SkillAddCommand : AsyncCommand<SkillAddSettings>
 
             try
             {
-                using var fetcher = new HttpClient();
-                var skillFetcher = new SkillFetcher(fetcher);
-                fetched = await skillFetcher.FetchAsync(source).ConfigureAwait(false);
-            }
-            catch (HttpRequestException ex)
-            {
-                AnsiConsole.MarkupLine(
-                    $"[red]Failed to fetch skill: {Markup.Escape(ex.Message)}[/]"
-                );
-                return 1;
-            }
-            catch (IOException ex)
-            {
-                AnsiConsole.MarkupLine(
-                    $"[red]Failed to fetch skill: {Markup.Escape(ex.Message)}[/]"
-                );
-                return 1;
+                fetched = await new SkillFetcher().FetchAsync(source).ConfigureAwait(false);
             }
             catch (InvalidOperationException ex)
             {

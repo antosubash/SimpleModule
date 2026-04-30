@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,19 +10,17 @@ public sealed record FetchedSkill(IReadOnlyList<FetchedSkillFile> Files, string 
 
 public sealed class FetchedSkillFile
 {
+    private readonly byte[] _content;
+
     public FetchedSkillFile(string relativePath, byte[] content)
     {
         RelativePath = relativePath;
         _content = content;
     }
 
-    private readonly byte[] _content;
-
     public string RelativePath { get; }
 
     public byte[] GetContent() => _content;
-
-    public int Length => _content.Length;
 }
 
 public sealed class SkillFetcher
@@ -29,44 +28,74 @@ public sealed class SkillFetcher
     private const string GitHubApiBase = "https://api.github.com";
     private const string UserAgent = "SimpleModule.Cli";
 
+    // Shared HttpClient avoids socket exhaustion across repeated fetches; matches NuGetVersionResolver's pattern.
+    private static readonly HttpClient SharedHttpClient = CreateHttpClient();
+
     private readonly HttpClient _http;
 
     public SkillFetcher(HttpClient? http = null)
     {
-        _http = http ?? new HttpClient();
-        if (_http.DefaultRequestHeaders.UserAgent.Count == 0)
-        {
-            _http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-        }
-
-        if (_http.DefaultRequestHeaders.Accept.Count == 0)
-        {
-            _http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
-        }
-
-        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        if (!string.IsNullOrWhiteSpace(token) && _http.DefaultRequestHeaders.Authorization is null)
-        {
-            _http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        }
+        _http = http ?? SharedHttpClient;
     }
 
+    private static HttpClient CreateHttpClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+        client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+
+        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                "Bearer",
+                token
+            );
+        }
+
+        return client;
+    }
+
+    /// <summary>
+    /// Fetches the skill content from its source. Wraps transport, IO, and JSON
+    /// failures into <see cref="InvalidOperationException"/> so callers only need
+    /// a single catch arm.
+    /// </summary>
     public async Task<FetchedSkill> FetchAsync(
         SkillSource source,
         CancellationToken cancellationToken = default
     )
     {
-        return source.Type switch
+        try
         {
-            SkillSourceType.GitHub => await FetchGitHubAsync(source, cancellationToken)
-                .ConfigureAwait(false),
-            SkillSourceType.Local => FetchLocal(source),
-            SkillSourceType.Scaffold => throw new InvalidOperationException(
-                "Scaffold sources are produced inline; not fetched."
-            ),
-            _ => throw new NotSupportedException($"Source type {source.Type} is not supported."),
-        };
+            return source.Type switch
+            {
+                SkillSourceType.GitHub => await FetchGitHubAsync(source, cancellationToken)
+                    .ConfigureAwait(false),
+                SkillSourceType.Local => FetchLocal(source),
+                SkillSourceType.Scaffold => throw new InvalidOperationException(
+                    "Scaffold sources are produced inline; not fetched."
+                ),
+                _ => throw new NotSupportedException(
+                    $"Source type {source.Type} is not supported."
+                ),
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException(ex.Message, ex);
+        }
+        catch (IOException ex)
+        {
+            throw new InvalidOperationException(ex.Message, ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException(
+                $"Failed to parse response from skill source: {ex.Message}",
+                ex
+            );
+        }
     }
 
     private static FetchedSkill FetchLocal(SkillSource source)
@@ -189,7 +218,6 @@ public sealed class SkillFetcher
 
         if (entries.ValueKind == JsonValueKind.Object)
         {
-            // Single file response — wrap in an array-like flow
             await ProcessEntryAsync(
                     owner,
                     repo,
