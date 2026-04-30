@@ -134,6 +134,11 @@ public static partial class SimpleModuleHostExtensions
             builder.Services.AddDevTools();
         }
 
+        if (options.ValidateModuleGraph)
+        {
+            builder.Services.AddHostedService<ModuleGraphValidator>();
+        }
+
         return builder;
     }
 

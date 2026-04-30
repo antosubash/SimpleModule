@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Description>Reusable integration-test helpers for SimpleModule applications: header-based test auth scheme, TestAuthHandler, and CreateAuthenticatedClient extensions for WebApplicationFactory.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SimpleModule.Core\SimpleModule.Core.csproj" />
+  </ItemGroup>
+</Project>

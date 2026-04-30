@@ -15,3 +15,4 @@ SimpleModule.Storage
 SimpleModule.Storage.Azure
 SimpleModule.Storage.Local
 SimpleModule.Storage.S3
+SimpleModule.Testing

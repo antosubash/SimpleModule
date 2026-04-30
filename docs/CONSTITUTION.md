@@ -306,7 +306,8 @@ Override `ConfigureEndpoints` on the module class for non-standard routes.
 
 ### Registering Permissions
 
-- Override `ConfigurePermissions` on the module class and call `builder.AddPermissions<T>()`.
+- Auto-discovered by the source generator. Any class implementing `IModulePermissions` is registered automatically — no `ConfigurePermissions` override required.
+- For manual control (rare), override `ConfigurePermissions` on the module class and call `builder.AddPermissions<T>()`.
 
 ### Applying Permissions
 

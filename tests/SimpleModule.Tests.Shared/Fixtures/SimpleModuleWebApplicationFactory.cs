@@ -23,14 +23,13 @@ using SimpleModule.Rag.Module;
 using SimpleModule.RateLimiting;
 using SimpleModule.Settings;
 using SimpleModule.Tenants;
+using SimpleModule.Testing;
 using SimpleModule.Users;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
 
 public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
 {
-    public const string TestAuthScheme = "TestScheme";
-
     // Shared in-memory SQLite connection kept open for the lifetime of the factory
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
 
@@ -93,13 +92,7 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
             );
 
             // Add test authentication scheme that bypasses OpenIddict validation
-            services
-                .AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = TestAuthScheme;
-                    options.DefaultChallengeScheme = TestAuthScheme;
-                })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthScheme, _ => { });
+            services.AddTestAuthentication();
 
             services.PostConfigure<PolicySchemeOptions>(
                 AuthConstants.SmartAuthPolicy,
@@ -108,8 +101,8 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
                     var fallbackSelector = options.ForwardDefaultSelector;
                     options.ForwardDefaultSelector = context =>
                     {
-                        if (context.Request.Headers.ContainsKey("X-Test-Claims"))
-                            return TestAuthScheme;
+                        if (context.Request.Headers.ContainsKey(TestAuthDefaults.ClaimsHeader))
+                            return TestAuthDefaults.AuthenticationScheme;
 
                         return fallbackSelector?.Invoke(context);
                     };
