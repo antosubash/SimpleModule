@@ -312,6 +312,7 @@ export const routes = {
     api: {
       authorization: () => '/connect/authorize' as const,
       logout: () => '/connect/endsession' as const,
+      oAuthCallback: () => '/oauth-callback' as const,
       token: () => '/connect/token' as const,
       userinfo: () => '/connect/userinfo' as const,
     },

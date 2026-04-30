@@ -121,7 +121,7 @@ export function TokenTester() {
       response_type: 'code',
       client_id: 'simplemodule-client',
       redirect_uri: `${window.location.origin}/oauth-callback`,
-      scope: 'openid profile email',
+      scope: 'openid profile email roles',
       state,
       code_challenge: challenge,
       code_challenge_method: 'S256',

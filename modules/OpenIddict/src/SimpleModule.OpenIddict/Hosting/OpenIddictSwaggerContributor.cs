@@ -33,6 +33,7 @@ internal sealed class OpenIddictSwaggerGenSetup : IConfigureOptions<SwaggerGenOp
                             { AuthConstants.OpenIdScope, "OpenID" },
                             { AuthConstants.ProfileScope, "Profile" },
                             { AuthConstants.EmailScope, "Email" },
+                            { AuthConstants.RolesScope, "Roles" },
                         },
                     },
                 },
@@ -55,6 +56,7 @@ internal sealed class OpenIddictSwaggerGenSetup : IConfigureOptions<SwaggerGenOp
                         AuthConstants.OpenIdScope,
                         AuthConstants.ProfileScope,
                         AuthConstants.EmailScope,
+                        AuthConstants.RolesScope,
                     ]
                 },
             };

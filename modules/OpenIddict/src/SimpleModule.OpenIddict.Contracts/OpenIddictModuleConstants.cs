@@ -12,7 +12,7 @@ public static class OpenIddictModuleConstants
         public const string ClientsCreate = "/clients/create";
         public const string ClientsEdit = "/clients/{id}/edit";
 
-        // View route — registered via ConfigureEndpoints (escape hatch)
+        // OAuth callback (registered as a top-level IEndpoint, not under ViewPrefix)
         public const string OAuthCallback = "/oauth-callback";
 
         // Connect routes (also in ConnectRouteConstants)
