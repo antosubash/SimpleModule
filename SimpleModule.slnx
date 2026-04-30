@@ -9,6 +9,7 @@
     <Project Path="framework/SimpleModule.Generator/SimpleModule.Generator.csproj" />
     <Project Path="framework/SimpleModule.Database/SimpleModule.Database.csproj" />
     <Project Path="framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
+    <Project Path="framework/SimpleModule.Testing/SimpleModule.Testing.csproj" />
     <Project Path="framework/SimpleModule.Storage/SimpleModule.Storage.csproj" />
     <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
     <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />

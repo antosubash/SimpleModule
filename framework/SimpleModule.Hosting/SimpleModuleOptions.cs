@@ -15,6 +15,16 @@ public class SimpleModuleOptions
     public bool EnableDevTools { get; set; } = true;
 
     /// <summary>
+    /// Logs a warning at startup for every SimpleModule contract interface
+    /// (e.g. <c>IUsersContracts</c>) that is in the assembly graph but has no
+    /// registered implementation — the typical signal that a peer module's
+    /// package is missing.
+    /// Defaults to true in non-Production environments and false otherwise so
+    /// production logs aren't polluted by intentionally-absent peers.
+    /// </summary>
+    public bool ValidateModuleGraph { get; set; } = true;
+
+    /// <summary>
     /// Content Security Policy overrides. Modules can append extra origins for
     /// directives like <c>connect-src</c>, <c>img-src</c>, etc.
     /// </summary>

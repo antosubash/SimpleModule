@@ -95,6 +95,9 @@ jobs:
       - name: Verify module .nupkgs contain static web assets
         run: node scripts/verify-nupkg-static-assets.mjs ./nupkgs
 
+      - name: Smoke-test packed nupkgs against a real consumer
+        run: node scripts/smoke-test-nupkg-consumer.mjs ./nupkgs --version 0.0.0-ci
+
   docker:
     runs-on: ubuntu-latest
     needs: lint

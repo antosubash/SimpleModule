@@ -47,6 +47,7 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         Plan(Path.Combine(moduleDir, $"{moduleName}.csproj"));
         Plan(Path.Combine(moduleDir, $"{moduleName}Module.cs"));
         Plan(Path.Combine(moduleDir, $"{moduleName}Constants.cs"));
+        Plan(Path.Combine(moduleDir, $"{moduleName}Permissions.cs"));
         Plan(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"));
         Plan(Path.Combine(moduleDir, $"{singularName}Service.cs"));
         Plan(Path.Combine(endpointsDir, "GetAllEndpoint.cs"));
@@ -107,6 +108,10 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
                     File.WriteAllText(
                         Path.Combine(moduleDir, $"{moduleName}Constants.cs"),
                         templates.ConstantsClass(moduleName, singularName)
+                    );
+                    File.WriteAllText(
+                        Path.Combine(moduleDir, $"{moduleName}Permissions.cs"),
+                        templates.PermissionsClass(moduleName, singularName)
                     );
                     File.WriteAllText(
                         Path.Combine(moduleDir, $"{moduleName}DbContext.cs"),

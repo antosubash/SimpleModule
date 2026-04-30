@@ -14,6 +14,9 @@
     <PackageReference Include="FluentAssertions" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\framework\SimpleModule.Testing\SimpleModule.Testing.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Excluded here; each test assembly includes its own copy of IntegrationTestCollection.cs -->
     <Compile Remove="Fixtures/IntegrationTestCollection.cs" />
   </ItemGroup>

@@ -200,6 +200,23 @@ public sealed class ModuleTemplates
         );
     }
 
+    public string PermissionsClass(string moduleName, string singularName)
+    {
+        var refPath = RefModulePath($"{_refModule}Permissions.cs");
+        if (refPath is null)
+        {
+            return FallbackPermissionsClass(moduleName);
+        }
+
+        return TemplateExtractor.ReadAndTransform(
+            refPath,
+            _refModule!,
+            _refSingular!,
+            moduleName,
+            singularName
+        );
+    }
+
     public string GlobalUsings()
     {
         var refPath = RefTestPath("GlobalUsings.cs");
@@ -985,6 +1002,24 @@ public sealed class ModuleTemplates
                 public const string RoutePrefix = "/api/{{moduleName.ToLowerInvariant()}}";
                 public const string FieldName = "Name";
                 public const string NameRequired = "Name is required.";
+            }
+            """;
+
+    private static string FallbackPermissionsClass(string moduleName) =>
+        $$"""
+            using SimpleModule.Core.Authorization;
+
+            namespace SimpleModule.{{moduleName}};
+
+            // Permissions are auto-discovered by the source generator. Use them on endpoints via
+            // `.RequirePermission({{moduleName}}Permissions.View)` or the `[RequirePermission]` attribute.
+            // Delete this file if the module has no protected endpoints.
+            public sealed class {{moduleName}}Permissions : IModulePermissions
+            {
+                public const string View = "{{moduleName}}.View";
+                public const string Create = "{{moduleName}}.Create";
+                public const string Update = "{{moduleName}}.Update";
+                public const string Delete = "{{moduleName}}.Delete";
             }
             """;
 
