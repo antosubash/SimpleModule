@@ -3,6 +3,7 @@ using SimpleModule.Cli.Commands.Doctor;
 using SimpleModule.Cli.Commands.Install;
 using SimpleModule.Cli.Commands.List;
 using SimpleModule.Cli.Commands.New;
+using SimpleModule.Cli.Commands.Skill;
 using SimpleModule.Cli.Commands.Version;
 using Spectre.Console.Cli;
 
@@ -19,6 +20,8 @@ app.Configure(config =>
     config.AddExample("dev");
     config.AddExample("list");
     config.AddExample("doctor", "--fix");
+    config.AddExample("skill", "add", "shadcn", "--source", "shadcn/ui/skills/shadcn");
+    config.AddExample("skill", "update");
 
     config.AddBranch(
         "new",
@@ -60,6 +63,29 @@ app.Configure(config =>
     config
         .AddCommand<DoctorCommand>("doctor")
         .WithDescription("Validate project structure and conventions");
+
+    config.AddBranch(
+        "skill",
+        skillBranch =>
+        {
+            skillBranch.SetDescription("Manage Claude skills under .claude/skills");
+            skillBranch
+                .AddCommand<SkillAddCommand>("add")
+                .WithDescription("Add a Claude skill (from GitHub, a local path, or a scaffold)")
+                .WithExample("skill", "add", "shadcn", "--source", "shadcn/ui/skills/shadcn")
+                .WithExample("skill", "add", "my-skill")
+                .WithExample("skill", "add", "team-skill", "--source", "./skills/team-skill");
+            skillBranch
+                .AddCommand<SkillUpdateCommand>("update")
+                .WithDescription("Re-fetch tracked skills and refresh skills-lock.json")
+                .WithExample("skill", "update")
+                .WithExample("skill", "update", "shadcn", "--ref", "main")
+                .WithExample("skill", "update", "--check");
+            skillBranch
+                .AddCommand<SkillListCommand>("list")
+                .WithDescription("List installed Claude skills and their tracked sources");
+        }
+    );
 
     config.AddCommand<VersionCommand>("version").WithDescription("Print the sm CLI version");
 });
