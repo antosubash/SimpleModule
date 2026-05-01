@@ -74,26 +74,4 @@ public static class SlnxManipulator
 
         return "    ";
     }
-
-    private static int FindFolderClosingTag(List<string> lines, string folderName)
-    {
-        var folderIndex = lines.FindIndex(l =>
-            l.Contains($"<Folder Name=\"{folderName}\">", StringComparison.Ordinal)
-        );
-        if (folderIndex < 0)
-        {
-            return -1;
-        }
-
-        // Find closing </Folder> tag
-        for (var i = folderIndex + 1; i < lines.Count; i++)
-        {
-            if (lines[i].TrimStart().StartsWith("</Folder>", StringComparison.Ordinal))
-            {
-                return i;
-            }
-        }
-
-        return -1;
-    }
 }

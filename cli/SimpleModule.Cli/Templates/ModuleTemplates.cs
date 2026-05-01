@@ -230,6 +230,51 @@ public sealed class ModuleTemplates
             """;
     }
 
+    public static string IndexViewEndpoint(string moduleName) =>
+        $$"""
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+            using SimpleModule.Core.Inertia;
+
+            namespace SimpleModule.{{moduleName}}.Views;
+
+            public class IndexEndpoint : IViewEndpoint
+            {
+                public void Map(IEndpointRouteBuilder app)
+                {
+                    app.MapGet("/", () => Inertia.Render("{{moduleName}}/Index", new { }))
+                        .ExcludeFromDescription();
+                }
+            }
+            """;
+
+    public static string PagesIndexTs(string moduleName) =>
+        $$"""
+            export const pages: Record<string, () => Promise<unknown>> = {
+              '{{moduleName}}/Index': () => import('../Views/Index'),
+            };
+            """;
+
+    public static string IndexPageTsx(string moduleName) =>
+        """
+            export default function Index() {
+              return (
+                <div style={{ padding: '2rem' }}>
+                  <h1>__MODULE_NAME__</h1>
+                  <p>Welcome to the __MODULE_NAME__ module. Edit Views/Index.tsx to customize this page.</p>
+                </div>
+              );
+            }
+            """.Replace("__MODULE_NAME__", moduleName, StringComparison.Ordinal);
+
+    public static string ViteConfig() =>
+        """
+            import { defineModuleConfig } from '@simplemodule/client/module';
+
+            export default defineModuleConfig(import.meta.dirname);
+            """;
+
     // ── Medium C# files (read + strip + rename) ─────────────────────
 
     public string ContractsInterface(string moduleName, string singularName)

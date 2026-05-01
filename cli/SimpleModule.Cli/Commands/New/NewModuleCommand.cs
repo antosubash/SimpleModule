@@ -36,6 +36,8 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         var moduleDir = solution.GetModuleProjectPath(moduleName);
         var eventsDir = Path.Combine(contractsDir, "Events");
         var endpointsDir = Path.Combine(moduleDir, "Endpoints", moduleName);
+        var viewsDir = solution.GetModuleViewsPath(moduleName);
+        var pagesDir = Path.Combine(moduleDir, "Pages");
         var testDir = solution.GetTestProjectPath(moduleName);
 
         void Plan(string path) => ops.Add((path, FileAction.Create));
@@ -51,6 +53,10 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
         Plan(Path.Combine(moduleDir, $"{moduleName}DbContext.cs"));
         Plan(Path.Combine(moduleDir, $"{singularName}Service.cs"));
         Plan(Path.Combine(endpointsDir, "GetAllEndpoint.cs"));
+        Plan(Path.Combine(viewsDir, "IndexEndpoint.cs"));
+        Plan(Path.Combine(viewsDir, "Index.tsx"));
+        Plan(Path.Combine(pagesDir, "index.ts"));
+        Plan(Path.Combine(moduleDir, "vite.config.ts"));
         Plan(Path.Combine(testDir, $"{moduleName}.Tests.csproj"));
         Plan(Path.Combine(testDir, "GlobalUsings.cs"));
         Plan(Path.Combine(testDir, "Unit", $"{singularName}ServiceTests.cs"));
@@ -73,6 +79,8 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
                 {
                     Directory.CreateDirectory(eventsDir);
                     Directory.CreateDirectory(endpointsDir);
+                    Directory.CreateDirectory(viewsDir);
+                    Directory.CreateDirectory(pagesDir);
                     Directory.CreateDirectory(Path.Combine(testDir, "Unit"));
                     Directory.CreateDirectory(Path.Combine(testDir, "Integration"));
 
@@ -124,6 +132,22 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
                     File.WriteAllText(
                         Path.Combine(endpointsDir, "GetAllEndpoint.cs"),
                         templates.GetAllEndpoint(moduleName, singularName)
+                    );
+                    File.WriteAllText(
+                        Path.Combine(viewsDir, "IndexEndpoint.cs"),
+                        ModuleTemplates.IndexViewEndpoint(moduleName)
+                    );
+                    File.WriteAllText(
+                        Path.Combine(viewsDir, "Index.tsx"),
+                        ModuleTemplates.IndexPageTsx(moduleName)
+                    );
+                    File.WriteAllText(
+                        Path.Combine(pagesDir, "index.ts"),
+                        ModuleTemplates.PagesIndexTs(moduleName)
+                    );
+                    File.WriteAllText(
+                        Path.Combine(moduleDir, "vite.config.ts"),
+                        ModuleTemplates.ViteConfig()
                     );
 
                     File.WriteAllText(

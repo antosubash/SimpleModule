@@ -102,13 +102,6 @@ internal sealed class HostingExtensionsEmitter : IEmitter
             }
         }
 
-        var hasLocalizationModule = data.Modules.Any(m => m.ModuleName == "Localization");
-        if (hasLocalizationModule)
-        {
-            sb.AppendLine();
-            sb.AppendLine("        app.InitializeLocalization();");
-        }
-
         sb.AppendLine();
         sb.AppendLine("        // Source-generated endpoint mapping");
         sb.AppendLine("        app.MapModuleEndpoints();");

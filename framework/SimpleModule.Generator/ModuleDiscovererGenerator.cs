@@ -23,7 +23,6 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new DbContextRegistryEmitter(),
         new ContractRegistryEmitter(),
         new AgentExtensionsEmitter(),
-        new LocalizationExtensionsEmitter(),
         new RoutesEmitter(),
         new TypeScriptRoutesEmitter(),
     ];

@@ -6,8 +6,8 @@ namespace SimpleModule.Core.Hosting;
 
 /// <summary>
 /// Calls lifecycle hooks on all discovered modules during application startup and shutdown.
-/// Supports both <see cref="IModule.OnStartAsync"/>/<see cref="IModule.OnStopAsync"/> (default methods)
-/// and the focused <see cref="IModuleLifecycle"/> interface.
+/// Modules implement lifecycle by overriding <see cref="IModule.OnStartAsync"/> /
+/// <see cref="IModule.OnStopAsync"/> default methods.
 /// </summary>
 public sealed partial class ModuleLifecycleHostedService(
     IEnumerable<IModule> modules,
@@ -31,14 +31,7 @@ public sealed partial class ModuleLifecycleHostedService(
             var moduleName = module.GetType().Name;
             try
             {
-                if (module is IModuleLifecycle lifecycle)
-                {
-                    await lifecycle.OnStartAsync(cancellationToken);
-                }
-                else
-                {
-                    await module.OnStartAsync(cancellationToken);
-                }
+                await module.OnStartAsync(cancellationToken);
                 LogModuleStarted(logger, moduleName);
             }
             catch (OperationCanceledException)
@@ -69,14 +62,7 @@ public sealed partial class ModuleLifecycleHostedService(
             var moduleName = module.GetType().Name;
             try
             {
-                if (module is IModuleLifecycle lifecycle)
-                {
-                    await lifecycle.OnStopAsync(cancellationToken);
-                }
-                else
-                {
-                    await module.OnStopAsync(cancellationToken);
-                }
+                await module.OnStopAsync(cancellationToken);
                 LogModuleStopped(logger, moduleName);
             }
             catch (OperationCanceledException)

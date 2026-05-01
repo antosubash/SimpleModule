@@ -19,6 +19,9 @@ public sealed class KnowledgeRecord
     [VectorStoreData(IsIndexed = true)]
     public string? ModuleName { get; set; }
 
-    [VectorStoreVector(1536)]
+    // Dimension is configured at runtime via VectorStoreCollectionDefinition built from
+    // RagOptions.EmbeddingDimension. The attribute default below is only used when callers
+    // bypass VectorKnowledgeStore and use attribute-based discovery directly.
+    [VectorStoreVector(VectorKnowledgeStore.DefaultEmbeddingDimension)]
     public ReadOnlyMemory<float> Embedding { get; set; }
 }

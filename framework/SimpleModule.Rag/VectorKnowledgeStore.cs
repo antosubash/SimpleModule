@@ -1,30 +1,65 @@
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.VectorData;
 using SimpleModule.Core.Rag;
 
 namespace SimpleModule.Rag;
 
-public sealed class VectorKnowledgeStore(
-    VectorStore vectorStore,
-    IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator
-) : IKnowledgeStore
+public sealed class VectorKnowledgeStore : IKnowledgeStore
 {
+    public const int DefaultEmbeddingDimension = 1536;
+
+    private readonly VectorStore _vectorStore;
+    private readonly IEmbeddingGenerator<string, Embedding<float>> _embeddingGenerator;
+    private readonly VectorStoreCollectionDefinition _definition;
+
+    public VectorKnowledgeStore(
+        VectorStore vectorStore,
+        IEmbeddingGenerator<string, Embedding<float>> embeddingGenerator,
+        IOptions<RagOptions> options
+    )
+    {
+        _vectorStore = vectorStore;
+        _embeddingGenerator = embeddingGenerator;
+        _definition = BuildDefinition(options.Value.EmbeddingDimension);
+    }
+
+    private static VectorStoreCollectionDefinition BuildDefinition(int dimension) =>
+        new()
+        {
+            Properties =
+            {
+                new VectorStoreKeyProperty("Id", typeof(string)),
+                new VectorStoreDataProperty("Title", typeof(string)),
+                new VectorStoreDataProperty("Content", typeof(string)),
+                new VectorStoreDataProperty("CollectionName", typeof(string)),
+                new VectorStoreDataProperty("ModuleName", typeof(string)) { IsIndexed = true },
+                new VectorStoreVectorProperty(
+                    "Embedding",
+                    typeof(ReadOnlyMemory<float>),
+                    dimension
+                ),
+            },
+        };
+
     public async Task IndexDocumentsAsync(
         string collectionName,
         IReadOnlyList<KnowledgeDocument> documents,
         CancellationToken cancellationToken = default
     )
     {
-        var collection = vectorStore.GetCollection<string, KnowledgeRecord>(collectionName);
+        var collection = _vectorStore.GetCollection<string, KnowledgeRecord>(
+            collectionName,
+            _definition
+        );
         await collection.EnsureCollectionExistsAsync(cancellationToken);
 
         var contents = documents.Select(d => d.Content).ToList();
-        var embeddings = await embeddingGenerator.GenerateAsync(
+        var embeddings = await _embeddingGenerator.GenerateAsync(
             contents,
             cancellationToken: cancellationToken
         );
 
-        // Upsert concurrently in batches for better throughput
         var upsertTasks = new List<Task>(documents.Count);
         for (var i = 0; i < documents.Count; i++)
         {
@@ -52,12 +87,15 @@ public sealed class VectorKnowledgeStore(
         CancellationToken cancellationToken = default
     )
     {
-        var collection = vectorStore.GetCollection<string, KnowledgeRecord>(collectionName);
+        var collection = _vectorStore.GetCollection<string, KnowledgeRecord>(
+            collectionName,
+            _definition
+        );
 
         if (!await collection.CollectionExistsAsync(cancellationToken))
             return [];
 
-        var queryEmbeddings = await embeddingGenerator.GenerateAsync(
+        var queryEmbeddings = await _embeddingGenerator.GenerateAsync(
             [query],
             cancellationToken: cancellationToken
         );
@@ -96,7 +134,10 @@ public sealed class VectorKnowledgeStore(
         CancellationToken cancellationToken = default
     )
     {
-        var collection = vectorStore.GetCollection<string, KnowledgeRecord>(collectionName);
+        var collection = _vectorStore.GetCollection<string, KnowledgeRecord>(
+            collectionName,
+            _definition
+        );
         await collection.EnsureCollectionDeletedAsync(cancellationToken);
     }
 }

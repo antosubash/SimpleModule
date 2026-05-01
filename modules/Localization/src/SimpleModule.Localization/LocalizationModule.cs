@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Localization;
 using SimpleModule.Core;
 using SimpleModule.Localization.Contracts;
@@ -25,5 +26,16 @@ public sealed class LocalizationModule : IModule
     public void ConfigureMiddleware(IApplicationBuilder app)
     {
         app.UseMiddleware<Middleware.LocaleResolutionMiddleware>();
+    }
+
+    public void ConfigureHost(IHost host)
+    {
+        var loader = host.Services.GetRequiredService<TranslationLoader>();
+        var assemblies = host
+            .Services.GetServices<IModule>()
+            .Select(m => m.GetType().Assembly)
+            .Distinct()
+            .ToArray();
+        loader.Initialize(assemblies);
     }
 }

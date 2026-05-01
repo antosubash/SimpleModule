@@ -2,6 +2,7 @@ using Anthropic.SDK;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace SimpleModule.AI.Anthropic;
 
@@ -16,9 +17,7 @@ public static class AnthropicExtensions
 
         services.AddSingleton<IChatClient>(sp =>
         {
-            var opts =
-                configuration.GetSection("AI:Anthropic").Get<AnthropicOptions>()
-                ?? new AnthropicOptions();
+            var opts = sp.GetRequiredService<IOptions<AnthropicOptions>>().Value;
             var client = new AnthropicClient(opts.ApiKey);
             return client.Messages;
         });

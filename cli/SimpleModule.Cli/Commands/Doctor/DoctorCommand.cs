@@ -180,7 +180,7 @@ public sealed class DoctorCommand : Command<DoctorSettings>
                 var moduleName = result.Name["API -> ".Length..];
                 ProjectManipulator.AddProjectReference(
                     solution.ApiCsprojPath,
-                    $@"..\modules\{moduleName}\{moduleName}\{moduleName}.csproj"
+                    $@"..\modules\{moduleName}\src\{moduleName}\{moduleName}.csproj"
                 );
                 AnsiConsole.MarkupLine(
                     $"[green]  Fixed: added {moduleName} reference to API csproj[/]"
