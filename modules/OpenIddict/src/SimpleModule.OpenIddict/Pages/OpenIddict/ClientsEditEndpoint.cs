@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using OpenIddict.Abstractions;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.OpenIddict.Contracts;
 
@@ -49,7 +50,7 @@ public class ClientsEditEndpoint : IViewEndpoint
                     );
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
 
         app.MapPost(
                 "/clients/{id}",
@@ -72,7 +73,7 @@ public class ClientsEditEndpoint : IViewEndpoint
                     return TypedResults.Redirect($"/openiddict/clients/{id}/edit");
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
 
         app.MapPost(
@@ -110,7 +111,7 @@ public class ClientsEditEndpoint : IViewEndpoint
                     return TypedResults.Redirect($"/openiddict/clients/{id}/edit?tab=uris");
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
 
         app.MapPost(
@@ -140,7 +141,7 @@ public class ClientsEditEndpoint : IViewEndpoint
                     return TypedResults.Redirect($"/openiddict/clients/{id}/edit?tab=permissions");
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
     }
 }

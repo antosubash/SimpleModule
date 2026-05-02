@@ -52,6 +52,6 @@ public class RolesEditEndpoint : IViewEndpoint
                     );
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
     }
 }

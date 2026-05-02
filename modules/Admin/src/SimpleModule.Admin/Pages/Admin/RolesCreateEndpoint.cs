@@ -25,6 +25,6 @@ public class RolesCreateEndpoint : IViewEndpoint
                     return Inertia.Render("Admin/Admin/RolesCreate", new { permissionsByModule });
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
     }
 }

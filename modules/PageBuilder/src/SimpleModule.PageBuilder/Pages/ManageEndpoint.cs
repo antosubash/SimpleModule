@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.PageBuilder.Contracts;
 
@@ -20,6 +21,6 @@ public class ManageEndpoint : IViewEndpoint
                         new { pages = await pageBuilder.GetAllPagesAsync() }
                     )
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
     }
 }
