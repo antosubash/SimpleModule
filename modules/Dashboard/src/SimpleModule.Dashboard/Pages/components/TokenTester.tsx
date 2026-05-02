@@ -88,7 +88,10 @@ export function TokenTester() {
       try {
         const res = await fetch('/connect/token', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Accept: 'application/json',
+          },
           body: new URLSearchParams({
             grant_type: 'authorization_code',
             client_id: 'simplemodule-client',
@@ -98,8 +101,16 @@ export function TokenTester() {
           }),
         });
 
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const data = await res.json();
+        const body = await res.text();
+        const data = body ? (JSON.parse(body) as Record<string, string>) : null;
+
+        if (!res.ok) {
+          const detail = data?.error_description ?? data?.error ?? body;
+          throw new Error(`${res.status} ${res.statusText}${detail ? ` - ${detail}` : ''}`);
+        }
+        if (!data?.access_token) {
+          throw new Error('Response did not contain an access_token');
+        }
         setToken(data.access_token);
       } catch (e: unknown) {
         alert(`Token exchange failed: ${e instanceof Error ? e.message : String(e)}`);
