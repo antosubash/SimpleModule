@@ -12,9 +12,15 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-public class RegisterEndpoint : IViewEndpoint
+public partial class RegisterEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.Register;
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "User created a new account with password."
+    )]
+    private static partial void LogAccountCreatedWithPassword(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -89,7 +95,7 @@ public class RegisterEndpoint : IViewEndpoint
                         );
                     }
 
-                    logger.LogInformation("User created a new account with password.");
+                    LogAccountCreatedWithPassword(logger);
 
                     var userId = await userManager.GetUserIdAsync(user);
                     var code = await userManager.GenerateEmailConfirmationTokenAsync(user);

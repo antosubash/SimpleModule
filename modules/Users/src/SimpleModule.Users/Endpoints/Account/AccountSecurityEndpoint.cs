@@ -11,10 +11,31 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Account;
 
-public class AccountSecurityEndpoint : IEndpoint
+public partial class AccountSecurityEndpoint : IEndpoint
 {
     public const string Route = UsersConstants.Routes.TwoFactorAuthentication;
     public const string Method = "POST";
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "User has enabled 2FA with an authenticator app."
+    )]
+    private static partial void LogTwoFactorEnabled(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User has disabled 2FA.")]
+    private static partial void LogTwoFactorDisabled(ILogger logger);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "User has reset their authentication app key."
+    )]
+    private static partial void LogAuthenticatorKeyReset(ILogger logger);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "User has generated new 2FA recovery codes."
+    )]
+    private static partial void LogRecoveryCodesGenerated(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -75,7 +96,7 @@ public class AccountSecurityEndpoint : IEndpoint
                     }
 
                     await userManager.SetTwoFactorEnabledAsync(user, true);
-                    logger.LogInformation("User has enabled 2FA with an authenticator app.");
+                    LogTwoFactorEnabled(logger);
 
                     if (await userManager.CountRecoveryCodesAsync(user) == 0)
                     {
@@ -113,7 +134,7 @@ public class AccountSecurityEndpoint : IEndpoint
                     return TypedResults.Redirect("/Identity/Account/Login");
 
                 await userManager.SetTwoFactorEnabledAsync(user, false);
-                logger.LogInformation("User has disabled 2FA.");
+                LogTwoFactorDisabled(logger);
 
                 return TypedResults.Redirect(
                     "/Identity/Account/Manage/TwoFactorAuthentication?status=2fa-disabled"
@@ -137,7 +158,7 @@ public class AccountSecurityEndpoint : IEndpoint
 
                 await userManager.SetTwoFactorEnabledAsync(user, false);
                 await userManager.ResetAuthenticatorKeyAsync(user);
-                logger.LogInformation("User has reset their authentication app key.");
+                LogAuthenticatorKeyReset(logger);
 
                 await signInManager.RefreshSignInAsync(user);
 
@@ -169,7 +190,7 @@ public class AccountSecurityEndpoint : IEndpoint
                     user,
                     10
                 );
-                logger.LogInformation("User has generated new 2FA recovery codes.");
+                LogRecoveryCodesGenerated(logger);
 
                 return Inertia.Render(
                     "Users/Account/ShowRecoveryCodes",

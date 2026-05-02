@@ -11,9 +11,12 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account.Manage;
 
-public class DeletePersonalDataEndpoint : IViewEndpoint
+public partial class DeletePersonalDataEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.DeletePersonalData;
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User deleted themselves.")]
+    private static partial void LogUserDeletedThemselves(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -77,7 +80,7 @@ public class DeletePersonalDataEndpoint : IViewEndpoint
                     }
 
                     await signInManager.SignOutAsync();
-                    logger.LogInformation("User deleted themselves.");
+                    LogUserDeletedThemselves(logger);
                     return TypedResults.Redirect("/");
                 }
             )

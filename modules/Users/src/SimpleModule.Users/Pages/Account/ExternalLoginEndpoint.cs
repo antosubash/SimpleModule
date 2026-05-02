@@ -14,9 +14,25 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-public class ExternalLoginEndpoint : IViewEndpoint
+public partial class ExternalLoginEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.ExternalLogin;
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "{Name} logged in with {LoginProvider} provider."
+    )]
+    private static partial void LogExternalLoginSucceeded(
+        ILogger logger,
+        string? name,
+        string loginProvider
+    );
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "User created an account using {LoginProvider} provider."
+    )]
+    private static partial void LogExternalAccountCreated(ILogger logger, string loginProvider);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -61,14 +77,11 @@ public class ExternalLoginEndpoint : IViewEndpoint
 
                     if (result.Succeeded)
                     {
-                        if (logger.IsEnabled(LogLevel.Information))
-                        {
-                            logger.LogInformation(
-                                "{Name} logged in with {LoginProvider} provider.",
-                                info.Principal.Identity?.Name,
-                                info.LoginProvider
-                            );
-                        }
+                        LogExternalLoginSucceeded(
+                            logger,
+                            info.Principal.Identity?.Name,
+                            info.LoginProvider
+                        );
                         return TypedResults.Redirect(returnUrl);
                     }
 
@@ -145,13 +158,7 @@ public class ExternalLoginEndpoint : IViewEndpoint
                         result = await userManager.AddLoginAsync(user, info);
                         if (result.Succeeded)
                         {
-                            if (logger.IsEnabled(LogLevel.Information))
-                            {
-                                logger.LogInformation(
-                                    "User created an account using {Name} provider.",
-                                    info.LoginProvider
-                                );
-                            }
+                            LogExternalAccountCreated(logger, info.LoginProvider);
 
                             var userId = await userManager.GetUserIdAsync(user);
                             var code = await userManager.GenerateEmailConfirmationTokenAsync(user);

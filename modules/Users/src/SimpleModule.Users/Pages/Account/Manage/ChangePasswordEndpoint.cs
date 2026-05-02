@@ -11,9 +11,15 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account.Manage;
 
-public class ChangePasswordEndpoint : IViewEndpoint
+public partial class ChangePasswordEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.ChangePassword;
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "User changed their password successfully."
+    )]
+    private static partial void LogPasswordChanged(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -73,7 +79,7 @@ public class ChangePasswordEndpoint : IViewEndpoint
                     }
 
                     await signInManager.RefreshSignInAsync(user);
-                    logger.LogInformation("User changed their password successfully.");
+                    LogPasswordChanged(logger);
                     return Inertia.Render(
                         "Users/Account/Manage/ChangePassword",
                         new { statusMessage = "Your password has been changed." }

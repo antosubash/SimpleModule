@@ -10,9 +10,18 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-public class LoginWithRecoveryCodeEndpoint : IViewEndpoint
+public partial class LoginWithRecoveryCodeEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.LoginWithRecoveryCode;
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User logged in with a recovery code.")]
+    private static partial void LogLoggedInWithRecoveryCode(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "User account locked out.")]
+    private static partial void LogUserLockedOut(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid recovery code entered.")]
+    private static partial void LogInvalidRecoveryCode(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -57,17 +66,17 @@ public class LoginWithRecoveryCodeEndpoint : IViewEndpoint
 
                     if (result.Succeeded)
                     {
-                        logger.LogInformation("User logged in with a recovery code.");
+                        LogLoggedInWithRecoveryCode(logger);
                         return TypedResults.Redirect(returnUrl ?? "/");
                     }
 
                     if (result.IsLockedOut)
                     {
-                        logger.LogWarning("User account locked out.");
+                        LogUserLockedOut(logger);
                         return TypedResults.Redirect("/Identity/Account/Lockout");
                     }
 
-                    logger.LogWarning("Invalid recovery code entered.");
+                    LogInvalidRecoveryCode(logger);
                     return Inertia.Render(
                         "Users/Account/LoginWithRecoveryCode",
                         new

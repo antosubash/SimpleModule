@@ -11,11 +11,14 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Endpoints.Users;
 
-public class DownloadPersonalDataEndpoint : IEndpoint
+public partial class DownloadPersonalDataEndpoint : IEndpoint
 {
     public const string Route =
         UsersConstants.RoutePrefix + UsersConstants.Routes.DownloadPersonalData;
     public const string Method = "POST";
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User asked for their personal data.")]
+    private static partial void LogPersonalDataRequested(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -33,7 +36,7 @@ public class DownloadPersonalDataEndpoint : IEndpoint
                         return Results.NotFound();
                     }
 
-                    logger.LogInformation("User asked for their personal data.");
+                    LogPersonalDataRequested(logger);
 
                     // Manually enumerate personal data properties
                     var personalData = new Dictionary<string, string>
