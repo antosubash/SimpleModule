@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using OpenIddict.Abstractions;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.OpenIddict.Contracts;
 
@@ -37,7 +38,7 @@ public class ClientsEndpoint : IViewEndpoint
                     return Inertia.Render("OpenIddict/OpenIddict/Clients", new { clients });
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
 
         app.MapPost(
                 Route,
@@ -69,7 +70,7 @@ public class ClientsEndpoint : IViewEndpoint
                     return TypedResults.Redirect($"/openiddict/clients/{id}/edit");
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
 
         app.MapDelete(
@@ -86,6 +87,6 @@ public class ClientsEndpoint : IViewEndpoint
                     return Results.Ok();
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
     }
 }

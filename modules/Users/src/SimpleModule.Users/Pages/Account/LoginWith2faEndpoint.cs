@@ -10,9 +10,18 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-public class LoginWith2faEndpoint : IViewEndpoint
+public partial class LoginWith2faEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.LoginWith2fa;
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User logged in with 2fa.")]
+    private static partial void LogLoggedInWith2fa(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "User account locked out.")]
+    private static partial void LogUserLockedOut(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Invalid authenticator code entered.")]
+    private static partial void LogInvalidAuthenticatorCode(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -67,17 +76,17 @@ public class LoginWith2faEndpoint : IViewEndpoint
 
                     if (result.Succeeded)
                     {
-                        logger.LogInformation("User logged in with 2fa.");
+                        LogLoggedInWith2fa(logger);
                         return TypedResults.Redirect(returnUrl ?? "/");
                     }
 
                     if (result.IsLockedOut)
                     {
-                        logger.LogWarning("User account locked out.");
+                        LogUserLockedOut(logger);
                         return TypedResults.Redirect("/Identity/Account/Lockout");
                     }
 
-                    logger.LogWarning("Invalid authenticator code entered.");
+                    LogInvalidAuthenticatorCode(logger);
                     return Inertia.Render(
                         "Users/Account/LoginWith2fa",
                         new

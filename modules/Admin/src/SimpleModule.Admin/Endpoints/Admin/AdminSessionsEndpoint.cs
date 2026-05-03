@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.Admin.Endpoints.Admin;
@@ -15,7 +16,7 @@ public class AdminSessionsEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/users/{id}/sessions")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
 
         // DELETE /admin/users/{id}/sessions/{tokenId} — Revoke individual session

@@ -10,9 +10,12 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-public class LogoutEndpoint : IViewEndpoint
+public partial class LogoutEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.Logout;
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User logged out.")]
+    private static partial void LogUserLoggedOut(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -35,7 +38,7 @@ public class LogoutEndpoint : IViewEndpoint
                 ) =>
                 {
                     await signInManager.SignOutAsync();
-                    logger.LogInformation("User logged out.");
+                    LogUserLoggedOut(logger);
                     return TypedResults.Redirect(returnUrl ?? "/");
                 }
             )

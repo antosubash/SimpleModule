@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
 
@@ -17,7 +18,7 @@ public class AdminRolesEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin/roles")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
 
         // POST / — Create role with permissions

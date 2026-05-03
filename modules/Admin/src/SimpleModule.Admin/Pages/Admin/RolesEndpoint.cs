@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
@@ -43,6 +44,6 @@ public class RolesEndpoint : IViewEndpoint
                     return Inertia.Render("Admin/Admin/Roles", new { roles = roleList });
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
     }
 }

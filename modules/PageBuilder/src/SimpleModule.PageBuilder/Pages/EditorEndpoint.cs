@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.PageBuilder.Contracts;
 
@@ -25,7 +26,7 @@ public class EditorEndpoint : IViewEndpoint
                         }
                     )
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
 
         app.MapGet(
                 PageBuilderConstants.Routes.EditPage,
@@ -54,6 +55,6 @@ public class EditorEndpoint : IViewEndpoint
                     return Inertia.Render("PageBuilder/Editor", new { page = editorPage });
                 }
             )
-            .RequireAuthorization(policy => policy.RequireRole("Admin"));
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin));
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
 
@@ -19,7 +20,7 @@ public class AdminUsersEndpoint : IEndpoint
     {
         var group = app.MapGroup("/admin/users")
             .WithTags("Admin")
-            .RequireAuthorization(policy => policy.RequireRole("Admin"))
+            .RequireAuthorization(policy => policy.RequireRole(WellKnownRoles.Admin))
             .DisableAntiforgery();
 
         // POST /admin/users — Create user

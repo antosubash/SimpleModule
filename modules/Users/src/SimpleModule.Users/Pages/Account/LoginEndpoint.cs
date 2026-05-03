@@ -15,9 +15,15 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-public class LoginEndpoint : IViewEndpoint
+public partial class LoginEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.Login;
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "User logged in.")]
+    private static partial void LogUserLoggedIn(ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "User account locked out.")]
+    private static partial void LogUserLockedOut(ILogger logger);
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -77,7 +83,7 @@ public class LoginEndpoint : IViewEndpoint
 
                     if (result.Succeeded)
                     {
-                        logger.LogInformation("User logged in.");
+                        LogUserLoggedIn(logger);
                         return TypedResults.Redirect(returnUrl ?? "/");
                     }
 
@@ -90,7 +96,7 @@ public class LoginEndpoint : IViewEndpoint
 
                     if (result.IsLockedOut)
                     {
-                        logger.LogWarning("User account locked out.");
+                        LogUserLockedOut(logger);
                         return TypedResults.Redirect("/Identity/Account/Lockout");
                     }
 
