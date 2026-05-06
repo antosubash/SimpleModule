@@ -158,6 +158,5 @@ All paths are normalized to forward slashes internally. The `StoragePathHelper` 
 
 ## Next Steps
 
-- [AI Agents](/guide/ai-agents) -- using file storage with RAG knowledge indexing
 - [Configuration](/reference/configuration) -- all storage configuration options
 - [Deployment](/advanced/deployment) -- production storage configuration

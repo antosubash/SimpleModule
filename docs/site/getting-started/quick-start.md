@@ -80,36 +80,36 @@ Open [https://localhost:5001](https://localhost:5001).
 With the CLI installed and your project running, add a new module:
 
 ```bash
-sm new module Products
+sm new module Customers
 ```
 
 This creates three projects following the standard module pattern:
 
 ```
-src/modules/Products/
+src/modules/Customers/
 ├── src/
-│   ├── Products/                       # Module implementation
-│   │   ├── Products.csproj
-│   │   ├── ProductsModule.cs           # [Module] class with ConfigureServices
-│   │   ├── ProductsConstants.cs        # Module constants
-│   │   ├── ProductsDbContext.cs        # EF Core DbContext
-│   │   ├── ProductService.cs           # Default IProductContracts implementation
+│   ├── Customers/                       # Module implementation
+│   │   ├── Customers.csproj
+│   │   ├── CustomersModule.cs           # [Module] class with ConfigureServices
+│   │   ├── CustomersConstants.cs        # Module constants
+│   │   ├── CustomersDbContext.cs        # EF Core DbContext
+│   │   ├── CustomerService.cs           # Default ICustomerContracts implementation
 │   │   ├── Endpoints/
-│   │   │   └── Products/
+│   │   │   └── Customers/
 │   │   │       └── GetAllEndpoint.cs   # Starter endpoint
 │   │   └── tsconfig.json
-│   └── Products.Contracts/             # Public interface for other modules
-│       ├── Products.Contracts.csproj
-│       ├── IProductContracts.cs        # Contract interface
-│       ├── Product.cs                  # Shared DTO with [Dto] attribute
+│   └── Customers.Contracts/             # Public interface for other modules
+│       ├── Customers.Contracts.csproj
+│       ├── ICustomerContracts.cs        # Contract interface
+│       ├── Customer.cs                  # Shared DTO with [Dto] attribute
 │       └── Events/
-│           └── ProductCreatedEvent.cs  # Contract-level event
+│           └── CustomerCreatedEvent.cs  # Contract-level event
 └── tests/
-    └── Products.Tests/                 # xUnit test project
-        ├── Products.Tests.csproj
+    └── Customers.Tests/                 # xUnit test project
+        ├── Customers.Tests.csproj
         ├── GlobalUsings.cs
-        ├── Unit/ProductServiceTests.cs
-        └── Integration/ProductsEndpointTests.cs
+        ├── Unit/CustomerServiceTests.cs
+        └── Integration/CustomersEndpointTests.cs
 ```
 
 The CLI also:
@@ -124,14 +124,14 @@ The CLI also:
 ### The Generated Module Class
 
 ```csharp
-[Module("Products", RoutePrefix = "products")]
-public sealed class ProductsModule : IModule
+[Module("Customers", RoutePrefix = "customers")]
+public sealed class CustomersModule : IModule
 {
     public static void ConfigureServices(
         IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddScoped<IProductContracts, ProductService>();
+        services.AddScoped<ICustomerContracts, CustomerService>();
     }
 }
 ```
@@ -139,14 +139,14 @@ public sealed class ProductsModule : IModule
 ### The Generated Contract
 
 ```csharp
-// In Products.Contracts
-public interface IProductContracts
+// In Customers.Contracts
+public interface ICustomerContracts
 {
-    Task<List<ProductDto>> GetAllAsync(CancellationToken cancellationToken);
+    Task<List<CustomerDto>> GetAllAsync(CancellationToken cancellationToken);
 }
 
 [Dto]
-public sealed record ProductDto(int Id, string Name, decimal Price);
+public sealed record CustomerDto(int Id, string Name, string Email);
 ```
 
 ::: info The `[Dto]` Attribute
@@ -155,17 +155,17 @@ Marking a type with `[Dto]` tells the source generator to include it in JSON ser
 
 ## Adding a Feature
 
-Add a browsing feature to the Products module:
+Add a browsing feature to the Customers module:
 
 ```bash
-sm new feature Browse --module Products
+sm new feature Browse --module Customers
 ```
 
 Run `sm new feature` with no arguments for an interactive prompt that asks for the feature name, module, HTTP method, and route.
 
 This scaffolds:
 
-- A C# endpoint class (`Endpoints/Products/BrowseEndpoint.cs`)
+- A C# endpoint class (`Endpoints/Customers/BrowseEndpoint.cs`)
 - A React page component (`Views/Browse.tsx`)
 - An entry in the page registry (`Pages/index.ts`)
 
@@ -178,11 +178,11 @@ public sealed class BrowseEndpoint : IViewEndpoint
         app.MapGet("/", Handler);
 
     private static async Task<IResult> Handler(
-        IProductContracts products,
+        ICustomerContracts customers,
         CancellationToken cancellationToken)
     {
-        var items = await products.GetAllAsync(cancellationToken);
-        return Inertia.Render("Products/Browse", new { Products = items });
+        var items = await customers.GetAllAsync(cancellationToken);
+        return Inertia.Render("Customers/Browse", new { Customers = items });
     }
 }
 ```
@@ -193,22 +193,22 @@ public sealed class BrowseEndpoint : IViewEndpoint
 import { Head } from "@inertiajs/react";
 
 interface Props {
-    products: Array<{
+    customers: Array<{
         id: number;
         name: string;
-        price: number;
+        email: string;
     }>;
 }
 
-export default function Browse({ products }: Props) {
+export default function Browse({ customers }: Props) {
     return (
         <>
-            <Head title="Products" />
-            <h1>Products</h1>
+            <Head title="Customers" />
+            <h1>Customers</h1>
             <ul>
-                {products.map((product) => (
-                    <li key={product.id}>
-                        {product.name} - ${product.price}
+                {customers.map((customer) => (
+                    <li key={customer.id}>
+                        {customer.name} - {customer.email}
                     </li>
                 ))}
             </ul>
@@ -220,14 +220,14 @@ export default function Browse({ products }: Props) {
 ### The Page Registry
 
 ```typescript
-// src/modules/Products/src/Products/Pages/index.ts
+// src/modules/Customers/src/Customers/Pages/index.ts
 export const pages: Record<string, unknown> = {
-    "Products/Browse": () => import("@/Views/Browse"),
+    "Customers/Browse": () => import("@/Views/Browse"),
 };
 ```
 
 ::: danger Don't Forget the Page Registry
-Every `IViewEndpoint` that calls `Inertia.Render("Products/Something", ...)` **must** have a matching entry in `Pages/index.ts`. If you forget, the endpoint works on the server but silently 404s on the client with no error message.
+Every `IViewEndpoint` that calls `Inertia.Render("Customers/Something", ...)` **must** have a matching entry in `Pages/index.ts`. If you forget, the endpoint works on the server but silently 404s on the client with no error message.
 
 Run `npm run validate-pages` to catch mismatches.
 :::
@@ -243,13 +243,13 @@ dotnet test
 Run tests for a specific module:
 
 ```bash
-dotnet test --filter "FullyQualifiedName~Products"
+dotnet test --filter "FullyQualifiedName~Customers"
 ```
 
 Run a single test method:
 
 ```bash
-dotnet test --filter "FullyQualifiedName~BrowseProducts_ReturnsOk"
+dotnet test --filter "FullyQualifiedName~BrowseCustomers_ReturnsOk"
 ```
 
 The test infrastructure provides:
@@ -259,14 +259,14 @@ The test infrastructure provides:
 - **`FakeDataGenerators`** -- Bogus-based fakers for all module DTOs
 
 ```csharp
-public sealed class BrowseProductsTests(
+public sealed class BrowseCustomersTests(
     SimpleModuleWebApplicationFactory factory) : IClassFixture<SimpleModuleWebApplicationFactory>
 {
     [Fact]
-    public async Task BrowseProducts_ReturnsOk()
+    public async Task BrowseCustomers_ReturnsOk()
     {
         var client = factory.CreateAuthenticatedClient();
-        var response = await client.GetAsync("/products");
+        var response = await client.GetAsync("/customers");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }
@@ -285,7 +285,7 @@ This starts:
 - The SimpleModule host app on **http://localhost:8080**
 - A **PostgreSQL** instance for production-like database behavior
 
-::: tip Development vs Production Database
+::: tip Development vs Customerion Database
 During local development with `npm run dev`, the app uses SQLite by default -- no database server needed. Docker Compose switches to PostgreSQL to match production behavior.
 :::
 
@@ -294,7 +294,7 @@ During local development with `npm run dev`, the app uses SQLite by default -- n
 | Command                  | What it does                                    |
 | ------------------------ | ----------------------------------------------- |
 | `npm run dev`            | Start backend + all frontend watchers           |
-| `npm run build`          | Production build (minified, optimized)          |
+| `npm run build`          | Customerion build (minified, optimized)          |
 | `npm run dev:build`      | Dev build (unminified, source maps)             |
 | `npm run check`          | Lint + format check (Biome)                     |
 | `npm run check:fix`      | Auto-fix lint + formatting                      |

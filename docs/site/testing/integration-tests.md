@@ -37,8 +37,8 @@ public class SimpleModuleWebApplicationFactory : WebApplicationFactory<Program>
                 opts.Provider = "Sqlite";
             });
 
-            ReplaceDbContext<ProductsDbContext>(services);
-            ReplaceDbContext<OrdersDbContext>(services);
+            ReplaceDbContext<UsersDbContext>(services);
+            ReplaceDbContext<SettingsDbContext>(services);
             // ... all module DbContexts
         });
     }
@@ -64,7 +64,7 @@ If no `NameIdentifier` claim is provided, a default `"test-user-id"` is added au
 
 ```csharp
 var client = factory.CreateAuthenticatedClient(
-    [ProductsPermissions.View, ProductsPermissions.Create]
+    [CustomersPermissions.View, CustomersPermissions.Create]
 );
 ```
 
@@ -72,7 +72,7 @@ This overload converts each permission string into a `permission` claim. You can
 
 ```csharp
 var client = factory.CreateAuthenticatedClient(
-    [ProductsPermissions.View],
+    [CustomersPermissions.View],
     new Claim(ClaimTypes.NameIdentifier, "custom-user-id")
 );
 ```
@@ -90,7 +90,7 @@ var client = factory.CreateClient();
 Claims are serialized into the `X-Test-Claims` header as semicolon-separated `type=value` pairs. The `TestAuthHandler` reads this header and builds a `ClaimsPrincipal`:
 
 ```
-X-Test-Claims: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier=test-user-id;permission=Products.View
+X-Test-Claims: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier=test-user-id;permission=Customers.View
 ```
 
 Requests without the `X-Test-Claims` header are treated as unauthenticated.
@@ -100,46 +100,46 @@ Requests without the `X-Test-Claims` header are treated as unauthenticated.
 Use `IClassFixture<SimpleModuleWebApplicationFactory>` to share the factory across tests in a class:
 
 ```csharp
-public class ProductsEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
+public class CustomersEndpointTests : IClassFixture<SimpleModuleWebApplicationFactory>
 {
     private readonly SimpleModuleWebApplicationFactory _factory;
 
-    public ProductsEndpointTests(SimpleModuleWebApplicationFactory factory)
+    public CustomersEndpointTests(SimpleModuleWebApplicationFactory factory)
     {
         _factory = factory;
     }
 
     [Fact]
-    public async Task GetAllProducts_WithViewPermission_Returns200WithProductList()
+    public async Task GetAllCustomers_WithViewPermission_Returns200WithCustomerList()
     {
         var client = _factory.CreateAuthenticatedClient(
-            [ProductsPermissions.View]);
+            [CustomersPermissions.View]);
 
-        var response = await client.GetAsync("/api/products");
+        var response = await client.GetAsync("/api/customers");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var products = await response.Content
-            .ReadFromJsonAsync<List<Product>>();
-        products.Should().NotBeEmpty();
+        var customers = await response.Content
+            .ReadFromJsonAsync<List<Customer>>();
+        customers.Should().NotBeEmpty();
     }
 
     [Fact]
-    public async Task GetAllProducts_Unauthenticated_Returns401()
+    public async Task GetAllCustomers_Unauthenticated_Returns401()
     {
         var client = _factory.CreateClient();
 
-        var response = await client.GetAsync("/api/products");
+        var response = await client.GetAsync("/api/customers");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
-    public async Task GetAllProducts_WithoutPermission_Returns403()
+    public async Task GetAllCustomers_WithoutPermission_Returns403()
     {
         var client = _factory.CreateAuthenticatedClient(
-            [ProductsPermissions.Create]); // wrong permission
+            [CustomersPermissions.Create]); // wrong permission
 
-        var response = await client.GetAsync("/api/products");
+        var response = await client.GetAsync("/api/customers");
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
@@ -152,22 +152,22 @@ public class ProductsEndpointTests : IClassFixture<SimpleModuleWebApplicationFac
 
 ```csharp
 [Fact]
-public async Task CreateProduct_WithCreatePermission_Returns201()
+public async Task CreateCustomer_WithCreatePermission_Returns201()
 {
     var client = _factory.CreateAuthenticatedClient(
-        [ProductsPermissions.Create]);
-    var request = new CreateProductRequest
+        [CustomersPermissions.Create]);
+    var request = new CreateCustomerRequest
     {
-        Name = "New Product",
-        Price = 29.99m,
+        Name = "Alice",
+        Email = "alice@example.com",
     };
 
-    var response = await client.PostAsJsonAsync("/api/products", request);
+    var response = await client.PostAsJsonAsync("/api/customers", request);
 
     response.StatusCode.Should().Be(HttpStatusCode.Created);
-    var product = await response.Content.ReadFromJsonAsync<Product>();
-    product.Should().NotBeNull();
-    product!.Name.Should().Be("New Product");
+    var customer = await response.Content.ReadFromJsonAsync<Customer>();
+    customer.Should().NotBeNull();
+    customer!.Name.Should().Be("Alice");
 }
 ```
 
@@ -175,18 +175,18 @@ public async Task CreateProduct_WithCreatePermission_Returns201()
 
 ```csharp
 [Fact]
-public async Task UpdateProduct_WithNonExistentId_Returns404()
+public async Task UpdateCustomer_WithNonExistentId_Returns404()
 {
     var client = _factory.CreateAuthenticatedClient(
-        [ProductsPermissions.Update]);
-    var request = new UpdateProductRequest
+        [CustomersPermissions.Update]);
+    var request = new UpdateCustomerRequest
     {
         Name = "Updated",
-        Price = 10.00m,
+        Email = "updated@example.com",
     };
 
     var response = await client.PutAsJsonAsync(
-        "/api/products/99999", request);
+        "/api/customers/99999", request);
 
     response.StatusCode.Should().Be(HttpStatusCode.NotFound);
 }
@@ -196,26 +196,26 @@ public async Task UpdateProduct_WithNonExistentId_Returns404()
 
 ```csharp
 [Fact]
-public async Task DeleteProduct_WithExistingId_Returns204()
+public async Task DeleteCustomer_WithExistingId_Returns204()
 {
     var client = _factory.CreateAuthenticatedClient([
-        ProductsPermissions.Create,
-        ProductsPermissions.Delete,
+        CustomersPermissions.Create,
+        CustomersPermissions.Delete,
     ]);
 
-    // Create a product first
-    var createRequest = new CreateProductRequest
+    // Create a customer first
+    var createRequest = new CreateCustomerRequest
     {
         Name = "ToDelete",
-        Price = 5.00m,
+        Email = "todelete@example.com",
     };
     var createResponse = await client.PostAsJsonAsync(
-        "/api/products", createRequest);
+        "/api/customers", createRequest);
     var created = await createResponse.Content
-        .ReadFromJsonAsync<Product>();
+        .ReadFromJsonAsync<Customer>();
 
     var response = await client.DeleteAsync(
-        $"/api/products/{created!.Id}");
+        $"/api/customers/{created!.Id}");
 
     response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 }

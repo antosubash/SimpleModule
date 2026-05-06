@@ -70,7 +70,7 @@ Framework code (`Core`, `Database`, `Generator`) is consumed from NuGet packages
 
 ```bash
 cd MyApp
-sm new module Products        # add another module under src/modules/
+sm new module Customers       # add another module under src/modules/
 dotnet build                  # build the solution
 dotnet run --project src/MyApp.Host
 ```

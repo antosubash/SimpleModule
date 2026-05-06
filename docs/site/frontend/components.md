@@ -111,17 +111,17 @@ This avoids class conflicts (e.g., `p-4` and `p-2` don't both end up in the DOM 
 
 ```tsx
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
-import type { Product } from '../types';
+import type { Customer } from '../types';
 
-export default function Browse({ products }: { products: Product[] }) {
+export default function Browse({ customers }: { customers: Customer[] }) {
   return (
-    <PageShell title="Products" description="Browse the product catalog.">
+    <PageShell title="Customers" description="Browse the customer list.">
       <div className="space-y-3">
-        {products.map((p) => (
-          <Card key={p.id}>
+        {customers.map((c) => (
+          <Card key={c.id}>
             <CardContent className="flex justify-between items-center">
-              <span className="font-medium">{p.name}</span>
-              <span className="text-text-muted">${p.price.toFixed(2)}</span>
+              <span className="font-medium">{c.name}</span>
+              <span className="text-text-muted">{c.email}</span>
             </CardContent>
           </Card>
         ))}
@@ -141,11 +141,11 @@ function CreateForm() {
     <form>
       <FieldGroup>
         <Field>
-          <Label>Product Name</Label>
-          <Input name="name" placeholder="Enter product name" />
+          <Label>Customer Name</Label>
+          <Input name="name" placeholder="Enter customer name" />
           <FieldError>Name is required</FieldError>
         </Field>
-        <Button type="submit">Create Product</Button>
+        <Button type="submit">Create Customer</Button>
       </FieldGroup>
     </form>
   );
@@ -157,13 +157,13 @@ function CreateForm() {
 ```tsx
 import { DataGridPage } from '@simplemodule/ui';
 
-export default function Manage({ products }) {
+export default function Manage({ customers }) {
   return (
     <DataGridPage
-      title="Products"
-      description="Manage your product catalog."
+      title="Customers"
+      description="Manage your customer list."
       columns={columns}
-      data={products}
+      data={customers}
     />
   );
 }

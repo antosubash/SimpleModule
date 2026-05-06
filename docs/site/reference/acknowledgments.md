@@ -63,12 +63,6 @@ SimpleModule is built on the shoulders of many excellent open-source projects. W
 | [Wolverine](https://github.com/JasperFx/wolverine) | In-process and distributed messaging used for the domain event bus and background job transport | MIT |
 | [Cronos](https://github.com/HangfireIO/Cronos) | CRON expression parser for scheduled background jobs | MIT |
 
-### AI Providers
-
-| Package | Description | License |
-|---------|-------------|---------|
-| [Anthropic.SDK](https://github.com/tghamm/Anthropic.SDK) | .NET SDK for the Anthropic Claude API, used by `SimpleModule.AI.Anthropic` | MIT |
-
 ### Cloud Storage
 
 | Package | Description | License |

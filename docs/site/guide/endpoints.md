@@ -21,9 +21,9 @@ Inside `Map`, you use ASP.NET Minimal API methods (`MapGet`, `MapPost`, `MapPut`
 
 ### Example: Full CRUD
 
-Here is the complete set of API endpoints from the Products module. The module's `RoutePrefix` is `"/api/products"`, so `"/"` maps to `/api/products` and `"/{id}"` maps to `/api/products/{id}`.
+Here is a complete set of API endpoints for a Customers module. The module's `RoutePrefix` is `"/api/customers"`, so `"/"` maps to `/api/customers` and `"/{id}"` maps to `/api/customers/{id}`.
 
-**GET all products:**
+**GET all customers:**
 
 ```csharp
 public class GetAllEndpoint : IEndpoint
@@ -31,10 +31,10 @@ public class GetAllEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/",
-                (IProductContracts productContracts) =>
-                    CrudEndpoints.GetAll(productContracts.GetAllProductsAsync)
+                (ICustomerContracts customerContracts) =>
+                    CrudEndpoints.GetAll(customerContracts.GetAllCustomersAsync)
             )
-            .RequirePermission(ProductsPermissions.View);
+            .RequirePermission(CustomersPermissions.View);
 }
 ```
 
@@ -46,11 +46,11 @@ public class GetByIdEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 "/{id}",
-                (ProductId id, IProductContracts productContracts) =>
+                (CustomerId id, ICustomerContracts customerContracts) =>
                     CrudEndpoints.GetById(
-                        () => productContracts.GetProductByIdAsync(id))
+                        () => customerContracts.GetCustomerByIdAsync(id))
             )
-            .RequirePermission(ProductsPermissions.View);
+            .RequirePermission(CustomersPermissions.View);
 }
 ```
 
@@ -63,9 +63,9 @@ public class CreateEndpoint : IEndpoint
         app.MapPost(
                 "/",
                 async (
-                    CreateProductRequest request,
-                    IValidator<CreateProductRequest> validator,
-                    IProductContracts productContracts
+                    CreateCustomerRequest request,
+                    IValidator<CreateCustomerRequest> validator,
+                    ICustomerContracts customerContracts
                 ) =>
                 {
                     var validation = await validator.ValidateAsync(request);
@@ -75,12 +75,12 @@ public class CreateEndpoint : IEndpoint
                     }
 
                     return await CrudEndpoints.Create(
-                        () => productContracts.CreateProductAsync(request),
-                        p => $"{ProductsConstants.RoutePrefix}/{p.Id}"
+                        () => customerContracts.CreateCustomerAsync(request),
+                        p => $"{CustomersConstants.RoutePrefix}/{p.Id}"
                     );
                 }
             )
-            .RequirePermission(ProductsPermissions.Create);
+            .RequirePermission(CustomersPermissions.Create);
 }
 ```
 
@@ -93,10 +93,10 @@ public class UpdateEndpoint : IEndpoint
         app.MapPut(
                 "/{id}",
                 async (
-                    ProductId id,
-                    UpdateProductRequest request,
-                    IValidator<UpdateProductRequest> validator,
-                    IProductContracts productContracts
+                    CustomerId id,
+                    UpdateCustomerRequest request,
+                    IValidator<UpdateCustomerRequest> validator,
+                    ICustomerContracts customerContracts
                 ) =>
                 {
                     var validation = await validator.ValidateAsync(request);
@@ -106,10 +106,10 @@ public class UpdateEndpoint : IEndpoint
                     }
 
                     return await CrudEndpoints.Update(
-                        () => productContracts.UpdateProductAsync(id, request));
+                        () => customerContracts.UpdateCustomerAsync(id, request));
                 }
             )
-            .RequirePermission(ProductsPermissions.Update);
+            .RequirePermission(CustomersPermissions.Update);
 }
 ```
 
@@ -121,11 +121,11 @@ public class DeleteEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
                 "/{id}",
-                (ProductId id, IProductContracts productContracts) =>
+                (CustomerId id, ICustomerContracts customerContracts) =>
                     CrudEndpoints.Delete(
-                        () => productContracts.DeleteProductAsync(id))
+                        () => customerContracts.DeleteCustomerAsync(id))
             )
-            .RequirePermission(ProductsPermissions.Delete);
+            .RequirePermission(CustomersPermissions.Delete);
 }
 ```
 
@@ -151,10 +151,10 @@ public class BrowseEndpoint : IViewEndpoint
     {
         app.MapGet(
                 "/browse",
-                async (IProductContracts products) =>
+                async (ICustomerContracts customers) =>
                     Inertia.Render(
-                        "Products/Browse",
-                        new { products = await products.GetAllProductsAsync() }
+                        "Customers/Browse",
+                        new { customers = await customers.GetAllCustomersAsync() }
                     )
             )
             .AllowAnonymous();
@@ -162,7 +162,7 @@ public class BrowseEndpoint : IViewEndpoint
 }
 ```
 
-The first argument to `Inertia.Render` is the component name (e.g., `"Products/Browse"`). This must match an entry in the module's `Pages/index.ts` registry on the frontend side.
+The first argument to `Inertia.Render` is the component name (e.g., `"Customers/Browse"`). This must match an entry in the module's `Pages/index.ts` registry on the frontend side.
 
 ### Example: Create View with Form Handling
 
@@ -173,22 +173,22 @@ public class CreateEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/create", () => Inertia.Render("Products/Create"));
+        app.MapGet("/create", () => Inertia.Render("Customers/Create"));
 
         app.MapPost(
                 "/",
                 async (
                     [FromForm] string name,
-                    [FromForm] decimal price,
-                    IProductContracts products
+                    [FromForm] string email,
+                    ICustomerContracts customers
                 ) =>
                 {
-                    var request = new CreateProductRequest
+                    var request = new CreateCustomerRequest
                     {
-                        Name = name, Price = price
+                        Name = name, Email = email
                     };
-                    await products.CreateProductAsync(request);
-                    return TypedResults.Redirect("/products/manage");
+                    await customers.CreateCustomerAsync(request);
+                    return TypedResults.Redirect("/customers/manage");
                 }
             )
             .DisableAntiforgery();
@@ -205,40 +205,40 @@ public class EditEndpoint : IViewEndpoint
     {
         app.MapGet(
             "/{id}/edit",
-            async (ProductId id, IProductContracts products) =>
+            async (CustomerId id, ICustomerContracts customers) =>
             {
-                var product = await products.GetProductByIdAsync(id);
-                if (product is null)
+                var customer = await customers.GetCustomerByIdAsync(id);
+                if (customer is null)
                     return TypedResults.NotFound();
-                return Inertia.Render("Products/Edit", new { product });
+                return Inertia.Render("Customers/Edit", new { customer });
             }
         );
 
         app.MapPost(
                 "/{id}",
                 async (
-                    ProductId id,
+                    CustomerId id,
                     [FromForm] string name,
-                    [FromForm] decimal price,
-                    IProductContracts products
+                    [FromForm] string email,
+                    ICustomerContracts customers
                 ) =>
                 {
-                    var request = new UpdateProductRequest
+                    var request = new UpdateCustomerRequest
                     {
-                        Name = name, Price = price
+                        Name = name, Email = email
                     };
-                    await products.UpdateProductAsync(id, request);
-                    return TypedResults.Redirect($"/products/{id}/edit");
+                    await customers.UpdateCustomerAsync(id, request);
+                    return TypedResults.Redirect($"/customers/{id}/edit");
                 }
             )
             .DisableAntiforgery();
 
         app.MapDelete(
             "/{id}",
-            async (ProductId id, IProductContracts products) =>
+            async (CustomerId id, ICustomerContracts customers) =>
             {
-                await products.DeleteProductAsync(id);
-                return TypedResults.Redirect("/products/manage");
+                await customers.DeleteCustomerAsync(id);
+                return TypedResults.Redirect("/customers/manage");
             }
         );
     }
@@ -246,7 +246,7 @@ public class EditEndpoint : IViewEndpoint
 ```
 
 ::: warning
-When adding a new `IViewEndpoint`, you **must** also register the corresponding component in your module's `Pages/index.ts`. The Inertia component name in `Inertia.Render("Products/Edit", ...)` must have a matching key in the pages record. If you forget, the page will silently 404 on the client side with no error.
+When adding a new `IViewEndpoint`, you **must** also register the corresponding component in your module's `Pages/index.ts`. The Inertia component name in `Inertia.Render("Customers/Edit", ...)` must have a matching key in the pages record. If you forget, the page will silently 404 on the client side with no error.
 
 Run `npm run validate-pages` to verify all endpoints have matching frontend entries.
 :::
@@ -257,8 +257,8 @@ The source generator automatically discovers all classes implementing `IEndpoint
 
 The generated code creates route groups with the appropriate prefixes:
 
-- `IEndpoint` classes are grouped under the module's `RoutePrefix` (e.g., `/api/products`) with `RequireAuthorization()` applied by default
-- `IViewEndpoint` classes are grouped under the module's `ViewPrefix` (e.g., `/products`) with `RequireAuthorization()` and `ExcludeFromDescription()` applied by default
+- `IEndpoint` classes are grouped under the module's `RoutePrefix` (e.g., `/api/customers`) with `RequireAuthorization()` applied by default
+- `IViewEndpoint` classes are grouped under the module's `ViewPrefix` (e.g., `/customers`) with `RequireAuthorization()` and `ExcludeFromDescription()` applied by default
 
 To allow anonymous access to a specific endpoint, chain `.AllowAnonymous()` after the route definition.
 
@@ -279,16 +279,16 @@ Most parameters bind automatically without any attributes:
 
 ```csharp
 // Route parameter: int id binds from {id} in the route template
-app.MapGet("/{id}", (ProductId id) => ...);
+app.MapGet("/{id}", (CustomerId id) => ...);
 
 // Query parameter: string? search binds from ?search=...
 app.MapGet("/", (string? search, int page = 1) => ...);
 
 // JSON body: complex type binds from request body for POST/PUT
-app.MapPost("/", (CreateProductRequest request) => ...);
+app.MapPost("/", (CreateCustomerRequest request) => ...);
 
 // DI services: auto-injected when registered in the container
-app.MapGet("/", (IProductContracts products) => ...);
+app.MapGet("/", (ICustomerContracts customers) => ...);
 
 // Special types: auto-bound by the framework
 app.MapGet("/", (HttpContext context, CancellationToken ct,
@@ -307,8 +307,8 @@ DI services are auto-injected. You do **not** need `[FromServices]` -- it is noi
 // CORRECT: scalar form fields require [FromForm]
 app.MapPost("/", async (
     [FromForm] string name,
-    [FromForm] decimal price,
-    IProductContracts products) => ...);
+    [FromForm] string email,
+    ICustomerContracts customers) => ...);
 ```
 
 **`[FromQuery]`** when a parameter name conflicts with a route parameter, or to rename:
@@ -359,17 +359,17 @@ app.MapPost("/", async (HttpContext context) =>
 
 ```csharp
 // API: complex type auto-binds from JSON body, service auto-injected
-app.MapPost("/", async (CreateProductRequest request,
-                        IProductContracts products) => ...);
+app.MapPost("/", async (CreateCustomerRequest request,
+                        ICustomerContracts customers) => ...);
 
 // API: route param + body + DI
-app.MapPut("/{id}", async (int id, UpdateProductRequest request,
-                           IProductContracts products) => ...);
+app.MapPut("/{id}", async (int id, UpdateCustomerRequest request,
+                           ICustomerContracts customers) => ...);
 
 // View: scalar form data requires [FromForm]
 app.MapPost("/", async ([FromForm] string name,
-                        [FromForm] decimal price,
-                        IProductContracts products) => ...);
+                        [FromForm] string email,
+                        ICustomerContracts customers) => ...);
 
 // Query: arrays bind from repeated keys
 app.MapGet("/tags", (int[] q) => $"tag1: {q[0]}, tag2: {q[1]}");
@@ -393,9 +393,9 @@ app.MapPost("/", async (HttpContext context) =>
 });
 
 // BAD: [FromServices] is unnecessary noise
-app.MapGet("/", ([FromServices] IProductContracts products) => ...);
+app.MapGet("/", ([FromServices] ICustomerContracts customers) => ...);
 // GOOD: DI services auto-inject
-app.MapGet("/", (IProductContracts products) => ...);
+app.MapGet("/", (ICustomerContracts customers) => ...);
 ```
 
 ## Validation
@@ -405,12 +405,12 @@ Request validation uses **[FluentValidation](https://docs.fluentvalidation.net/)
 ```csharp
 using FluentValidation;
 
-public sealed class CreateRequestValidator : AbstractValidator<CreateProductRequest>
+public sealed class CreateRequestValidator : AbstractValidator<CreateCustomerRequest>
 {
     public CreateRequestValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
-        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Customer name is required.");
+        RuleFor(x => x.Email).NotEmpty().EmailAddress().WithMessage("A valid email is required.");
     }
 }
 ```
@@ -418,7 +418,7 @@ public sealed class CreateRequestValidator : AbstractValidator<CreateProductRequ
 Register validators once in your module's `ConfigureServices`:
 
 ```csharp
-services.AddValidatorsFromAssemblyContaining<ProductsModule>();
+services.AddValidatorsFromAssemblyContaining<CustomersModule>();
 ```
 
 Endpoints inject `IValidator<T>`, call `ValidateAsync`, and convert failures to the framework's `ValidationException`:
@@ -438,15 +438,15 @@ if (!validation.IsValid)
 By convention, endpoints are organized in the module's directory structure:
 
 ```
-modules/Products/src/SimpleModule.Products/
+modules/Customers/src/SimpleModule.Customers/
   Endpoints/
-    Products/
+    Customers/
       GetAllEndpoint.cs
       GetByIdEndpoint.cs
       CreateEndpoint.cs
-      CreateRequestValidator.cs    # AbstractValidator<CreateProductRequest>
+      CreateRequestValidator.cs    # AbstractValidator<CreateCustomerRequest>
       UpdateEndpoint.cs
-      UpdateRequestValidator.cs    # AbstractValidator<UpdateProductRequest>
+      UpdateRequestValidator.cs    # AbstractValidator<UpdateCustomerRequest>
       DeleteEndpoint.cs
   Pages/
     BrowseEndpoint.cs              # IViewEndpoint — sits next to Browse.tsx

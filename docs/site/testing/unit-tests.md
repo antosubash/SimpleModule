@@ -8,17 +8,17 @@ Unit tests verify individual services, validators, and event handlers in isolati
 
 ## Service Tests
 
-Service tests create a real `DbContext` with an in-memory SQLite connection and test the service directly. Here is the pattern from `ProductServiceTests`:
+Service tests create a real `DbContext` with an in-memory SQLite connection and test the service directly. Here is the pattern from `CustomerServiceTests`:
 
 ```csharp
-public sealed class ProductServiceTests : IDisposable
+public sealed class CustomerServiceTests : IDisposable
 {
-    private readonly ProductsDbContext _db;
-    private readonly ProductService _sut;
+    private readonly CustomersDbContext _db;
+    private readonly CustomerService _sut;
 
-    public ProductServiceTests()
+    public CustomerServiceTests()
     {
-        var options = new DbContextOptionsBuilder<ProductsDbContext>()
+        var options = new DbContextOptionsBuilder<CustomersDbContext>()
             .UseSqlite("Data Source=:memory:")
             .Options;
         var dbOptions = Options.Create(
@@ -26,40 +26,40 @@ public sealed class ProductServiceTests : IDisposable
             {
                 ModuleConnections = new Dictionary<string, string>
                 {
-                    ["Products"] = "Data Source=:memory:",
+                    ["Customers"] = "Data Source=:memory:",
                 },
             }
         );
-        _db = new ProductsDbContext(options, dbOptions);
+        _db = new CustomersDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new ProductService(_db, new TestMessageBus(), NullLogger<ProductService>.Instance);
+        _sut = new CustomerService(_db, new TestMessageBus(), NullLogger<CustomerService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
 
     [Fact]
-    public async Task CreateProductAsync_CreatesAndReturnsProduct()
+    public async Task CreateCustomerAsync_CreatesAndReturnsCustomer()
     {
-        var request = new CreateProductRequest { Name = "Test Widget", Price = 19.99m };
+        var request = new CreateCustomerRequest { Name = "Alice", Email = "alice@example.com" };
 
-        var product = await _sut.CreateProductAsync(request);
+        var customer = await _sut.CreateCustomerAsync(request);
 
-        product.Should().NotBeNull();
-        product.Name.Should().Be("Test Widget");
-        product.Price.Should().Be(19.99m);
-        product.Id.Value.Should().BeGreaterThan(0);
+        customer.Should().NotBeNull();
+        customer.Name.Should().Be("Alice");
+        customer.Email.Should().Be("alice@example.com");
+        customer.Id.Value.Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public async Task UpdateProductAsync_WithNonExistentId_ThrowsNotFoundException()
+    public async Task UpdateCustomerAsync_WithNonExistentId_ThrowsNotFoundException()
     {
-        var request = new UpdateProductRequest { Name = "Test", Price = 10.00m };
+        var request = new UpdateCustomerRequest { Name = "Test", Email = "test@example.com" };
 
-        var act = () => _sut.UpdateProductAsync(ProductId.From(99999), request);
+        var act = () => _sut.UpdateCustomerAsync(CustomerId.From(99999), request);
 
         await act.Should().ThrowAsync<NotFoundException>()
-            .WithMessage("*Product*99999*not found*");
+            .WithMessage("*Customer*99999*not found*");
     }
 }
 ```
@@ -78,7 +78,7 @@ public class CreateRequestValidatorTests
     [Fact]
     public void Validate_WithValidRequest_ReturnsSuccess()
     {
-        var request = new CreateProductRequest { Name = "Widget", Price = 9.99m };
+        var request = new CreateCustomerRequest { Name = "Alice", Email = "alice@example.com" };
 
         var result = CreateRequestValidator.Validate(request);
 
@@ -88,7 +88,7 @@ public class CreateRequestValidatorTests
     [Fact]
     public void Validate_WithEmptyName_ReturnsError()
     {
-        var request = new CreateProductRequest { Name = "", Price = 9.99m };
+        var request = new CreateCustomerRequest { Name = "", Email = "alice@example.com" };
 
         var result = CreateRequestValidator.Validate(request);
 
@@ -105,25 +105,23 @@ The `SimpleModule.Tests.Shared` project provides pre-built Bogus fakers for all 
 ```csharp
 public static class FakeDataGenerators
 {
-    public static Faker<Product> ProductFaker { get; } =
-        new Faker<Product>()
-            .RuleFor(p => p.Id, f => ProductId.From(f.IndexFaker + 1))
-            .RuleFor(p => p.Name, f => f.Commerce.ProductName())
-            .RuleFor(p => p.Price, f => f.Finance.Amount(1, 1000));
+    public static Faker<Customer> CustomerFaker { get; } =
+        new Faker<Customer>()
+            .RuleFor(c => c.Id, f => CustomerId.From(f.IndexFaker + 1))
+            .RuleFor(c => c.Name, f => f.Person.FullName)
+            .RuleFor(c => c.Email, f => f.Internet.Email());
 
-    public static Faker<CreateProductRequest> CreateProductRequestFaker { get; } =
-        new Faker<CreateProductRequest>()
-            .RuleFor(r => r.Name, f => f.Commerce.ProductName())
-            .RuleFor(r => r.Price, f => f.Finance.Amount(1, 1000));
+    public static Faker<CreateCustomerRequest> CreateCustomerRequestFaker { get; } =
+        new Faker<CreateCustomerRequest>()
+            .RuleFor(r => r.Name, f => f.Person.FullName)
+            .RuleFor(r => r.Email, f => f.Internet.Email());
 
-    public static Faker<Order> OrderFaker { get; } =
-        new Faker<Order>()
-            .RuleFor(o => o.Id, f => OrderId.From(f.IndexFaker + 1))
-            .RuleFor(o => o.UserId, f =>
-                f.Random.Int(1, 100).ToString(CultureInfo.InvariantCulture))
-            .RuleFor(o => o.Items, f => OrderItemFaker.Generate(f.Random.Int(1, 3)))
-            .RuleFor(o => o.Total, f => f.Finance.Amount(10, 500))
-            .RuleFor(o => o.CreatedAt, f => f.Date.Recent());
+    public static Faker<User> UserFaker { get; } =
+        new Faker<User>()
+            .RuleFor(u => u.Id, f => UserId.From(f.IndexFaker + 1))
+            .RuleFor(u => u.Email, f => f.Internet.Email())
+            .RuleFor(u => u.Name, f => f.Person.FullName)
+            .RuleFor(u => u.CreatedAt, f => f.Date.Recent());
 
     // ... fakers for all module DTOs and request types
 }
@@ -132,36 +130,36 @@ public static class FakeDataGenerators
 Use them in tests to generate realistic test data:
 
 ```csharp
-var products = FakeDataGenerators.ProductFaker.Generate(5);
-var request = FakeDataGenerators.CreateProductRequestFaker.Generate();
+var customers = FakeDataGenerators.CustomerFaker.Generate(5);
+var request = FakeDataGenerators.CreateCustomerRequestFaker.Generate();
 ```
 
 ## Fake Contract Implementations
 
-For testing code that depends on other modules, the shared project provides fake implementations of contract interfaces. For example, `FakeProductContracts` implements `IProductContracts` with an in-memory list:
+For testing code that depends on other modules, the shared project provides fake implementations of contract interfaces. For example, `FakeCustomerContracts` implements `ICustomerContracts` with an in-memory list:
 
 ```csharp
-public class FakeProductContracts : IProductContracts
+public class FakeCustomerContracts : ICustomerContracts
 {
-    public List<Product> Products { get; set; } =
-        FakeDataGenerators.ProductFaker.Generate(3);
+    public List<Customer> Customers { get; set; } =
+        FakeDataGenerators.CustomerFaker.Generate(3);
 
-    public Task<IEnumerable<Product>> GetAllProductsAsync() =>
-        Task.FromResult<IEnumerable<Product>>(Products);
+    public Task<IEnumerable<Customer>> GetAllCustomersAsync() =>
+        Task.FromResult<IEnumerable<Customer>>(Customers);
 
-    public Task<Product?> GetProductByIdAsync(ProductId id) =>
-        Task.FromResult(Products.FirstOrDefault(p => p.Id == id));
+    public Task<Customer?> GetCustomerByIdAsync(CustomerId id) =>
+        Task.FromResult(Customers.FirstOrDefault(c => c.Id == id));
 
-    public Task<Product> CreateProductAsync(CreateProductRequest request)
+    public Task<Customer> CreateCustomerAsync(CreateCustomerRequest request)
     {
-        var product = new Product
+        var customer = new Customer
         {
-            Id = ProductId.From(_nextId++),
+            Id = CustomerId.From(_nextId++),
             Name = request.Name,
-            Price = request.Price,
+            Email = request.Email,
         };
-        Products.Add(product);
-        return Task.FromResult(product);
+        Customers.Add(customer);
+        return Task.FromResult(customer);
     }
 
     // ... other CRUD methods
@@ -171,8 +169,8 @@ public class FakeProductContracts : IProductContracts
 These fakes are useful when a module under test depends on another module's contracts. Rather than spinning up the full dependency, inject the fake:
 
 ```csharp
-var fakeProducts = new FakeProductContracts();
-var service = new OrderService(fakeProducts, db, logger);
+var fakeCustomers = new FakeCustomerContracts();
+var service = new InvoiceService(fakeCustomers, db, logger);
 ```
 
 ## Testing Event Handlers
@@ -181,15 +179,15 @@ Wolverine handlers are plain classes — instantiate them directly and call `Han
 
 ```csharp
 [Fact]
-public async Task CreateOrderAsync_PublishesOrderCreatedEvent()
+public async Task CreateCustomerAsync_PublishesCustomerCreatedEvent()
 {
     var bus = Substitute.For<IMessageBus>();
-    var service = new OrderService(_db, _users, _products, bus, _logger);
-    var request = FakeDataGenerators.CreateOrderRequestFaker.Generate();
+    var service = new CustomerService(_db, bus, _logger);
+    var request = FakeDataGenerators.CreateCustomerRequestFaker.Generate();
 
-    await service.CreateOrderAsync(request);
+    await service.CreateCustomerAsync(request);
 
-    await bus.Received().PublishAsync(Arg.Any<OrderCreatedEvent>());
+    await bus.Received().PublishAsync(Arg.Any<CustomerCreatedEvent>());
 }
 ```
 

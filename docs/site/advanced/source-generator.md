@@ -59,7 +59,6 @@ The generator scans both referenced assemblies and the current compilation for:
 | **Permission Classes** | Sealed classes implementing `IModulePermissions` |
 | **Feature Flag Classes** | Classes implementing `IModuleFeatures` |
 | **Module Options** | `[ModuleOptions]`-annotated classes |
-| **Agents** | `[Agent]` classes, `IAgentToolProvider` implementations, knowledge sources |
 | **Interceptors** | Classes implementing `ISaveChangesInterceptor` |
 | **Vogen Value Objects** | Types with Vogen value object markers |
 
@@ -80,11 +79,7 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<InterceptorInfoRecord> Interceptors,
     ImmutableArray<VogenValueObjectRecord> VogenValueObjects,
     ImmutableArray<ModuleOptionsRecord> ModuleOptions,
-    ImmutableArray<AgentDefinitionRecord> AgentDefinitions,
-    ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
-    ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
     ImmutableArray<string> ContractsAssemblyNames,
-    bool HasAgentsAssembly,
     string HostAssemblyName
 );
 ```
@@ -110,8 +105,7 @@ Discovery/
 │   ├── PermissionFeatureFinder.cs
 │   ├── DbContextFinder.cs
 │   ├── InterceptorFinder.cs
-│   ├── VogenFinder.cs
-│   └── AgentFinder.cs
+│   └── VogenFinder.cs
 └── Records/                    # equatable value-type records used in DiscoveryData
 ```
 
@@ -131,7 +125,6 @@ The generator feeds `DiscoveryData` through a pipeline of **emitters**, each res
 | `SettingsExtensionsEmitter` | `SettingsExtensions.g.cs` | Collects settings definitions from modules that implement `ConfigureSettings` |
 | `ModuleOptionsEmitter` | `ModuleOptionsExtensions.g.cs` | Binds `[ModuleOptions]` classes to configuration sections |
 | `ContractRegistryEmitter` | `ContractRegistry.g.cs` | Registers each `I{Name}Contracts` against its implementation |
-| `AgentExtensionsEmitter` | `AgentExtensions.g.cs` | Registers agents, tool providers, and knowledge sources (when the Agents framework assembly is referenced) |
 | `LocalizationExtensionsEmitter` | `LocalizationExtensions.g.cs` | Aggregates localization resources across modules |
 | `RoutesEmitter` | `ModuleRoutes.g.cs` | Strongly-typed C# route constants |
 | `TypeScriptRoutesEmitter` | `TypeScriptRoutes.g.cs` | Embedded TypeScript route constants for the ClientApp |
@@ -214,7 +207,6 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
         new ValueConverterConventionsEmitter(),
         new DbContextRegistryEmitter(),
         new ContractRegistryEmitter(),
-        new AgentExtensionsEmitter(),
         new LocalizationExtensionsEmitter(),
         new RoutesEmitter(),
         new TypeScriptRoutesEmitter(),
@@ -252,8 +244,8 @@ The generator performs **topological sorting** of modules based on their contrac
 // Phase 1: No dependencies
 ((IModule)s_Dashboard_DashboardModule).ConfigureServices(services, configuration);
 
-// Phase 2: Depends on Products
-((IModule)s_Orders_OrdersModule).ConfigureServices(services, configuration);
+// Phase 2: Depends on Users
+((IModule)s_Admin_AdminModule).ConfigureServices(services, configuration);
 ```
 
 ## Debugging Tips

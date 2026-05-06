@@ -15,7 +15,7 @@ Modules communicate without direct references by publishing events. SimpleModule
 ```csharp
 using SimpleModule.Core.Events;
 
-public sealed record OrderCreatedEvent(OrderId OrderId, UserId UserId, decimal Total) : IEvent;
+public sealed record CustomerCreatedEvent(CustomerId CustomerId, UserId CreatedBy, string Email) : IEvent;
 ```
 
 ### Publishing with IMessageBus
@@ -25,22 +25,22 @@ Inject Wolverine's `IMessageBus` and call `PublishAsync`:
 ```csharp
 using Wolverine;
 
-public sealed partial class OrderService(
-    OrdersDbContext db,
+public sealed partial class CustomerService(
+    CustomersDbContext db,
     IMessageBus bus,
-    ILogger<OrderService> logger
-) : IOrderContracts
+    ILogger<CustomerService> logger
+) : ICustomerContracts
 {
-    public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
+    public async Task<Customer> CreateCustomerAsync(CreateCustomerRequest request)
     {
-        var order = new Order { UserId = request.UserId, Total = request.Total };
+        var customer = new Customer { Name = request.Name, Email = request.Email };
 
-        db.Orders.Add(order);
+        db.Customers.Add(customer);
         await db.SaveChangesAsync();
 
-        await bus.PublishAsync(new OrderCreatedEvent(order.Id, order.UserId, order.Total));
+        await bus.PublishAsync(new CustomerCreatedEvent(customer.Id, request.CreatedBy, customer.Email));
 
-        return order;
+        return customer;
     }
 }
 ```
@@ -56,10 +56,10 @@ If two services form a cycle through the bus (for example, a settings service wh
 Wolverine discovers handlers by **naming convention**: a public class whose type or name ends with `Handler` / `Consumer`, with a method named `Handle` / `Consume` / `HandleAsync` that takes the event as its first parameter. No interface, no DI registration.
 
 ```csharp
-public sealed class OrderCreatedNotificationHandler(INotificationService notifications)
+public sealed class CustomerCreatedNotificationHandler(INotificationService notifications)
 {
-    public Task Handle(OrderCreatedEvent evt, CancellationToken ct) =>
-        notifications.SendAsync(evt.UserId, $"Order {evt.OrderId} confirmed", ct);
+    public Task Handle(CustomerCreatedEvent evt, CancellationToken ct) =>
+        notifications.SendAsync(evt.CreatedBy, $"Customer {evt.CustomerId} created", ct);
 }
 ```
 
@@ -70,15 +70,15 @@ Handlers resolve through the request scope, so injected services (DbContext, log
 Entities that derive from `AuditableAggregateRoot` (or implement `IHasDomainEvents`) can queue events that are flushed via `IMessageBus` after `SaveChangesAsync()` succeeds. This keeps write logic transactional: events only fire if the save commits.
 
 ```csharp
-public sealed class Order : AuditableAggregateRoot<OrderId>
+public sealed class Customer : AuditableAggregateRoot<CustomerId>
 {
-    public decimal Total { get; set; }
-    public OrderStatus Status { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public CustomerStatus Status { get; set; }
 
-    public void Confirm()
+    public void Activate()
     {
-        Status = OrderStatus.Confirmed;
-        AddDomainEvent(new OrderConfirmedEvent(Id, Total));
+        Status = CustomerStatus.Active;
+        AddDomainEvent(new CustomerActivatedEvent(Id, Name));
     }
 }
 ```
@@ -102,7 +102,7 @@ Wolverine is running in-memory here. For work that must survive a restart, use t
 
 ### Keep Handlers Focused
 
-A handler should do one thing. If `OrderCreatedEvent` needs to send an email, update a search index, and invalidate caches, write three handlers. Wolverine invokes them independently.
+A handler should do one thing. If `CustomerCreatedEvent` needs to send a welcome email, update a search index, and invalidate caches, write three handlers. Wolverine invokes them independently.
 
 ### Be Idempotent
 
@@ -113,18 +113,18 @@ An event may be replayed (retry logic, re-run of a background job). Handlers sho
 Audit logging, metrics, cache invalidation, and similar cross-cutting concerns should catch their own exceptions. Reserve rethrown exceptions for failures the caller actually needs to know about.
 
 ```csharp
-public sealed class OrderMetricsHandler(IMetrics metrics, ILogger<OrderMetricsHandler> logger)
+public sealed class CustomerMetricsHandler(IMetrics metrics, ILogger<CustomerMetricsHandler> logger)
 {
-    public Task Handle(OrderCreatedEvent evt, CancellationToken ct)
+    public Task Handle(CustomerCreatedEvent evt, CancellationToken ct)
     {
         try
         {
-            metrics.Increment("orders.created", tags: new { evt.UserId });
+            metrics.Increment("customers.created", tags: new { evt.CreatedBy });
         }
 #pragma warning disable CA1031
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to record order metrics");
+            logger.LogWarning(ex, "Failed to record customer metrics");
         }
 #pragma warning restore CA1031
         return Task.CompletedTask;
@@ -144,13 +144,13 @@ Instantiate the handler directly. No DI container is required.
 
 ```csharp
 [Fact]
-public async Task OrderCreatedNotificationHandler_sends_confirmation()
+public async Task CustomerCreatedNotificationHandler_sends_confirmation()
 {
     var notifications = Substitute.For<INotificationService>();
-    var handler = new OrderCreatedNotificationHandler(notifications);
+    var handler = new CustomerCreatedNotificationHandler(notifications);
 
     await handler.Handle(
-        new OrderCreatedEvent(OrderId.From(1), UserId.From(42), 99.99m),
+        new CustomerCreatedEvent(CustomerId.From(1), UserId.From(42), "test@example.com"),
         CancellationToken.None
     );
 
@@ -164,14 +164,16 @@ In service-level tests, substitute `IMessageBus` and assert on the recorded call
 
 ```csharp
 [Fact]
-public async Task CreateOrder_publishes_order_created_event()
+public async Task CreateCustomer_publishes_customer_created_event()
 {
     var bus = Substitute.For<IMessageBus>();
-    var service = new OrderService(db, bus, NullLogger<OrderService>.Instance);
+    var service = new CustomerService(db, bus, NullLogger<CustomerService>.Instance);
 
-    var order = await service.CreateOrderAsync(new CreateOrderRequest(UserId.From(42), 99.99m));
+    var customer = await service.CreateCustomerAsync(
+        new CreateCustomerRequest("Alice", "alice@example.com") { CreatedBy = UserId.From(42) }
+    );
 
-    await bus.Received().PublishAsync(Arg.Is<OrderCreatedEvent>(e => e.OrderId == order.Id));
+    await bus.Received().PublishAsync(Arg.Is<CustomerCreatedEvent>(e => e.CustomerId == customer.Id));
 }
 ```
 

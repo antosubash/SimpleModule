@@ -29,15 +29,6 @@ COPY framework/SimpleModule.Storage/*.csproj framework/SimpleModule.Storage/
 COPY framework/SimpleModule.Storage.Local/*.csproj framework/SimpleModule.Storage.Local/
 COPY framework/SimpleModule.Storage.Azure/*.csproj framework/SimpleModule.Storage.Azure/
 COPY framework/SimpleModule.Storage.S3/*.csproj framework/SimpleModule.Storage.S3/
-COPY framework/SimpleModule.Agents/*.csproj framework/SimpleModule.Agents/
-COPY framework/SimpleModule.AI.Anthropic/*.csproj framework/SimpleModule.AI.Anthropic/
-COPY framework/SimpleModule.AI.AzureOpenAI/*.csproj framework/SimpleModule.AI.AzureOpenAI/
-COPY framework/SimpleModule.AI.Ollama/*.csproj framework/SimpleModule.AI.Ollama/
-COPY framework/SimpleModule.AI.OpenAI/*.csproj framework/SimpleModule.AI.OpenAI/
-COPY framework/SimpleModule.Rag/*.csproj framework/SimpleModule.Rag/
-COPY framework/SimpleModule.Rag.StructuredRag/*.csproj framework/SimpleModule.Rag.StructuredRag/
-COPY framework/SimpleModule.Rag.VectorStore.InMemory/*.csproj framework/SimpleModule.Rag.VectorStore.InMemory/
-COPY framework/SimpleModule.Rag.VectorStore.Postgres/*.csproj framework/SimpleModule.Rag.VectorStore.Postgres/
 
 # ServiceDefaults
 COPY SimpleModule.ServiceDefaults/*.csproj SimpleModule.ServiceDefaults/
@@ -54,44 +45,26 @@ COPY modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/*.csproj modules/O
 COPY modules/OpenIddict/src/SimpleModule.OpenIddict/*.csproj modules/OpenIddict/src/SimpleModule.OpenIddict/
 COPY modules/Permissions/src/SimpleModule.Permissions.Contracts/*.csproj modules/Permissions/src/SimpleModule.Permissions.Contracts/
 COPY modules/Permissions/src/SimpleModule.Permissions/*.csproj modules/Permissions/src/SimpleModule.Permissions/
-COPY modules/Products/src/SimpleModule.Products.Contracts/*.csproj modules/Products/src/SimpleModule.Products.Contracts/
-COPY modules/Products/src/SimpleModule.Products/*.csproj modules/Products/src/SimpleModule.Products/
-COPY modules/Orders/src/SimpleModule.Orders.Contracts/*.csproj modules/Orders/src/SimpleModule.Orders.Contracts/
-COPY modules/Orders/src/SimpleModule.Orders/*.csproj modules/Orders/src/SimpleModule.Orders/
 COPY modules/Admin/src/SimpleModule.Admin.Contracts/*.csproj modules/Admin/src/SimpleModule.Admin.Contracts/
 COPY modules/Admin/src/SimpleModule.Admin/*.csproj modules/Admin/src/SimpleModule.Admin/
-COPY modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/*.csproj modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/
-COPY modules/PageBuilder/src/SimpleModule.PageBuilder/*.csproj modules/PageBuilder/src/SimpleModule.PageBuilder/
 COPY modules/Settings/src/SimpleModule.Settings.Contracts/*.csproj modules/Settings/src/SimpleModule.Settings.Contracts/
 COPY modules/Settings/src/SimpleModule.Settings/*.csproj modules/Settings/src/SimpleModule.Settings/
 COPY modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/*.csproj modules/AuditLogs/src/SimpleModule.AuditLogs.Contracts/
 COPY modules/AuditLogs/src/SimpleModule.AuditLogs/*.csproj modules/AuditLogs/src/SimpleModule.AuditLogs/
-COPY modules/Marketplace/src/SimpleModule.Marketplace.Contracts/*.csproj modules/Marketplace/src/SimpleModule.Marketplace.Contracts/
-COPY modules/Marketplace/src/SimpleModule.Marketplace/*.csproj modules/Marketplace/src/SimpleModule.Marketplace/
 COPY modules/FileStorage/src/SimpleModule.FileStorage.Contracts/*.csproj modules/FileStorage/src/SimpleModule.FileStorage.Contracts/
 COPY modules/FileStorage/src/SimpleModule.FileStorage/*.csproj modules/FileStorage/src/SimpleModule.FileStorage/
 COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/*.csproj modules/FeatureFlags/src/SimpleModule.FeatureFlags.Contracts/
 COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags/*.csproj modules/FeatureFlags/src/SimpleModule.FeatureFlags/
 COPY modules/Tenants/src/SimpleModule.Tenants.Contracts/*.csproj modules/Tenants/src/SimpleModule.Tenants.Contracts/
 COPY modules/Tenants/src/SimpleModule.Tenants/*.csproj modules/Tenants/src/SimpleModule.Tenants/
-COPY modules/Agents/src/SimpleModule.Agents.Contracts/*.csproj modules/Agents/src/SimpleModule.Agents.Contracts/
-COPY modules/Agents/src/SimpleModule.Agents.Module/*.csproj modules/Agents/src/SimpleModule.Agents.Module/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/*.csproj modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
 COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modules/Localization/src/SimpleModule.Localization.Contracts/
 COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
-COPY modules/Rag/src/SimpleModule.Rag.Contracts/*.csproj modules/Rag/src/SimpleModule.Rag.Contracts/
-COPY modules/Rag/src/SimpleModule.Rag.Module/*.csproj modules/Rag/src/SimpleModule.Rag.Module/
 COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/SimpleModule.Email.Contracts/
 COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
-COPY modules/Chat/src/SimpleModule.Chat.Contracts/*.csproj modules/Chat/src/SimpleModule.Chat.Contracts/
-COPY modules/Chat/src/SimpleModule.Chat/*.csproj modules/Chat/src/SimpleModule.Chat/
-COPY modules/Map/src/SimpleModule.Map.Contracts/*.csproj modules/Map/src/SimpleModule.Map.Contracts/
-COPY modules/Map/src/SimpleModule.Map/*.csproj modules/Map/src/SimpleModule.Map/
-COPY modules/Datasets/src/SimpleModule.Datasets.Contracts/*.csproj modules/Datasets/src/SimpleModule.Datasets.Contracts/
-COPY modules/Datasets/src/SimpleModule.Datasets/*.csproj modules/Datasets/src/SimpleModule.Datasets/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
@@ -110,19 +83,13 @@ COPY modules/AuditLogs/src/SimpleModule.AuditLogs/package.json modules/AuditLogs
 COPY modules/Dashboard/src/SimpleModule.Dashboard/package.json modules/Dashboard/src/SimpleModule.Dashboard/
 COPY modules/FeatureFlags/src/SimpleModule.FeatureFlags/package.json modules/FeatureFlags/src/SimpleModule.FeatureFlags/
 COPY modules/FileStorage/src/SimpleModule.FileStorage/package.json modules/FileStorage/src/SimpleModule.FileStorage/
-COPY modules/Marketplace/src/SimpleModule.Marketplace/package.json modules/Marketplace/src/SimpleModule.Marketplace/
 COPY modules/OpenIddict/src/SimpleModule.OpenIddict/package.json modules/OpenIddict/src/SimpleModule.OpenIddict/
-COPY modules/Orders/src/SimpleModule.Orders/package.json modules/Orders/src/SimpleModule.Orders/
-COPY modules/PageBuilder/src/SimpleModule.PageBuilder/package.json modules/PageBuilder/src/SimpleModule.PageBuilder/
-COPY modules/Products/src/SimpleModule.Products/package.json modules/Products/src/SimpleModule.Products/
 COPY modules/Settings/src/SimpleModule.Settings/package.json modules/Settings/src/SimpleModule.Settings/
 COPY modules/Tenants/src/SimpleModule.Tenants/package.json modules/Tenants/src/SimpleModule.Tenants/
 COPY modules/Users/src/SimpleModule.Users/package.json modules/Users/src/SimpleModule.Users/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
 COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleModule.Email/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
-COPY modules/Chat/src/SimpleModule.Chat/package.json modules/Chat/src/SimpleModule.Chat/
-COPY modules/Map/src/SimpleModule.Map/package.json modules/Map/src/SimpleModule.Map/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
 COPY packages/SimpleModule.TsConfig/package.json packages/SimpleModule.TsConfig/

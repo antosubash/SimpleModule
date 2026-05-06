@@ -11,12 +11,12 @@ Every module that renders UI must maintain a **pages registry** -- a `Pages/inde
 Each module exports a `pages` record from `Pages/index.ts`:
 
 ```ts
-// modules/Products/src/SimpleModule.Products/Pages/index.ts
+// modules/Customers/src/SimpleModule.Customers/Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('./Browse'),
-  'Products/Manage': () => import('./Manage'),
-  'Products/Create': () => import('./Create'),
-  'Products/Edit': () => import('./Edit'),
+  'Customers/Browse': () => import('./Browse'),
+  'Customers/Manage': () => import('./Manage'),
+  'Customers/Create': () => import('./Create'),
+  'Customers/Edit': () => import('./Edit'),
 };
 ```
 
@@ -27,17 +27,17 @@ Each key matches the component name passed to `Inertia.Render()` on the server s
 On the backend, view endpoints call `Inertia.Render` with a component name:
 
 ```csharp
-// modules/Products/src/SimpleModule.Products/Pages/BrowseEndpoint.cs
+// modules/Customers/src/SimpleModule.Customers/Pages/BrowseEndpoint.cs
 public class BrowseEndpoint : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(
                 "/browse",
-                async (IProductContracts products) =>
+                async (ICustomerContracts customers) =>
                     Inertia.Render(
-                        "Products/Browse",  // <-- This key must exist in Pages/index.ts
-                        new { products = await products.GetAllProductsAsync() }
+                        "Customers/Browse",  // <-- This key must exist in Pages/index.ts
+                        new { customers = await customers.GetAllCustomersAsync() }
                     )
             )
             .AllowAnonymous();
@@ -45,14 +45,14 @@ public class BrowseEndpoint : IViewEndpoint
 }
 ```
 
-The string `"Products/Browse"` is the key that `resolvePage` looks up in the module's `pages` record. If the key does not exist, `resolvePage` throws an explicit error and the ClientApp surfaces a toast notification.
+The string `"Customers/Browse"` is the key that `resolvePage` looks up in the module's `pages` record. If the key does not exist, `resolvePage` throws an explicit error and the ClientApp surfaces a toast notification.
 
 ::: danger Missing entries throw an explicit error
-If you add a new `IViewEndpoint` with `Inertia.Render("Products/Something")` but forget to add a matching entry in `Pages/index.ts`:
+If you add a new `IViewEndpoint` with `Inertia.Render("Customers/Something")` but forget to add a matching entry in `Pages/index.ts`:
 
 - The endpoint compiles and runs fine on the server
 - Navigating to that page causes `resolvePage` to throw:
-  `Error: Page "Products/Something" not found in module "Products". Available pages: ...`
+  `Error: Page "Customers/Something" not found in module "Customers". Available pages: ...`
 - The ClientApp surfaces this via a toast notification (not a silent 404), and the error is logged to the browser console
 
 **Always add the pages registry entry immediately when creating a new view endpoint** -- the error is visible, but it still breaks navigation for users.
@@ -75,8 +75,8 @@ For every `IViewEndpoint` that calls `Inertia.Render("ModuleName/PageName", ...)
    {
        public void Map(IEndpointRouteBuilder app)
        {
-           app.MapGet("/{id}", (int id, IProductContracts products) =>
-               Inertia.Render("Products/Details", new { product = ... }));
+           app.MapGet("/{id}", (int id, ICustomerContracts customers) =>
+               Inertia.Render("Customers/Details", new { customer = ... }));
        }
    }
    ```
@@ -84,13 +84,13 @@ For every `IViewEndpoint` that calls `Inertia.Render("ModuleName/PageName", ...)
 2. **Create the React component** in the module's `Pages/` directory:
 
    ```tsx
-   // modules/Products/src/SimpleModule.Products/Pages/Details.tsx
+   // modules/Customers/src/SimpleModule.Customers/Pages/Details.tsx
    import { PageShell } from '@simplemodule/ui';
-   import type { Product } from '../types';
+   import type { Customer } from '../types';
 
-   export default function Details({ product }: { product: Product }) {
+   export default function Details({ customer }: { customer: Customer }) {
      return (
-       <PageShell title={product.name}>
+       <PageShell title={customer.name}>
          {/* ... */}
        </PageShell>
      );
@@ -101,11 +101,11 @@ For every `IViewEndpoint` that calls `Inertia.Render("ModuleName/PageName", ...)
 
    ```ts
    export const pages: Record<string, unknown> = {
-     'Products/Browse': () => import('./Browse'),
-     'Products/Manage': () => import('./Manage'),
-     'Products/Create': () => import('./Create'),
-     'Products/Edit': () => import('./Edit'),
-     'Products/Details': () => import('./Details'), // [!code ++]
+     'Customers/Browse': () => import('./Browse'),
+     'Customers/Manage': () => import('./Manage'),
+     'Customers/Create': () => import('./Create'),
+     'Customers/Edit': () => import('./Edit'),
+     'Customers/Details': () => import('./Details'), // [!code ++]
    };
    ```
 
@@ -146,8 +146,8 @@ On failure:
 ```
 === Pages Registry Validation ===
 
-Module: Products
-   Missing in Pages/index.ts: Products/Details
+Module: Customers
+   Missing in Pages/index.ts: Customers/Details
 
 Found 1 module(s) with mismatches
 Please update the Pages/index.ts files to match C# endpoints.
@@ -170,10 +170,10 @@ The pages registry supports both lazy and eager component imports:
 
 ```ts
 // Lazy (recommended) -- component is loaded on demand
-'Products/Browse': () => import('./Browse'),
+'Customers/Browse': () => import('./Browse'),
 
 // Eager -- component is bundled into the pages.js file
-'Products/Browse': Browse,
+'Customers/Browse': Browse,
 ```
 
 Lazy imports are recommended because they allow Vite to code-split within the module bundle. The `resolvePage` function handles both patterns transparently.
