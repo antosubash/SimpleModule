@@ -24,7 +24,7 @@ test.describe('AuditLogs flows', () => {
     const browse = new AuditLogsBrowsePage(page);
 
     // Seed an audit entry by making an API call
-    await request.get('/api/products');
+    await request.get('/api/admin/users');
 
     await browse.goto();
     await expect(browse.heading).toBeVisible();
@@ -43,7 +43,7 @@ test.describe('AuditLogs flows', () => {
 
   test('export buttons trigger downloads', async ({ page, request }) => {
     // Seed an audit entry
-    await request.get('/api/products');
+    await request.get('/api/admin/users');
 
     const browse = new AuditLogsBrowsePage(page);
     await browse.goto();
