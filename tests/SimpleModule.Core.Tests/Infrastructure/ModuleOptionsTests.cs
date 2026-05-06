@@ -4,9 +4,6 @@ using Microsoft.Extensions.Options;
 using SimpleModule.Admin;
 using SimpleModule.AuditLogs;
 using SimpleModule.FileStorage;
-using SimpleModule.Orders;
-using SimpleModule.PageBuilder;
-using SimpleModule.Products;
 using SimpleModule.Settings;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users;
@@ -26,16 +23,6 @@ public class ModuleOptionsTests
     public ModuleOptionsTests(SimpleModuleWebApplicationFactory factory) => _factory = factory;
 
     // ── Default values ─────────────────────────────────────────────────
-
-    [Fact]
-    public void ProductsModuleOptions_IsRegistered_WithDefaults()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var options = scope.ServiceProvider.GetRequiredService<IOptions<ProductsModuleOptions>>();
-
-        options.Value.DefaultPageSize.Should().Be(10);
-        options.Value.MaxPageSize.Should().Be(100);
-    }
 
     [Fact]
     public void AuditLogsModuleOptions_IsRegistered_WithDefaults()
@@ -71,18 +58,6 @@ public class ModuleOptionsTests
     }
 
     [Fact]
-    public void PageBuilderModuleOptions_IsRegistered_WithDefaults()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var options = scope.ServiceProvider.GetRequiredService<
-            IOptions<PageBuilderModuleOptions>
-        >();
-
-        options.Value.MaxTitleLength.Should().Be(200);
-        options.Value.MaxSlugLength.Should().Be(200);
-    }
-
-    [Fact]
     public void UsersModuleOptions_IsRegistered_WithDefaults()
     {
         using var scope = _factory.Services.CreateScope();
@@ -106,16 +81,6 @@ public class ModuleOptionsTests
         options.Value.CacheDuration.Should().Be(TimeSpan.FromSeconds(60));
     }
 
-    [Fact]
-    public void OrdersModuleOptions_IsRegistered_WithDefaults()
-    {
-        using var scope = _factory.Services.CreateScope();
-        var options = scope.ServiceProvider.GetRequiredService<IOptions<OrdersModuleOptions>>();
-
-        options.Value.DefaultPageSize.Should().Be(10);
-        options.Value.MaxPageSize.Should().Be(100);
-    }
-
     // ── Override test ──────────────────────────────────────────────────
 
     [Fact]
@@ -126,28 +91,19 @@ public class ModuleOptionsTests
         var services = new ServiceCollection();
 
         // Register defaults (what the generator does)
-        services.AddOptions<ProductsModuleOptions>();
         services.AddOptions<AuditLogsModuleOptions>();
         services.AddOptions<AdminModuleOptions>();
-        services.AddOptions<OrdersModuleOptions>();
         services.AddOptions<UsersModuleOptions>();
         services.AddOptions<SettingsModuleOptions>();
         services.AddOptions<FileStorageModuleOptions>();
-        services.AddOptions<PageBuilderModuleOptions>();
 
-        // Override (what the host app does via ConfigureProducts, etc.)
-        services.Configure<ProductsModuleOptions>(o =>
-        {
-            o.DefaultPageSize = 25;
-            o.MaxPageSize = 50;
-        });
+        // Override (what the host app does via services.Configure<T>(...))
         services.Configure<AuditLogsModuleOptions>(o =>
         {
             o.WriterBatchSize = 200;
             o.RetentionDays = 30;
         });
         services.Configure<AdminModuleOptions>(o => o.UsersPageSize = 50);
-        services.Configure<OrdersModuleOptions>(o => o.DefaultPageSize = 20);
         services.Configure<UsersModuleOptions>(o =>
         {
             o.PasswordMinLength = 12;
@@ -159,18 +115,8 @@ public class ModuleOptionsTests
             o.MaxFileSizeMb = 100;
             o.AllowedExtensions = ".pdf,.zip";
         });
-        services.Configure<PageBuilderModuleOptions>(o =>
-        {
-            o.MaxTitleLength = 300;
-            o.MaxSlugLength = 300;
-        });
 
         using var sp = services.BuildServiceProvider();
-
-        sp.GetRequiredService<IOptions<ProductsModuleOptions>>()
-            .Value.DefaultPageSize.Should()
-            .Be(25);
-        sp.GetRequiredService<IOptions<ProductsModuleOptions>>().Value.MaxPageSize.Should().Be(50);
 
         sp.GetRequiredService<IOptions<AuditLogsModuleOptions>>()
             .Value.WriterBatchSize.Should()
@@ -180,10 +126,6 @@ public class ModuleOptionsTests
             .Be(30);
 
         sp.GetRequiredService<IOptions<AdminModuleOptions>>().Value.UsersPageSize.Should().Be(50);
-
-        sp.GetRequiredService<IOptions<OrdersModuleOptions>>()
-            .Value.DefaultPageSize.Should()
-            .Be(20);
 
         sp.GetRequiredService<IOptions<UsersModuleOptions>>()
             .Value.PasswordMinLength.Should()
@@ -202,12 +144,5 @@ public class ModuleOptionsTests
         sp.GetRequiredService<IOptions<FileStorageModuleOptions>>()
             .Value.AllowedExtensions.Should()
             .Be(".pdf,.zip");
-
-        sp.GetRequiredService<IOptions<PageBuilderModuleOptions>>()
-            .Value.MaxTitleLength.Should()
-            .Be(300);
-        sp.GetRequiredService<IOptions<PageBuilderModuleOptions>>()
-            .Value.MaxSlugLength.Should()
-            .Be(300);
     }
 }

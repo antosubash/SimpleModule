@@ -13,10 +13,7 @@ using SimpleModule.FileStorage;
 using SimpleModule.Host;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
-using SimpleModule.Orders;
-using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
-using SimpleModule.Products;
 using SimpleModule.Settings;
 using SimpleModule.Tenants;
 using SimpleModule.Users;
@@ -40,9 +37,6 @@ public partial class LoadTestWebApplicationFactory
 
             ReplaceWithFileDb<HostDbContext>(services, connectionString, useOpenIddict: true);
             ReplaceWithFileDb<UsersDbContext>(services, connectionString);
-            ReplaceWithFileDb<OrdersDbContext>(services, connectionString);
-            ReplaceWithFileDb<ProductsDbContext>(services, connectionString);
-            ReplaceWithFileDb<PageBuilderDbContext>(services, connectionString);
             ReplaceWithFileDb<PermissionsDbContext>(services, connectionString);
             ReplaceWithFileDb<SettingsDbContext>(services, connectionString);
             ReplaceWithFileDb<AuditLogsDbContext>(services, connectionString);

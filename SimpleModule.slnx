@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Configurations>
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
@@ -14,15 +14,6 @@
     <Project Path="framework/SimpleModule.Storage.Local/SimpleModule.Storage.Local.csproj" />
     <Project Path="framework/SimpleModule.Storage.Azure/SimpleModule.Storage.Azure.csproj" />
     <Project Path="framework/SimpleModule.Storage.S3/SimpleModule.Storage.S3.csproj" />
-    <Project Path="framework/SimpleModule.Rag/SimpleModule.Rag.csproj" />
-    <Project Path="framework/SimpleModule.Rag.StructuredRag/SimpleModule.Rag.StructuredRag.csproj" />
-    <Project Path="framework/SimpleModule.Rag.VectorStore.InMemory/SimpleModule.Rag.VectorStore.InMemory.csproj" />
-    <Project Path="framework/SimpleModule.Agents/SimpleModule.Agents.csproj" />
-    <Project Path="framework/SimpleModule.AI.Ollama/SimpleModule.AI.Ollama.csproj" />
-    <Project Path="framework/SimpleModule.AI.AzureOpenAI/SimpleModule.AI.AzureOpenAI.csproj" />
-    <Project Path="framework/SimpleModule.AI.OpenAI/SimpleModule.AI.OpenAI.csproj" />
-    <Project Path="framework/SimpleModule.AI.Anthropic/SimpleModule.AI.Anthropic.csproj" />
-    <Project Path="framework/SimpleModule.Rag.VectorStore.Postgres/SimpleModule.Rag.VectorStore.Postgres.csproj" />
   </Folder>
   <Folder Name="/cli/">
     <Project Path="cli/SimpleModule.Cli/SimpleModule.Cli.csproj" />
@@ -35,21 +26,6 @@
     <Project Path="modules/Dashboard/src/SimpleModule.Dashboard.Contracts/SimpleModule.Dashboard.Contracts.csproj" />
     <Project Path="modules/Dashboard/src/SimpleModule.Dashboard/SimpleModule.Dashboard.csproj" />
     <Project Path="modules/Dashboard/tests/SimpleModule.Dashboard.Tests/SimpleModule.Dashboard.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Orders/">
-    <Project Path="modules/Orders/src/SimpleModule.Orders.Contracts/SimpleModule.Orders.Contracts.csproj" />
-    <Project Path="modules/Orders/src/SimpleModule.Orders/SimpleModule.Orders.csproj" />
-    <Project Path="modules/Orders/tests/SimpleModule.Orders.Tests/SimpleModule.Orders.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Products/">
-    <Project Path="modules/Products/src/SimpleModule.Products.Contracts/SimpleModule.Products.Contracts.csproj" />
-    <Project Path="modules/Products/src/SimpleModule.Products/SimpleModule.Products.csproj" />
-    <Project Path="modules/Products/tests/SimpleModule.Products.Tests/SimpleModule.Products.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Map/">
-    <Project Path="modules/Map/src/SimpleModule.Map.Contracts/SimpleModule.Map.Contracts.csproj" />
-    <Project Path="modules/Map/src/SimpleModule.Map/SimpleModule.Map.csproj" />
-    <Project Path="modules/Map/tests/SimpleModule.Map.Tests/SimpleModule.Map.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/Users/">
     <Project Path="modules/Users/src/SimpleModule.Users.Contracts/SimpleModule.Users.Contracts.csproj" />
@@ -71,20 +47,10 @@
     <Project Path="modules/Admin/src/SimpleModule.Admin/SimpleModule.Admin.csproj" />
     <Project Path="modules/Admin/tests/SimpleModule.Admin.Tests/SimpleModule.Admin.Tests.csproj" />
   </Folder>
-  <Folder Name="/modules/PageBuilder/">
-    <Project Path="modules/PageBuilder/src/SimpleModule.PageBuilder.Contracts/SimpleModule.PageBuilder.Contracts.csproj" />
-    <Project Path="modules/PageBuilder/src/SimpleModule.PageBuilder/SimpleModule.PageBuilder.csproj" />
-    <Project Path="modules/PageBuilder/tests/SimpleModule.PageBuilder.Tests/SimpleModule.PageBuilder.Tests.csproj" />
-  </Folder>
   <Folder Name="/modules/Settings/">
     <Project Path="modules/Settings/src/SimpleModule.Settings.Contracts/SimpleModule.Settings.Contracts.csproj" />
     <Project Path="modules/Settings/src/SimpleModule.Settings/SimpleModule.Settings.csproj" />
     <Project Path="modules/Settings/tests/SimpleModule.Settings.Tests/SimpleModule.Settings.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Datasets/">
-    <Project Path="modules/Datasets/src/SimpleModule.Datasets.Contracts/SimpleModule.Datasets.Contracts.csproj" />
-    <Project Path="modules/Datasets/src/SimpleModule.Datasets/SimpleModule.Datasets.csproj" />
-    <Project Path="modules/Datasets/tests/SimpleModule.Datasets.Tests/SimpleModule.Datasets.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/FileStorage/">
     <Project Path="modules/FileStorage/src/SimpleModule.FileStorage.Contracts/SimpleModule.FileStorage.Contracts.csproj" />
@@ -101,30 +67,10 @@
     <Project Path="modules/AuditLogs/src/SimpleModule.AuditLogs/SimpleModule.AuditLogs.csproj" />
     <Project Path="modules/AuditLogs/tests/SimpleModule.AuditLogs.Tests/SimpleModule.AuditLogs.Tests.csproj" />
   </Folder>
-  <Folder Name="/modules/Marketplace/">
-    <Project Path="modules/Marketplace/src/SimpleModule.Marketplace.Contracts/SimpleModule.Marketplace.Contracts.csproj" />
-    <Project Path="modules/Marketplace/src/SimpleModule.Marketplace/SimpleModule.Marketplace.csproj" />
-    <Project Path="modules/Marketplace/tests/SimpleModule.Marketplace.Tests/SimpleModule.Marketplace.Tests.csproj" />
-  </Folder>
   <Folder Name="/modules/Tenants/">
     <Project Path="modules/Tenants/src/SimpleModule.Tenants.Contracts/SimpleModule.Tenants.Contracts.csproj" />
     <Project Path="modules/Tenants/src/SimpleModule.Tenants/SimpleModule.Tenants.csproj" />
     <Project Path="modules/Tenants/tests/SimpleModule.Tenants.Tests/SimpleModule.Tenants.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Rag/">
-    <Project Path="modules/Rag/src/SimpleModule.Rag.Contracts/SimpleModule.Rag.Contracts.csproj" />
-    <Project Path="modules/Rag/src/SimpleModule.Rag.Module/SimpleModule.Rag.Module.csproj" />
-    <Project Path="modules/Rag/tests/SimpleModule.Rag.Tests/SimpleModule.Rag.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Agents/">
-    <Project Path="modules/Agents/src/SimpleModule.Agents.Contracts/SimpleModule.Agents.Contracts.csproj" />
-    <Project Path="modules/Agents/src/SimpleModule.Agents.Module/SimpleModule.Agents.Module.csproj" />
-    <Project Path="modules/Agents/tests/SimpleModule.Agents.Tests/SimpleModule.Agents.Tests.csproj" />
-  </Folder>
-  <Folder Name="/modules/Chat/">
-    <Project Path="modules/Chat/src/SimpleModule.Chat.Contracts/SimpleModule.Chat.Contracts.csproj" />
-    <Project Path="modules/Chat/src/SimpleModule.Chat/SimpleModule.Chat.csproj" />
-    <Project Path="modules/Chat/tests/SimpleModule.Chat.Tests/SimpleModule.Chat.Tests.csproj" />
   </Folder>
   <Folder Name="/modules/BackgroundJobs/">
     <Project Path="modules/BackgroundJobs/src/SimpleModule.BackgroundJobs.Contracts/SimpleModule.BackgroundJobs.Contracts.csproj" />

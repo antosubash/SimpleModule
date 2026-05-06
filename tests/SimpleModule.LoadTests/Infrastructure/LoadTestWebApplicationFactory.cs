@@ -4,9 +4,6 @@ using SimpleModule.AuditLogs;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.OpenIddict.Contracts;
-using SimpleModule.Orders;
-using SimpleModule.PageBuilder;
-using SimpleModule.Products;
 using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.LoadTests.Infrastructure;
@@ -84,24 +81,11 @@ public partial class LoadTestWebApplicationFactory : SimpleModuleWebApplicationF
 
     private static readonly string[] AllPermissions =
     [
-        ProductsPermissions.View,
-        ProductsPermissions.Create,
-        ProductsPermissions.Update,
-        ProductsPermissions.Delete,
-        OrdersPermissions.View,
-        OrdersPermissions.Create,
-        OrdersPermissions.Update,
-        OrdersPermissions.Delete,
         AuditLogsPermissions.View,
         AuditLogsPermissions.Export,
         FileStoragePermissions.View,
         FileStoragePermissions.Upload,
         FileStoragePermissions.Delete,
-        PageBuilderPermissions.View,
-        PageBuilderPermissions.Create,
-        PageBuilderPermissions.Update,
-        PageBuilderPermissions.Delete,
-        PageBuilderPermissions.Publish,
         AdminPermissions.ManageUsers,
         AdminPermissions.ManageRoles,
         OpenIddictPermissions.ManageClients,
