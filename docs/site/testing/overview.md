@@ -30,12 +30,12 @@ Test projects follow a consistent naming and location pattern:
 Each module test project is organized into subdirectories:
 
 ```
-modules/Products/tests/Products.Tests/
+modules/Customers/tests/Customers.Tests/
   Unit/
-    ProductServiceTests.cs
+    CustomerServiceTests.cs
     CreateRequestValidatorTests.cs
   Integration/
-    ProductsEndpointTests.cs
+    CustomersEndpointTests.cs
 ```
 
 ## Running Tests
@@ -45,10 +45,10 @@ modules/Products/tests/Products.Tests/
 dotnet test
 
 # Run a single test class
-dotnet test --filter "FullyQualifiedName~ProductServiceTests"
+dotnet test --filter "FullyQualifiedName~CustomerServiceTests"
 
 # Run a single test method
-dotnet test --filter "FullyQualifiedName~CreateProductAsync_CreatesAndReturnsProduct"
+dotnet test --filter "FullyQualifiedName~CreateCustomerAsync_CreatesAndReturnsCustomer"
 
 # Run E2E tests
 npm run test:e2e
@@ -66,8 +66,8 @@ Method_Scenario_Expected
 ```
 
 For example:
-- `GetProductByIdAsync_WithExistingId_ReturnsProduct`
-- `CreateProduct_WithCreatePermission_Returns201`
+- `GetCustomerByIdAsync_WithExistingId_ReturnsCustomer`
+- `CreateCustomer_WithCreatePermission_Returns201`
 - `Validate_WithEmptyName_ReturnsError`
 
 This convention is enforced by `.editorconfig` which suppresses the `CA1707` naming rule in test projects.
@@ -90,7 +90,7 @@ Micro-benchmarks measure endpoint latency and JSON serialization performance for
 dotnet run -c Release --project tests/SimpleModule.Benchmarks
 
 # Run benchmarks for a specific module
-dotnet run -c Release --project tests/SimpleModule.Benchmarks -- --filter "*Products*"
+dotnet run -c Release --project tests/SimpleModule.Benchmarks -- --filter "*Customers*"
 ```
 
 Benchmarks use `SimpleModuleWebApplicationFactory` with test auth headers for low-overhead measurement of CRUD operations via an in-process TestServer.
@@ -104,15 +104,14 @@ HTTP load tests using real OAuth Bearer tokens acquired via password grant from 
 dotnet test tests/SimpleModule.LoadTests
 
 # Run a single scenario
-dotnet test tests/SimpleModule.LoadTests --filter "Products_Crud"
+dotnet test tests/SimpleModule.LoadTests --filter "Users_Crud"
 ```
 
 Scenarios cover all modules at 50 concurrent copies:
 
-- **CRUD lifecycle** -- Products, Orders, Users, PageBuilder (create, read, update, delete)
+- **CRUD lifecycle** -- Users (create, read, update, delete)
 - **Read operations** -- Settings, AuditLogs, FileStorage, FeatureFlags
-- **Admin operations** -- role create/delete (handles 302 Blazor SSR redirects)
-- **Anonymous** -- Marketplace search and browse
+- **Admin operations** -- role create/delete (handles 302 redirects)
 - **Mixed Realistic** -- weighted workload (70% reads, 20% creates, 10% updates)
 
 Key infrastructure:

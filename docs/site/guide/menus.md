@@ -33,15 +33,15 @@ The builder collects items from all modules into a flat list. Items are grouped 
 Override `ConfigureMenu` in your module class:
 
 ```csharp
-[Module("Products", RoutePrefix = "/products", ViewPrefix = "/products")]
-public class ProductsModule : IModule
+[Module("Customers", RoutePrefix = "/customers", ViewPrefix = "/customers")]
+public class CustomersModule : IModule
 {
     public void ConfigureMenu(IMenuBuilder menus)
     {
         menus.Add(new MenuItem
         {
-            Label = "Products",
-            Url = "/products/browse",
+            Label = "Customers",
+            Url = "/customers/browse",
             Icon = """<svg class="w-4 h-4" ...>...</svg>""",
             Order = 30,
             Section = MenuSection.Navbar,
@@ -50,8 +50,8 @@ public class ProductsModule : IModule
 
         menus.Add(new MenuItem
         {
-            Label = "Manage Products",
-            Url = "/products/manage",
+            Label = "Manage Customers",
+            Url = "/customers/manage",
             Icon = """<svg class="w-4 h-4" ...>...</svg>""",
             Order = 31,
             Section = MenuSection.Navbar,
@@ -96,8 +96,8 @@ public void ConfigureMenu(IMenuBuilder menus)
     // Show in the top navbar
     menus.Add(new MenuItem
     {
-        Label = "Products",
-        Url = "/products/browse",
+        Label = "Customers",
+        Url = "/customers/browse",
         Order = 30,
         Section = MenuSection.Navbar,
         RequiresAuth = false,
@@ -106,8 +106,8 @@ public void ConfigureMenu(IMenuBuilder menus)
     // Also show in the app sidebar
     menus.Add(new MenuItem
     {
-        Label = "Products",
-        Url = "/products/browse",
+        Label = "Customers",
+        Url = "/customers/browse",
         Order = 20,
         Section = MenuSection.AppSidebar,
     });
@@ -148,8 +148,8 @@ Menu items carry an `Order` value that renderers use to sort within a section. `
 |-------|--------|
 | 10-19 | Dashboard |
 | 20-29 | Core features |
-| 30-39 | Products |
-| 40-49 | Orders |
+| 30-39 | Customers |
+| 40-49 | Users |
 | 90-99 | Settings / Admin |
 
 ::: tip

@@ -10,7 +10,7 @@ A **module** is the fundamental building block of a SimpleModule application. Ea
 
 A module is a class that implements the `IModule` interface and is decorated with the `[Module]` attribute. It groups related functionality into a single cohesive unit that can be developed, tested, and reasoned about independently.
 
-For example, a Products module owns everything related to products: the database table, the API endpoints, the React views, the menu entries, and the permission definitions. Other modules interact with Products only through its **contracts** interface.
+For example, a Customers module owns everything related to customers: the database table, the API endpoints, the React views, the menu entries, and the permission definitions. Other modules interact with Customers only through its **contracts** interface.
 
 ## The `IModule` Interface
 
@@ -26,7 +26,6 @@ public interface IModule
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
     virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
-    virtual void ConfigureAgents(IAgentBuilder builder) { }
     virtual void ConfigureRateLimits(IRateLimitBuilder builder) { }
     virtual void ConfigureHost(IHost host) { }
     virtual Task OnStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -45,7 +44,6 @@ public interface IModule
 | `ConfigurePermissions` | Define module-specific permissions for authorization |
 | `ConfigureSettings` | Register configurable settings for the module |
 | `ConfigureFeatureFlags` | Register feature flag definitions |
-| `ConfigureAgents` | Register AI agent definitions |
 | `ConfigureRateLimits` | Register rate limit policies |
 | `ConfigureHost` | Configure host-level integrations after the host is built (e.g., TickerQ, database initialization) |
 | `OnStartAsync` | One-time async initialization after all services are registered |
@@ -79,47 +77,47 @@ public sealed class ModuleAttribute : Attribute
 
 | Property | Description |
 |----------|-------------|
-| `Name` | The unique module name (e.g., `"Products"`). Used for database schema isolation and logging. |
+| `Name` | The unique module name (e.g., `"Customers"`). Used for database schema isolation and logging. |
 | `Version` | Semantic version string. Defaults to `"1.0.0"`. |
-| `RoutePrefix` | Base path for API endpoints (e.g., `"/api/products"`). All `IEndpoint` implementations are grouped under this prefix. |
-| `ViewPrefix` | Base path for view (Inertia) endpoints (e.g., `"/products"`). All `IViewEndpoint` implementations are grouped under this prefix. |
+| `RoutePrefix` | Base path for API endpoints (e.g., `"/api/customers"`). All `IEndpoint` implementations are grouped under this prefix. |
+| `ViewPrefix` | Base path for view (Inertia) endpoints (e.g., `"/customers"`). All `IViewEndpoint` implementations are grouped under this prefix. |
 
-## Full Example: The Products Module
+## Full Example: A Customers Module
 
-Here is the Products module from the framework's reference implementation:
+Here is a hypothetical Customers module showing the standard layout:
 
 ```csharp
-// ProductsConstants.cs
-namespace SimpleModule.Products;
+// CustomersConstants.cs
+namespace SimpleModule.Customers;
 
-public static class ProductsConstants
+public static class CustomersConstants
 {
-    public const string ModuleName = "Products";
-    public const string RoutePrefix = "/api/products";
+    public const string ModuleName = "Customers";
+    public const string RoutePrefix = "/api/customers";
 }
 ```
 
 ```csharp
-// ProductsModule.cs
+// CustomersModule.cs
 [Module(
-    ProductsConstants.ModuleName,
-    RoutePrefix = ProductsConstants.RoutePrefix,
-    ViewPrefix = "/products"
+    CustomersConstants.ModuleName,
+    RoutePrefix = CustomersConstants.RoutePrefix,
+    ViewPrefix = "/customers"
 )]
-public class ProductsModule : IModule
+public class CustomersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<ProductsDbContext>(
-            configuration, ProductsConstants.ModuleName);
+        services.AddModuleDbContext<CustomersDbContext>(
+            configuration, CustomersConstants.ModuleName);
     }
 
     public void ConfigureMenu(IMenuBuilder menus)
     {
         menus.Add(new MenuItem
         {
-            Label = "Products",
-            Url = "/products/browse",
+            Label = "Customers",
+            Url = "/customers/browse",
             Icon = """<svg class="w-4 h-4" ...>...</svg>""",
             Order = 30,
             Section = MenuSection.Navbar,
@@ -128,8 +126,8 @@ public class ProductsModule : IModule
 
         menus.Add(new MenuItem
         {
-            Label = "Manage Products",
-            Url = "/products/manage",
+            Label = "Manage Customers",
+            Url = "/customers/manage",
             Icon = """<svg class="w-4 h-4" ...>...</svg>""",
             Order = 31,
             Section = MenuSection.Navbar,
@@ -163,21 +161,21 @@ The source generator emits several extension methods as plain C# code:
 // Generated: ModuleExtensions.g.cs
 public static class ModuleExtensions
 {
-    internal static readonly ProductsModule _productsModule = new();
-    internal static readonly OrdersModule _ordersModule = new();
+    internal static readonly CustomersModule _customersModule = new();
+    internal static readonly InvoicesModule _invoicesModule = new();
 
     public static IServiceCollection AddModules(
         this IServiceCollection services, IConfiguration configuration)
     {
         // Phase 1: No dependencies
-        ((IModule)_productsModule).ConfigureServices(services, configuration);
+        ((IModule)_customersModule).ConfigureServices(services, configuration);
 
-        // Phase 2: Depends on Products
-        ((IModule)_ordersModule).ConfigureServices(services, configuration);
+        // Phase 2: Depends on Customers
+        ((IModule)_invoicesModule).ConfigureServices(services, configuration);
 
         // Auto-discovered contract implementations
-        services.AddScoped<IProductContracts, ProductService>();
-        services.AddScoped<IOrderContracts, OrderService>();
+        services.AddScoped<ICustomerContracts, CustomerService>();
+        services.AddScoped<IInvoiceContracts, InvoiceService>();
 
         return services;
     }
@@ -190,10 +188,10 @@ public static class ModuleExtensions
 // Generated: EndpointExtensions.g.cs
 public static WebApplication MapModuleEndpoints(this WebApplication app)
 {
-    // Auto-registered endpoints for Products
+    // Auto-registered endpoints for Customers
     {
-        var group = app.MapGroup("/api/products")
-            .WithTags("Products").RequireAuthorization();
+        var group = app.MapGroup("/api/customers")
+            .WithTags("Customers").RequireAuthorization();
         new GetAllEndpoint().Map(group);
         new GetByIdEndpoint().Map(group);
         new CreateEndpoint().Map(group);
@@ -201,10 +199,10 @@ public static WebApplication MapModuleEndpoints(this WebApplication app)
         new DeleteEndpoint().Map(group);
     }
 
-    // Auto-registered view endpoints for Products
+    // Auto-registered view endpoints for Customers
     {
-        var viewGroup = app.MapGroup("/products")
-            .WithTags("Products").ExcludeFromDescription()
+        var viewGroup = app.MapGroup("/customers")
+            .WithTags("Customers").ExcludeFromDescription()
             .RequireAuthorization();
         new BrowseEndpoint().Map(viewGroup);
         new ManageEndpoint().Map(viewGroup);
@@ -223,8 +221,8 @@ public static IServiceCollection CollectModuleMenuItems(
     this IServiceCollection services)
 {
     var menus = new MenuBuilder();
-    ((IModule)ModuleExtensions._productsModule).ConfigureMenu(menus);
-    ((IModule)ModuleExtensions._ordersModule).ConfigureMenu(menus);
+    ((IModule)ModuleExtensions._customersModule).ConfigureMenu(menus);
+    ((IModule)ModuleExtensions._invoicesModule).ConfigureMenu(menus);
     services.AddSingleton<IMenuRegistry>(new MenuRegistry(menus.ToList()));
     return services;
 }
@@ -257,7 +255,7 @@ The lifecycle during application startup:
 The fastest way to create a module:
 
 ```bash
-sm new module Products
+sm new module Customers
 ```
 
 This scaffolds the full module structure with contracts, endpoints, tests, and frontend pages.
@@ -267,25 +265,25 @@ This scaffolds the full module structure with contracts, endpoints, tests, and f
 If you prefer to create a module by hand, follow this structure:
 
 ```
-modules/Products/
+modules/Customers/
   src/
-    SimpleModule.Products.Contracts/
-      SimpleModule.Products.Contracts.csproj  # References Core only
-      IProductContracts.cs                    # Public API interface
-      Product.cs                              # Shared DTO types
-      ProductId.cs                            # Strongly-typed ID
-    SimpleModule.Products/
-      SimpleModule.Products.csproj            # References Core + Contracts + Database
-      ProductsModule.cs                       # Module class with [Module] attribute
-      ProductsConstants.cs                    # Module name and route prefix
-      ProductsDbContext.cs                    # EF Core DbContext
-      Endpoints/Products/                     # IEndpoint implementations
-      Pages/                                  # IViewEndpoint classes next to React .tsx pages
-      Pages/index.ts                          # React page registry
-      vite.config.ts                          # Vite library mode build
-      package.json                            # npm package with peer dependencies
+    SimpleModule.Customers.Contracts/
+      SimpleModule.Customers.Contracts.csproj  # References Core only
+      ICustomerContracts.cs                    # Public API interface
+      Customer.cs                              # Shared DTO types
+      CustomerId.cs                            # Strongly-typed ID
+    SimpleModule.Customers/
+      SimpleModule.Customers.csproj            # References Core + Contracts + Database
+      CustomersModule.cs                       # Module class with [Module] attribute
+      CustomersConstants.cs                    # Module name and route prefix
+      CustomersDbContext.cs                    # EF Core DbContext
+      Endpoints/Customers/                     # IEndpoint implementations
+      Pages/                                   # IViewEndpoint classes next to React .tsx pages
+      Pages/index.ts                           # React page registry
+      vite.config.ts                           # Vite library mode build
+      package.json                             # npm package with peer dependencies
   tests/
-    SimpleModule.Products.Tests/              # xUnit test project
+    SimpleModule.Customers.Tests/              # xUnit test project
 ```
 
 Key project file requirements:
@@ -306,13 +304,13 @@ Key project file requirements:
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
-    <ProjectReference Include="..\SimpleModule.Products.Contracts\SimpleModule.Products.Contracts.csproj" />
+    <ProjectReference Include="..\SimpleModule.Customers.Contracts\SimpleModule.Customers.Contracts.csproj" />
   </ItemGroup>
 </Project>
 ```
 
 ::: info
-Project and folder names **must** begin with `SimpleModule.` (e.g. `SimpleModule.Products`, `SimpleModule.Products.Contracts`). This convention is enforced by source generator diagnostic **SM0052**. Modules ship static web assets via `Microsoft.NET.Sdk.StaticWebAssets` when they include JS/CSS, but plain `Microsoft.NET.Sdk` works for modules without frontend assets — no Razor SDK is required.
+Project and folder names **must** begin with `SimpleModule.` (e.g. `SimpleModule.Customers`, `SimpleModule.Customers.Contracts`). This convention is enforced by source generator diagnostic **SM0052**. Modules ship static web assets via `Microsoft.NET.Sdk.StaticWebAssets` when they include JS/CSS, but plain `Microsoft.NET.Sdk` works for modules without frontend assets — no Razor SDK is required.
 :::
 
 ::: warning

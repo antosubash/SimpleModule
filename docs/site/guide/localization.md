@@ -20,7 +20,7 @@ SimpleModule includes a built-in localization system that provides multi-languag
 Add a `Locales/` directory to your module with JSON files named by locale code:
 
 ```
-modules/Products/src/Products/
+modules/Customers/src/Customers/
 ├── Locales/
 │   ├── en.json
 │   └── es.json
@@ -31,8 +31,8 @@ Translation keys use dot notation:
 ```json
 // Locales/en.json
 {
-  "Browse.Title": "Products",
-  "Browse.Description": "Browse the product catalog.",
+  "Browse.Title": "Customers",
+  "Browse.Description": "Browse the customer list.",
   "Manage.DeleteConfirm": "Are you sure you want to delete \"{name}\"?"
 }
 ```
@@ -40,8 +40,8 @@ Translation keys use dot notation:
 ```json
 // Locales/es.json
 {
-  "Browse.Title": "Productos",
-  "Browse.Description": "Navegar el catálogo de productos.",
+  "Browse.Title": "Clientes",
+  "Browse.Description": "Navegar la lista de clientes.",
   "Manage.DeleteConfirm": "¿Estás seguro de que deseas eliminar \"{name}\"?"
 }
 ```
@@ -63,8 +63,8 @@ Import the `useTranslation` hook from `@simplemodule/client`:
 ```tsx
 import { useTranslation } from '@simplemodule/client';
 
-export default function Browse({ products }) {
-  const { t, locale } = useTranslation('Products');
+export default function Browse({ customers }) {
+  const { t, locale } = useTranslation('Customers');
 
   return (
     <div>
@@ -85,7 +85,7 @@ Use `{paramName}` placeholders in translation values:
 
 ```tsx
 // Translation: "Are you sure you want to delete \"{name}\"?"
-t('Manage.DeleteConfirm', { name: product.name })
+t('Manage.DeleteConfirm', { name: customer.name })
 ```
 
 ### 4. Type-Safe Keys (Optional)
@@ -94,7 +94,7 @@ Create a `keys.ts` file for compile-time key safety:
 
 ```typescript
 // Locales/keys.ts
-export const ProductsKeys = {
+export const CustomersKeys = {
   Browse: {
     Title: 'Browse.Title',
     Description: 'Browse.Description',
@@ -108,10 +108,10 @@ export const ProductsKeys = {
 Then use it in components:
 
 ```tsx
-import { ProductsKeys } from '../Locales/keys';
+import { CustomersKeys } from '../Locales/keys';
 
-const { t } = useTranslation('Products');
-t(ProductsKeys.Browse.Title);
+const { t } = useTranslation('Customers');
+t(CustomersKeys.Browse.Title);
 ```
 
 ## Locale Resolution
@@ -143,7 +143,7 @@ public class MyService(IStringLocalizer<MyService> localizer)
 
 - If a key is missing for the requested locale, the system falls back to English (`"en"`)
 - If the key is missing in English too, behavior depends on where the lookup runs:
-  - **React (`useTranslation`)** returns the **un-prefixed** key you passed in (e.g. `t('Browse.Title')` returns `"Browse.Title"`, not `"Products.Browse.Title"`)
+  - **React (`useTranslation`)** returns the **un-prefixed** key you passed in (e.g. `t('Browse.Title')` returns `"Browse.Title"`, not `"Customers.Browse.Title"`)
   - **.NET (`TranslationLoader.GetTranslation`)** returns `null`. Code paths that go through `IStringLocalizer` may wrap that into a `LocalizedString` whose `Name` is the key and whose `ResourceNotFound` is `true`
 
 ## Configuration

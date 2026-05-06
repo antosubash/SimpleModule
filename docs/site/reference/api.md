@@ -24,7 +24,6 @@ public interface IModule
     virtual void ConfigurePermissions(PermissionRegistryBuilder builder) { }
     virtual void ConfigureSettings(ISettingsBuilder settings) { }
     virtual void ConfigureFeatureFlags(IFeatureFlagBuilder builder) { }
-    virtual void ConfigureAgents(IAgentBuilder builder) { }
     virtual void ConfigureRateLimits(IRateLimitBuilder builder) { }
     virtual void ConfigureHost(IHost host) { }
     virtual Task OnStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -43,7 +42,6 @@ public interface IModule
 | `ConfigurePermissions` | Application startup | Register permission definitions |
 | `ConfigureSettings` | Application startup | Register settings definitions |
 | `ConfigureFeatureFlags` | Application startup | Register feature flag definitions |
-| `ConfigureAgents` | Application startup | Register AI agent definitions |
 | `ConfigureRateLimits` | Application startup | Register rate limit policies |
 | `ConfigureHost` | After host is built | Configure host-level integrations (TickerQ, DB init) |
 | `OnStartAsync` | After services registered | One-time async initialization |
@@ -72,13 +70,13 @@ public interface IEndpoint
 **Usage:**
 
 ```csharp
-public sealed class GetProducts : IEndpoint
+public sealed class GetCustomers : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (IProductContracts products) =>
+        app.MapGet("/", async (ICustomerContracts customers) =>
         {
-            var result = await products.GetAllAsync();
+            var result = await customers.GetAllAsync();
             return TypedResults.Ok(result);
         });
     }
@@ -107,10 +105,10 @@ public sealed class Browse : IViewEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/", async (IProductContracts products, HttpContext context) =>
+        app.MapGet("/", async (ICustomerContracts customers, HttpContext context) =>
         {
-            var result = await products.GetAllAsync();
-            return Inertia.Render("Products/Browse", new { products = result });
+            var result = await customers.GetAllAsync();
+            return Inertia.Render("Customers/Browse", new { customers = result });
         });
     }
 }
@@ -135,7 +133,7 @@ public interface IEvent;
 **Usage:**
 
 ```csharp
-public sealed record OrderCreatedEvent(int OrderId, string CustomerName) : IEvent;
+public sealed record CustomerCreatedEvent(int CustomerId, string Name) : IEvent;
 ```
 
 ---
@@ -147,16 +145,16 @@ Publishing is provided by **[Wolverine](https://wolverinefx.net/)**'s `IMessageB
 ```csharp
 using Wolverine;
 
-public sealed class CreateOrder : IEndpoint
+public sealed class CreateCustomer : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", async (CreateOrderRequest request,
-            IOrderContracts orders, IMessageBus bus) =>
+        app.MapPost("/", async (CreateCustomerRequest request,
+            ICustomerContracts customers, IMessageBus bus) =>
         {
-            var order = await orders.CreateAsync(request);
-            await bus.PublishAsync(new OrderCreatedEvent(order.Id, request.CustomerName));
-            return TypedResults.Created($"/{order.Id}", order);
+            var customer = await customers.CreateAsync(request);
+            await bus.PublishAsync(new CustomerCreatedEvent(customer.Id, request.Name));
+            return TypedResults.Created($"/{customer.Id}", customer);
         });
     }
 }
@@ -165,10 +163,10 @@ public sealed class CreateOrder : IEndpoint
 Handlers are discovered by Wolverine's naming convention — a class with a `Handle` / `Consume` / `HandleAsync` method taking the event as its first parameter. See [Events](/guide/events) for the full guide.
 
 ```csharp
-public sealed class OrderCreatedAuditHandler(IAuditContext audit)
+public sealed class CustomerCreatedAuditHandler(IAuditContext audit)
 {
-    public Task Handle(OrderCreatedEvent evt, CancellationToken ct) =>
-        audit.LogAsync("Order created", evt.OrderId.ToString(), ct);
+    public Task Handle(CustomerCreatedEvent evt, CancellationToken ct) =>
+        audit.LogAsync("Customer created", evt.CustomerId.ToString(), ct);
 }
 ```
 
@@ -234,12 +232,12 @@ public interface IModulePermissions;
 **Usage:**
 
 ```csharp
-public sealed class ProductPermissions : IModulePermissions
+public sealed class CustomersPermissions : IModulePermissions
 {
-    public const string View = "Products.View";
-    public const string Create = "Products.Create";
-    public const string Edit = "Products.Edit";
-    public const string Delete = "Products.Delete";
+    public const string View = "Customers.View";
+    public const string Create = "Customers.Create";
+    public const string Edit = "Customers.Edit";
+    public const string Delete = "Customers.Delete";
 }
 ```
 
@@ -274,8 +272,8 @@ public sealed class ModuleAttribute : Attribute
 **Usage:**
 
 ```csharp
-[Module("Products", RoutePrefix = "/api/products", ViewPrefix = "/products")]
-public sealed class ProductsModule : IModule
+[Module("Customers", RoutePrefix = "/api/customers", ViewPrefix = "/customers")]
+public sealed class CustomersModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
@@ -333,15 +331,15 @@ public sealed class RequirePermissionAttribute : Attribute
 **Usage:**
 
 ```csharp
-[RequirePermission(ProductPermissions.Create)]
-public sealed class CreateProduct : IEndpoint
+[RequirePermission(CustomersPermissions.Create)]
+public sealed class CreateCustomer : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapPost("/", async (CreateProductRequest request, IProductContracts products) =>
+        app.MapPost("/", async (CreateCustomerRequest request, ICustomerContracts customers) =>
         {
-            var product = await products.CreateAsync(request);
-            return TypedResults.Created($"/{product.Id}", product);
+            var customer = await customers.CreateAsync(request);
+            return TypedResults.Created($"/{customer.Id}", customer);
         });
     }
 }
@@ -458,7 +456,7 @@ public sealed class PermissionRegistryBuilder
 }
 ```
 
-Permissions follow the convention `ModuleName.Action` (e.g., `Products.Create`). The module prefix is extracted from the first segment before the `.`.
+Permissions follow the convention `ModuleName.Action` (e.g., `Customers.Create`). The module prefix is extracted from the first segment before the `.`.
 
 ---
 

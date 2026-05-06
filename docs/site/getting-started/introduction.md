@@ -64,11 +64,11 @@ This means:
 - **Full React ecosystem** -- use any React library. The framework doesn't limit what you can do on the client.
 
 ```typescript
-// modules/Products/src/SimpleModule.Products/Pages/index.ts
+// modules/Customers/src/SimpleModule.Customers/Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('./Browse'),
-  'Products/Manage': () => import('./Manage'),
-  'Products/Create': () => import('./Create'),
+  'Customers/Browse': () => import('./Browse'),
+  'Customers/Manage': () => import('./Manage'),
+  'Customers/Create': () => import('./Create'),
 };
 ```
 
@@ -94,21 +94,11 @@ Modules cannot reference each other's implementation projects. They depend on `.
 The `sm` command-line tool handles scaffolding and project health:
 
 ```bash
-sm new project MyApp         # scaffold a new SimpleModule solution
-sm new module Products       # create a module with contracts, endpoints, tests
-sm new feature Products/Browse  # add a feature to an existing module
-sm doctor --fix              # validate project structure, auto-fix issues
+sm new project MyApp          # scaffold a new SimpleModule solution
+sm new module Customers       # create a module with contracts, endpoints, tests
+sm new feature Customers/Browse  # add a feature to an existing module
+sm doctor --fix               # validate project structure, auto-fix issues
 ```
-
-### AI Agents & RAG
-
-Build AI-powered features with built-in support for multiple LLM providers, tool calling, and retrieval-augmented generation:
-
-- **Multi-provider AI** -- Anthropic (Claude), OpenAI, Azure OpenAI, and Ollama behind a unified `IChatClient` interface
-- **Agent runtime** -- define agents with custom instructions, tools, and guardrails. Supports streaming (SSE) responses
-- **Tool discovery** -- mark methods with `[AgentTool]` for automatic tool registration
-- **RAG pipeline** -- index documents into a vector store and inject relevant context into agent conversations
-- **Built-in safety** -- rate limiting, token tracking, PII redaction, and prompt injection detection
 
 ### File Storage
 
@@ -132,9 +122,9 @@ SimpleModule supports multiple database providers with automatic schema isolatio
 
 | Provider | Isolation strategy | Use case |
 |----------|-------------------|----------|
-| SQLite | Table prefixes (`Products_Items`) | Local development, testing |
-| PostgreSQL | Schemas (`products.items`) | Production |
-| SQL Server | Schemas (`products.items`) | Production |
+| SQLite | Table prefixes (`Customers_Items`) | Local development, testing |
+| PostgreSQL | Schemas (`customers.items`) | Production |
+| SQL Server | Schemas (`customers.items`) | Production |
 
 Each module registers its database context through `ModuleDbContextInfo`. The framework handles schema creation and provider-specific configuration.
 
@@ -145,14 +135,14 @@ The core workflow is straightforward:
 **1. Define a module**
 
 ```csharp
-[Module("Products", RoutePrefix = "products")]
-public sealed class ProductsModule : IModule
+[Module("Customers", RoutePrefix = "customers")]
+public sealed class CustomersModule : IModule
 {
     public static void ConfigureServices(
         IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddScoped<IProductContracts, ProductService>();
+        services.AddScoped<ICustomerContracts, CustomerService>();
     }
 }
 ```
@@ -160,26 +150,26 @@ public sealed class ProductsModule : IModule
 **2. Add endpoints**
 
 ```csharp
-public sealed class BrowseProducts : IViewEndpoint
+public sealed class BrowseCustomers : IViewEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapGet("/", Handler);
 
-    private static IResult Handler(IProductContracts products) =>
-        Inertia.Render("Products/Browse", new
+    private static IResult Handler(ICustomerContracts customers) =>
+        Inertia.Render("Customers/Browse", new
         {
-            Products = products.GetAll()
+            Customers = customers.GetAll()
         });
 }
 ```
 
 **3. Build the project**
 
-The Roslyn source generator runs during compilation. It discovers `ProductsModule`, finds `BrowseProducts`, and generates the wiring code. You can see the generated files in your IDE under Analyzers.
+The Roslyn source generator runs during compilation. It discovers `CustomersModule`, finds `BrowseCustomers`, and generates the wiring code. You can see the generated files in your IDE under Analyzers.
 
 **4. Everything is registered**
 
-When you call `AddSimpleModule()`, the generated `AddModules()` runs and invokes `ProductsModule.ConfigureServices()`. When you call `UseSimpleModule()`, the generated `MapModuleEndpoints()` maps `BrowseProducts` under the `/products` route prefix, and `CollectModuleMenuItems()` gathers any menu items the module registered. All at compile time. All type-safe.
+When you call `AddSimpleModule()`, the generated `AddModules()` runs and invokes `CustomersModule.ConfigureServices()`. When you call `UseSimpleModule()`, the generated `MapModuleEndpoints()` maps `BrowseCustomers` under the `/customers` route prefix, and `CollectModuleMenuItems()` gathers any menu items the module registered. All at compile time. All type-safe.
 
 ::: tip Zero Configuration
 You don't write registration code, startup configuration, or reflection-based discovery logic. Add a class, implement an interface, build. The generator handles the rest.
@@ -195,8 +185,6 @@ You don't write registration code, startup configuration, or reflection-based di
 | Build tooling | Vite, Tailwind CSS 4 |
 | Source generation | Roslyn incremental generators |
 | Component library | Radix UI |
-| AI | Anthropic, OpenAI, Azure OpenAI, Ollama via Microsoft.Extensions.AI |
-| RAG | Vector search with PostgreSQL or in-memory stores |
 | Testing | xUnit.v3, FluentAssertions, Bogus, Playwright, BenchmarkDotNet, NBomber |
 | Database | SQLite, PostgreSQL, SQL Server via EF Core |
 | File storage | Local, AWS S3, Azure Blob Storage |

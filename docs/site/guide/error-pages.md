@@ -63,28 +63,28 @@ If an exception occurs so early that Inertia can't render (e.g., DI resolution f
 Throw the framework exceptions from services or endpoints; the handler takes care of the status code and response shape.
 
 ```csharp
-public async Task<Product> GetProductAsync(ProductId id)
+public async Task<Customer> GetCustomerAsync(CustomerId id)
 {
-    var product = await db.Products.FindAsync(id);
-    if (product is null)
+    var customer = await db.Customers.FindAsync(id);
+    if (customer is null)
     {
-        throw new NotFoundException("Product", id);
+        throw new NotFoundException("Customer", id);
     }
-    return product;
+    return customer;
 }
 ```
 
 ```csharp
-public async Task<Order> CancelOrderAsync(OrderId id, UserId actor)
+public async Task DeactivateCustomerAsync(CustomerId id, UserId actor)
 {
-    var order = await db.Orders.FindAsync(id);
-    if (order is null)
+    var customer = await db.Customers.FindAsync(id);
+    if (customer is null)
     {
-        throw new NotFoundException("Order", id);
+        throw new NotFoundException("Customer", id);
     }
-    if (order.OwnerId != actor)
+    if (customer.OwnerId != actor)
     {
-        throw new ForbiddenException("You cannot cancel another user's order.");
+        throw new ForbiddenException("You cannot deactivate another tenant's customer.");
     }
     // ...
 }
@@ -125,11 +125,11 @@ Assert on the status code and, for Inertia flows, the component name:
 
 ```csharp
 [Fact]
-public async Task Missing_product_returns_404_problem_details()
+public async Task Missing_customer_returns_404_problem_details()
 {
     using var client = factory.CreateAuthenticatedClient();
 
-    var response = await client.GetAsync("/api/products/99999");
+    var response = await client.GetAsync("/api/customers/99999");
 
     response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();

@@ -281,12 +281,12 @@ SimpleModule relies on EF Core migrations per module — there is no `EnsureCrea
 ```bash
 # Add a migration for a specific module's DbContext
 dotnet ef migrations add InitialCreate \
-  --project modules/Products/src/Products \
+  --project modules/Customers/src/Customers \
   --startup-project template/SimpleModule.Host
 
 # Apply migrations
 dotnet ef database update \
-  --project modules/Products/src/Products \
+  --project modules/Customers/src/Customers \
   --startup-project template/SimpleModule.Host
 ```
 

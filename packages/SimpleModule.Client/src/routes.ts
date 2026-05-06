@@ -17,21 +17,6 @@ export const routes = {
       recurring: () => '/admin/jobs/recurring' as const,
     },
   },
-  chat: {
-    api: {
-      createConversation: () => '/api/chat/conversations' as const,
-      deleteConversation: (id: string | number) => `/api/chat/conversations/${id}`,
-      getConversation: (id: string | number) => `/api/chat/conversations/${id}`,
-      getMessages: (id: string | number) => `/api/chat/conversations/${id}/messages`,
-      listConversations: () => '/api/chat/conversations' as const,
-      renameConversation: (id: string | number) => `/api/chat/conversations/${id}`,
-      sendMessageStream: (id: string | number) => `/api/chat/conversations/${id}/stream`,
-    },
-    views: {
-      browse: () => '/chat' as const,
-      conversation: (id: string | number) => `/chat/${id}`,
-    },
-  },
   dashboard: {
     views: {
       home: () => '/' as const,
@@ -61,60 +46,6 @@ export const routes = {
     },
     views: {
       browse: () => '/files' as const,
-    },
-  },
-  marketplace: {
-    api: {
-      getById: (id: string | number) => `/api/marketplace/${id}`,
-      search: () => '/api/marketplace' as const,
-    },
-    views: {
-      browse: () => '/marketplace' as const,
-      detail: (id: string | number) => `/marketplace/${id}`,
-    },
-  },
-  pageBuilder: {
-    api: {
-      create: () => '/api/pagebuilder' as const,
-      delete: (id: string | number) => `/api/pagebuilder/${id}`,
-      getAll: () => '/api/pagebuilder' as const,
-      getById: (id: string | number) => `/api/pagebuilder/${id}`,
-      permanentDelete: (id: string | number) => `/api/pagebuilder/${id}/permanent`,
-      publish: (id: string | number) => `/api/pagebuilder/${id}/publish`,
-      restore: (id: string | number) => `/api/pagebuilder/${id}/restore`,
-      trash: () => '/api/pagebuilder/trash' as const,
-      unpublish: (id: string | number) => `/api/pagebuilder/${id}/unpublish`,
-      updateContent: (id: string | number) => `/api/pagebuilder/${id}/content`,
-      update: (id: string | number) => `/api/pagebuilder/${id}`,
-      addTagToPage: (id: string | number) => `/api/pagebuilder/${id}/tags`,
-      getAllTags: () => '/api/pagebuilder/tags' as const,
-      removeTagFromPage: (id: string | number, tagId: string | number) =>
-        `/api/pagebuilder/${id}/tags/${tagId}`,
-      createTemplate: () => '/api/pagebuilder/templates' as const,
-      deleteTemplate: (id: string | number) => `/api/pagebuilder/templates/${id}`,
-      getAllTemplates: () => '/api/pagebuilder/templates' as const,
-    },
-    views: {
-      editor: () => '/pages/new' as const,
-      manage: () => '/pages/manage' as const,
-      pagesList: () => '/pages' as const,
-      viewerDraft: (slug: string | number) => `/pages/view/${slug}/draft`,
-      viewer: (slug: string | number) => `/pages/view/${slug}`,
-    },
-  },
-  products: {
-    api: {
-      create: () => '/api/products' as const,
-      delete: (id: string | number) => `/api/products/${id}`,
-      getAll: () => '/api/products' as const,
-      getById: (id: string | number) => `/api/products/${id}`,
-      update: (id: string | number) => `/api/products/${id}`,
-    },
-    views: {
-      browse: () => '/products' as const,
-      create: () => '/products/create' as const,
-      edit: (id: string | number) => `/products/${id}/edit`,
-      manage: () => '/products/manage' as const,
     },
   },
   rateLimiting: {
@@ -193,22 +124,6 @@ export const routes = {
       detail: (id: string | number) => `/audit-logs/${id}`,
     },
   },
-  datasets: {
-    api: {
-      convertDataset: (id: string | number) => `/api/datasets/${id}/convert`,
-      deleteDataset: (id: string | number) => `/api/datasets/${id}`,
-      downloadDataset: (id: string | number) => `/api/datasets/${id}/download`,
-      getDataset: (id: string | number) => `/api/datasets/${id}`,
-      getDatasetFeatures: (id: string | number) => `/api/datasets/${id}/features`,
-      listDatasets: () => '/api/datasets' as const,
-      uploadDataset: () => '/api/datasets' as const,
-    },
-    views: {
-      datasetsBrowse: () => '/datasets' as const,
-      datasetsDetail: (id: string | number) => `/datasets/${id}`,
-      datasetsUpload: () => '/datasets/upload' as const,
-    },
-  },
   users: {
     api: {
       accountSecurity: () => '/Manage/TwoFactorAuthentication' as const,
@@ -252,27 +167,6 @@ export const routes = {
       setPassword: () => '/Identity/Account/Manage/SetPassword' as const,
     },
   },
-  map: {
-    api: {
-      createBasemap: () => '/api/map/basemaps' as const,
-      deleteBasemap: (id: string | number) => `/api/map/basemaps/${id}`,
-      getAllBasemaps: () => '/api/map/basemaps' as const,
-      getBasemapById: (id: string | number) => `/api/map/basemaps/${id}`,
-      updateBasemap: (id: string | number) => `/api/map/basemaps/${id}`,
-      getDefaultMap: () => '/api/map/default' as const,
-      updateDefaultMap: () => '/api/map/default' as const,
-      createLayerSource: () => '/api/map/sources' as const,
-      createFromDataset: () => '/api/map/sources/from-dataset' as const,
-      deleteLayerSource: (id: string | number) => `/api/map/sources/${id}`,
-      getAllLayerSources: () => '/api/map/sources' as const,
-      getLayerSourceById: (id: string | number) => `/api/map/sources/${id}`,
-      updateLayerSource: (id: string | number) => `/api/map/sources/${id}`,
-    },
-    views: {
-      browse: () => '/map' as const,
-      layers: () => '/map/layers' as const,
-    },
-  },
   email: {
     api: {
       getAllMessages: () => '/api/email/messages' as const,
@@ -292,20 +186,6 @@ export const routes = {
       history: () => '/email/history' as const,
       settings: () => '/email/settings' as const,
       templates: () => '/email/templates' as const,
-    },
-  },
-  orders: {
-    api: {
-      create: () => '/api/orders' as const,
-      delete: (id: string | number) => `/api/orders/${id}`,
-      getAll: () => '/api/orders' as const,
-      getById: (id: string | number) => `/api/orders/${id}`,
-      update: (id: string | number) => `/api/orders/${id}`,
-    },
-    views: {
-      create: () => '/orders/create' as const,
-      edit: (id: string | number) => `/orders/${id}/edit`,
-      list: () => '/orders' as const,
     },
   },
   openIddict: {

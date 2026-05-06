@@ -1,11 +1,8 @@
-﻿using System.Net.Http.Json;
 using NBomber.Contracts;
 using NBomber.Contracts.Stats;
 using NBomber.CSharp;
 using SimpleModule.LoadTests.Infrastructure;
 using SimpleModule.LoadTests.Scenarios;
-using SimpleModule.Products.Contracts;
-using SimpleModule.Tests.Shared.Fakes;
 
 namespace SimpleModule.LoadTests;
 
@@ -16,8 +13,6 @@ public sealed class LoadTestRunner
 {
     private readonly LoadTestWebApplicationFactory _factory;
     private HttpClient _client = null!;
-    private string _seededUserId = null!;
-    private int[] _seededProductIds = null!;
 
     public LoadTestRunner(LoadTestWebApplicationFactory factory)
     {
@@ -28,22 +23,6 @@ public sealed class LoadTestRunner
     {
         // Acquire a real Bearer token via ROPC (password grant)
         _client = await _factory.CreateBearerClientAsync();
-        _seededUserId = await _factory.GetSeededUserIdAsync();
-
-        // Seed products for the Orders scenario
-        var productIds = new List<int>();
-        for (var i = 0; i < 5; i++)
-        {
-            var req = FakeDataGenerators.CreateProductRequestFaker.Generate();
-            var resp = await _client.PostAsJsonAsync("/api/products", req);
-            if (resp.IsSuccessStatusCode)
-            {
-                var product = await resp.Content.ReadFromJsonAsync<Product>();
-                productIds.Add(product!.Id.Value);
-            }
-        }
-
-        _seededProductIds = productIds.Count > 0 ? [.. productIds] : [1];
     }
 
     public ValueTask DisposeAsync() => default;
@@ -92,25 +71,13 @@ public sealed class LoadTestRunner
     [Fact]
     public void All_Scenarios() =>
         RunAllScenarios(
-            ProductsScenario.Create(_client, LoadProfile.Combined),
-            OrdersScenario.Create(_client, _seededUserId, _seededProductIds, LoadProfile.Combined),
             UsersScenario.Create(_client, LoadProfile.Combined),
             SettingsScenario.Create(_client, LoadProfile.Combined),
             AuditLogsScenario.Create(_client, LoadProfile.Combined),
             FileStorageScenario.Create(_client, LoadProfile.Combined),
-            PageBuilderScenario.Create(_client, LoadProfile.Combined),
             AdminScenario.Create(_client, LoadProfile.Combined),
-            MixedWorkloadScenario.Create(_client, LoadProfile.Combined),
-            FeatureFlagsScenario.Create(_client, LoadProfile.Combined),
-            MarketplaceScenario.Create(_client, LoadProfile.Combined)
+            FeatureFlagsScenario.Create(_client, LoadProfile.Combined)
         );
-
-    [Fact]
-    public void Products_Crud() => RunScenario(ProductsScenario.Create(_client));
-
-    [Fact]
-    public void Orders_Crud() =>
-        RunScenario(OrdersScenario.Create(_client, _seededUserId, _seededProductIds));
 
     [Fact]
     public void Users_Crud() => RunScenario(UsersScenario.Create(_client));
@@ -125,17 +92,8 @@ public sealed class LoadTestRunner
     public void Files_Ops() => RunScenario(FileStorageScenario.Create(_client));
 
     [Fact]
-    public void PageBuilder_Crud() => RunScenario(PageBuilderScenario.Create(_client));
-
-    [Fact]
     public void Admin_Ops() => RunScenario(AdminScenario.Create(_client));
 
     [Fact]
-    public void Mixed_Realistic() => RunScenario(MixedWorkloadScenario.Create(_client));
-
-    [Fact]
     public void FeatureFlags_Ops() => RunScenario(FeatureFlagsScenario.Create(_client));
-
-    [Fact]
-    public void Marketplace_Read() => RunScenario(MarketplaceScenario.Create(_client));
 }

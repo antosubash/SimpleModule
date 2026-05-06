@@ -189,14 +189,10 @@ public sealed partial class NewProjectScaffoldTests
         if (isHost)
         {
             // The Host must reference framework assemblies that the generated code
-            // may call into (Agents, Rag, Storage, DevTools, etc.).
+            // may call into (Storage, DevTools, etc.).
             var hostRefs = new[]
             {
                 "SimpleModule.Hosting",
-                "SimpleModule.Agents",
-                "SimpleModule.Rag",
-                "SimpleModule.Rag.StructuredRag",
-                "SimpleModule.Rag.VectorStore.InMemory",
                 "SimpleModule.DevTools",
                 "SimpleModule.Storage",
                 "SimpleModule.Storage.Local",

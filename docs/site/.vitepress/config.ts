@@ -62,7 +62,6 @@ export default defineConfig({
             { text: 'File Storage', link: '/guide/file-storage' },
             { text: 'Localization', link: '/guide/localization' },
             { text: 'Error Pages', link: '/guide/error-pages' },
-            { text: 'AI Agents & RAG', link: '/guide/ai-agents' },
           ],
         },
       ],

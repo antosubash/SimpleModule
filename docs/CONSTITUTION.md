@@ -61,7 +61,7 @@ Modules can expose configurable behavior via the `IModuleOptions` marker interfa
 
 ```csharp
 // Module defines options
-public class ProductsModuleOptions : IModuleOptions
+public class CustomersModuleOptions : IModuleOptions
 {
     public int DefaultPageSize { get; set; } = 10;
     public int MaxPageSize { get; set; } = 100;
@@ -70,11 +70,11 @@ public class ProductsModuleOptions : IModuleOptions
 // Host app configures them
 builder.AddSimpleModule(o =>
 {
-    o.ConfigureProducts(p => p.MaxPageSize = 50);
+    o.ConfigureCustomers(p => p.MaxPageSize = 50);
 });
 
 // Module reads them via IOptions<T>
-public class BrowseEndpoint(IOptions<ProductsModuleOptions> options) : IViewEndpoint { ... }
+public class BrowseEndpoint(IOptions<CustomersModuleOptions> options) : IViewEndpoint { ... }
 ```
 
 **Rules:**
@@ -566,7 +566,7 @@ The `tools/` directory holds non-module .NET utilities consumed by the host, the
 
 ### Sub-projects
 
-A sub-project is an additional assembly inside a module, used when a module owns multiple optional providers (e.g., `SimpleModule.Agents.AI.Anthropic`). Rules:
+A sub-project is an additional assembly inside a module, used when a module owns multiple optional providers (e.g., `SimpleModule.FileStorage.S3`). Rules:
 
 - Lives at `modules/{Name}/src/SimpleModule.{Name}.{Suffix}/`.
 - Name matches `SimpleModule.{Name}.{Suffix}`.

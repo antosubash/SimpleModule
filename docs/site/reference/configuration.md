@@ -22,36 +22,6 @@ The default `appsettings.json` for the host application:
       "BasePath": "./storage"
     }
   },
-  "AI": {
-    "Ollama": {
-      "Endpoint": "http://localhost:11434",
-      "Model": "llama3.2",
-      "EmbeddingModel": "nomic-embed-text"
-    }
-  },
-  "Agents": {
-    "Enabled": true,
-    "MaxTokens": 4096,
-    "Temperature": 0.7,
-    "EnableRag": true,
-    "EnableStreaming": true,
-    "SessionTimeout": "00:30:00",
-    "RateLimit": {
-      "RequestsPerMinute": 60,
-      "TokensPerMinute": 100000
-    }
-  },
-  "Rag": {
-    "DefaultTopK": 5,
-    "MinScore": 0.7,
-    "EmbeddingDimension": 1536,
-    "IndexOnStartup": true,
-    "StructuredRag": {
-      "EnableRouter": true,
-      "DefaultStructure": "Chunk",
-      "StructurizerMaxTokens": 4096
-    }
-  },
   "Localization": {
     "DefaultLocale": "en"
   },
@@ -110,8 +80,8 @@ Each module gets its own isolated storage space:
 
 | Provider | Isolation Strategy | Example |
 |----------|-------------------|---------|
-| SQLite | Table name prefixes | `Products_Products`, `Orders_Orders` |
-| PostgreSQL | Schemas | `products.Products`, `orders.Orders` |
+| SQLite | Table name prefixes | `Customers_Customers`, `Users_Users` |
+| PostgreSQL | Schemas | `customers.Customers`, `users.Users` |
 
 This is configured automatically via `ModuleDbContextInfo` -- you do not need to set this manually.
 
@@ -220,10 +190,10 @@ public void ConfigureSettings(ISettingsBuilder settings)
 {
     settings.Add(new SettingDefinition
     {
-        Key = "Products.MaxItemsPerPage",
+        Key = "Customers.MaxItemsPerPage",
         DisplayName = "Max Items Per Page",
-        Description = "Maximum number of products displayed per page",
-        Group = "Products",
+        Description = "Maximum number of customers displayed per page",
+        Group = "Customers",
         DefaultValue = "25",
         Type = SettingType.Integer,
         Scope = SettingScope.Application,
@@ -243,126 +213,6 @@ ASP.NET loads configuration from multiple sources. Later sources override earlie
 4. Command-line arguments (highest priority)
 
 For the `Development` environment, the effective configuration merges `appsettings.json` with `appsettings.Development.json`, with the Development file winning on conflicts.
-
-## AI Provider Configuration
-
-SimpleModule supports multiple AI providers. Configure one in `appsettings.json`:
-
-### Anthropic (Claude)
-
-```json
-{
-  "AI": {
-    "Anthropic": {
-      "ApiKey": "sk-ant-...",
-      "Model": "claude-sonnet-4-20250514"
-    }
-  }
-}
-```
-
-### OpenAI
-
-```json
-{
-  "AI": {
-    "OpenAI": {
-      "ApiKey": "sk-...",
-      "Model": "gpt-4o"
-    }
-  }
-}
-```
-
-### Azure OpenAI
-
-```json
-{
-  "AI": {
-    "AzureOpenAI": {
-      "Endpoint": "https://your-resource.openai.azure.com",
-      "DeploymentName": "gpt-4o",
-      "ApiKey": "your-key"
-    }
-  }
-}
-```
-
-### Ollama (Local)
-
-```json
-{
-  "AI": {
-    "Ollama": {
-      "Endpoint": "http://localhost:11434",
-      "Model": "llama3.2",
-      "EmbeddingModel": "nomic-embed-text"
-    }
-  }
-}
-```
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `AI:Ollama:Endpoint` | `http://localhost:11434` | Base URL of the Ollama server |
-| `AI:Ollama:Model` | `llama3.2` | Chat completion model |
-| `AI:Ollama:EmbeddingModel` | `nomic-embed-text` | Model used for embedding generation |
-
-::: tip
-Use environment variables for API keys in production: `AI__Anthropic__ApiKey`, `AI__OpenAI__ApiKey`, etc.
-:::
-
-## Agent Configuration
-
-The agent runtime is configured under the `Agents` section:
-
-```json
-{
-  "Agents": {
-    "Enabled": true,
-    "MaxTokens": 4096,
-    "Temperature": 0.7,
-    "EnableRag": true,
-    "EnableStreaming": true,
-    "SessionTimeout": "00:30:00",
-    "RateLimit": {
-      "RequestsPerMinute": 60,
-      "TokensPerMinute": 100000
-    }
-  }
-}
-```
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `Agents:Enabled` | `true` | Global kill switch for AI agents |
-| `Agents:MaxTokens` | `4096` | Default max tokens per response |
-| `Agents:Temperature` | `0.7` | Default sampling temperature |
-| `Agents:EnableRag` | `true` | Enable RAG context injection |
-| `Agents:EnableStreaming` | `true` | Allow SSE streaming responses |
-| `Agents:SessionTimeout` | `00:30:00` | Session inactivity timeout |
-| `Agents:RateLimit:RequestsPerMinute` | `60` | Per-user request rate limit |
-| `Agents:RateLimit:TokensPerMinute` | `100000` | Per-user token rate limit |
-
-## RAG Configuration
-
-```json
-{
-  "Rag": {
-    "DefaultTopK": 5,
-    "MinScore": 0.7,
-    "EmbeddingDimension": 1536,
-    "IndexOnStartup": true
-  }
-}
-```
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `Rag:DefaultTopK` | `5` | Number of results per query |
-| `Rag:MinScore` | `0.7` | Minimum similarity score threshold |
-| `Rag:EmbeddingDimension` | `1536` | Vector embedding dimension |
-| `Rag:IndexOnStartup` | `true` | Index knowledge base on application start |
 
 ## File Storage Configuration
 

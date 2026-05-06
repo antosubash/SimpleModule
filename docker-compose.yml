@@ -16,8 +16,8 @@ services:
       # All IModuleJob execution lives in the worker service below.
       BackgroundJobs__WorkerMode: Producer
     volumes:
-      # Shared with the worker so uploaded dataset blobs are visible to
-      # both producer (web upload path) and consumer (background job path).
+      # Shared with the worker so uploaded blobs are visible to both
+      # producer (web upload path) and consumer (background job path).
       - storage_data:/app/storage
     depends_on:
       postgres:

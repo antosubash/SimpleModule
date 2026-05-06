@@ -21,14 +21,14 @@ Create a sealed class implementing `IModulePermissions` with `public const strin
 ```csharp
 using SimpleModule.Core.Authorization;
 
-namespace SimpleModule.Products;
+namespace SimpleModule.Customers;
 
-public sealed class ProductsPermissions : IModulePermissions
+public sealed class CustomersPermissions : IModulePermissions
 {
-    public const string View = "Products.View";
-    public const string Create = "Products.Create";
-    public const string Update = "Products.Update";
-    public const string Delete = "Products.Delete";
+    public const string View = "Customers.View";
+    public const string Create = "Customers.Create";
+    public const string Update = "Customers.Update";
+    public const string Delete = "Customers.Delete";
 }
 ```
 
@@ -39,8 +39,8 @@ Classes implementing `IModulePermissions` are **automatically discovered** by th
 The `PermissionRegistryBuilder` uses reflection to find all `public const string` fields in the class and groups them by the prefix before the first dot:
 
 ```csharp
-// "Products.View" → grouped under "Products" module
-// "Orders.Create" → grouped under "Orders" module
+// "Customers.View" → grouped under "Customers" module
+// "Users.Create"   → grouped under "Users" module
 // "GlobalAdmin"   → grouped under "Global" (no dot prefix)
 ```
 
@@ -56,22 +56,22 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/",
-                (CreateProductRequest request, IProductContracts productContracts) =>
+                (CreateCustomerRequest request, ICustomerContracts customerContracts) =>
                 {
                     // ... handle request
                 }
             )
-            .RequirePermission(ProductsPermissions.Create);
+            .RequirePermission(CustomersPermissions.Create);
 }
 ```
 
 Multiple permissions can be required on a single endpoint:
 
 ```csharp
-app.MapDelete("/{id}", (int id, IProductContracts products) =>
-        products.DeleteProductAsync(id)
+app.MapDelete("/{id}", (int id, ICustomerContracts customers) =>
+        customers.DeleteCustomerAsync(id)
     )
-    .RequirePermission(ProductsPermissions.View, ProductsPermissions.Delete);
+    .RequirePermission(CustomersPermissions.View, CustomersPermissions.Delete);
 ```
 
 Each permission becomes a separate `PermissionRequirement`. The user must satisfy **all** of them.
@@ -81,12 +81,12 @@ Each permission becomes a separate `PermissionRequirement`. The user must satisf
 The `[RequirePermission]` attribute can be applied to endpoint classes:
 
 ```csharp
-[RequirePermission(ProductsPermissions.View)]
+[RequirePermission(CustomersPermissions.View)]
 public class GetByIdEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/{id}", (int id, IProductContracts products) =>
-            products.GetProductByIdAsync(id)
+        app.MapGet("/{id}", (int id, ICustomerContracts customers) =>
+            customers.GetCustomerByIdAsync(id)
         );
 }
 ```
@@ -135,7 +135,7 @@ public sealed class PermissionAuthorizationHandler
 The handler delegates to `ClaimsPrincipalExtensions.HasPermission`, which is where the real policy lives:
 
 - Users with the **Admin role** bypass all permission checks
-- For other users, each `permission` claim is tested against the requirement via `PermissionMatcher.IsMatch`, which supports **wildcard matching**: a claim value of `"Products.*"` satisfies any `Products.X` requirement, and a bare `"*"` claim satisfies any requirement. Only trailing wildcards (`prefix.*` or `*`) are supported.
+- For other users, each `permission` claim is tested against the requirement via `PermissionMatcher.IsMatch`, which supports **wildcard matching**: a claim value of `"Customers.*"` satisfies any `Customers.X` requirement, and a bare `"*"` claim satisfies any requirement. Only trailing wildcards (`prefix.*` or `*`) are supported.
 - If no matching claim is found, the requirement fails (returns 403 Forbidden)
 
 ### RequirePermission Extension
@@ -179,7 +179,7 @@ This is useful for building admin UIs that display and assign permissions. For e
 ```csharp
 app.MapGet("/permissions", (PermissionRegistry registry) =>
 {
-    return registry.ByModule; // { "Products": ["Products.View", ...], "Orders": [...] }
+    return registry.ByModule; // { "Customers": ["Customers.View", ...], "Users": [...] }
 });
 ```
 
@@ -222,23 +222,23 @@ The test infrastructure provides `CreateAuthenticatedClient` which accepts claim
 
 ```csharp
 [Fact]
-public async Task Create_product_requires_permission()
+public async Task Create_customer_requires_permission()
 {
     var client = factory.CreateAuthenticatedClient(
-        new Claim("permission", ProductsPermissions.Create)
+        new Claim("permission", CustomersPermissions.Create)
     );
 
-    var response = await client.PostAsJsonAsync("/products", new { Name = "Test" });
+    var response = await client.PostAsJsonAsync("/customers", new { Name = "Test" });
 
     response.StatusCode.Should().Be(HttpStatusCode.Created);
 }
 
 [Fact]
-public async Task Create_product_forbidden_without_permission()
+public async Task Create_customer_forbidden_without_permission()
 {
     var client = factory.CreateAuthenticatedClient(); // no permission claims
 
-    var response = await client.PostAsJsonAsync("/products", new { Name = "Test" });
+    var response = await client.PostAsJsonAsync("/customers", new { Name = "Test" });
 
     response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 }

@@ -171,15 +171,15 @@ Tests are organized into two categories:
 Quick page-load checks that verify pages render without errors:
 
 ```typescript
-test.describe('Products pages', () => {
-  test('browse page loads', async ({ page }) => {
-    const browse = new ProductsBrowsePage(page);
-    await browse.goto();
-    await expect(browse.heading).toBeVisible();
+test.describe('Users pages', () => {
+  test('users list loads', async ({ page }) => {
+    const users = new UsersListPage(page);
+    await users.goto();
+    await expect(users.heading).toBeVisible();
   });
 
-  test('create page loads', async ({ page }) => {
-    const create = new ProductsCreatePage(page);
+  test('create user page loads', async ({ page }) => {
+    const create = new UsersCreatePage(page);
     await create.goto();
     await expect(create.heading).toBeVisible();
   });
@@ -191,23 +191,19 @@ test.describe('Products pages', () => {
 Full CRUD and business workflows that create, read, update, and delete data:
 
 ```typescript
-test.describe('Orders CRUD', () => {
+test.describe('Users CRUD', () => {
   test.describe.configure({ mode: 'serial' });
 
-  test('create an order and verify it appears in the list',
-    async ({ page, request }) => {
-      const productsPage = new ProductsCreatePage(page);
-      await productsPage.goto();
-      await productsPage.createProduct(productName, price);
-
-      const createPage = new OrdersCreatePage(page);
+  test('create a user and verify it appears in the list',
+    async ({ page }) => {
+      const createPage = new UsersCreatePage(page);
       await createPage.goto();
-      await createPage.createOrder(adminUserId, 0, quantity);
+      await createPage.createUser(userName, userEmail);
 
-      const listPage = new OrdersListPage(page);
+      const listPage = new UsersListPage(page);
       await listPage.goto();
       await expect(
-        listPage.orderRowByUser(adminUserId).first()
+        listPage.userRowByEmail(userEmail).first()
       ).toBeVisible();
     });
 });
@@ -224,23 +220,23 @@ E2E tests use the Page Object Model pattern. Each page has a corresponding class
 ```typescript
 import type { Page } from '@playwright/test';
 
-export class ProductsBrowsePage {
+export class UsersListPage {
   constructor(private page: Page) {}
 
   async goto() {
-    await this.page.goto('/products/browse');
+    await this.page.goto('/admin/users');
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /products/i });
+    return this.page.getByRole('heading', { name: /users/i });
   }
 
-  get productCards() {
-    return this.page.locator('[data-testid="product-card"]');
+  get userRows() {
+    return this.page.locator('[data-testid="user-row"]');
   }
 
-  productByName(name: string) {
-    return this.page.getByText(name);
+  userRowByEmail(email: string) {
+    return this.page.getByText(email);
   }
 }
 ```
@@ -264,30 +260,11 @@ pages/
     dashboard.page.ts
     list.page.ts
     recurring.page.ts
-  chat/
-  datasets/
   email/
   feature-flags/
   filestorage/
-  map/
-  marketplace/
-    browse.page.ts
   openiddict/
     clients.page.ts
-  orders/
-    create.page.ts
-    edit.page.ts
-    list.page.ts
-  pagebuilder/
-    editor.page.ts
-    manage.page.ts
-    pages-list.page.ts
-    viewer.page.ts
-  products/
-    browse.page.ts
-    create.page.ts
-    edit.page.ts
-    manage.page.ts
   rate-limiting/
   settings/
     admin.page.ts

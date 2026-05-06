@@ -12,9 +12,9 @@ The frontend architecture follows a modular pattern that mirrors the backend:
 
 ```
 Browser Request
-  --> ASP.NET route handler calls Inertia.Render("Products/Browse", props)
+  --> ASP.NET route handler calls Inertia.Render("Customers/Browse", props)
   --> Inertia middleware renders static HTML shell with embedded JSON props
-  --> React ClientApp dynamically imports SimpleModule.Products.pages.js
+  --> React ClientApp dynamically imports SimpleModule.Customers.pages.js
   --> Component hydrates with server-provided props
 ```
 
@@ -36,12 +36,12 @@ Each module compiles its React pages into a single ES module bundle (`{ModuleNam
 Every module that has a UI builds a `{ModuleName}.pages.js` file into its `wwwroot/` directory. This file exports a `pages` record that maps route names to React components:
 
 ```ts
-// modules/Products/src/SimpleModule.Products/Pages/index.ts
+// modules/Customers/src/SimpleModule.Customers/Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('./Browse'),
-  'Products/Manage': () => import('./Manage'),
-  'Products/Create': () => import('./Create'),
-  'Products/Edit': () => import('./Edit'),
+  'Customers/Browse': () => import('./Browse'),
+  'Customers/Manage': () => import('./Manage'),
+  'Customers/Create': () => import('./Create'),
+  'Customers/Edit': () => import('./Edit'),
 };
 ```
 
@@ -102,10 +102,10 @@ export async function resolvePage(name: string) {
 }
 ```
 
-For a route name like `Products/Browse`:
-1. The module name `Products` is extracted from the first segment
-2. The bundle `/_content/SimpleModule.Products/SimpleModule.Products.pages.js` is dynamically imported
-3. The `pages` record is looked up for the key `Products/Browse`
+For a route name like `Customers/Browse`:
+1. The module name `Customers` is extracted from the first segment
+2. The bundle `/_content/SimpleModule.Customers/SimpleModule.Customers.pages.js` is dynamically imported
+3. The `pages` record is looked up for the key `Customers/Browse`
 4. Lazy entries (functions) are resolved, eager entries are returned directly
 
 A cache-buster query parameter is appended from a `<meta name="cache-buster">` tag when present, ensuring browsers pick up new builds without stale caches.
@@ -125,16 +125,16 @@ The `@simplemodule/client` package (`packages/SimpleModule.Client/`) provides th
 The source generator discovers C# types marked with the `[Dto]` attribute and embeds TypeScript interface definitions. The `scripts/extract-ts-types.mjs` script extracts these into `.ts` files under `ClientApp/types/`, giving React components full type safety over server-provided props:
 
 ```tsx
-import type { Product } from '../types';
+import type { Customer } from '../types';
 
-export default function Browse({ products }: { products: Product[] }) {
+export default function Browse({ customers }: { customers: Customer[] }) {
   return (
-    <PageShell title="Products" description="Browse the product catalog.">
-      {products.map((p) => (
-        <Card key={p.id}>
+    <PageShell title="Customers" description="Browse the customer list.">
+      {customers.map((c) => (
+        <Card key={c.id}>
           <CardContent>
-            <span>{p.name}</span>
-            <span>${p.price.toFixed(2)}</span>
+            <span>{c.name}</span>
+            <span>{c.email}</span>
           </CardContent>
         </Card>
       ))}

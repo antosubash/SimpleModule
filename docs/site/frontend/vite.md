@@ -23,7 +23,7 @@ In a modular monolith, each module is independently deployable. If every module 
 Every module uses the `defineModuleConfig` helper from `@simplemodule/client/module`:
 
 ```ts
-// modules/Products/src/SimpleModule.Products/vite.config.ts
+// modules/Customers/src/SimpleModule.Customers/vite.config.ts
 import { defineModuleConfig } from '@simplemodule/client/module';
 
 export default defineModuleConfig(import.meta.dirname);
@@ -116,7 +116,7 @@ Each module declares React and React-DOM as **peer dependencies** since they are
 ```json
 {
   "private": true,
-  "name": "@simplemodule/products",
+  "name": "@simplemodule/customers",
   "version": "0.0.0",
   "scripts": {
     "build": "cross-env VITE_MODE=prod vite build",
@@ -153,9 +153,9 @@ The `npm run dev` command starts the complete development environment using the 
 npm run dev
   |
   ├── dotnet run --project template/SimpleModule.Host
-  ├── npm run watch  (in modules/Products/src/SimpleModule.Products/)
-  ├── npm run watch  (in modules/Orders/src/SimpleModule.Orders/)
+  ├── npm run watch  (in modules/Customers/src/SimpleModule.Customers/)
   ├── npm run watch  (in modules/Users/src/SimpleModule.Users/)
+  ├── npm run watch  (in modules/Admin/src/SimpleModule.Admin/)
   └── npm run watch  (in template/SimpleModule.Host/ClientApp/)
 ```
 
@@ -222,12 +222,12 @@ npm run dev:build
 After building, each module's `wwwroot/` directory contains:
 
 ```
-modules/Products/src/SimpleModule.Products/wwwroot/
-  SimpleModule.Products.pages.js   # The module's page bundle
-  simplemodule.products.css        # Any CSS assets (named from module)
+modules/Customers/src/SimpleModule.Customers/wwwroot/
+  SimpleModule.Customers.pages.js   # The module's page bundle
+  simplemodule.customers.css       # Any CSS assets (named from module)
 ```
 
-These files are served as static content via ASP.NET's `_content/SimpleModule.{ModuleName}/` path, which is how `resolvePage` finds them at `/_content/SimpleModule.Products/SimpleModule.Products.pages.js`.
+These files are served as static content via ASP.NET's `_content/SimpleModule.{ModuleName}/` path, which is how `resolvePage` finds them at `/_content/SimpleModule.Customers/SimpleModule.Customers.pages.js`.
 
 ## Next Steps
 

@@ -21,10 +21,10 @@ The Inertia integration in SimpleModule has three layers:
 On the first request (full page load), the flow is:
 
 ```
-Browser GET /products/browse
+Browser GET /customers/browse
     ↓
 ASP.NET route handler
-    → Inertia.Render("Products/Browse", { products: [...] })
+    → Inertia.Render("Customers/Browse", { customers: [...] })
     ↓
 InertiaResult.ExecuteAsync()
     → Serializes page data (component, props, url, version) as JSON
@@ -39,8 +39,8 @@ HtmlFileInertiaPageRenderer (default IInertiaPageRenderer)
     ↓
 Browser receives HTML
     → React's createInertiaApp hydrates the page
-    → resolvePage() imports Products.pages.js
-    → "Products/Browse" component renders with props
+    → resolvePage() imports Customers.pages.js
+    → "Customers/Browse" component renders with props
 ```
 
 ### Subsequent Navigation
@@ -49,10 +49,10 @@ On subsequent navigation (Inertia XHR requests), the flow is shorter:
 
 ```
 Browser clicks Inertia link
-    → XHR GET /products/browse (with X-Inertia header)
+    → XHR GET /customers/browse (with X-Inertia header)
     ↓
 ASP.NET route handler
-    → Inertia.Render("Products/Browse", { products: [...] })
+    → Inertia.Render("Customers/Browse", { customers: [...] })
     ↓
 InertiaResult.ExecuteAsync()
     → Detects X-Inertia header
@@ -78,10 +78,10 @@ public class BrowseEndpoint : IViewEndpoint
     {
         app.MapGet(
             "/browse",
-            async (IProductContracts products) =>
+            async (ICustomerContracts customers) =>
                 Inertia.Render(
-                    "Products/Browse",
-                    new { products = await products.GetAllProductsAsync() }
+                    "Customers/Browse",
+                    new { customers = await customers.GetAllCustomersAsync() }
                 )
         );
     }
@@ -89,7 +89,7 @@ public class BrowseEndpoint : IViewEndpoint
 ```
 
 Parameters:
-- **`component`** -- the page name (e.g., `"Products/Browse"`). Must match an entry in the module's `Pages/index.ts`.
+- **`component`** -- the page name (e.g., `"Customers/Browse"`). Must match an entry in the module's `Pages/index.ts`.
 - **`props`** -- an anonymous object or any serializable type. Serialized as camelCase JSON.
 
 ### Props Serialization
@@ -98,14 +98,14 @@ Props are serialized using `System.Text.Json` with `JsonNamingPolicy.CamelCase`:
 
 ```csharp
 // Server
-Inertia.Render("Products/Edit", new { product });
+Inertia.Render("Customers/Edit", new { customer });
 
 // Client receives:
-// { "component": "Products/Edit", "props": { "product": { "id": 1, "name": "..." } } }
+// { "component": "Customers/Edit", "props": { "customer": { "id": 1, "name": "..." } } }
 ```
 
 ::: warning
-Property names are automatically converted to camelCase. A C# property `ProductName` becomes `productName` in JavaScript.
+Property names are automatically converted to camelCase. A C# property `CustomerName` becomes `customerName` in JavaScript.
 :::
 
 ### Shared Data
@@ -249,10 +249,10 @@ export async function resolvePage(name: string) {
 }
 ```
 
-For a component name like `"Products/Browse"`:
-1. Extracts module name: `"Products"`
-2. Imports `/_content/Products/Products.pages.js`
-3. Looks up `"Products/Browse"` in the `pages` export
+For a component name like `"Customers/Browse"`:
+1. Extracts module name: `"Customers"`
+2. Imports `/_content/Customers/Customers.pages.js`
+3. Looks up `"Customers/Browse"` in the `pages` export
 4. Supports lazy loading via function entries
 
 ### Module Pages Registry
@@ -260,12 +260,12 @@ For a component name like `"Products/Browse"`:
 Each module exports a `pages` record in `Pages/index.ts`:
 
 ```typescript
-// modules/Products/src/SimpleModule.Products/Pages/index.ts
+// modules/Customers/src/SimpleModule.Customers/Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('./Browse'),
-  'Products/Manage': () => import('./Manage'),
-  'Products/Create': () => import('./Create'),
-  'Products/Edit': () => import('./Edit'),
+  'Customers/Browse': () => import('./Browse'),
+  'Customers/Manage': () => import('./Manage'),
+  'Customers/Create': () => import('./Create'),
+  'Customers/Edit': () => import('./Edit'),
 };
 ```
 
@@ -281,16 +281,16 @@ Page components receive props from the server as React props:
 import { PageHeader } from '@simplemodule/ui/components';
 
 interface BrowseProps {
-  products: Product[];
+  customers: Customer[];
 }
 
-export default function Browse({ products }: BrowseProps) {
+export default function Browse({ customers }: BrowseProps) {
   return (
     <div>
-      <PageHeader title="Products" />
+      <PageHeader title="Customers" />
       <ul>
-        {products.map((p) => (
-          <li key={p.id}>{p.name} - ${p.price}</li>
+        {customers.map((c) => (
+          <li key={c.id}>{c.name} - {c.email}</li>
         ))}
       </ul>
     </div>
@@ -316,7 +316,7 @@ Instead of showing the default "must receive a valid Inertia response" error, a 
 
 ## Full Example
 
-Here is the complete flow for a Products/Browse page:
+Here is the complete flow for a Customers/Browse page:
 
 **1. Endpoint (C#):**
 
@@ -327,10 +327,10 @@ public class BrowseEndpoint : IViewEndpoint
     {
         app.MapGet(
             "/browse",
-            async (IProductContracts products) =>
+            async (ICustomerContracts customers) =>
                 Inertia.Render(
-                    "Products/Browse",
-                    new { products = await products.GetAllProductsAsync() }
+                    "Customers/Browse",
+                    new { customers = await customers.GetAllCustomersAsync() }
                 )
         ).AllowAnonymous();
     }
@@ -342,7 +342,7 @@ public class BrowseEndpoint : IViewEndpoint
 ```typescript
 // Pages/index.ts
 export const pages: Record<string, unknown> = {
-  'Products/Browse': () => import('./Browse'),
+  'Customers/Browse': () => import('./Browse'),
 };
 ```
 
@@ -350,12 +350,12 @@ export const pages: Record<string, unknown> = {
 
 ```tsx
 // Pages/Browse.tsx
-export default function Browse({ products }: { products: Product[] }) {
+export default function Browse({ customers }: { customers: Customer[] }) {
   return (
     <div>
-      <h1>Products</h1>
-      {products.map((p) => (
-        <div key={p.id}>{p.name}</div>
+      <h1>Customers</h1>
+      {customers.map((c) => (
+        <div key={c.id}>{c.name}</div>
       ))}
     </div>
   );
@@ -364,13 +364,13 @@ export default function Browse({ products }: { products: Product[] }) {
 
 **4. What happens at runtime:**
 
-1. User navigates to `/products/browse`
+1. User navigates to `/customers/browse`
 2. ASP.NET matches the route, calls the endpoint handler
-3. `IProductContracts.GetAllProductsAsync()` fetches products from the database
-4. `Inertia.Render("Products/Browse", { products })` serializes the page data
+3. `ICustomerContracts.GetAllCustomersAsync()` fetches customers from the database
+4. `Inertia.Render("Customers/Browse", { customers })` serializes the page data
 5. On initial load: `HtmlFileInertiaPageRenderer` writes the pre-split `index.html` shell with the JSON injected into `<script data-page="app">`
-6. React hydrates, `resolvePage("Products/Browse")` imports `Products.pages.js`
-7. The Browse component renders with the server-provided products array
+6. React hydrates, `resolvePage("Customers/Browse")` imports `Customers.pages.js`
+7. The Browse component renders with the server-provided customers array
 8. On subsequent navigation: only JSON is returned, React swaps the component
 
 ## Next Steps

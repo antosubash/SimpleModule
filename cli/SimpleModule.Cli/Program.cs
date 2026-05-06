@@ -15,8 +15,8 @@ app.Configure(config =>
     config.SetApplicationVersion(VersionCommand.ResolveVersion());
 
     config.AddExample("new", "project", "MyApp");
-    config.AddExample("new", "module", "Products");
-    config.AddExample("new", "feature", "CreateProduct", "--module", "Products");
+    config.AddExample("new", "module", "Customers");
+    config.AddExample("new", "feature", "CreateCustomer", "--module", "Customers");
     config.AddExample("dev");
     config.AddExample("list");
     config.AddExample("doctor", "--fix");
@@ -35,14 +35,11 @@ app.Configure(config =>
             newBranch
                 .AddCommand<NewModuleCommand>("module")
                 .WithDescription("Scaffold a new module")
-                .WithExample("new", "module", "Products");
+                .WithExample("new", "module", "Customers");
             newBranch
                 .AddCommand<NewFeatureCommand>("feature")
                 .WithDescription("Add a feature to an existing module")
-                .WithExample("new", "feature", "CreateProduct", "--module", "Products");
-            newBranch
-                .AddCommand<NewAgentCommand>("agent")
-                .WithDescription("Add an AI agent to an existing module");
+                .WithExample("new", "feature", "CreateCustomer", "--module", "Customers");
         }
     );
 

@@ -12,9 +12,9 @@ Three database providers are supported out of the box:
 
 | Provider | Schema Isolation | Detection Heuristic |
 |----------|-----------------|---------------------|
-| **SQLite** | Table name prefixes (`Products_Products`) | Connection string contains `Data Source=` |
-| **PostgreSQL** | Database schemas (`products.Products`) | Connection string contains `Host=` |
-| **SQL Server** | Database schemas (`products.Products`) | Connection string contains `Initial Catalog=`, `Server=.\`, or `Server=(` |
+| **SQLite** | Table name prefixes (`Customers_Customers`) | Connection string contains `Data Source=` |
+| **PostgreSQL** | Database schemas (`customers.Customers`) | Connection string contains `Host=` |
+| **SQL Server** | Database schemas (`customers.Customers`) | Connection string contains `Initial Catalog=`, `Server=.\`, or `Server=(` |
 
 The provider is auto-detected from the connection string. You can also set it explicitly in configuration:
 
@@ -52,46 +52,46 @@ Each module registers its own `DbContext` using the `AddModuleDbContext<T>` exte
 
 ```csharp
 [Module(
-    ProductsConstants.ModuleName,
-    RoutePrefix = ProductsConstants.RoutePrefix,
-    ViewPrefix = "/products"
+    CustomersConstants.ModuleName,
+    RoutePrefix = CustomersConstants.RoutePrefix,
+    ViewPrefix = "/customers"
 )]
-public class ProductsModule : IModule
+public class CustomersModule : IModule
 {
     public void ConfigureServices(
         IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<ProductsDbContext>(
-            configuration, ProductsConstants.ModuleName);
+        services.AddModuleDbContext<CustomersDbContext>(
+            configuration, CustomersConstants.ModuleName);
     }
 }
 ```
 
-### The ProductsDbContext
+### The CustomersDbContext
 
 Here is a complete example of a module DbContext:
 
 ```csharp
-public class ProductsDbContext(
-    DbContextOptions<ProductsDbContext> options,
+public class CustomersDbContext(
+    DbContextOptions<CustomersDbContext> options,
     IOptions<DatabaseOptions> dbOptions
 ) : DbContext(options)
 {
-    public DbSet<Product> Products => Set<Product>();
+    public DbSet<Customer> Customers => Set<Customer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new ProductConfiguration());
-        modelBuilder.ApplyModuleSchema("Products", dbOptions.Value);
+        modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+        modelBuilder.ApplyModuleSchema("Customers", dbOptions.Value);
     }
 
     protected override void ConfigureConventions(
         ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder
-            .Properties<ProductId>()
-            .HaveConversion<ProductId.EfCoreValueConverter,
-                            ProductId.EfCoreValueComparer>();
+            .Properties<CustomerId>()
+            .HaveConversion<CustomerId.EfCoreValueConverter,
+                            CustomerId.EfCoreValueComparer>();
     }
 }
 ```
@@ -113,19 +113,19 @@ The `ApplyModuleSchema` extension method automatically applies the correct isola
 **SQLite** -- Prefixes all table names with the module name:
 
 ```
-Products_Products
-Products_Categories
-Orders_Orders
-Orders_OrderItems
+Customers_Customers
+Customers_Addresses
+Users_Users
+Users_Roles
 ```
 
 **PostgreSQL / SQL Server** -- Creates separate schemas:
 
 ```sql
-products.Products
-products.Categories
-orders.Orders
-orders.OrderItems
+customers.Customers
+customers.Addresses
+users.Users
+users.Roles
 ```
 
 The implementation:
@@ -176,28 +176,26 @@ After partitioning tables, `ApplyModuleSchema` calls a private `ApplyEntityConve
 Use `IEntityTypeConfiguration<T>` to define entity mappings. Keep these in an `EntityConfigurations` directory in your module:
 
 ```csharp
-public class ProductConfiguration : IEntityTypeConfiguration<Product>
+public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
-    public void Configure(EntityTypeBuilder<Product> builder)
+    public void Configure(EntityTypeBuilder<Customer> builder)
     {
-        builder.HasKey(p => p.Id);
-        builder.Property(p => p.Id).ValueGeneratedOnAdd();
-        builder.Property(p => p.Name).IsRequired();
-        builder.Property(p => p.Price).HasColumnType("decimal(18,2)");
+        builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id).ValueGeneratedOnAdd();
+        builder.Property(c => c.Name).IsRequired();
+        builder.Property(c => c.Email).IsRequired().HasMaxLength(256);
 
-        builder.HasData(GenerateSeedProducts());
+        builder.HasData(GenerateSeedCustomers());
     }
 
-    private static Product[] GenerateSeedProducts()
+    private static Customer[] GenerateSeedCustomers()
     {
         var id = 0;
-        var faker = new Faker<Product>()
+        var faker = new Faker<Customer>()
             .UseSeed(54321)
-            .RuleFor(p => p.Id, _ => ProductId.From(++id))
-            .RuleFor(p => p.Name, f => f.Commerce.ProductName())
-            .RuleFor(p => p.Price, f => decimal.Parse(
-                f.Commerce.Price(10, 1000),
-                CultureInfo.InvariantCulture));
+            .RuleFor(c => c.Id, _ => CustomerId.From(++id))
+            .RuleFor(c => c.Name, f => f.Person.FullName)
+            .RuleFor(c => c.Email, f => f.Internet.Email());
 
         return faker.Generate(10).ToArray();
     }
@@ -209,8 +207,8 @@ Apply configurations in `OnModelCreating`:
 ```csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
-    modelBuilder.ApplyConfiguration(new ProductConfiguration());
-    modelBuilder.ApplyModuleSchema("Products", dbOptions.Value);
+    modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+    modelBuilder.ApplyModuleSchema("Customers", dbOptions.Value);
 }
 ```
 
@@ -329,17 +327,17 @@ For development, `EnsureCreated()` is called automatically. You do not need to r
 For production deployments, use EF Core migrations scoped to each module:
 
 ```bash
-# Generate a migration for the Products module
+# Generate a migration for the Customers module
 dotnet ef migrations add InitialCreate \
-  --project modules/Products/src/Products \
+  --project modules/Customers/src/Customers \
   --startup-project template/SimpleModule.Host \
-  --context ProductsDbContext
+  --context CustomersDbContext
 
 # Apply migrations
 dotnet ef database update \
-  --project modules/Products/src/Products \
+  --project modules/Customers/src/Customers \
   --startup-project template/SimpleModule.Host \
-  --context ProductsDbContext
+  --context CustomersDbContext
 ```
 
 Each module manages its own migration history independently, since each has its own `DbContext` with its own schema.

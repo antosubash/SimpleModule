@@ -3,23 +3,16 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
-using SimpleModule.Agents.Module;
 using SimpleModule.AuditLogs;
 using SimpleModule.BackgroundJobs;
-using SimpleModule.Chat;
 using SimpleModule.Database;
 using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
-using SimpleModule.Map;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
-using SimpleModule.Orders;
-using SimpleModule.PageBuilder;
 using SimpleModule.Permissions;
-using SimpleModule.Products;
-using SimpleModule.Rag.Module;
 using SimpleModule.RateLimiting;
 using SimpleModule.Settings;
 using SimpleModule.Tenants;
@@ -52,26 +45,12 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
 
             ReplaceDbContext<HostDbContext>(services, useOpenIddict: true);
             ReplaceDbContext<UsersDbContext>(services);
-            ReplaceDbContext<OrdersDbContext>(services);
-            ReplaceDbContext<ProductsDbContext>(services);
-            // Map module: in-memory SQLite has no SpatiaLite native lib, so disable
-            // the geometry columns globally for the test fixture. Production providers
-            // (PostGIS, SQL Server, SpatiaLite when installed) still get the spatial
-            // columns because the static defaults to true.
-            SimpleModule.Map.EntityConfigurations.LayerSourceConfiguration.EnableSpatial = false;
-            SimpleModule.Map.EntityConfigurations.SavedMapConfiguration.EnableSpatial = false;
-            ReplaceDbContext<MapDbContext>(services);
-            ReplaceDbContext<PageBuilderDbContext>(services);
             ReplaceDbContext<PermissionsDbContext>(services);
             ReplaceDbContext<SettingsDbContext>(services);
             ReplaceDbContext<AuditLogsDbContext>(services);
             ReplaceDbContext<FileStorageDbContext>(services);
             ReplaceDbContext<FeatureFlagsDbContext>(services);
             ReplaceDbContext<TenantsDbContext>(services);
-            ReplaceDbContext<RagDbContext>(services);
-            ReplaceDbContext<AgentsDbContext>(services);
-            ReplaceDbContext<ChatDbContext>(services);
-            ReplaceDbContext<SimpleModule.Datasets.DatasetsDbContext>(services);
             ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<RateLimitingDbContext>(services);
             ReplaceDbContext<EmailDbContext>(services);

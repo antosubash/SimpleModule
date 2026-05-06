@@ -23,12 +23,12 @@ When you run `sm new project MyApp`, the resulting solution looks like this:
 MyApp/
 ├── src/
 │   ├── modules/                    # Your feature modules
-│   │   ├── SimpleModule.Products/
+│   │   ├── SimpleModule.Customers/
 │   │   │   ├── src/
-│   │   │   │   ├── SimpleModule.Products/
-│   │   │   │   └── SimpleModule.Products.Contracts/
+│   │   │   │   ├── SimpleModule.Customers/
+│   │   │   │   └── SimpleModule.Customers.Contracts/
 │   │   │   └── tests/
-│   │   │       └── SimpleModule.Products.Tests/
+│   │   │       └── SimpleModule.Customers.Tests/
 │   │   └── ...
 │   └── MyApp.Host/                 # Host application
 │       ├── ClientApp/
@@ -52,39 +52,21 @@ SimpleModule/
 │   ├── SimpleModule.Generator/
 │   ├── SimpleModule.Database/
 │   ├── SimpleModule.Hosting/
-│   ├── SimpleModule.Agents/       # AI agent runtime and registry
-│   ├── SimpleModule.AI.Anthropic/ # Claude API provider
-│   ├── SimpleModule.AI.OpenAI/    # OpenAI API provider
-│   ├── SimpleModule.AI.AzureOpenAI/ # Azure OpenAI provider
-│   ├── SimpleModule.AI.Ollama/    # Ollama local model provider
-│   ├── SimpleModule.Rag/          # RAG pipeline and knowledge store
-│   ├── SimpleModule.Rag.StructuredRag/      # Structured RAG pipeline
-│   ├── SimpleModule.Rag.VectorStore.InMemory/ # In-memory vector store (dev)
-│   ├── SimpleModule.Rag.VectorStore.Postgres/ # PostgreSQL vector store
 │   ├── SimpleModule.Storage/      # Storage provider abstraction
 │   ├── SimpleModule.Storage.Local/ # Local filesystem storage
 │   ├── SimpleModule.Storage.S3/    # AWS S3 storage
 │   └── SimpleModule.Storage.Azure/ # Azure Blob storage
 ├── modules/                      # Demo / built-in modules (framework repo only)
 │   ├── Admin/
-│   ├── Agents/
 │   ├── AuditLogs/
 │   ├── BackgroundJobs/
-│   ├── Chat/
 │   ├── Dashboard/
-│   ├── Datasets/
 │   ├── Email/
 │   ├── FeatureFlags/
 │   ├── FileStorage/
 │   ├── Localization/
-│   ├── Map/
-│   ├── Marketplace/
 │   ├── OpenIddict/
-│   ├── Orders/
-│   ├── PageBuilder/
 │   ├── Permissions/
-│   ├── Products/
-│   ├── Rag/
 │   ├── RateLimiting/
 │   ├── Settings/
 │   ├── Tenants/
@@ -164,27 +146,6 @@ Multi-provider database support built on EF Core. Handles:
 
 Module registration infrastructure and Inertia page rendering. Exposes the two user-facing entry points that your host's `Program.cs` calls -- `builder.AddSimpleModule()` and `await app.UseSimpleModule()` -- which in turn invoke the generated `AddModules()`, `MapModuleEndpoints()`, and `CollectModuleMenuItems()` methods. Handles service collection extensions, endpoint routing integration, module lifecycle management, and renders the static HTML shell with embedded JSON props for React hydration.
 
-### SimpleModule.Agents
-
-AI agent runtime and orchestration. Provides `IAgentRegistry` for agent discovery, `AgentChatService` for chat (streaming and non-streaming), `IAgentToolProvider` with `[AgentTool]` attribute for tool discovery, and middleware for rate limiting, token tracking, and guardrails (PII redaction, prompt injection detection).
-
-### SimpleModule.AI.*
-
-AI provider integrations implementing `IChatClient` from Microsoft.Extensions.AI:
-
-- **SimpleModule.AI.Anthropic** -- Claude API via the Anthropic SDK
-- **SimpleModule.AI.OpenAI** -- OpenAI API
-- **SimpleModule.AI.AzureOpenAI** -- Azure OpenAI Service
-- **SimpleModule.AI.Ollama** -- Ollama for local model inference
-
-### SimpleModule.Rag
-
-Retrieval-augmented generation pipeline. Defines `IRagPipeline` for querying a knowledge base and `IKnowledgeStore` for indexing documents. Includes `KnowledgeIndexingHostedService` for background indexing with deduplication.
-
-- **SimpleModule.Rag.StructuredRag** -- Structured RAG implementation (table, graph, algorithm, catalogue, chunk formats)
-- **SimpleModule.Rag.VectorStore.InMemory** -- In-memory vector store for development and testing
-- **SimpleModule.Rag.VectorStore.Postgres** -- PostgreSQL-backed vector store for production
-
 ### SimpleModule.Storage
 
 File storage abstraction with `IStorageProvider` interface (save, get, delete, exists, list). Three provider implementations:
@@ -206,50 +167,50 @@ Development utilities including hot reload support, diagnostic middleware, and d
 Every module follows a **three-project pattern**: implementation, contracts, and tests. Project directories and assembly names use the `SimpleModule.{Name}` prefix (enforced by diagnostic SM0052).
 
 ```
-modules/Products/                        # (framework repo layout -- use src/modules/SimpleModule.Products/ in a CLI-scaffolded app)
+modules/Customers/                        # (framework repo layout -- use src/modules/SimpleModule.Customers/ in a CLI-scaffolded app)
 ├── src/
-│   ├── SimpleModule.Products/                        # Implementation (private)
-│   │   ├── SimpleModule.Products.csproj
-│   │   ├── ProductsModule.cs                         # Module class with [Module] attribute
-│   │   ├── ProductsDbContext.cs                      # EF Core DbContext (module root)
-│   │   ├── ProductService.cs                         # IProductContracts implementation (module root)
-│   │   ├── EntityConfigurations/                     # IEntityTypeConfiguration<T> classes
+│   ├── SimpleModule.Customers/                        # Implementation (private)
+│   │   ├── SimpleModule.Customers.csproj
+│   │   ├── CustomersModule.cs                         # Module class with [Module] attribute
+│   │   ├── CustomersDbContext.cs                      # EF Core DbContext (module root)
+│   │   ├── CustomerService.cs                         # ICustomerContracts implementation (module root)
+│   │   ├── EntityConfigurations/                      # IEntityTypeConfiguration<T> classes
 │   │   ├── Endpoints/
-│   │   │   └── Products/
-│   │   │       ├── BrowseProducts.cs                 # GET /products
-│   │   │       ├── CreateProduct.cs                  # POST /products/create
-│   │   │       └── ManageProduct.cs                  # GET /products/{id}
-│   │   ├── Pages/                                    # React components live alongside their view endpoints
-│   │   │   ├── index.ts                              # React page registry
-│   │   │   ├── Browse.tsx                            # React page component
-│   │   │   ├── BrowseEndpoint.cs                     # Matching IViewEndpoint
+│   │   │   └── Customers/
+│   │   │       ├── BrowseCustomers.cs                 # GET /customers
+│   │   │       ├── CreateCustomer.cs                  # POST /customers/create
+│   │   │       └── ManageCustomer.cs                  # GET /customers/{id}
+│   │   ├── Pages/                                     # React components live alongside their view endpoints
+│   │   │   ├── index.ts                               # React page registry
+│   │   │   ├── Browse.tsx                             # React page component
+│   │   │   ├── BrowseEndpoint.cs                      # Matching IViewEndpoint
 │   │   │   ├── Create.tsx
 │   │   │   ├── CreateEndpoint.cs
 │   │   │   ├── Edit.tsx
 │   │   │   ├── EditEndpoint.cs
 │   │   │   ├── Manage.tsx
 │   │   │   └── ManageEndpoint.cs
-│   │   ├── vite.config.ts                            # Vite library mode config
-│   │   └── package.json                              # npm package with peer deps
-│   └── SimpleModule.Products.Contracts/              # Public API (shared)
-│       ├── SimpleModule.Products.Contracts.csproj
-│       ├── IProductContracts.cs                      # Contract interface
-│       ├── Product.cs                                # [Dto] public record
-│       ├── CreateProductRequest.cs                   # [Dto] request shape
-│       ├── UpdateProductRequest.cs                   # [Dto] request shape
-│       ├── ProductId.cs                              # Strongly-typed id
-│       ├── ProductsConstants.cs                      # Shared constants
-│       └── Events/                                   # Cross-module event records
+│   │   ├── vite.config.ts                             # Vite library mode config
+│   │   └── package.json                               # npm package with peer deps
+│   └── SimpleModule.Customers.Contracts/              # Public API (shared)
+│       ├── SimpleModule.Customers.Contracts.csproj
+│       ├── ICustomerContracts.cs                      # Contract interface
+│       ├── Customer.cs                                # [Dto] public record
+│       ├── CreateCustomerRequest.cs                   # [Dto] request shape
+│       ├── UpdateCustomerRequest.cs                   # [Dto] request shape
+│       ├── CustomerId.cs                              # Strongly-typed id
+│       ├── CustomersConstants.cs                      # Shared constants
+│       └── Events/                                    # Cross-module event records
 └── tests/
-    └── SimpleModule.Products.Tests/                  # Test project
-        ├── SimpleModule.Products.Tests.csproj
+    └── SimpleModule.Customers.Tests/                  # Test project
+        ├── SimpleModule.Customers.Tests.csproj
         └── Endpoints/
-            └── BrowseProductsTests.cs
+            └── BrowseCustomersTests.cs
 ```
 
 There is no separate `Views/` directory -- React components (`*.tsx`) live directly in `Pages/` next to their matching `*Endpoint.cs` view endpoints. Likewise the DbContext and the contracts service implementation sit at the module root rather than inside `Data/` or `Services/` folders.
 
-### Implementation Project (`SimpleModule.Products/`)
+### Implementation Project (`SimpleModule.Customers/`)
 
 This is the private implementation. No other module should reference this project directly. It contains:
 
@@ -270,60 +231,60 @@ The `.csproj` file uses `Microsoft.NET.Sdk` with a framework reference to ASP.NE
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../../../../framework/SimpleModule.Hosting/SimpleModule.Hosting.csproj" />
-    <ProjectReference Include="../SimpleModule.Products.Contracts/SimpleModule.Products.Contracts.csproj" />
+    <ProjectReference Include="../SimpleModule.Customers.Contracts/SimpleModule.Customers.Contracts.csproj" />
   </ItemGroup>
 </Project>
 ```
 
-### Contracts Project (`SimpleModule.Products.Contracts/`)
+### Contracts Project (`SimpleModule.Customers.Contracts/`)
 
-The public face of the module. Other modules depend on this project when they need to interact with Products. Types live at the root of the contracts project (no `Dtos/` folder). It contains:
+The public face of the module. Other modules depend on this project when they need to interact with Customers. Types live at the root of the contracts project (no `Dtos/` folder). It contains:
 
-- **Contract interface** (`IProductContracts`) -- methods other modules can call
-- **Public record types** marked with `[Dto]` -- `Product`, `CreateProductRequest`, `UpdateProductRequest`, strongly-typed ids such as `ProductId`, and shared constants in `ProductsConstants`
+- **Contract interface** (`ICustomerContracts`) -- methods other modules can call
+- **Public record types** marked with `[Dto]` -- `Customer`, `CreateCustomerRequest`, `UpdateCustomerRequest`, strongly-typed ids such as `CustomerId`, and shared constants in `CustomersConstants`
 - **`Events/`** -- cross-module event records published through the event bus
 
 ```csharp
-// IProductContracts.cs
-public interface IProductContracts
+// ICustomerContracts.cs
+public interface ICustomerContracts
 {
-    Task<List<Product>> GetAllAsync(CancellationToken cancellationToken);
-    Task<Product?> GetByIdAsync(ProductId id, CancellationToken cancellationToken);
-    Task<Product> CreateAsync(CreateProductRequest request, CancellationToken cancellationToken);
+    Task<List<Customer>> GetAllAsync(CancellationToken cancellationToken);
+    Task<Customer?> GetByIdAsync(CustomerId id, CancellationToken cancellationToken);
+    Task<Customer> CreateAsync(CreateCustomerRequest request, CancellationToken cancellationToken);
 }
 ```
 
 ```csharp
-// Product.cs
+// Customer.cs
 [Dto]
-public sealed record Product(ProductId Id, string Name, decimal Price, string? Description);
+public sealed record Customer(CustomerId Id, string Name, string Email, string? Notes);
 
-// CreateProductRequest.cs
+// CreateCustomerRequest.cs
 [Dto]
-public sealed record CreateProductRequest(string Name, decimal Price, string? Description);
+public sealed record CreateCustomerRequest(string Name, string Email, string? Notes);
 ```
 
 ::: warning Contracts Are the Boundary
 The contracts project must never reference the implementation project. It depends only on `SimpleModule.Core`. This ensures that modules cannot access each other's internals -- the compiler enforces the boundary.
 :::
 
-### Test Project (`SimpleModule.Products.Tests/`)
+### Test Project (`SimpleModule.Customers.Tests/`)
 
 An xUnit.v3 test project with access to the shared test infrastructure:
 
 ```csharp
-public sealed class BrowseProductsTests(
+public sealed class BrowseCustomersTests(
     SimpleModuleWebApplicationFactory factory)
     : IClassFixture<SimpleModuleWebApplicationFactory>
 {
     [Fact]
-    public async Task BrowseProducts_WithProducts_ReturnsAll()
+    public async Task BrowseCustomers_WithCustomers_ReturnsAll()
     {
         // Arrange
         var client = factory.CreateAuthenticatedClient();
 
         // Act
-        var response = await client.GetAsync("/products");
+        var response = await client.GetAsync("/customers");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -369,7 +330,7 @@ ClientApp/
 └── ...
 ```
 
-The page resolver in `app.tsx` dynamically imports module bundles based on the route name. When Inertia navigates to `Products/Browse`, it resolves to `/_content/Products/Products.pages.js` and loads the corresponding React component.
+The page resolver in `app.tsx` dynamically imports module bundles based on the route name. When Inertia navigates to `Customers/Browse`, it resolves to `/_content/Customers/Customers.pages.js` and loads the corresponding React component.
 
 ```typescript
 // Simplified page resolution logic
@@ -422,29 +383,29 @@ Modules communicate through two mechanisms:
 Module A depends on Module B's contracts project and calls its interface methods:
 
 ```
-modules/Orders/src/SimpleModule.Orders/SimpleModule.Orders.csproj
-  └── references → modules/Products/src/SimpleModule.Products.Contracts/
+modules/Invoices/src/SimpleModule.Invoices/SimpleModule.Invoices.csproj
+  └── references → modules/Customers/src/SimpleModule.Customers.Contracts/
 ```
 
 ```csharp
-// In an Orders endpoint
-public sealed class CreateOrder : IEndpoint
+// In an Invoices endpoint
+public sealed class CreateInvoice : IEndpoint
 {
     public static void Map(IEndpointRouteBuilder app) =>
         app.MapPost("/", Handler);
 
     private static async Task<IResult> Handler(
-        CreateOrderRequest request,
-        IProductContracts products,    // injected from Products module
-        IOrderContracts orders,
+        CreateInvoiceRequest request,
+        ICustomerContracts customers,   // injected from Customers module
+        IInvoiceContracts invoices,
         CancellationToken cancellationToken)
     {
-        var product = await products.GetByIdAsync(request.ProductId, cancellationToken);
-        if (product is null)
+        var customer = await customers.GetByIdAsync(request.CustomerId, cancellationToken);
+        if (customer is null)
             return TypedResults.NotFound();
 
-        var order = await orders.CreateAsync(request, cancellationToken);
-        return TypedResults.Created($"/orders/{order.Id}", order);
+        var invoice = await invoices.CreateAsync(request, cancellationToken);
+        return TypedResults.Created($"/invoices/{invoice.Id}", invoice);
     }
 }
 ```
@@ -454,14 +415,14 @@ public sealed class CreateOrder : IEndpoint
 For loose coupling, modules publish events through Wolverine's `IMessageBus`:
 
 ```csharp
-// Publisher (in Orders module)
-await bus.PublishAsync(new OrderCreatedEvent(order.Id, order.ProductId));
+// Publisher (in Invoices module)
+await bus.PublishAsync(new InvoiceCreatedEvent(invoice.Id, invoice.CustomerId));
 
-// Handler (in Products module, or any module) -- discovered by naming convention
-public sealed class UpdateStockOnOrderCreated(IProductContracts products)
+// Handler (in Customers module, or any module) -- discovered by naming convention
+public sealed class UpdateBalanceOnInvoiceCreated(ICustomerContracts customers)
 {
-    public Task Handle(OrderCreatedEvent evt, CancellationToken ct) =>
-        products.ReduceStockAsync(evt.ProductId, ct);
+    public Task Handle(InvoiceCreatedEvent evt, CancellationToken ct) =>
+        customers.IncrementBalanceAsync(evt.CustomerId, ct);
 }
 ```
 
