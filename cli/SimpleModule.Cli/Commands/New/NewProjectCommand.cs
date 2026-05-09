@@ -77,7 +77,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         var moduleTemplates = new ModuleTemplates(solution);
 
         const string moduleName = "Items";
-        var singularName = ModuleTemplates.GetSingularName(moduleName);
+        var singularName = ModuleTemplates.GetEntityName(moduleName);
 
         var hostDir = Path.Combine(rootDir, "src", $"{projectName}.Host");
         var modulesDir = Path.Combine(rootDir, "src", "modules");
@@ -121,7 +121,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             )
         );
         File.WriteAllText(Path.Combine(rootDir, "biome.json"), projectTemplates.BiomeJson());
-        File.WriteAllText(Path.Combine(rootDir, "tsconfig.json"), projectTemplates.TsconfigJson());
+        File.WriteAllText(Path.Combine(rootDir, "tsconfig.json"), ProjectTemplates.TsconfigJson());
         var editorConfig = projectTemplates.EditorConfig();
         if (!string.IsNullOrEmpty(editorConfig))
         {
@@ -278,7 +278,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         var testsSharedDir = Path.Combine(rootDir, "tests", $"{projectName}.Tests.Shared");
 
         const string moduleName = "Items";
-        var singularName = ModuleTemplates.GetSingularName(moduleName);
+        var singularName = ModuleTemplates.GetEntityName(moduleName);
 
         // Root config files
         Plan(Path.Combine(rootDir, $"{projectName}.slnx"));
