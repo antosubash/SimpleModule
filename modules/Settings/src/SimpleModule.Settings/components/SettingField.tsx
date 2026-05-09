@@ -1,21 +1,5 @@
 import { Button, Input, Switch, Textarea } from '@simplemodule/ui';
-import { useState } from 'react';
-
-interface SettingDefinition {
-  key: string;
-  displayName: string;
-  description?: string;
-  group?: string;
-  scope: number;
-  defaultValue?: string;
-  type: number;
-}
-
-interface SettingFieldProps {
-  definition: SettingDefinition;
-  currentValue?: string | null;
-  onSave: (key: string, value: string, scope: number) => Promise<void>;
-}
+import { useMemo, useState } from 'react';
 
 const SettingTypes = {
   Text: 0,
@@ -24,7 +8,25 @@ const SettingTypes = {
   Json: 3,
 } as const;
 
-function decodeForDisplay(stored: string, type: number): string {
+type SettingType = (typeof SettingTypes)[keyof typeof SettingTypes];
+
+interface SettingDefinition {
+  key: string;
+  displayName: string;
+  description?: string;
+  group?: string;
+  scope: number;
+  defaultValue?: string;
+  type: SettingType;
+}
+
+interface SettingFieldProps {
+  definition: SettingDefinition;
+  currentValue?: string | null;
+  onSave: (key: string, value: string, scope: number) => Promise<void>;
+}
+
+function decodeForDisplay(stored: string, type: SettingType): string {
   if (stored === '') return '';
   try {
     const parsed = JSON.parse(stored);
@@ -45,7 +47,7 @@ function decodeForDisplay(stored: string, type: number): string {
   }
 }
 
-function encodeForStorage(input: string, type: number): string {
+function encodeForStorage(input: string, type: SettingType): string {
   switch (type) {
     case SettingTypes.Text:
       return JSON.stringify(input);
@@ -64,16 +66,19 @@ function encodeForStorage(input: string, type: number): string {
 
 export default function SettingField({ definition, currentValue, onSave }: SettingFieldProps) {
   const storedRaw = currentValue ?? definition.defaultValue ?? '';
-  const initial = decodeForDisplay(storedRaw, definition.type);
+  const initial = useMemo(
+    () => decodeForDisplay(storedRaw, definition.type),
+    [storedRaw, definition.type],
+  );
   const [value, setValue] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
   const hasChanged = value !== initial;
 
-  const handleSave = async () => {
+  const performSave = async (rawInput: string) => {
     if (definition.type === SettingTypes.Json) {
       try {
-        JSON.parse(value);
+        JSON.parse(rawInput);
         setJsonError(null);
       } catch (err) {
         setJsonError(err instanceof Error ? err.message : 'Invalid JSON');
@@ -82,7 +87,7 @@ export default function SettingField({ definition, currentValue, onSave }: Setti
     }
     setSaving(true);
     try {
-      await onSave(definition.key, encodeForStorage(value, definition.type), definition.scope);
+      await onSave(definition.key, encodeForStorage(rawInput, definition.type), definition.scope);
     } finally {
       setSaving(false);
     }
@@ -112,12 +117,7 @@ export default function SettingField({ definition, currentValue, onSave }: Setti
             onCheckedChange={(checked) => {
               const newVal = String(checked);
               setValue(newVal);
-              setSaving(true);
-              onSave(
-                definition.key,
-                encodeForStorage(newVal, definition.type),
-                definition.scope,
-              ).finally(() => setSaving(false));
+              void performSave(newVal);
             }}
           />
         );
@@ -147,7 +147,7 @@ export default function SettingField({ definition, currentValue, onSave }: Setti
       {renderInput()}
       {jsonError && <p className="text-sm text-destructive">{jsonError}</p>}
       {definition.type !== SettingTypes.Bool && hasChanged && (
-        <Button size="sm" onClick={handleSave} disabled={saving}>
+        <Button size="sm" onClick={() => performSave(value)} disabled={saving}>
           {saving ? 'Saving...' : 'Save'}
         </Button>
       )}
