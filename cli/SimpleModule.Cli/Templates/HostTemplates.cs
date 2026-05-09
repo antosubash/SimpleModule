@@ -159,16 +159,47 @@ public sealed class HostTemplates
     /// Return a clean Styles/app.css with tailwindcss import, theme import,
     /// and @source directives for modules. Strip _scan/ import if present.
     /// </summary>
+    /// <remarks>
+    /// The embedded template lives in <c>template/SimpleModule.Host/Styles/</c> and uses
+    /// monorepo-relative paths (<c>../../../packages/...</c>, <c>../../../modules/...</c>).
+    /// In a scaffolded project the layout is <c>src/&lt;Project&gt;.Host/Styles/</c>, so:
+    /// <list type="bullet">
+    /// <item>Framework packages live in <c>node_modules/@simplemodule/*</c> at the project root
+    /// (3 ups from Styles/) — installed via npm.</item>
+    /// <item>Modules live at <c>src/modules/</c> (2 ups from Styles/).</item>
+    /// </list>
+    /// We rewrite each <c>@import</c>/<c>@source</c> directive directly rather than blindly
+    /// rewriting path prefixes, since the original substrings overlap.
+    /// </remarks>
     public static string AppCss()
     {
         var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Styles.app.css");
         lines.RemoveAll(line => line.Contains("_scan/", StringComparison.Ordinal));
 
-        // Replace module source paths for new project structure (template/ → src/)
-        var result = string.Join(Environment.NewLine, lines);
-        result = result.Replace("../../modules/", "../../../modules/", StringComparison.Ordinal);
+        var result = new List<string>(lines.Count);
+        foreach (var line in lines)
+        {
+            var rewritten = line.Replace(
+                    "../../../packages/SimpleModule.Theme.Default/theme.css",
+                    "../../../node_modules/@simplemodule/theme-default/theme.css",
+                    StringComparison.Ordinal
+                )
+                .Replace(
+                    "../../../packages/SimpleModule.UI/",
+                    "../../../node_modules/@simplemodule/ui/",
+                    StringComparison.Ordinal
+                )
+                .Replace(
+                    "../../../packages/SimpleModule.Client/",
+                    "../../../node_modules/@simplemodule/client/",
+                    StringComparison.Ordinal
+                )
+                .Replace("../../../modules/", "../../modules/", StringComparison.Ordinal);
 
-        return result;
+            result.Add(rewritten);
+        }
+
+        return string.Join(Environment.NewLine, result);
     }
 
     /// <summary>

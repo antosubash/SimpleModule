@@ -261,39 +261,12 @@ public sealed class ProjectTemplates
         return content;
     }
 
-    public string TsconfigJson()
+    public static string TsconfigJson()
     {
-        if (_solution is null)
-        {
-            return FallbackTsconfigJson();
-        }
-
-        var path = Path.Combine(_solution.RootPath, "tsconfig.json");
-        if (!File.Exists(path))
-        {
-            return FallbackTsconfigJson();
-        }
-
-        var content = File.ReadAllText(path);
-
-        // Remove the SimpleModule.UI registry templates exclude entry
-        content = content.Replace(
-            ", \"src/SimpleModule.UI/registry/templates\"",
-            "",
-            StringComparison.Ordinal
-        );
-        content = content.Replace(
-            "\"src/SimpleModule.UI/registry/templates\", ",
-            "",
-            StringComparison.Ordinal
-        );
-        content = content.Replace(
-            "\"src/SimpleModule.UI/registry/templates\"",
-            "",
-            StringComparison.Ordinal
-        );
-
-        return content;
+        // The root tsconfig in the monorepo extends "@simplemodule/tsconfig/base", which
+        // isn't published to npm. Always emit a self-contained tsconfig for scaffolded
+        // projects so npm install + tsc work without that package.
+        return FallbackTsconfigJson();
     }
 
     public string EditorConfig()
@@ -713,7 +686,6 @@ public sealed class ProjectTemplates
         string clientDep;
         string uiDep;
         string themeDep;
-        string tsconfigDep;
 
         if (frameworkPackagesPath is not null)
         {
@@ -721,14 +693,12 @@ public sealed class ProjectTemplates
             clientDep = $"\"file:{pkgPath}/SimpleModule.Client\"";
             uiDep = $"\"file:{pkgPath}/SimpleModule.UI\"";
             themeDep = $"\"file:{pkgPath}/SimpleModule.Theme.Default\"";
-            tsconfigDep = $"\"file:{pkgPath}/SimpleModule.TsConfig\"";
         }
         else
         {
             clientDep = $"\"^{frameworkVersion}\"";
             uiDep = $"\"^{frameworkVersion}\"";
             themeDep = $"\"^{frameworkVersion}\"";
-            tsconfigDep = $"\"^{frameworkVersion}\"";
         }
 
         return $$"""
@@ -750,6 +720,7 @@ public sealed class ProjectTemplates
               },
               "devDependencies": {
                 "@biomejs/biome": "^2.4.10",
+                "@tailwindcss/cli": "^4.2.2",
                 "@tailwindcss/vite": "^4.2.2",
                 "@types/react": "^19.0.0",
                 "@types/react-dom": "^19.0.0",
@@ -763,7 +734,6 @@ public sealed class ProjectTemplates
                 "@simplemodule/client": {{clientDep}},
                 "@simplemodule/ui": {{uiDep}},
                 "@simplemodule/theme-default": {{themeDep}},
-                "@simplemodule/tsconfig": {{tsconfigDep}},
                 "esbuild": "^0.27.0",
                 "react": "^19.0.0",
                 "react-dom": "^19.0.0",
@@ -815,6 +785,7 @@ public sealed class ProjectTemplates
     private static string FallbackTsconfigJson() =>
         """
             {
+              "$schema": "https://json.schemastore.org/tsconfig",
               "compilerOptions": {
                 "target": "ES2022",
                 "module": "ESNext",
@@ -826,7 +797,8 @@ public sealed class ProjectTemplates
                 "forceConsistentCasingInFileNames": true,
                 "resolveJsonModule": true,
                 "isolatedModules": true,
-                "noEmit": true
+                "noEmit": true,
+                "allowImportingTsExtensions": true
               },
               "exclude": ["node_modules", "**/wwwroot/**"]
             }

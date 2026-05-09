@@ -16,7 +16,7 @@ public sealed class ModuleTemplates
             solution is not null && solution.ExistingModules.Count > 0
                 ? solution.ExistingModules[0]
                 : null;
-        _refSingular = _refModule is not null ? GetSingularName(_refModule) : null;
+        _refSingular = _refModule is not null ? GetEntityName(_refModule) : null;
         _otherModuleNames =
             _refModule is not null && solution is not null
                 ? solution
@@ -34,11 +34,14 @@ public sealed class ModuleTemplates
         var refPath = RefContractsPath($"{_refModule}.Contracts.csproj");
         if (refPath is null)
         {
-            return FallbackContractsCsproj();
+            return FallbackContractsCsproj(moduleName);
         }
 
-        return ReplaceFrameworkProjectRefs(
-            TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName)
+        return EnsureAssemblyName(
+            ReplaceFrameworkProjectRefs(
+                TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName)
+            ),
+            $"SimpleModule.{moduleName}.Contracts"
         );
     }
 
@@ -53,8 +56,11 @@ public sealed class ModuleTemplates
         // Strip references to other modules and non-essential packages
         var stripPatterns = _otherModuleNames.Select(m => m).Append("Bogus").ToList();
 
-        return ReplaceFrameworkProjectRefs(
-            TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
+        return EnsureAssemblyName(
+            ReplaceFrameworkProjectRefs(
+                TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
+            ),
+            $"SimpleModule.{moduleName}"
         );
     }
 
@@ -67,8 +73,11 @@ public sealed class ModuleTemplates
         }
 
         var stripPatterns = _otherModuleNames.ToList();
-        return ReplaceFrameworkProjectRefs(
-            TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
+        return EnsureAssemblyName(
+            ReplaceFrameworkProjectRefs(
+                TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
+            ),
+            $"SimpleModule.{moduleName}.Tests"
         );
     }
 
@@ -459,7 +468,7 @@ public sealed class ModuleTemplates
         // Find the class declaration and simplify constructor params
         // Keep only the DbContext param, remove cross-module and infrastructure deps
         var crossModuleTypes = _otherModuleNames
-            .Select(m => $"I{GetSingularName(m)}")
+            .Select(m => $"I{GetEntityName(m)}")
             .Append("IMessageBus")
             .Append("ILogger<")
             .ToList();
@@ -689,6 +698,19 @@ public sealed class ModuleTemplates
         return pluralName;
     }
 
+    /// <summary>
+    /// Derives the entity type name for a module. Normally this is the singular form,
+    /// but when the singular equals the module name (e.g. "PageBuilder", "Marketplace"),
+    /// the entity would collide with the module's namespace, so an "Item" suffix is added.
+    /// </summary>
+    public static string GetEntityName(string moduleName)
+    {
+        var singular = GetSingularName(moduleName);
+        return string.Equals(singular, moduleName, StringComparison.Ordinal)
+            ? $"{moduleName}Item"
+            : singular;
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────
 
     private string? RefContractsPath(string relativePath)
@@ -777,6 +799,50 @@ public sealed class ModuleTemplates
         }
 
         return string.Join(Environment.NewLine, TemplateExtractor.CollapseBlankLines(result));
+    }
+
+    /// <summary>
+    /// Ensures the csproj content has explicit RootNamespace and AssemblyName set to the
+    /// expected SimpleModule.&lt;Module&gt; convention. This guards against the analyzer's SM0052
+    /// (assembly naming) and SM0053 (matching contracts assembly) checks when the csproj
+    /// filename and namespace prefix don't naturally agree.
+    /// </summary>
+    private static string EnsureAssemblyName(string csprojContent, string expectedName)
+    {
+        var hasAssembly = csprojContent.Contains("<AssemblyName>", StringComparison.Ordinal);
+        var hasRoot = csprojContent.Contains("<RootNamespace>", StringComparison.Ordinal);
+
+        if (hasAssembly && hasRoot)
+        {
+            return csprojContent;
+        }
+
+        var lines = csprojContent.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+        var firstPropGroupIdx = lines.FindIndex(l =>
+            l.TrimStart().StartsWith("<PropertyGroup", StringComparison.Ordinal)
+        );
+
+        if (firstPropGroupIdx < 0)
+        {
+            return csprojContent;
+        }
+
+        var indent = "    ";
+        var insertAt = firstPropGroupIdx + 1;
+        var toInsert = new List<string>();
+
+        if (!hasRoot)
+        {
+            toInsert.Add($"{indent}<RootNamespace>{expectedName}</RootNamespace>");
+        }
+
+        if (!hasAssembly)
+        {
+            toInsert.Add($"{indent}<AssemblyName>{expectedName}</AssemblyName>");
+        }
+
+        lines.InsertRange(insertAt, toInsert);
+        return string.Join(Environment.NewLine, lines);
     }
 
     private List<string> OtherModuleStripPatterns()
@@ -871,8 +937,20 @@ public sealed class ModuleTemplates
     public static string TsconfigJson() =>
         """
             {
-              "extends": "@simplemodule/tsconfig/base",
+              "$schema": "https://json.schemastore.org/tsconfig",
               "compilerOptions": {
+                "target": "ES2022",
+                "module": "ESNext",
+                "moduleResolution": "bundler",
+                "jsx": "react-jsx",
+                "strict": true,
+                "esModuleInterop": true,
+                "skipLibCheck": true,
+                "forceConsistentCasingInFileNames": true,
+                "resolveJsonModule": true,
+                "isolatedModules": true,
+                "noEmit": true,
+                "allowImportingTsExtensions": true,
                 "paths": {
                   "@/*": ["./*"]
                 }
@@ -882,12 +960,14 @@ public sealed class ModuleTemplates
 
     // ── Fallback templates (when no reference module exists) ────────
 
-    private static string FallbackContractsCsproj() =>
-        """
+    private static string FallbackContractsCsproj(string moduleName) =>
+        $"""
             <Project Sdk="Microsoft.NET.Sdk">
               <PropertyGroup>
                 <TargetFramework>net10.0</TargetFramework>
                 <OutputType>Library</OutputType>
+                <RootNamespace>SimpleModule.{moduleName}.Contracts</RootNamespace>
+                <AssemblyName>SimpleModule.{moduleName}.Contracts</AssemblyName>
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="SimpleModule.Core" />
@@ -901,6 +981,8 @@ public sealed class ModuleTemplates
               <PropertyGroup>
                 <TargetFramework>net10.0</TargetFramework>
                 <OutputType>Library</OutputType>
+                <RootNamespace>SimpleModule.{moduleName}</RootNamespace>
+                <AssemblyName>SimpleModule.{moduleName}</AssemblyName>
               </PropertyGroup>
               <ItemGroup>
                 <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -918,6 +1000,8 @@ public sealed class ModuleTemplates
                 <TargetFramework>net10.0</TargetFramework>
                 <IsPackable>false</IsPackable>
                 <OutputType>Exe</OutputType>
+                <RootNamespace>SimpleModule.{moduleName}.Tests</RootNamespace>
+                <AssemblyName>SimpleModule.{moduleName}.Tests</AssemblyName>
               </PropertyGroup>
               <ItemGroup>
                 <FrameworkReference Include="Microsoft.AspNetCore.App" />
