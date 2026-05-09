@@ -17,16 +17,72 @@ interface SettingFieldProps {
   onSave: (key: string, value: string, scope: number) => Promise<void>;
 }
 
+const SettingTypes = {
+  Text: 0,
+  Number: 1,
+  Bool: 2,
+  Json: 3,
+} as const;
+
+function decodeForDisplay(stored: string, type: number): string {
+  if (stored === '') return '';
+  try {
+    const parsed = JSON.parse(stored);
+    switch (type) {
+      case SettingTypes.Text:
+        return typeof parsed === 'string' ? parsed : stored;
+      case SettingTypes.Number:
+        return typeof parsed === 'number' ? String(parsed) : stored;
+      case SettingTypes.Bool:
+        return typeof parsed === 'boolean' ? String(parsed) : stored;
+      case SettingTypes.Json:
+        return JSON.stringify(parsed, null, 2);
+      default:
+        return stored;
+    }
+  } catch {
+    return stored;
+  }
+}
+
+function encodeForStorage(input: string, type: number): string {
+  switch (type) {
+    case SettingTypes.Text:
+      return JSON.stringify(input);
+    case SettingTypes.Number: {
+      const num = Number(input);
+      return Number.isFinite(num) && input.trim() !== '' ? String(num) : JSON.stringify(input);
+    }
+    case SettingTypes.Bool:
+      return input === 'true' ? 'true' : 'false';
+    case SettingTypes.Json:
+      return input;
+    default:
+      return input;
+  }
+}
+
 export default function SettingField({ definition, currentValue, onSave }: SettingFieldProps) {
-  const initial = currentValue ?? definition.defaultValue ?? '';
+  const storedRaw = currentValue ?? definition.defaultValue ?? '';
+  const initial = decodeForDisplay(storedRaw, definition.type);
   const [value, setValue] = useState(initial);
   const [saving, setSaving] = useState(false);
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const hasChanged = value !== initial;
 
   const handleSave = async () => {
+    if (definition.type === SettingTypes.Json) {
+      try {
+        JSON.parse(value);
+        setJsonError(null);
+      } catch (err) {
+        setJsonError(err instanceof Error ? err.message : 'Invalid JSON');
+        return;
+      }
+    }
     setSaving(true);
     try {
-      await onSave(definition.key, value, definition.scope);
+      await onSave(definition.key, encodeForStorage(value, definition.type), definition.scope);
     } finally {
       setSaving(false);
     }
@@ -34,26 +90,46 @@ export default function SettingField({ definition, currentValue, onSave }: Setti
 
   const renderInput = () => {
     switch (definition.type) {
-      case 0: // Text
-        return <Input value={value} onChange={(e) => setValue(e.target.value)} />;
-      case 1: // Number
-        return <Input type="number" value={value} onChange={(e) => setValue(e.target.value)} />;
-      case 2: // Bool
+      case SettingTypes.Text:
+        return (
+          <Input id={definition.key} value={value} onChange={(e) => setValue(e.target.value)} />
+        );
+      case SettingTypes.Number:
+        return (
+          <Input
+            id={definition.key}
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        );
+      case SettingTypes.Bool:
         return (
           <Switch
+            id={definition.key}
             checked={value === 'true'}
+            disabled={saving}
             onCheckedChange={(checked) => {
               const newVal = String(checked);
               setValue(newVal);
-              onSave(definition.key, newVal, definition.scope);
+              setSaving(true);
+              onSave(
+                definition.key,
+                encodeForStorage(newVal, definition.type),
+                definition.scope,
+              ).finally(() => setSaving(false));
             }}
           />
         );
-      case 3: // Json
+      case SettingTypes.Json:
         return (
           <Textarea
+            id={definition.key}
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={(e) => {
+              setValue(e.target.value);
+              if (jsonError) setJsonError(null);
+            }}
             rows={4}
             className="font-mono text-sm"
           />
@@ -69,7 +145,8 @@ export default function SettingField({ definition, currentValue, onSave }: Setti
         <p className="text-sm text-muted-foreground">{definition.description}</p>
       )}
       {renderInput()}
-      {definition.type !== 2 && hasChanged && (
+      {jsonError && <p className="text-sm text-destructive">{jsonError}</p>}
+      {definition.type !== SettingTypes.Bool && hasChanged && (
         <Button size="sm" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save'}
         </Button>
