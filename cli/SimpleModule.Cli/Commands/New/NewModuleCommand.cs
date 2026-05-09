@@ -10,7 +10,7 @@ public sealed class NewModuleCommand : Command<NewModuleSettings>
     public override int Execute(CommandContext context, NewModuleSettings settings)
     {
         var moduleName = settings.ResolveName();
-        var singularName = ModuleTemplates.GetSingularName(moduleName);
+        var singularName = ModuleTemplates.GetEntityName(moduleName);
 
         var solution = SolutionContext.Discover();
         if (solution is null)

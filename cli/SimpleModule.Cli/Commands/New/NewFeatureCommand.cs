@@ -31,7 +31,7 @@ public sealed class NewFeatureCommand : Command<NewFeatureSettings>
         var httpMethod = settings.ResolveHttpMethod();
         var route = settings.ResolveRoute();
         var includeValidator = settings.ResolveIncludeValidator();
-        var singularName = ModuleTemplates.GetSingularName(moduleName);
+        var singularName = ModuleTemplates.GetEntityName(moduleName);
 
         var templates = new FeatureTemplates(solution);
         var ops = new List<(string Path, FileAction Action)>();

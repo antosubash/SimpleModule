@@ -12,7 +12,7 @@ public sealed class FeatureTemplates
     {
         _solution = solution;
         _refModule = solution.ExistingModules.Count > 0 ? solution.ExistingModules[0] : null;
-        _refSingular = _refModule is not null ? ModuleTemplates.GetSingularName(_refModule) : null;
+        _refSingular = _refModule is not null ? ModuleTemplates.GetEntityName(_refModule) : null;
     }
 
     public string Endpoint(
