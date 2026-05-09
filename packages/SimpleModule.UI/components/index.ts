@@ -13,7 +13,16 @@ export {
 } from './breadcrumb';
 export { Button, buttonVariants } from './button';
 export { Calendar, type CalendarProps } from './calendar';
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
+export {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  type CardProps,
+  CardTitle,
+  cardVariants,
+} from './card';
 export {
   type ChartConfig,
   ChartContainer,
@@ -44,6 +53,7 @@ export {
   Dialog,
   DialogClose,
   DialogContent,
+  type DialogContentProps,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -51,6 +61,7 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+  dialogContentVariants,
 } from './dialog';
 export {
   DropdownMenu,
