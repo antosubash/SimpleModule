@@ -81,7 +81,7 @@ public class EmailModule : IModule, IModuleServices
                     Description = "The email provider to use (Log, SMTP)",
                     Group = "Email",
                     Scope = SettingScope.System,
-                    DefaultValue = "Log",
+                    DefaultValue = "\"Log\"",
                     Type = SettingType.Text,
                 }
             )
@@ -93,7 +93,7 @@ public class EmailModule : IModule, IModuleServices
                     Description = "Default sender email address",
                     Group = "Email",
                     Scope = SettingScope.System,
-                    DefaultValue = "noreply@localhost",
+                    DefaultValue = "\"noreply@localhost\"",
                     Type = SettingType.Text,
                 }
             )
@@ -117,7 +117,7 @@ public class EmailModule : IModule, IModuleServices
                     Description = "Cron expression for retrying failed emails",
                     Group = "Email",
                     Scope = SettingScope.System,
-                    DefaultValue = "*/5 * * * *",
+                    DefaultValue = "\"*/5 * * * *\"",
                     Type = SettingType.Text,
                 }
             );
