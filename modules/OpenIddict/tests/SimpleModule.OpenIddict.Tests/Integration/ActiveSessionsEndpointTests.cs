@@ -4,9 +4,11 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using OpenIddict.Abstractions;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Testing;
 using SimpleModule.Users.Contracts;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OpenIddict.Tests.Integration;
 
@@ -50,14 +52,50 @@ public class ActiveSessionsEndpointTests
         return userId;
     }
 
-    private HttpClient CreateAuthenticatedNoRedirectClient(string userId)
+    private HttpClient CreateAuthenticatedNoRedirectClient(string userId, string? currentTokenId = null)
     {
         var client = _factory.CreateClient(NoRedirects());
-        client.DefaultRequestHeaders.Add(
-            TestAuthDefaults.ClaimsHeader,
-            $"{ClaimTypes.NameIdentifier}={userId}"
-        );
+        var claims = $"{ClaimTypes.NameIdentifier}={userId}";
+        if (!string.IsNullOrEmpty(currentTokenId))
+        {
+            // Matches the claim name OpenIddict's validation handler exposes on
+            // the principal (see ActiveSessionsHelpers.AccessTokenIdClaim).
+            claims += $";oi_tkn_id={currentTokenId}";
+        }
+        client.DefaultRequestHeaders.Add(TestAuthDefaults.ClaimsHeader, claims);
         return client;
+    }
+
+    private async Task<(string AuthorizationId, string AccessTokenId)> SeedAuthorizationWithTokensAsync(
+        string userId
+    )
+    {
+        using var scope = _factory.Services.CreateScope();
+        var authManager = scope.ServiceProvider.GetRequiredService<IOpenIddictAuthorizationManager>();
+        var auth = await authManager.CreateAsync(
+            new OpenIddictAuthorizationDescriptor
+            {
+                Subject = userId,
+                Status = Statuses.Valid,
+                Type = AuthorizationTypes.Permanent,
+            }
+        );
+        var authId = (await authManager.GetIdAsync(auth))!;
+
+        var tokenManager = scope.ServiceProvider.GetRequiredService<IOpenIddictTokenManager>();
+        var token = await tokenManager.CreateAsync(
+            new OpenIddictTokenDescriptor
+            {
+                Subject = userId,
+                AuthorizationId = authId,
+                Type = TokenTypeHints.AccessToken,
+                Status = Statuses.Valid,
+                CreationDate = DateTimeOffset.UtcNow,
+                ExpirationDate = DateTimeOffset.UtcNow.AddDays(30),
+            }
+        );
+        var tokenId = (await tokenManager.GetIdAsync(token))!;
+        return (authId, tokenId);
     }
 
     // ── GET page ───────────────────────────────────────────────────────
@@ -122,6 +160,46 @@ public class ActiveSessionsEndpointTests
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Revoke_WhenTargetSharesCallersAuthorization_Returns400()
+    {
+        // Self-revoke must be rejected with 400 (not silently let through as a
+        // redirect, and not as 404), so the user can't kill their own session
+        // from under their own request — including via a sibling token id in
+        // the same authorization.
+        var userId = await SeedUserAsync("revoke-self-1");
+        var (_, accessTokenId) = await SeedAuthorizationWithTokensAsync(userId);
+        using var client = CreateAuthenticatedNoRedirectClient(userId, currentTokenId: accessTokenId);
+
+        var response = await client.PostAsync(
+            $"/Identity/Account/Manage/ActiveSessions/{accessTokenId}/revoke",
+            content: null
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Revoke_WhenTargetOwnedByCallerInDifferentAuthorization_RedirectsToListing()
+    {
+        var userId = await SeedUserAsync("revoke-other-auth-1");
+        var (_, currentToken) = await SeedAuthorizationWithTokensAsync(userId);
+        var (_, otherToken) = await SeedAuthorizationWithTokensAsync(userId);
+        using var client = CreateAuthenticatedNoRedirectClient(userId, currentTokenId: currentToken);
+
+        var response = await client.PostAsync(
+            $"/Identity/Account/Manage/ActiveSessions/{otherToken}/revoke",
+            content: null
+        );
+
+        response
+            .StatusCode.Should()
+            .BeOneOf(HttpStatusCode.Redirect, HttpStatusCode.Found);
+        response.Headers.Location?.ToString()
+            .Should()
+            .Contain("/Identity/Account/Manage/ActiveSessions");
     }
 
     // ── POST revoke-others ─────────────────────────────────────────────

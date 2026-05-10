@@ -22,12 +22,7 @@ public class RevokeOtherSessionsEndpoint : IEndpoint
                     IOpenIddictSessionContracts sessionContracts
                 ) =>
                 {
-                    var userId = principal.GetUserId();
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        return TypedResults.Unauthorized();
-                    }
-
+                    var userId = principal.GetUserId()!;
                     var currentTokenId = ActiveSessionsHelpers.GetCurrentTokenId(principal);
                     await sessionContracts.RevokeOtherSessionsForUserAsync(userId, currentTokenId);
                     return TypedResults.Redirect("/Identity/Account/Manage/ActiveSessions");
