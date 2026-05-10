@@ -41,4 +41,11 @@ public class UsersModuleOptions : IModuleOptions
     /// Duration of account lockout after exceeding max failed attempts. Default: 5 minutes.
     /// </summary>
     public TimeSpan LockoutDuration { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// How frequently the cookie middleware revalidates the user's security stamp. The Identity
+    /// default is 30 minutes; we shorten it so a "Sign out everywhere" action takes effect on
+    /// other devices much faster. Default: 1 minute.
+    /// </summary>
+    public TimeSpan SecurityStampValidationInterval { get; set; } = TimeSpan.FromMinutes(1);
 }

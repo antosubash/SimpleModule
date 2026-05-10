@@ -264,7 +264,11 @@ public sealed class OpenIddictSessionService(
         if (row is null)
             return null;
 
-        var appName = await ResolveAppNameAsync(row.Value.ApplicationId, appNameCache, cancellationToken);
+        var appName = await ResolveAppNameAsync(
+            row.Value.ApplicationId,
+            appNameCache,
+            cancellationToken
+        );
 
         return new UserSessionDto
         {
@@ -319,7 +323,9 @@ public sealed class OpenIddictSessionService(
             return cached;
 
         var app = await appManager.FindByIdAsync(appId, cancellationToken);
-        var name = app is null ? null : await appManager.GetDisplayNameAsync(app, cancellationToken);
+        var name = app is null
+            ? null
+            : await appManager.GetDisplayNameAsync(app, cancellationToken);
         cache[appId] = name;
         return name;
     }

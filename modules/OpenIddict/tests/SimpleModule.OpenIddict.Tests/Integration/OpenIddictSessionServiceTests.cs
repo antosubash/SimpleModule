@@ -26,7 +26,10 @@ public class OpenIddictSessionServiceTests
 
     // ── Seeding ────────────────────────────────────────────────────────
 
-    private static async Task<string> SeedAuthorizationAsync(string userId, IServiceProvider services)
+    private static async Task<string> SeedAuthorizationAsync(
+        string userId,
+        IServiceProvider services
+    )
     {
         var authManager = services.GetRequiredService<IOpenIddictAuthorizationManager>();
         var auth = await authManager.CreateAsync(
@@ -62,8 +65,9 @@ public class OpenIddictSessionServiceTests
         return (await tokenManager.GetIdAsync(token))!;
     }
 
-    private static string NewUserId([System.Runtime.CompilerServices.CallerMemberName] string caller = "") =>
-        $"sess-svc-{caller}-{Guid.NewGuid():N}";
+    private static string NewUserId(
+        [System.Runtime.CompilerServices.CallerMemberName] string caller = ""
+    ) => $"sess-svc-{caller}-{Guid.NewGuid():N}";
 
     // ── Grouping ───────────────────────────────────────────────────────
 
@@ -117,7 +121,10 @@ public class OpenIddictSessionServiceTests
         await SeedTokenAsync(userId, authId, TokenTypeHints.RefreshToken, scope.ServiceProvider);
 
         var contracts = scope.ServiceProvider.GetRequiredService<IOpenIddictSessionContracts>();
-        var sessions = await contracts.GetActiveSessionsForUserAsync(userId, currentTokenId: accessId);
+        var sessions = await contracts.GetActiveSessionsForUserAsync(
+            userId,
+            currentTokenId: accessId
+        );
 
         sessions.Should().HaveCount(1);
         sessions[0].IsCurrent.Should().BeTrue();

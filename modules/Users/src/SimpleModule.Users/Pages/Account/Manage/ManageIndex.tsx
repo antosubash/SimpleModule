@@ -1,5 +1,18 @@
 import { router } from '@inertiajs/react';
-import { Button, Field, FieldGroup, Input, Label } from '@simplemodule/ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Field,
+  FieldGroup,
+  Input,
+  Label,
+} from '@simplemodule/ui';
+import { useState } from 'react';
 import ManageLayout from '@/components/ManageLayout';
 
 interface Props {
@@ -9,10 +22,16 @@ interface Props {
 }
 
 export default function ManageIndex({ username, phoneNumber, statusMessage }: Props) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     router.post('/Identity/Account/Manage', formData);
+  }
+
+  function confirmSignOutEverywhere() {
+    router.post('/Identity/Account/Manage/SignOutEverywhere');
   }
 
   return (
@@ -43,6 +62,39 @@ export default function ManageIndex({ username, phoneNumber, statusMessage }: Pr
           </Button>
         </FieldGroup>
       </form>
+
+      <hr className="my-8 border-border" />
+
+      <section>
+        <h3 className="text-xl font-bold mb-2">Security</h3>
+        <p className="text-sm text-text-secondary mb-4">
+          Sign out of every device you've ever signed in on, including this one. Useful if you've
+          lost a device or suspect your account has been compromised.
+        </p>
+        <Button type="button" variant="danger" onClick={() => setConfirmOpen(true)}>
+          Sign out everywhere
+        </Button>
+      </section>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign out everywhere?</DialogTitle>
+            <DialogDescription>
+              This will sign you out of every device, including this one. You'll need to sign in
+              again on this device. Continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="danger" onClick={confirmSignOutEverywhere}>
+              Sign out everywhere
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ManageLayout>
   );
 }
