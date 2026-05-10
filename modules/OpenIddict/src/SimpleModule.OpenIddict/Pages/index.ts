@@ -3,4 +3,5 @@
   'OpenIddict/OpenIddict/ClientsCreate': () => import('./ClientsCreate'),
   'OpenIddict/OpenIddict/ClientsEdit': () => import('./ClientsEdit'),
   'OpenIddict/OAuthCallback': () => import('./OAuthCallback'),
+  'OpenIddict/Account/Manage/ActiveSessions': () => import('./Account/Manage/ActiveSessions'),
 };

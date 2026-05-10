@@ -64,6 +64,7 @@ public class EmailModule : IModule, IModuleServices
 
         // Replace Identity's ConsoleEmailSender with a real one
         services.AddScoped<IEmailSender<ApplicationUser>, IdentityEmailSender>();
+        services.AddScoped<IAccountUnlockEmailSender, IdentityAccountUnlockEmailSender>();
 
         services.AddModuleJob<SendEmailJob>();
         services.AddModuleJob<RetryFailedEmailsJob>();

@@ -80,6 +80,7 @@ public class UsersModule : IModule
 
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
+        services.AddSingleton<IAccountUnlockEmailSender, ConsoleAccountUnlockEmailSender>();
     }
 
     public void ConfigurePermissions(PermissionRegistryBuilder builder)

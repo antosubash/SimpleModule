@@ -5,6 +5,7 @@ export interface UserSessionDto {
   applicationName: string;
   creationDate: string | null;
   expirationDate: string | null;
+  isCurrent: boolean;
 }
 
 export interface OpenIddictPermissions {

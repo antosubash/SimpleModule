@@ -157,7 +157,10 @@ export const routes = {
       resetAuthenticator: () => '/Identity/Account/Manage/ResetAuthenticator' as const,
       resetPasswordConfirmation: () => '/Identity/Account/ResetPasswordConfirmation' as const,
       resetPassword: () => '/Identity/Account/ResetPassword' as const,
+      sendUnlockEmailConfirmation: () => '/Identity/Account/SendUnlockEmailConfirmation' as const,
+      sendUnlockEmail: () => '/Identity/Account/SendUnlockEmail' as const,
       twoFactorAuthentication: () => '/Identity/Account/Manage/TwoFactorAuthentication' as const,
+      unlockAccount: () => '/Identity/Account/UnlockAccount' as const,
       changePassword: () => '/Identity/Account/Manage/ChangePassword' as const,
       deletePersonalData: () => '/Identity/Account/Manage/DeletePersonalData' as const,
       email: () => '/Identity/Account/Manage/Email' as const,
@@ -195,6 +198,10 @@ export const routes = {
       oAuthCallback: () => '/oauth-callback' as const,
       token: () => '/connect/token' as const,
       userinfo: () => '/connect/userinfo' as const,
+      activeSessions: () => '/Identity/Account/Manage/ActiveSessions' as const,
+      revokeOtherSessions: () => '/Identity/Account/Manage/ActiveSessions/revoke-others' as const,
+      revokeSession: (tokenId: string | number) =>
+        `/Identity/Account/Manage/ActiveSessions/${tokenId}/revoke`,
     },
     views: {
       clientsCreate: () => '/openiddict/clients/create' as const,
