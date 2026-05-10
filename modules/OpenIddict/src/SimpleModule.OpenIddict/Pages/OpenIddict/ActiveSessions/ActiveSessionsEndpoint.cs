@@ -23,12 +23,7 @@ public class ActiveSessionsEndpoint : IEndpoint
                     IOpenIddictSessionContracts sessionContracts
                 ) =>
                 {
-                    var userId = principal.GetUserId();
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        return TypedResults.Redirect("/Identity/Account/Login");
-                    }
-
+                    var userId = principal.GetUserId()!;
                     var currentTokenId = ActiveSessionsHelpers.GetCurrentTokenId(principal);
                     var sessions = await sessionContracts.GetActiveSessionsForUserAsync(
                         userId,

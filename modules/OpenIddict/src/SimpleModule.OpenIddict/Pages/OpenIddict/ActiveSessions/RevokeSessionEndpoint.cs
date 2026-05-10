@@ -23,37 +23,29 @@ public class RevokeSessionEndpoint : IEndpoint
                     IOpenIddictSessionContracts sessionContracts
                 ) =>
                 {
-                    var userId = principal.GetUserId();
-                    if (string.IsNullOrEmpty(userId))
-                    {
-                        return TypedResults.Unauthorized();
-                    }
-
-                    // Refuse to revoke the request's own session before touching
-                    // the store, so a self-revoke can never silently sign the
-                    // caller out from under their own request.
+                    // RequireAuthorization short-circuits unauthenticated requests
+                    // before the handler runs, so userId is always present.
+                    var userId = principal.GetUserId()!;
                     var currentTokenId = ActiveSessionsHelpers.GetCurrentTokenId(principal);
-                    if (
-                        !string.IsNullOrEmpty(currentTokenId)
-                        && string.Equals(tokenId, currentTokenId, StringComparison.Ordinal)
-                    )
-                    {
-                        return TypedResults.BadRequest();
-                    }
 
-                    // 404 (not 403) when the token is missing or owned by someone
-                    // else, so the response shape doesn't leak whether a token id
-                    // exists for a different user.
-                    var revoked = await sessionContracts.TryRevokeSessionForUserAsync(
+                    var result = await sessionContracts.TryRevokeSessionForUserAsync(
                         tokenId,
-                        userId
+                        userId,
+                        currentTokenId
                     );
-                    if (!revoked)
-                    {
-                        return TypedResults.NotFound();
-                    }
 
-                    return TypedResults.Redirect("/Identity/Account/Manage/ActiveSessions");
+                    return result switch
+                    {
+                        // Self-revoke is rejected with 400 — revoking the
+                        // caller's own session would sign them out from under
+                        // their own request.
+                        RevokeSessionResult.BlockedCurrent => TypedResults.BadRequest(),
+                        // 404 (not 403) when the token is missing or owned by
+                        // someone else, so the response shape doesn't leak
+                        // whether a token id exists for a different user.
+                        RevokeSessionResult.NotFound => TypedResults.NotFound(),
+                        _ => TypedResults.Redirect("/Identity/Account/Manage/ActiveSessions"),
+                    };
                 }
             )
             .RequireAuthorization()
