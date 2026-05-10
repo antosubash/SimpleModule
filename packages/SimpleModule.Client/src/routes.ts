@@ -198,6 +198,10 @@ export const routes = {
       oAuthCallback: () => '/oauth-callback' as const,
       token: () => '/connect/token' as const,
       userinfo: () => '/connect/userinfo' as const,
+      activeSessions: () => '/Identity/Account/Manage/ActiveSessions' as const,
+      revokeOtherSessions: () => '/Identity/Account/Manage/ActiveSessions/revoke-others' as const,
+      revokeSession: (tokenId: string | number) =>
+        `/Identity/Account/Manage/ActiveSessions/${tokenId}/revoke`,
     },
     views: {
       clientsCreate: () => '/openiddict/clients/create' as const,
