@@ -53,4 +53,9 @@ public static class UsersConstants
         public const string ResetAuthenticator = "/Manage/ResetAuthenticator";
         public const string GenerateRecoveryCodes = "/Manage/GenerateRecoveryCodes";
     }
+
+    public static class TokenPurposes
+    {
+        public const string AccountUnlock = "AccountUnlock";
+    }
 }

@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { routes } from '@simplemodule/client/routes';
 import { Card, CardContent, Container } from '@simplemodule/ui';
 
 export default function Lockout() {
@@ -16,7 +17,7 @@ export default function Lockout() {
               <p className="text-sm text-text-muted">
                 You can also{' '}
                 <Link
-                  href="/Identity/Account/SendUnlockEmail"
+                  href={routes.users.views.sendUnlockEmail()}
                   className="text-primary underline hover:no-underline"
                 >
                   receive an unlock link by email

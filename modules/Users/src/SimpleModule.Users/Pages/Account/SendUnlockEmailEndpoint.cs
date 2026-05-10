@@ -30,12 +30,16 @@ public class SendUnlockEmailEndpoint : IViewEndpoint
                 ) =>
                 {
                     var user = await userManager.FindByEmailAsync(email);
-                    if (user is not null && await userManager.IsLockedOutAsync(user))
+                    if (
+                        user is not null
+                        && await userManager.IsEmailConfirmedAsync(user)
+                        && await userManager.IsLockedOutAsync(user)
+                    )
                     {
                         var code = await userManager.GenerateUserTokenAsync(
                             user,
                             TokenOptions.DefaultProvider,
-                            "AccountUnlock"
+                            UsersConstants.TokenPurposes.AccountUnlock
                         );
                         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 

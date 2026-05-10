@@ -13,9 +13,7 @@ export default function UnlockAccount({ success, message }: Props) {
         <div className="w-full max-w-md">
           <Card>
             <CardContent className="p-8">
-              <h1
-                className={`text-xl font-bold mb-4 ${success ? 'text-success' : 'text-danger'}`}
-              >
+              <h1 className={`text-xl font-bold mb-4 ${success ? 'text-success' : 'text-danger'}`}>
                 {success ? 'Account unlocked' : 'Unlock failed'}
               </h1>
               <p className="text-sm mb-6">{message}</p>

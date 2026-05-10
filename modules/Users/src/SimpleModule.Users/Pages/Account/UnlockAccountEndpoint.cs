@@ -1,10 +1,11 @@
+using System.Buffers;
+using System.Buffers.Text;
 using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.WebUtilities;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
@@ -16,6 +17,8 @@ namespace SimpleModule.Users.Pages.Account;
 public class UnlockAccountEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.UnlockAccount;
+
+    private const string ComponentName = "Users/Account/UnlockAccount";
 
     public void Map(IEndpointRouteBuilder app)
     {
@@ -33,33 +36,42 @@ public class UnlockAccountEndpoint : IViewEndpoint
                         return TypedResults.Redirect("/");
                     }
 
+                    static IResult InvalidLink() =>
+                        Inertia.Render(
+                            ComponentName,
+                            new { success = false, message = "Invalid or expired unlock link." }
+                        );
+
                     var user = await userManager.FindByIdAsync(userId);
                     if (user is null)
                     {
-                        return Inertia.Render(
-                            "Users/Account/UnlockAccount",
-                            new { success = false, message = "Unable to unlock account." }
-                        );
+                        return InvalidLink();
                     }
 
-                    var decodedCode = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
+                    var decodeBuffer = new byte[Base64Url.GetMaxDecodedLength(code.Length)];
+                    var decodeStatus = Base64Url.DecodeFromChars(
+                        code,
+                        decodeBuffer,
+                        out _,
+                        out var bytesWritten,
+                        isFinalBlock: true
+                    );
+                    if (decodeStatus != OperationStatus.Done)
+                    {
+                        return InvalidLink();
+                    }
+                    var decodedCode = Encoding.UTF8.GetString(decodeBuffer, 0, bytesWritten);
+
                     var isValid = await userManager.VerifyUserTokenAsync(
                         user,
                         TokenOptions.DefaultProvider,
-                        "AccountUnlock",
+                        UsersConstants.TokenPurposes.AccountUnlock,
                         decodedCode
                     );
 
                     if (!isValid)
                     {
-                        return Inertia.Render(
-                            "Users/Account/UnlockAccount",
-                            new
-                            {
-                                success = false,
-                                message = "Invalid or expired unlock link.",
-                            }
-                        );
+                        return InvalidLink();
                     }
 
                     user.LockoutEnd = null;
@@ -68,14 +80,11 @@ public class UnlockAccountEndpoint : IViewEndpoint
                     await userManager.UpdateSecurityStampAsync(user);
 
                     await bus.PublishAsync(
-                        new UserSelfUnlockedEvent(
-                            UserId.From(user.Id),
-                            user.Email ?? string.Empty
-                        )
+                        new UserSelfUnlockedEvent(UserId.From(user.Id), user.Email ?? string.Empty)
                     );
 
                     return Inertia.Render(
-                        "Users/Account/UnlockAccount",
+                        ComponentName,
                         new
                         {
                             success = true,
