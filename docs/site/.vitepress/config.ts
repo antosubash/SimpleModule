@@ -31,6 +31,7 @@ export default defineConfig({
             { text: 'Introduction', link: '/getting-started/introduction' },
             { text: 'Quick Start', link: '/getting-started/quick-start' },
             { text: 'Project Structure', link: '/getting-started/project-structure' },
+            { text: 'Brownfield Integration', link: '/getting-started/brownfield-integration' },
           ],
         },
       ],
