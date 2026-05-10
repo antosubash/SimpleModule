@@ -1,5 +1,11 @@
 import { Card, CardContent, PageShell } from '@simplemodule/ui';
 
+// Mirrors modules/Users/src/SimpleModule.Users/components/ManageLayout.tsx — the
+// /Identity/Account/Manage/* nav lives in the Users module, but Vite library-mode
+// bundles each module separately so OpenIddict can't import it. Keep these in
+// sync when nav items change. Constitution rule SM0010 forbids OpenIddict →
+// Users React imports.
+
 interface ManageLayoutProps {
   activePage: string;
   children: React.ReactNode;
