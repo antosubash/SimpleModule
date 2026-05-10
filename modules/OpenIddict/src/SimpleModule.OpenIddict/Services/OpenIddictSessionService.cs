@@ -9,8 +9,14 @@ public sealed class OpenIddictSessionService(
     IOpenIddictApplicationManager appManager
 ) : IOpenIddictSessionContracts
 {
+    public Task<IReadOnlyList<UserSessionDto>> GetActiveSessionsForUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default
+    ) => GetActiveSessionsForUserAsync(userId, currentTokenId: null, cancellationToken);
+
     public async Task<IReadOnlyList<UserSessionDto>> GetActiveSessionsForUserAsync(
         string userId,
+        string? currentTokenId,
         CancellationToken cancellationToken = default
     )
     {
@@ -44,11 +50,13 @@ public sealed class OpenIddictSessionService(
                 }
             }
 
+            var tokenId =
+                await tokenManager.GetIdAsync(token, cancellationToken) ?? string.Empty;
+
             sessions.Add(
                 new UserSessionDto
                 {
-                    TokenId =
-                        await tokenManager.GetIdAsync(token, cancellationToken) ?? string.Empty,
+                    TokenId = tokenId,
                     Type = type ?? string.Empty,
                     ApplicationName = appName,
                     CreationDate = await tokenManager.GetCreationDateAsync(
@@ -56,11 +64,32 @@ public sealed class OpenIddictSessionService(
                         cancellationToken
                     ),
                     ExpirationDate = expiration,
+                    IsCurrent =
+                        !string.IsNullOrEmpty(currentTokenId)
+                        && string.Equals(tokenId, currentTokenId, StringComparison.Ordinal),
                 }
             );
         }
 
         return sessions;
+    }
+
+    public async Task<bool> TryRevokeSessionForUserAsync(
+        string tokenId,
+        string userId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var token = await tokenManager.FindByIdAsync(tokenId, cancellationToken);
+        if (token is null)
+            return false;
+
+        var subject = await tokenManager.GetSubjectAsync(token, cancellationToken);
+        if (!string.Equals(subject, userId, StringComparison.Ordinal))
+            return false;
+
+        await tokenManager.TryRevokeAsync(token, cancellationToken);
+        return true;
     }
 
     public async Task RevokeSessionAsync(
@@ -75,20 +104,35 @@ public sealed class OpenIddictSessionService(
         }
     }
 
-    public async Task RevokeAllSessionsForUserAsync(
+    public Task RevokeAllSessionsForUserAsync(
         string userId,
+        CancellationToken cancellationToken = default
+    ) => RevokeOtherSessionsForUserAsync(userId, currentTokenId: null, cancellationToken);
+
+    public async Task RevokeOtherSessionsForUserAsync(
+        string userId,
+        string? currentTokenId,
         CancellationToken cancellationToken = default
     )
     {
+        // Materialize valid tokens first; revoking inside the FindBySubjectAsync
+        // enumeration could mutate the underlying store mid-iteration.
         var tokensToRevoke = new List<object>();
 
         await foreach (var token in tokenManager.FindBySubjectAsync(userId, cancellationToken))
         {
             var status = await tokenManager.GetStatusAsync(token, cancellationToken);
-            if (status == Statuses.Valid)
+            if (status != Statuses.Valid)
+                continue;
+
+            if (!string.IsNullOrEmpty(currentTokenId))
             {
-                tokensToRevoke.Add(token);
+                var tokenId = await tokenManager.GetIdAsync(token, cancellationToken);
+                if (string.Equals(tokenId, currentTokenId, StringComparison.Ordinal))
+                    continue;
             }
+
+            tokensToRevoke.Add(token);
         }
 
         foreach (var token in tokensToRevoke)
