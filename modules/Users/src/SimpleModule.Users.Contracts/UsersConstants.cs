@@ -32,6 +32,9 @@ public static class UsersConstants
         public const string LoginWith2fa = "/LoginWith2fa";
         public const string LoginWithRecoveryCode = "/LoginWithRecoveryCode";
         public const string Lockout = "/Lockout";
+        public const string SendUnlockEmail = "/SendUnlockEmail";
+        public const string SendUnlockEmailConfirmation = "/SendUnlockEmailConfirmation";
+        public const string UnlockAccount = "/UnlockAccount";
         public const string AccessDenied = "/AccessDenied";
         public const string Error = "/Error";
         public const string RegisterConfirmation = "/RegisterConfirmation";

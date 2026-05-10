@@ -88,19 +88,16 @@ export const routes = {
   },
   tenants: {
     api: {
-      deleteTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      deleteTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       getTenantFeatures: (id: string | number) => `/api/tenants/${id}/features`,
-      setTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      setTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       addHost: (id: string | number) => `/api/tenants/${id}/hosts`,
       changeStatus: (id: string | number) => `/api/tenants/${id}/status`,
       create: () => '/api/tenants' as const,
       delete: (id: string | number) => `/api/tenants/${id}`,
       getAll: () => '/api/tenants' as const,
       getById: (id: string | number) => `/api/tenants/${id}`,
-      removeHost: (id: string | number, hostId: string | number) =>
-        `/api/tenants/${id}/hosts/${hostId}`,
+      removeHost: (id: string | number, hostId: string | number) => `/api/tenants/${id}/hosts/${hostId}`,
       update: (id: string | number) => `/api/tenants/${id}`,
     },
     views: {
@@ -157,7 +154,10 @@ export const routes = {
       resetAuthenticator: () => '/Identity/Account/Manage/ResetAuthenticator' as const,
       resetPasswordConfirmation: () => '/Identity/Account/ResetPasswordConfirmation' as const,
       resetPassword: () => '/Identity/Account/ResetPassword' as const,
+      sendUnlockEmailConfirmation: () => '/Identity/Account/SendUnlockEmailConfirmation' as const,
+      sendUnlockEmail: () => '/Identity/Account/SendUnlockEmail' as const,
       twoFactorAuthentication: () => '/Identity/Account/Manage/TwoFactorAuthentication' as const,
+      unlockAccount: () => '/Identity/Account/UnlockAccount' as const,
       changePassword: () => '/Identity/Account/Manage/ChangePassword' as const,
       deletePersonalData: () => '/Identity/Account/Manage/DeletePersonalData' as const,
       email: () => '/Identity/Account/Manage/Email' as const,
@@ -205,8 +205,7 @@ export const routes = {
   admin: {
     api: {
       adminRoles: () => '/admin/roles' as const,
-      adminSessions: (id: string | number, tokenId: string | number) =>
-        `/admin/users/${id}/sessions/${tokenId}`,
+      adminSessions: (id: string | number, tokenId: string | number) => `/admin/users/${id}/sessions/${tokenId}`,
       adminUsers: () => '/admin/users' as const,
     },
     views: {
@@ -220,3 +219,4 @@ export const routes = {
     },
   },
 } as const;
+
