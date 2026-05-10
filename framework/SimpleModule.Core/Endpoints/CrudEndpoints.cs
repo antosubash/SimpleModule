@@ -34,4 +34,26 @@ public static class CrudEndpoints
         await delete();
         return TypedResults.NoContent();
     }
+
+    /// <summary>
+    /// Endpoint helper for restoring a soft-deleted row. The <paramref name="restore"/>
+    /// delegate should call <c>ISoftDeleteService&lt;T&gt;.RestoreAsync(id)</c> and return
+    /// the number of rows affected (0 → 404, 1 → 204).
+    /// </summary>
+    public static async Task<IResult> Restore(Func<Task<int>> restore)
+    {
+        var affected = await restore();
+        return affected > 0 ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
+
+    /// <summary>
+    /// Endpoint helper for force-deleting a row (bypassing soft delete). The
+    /// <paramref name="forceDelete"/> delegate should call
+    /// <c>ISoftDeleteService&lt;T&gt;.ForceDeleteAsync(id)</c>.
+    /// </summary>
+    public static async Task<IResult> ForceDelete(Func<Task<int>> forceDelete)
+    {
+        var affected = await forceDelete();
+        return affected > 0 ? TypedResults.NoContent() : TypedResults.NotFound();
+    }
 }

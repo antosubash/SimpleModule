@@ -14,6 +14,10 @@ export const pages: Record<string, unknown> = {
   'Users/Account/LoginWith2fa': () => import('./Account/LoginWith2fa'),
   'Users/Account/LoginWithRecoveryCode': () => import('./Account/LoginWithRecoveryCode'),
   'Users/Account/Lockout': () => import('./Account/Lockout'),
+  'Users/Account/SendUnlockEmail': () => import('./Account/SendUnlockEmail'),
+  'Users/Account/SendUnlockEmailConfirmation': () =>
+    import('./Account/SendUnlockEmailConfirmation'),
+  'Users/Account/UnlockAccount': () => import('./Account/UnlockAccount'),
   'Users/Account/AccessDenied': () => import('./Account/AccessDenied'),
   'Users/Account/Error': () => import('./Account/Error'),
   'Users/Account/ExternalLogin': () => import('./Account/ExternalLogin'),
