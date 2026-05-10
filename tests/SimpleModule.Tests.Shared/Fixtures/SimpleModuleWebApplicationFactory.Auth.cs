@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc.Testing;
 using SimpleModule.Testing;
 
 namespace SimpleModule.Tests.Shared.Fixtures;
@@ -22,5 +23,18 @@ public partial class SimpleModuleWebApplicationFactory
     {
         EnsureDatabasesInitialized();
         return WebApplicationFactoryAuthExtensions.CreateAuthenticatedClient(this, claims);
+    }
+
+    public HttpClient CreateAuthenticatedClient(
+        WebApplicationFactoryClientOptions clientOptions,
+        params Claim[] claims
+    )
+    {
+        EnsureDatabasesInitialized();
+        return WebApplicationFactoryAuthExtensions.CreateAuthenticatedClient(
+            this,
+            clientOptions,
+            claims
+        );
     }
 }

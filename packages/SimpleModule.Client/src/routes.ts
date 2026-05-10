@@ -157,6 +157,7 @@ export const routes = {
       resetAuthenticator: () => '/Identity/Account/Manage/ResetAuthenticator' as const,
       resetPasswordConfirmation: () => '/Identity/Account/ResetPasswordConfirmation' as const,
       resetPassword: () => '/Identity/Account/ResetPassword' as const,
+      signOutEverywhere: () => '/Identity/Account/Manage/SignOutEverywhere' as const,
       twoFactorAuthentication: () => '/Identity/Account/Manage/TwoFactorAuthentication' as const,
       changePassword: () => '/Identity/Account/Manage/ChangePassword' as const,
       deletePersonalData: () => '/Identity/Account/Manage/DeletePersonalData' as const,

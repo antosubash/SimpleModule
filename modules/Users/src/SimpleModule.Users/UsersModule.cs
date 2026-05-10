@@ -77,6 +77,10 @@ public class UsersModule : IModule
 
         // Bridge UsersModuleOptions into ASP.NET Identity options
         services.AddSingleton<IPostConfigureOptions<IdentityOptions>, ApplyUsersModuleOptions>();
+        services.AddSingleton<
+            IPostConfigureOptions<SecurityStampValidatorOptions>,
+            ApplySecurityStampValidatorOptions
+        >();
 
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();

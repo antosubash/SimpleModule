@@ -49,5 +49,6 @@ public static class UsersConstants
         public const string Disable2fa = "/Manage/Disable2fa";
         public const string ResetAuthenticator = "/Manage/ResetAuthenticator";
         public const string GenerateRecoveryCodes = "/Manage/GenerateRecoveryCodes";
+        public const string SignOutEverywhere = "/Manage/SignOutEverywhere";
     }
 }

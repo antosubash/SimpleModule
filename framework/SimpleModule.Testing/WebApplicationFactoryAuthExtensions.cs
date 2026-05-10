@@ -27,6 +27,27 @@ public static class WebApplicationFactoryAuthExtensions
     }
 
     /// <summary>
+    /// Same as <see cref="CreateAuthenticatedClient{TEntryPoint}(WebApplicationFactory{TEntryPoint}, Claim[])"/>
+    /// but lets the caller pass <see cref="WebApplicationFactoryClientOptions"/>, e.g. to disable
+    /// auto-redirect when the test asserts on the redirect itself.
+    /// </summary>
+    public static HttpClient CreateAuthenticatedClient<TEntryPoint>(
+        this WebApplicationFactory<TEntryPoint> factory,
+        WebApplicationFactoryClientOptions clientOptions,
+        params Claim[] claims
+    )
+        where TEntryPoint : class
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        ArgumentNullException.ThrowIfNull(clientOptions);
+        ArgumentNullException.ThrowIfNull(claims);
+
+        var client = factory.CreateClient(clientOptions);
+        ApplyClaims(client, claims);
+        return client;
+    }
+
+    /// <summary>
     /// Convenience overload that adds each entry of <paramref name="permissions"/>
     /// as a <see cref="WellKnownClaims.Permission"/> claim before applying any
     /// <paramref name="additionalClaims"/>.
