@@ -18,18 +18,50 @@ const inputVariants = cva(
 );
 
 interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
-    VariantProps<typeof inputVariants> {}
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'prefix'>,
+    VariantProps<typeof inputVariants> {
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
+  wrapperClassName?: string;
+}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, variant, type, ...props }, ref) => {
+  ({ className, variant, type, prefix, suffix, wrapperClassName, ...props }, ref) => {
+    if (prefix == null && suffix == null) {
+      return (
+        <input
+          type={type}
+          className={cn(inputVariants({ variant, className }))}
+          ref={ref}
+          {...props}
+        />
+      );
+    }
+
     return (
-      <input
-        type={type}
-        className={cn(inputVariants({ variant, className }))}
-        ref={ref}
-        {...props}
-      />
+      <div
+        className={cn(
+          'relative flex items-center w-full',
+          // make adornments inherit muted color and not steal focus
+          '[&>[data-slot=prefix]]:absolute [&>[data-slot=prefix]]:left-3 [&>[data-slot=prefix]]:text-text-muted [&>[data-slot=prefix]]:pointer-events-none',
+          '[&>[data-slot=suffix]]:absolute [&>[data-slot=suffix]]:right-3 [&>[data-slot=suffix]]:text-text-muted',
+          wrapperClassName,
+        )}
+      >
+        {prefix != null && <span data-slot="prefix">{prefix}</span>}
+        <input
+          type={type}
+          className={cn(
+            inputVariants({ variant }),
+            prefix != null && 'pl-10',
+            suffix != null && 'pr-10',
+            className,
+          )}
+          ref={ref}
+          {...props}
+        />
+        {suffix != null && <span data-slot="suffix">{suffix}</span>}
+      </div>
     );
   },
 );
