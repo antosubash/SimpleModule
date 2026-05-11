@@ -1,3 +1,4 @@
+using JasperFx.Resources;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -20,12 +21,12 @@ using SimpleModule.Core.Security;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
-using JasperFx.Resources;
 using SimpleModule.DevTools;
-using Wolverine;
+using SimpleModule.Hosting.Broadcasting;
 using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
+using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Hosting;
@@ -90,6 +91,8 @@ public static partial class SimpleModuleHostExtensions
                 dbConnectionString
             )
         );
+
+        builder.Services.AddSimpleModuleBroadcasting();
 
         builder.Host.UseResourceSetupOnStartup();
         // Lazy<IMessageBus> lets services break factory-lambda cycles
@@ -325,6 +328,11 @@ public static partial class SimpleModuleHostExtensions
                 )
                 .AllowAnonymous();
         }
+
+        // Broadcast hub — authenticated by default (the [Authorize] attribute on
+        // BroadcastHub kicks the FallbackPolicy back in for the WebSocket / SSE
+        // upgrade itself).
+        app.MapSimpleModuleBroadcasting();
 
         app.MapGet("/error/{statusCode:int}", (int statusCode) => RenderErrorPage(statusCode))
             .AllowAnonymous()
