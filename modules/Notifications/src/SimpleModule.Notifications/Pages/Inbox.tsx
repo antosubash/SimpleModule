@@ -58,8 +58,8 @@ export default function Inbox({ items, totalCount, unreadCount }: Props) {
               <CardContent className="flex items-start justify-between gap-4 p-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    {!n.readAt && <Badge variant="default">New</Badge>}
-                    <Badge variant="outline">{n.channel}</Badge>
+                    {!n.readAt && <Badge variant="info">New</Badge>}
+                    <Badge variant="default">{n.channel}</Badge>
                     <span className="text-xs text-text-muted">{n.type}</span>
                   </div>
                   {n.title && <p className="mt-1 font-medium">{n.title}</p>}
