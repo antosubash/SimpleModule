@@ -4,15 +4,12 @@ namespace SimpleModule.Core.Entities;
 
 /// <summary>
 /// Aggregate root with audit tracking, soft delete, versioning, and domain events.
-/// Domain events are automatically dispatched via Wolverine's <c>IMessageBus</c> after SaveChanges.
+/// Domain events added via <see cref="AddDomainEvent"/> are flushed to Wolverine's
+/// durable outbox during <c>SaveChangesAsync</c>, atomic with the EF transaction.
 /// </summary>
 public abstract class AuditableAggregateRoot<TId> : FullAuditableEntity<TId>, IHasDomainEvents
 {
-    private readonly List<IEvent> _domainEvents = [];
+    public List<IEvent> Events { get; } = [];
 
-    public IReadOnlyList<IEvent> GetDomainEvents() => _domainEvents.AsReadOnly();
-
-    public void ClearDomainEvents() => _domainEvents.Clear();
-
-    protected void AddDomainEvent(IEvent domainEvent) => _domainEvents.Add(domainEvent);
+    protected void AddDomainEvent(IEvent domainEvent) => Events.Add(domainEvent);
 }

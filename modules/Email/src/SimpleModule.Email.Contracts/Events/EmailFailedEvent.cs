@@ -7,4 +7,4 @@ public sealed record EmailFailedEvent(
     string To,
     string Subject,
     string Error
-) : IEvent;
+) : DomainEvent;

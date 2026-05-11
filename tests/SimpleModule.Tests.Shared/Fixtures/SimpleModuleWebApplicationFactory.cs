@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.AuditLogs;
 using SimpleModule.BackgroundJobs;
@@ -25,6 +26,25 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
 {
     // Shared in-memory SQLite connection kept open for the lifetime of the factory
     private readonly SqliteConnection _connection = new("Data Source=:memory:");
+
+    // Wolverine.Sqlite rejects in-memory databases for the durable outbox/inbox,
+    // so the test process gets a single file-based SQLite path under the OS temp
+    // directory. Stored statically and set as an env var before Program.cs reads
+    // configuration so the override beats appsettings.json in the default config
+    // chain. Per-instance isolation would require sub-processes — overkill for
+    // tests that already share an xUnit collection fixture.
+    private static readonly string s_wolverineDbPath = Path.Combine(
+        Path.GetTempPath(),
+        $"wolverine-test-{Guid.NewGuid():N}.db"
+    );
+
+    static SimpleModuleWebApplicationFactory()
+    {
+        Environment.SetEnvironmentVariable(
+            "Database__DefaultConnection",
+            $"Data Source={s_wolverineDbPath}"
+        );
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -97,6 +117,22 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
         if (disposing)
         {
             _connection.Dispose();
+            TryDeleteWolverineDb();
         }
+    }
+
+    private static void TryDeleteWolverineDb()
+    {
+        try
+        {
+            File.Delete(s_wolverineDbPath);
+        }
+#pragma warning disable CA1031
+        catch
+        {
+            // SQLite may briefly hold the file after host shutdown; leaking
+            // an empty temp DB is acceptable for test cleanup.
+        }
+#pragma warning restore CA1031
     }
 }

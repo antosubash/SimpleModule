@@ -4,12 +4,14 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Tenants.Contracts;
 using SimpleModule.Tenants.Contracts.Events;
 using Wolverine;
+using Wolverine.EntityFrameworkCore;
 
 namespace SimpleModule.Tenants;
 
 public sealed partial class TenantService(
     TenantsDbContext db,
     IMessageBus bus,
+    IDbContextOutbox<TenantsDbContext> outbox,
     ILogger<TenantService> logger
 ) : ITenantContracts
 {
@@ -101,10 +103,10 @@ public sealed partial class TenantService(
         entity.ConnectionString = request.ConnectionString;
         entity.ValidUpTo = request.ValidUpTo;
 
-        await db.SaveChangesAsync();
+        await outbox.PublishAsync(new TenantUpdatedEvent(entity.Id, entity.Name));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         LogTenantUpdated(logger, entity.Id, entity.Name);
-        await bus.PublishAsync(new TenantUpdatedEvent(entity.Id, entity.Name));
 
         return (await GetTenantByIdAsync(id))!;
     }
@@ -133,10 +135,11 @@ public sealed partial class TenantService(
 
         var oldStatus = entity.Status;
         entity.Status = status;
-        await db.SaveChangesAsync();
+
+        await outbox.PublishAsync(new TenantStatusChangedEvent(id, oldStatus, status));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         LogTenantStatusChanged(logger, id, oldStatus, status);
-        await bus.PublishAsync(new TenantStatusChangedEvent(id, oldStatus, status));
 
         return (await GetTenantByIdAsync(id))!;
     }
@@ -152,10 +155,11 @@ public sealed partial class TenantService(
         var hostEntity = new TenantHostEntity { TenantId = tenantId, HostName = request.HostName };
 
         db.TenantHosts.Add(hostEntity);
-        await db.SaveChangesAsync();
+
+        await outbox.PublishAsync(new TenantHostAddedEvent(tenantId, request.HostName));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         LogHostAdded(logger, tenantId, request.HostName);
-        await bus.PublishAsync(new TenantHostAddedEvent(tenantId, request.HostName));
 
         return MapHostToDto(hostEntity);
     }
@@ -172,10 +176,11 @@ public sealed partial class TenantService(
 
         var hostName = host.HostName;
         db.TenantHosts.Remove(host);
-        await db.SaveChangesAsync();
+
+        await outbox.PublishAsync(new TenantHostRemovedEvent(tenantId, hostName));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         LogHostRemoved(logger, tenantId, hostName);
-        await bus.PublishAsync(new TenantHostRemovedEvent(tenantId, hostName));
     }
 
     private static Tenant MapToDto(TenantEntity entity) =>

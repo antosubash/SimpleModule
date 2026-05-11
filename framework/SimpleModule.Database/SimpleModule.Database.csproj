@@ -13,6 +13,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer.NetTopologySuite" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" />
     <ProjectReference Include="..\SimpleModule.Core\SimpleModule.Core.csproj" />
   </ItemGroup>
 </Project>

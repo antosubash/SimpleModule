@@ -13,4 +13,4 @@ public sealed record FeatureFlagOverrideChangedEvent(
     OverrideAction Action,
     OverrideType OverrideType,
     string OverrideValue
-) : IEvent;
+) : DomainEvent;
