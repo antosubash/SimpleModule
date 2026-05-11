@@ -5,6 +5,7 @@ using NSubstitute;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Database;
 using SimpleModule.Email.Providers;
+using SimpleModule.Tests.Shared.Fakes;
 using Wolverine;
 
 namespace SimpleModule.Email.Tests.Unit;
@@ -14,6 +15,7 @@ public sealed partial class EmailServiceTests : IDisposable
     private readonly EmailDbContext _db;
     private readonly EmailService _sut;
     private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
+    private readonly FakeDbContextOutbox<EmailDbContext> _outbox;
     private readonly TestBackgroundJobs _backgroundJobs = new();
 
     public EmailServiceTests()
@@ -35,11 +37,13 @@ public sealed partial class EmailServiceTests : IDisposable
         _db.Database.EnsureCreated();
 
         var provider = new LogEmailProvider(NullLogger<LogEmailProvider>.Instance);
+        _outbox = new FakeDbContextOutbox<EmailDbContext>(_db);
 
         _sut = new EmailService(
             _db,
             provider,
             _bus,
+            _outbox,
             _backgroundJobs,
             NullLogger<EmailService>.Instance
         );

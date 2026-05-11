@@ -8,4 +8,4 @@ public sealed record SettingChangedEvent(
     string? OldValue,
     string? NewValue,
     SettingScope Scope
-) : IEvent;
+) : DomainEvent;

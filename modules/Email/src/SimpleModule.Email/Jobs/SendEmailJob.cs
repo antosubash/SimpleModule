@@ -5,6 +5,7 @@ using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
 using SimpleModule.Email.Providers;
 using Wolverine;
+using Wolverine.EntityFrameworkCore;
 
 namespace SimpleModule.Email.Jobs;
 
@@ -12,7 +13,7 @@ public partial class SendEmailJob(
     EmailDbContext db,
     IEmailProvider emailProvider,
     IOptions<EmailModuleOptions> options,
-    IMessageBus bus,
+    IDbContextOutbox<EmailDbContext> outbox,
     ILogger<SendEmailJob> logger
 ) : IModuleJob
 {
@@ -48,10 +49,13 @@ public partial class SendEmailJob(
             await emailProvider.SendAsync(envelope, cancellationToken);
             message.Status = EmailStatus.Sent;
             message.SentAt = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync(cancellationToken);
+
+            await outbox.PublishAsync(
+                new EmailSentEvent(message.Id, message.To, message.Subject)
+            );
+            await outbox.SaveChangesAndFlushMessagesAsync(cancellationToken);
 
             LogEmailSent(logger, message.Id, message.To);
-            await bus.PublishAsync(new EmailSentEvent(message.Id, message.To, message.Subject));
         }
         catch (Exception ex)
             when (ex
@@ -65,12 +69,13 @@ public partial class SendEmailJob(
         {
             message.Status = EmailStatus.Failed;
             message.ErrorMessage = ex.Message;
-            await db.SaveChangesAsync(cancellationToken);
 
-            LogEmailFailed(logger, message.Id, message.To, ex);
-            await bus.PublishAsync(
+            await outbox.PublishAsync(
                 new EmailFailedEvent(message.Id, message.To, message.Subject, ex.Message)
             );
+            await outbox.SaveChangesAndFlushMessagesAsync(cancellationToken);
+
+            LogEmailFailed(logger, message.Id, message.To, ex);
         }
 
         context.ReportProgress(100);

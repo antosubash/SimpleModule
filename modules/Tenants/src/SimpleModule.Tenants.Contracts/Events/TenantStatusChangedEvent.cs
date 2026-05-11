@@ -6,4 +6,4 @@ public sealed record TenantStatusChangedEvent(
     TenantId TenantId,
     TenantStatus OldStatus,
     TenantStatus NewStatus
-) : IEvent;
+) : DomainEvent;

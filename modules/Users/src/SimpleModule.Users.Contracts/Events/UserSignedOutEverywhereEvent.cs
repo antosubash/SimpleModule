@@ -8,4 +8,4 @@ namespace SimpleModule.Users.Contracts.Events;
 /// outstanding access/refresh tokens, since bearer holders bypass the cookie-side
 /// SecurityStampValidator.
 /// </summary>
-public sealed record UserSignedOutEverywhereEvent(UserId UserId) : IEvent;
+public sealed record UserSignedOutEverywhereEvent(UserId UserId) : DomainEvent;

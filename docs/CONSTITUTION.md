@@ -195,11 +195,15 @@ This is cosmetic organization -- all modules share one connection.
 ### Events
 
 - Cross-module notifications use Wolverine's `IMessageBus.PublishAsync<T>()`
-- Events are records implementing the `IEvent` marker, defined in the publishing module's Contracts project
-- Any module can handle any event by declaring a class with a `Handle` / `Consume` / `HandleAsync` method taking the event as its first parameter — Wolverine discovers handlers by naming convention
-- In-process only: no external transports, no durable outbox, no cross-restart persistence. For durable work use the Background Jobs module.
-- Handlers should be stateless, independent, and idempotent
-- Non-critical handlers (audit, metrics, cache invalidation) should catch their own exceptions so they never break the primary operation
+- Events are records deriving from `DomainEvent` (which implements the `IEvent` marker), defined in the publishing module's Contracts project. The `DomainEvent` base supplies a stable `EventId` and `OccurredAt` so the durable inbox can deduplicate redelivery.
+- Any module can handle any event by declaring a class with a `Handle` / `Consume` / `HandleAsync` method taking the event as its first parameter — Wolverine discovers handlers by naming convention.
+- Handler discovery is automatic across every module assembly — the host's source-generated `AddSimpleModule()` registers all module assemblies with Wolverine, so handlers do not need a per-module `[WolverineModule]` attribute or `IWolverineExtension` class.
+- Messaging is durable: Wolverine persists every published envelope to the configured database (SQLite, PostgreSQL, or SQL Server) via `WolverineFx.{Provider}` before dispatch, and every local listener is enrolled in the durable inbox so each handler chain processes a given `EventId` at most once — even across process restarts. Schema is auto-created on startup.
+- Most service-level publishes are **atomic with the business write**: services inject `IDbContextOutbox<TDbContext>`, stage entity changes, call `outbox.PublishAsync(...)`, and finish with `outbox.SaveChangesAndFlushMessagesAsync()` so the EF write and the outbox envelope commit in the same transaction.
+- Events raised by `IHasDomainEvents` aggregates are scraped by Wolverine's `PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents>(x => x.Events)` integration during the same transactional flush.
+- Three categories remain on the durable-but-non-atomic `bus.PublishAsync` pattern (microsecond commit→publish gap, mitigated by inbox dedup): (1) **create events with DB-generated identifiers** — the new ID is not known until after `SaveChangesAsync` returns; switching the affected identifiers (`TenantId`, `FileStorageId`, `EmailMessageId`, `EmailTemplateId`) to caller-generated `Guid.CreateVersion7()` would close the gap; (2) **`UserService` / `UserAdminService` and the self-service account endpoints** — ASP.NET Identity's `UserManager` owns its `SaveChanges` and cannot be enrolled in the outbox; (3) **`SettingsService`** — switching it to `IDbContextOutbox` re-introduces the DI cycle the existing `Lazy<IMessageBus>` was added to break (resolve by moving the `AuditingMessageBus` settings gate to a Wolverine middleware).
+- Handlers should be stateless, independent, and idempotent — the inbox dedup is a safety net, not a substitute for idempotency.
+- Wolverine logs handler exceptions and discards the message on first failure by default (`MaximumAttempts = 1` on local queues). Non-critical handlers (audit, metrics, cache invalidation) should still catch their own exceptions where the failure mode would otherwise produce noisy log spam.
 
 ### When to Use Which Communication Pattern
 

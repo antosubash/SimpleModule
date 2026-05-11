@@ -4,7 +4,7 @@ using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.AuditLogs.Pipeline;
 
-public static class AuditConfigCacheInvalidator
+public static class AuditConfigCacheInvalidatorHandler
 {
     public static ValueTask Handle(SettingChangedEvent @event, IFusionCache cache)
     {
