@@ -76,8 +76,16 @@ public class UnlockAccountEndpoint : IViewEndpoint
 
                     user.LockoutEnd = null;
                     user.AccessFailedCount = 0;
-                    await userManager.UpdateAsync(user);
-                    await userManager.UpdateSecurityStampAsync(user);
+                    var updateResult = await userManager.UpdateAsync(user);
+                    if (!updateResult.Succeeded)
+                    {
+                        return InvalidLink();
+                    }
+                    var stampResult = await userManager.UpdateSecurityStampAsync(user);
+                    if (!stampResult.Succeeded)
+                    {
+                        return InvalidLink();
+                    }
 
                     await bus.PublishAsync(
                         new UserSelfUnlockedEvent(UserId.From(user.Id), user.Email ?? string.Empty)

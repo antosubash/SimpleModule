@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
-using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Testing;
+using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users.Contracts;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -52,7 +52,10 @@ public class ActiveSessionsEndpointTests
         return userId;
     }
 
-    private HttpClient CreateAuthenticatedNoRedirectClient(string userId, string? currentTokenId = null)
+    private HttpClient CreateAuthenticatedNoRedirectClient(
+        string userId,
+        string? currentTokenId = null
+    )
     {
         var client = _factory.CreateClient(NoRedirects());
         var claims = $"{ClaimTypes.NameIdentifier}={userId}";
@@ -66,12 +69,14 @@ public class ActiveSessionsEndpointTests
         return client;
     }
 
-    private async Task<(string AuthorizationId, string AccessTokenId)> SeedAuthorizationWithTokensAsync(
-        string userId
-    )
+    private async Task<(
+        string AuthorizationId,
+        string AccessTokenId
+    )> SeedAuthorizationWithTokensAsync(string userId)
     {
         using var scope = _factory.Services.CreateScope();
-        var authManager = scope.ServiceProvider.GetRequiredService<IOpenIddictAuthorizationManager>();
+        var authManager =
+            scope.ServiceProvider.GetRequiredService<IOpenIddictAuthorizationManager>();
         var auth = await authManager.CreateAsync(
             new OpenIddictAuthorizationDescriptor
             {
@@ -171,7 +176,10 @@ public class ActiveSessionsEndpointTests
         // the same authorization.
         var userId = await SeedUserAsync("revoke-self-1");
         var (_, accessTokenId) = await SeedAuthorizationWithTokensAsync(userId);
-        using var client = CreateAuthenticatedNoRedirectClient(userId, currentTokenId: accessTokenId);
+        using var client = CreateAuthenticatedNoRedirectClient(
+            userId,
+            currentTokenId: accessTokenId
+        );
 
         var response = await client.PostAsync(
             $"/Identity/Account/Manage/ActiveSessions/{accessTokenId}/revoke",
@@ -187,17 +195,19 @@ public class ActiveSessionsEndpointTests
         var userId = await SeedUserAsync("revoke-other-auth-1");
         var (_, currentToken) = await SeedAuthorizationWithTokensAsync(userId);
         var (_, otherToken) = await SeedAuthorizationWithTokensAsync(userId);
-        using var client = CreateAuthenticatedNoRedirectClient(userId, currentTokenId: currentToken);
+        using var client = CreateAuthenticatedNoRedirectClient(
+            userId,
+            currentTokenId: currentToken
+        );
 
         var response = await client.PostAsync(
             $"/Identity/Account/Manage/ActiveSessions/{otherToken}/revoke",
             content: null
         );
 
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.Redirect, HttpStatusCode.Found);
         response
-            .StatusCode.Should()
-            .BeOneOf(HttpStatusCode.Redirect, HttpStatusCode.Found);
-        response.Headers.Location?.ToString()
+            .Headers.Location?.ToString()
             .Should()
             .Contain("/Identity/Account/Manage/ActiveSessions");
     }
@@ -230,10 +240,9 @@ public class ActiveSessionsEndpointTests
             content: null
         );
 
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.Redirect, HttpStatusCode.Found);
         response
-            .StatusCode.Should()
-            .BeOneOf(HttpStatusCode.Redirect, HttpStatusCode.Found);
-        response.Headers.Location?.ToString()
+            .Headers.Location?.ToString()
             .Should()
             .Contain("/Identity/Account/Manage/ActiveSessions");
     }

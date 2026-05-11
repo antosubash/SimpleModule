@@ -159,6 +159,7 @@ export const routes = {
       resetPassword: () => '/Identity/Account/ResetPassword' as const,
       sendUnlockEmailConfirmation: () => '/Identity/Account/SendUnlockEmailConfirmation' as const,
       sendUnlockEmail: () => '/Identity/Account/SendUnlockEmail' as const,
+      signOutEverywhere: () => '/Identity/Account/Manage/SignOutEverywhere' as const,
       twoFactorAuthentication: () => '/Identity/Account/Manage/TwoFactorAuthentication' as const,
       unlockAccount: () => '/Identity/Account/UnlockAccount' as const,
       changePassword: () => '/Identity/Account/Manage/ChangePassword' as const,
