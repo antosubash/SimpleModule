@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>Notifications module for SimpleModule. Multi-channel dispatch (mail, database, SMS) with in-app bell-icon UI.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <ProjectReference Include="..\SimpleModule.Notifications.Contracts\SimpleModule.Notifications.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\BackgroundJobs\src\SimpleModule.BackgroundJobs.Contracts\SimpleModule.BackgroundJobs.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Email\src\SimpleModule.Email.Contracts\SimpleModule.Email.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Settings\src\SimpleModule.Settings.Contracts\SimpleModule.Settings.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Views\*.tsx">
+      <DependentUpon>%(Filename)Endpoint.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+</Project>

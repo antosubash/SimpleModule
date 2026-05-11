@@ -11,6 +11,7 @@ using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
+using SimpleModule.Notifications;
 using SimpleModule.OpenIddict;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Permissions;
@@ -74,6 +75,7 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
             ReplaceDbContext<BackgroundJobsDbContext>(services);
             ReplaceDbContext<RateLimitingDbContext>(services);
             ReplaceDbContext<EmailDbContext>(services);
+            ReplaceDbContext<NotificationsDbContext>(services);
             ReplaceDbContext<OpenIddictAppDbContext>(services, useOpenIddict: true);
 
             // Remove hosted seed services — they need real DB tables that
