@@ -31,5 +31,16 @@ public class DashboardModule : IModule
                 Section = MenuSection.AppSidebar,
             }
         );
+        menus.Add(
+            new MenuItem
+            {
+                Label = "Broadcasting",
+                Url = DashboardConstants.Routes.Views.Broadcasting,
+                Icon =
+                    """<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9.75c4-4 8-4 12 0M6 12.75c2.5-2.5 5.5-2.5 8 0M9 15.75c1-1 2-1 3 0M12 19.5h.01" /></svg>""",
+                Order = 20,
+                Section = MenuSection.AppSidebar,
+            }
+        );
     }
 }
