@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.Core.Events;
 using Wolverine;
+using Wolverine.Tracking;
 
 namespace SimpleModule.Database.Tests;
 
@@ -29,7 +30,20 @@ public sealed class WolverineAssemblyDiscoveryTests
         await host.StartAsync();
 
         var bus = host.Services.GetRequiredService<IMessageBus>();
-        await bus.PublishAsync(new DiscoveryTestEvent("hello"));
+
+        // Wait for the handler to actually execute before asserting — PublishAsync
+        // is fire-and-forget; on slower runners (Linux CI) the assertion otherwise
+        // races against the in-memory dispatcher.
+        await host.TrackActivity()
+            .Timeout(TimeSpan.FromSeconds(10))
+            .ExecuteAndWaitAsync(
+                (Func<IMessageContext, Task>)(
+                    async _ =>
+                    {
+                        await bus.PublishAsync(new DiscoveryTestEvent("hello"));
+                    }
+                )
+            );
 
         DiscoveryTestHandler.LastPayload.Should().Be("hello");
 
