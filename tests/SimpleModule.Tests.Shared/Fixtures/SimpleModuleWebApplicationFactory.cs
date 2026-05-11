@@ -33,7 +33,7 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
     // configuration so the override beats appsettings.json in the default config
     // chain. Per-instance isolation would require sub-processes — overkill for
     // tests that already share an xUnit collection fixture.
-    private static readonly string s_wolverineDbPath = Path.Combine(
+    public static readonly string WolverineDbPath = Path.Combine(
         Path.GetTempPath(),
         $"wolverine-test-{Guid.NewGuid():N}.db"
     );
@@ -42,7 +42,7 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
     {
         Environment.SetEnvironmentVariable(
             "Database__DefaultConnection",
-            $"Data Source={s_wolverineDbPath}"
+            $"Data Source={WolverineDbPath}"
         );
     }
 
@@ -125,7 +125,7 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
     {
         try
         {
-            File.Delete(s_wolverineDbPath);
+            File.Delete(WolverineDbPath);
         }
 #pragma warning disable CA1031
         catch
