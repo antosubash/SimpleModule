@@ -9,6 +9,7 @@ using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
+using SimpleModule.Notifications;
 using SimpleModule.OpenIddict;
 using SimpleModule.Permissions;
 using SimpleModule.RateLimiting;
@@ -48,6 +49,7 @@ public partial class SimpleModuleWebApplicationFactory
         EnsureTablesCreated<BackgroundJobsDbContext>(sp);
         EnsureTablesCreated<RateLimitingDbContext>(sp);
         EnsureTablesCreated<EmailDbContext>(sp);
+        EnsureTablesCreated<NotificationsDbContext>(sp);
         EnsureTablesCreated<OpenIddictAppDbContext>(sp);
     }
 

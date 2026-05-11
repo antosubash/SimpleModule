@@ -192,6 +192,17 @@ export const routes = {
       templates: () => '/email/templates' as const,
     },
   },
+  notifications: {
+    api: {
+      listNotifications: () => '/api/notifications' as const,
+      markAllRead: () => '/api/notifications/read-all' as const,
+      markRead: (id: string | number) => `/api/notifications/${id}/read`,
+      unreadCount: () => '/api/notifications/unread-count' as const,
+    },
+    views: {
+      inbox: () => '/notifications' as const,
+    },
+  },
   openIddict: {
     api: {
       authorization: () => '/connect/authorize' as const,

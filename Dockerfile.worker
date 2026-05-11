@@ -71,6 +71,8 @@ COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modul
 COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
 COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/SimpleModule.Email.Contracts/
 COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/
+COPY modules/Notifications/src/SimpleModule.Notifications.Contracts/*.csproj modules/Notifications/src/SimpleModule.Notifications.Contracts/
+COPY modules/Notifications/src/SimpleModule.Notifications/*.csproj modules/Notifications/src/SimpleModule.Notifications/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
 

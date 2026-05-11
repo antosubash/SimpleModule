@@ -63,6 +63,8 @@ COPY modules/Localization/src/SimpleModule.Localization.Contracts/*.csproj modul
 COPY modules/Localization/src/SimpleModule.Localization/*.csproj modules/Localization/src/SimpleModule.Localization/
 COPY modules/Email/src/SimpleModule.Email.Contracts/*.csproj modules/Email/src/SimpleModule.Email.Contracts/
 COPY modules/Email/src/SimpleModule.Email/*.csproj modules/Email/src/SimpleModule.Email/
+COPY modules/Notifications/src/SimpleModule.Notifications.Contracts/*.csproj modules/Notifications/src/SimpleModule.Notifications.Contracts/
+COPY modules/Notifications/src/SimpleModule.Notifications/*.csproj modules/Notifications/src/SimpleModule.Notifications/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
 
@@ -89,6 +91,7 @@ COPY modules/Tenants/src/SimpleModule.Tenants/package.json modules/Tenants/src/S
 COPY modules/Users/src/SimpleModule.Users/package.json modules/Users/src/SimpleModule.Users/
 COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/
 COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleModule.Email/
+COPY modules/Notifications/src/SimpleModule.Notifications/package.json modules/Notifications/src/SimpleModule.Notifications/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
