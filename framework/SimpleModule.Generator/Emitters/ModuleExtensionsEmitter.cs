@@ -46,6 +46,23 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
 
         sb.AppendLine();
         sb.AppendLine(
+            "    /// <summary>Assemblies for every discovered module. Used by the host to register"
+        );
+        sb.AppendLine(
+            "    /// Wolverine handler discovery for every module without per-module boilerplate.</summary>"
+        );
+        sb.AppendLine(
+            "    public static readonly global::System.Reflection.Assembly[] ModuleAssemblies = new global::System.Reflection.Assembly[]"
+        );
+        sb.AppendLine("    {");
+        foreach (var module in sortedModules)
+        {
+            sb.AppendLine($"        typeof({module.FullyQualifiedName}).Assembly,");
+        }
+        sb.AppendLine("    };");
+
+        sb.AppendLine();
+        sb.AppendLine(
             "    public static IServiceCollection AddModules(this IServiceCollection services, IConfiguration configuration)"
         );
         sb.AppendLine("    {");

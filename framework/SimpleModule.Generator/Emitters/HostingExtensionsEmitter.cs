@@ -50,6 +50,9 @@ internal sealed class HostingExtensionsEmitter : IEmitter
         sb.AppendLine("        SimpleModuleOptions? smOptions = null;");
         sb.AppendLine("        builder.AddSimpleModuleInfrastructure(o =>");
         sb.AppendLine("        {");
+        sb.AppendLine(
+            "            o.ModuleAssemblies = global::SimpleModule.Core.ModuleExtensions.ModuleAssemblies;"
+        );
         sb.AppendLine("            configure?.Invoke(o);");
         sb.AppendLine("            smOptions = o;");
         sb.AppendLine("        });");

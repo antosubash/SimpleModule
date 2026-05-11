@@ -43,6 +43,7 @@ export default defineConfig({
             { text: 'Endpoints', link: '/guide/endpoints' },
             { text: 'Contracts & DTOs', link: '/guide/contracts' },
             { text: 'Database', link: '/guide/database' },
+            { text: 'Soft Delete', link: '/guide/soft-delete' },
           ],
         },
         {

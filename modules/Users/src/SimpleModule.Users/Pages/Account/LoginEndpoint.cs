@@ -34,7 +34,8 @@ public partial class LoginEndpoint : IViewEndpoint
                     ISettingsContracts settingsService,
                     ISettingsDefinitionRegistry settingsDefinitions,
                     IOptions<IdentityPasskeyOptions> passkeyOptions,
-                    [FromQuery] string? returnUrl
+                    [FromQuery] string? returnUrl,
+                    [FromQuery] bool? signedOutEverywhere
                 ) =>
                 {
                     await context.SignOutAsync(IdentityConstants.ExternalScheme);
@@ -56,6 +57,7 @@ public partial class LoginEndpoint : IViewEndpoint
                             passkeyEnabled = !string.IsNullOrEmpty(
                                 passkeyOptions.Value.ServerDomain
                             ),
+                            signedOutEverywhere = signedOutEverywhere == true,
                         }
                     );
                 }

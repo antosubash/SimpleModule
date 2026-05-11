@@ -8,6 +8,7 @@ using SimpleModule.Email.Jobs;
 using SimpleModule.Email.Providers;
 using SimpleModule.Email.Services;
 using Wolverine;
+using Wolverine.EntityFrameworkCore;
 
 namespace SimpleModule.Email;
 
@@ -15,6 +16,7 @@ public partial class EmailService(
     EmailDbContext db,
     IEmailProvider emailProvider,
     IMessageBus bus,
+    IDbContextOutbox<EmailDbContext> outbox,
     IBackgroundJobs backgroundJobs,
     ILogger<EmailService> logger
 ) : IEmailContracts

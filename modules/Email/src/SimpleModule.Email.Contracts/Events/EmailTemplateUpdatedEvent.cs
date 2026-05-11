@@ -6,4 +6,4 @@ public sealed record EmailTemplateUpdatedEvent(
     EmailTemplateId TemplateId,
     string Name,
     IReadOnlyList<string> ChangedFields
-) : IEvent;
+) : DomainEvent;

@@ -10,4 +10,5 @@ public class UserSessionDto
     public string? ApplicationName { get; set; }
     public DateTimeOffset? CreationDate { get; set; }
     public DateTimeOffset? ExpirationDate { get; set; }
+    public bool IsCurrent { get; set; }
 }

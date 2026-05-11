@@ -42,6 +42,12 @@ const navItems = [
     label: 'Personal data',
     icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4',
   },
+  {
+    href: '/Identity/Account/Manage/ActiveSessions',
+    page: 'ActiveSessions',
+    label: 'Active sessions',
+    icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+  },
 ];
 
 function NavLink({

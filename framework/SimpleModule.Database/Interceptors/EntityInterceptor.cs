@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using SimpleModule.Core.Entities;
+using SimpleModule.Database.SoftDelete;
 
 namespace SimpleModule.Database.Interceptors;
 
@@ -65,6 +66,11 @@ public sealed class EntityInterceptor(
                     break;
 
                 case EntityState.Deleted when entry.Entity is ISoftDelete sd:
+                    if (ForceDeleteExtensions.IsMarked(eventData.Context, sd))
+                    {
+                        ForceDeleteExtensions.Consume(eventData.Context, sd);
+                        break;
+                    }
                     entry.State = EntityState.Modified;
                     sd.IsDeleted = true;
                     sd.DeletedAt = now;

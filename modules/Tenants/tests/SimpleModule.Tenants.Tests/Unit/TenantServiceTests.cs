@@ -7,6 +7,7 @@ using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Tenants;
 using SimpleModule.Tenants.Contracts;
+using SimpleModule.Tests.Shared.Fakes;
 using Wolverine;
 
 namespace Tenants.Tests.Unit;
@@ -16,6 +17,7 @@ public sealed class TenantServiceTests : IDisposable
     private readonly TenantsDbContext _db;
     private readonly TenantService _sut;
     private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
+    private readonly FakeDbContextOutbox<TenantsDbContext> _outbox;
 
     public TenantServiceTests()
     {
@@ -34,7 +36,8 @@ public sealed class TenantServiceTests : IDisposable
         _db = new TenantsDbContext(options, dbOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _sut = new TenantService(_db, _bus, NullLogger<TenantService>.Instance);
+        _outbox = new FakeDbContextOutbox<TenantsDbContext>(_db);
+        _sut = new TenantService(_db, _bus, _outbox, NullLogger<TenantService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
@@ -100,10 +103,10 @@ public sealed class TenantServiceTests : IDisposable
         var updated = await _sut.UpdateTenantAsync(TenantId.From(1), request);
 
         updated.Name.Should().Be("Updated Acme");
-        await _bus.Received()
-            .PublishAsync(
-                Arg.Any<SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent>(),
-                Arg.Any<DeliveryOptions?>()
+        _outbox
+            .PublishedMessages.Should()
+            .ContainSingle(m =>
+                m is SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent
             );
     }
 
@@ -134,10 +137,10 @@ public sealed class TenantServiceTests : IDisposable
         var result = await _sut.ChangeStatusAsync(TenantId.From(1), TenantStatus.Suspended);
 
         result.Status.Should().Be(TenantStatus.Suspended);
-        await _bus.Received()
-            .PublishAsync(
-                Arg.Any<SimpleModule.Tenants.Contracts.Events.TenantStatusChangedEvent>(),
-                Arg.Any<DeliveryOptions?>()
+        _outbox
+            .PublishedMessages.Should()
+            .ContainSingle(m =>
+                m is SimpleModule.Tenants.Contracts.Events.TenantStatusChangedEvent
             );
     }
 

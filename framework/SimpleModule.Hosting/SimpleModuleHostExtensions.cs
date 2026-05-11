@@ -20,11 +20,12 @@ using SimpleModule.Core.Security;
 using SimpleModule.Database;
 using SimpleModule.Database.Health;
 using SimpleModule.Database.Interceptors;
+using JasperFx.Resources;
 using SimpleModule.DevTools;
+using Wolverine;
 using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
-using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace SimpleModule.Hosting;
@@ -75,9 +76,22 @@ public static partial class SimpleModuleHostExtensions
             .Services.AddFusionCache()
             .WithDefaultEntryOptions(o => o.Duration = TimeSpan.FromMinutes(5));
 
-        // Wolverine: in-process messaging only. Handlers are auto-discovered
-        // from loaded assemblies. No external transports, no message persistence.
-        builder.Host.UseWolverine(_ => { });
+        var dbConnectionString =
+            builder.Configuration["Database:DefaultConnection"]
+            ?? throw new InvalidOperationException(
+                "Database:DefaultConnection must be configured for Wolverine durable messaging."
+            );
+
+        builder.Host.UseWolverine(opts =>
+            WolverineConfiguration.Configure(
+                opts,
+                options.ModuleAssemblies,
+                options.DatabaseProvider,
+                dbConnectionString
+            )
+        );
+
+        builder.Host.UseResourceSetupOnStartup();
         // Lazy<IMessageBus> lets services break factory-lambda cycles
         // (e.g. SettingsService ↔ AuditingMessageBus via ISettingsContracts).
         builder.Services.AddScoped(sp => new Lazy<IMessageBus>(() =>
@@ -89,9 +103,7 @@ public static partial class SimpleModuleHostExtensions
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
 
-        // Entity framework interceptors for automatic entity field population
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
-        builder.Services.AddScoped<ISaveChangesInterceptor, DomainEventInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityChangeInterceptor>();
 
         // Authentication is configured by modules via their ConfigureServices
