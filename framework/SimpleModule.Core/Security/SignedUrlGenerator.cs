@@ -33,6 +33,13 @@ public sealed class SignedUrlGenerator : ISignedUrlGenerator
     )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (path.Contains('?', StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                "Path must not contain a query string; pass query parameters via the 'query' argument.",
+                nameof(path)
+            );
+        }
 
         var pairs = BuildPairs(query, expiresAt, purpose);
         var canonical = BuildCanonical(path, pairs);
@@ -92,10 +99,9 @@ public sealed class SignedUrlGenerator : ISignedUrlGenerator
             }
         }
 
-        if (
-            expectedPurpose is not null
-            && !string.Equals(expectedPurpose, purpose, StringComparison.Ordinal)
-        )
+        // A URL signed with a purpose must be validated against that exact purpose;
+        // otherwise a token issued for one flow could be replayed against another.
+        if (!string.Equals(expectedPurpose, purpose, StringComparison.Ordinal))
         {
             return false;
         }
@@ -105,7 +111,7 @@ public sealed class SignedUrlGenerator : ISignedUrlGenerator
             return false;
         }
 
-        var path = request.Path.HasValue ? request.Path.Value! : "/";
+        var path = request.Path.Value ?? string.Empty;
         var canonical = BuildCanonical(path, pairs);
         var canonicalBytes = Encoding.UTF8.GetBytes(canonical);
 
@@ -120,6 +126,10 @@ public sealed class SignedUrlGenerator : ISignedUrlGenerator
             return false;
         }
         catch (FormatException)
+        {
+            return false;
+        }
+        catch (InvalidOperationException)
         {
             return false;
         }

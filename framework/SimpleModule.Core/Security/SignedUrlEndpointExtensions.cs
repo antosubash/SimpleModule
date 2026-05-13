@@ -6,7 +6,7 @@ namespace SimpleModule.Core.Security;
 
 public static class SignedUrlEndpointExtensions
 {
-    public const string SignedUrlClaimsItemKey = "SimpleModule.SignedUrl.Claims";
+    private const string SignedUrlClaimsItemKey = "SimpleModule.SignedUrl.Claims";
 
     public static TBuilder RequireSignedUrl<TBuilder>(this TBuilder builder, string? purpose = null)
         where TBuilder : IEndpointConventionBuilder
@@ -28,5 +28,13 @@ public static class SignedUrlEndpointExtensions
             }
         );
         return builder;
+    }
+
+    public static SignedUrlClaims? GetSignedUrlClaims(this HttpContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return context.Items.TryGetValue(SignedUrlClaimsItemKey, out var value)
+            ? value as SignedUrlClaims
+            : null;
     }
 }

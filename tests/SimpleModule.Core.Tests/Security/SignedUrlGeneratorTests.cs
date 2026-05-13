@@ -50,7 +50,7 @@ public class SignedUrlGeneratorTests
         );
 
         var request = BuildRequest(url);
-        var ok = generator.TryValidate(request, out var claims);
+        var ok = generator.TryValidate(request, expectedPurpose: "download", out var claims);
 
         ok.Should().BeTrue();
         claims.Should().NotBeNull();
@@ -205,6 +205,38 @@ public class SignedUrlGeneratorTests
             generator.Sign("/files/abc", new Dictionary<string, string?> { ["signature"] = "x" });
 
         act.Should().Throw<ArgumentException>().WithMessage("*reserved*");
+    }
+
+    [Fact]
+    public void Sign_PathContainingQueryString_Throws()
+    {
+        var generator = CreateGenerator();
+
+        var act = () => generator.Sign("/files/abc?already=here");
+
+        act.Should().Throw<ArgumentException>().WithMessage("*query string*");
+    }
+
+    [Fact]
+    public void Validate_PurposeBoundUrl_WithoutExpectedPurpose_Fails()
+    {
+        var generator = CreateGenerator();
+        var url = generator.Sign("/files/abc", purpose: "download");
+
+        var ok = generator.TryValidate(BuildRequest(url), out _);
+
+        ok.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_NoPurposeUrl_WithExpectedPurpose_Fails()
+    {
+        var generator = CreateGenerator();
+        var url = generator.Sign("/files/abc");
+
+        var ok = generator.TryValidate(BuildRequest(url), expectedPurpose: "download", out _);
+
+        ok.Should().BeFalse();
     }
 
     [Fact]
