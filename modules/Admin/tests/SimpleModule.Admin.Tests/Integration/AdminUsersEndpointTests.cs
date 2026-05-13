@@ -56,6 +56,15 @@ public class AdminUsersEndpointTests
         return userId;
     }
 
+    private async Task<ApplicationUser> FetchUserAsync(string userId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await userManager.FindByIdAsync(userId);
+        user.Should().NotBeNull($"user {userId} should exist for assertion");
+        return user!;
+    }
+
     [Fact]
     public async Task GetUsers_AsAdmin_Returns200()
     {
@@ -99,74 +108,96 @@ public class AdminUsersEndpointTests
     }
 
     [Fact]
-    public async Task UpdateUser_ValidData_Redirects()
+    public async Task UpdateUser_ValidData_PersistsDisplayNameAndEmail()
     {
         var userId = await SeedTestUserAsync();
+        var newEmail = $"updated-{userId[..8]}@example.com";
         var client = CreateAdminClient();
 
         using var content = new FormUrlEncodedContent(
             new Dictionary<string, string>
             {
                 ["displayName"] = "Updated Name",
-                ["email"] = $"updated-{userId[..8]}@example.com",
+                ["email"] = newEmail,
             }
         );
 
         var response = await client.PostAsync($"/admin/users/{userId}", content);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        var user = await FetchUserAsync(userId);
+        user.DisplayName.Should().Be("Updated Name");
+        user.Email.Should().Be(newEmail);
     }
 
     [Fact]
-    public async Task LockUser_ValidUser_Redirects()
+    public async Task LockUser_SetsLockoutEndInFuture()
     {
         var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
         var response = await client.PostAsync($"/admin/users/{userId}/lock", null);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        var user = await FetchUserAsync(userId);
+        user.LockoutEnd.Should().NotBeNull();
+        user.LockoutEnd!.Value.Should().BeAfter(DateTimeOffset.UtcNow);
     }
 
     [Fact]
-    public async Task UnlockUser_ValidUser_Redirects()
+    public async Task UnlockUser_ClearsLockout()
     {
         var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
-        var response = await client.PostAsync($"/admin/users/{userId}/unlock", null);
+        await client.PostAsync($"/admin/users/{userId}/lock", null);
+        (await FetchUserAsync(userId)).LockoutEnd.Should().NotBeNull();
 
+        var response = await client.PostAsync($"/admin/users/{userId}/unlock", null);
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        var user = await FetchUserAsync(userId);
+        // UnlockAccountAsync sets LockoutEnd to null or to a past timestamp.
+        (user.LockoutEnd is null || user.LockoutEnd.Value <= DateTimeOffset.UtcNow)
+            .Should()
+            .BeTrue();
     }
 
     [Fact]
-    public async Task DeactivateUser_ValidUser_Redirects()
+    public async Task DeactivateUser_SetsDeactivatedAt()
     {
         var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
         var response = await client.PostAsync($"/admin/users/{userId}/deactivate", null);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        var user = await FetchUserAsync(userId);
+        user.DeactivatedAt.Should().NotBeNull();
+        user.DeactivatedAt!.Value.Should()
+            .BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
     }
 
     [Fact]
-    public async Task ReactivateUser_ValidUser_Redirects()
+    public async Task ReactivateUser_ClearsDeactivatedAt()
     {
         var userId = await SeedTestUserAsync();
         var client = CreateAdminClient();
 
         await client.PostAsync($"/admin/users/{userId}/deactivate", null);
+        (await FetchUserAsync(userId)).DeactivatedAt.Should().NotBeNull();
 
         var response = await client.PostAsync($"/admin/users/{userId}/reactivate", null);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        (await FetchUserAsync(userId)).DeactivatedAt.Should().BeNull();
     }
 
     [Fact]
-    public async Task ResetPassword_ValidData_Redirects()
+    public async Task ResetPassword_ReplacesPasswordHash_NewPasswordAuthenticates()
     {
         var userId = await SeedTestUserAsync();
+        var oldHash = (await FetchUserAsync(userId)).PasswordHash;
         var client = CreateAdminClient();
 
         using var content = new FormUrlEncodedContent(
@@ -174,8 +205,17 @@ public class AdminUsersEndpointTests
         );
 
         var response = await client.PostAsync($"/admin/users/{userId}/reset-password", content);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        using var scope = _factory.Services.CreateScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await userManager.FindByIdAsync(userId);
+        user.Should().NotBeNull();
+        user!.PasswordHash.Should().NotBe(oldHash, "password reset must replace the hash");
+        (await userManager.CheckPasswordAsync(user, "NewTestPass456!")).Should().BeTrue();
+        (await userManager.CheckPasswordAsync(user, "TestPass123!"))
+            .Should()
+            .BeFalse("the old password must no longer authenticate");
     }
 
     [Fact]
