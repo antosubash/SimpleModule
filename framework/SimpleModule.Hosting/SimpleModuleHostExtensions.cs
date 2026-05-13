@@ -24,6 +24,7 @@ using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
 using SimpleModule.Hosting.Broadcasting;
 using SimpleModule.Hosting.Inertia;
+using SimpleModule.Hosting.Maintenance;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
 using Wolverine;
@@ -129,6 +130,9 @@ public static partial class SimpleModuleHostExtensions
         builder.Services.TryAddScoped<IPublicMenuProvider, DefaultPublicMenuProvider>();
 
         builder.Services.AddScoped<ICspNonce, CspNonce>();
+
+        builder.Services.AddOptions<MaintenanceModeOptions>();
+        builder.Services.AddSingleton<IMaintenanceModeStore, FileMaintenanceModeStore>();
 
         if (options.EnableHealthChecks)
         {
@@ -292,6 +296,10 @@ public static partial class SimpleModuleHostExtensions
 
         app.UseAuthentication();
         app.UseAuthorization();
+        // Maintenance mode runs after auth so the bypass cookie is set under a known
+        // identity, but before rate limiting / module middleware so we don't waste
+        // budget on requests we're going to 503 anyway.
+        app.UseMiddleware<MaintenanceModeMiddleware>();
         app.UseSimpleModuleRateLimiting();
         app.UseMiddleware<InertiaLayoutDataMiddleware>();
 
