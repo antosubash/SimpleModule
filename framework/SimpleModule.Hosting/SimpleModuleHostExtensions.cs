@@ -130,6 +130,9 @@ public static partial class SimpleModuleHostExtensions
 
         builder.Services.AddScoped<ICspNonce, CspNonce>();
 
+        builder.Services.TryAddSingleton(TimeProvider.System);
+        builder.Services.AddSingleton<ISignedUrlGenerator, SignedUrlGenerator>();
+
         if (options.EnableHealthChecks)
         {
             builder
