@@ -88,19 +88,6 @@ public class AdminUsersEndpointTests
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(
-        Skip = "UsersEditEndpoint depends on PermissionRegistry which requires full module initialization in test setup"
-    )]
-    public async Task GetUsersEdit_ExistingUser_Returns200()
-    {
-        var userId = await SeedTestUserAsync();
-        var client = CreateAdminClient();
-
-        var response = await client.GetAsync($"/admin/users/{userId}/edit");
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-    }
-
     [Fact]
     public async Task GetUsersEdit_NonExistentUser_Returns404()
     {
