@@ -28,10 +28,18 @@ public class ManageIndexEndpoint : IViewEndpoint
 
                     var username = await userManager.GetUserNameAsync(user);
                     var phoneNumber = await userManager.GetPhoneNumberAsync(user);
+                    var isPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(
+                        user
+                    );
 
                     return Inertia.Render(
                         "Users/Account/Manage/Index",
-                        new { username, phoneNumber }
+                        new
+                        {
+                            username,
+                            phoneNumber,
+                            isPhoneNumberConfirmed,
+                        }
                     );
                 }
             )
