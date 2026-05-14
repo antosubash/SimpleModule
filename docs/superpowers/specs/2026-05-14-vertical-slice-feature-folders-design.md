@@ -161,7 +161,7 @@ See the C1 exception: fragment namespaces match the owning class, not the folder
 
 **C4. Pages/ is intentionally untouched.** View endpoints and their React companions stay in `Pages/<Section>/{*Endpoint.cs,*.tsx}`. Moving them would require rewriting `vite.config.ts` entry paths and every `Pages/index.ts` dynamic import, with no readability gain since they're already co-located.
 
-**C5. Tests mirror impl folders.** `tests/<Mod>.Tests/Features/<Agg>/<Op>/<Op>Tests.cs`. Tests remain in their own project (production assemblies stay xUnit-free). `Unit/` and `Integration/` keep their roles for cross-feature concerns.
+**C5. Tests mirror impl folders.** `tests/<Mod>.Tests/Features/<Agg>/<Op>/<Op>Tests.cs`. Tests remain in their own project (production assemblies stay xUnit-free). `Unit/` and `Integration/` keep their roles for cross-feature concerns. Shared fixture or helper types used by multiple operations within one aggregate live at the aggregate folder level (`tests/<Mod>.Tests/Features/<Agg>/<FixtureName>.cs`), not inside any single `<Op>/` folder.
 
 **C6. Validators stay co-located.** FluentValidation `AbstractValidator<TRequest>` files sit in the feature folder, named `<Op><Resource>Validator.cs` to match the request type they validate. Modules that currently park validators in a top-level `Validators/` folder (Email today) move them to feature folders during migration.
 
