@@ -4,7 +4,7 @@ using SimpleModule.Notifications.Contracts;
 using SimpleModule.Notifications.Contracts.Events;
 using Wolverine.EntityFrameworkCore;
 
-namespace SimpleModule.Notifications.Channels;
+namespace SimpleModule.Notifications.Infrastructure.Channels;
 
 public partial class DatabaseChannel(
     NotificationsDbContext db,

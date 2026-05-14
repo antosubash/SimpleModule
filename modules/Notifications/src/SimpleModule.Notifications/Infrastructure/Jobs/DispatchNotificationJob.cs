@@ -1,14 +1,13 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Notifications.Channels;
 using SimpleModule.Notifications.Contracts;
 using SimpleModule.Notifications.Contracts.Events;
-using SimpleModule.Notifications.Services;
+using SimpleModule.Notifications.Infrastructure.Channels;
 using SimpleModule.Users.Contracts;
 using Wolverine;
 
-namespace SimpleModule.Notifications.Jobs;
+namespace SimpleModule.Notifications.Infrastructure.Jobs;
 
 public sealed record DispatchNotificationJobData(
     string UserId,

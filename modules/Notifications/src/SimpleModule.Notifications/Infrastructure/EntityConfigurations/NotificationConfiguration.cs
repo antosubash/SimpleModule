@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimpleModule.Notifications.Contracts;
 
-namespace SimpleModule.Notifications.EntityConfigurations;
+namespace SimpleModule.Notifications.Infrastructure.EntityConfigurations;
 
 public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 {
@@ -20,7 +20,12 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 
         // Covers the inbox list query (filter UserId + order CreatedAt DESC, Id as tiebreaker)
         // and the unread-count query (predicate on UserId + ReadAt).
-        builder.HasIndex(n => new { n.UserId, n.CreatedAt, n.Id });
+        builder.HasIndex(n => new
+        {
+            n.UserId,
+            n.CreatedAt,
+            n.Id,
+        });
         builder.HasIndex(n => new { n.UserId, n.ReadAt });
     }
 }

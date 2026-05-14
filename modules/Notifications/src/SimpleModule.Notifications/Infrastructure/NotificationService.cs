@@ -3,7 +3,7 @@ using SimpleModule.Core;
 using SimpleModule.Notifications.Contracts;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Notifications.Services;
+namespace SimpleModule.Notifications.Infrastructure;
 
 public class NotificationService(NotificationsDbContext db) : INotificationsContracts
 {
@@ -51,15 +51,12 @@ public class NotificationService(NotificationsDbContext db) : INotificationsCont
         UserId userId,
         CancellationToken cancellationToken = default
     ) =>
-        db.Notifications.CountAsync(
-            n => n.UserId == userId && n.ReadAt == null,
-            cancellationToken
-        );
+        db.Notifications.CountAsync(n => n.UserId == userId && n.ReadAt == null, cancellationToken);
 
     public async Task<Notification?> GetByIdAsync(NotificationId id, UserId userId) =>
-        await db.Notifications.AsNoTracking().FirstOrDefaultAsync(n =>
-            n.Id == id && n.UserId == userId
-        );
+        await db
+            .Notifications.AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == id && n.UserId == userId);
 
     public async Task<bool> MarkReadAsync(NotificationId id, UserId userId)
     {

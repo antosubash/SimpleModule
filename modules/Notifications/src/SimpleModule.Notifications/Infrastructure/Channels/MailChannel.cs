@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Notifications.Contracts;
 
-namespace SimpleModule.Notifications.Channels;
+namespace SimpleModule.Notifications.Infrastructure.Channels;
 
 /// <summary>
 /// Forwards a notification's mail payload to the Email module. Skips silently when the

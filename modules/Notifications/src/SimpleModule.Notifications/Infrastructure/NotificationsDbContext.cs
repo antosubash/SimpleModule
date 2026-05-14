@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Notifications.Contracts;
-using SimpleModule.Notifications.EntityConfigurations;
+using SimpleModule.Notifications.Infrastructure.EntityConfigurations;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Notifications;
+namespace SimpleModule.Notifications.Infrastructure;
 
 public class NotificationsDbContext(
     DbContextOptions<NotificationsDbContext> options,

@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
-using SimpleModule.Notifications.Channels;
 using SimpleModule.Notifications.Contracts;
 using SimpleModule.Notifications.Contracts.Events;
-using SimpleModule.Notifications.Jobs;
+using SimpleModule.Notifications.Infrastructure.Channels;
+using SimpleModule.Notifications.Infrastructure.Jobs;
 using Wolverine;
 
-namespace SimpleModule.Notifications.Services;
+namespace SimpleModule.Notifications.Infrastructure;
 
 public class Notifier(
     INotificationChannelRegistry channels,

@@ -5,10 +5,10 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
-using SimpleModule.Notifications.Channels;
 using SimpleModule.Notifications.Contracts;
-using SimpleModule.Notifications.Jobs;
-using SimpleModule.Notifications.Services;
+using SimpleModule.Notifications.Infrastructure;
+using SimpleModule.Notifications.Infrastructure.Channels;
+using SimpleModule.Notifications.Infrastructure.Jobs;
 
 namespace SimpleModule.Notifications;
 

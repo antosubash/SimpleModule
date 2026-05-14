@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Notifications.Contracts;
-using SimpleModule.Notifications.Services;
+using SimpleModule.Notifications.Infrastructure;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Notifications.Tests.Unit;

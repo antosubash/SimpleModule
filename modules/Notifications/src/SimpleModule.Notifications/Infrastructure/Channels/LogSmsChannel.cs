@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using SimpleModule.Notifications.Contracts;
 
-namespace SimpleModule.Notifications.Channels;
+namespace SimpleModule.Notifications.Infrastructure.Channels;
 
 /// <summary>
 /// Default SMS channel: writes the message to the log. A real provider (Twilio, etc.)

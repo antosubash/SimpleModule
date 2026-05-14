@@ -1,6 +1,6 @@
 using SimpleModule.Notifications.Contracts;
 
-namespace SimpleModule.Notifications.Channels;
+namespace SimpleModule.Notifications.Infrastructure.Channels;
 
 /// <summary>
 /// A delivery channel — mail, database, sms, slack, push, etc. Each channel

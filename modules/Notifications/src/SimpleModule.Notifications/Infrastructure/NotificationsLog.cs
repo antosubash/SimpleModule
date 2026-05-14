@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace SimpleModule.Notifications.Services;
+namespace SimpleModule.Notifications.Infrastructure;
 
 internal static partial class NotificationsLog
 {
