@@ -5,9 +5,10 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Extensions;
 using SimpleModule.Notifications.Contracts;
+using SimpleModule.Notifications.Contracts.Features.Notifications.List;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Notifications.Endpoints.Notifications;
+namespace SimpleModule.Notifications.Features.Notifications.List;
 
 public class ListNotificationsEndpoint : IEndpoint
 {
@@ -20,8 +21,7 @@ public class ListNotificationsEndpoint : IEndpoint
                     [AsParameters] QueryNotificationsRequest request,
                     HttpContext context,
                     INotificationsContracts notifications
-                ) =>
-                    notifications.ListAsync(UserId.From(context.User.GetUserId()!), request)
+                ) => notifications.ListAsync(UserId.From(context.User.GetUserId()!), request)
             )
             .RequirePermission(NotificationsPermissions.ViewOwn);
 }

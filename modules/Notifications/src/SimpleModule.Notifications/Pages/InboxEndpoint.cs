@@ -6,6 +6,7 @@ using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Extensions;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Notifications.Contracts;
+using SimpleModule.Notifications.Contracts.Features.Notifications.List;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Notifications.Pages;

@@ -1,6 +1,6 @@
 using SimpleModule.Core;
 
-namespace SimpleModule.Notifications.Contracts;
+namespace SimpleModule.Notifications.Contracts.Features.Notifications.List;
 
 [Dto]
 public class QueryNotificationsRequest

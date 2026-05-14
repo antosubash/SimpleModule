@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using SimpleModule.Database;
 using SimpleModule.Notifications.Contracts;
+using SimpleModule.Notifications.Contracts.Features.Notifications.List;
 using SimpleModule.Notifications.Infrastructure;
 using SimpleModule.Users.Contracts;
 

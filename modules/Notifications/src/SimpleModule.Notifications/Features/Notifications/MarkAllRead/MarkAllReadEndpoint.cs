@@ -7,7 +7,7 @@ using SimpleModule.Core.Extensions;
 using SimpleModule.Notifications.Contracts;
 using SimpleModule.Users.Contracts;
 
-namespace SimpleModule.Notifications.Endpoints.Notifications;
+namespace SimpleModule.Notifications.Features.Notifications.MarkAllRead;
 
 public class MarkAllReadEndpoint : IEndpoint
 {
