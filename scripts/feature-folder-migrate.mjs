@@ -27,3 +27,26 @@ export function deriveNamespace({ assemblyName, projectRoot, filePath }) {
   const segments = dir.split('/').filter((s) => s.length > 0);
   return [assemblyName, ...segments].join('.');
 }
+
+const FILE_SCOPED_NS = /^namespace\s+([A-Za-z_][\w.]*)\s*;/m;
+const BLOCK_SCOPED_NS = /^namespace\s+[A-Za-z_][\w.]*\s*\{/m;
+
+/**
+ * Replace the file-scoped namespace declaration in a .cs source string.
+ * Throws if the file uses a block-scoped namespace or has none at all.
+ */
+export function rewriteNamespace(source, newNamespace) {
+  const match = source.match(FILE_SCOPED_NS);
+  if (!match) {
+    if (BLOCK_SCOPED_NS.test(source)) {
+      throw new Error(
+        'rewriteNamespace requires a file-scoped namespace declaration (got block-scoped)',
+      );
+    }
+    throw new Error('rewriteNamespace: no file-scoped namespace declaration found');
+  }
+  if (match[1] === newNamespace) {
+    return source;
+  }
+  return source.replace(FILE_SCOPED_NS, `namespace ${newNamespace};`);
+}
