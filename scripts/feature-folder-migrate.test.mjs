@@ -1,7 +1,7 @@
 // scripts/feature-folder-migrate.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { deriveNamespace, rewriteNamespace } from './feature-folder-migrate.mjs';
+import { deriveNamespace, rewriteNamespace, parseManifest } from './feature-folder-migrate.mjs';
 
 test('deriveNamespace: file at project root → assembly name only', () => {
   const ns = deriveNamespace({
@@ -80,4 +80,28 @@ test('rewriteNamespace: throws on block-scoped namespace (unsupported)', () => {
 test('rewriteNamespace: throws when no namespace declaration found', () => {
   const before = 'public class X {}\n';
   assert.throws(() => rewriteNamespace(before, 'A.B'), /no file-scoped namespace/);
+});
+
+test('parseManifest: skips comments and blank lines, parses TSV rows', () => {
+  const input = [
+    '# header comment',
+    '',
+    'a/b.cs\ta/c/b.cs\tSimpleModule.X',
+    '   ',
+    'foo.cs\tbar/foo.cs\tSimpleModule.Y\tmodules/Y/src/SimpleModule.Y',
+  ].join('\n');
+  const rows = parseManifest(input);
+  assert.deepEqual(rows, [
+    { oldPath: 'a/b.cs', newPath: 'a/c/b.cs', assemblyName: 'SimpleModule.X', projectRoot: undefined },
+    {
+      oldPath: 'foo.cs',
+      newPath: 'bar/foo.cs',
+      assemblyName: 'SimpleModule.Y',
+      projectRoot: 'modules/Y/src/SimpleModule.Y',
+    },
+  ]);
+});
+
+test('parseManifest: throws on malformed row (wrong column count)', () => {
+  assert.throws(() => parseManifest('only-one-column.cs\n'), /expected 3 or 4 tab-separated columns/);
 });
