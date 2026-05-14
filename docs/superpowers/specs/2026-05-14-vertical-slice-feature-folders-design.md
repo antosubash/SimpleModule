@@ -149,9 +149,13 @@ modules/Users/
 
 **C1. Folder = namespace.** A file at `Features/Users/Create/CreateEndpoint.cs` declares `namespace SimpleModule.Users.Features.Users.Create;`. This matches the existing project convention (folders map to namespaces) so no `.editorconfig` rules change.
 
+**Exception (partial-class fragments).** Files under `Features/<Agg>/<Op>/<Service>.<Op>.cs` declare the *owning class's* namespace (the `Infrastructure/` namespace where the root partial lives), not the folder-derived namespace. C# requires every partial declaration of the same class to share a namespace; otherwise they become distinct types and `SM0025` fires. The folder identifies the slice; the namespace identifies the type.
+
 **C2. Partial-class split.** Each service that implements a cross-module contract is a `public sealed partial class`. The root partial lives in `Infrastructure/` and owns the constructor, private fields, and any helper methods called by ≥2 operations. Each `<Service>.<Op>.cs` fragment under a feature folder declares the same partial and adds **only** the public method for that operation (and any private helpers used by that operation alone). Field declarations and constructors live in **exactly one** fragment — the root.
 
 **Multi-service case:** if one feature legitimately touches two services (e.g. `Users/Create/` calls both `UserAdminService` and an event-emitting helper on `UserService`), the feature folder holds a fragment per service: `Users/Create/UserAdminService.Create.cs` *and* `Users/Create/UserService.OnCreate.cs`. Keep this rare — usually the operation belongs to a single service, and cross-service orchestration happens via DI inside the endpoint or via events.
+
+See the C1 exception: fragment namespaces match the owning class, not the folder.
 
 **C3. Shared vs feature DTO rule.** A request DTO lives in its feature folder until a second consumer (another feature or another module) appears. At that point it moves to `Contracts/Shared/`. Heuristic at refactor time: if the file is referenced by exactly one endpoint, it's a feature DTO; otherwise it's shared.
 
