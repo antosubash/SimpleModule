@@ -12,7 +12,7 @@ import {
   Input,
   Label,
 } from '@simplemodule/ui';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ManageLayout from '@/components/ManageLayout';
 
 interface Props {
@@ -32,6 +32,12 @@ export default function ManageIndex({
 }: Props) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [inputPhone, setInputPhone] = useState(pendingPhoneNumber ?? phoneNumber ?? '');
+
+  // Inertia preserves component state across these POST responses, so re-sync
+  // the input when the server returns a new phoneNumber (e.g. after Remove).
+  useEffect(() => {
+    setInputPhone(pendingPhoneNumber ?? phoneNumber ?? '');
+  }, [phoneNumber, pendingPhoneNumber]);
 
   function confirmSignOutEverywhere() {
     router.post('/Identity/Account/Manage/SignOutEverywhere');

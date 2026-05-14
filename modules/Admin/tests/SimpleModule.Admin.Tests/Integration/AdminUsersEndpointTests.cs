@@ -210,4 +210,33 @@ public class AdminUsersEndpointTests
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task ForcePhoneReverify_ValidUser_ClearsPhoneNumberConfirmedAndRedirects()
+    {
+        var userId = await SeedTestUserAsync();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<
+                UserManager<ApplicationUser>
+            >();
+            var user = await userManager.FindByIdAsync(userId);
+            await userManager.SetPhoneNumberAsync(user!, "+15550009999");
+            user!.PhoneNumberConfirmed = true;
+            await userManager.UpdateAsync(user);
+        }
+
+        var client = CreateAdminClient();
+        var response = await client.PostAsync($"/admin/users/{userId}/force-phone-reverify", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        using var scope2 = _factory.Services.CreateScope();
+        var userManager2 = scope2.ServiceProvider.GetRequiredService<
+            UserManager<ApplicationUser>
+        >();
+        var after = await userManager2.FindByIdAsync(userId);
+        after!.PhoneNumberConfirmed.Should().BeFalse();
+        after.PhoneNumber.Should().Be("+15550009999", "phone number itself should be preserved");
+    }
 }
