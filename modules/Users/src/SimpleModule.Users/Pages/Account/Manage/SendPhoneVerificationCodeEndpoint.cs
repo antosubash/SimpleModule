@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users.Pages.Account.Manage;
 
@@ -22,7 +24,9 @@ public class SendPhoneVerificationCodeEndpoint : IViewEndpoint
                     [FromForm] string? phoneNumber,
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,
-                    ISmsSender smsSender
+                    ISmsSender smsSender,
+                    IVerificationThrottle throttle,
+                    HttpContext context
                 ) =>
                 {
                     var user = await userManager.GetUserAsync(principal);
@@ -47,6 +51,31 @@ public class SendPhoneVerificationCodeEndpoint : IViewEndpoint
                                 phoneNumber = currentPhoneNumber,
                                 isPhoneNumberConfirmed,
                                 statusMessage = "Error: Please enter a phone number.",
+                            }
+                        );
+                    }
+
+                    var userId = await userManager.GetUserIdAsync(user);
+                    var slot = await throttle.TryAcquireResendSlotAsync(
+                        userId,
+                        VerificationChannel.Phone,
+                        context.RequestAborted
+                    );
+                    if (!slot.Allowed)
+                    {
+                        var seconds = (int)Math.Ceiling((slot.RetryAfter ?? TimeSpan.Zero).TotalSeconds);
+                        context.Response.Headers.RetryAfter = seconds.ToString(
+                            CultureInfo.InvariantCulture
+                        );
+                        return Inertia.Render(
+                            "Users/Account/Manage/Index",
+                            new
+                            {
+                                username,
+                                phoneNumber = currentPhoneNumber,
+                                isPhoneNumberConfirmed,
+                                pendingPhoneNumber = phoneNumber,
+                                statusMessage = $"Please wait {seconds} seconds before requesting another code.",
                             }
                         );
                     }

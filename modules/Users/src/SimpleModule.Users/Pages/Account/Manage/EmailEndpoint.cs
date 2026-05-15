@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users.Pages.Account.Manage;
 
@@ -51,6 +52,7 @@ public class EmailEndpoint : IViewEndpoint
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,
                     IEmailSender<ApplicationUser> emailSender,
+                    IVerificationThrottle throttle,
                     HttpContext context
                 ) =>
                 {
@@ -66,6 +68,30 @@ public class EmailEndpoint : IViewEndpoint
                     if (newEmail != email)
                     {
                         var userId = await userManager.GetUserIdAsync(user);
+
+                        var slot = await throttle.TryAcquireResendSlotAsync(
+                            userId,
+                            VerificationChannel.Email,
+                            context.RequestAborted
+                        );
+                        if (!slot.Allowed)
+                        {
+                            var seconds = (int)Math.Ceiling((slot.RetryAfter ?? TimeSpan.Zero).TotalSeconds);
+                            context.Response.Headers.RetryAfter = seconds.ToString(
+                                System.Globalization.CultureInfo.InvariantCulture
+                            );
+                            return Inertia.Render(
+                                "Users/Account/Manage/Email",
+                                new
+                                {
+                                    email,
+                                    isEmailConfirmed,
+                                    newEmail,
+                                    statusMessage = $"Please wait {seconds} seconds before requesting another email.",
+                                }
+                            );
+                        }
+
                         var code = await userManager.GenerateChangeEmailTokenAsync(user, newEmail);
                         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                         var request = context.Request;

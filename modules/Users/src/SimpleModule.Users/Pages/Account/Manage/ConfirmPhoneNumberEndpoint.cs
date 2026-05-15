@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Users.Contracts;
+using SimpleModule.Users.Services;
 
 namespace SimpleModule.Users.Pages.Account.Manage;
 
@@ -23,7 +24,9 @@ public class ConfirmPhoneNumberEndpoint : IViewEndpoint
                     [FromForm] string? code,
                     ClaimsPrincipal principal,
                     UserManager<ApplicationUser> userManager,
-                    SignInManager<ApplicationUser> signInManager
+                    SignInManager<ApplicationUser> signInManager,
+                    IVerificationThrottle throttle,
+                    HttpContext context
                 ) =>
                 {
                     var user = await userManager.GetUserAsync(principal);
@@ -51,8 +54,8 @@ public class ConfirmPhoneNumberEndpoint : IViewEndpoint
                         );
                     }
 
-                    var result = await userManager.ChangePhoneNumberAsync(user, phoneNumber, code);
-                    if (!result.Succeeded)
+                    var userId = await userManager.GetUserIdAsync(user);
+                    if (await throttle.IsLockedOutAsync(userId, VerificationChannel.Phone, context.RequestAborted))
                     {
                         return Inertia.Render(
                             "Users/Account/Manage/Index",
@@ -64,11 +67,44 @@ public class ConfirmPhoneNumberEndpoint : IViewEndpoint
                                     user
                                 ),
                                 pendingPhoneNumber = phoneNumber,
-                                statusMessage = "Error: Invalid or expired verification code.",
+                                statusMessage = "Too many failed attempts. Please try again later.",
                             }
                         );
                     }
 
+                    var result = await userManager.ChangePhoneNumberAsync(user, phoneNumber, code);
+                    if (!result.Succeeded)
+                    {
+                        var attempt = await throttle.RecordAttemptAsync(
+                            userId,
+                            VerificationChannel.Phone,
+                            succeeded: false,
+                            context.RequestAborted
+                        );
+                        var msg = attempt.LockedOut
+                            ? "Too many failed attempts. Please try again later."
+                            : "Error: Invalid or expired verification code.";
+                        return Inertia.Render(
+                            "Users/Account/Manage/Index",
+                            new
+                            {
+                                username,
+                                phoneNumber = await userManager.GetPhoneNumberAsync(user),
+                                isPhoneNumberConfirmed = await userManager.IsPhoneNumberConfirmedAsync(
+                                    user
+                                ),
+                                pendingPhoneNumber = phoneNumber,
+                                statusMessage = msg,
+                            }
+                        );
+                    }
+
+                    await throttle.RecordAttemptAsync(
+                        userId,
+                        VerificationChannel.Phone,
+                        succeeded: true,
+                        context.RequestAborted
+                    );
                     await signInManager.RefreshSignInAsync(user);
 
                     return Inertia.Render(

@@ -86,6 +86,11 @@ public class UsersModule : IModule
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
         services.AddSingleton<IAccountUnlockEmailSender, ConsoleAccountUnlockEmailSender>();
         services.AddSingleton<ISmsSender, ConsoleSmsSender>();
+
+        services
+            .AddOptions<VerificationThrottleOptions>()
+            .Bind(configuration.GetSection("Identity:VerificationThrottle"));
+        services.AddSingleton<IVerificationThrottle, VerificationThrottle>();
     }
 
     public void ConfigurePermissions(PermissionRegistryBuilder builder)
