@@ -21,5 +21,6 @@ public interface IUserAdminContracts
     Task DeactivateAsync(UserId id);
     Task ReactivateAsync(UserId id);
     Task ForceEmailReverificationAsync(UserId id);
+    Task ForcePhoneReverificationAsync(UserId id);
     Task DisableTwoFactorAsync(UserId id);
 }

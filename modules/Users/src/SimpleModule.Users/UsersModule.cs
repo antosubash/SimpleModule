@@ -85,6 +85,7 @@ public class UsersModule : IModule
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
         services.AddSingleton<IAccountUnlockEmailSender, ConsoleAccountUnlockEmailSender>();
+        services.AddSingleton<ISmsSender, ConsoleSmsSender>();
     }
 
     public void ConfigurePermissions(PermissionRegistryBuilder builder)
