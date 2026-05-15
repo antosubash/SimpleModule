@@ -45,6 +45,14 @@ export default function TwoFactorAuthentication({
 
       {is2faEnabled && (
         <>
+          {recoveryCodesLeft >= 4 && (
+            <p className="mb-4 text-sm text-text-muted">
+              {t(UsersKeys.TwoFactor.RecoveryCodesRemaining, {
+                count: String(recoveryCodesLeft),
+              })}
+            </p>
+          )}
+
           {recoveryCodesLeft === 0 && (
             <Alert variant="danger" className="mb-4">
               <AlertTitle>{t(UsersKeys.TwoFactor.NoRecoveryCodesTitle)}</AlertTitle>

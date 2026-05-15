@@ -39,6 +39,9 @@ export const UsersKeys = {
   },
   ShowRecoveryCodes: {
     BackButton: 'ShowRecoveryCodes.BackButton',
+    DownloadButton: 'ShowRecoveryCodes.DownloadButton',
+    PrintButton: 'ShowRecoveryCodes.PrintButton',
+    PrintHeader: 'ShowRecoveryCodes.PrintHeader',
     Title: 'ShowRecoveryCodes.Title',
     WarningDescription: 'ShowRecoveryCodes.WarningDescription',
     WarningTitle: 'ShowRecoveryCodes.WarningTitle',
@@ -59,6 +62,7 @@ export const UsersKeys = {
     OneRecoveryCodeLinkText: 'TwoFactor.OneRecoveryCodeLinkText',
     OneRecoveryCodeTitle: 'TwoFactor.OneRecoveryCodeTitle',
     ResetAuthenticatorApp: 'TwoFactor.ResetAuthenticatorApp',
+    RecoveryCodesRemaining: 'TwoFactor.RecoveryCodesRemaining',
     ResetRecoveryCodes: 'TwoFactor.ResetRecoveryCodes',
     SetUpAuthenticatorApp: 'TwoFactor.SetUpAuthenticatorApp',
     Status: {
