@@ -32,6 +32,7 @@ public static class AdminConstants
         public const string UsersLockApi = "/admin/users/{id}/lock";
         public const string UsersUnlockApi = "/admin/users/{id}/unlock";
         public const string UsersForceReverifyApi = "/admin/users/{id}/force-reverify";
+        public const string UsersForcePhoneReverifyApi = "/admin/users/{id}/force-phone-reverify";
         public const string UsersDisable2faApi = "/admin/users/{id}/disable-2fa";
         public const string UsersDeactivateApi = "/admin/users/{id}/deactivate";
         public const string UsersReactivateApi = "/admin/users/{id}/reactivate";

@@ -30,6 +30,8 @@ interface UserDetail {
   displayName: string;
   email: string;
   emailConfirmed: boolean;
+  phoneNumber: string | null;
+  phoneNumberConfirmed: boolean;
   twoFactorEnabled: boolean;
   roles: string[];
   isLockedOut: boolean;
@@ -63,7 +65,13 @@ interface Props {
   currentUserId: string;
 }
 
-type ConfirmAction = 'deactivate' | 'reverify' | 'disable2fa' | 'revokeAll' | null;
+type ConfirmAction =
+  | 'deactivate'
+  | 'reverify'
+  | 'reverifyPhone'
+  | 'disable2fa'
+  | 'revokeAll'
+  | null;
 
 export default function UsersEdit({
   user,
@@ -94,6 +102,9 @@ export default function UsersEdit({
       case 'reverify':
         router.post(`/admin/users/${user.id}/force-reverify`);
         break;
+      case 'reverifyPhone':
+        router.post(`/admin/users/${user.id}/force-phone-reverify`);
+        break;
       case 'disable2fa':
         router.post(`/admin/users/${user.id}/disable-2fa`);
         break;
@@ -117,6 +128,11 @@ export default function UsersEdit({
       title: t(AdminKeys.UsersEdit.ConfirmReverifyTitle),
       description: t(AdminKeys.UsersEdit.ConfirmReverifyDescription),
       action: t(AdminKeys.UsersEdit.ConfirmReverifyAction),
+    },
+    reverifyPhone: {
+      title: t(AdminKeys.UsersEdit.ConfirmReverifyPhoneTitle),
+      description: t(AdminKeys.UsersEdit.ConfirmReverifyPhoneDescription),
+      action: t(AdminKeys.UsersEdit.ConfirmReverifyPhoneAction),
     },
     disable2fa: {
       title: t(AdminKeys.UsersEdit.ConfirmDisable2faTitle),
@@ -183,6 +199,7 @@ export default function UsersEdit({
           user={user}
           isSelf={isSelf}
           onReverify={() => setConfirmAction('reverify')}
+          onReverifyPhone={() => setConfirmAction('reverifyPhone')}
           onDisable2fa={() => setConfirmAction('disable2fa')}
         />
       )}
