@@ -4,6 +4,7 @@ using SimpleModule.Cli.Commands.Install;
 using SimpleModule.Cli.Commands.List;
 using SimpleModule.Cli.Commands.New;
 using SimpleModule.Cli.Commands.Skill;
+using SimpleModule.Cli.Commands.Tail;
 using SimpleModule.Cli.Commands.Version;
 using Spectre.Console.Cli;
 
@@ -22,6 +23,8 @@ app.Configure(config =>
     config.AddExample("doctor", "--fix");
     config.AddExample("skill", "add", "shadcn", "--source", "shadcn/ui/skills/shadcn");
     config.AddExample("skill", "update");
+    config.AddExample("tail", "--level", "Warning");
+    config.AddExample("tail", "--file", "logs/app.log", "--filter", "checkout");
 
     config.AddBranch(
         "new",
@@ -83,6 +86,10 @@ app.Configure(config =>
                 .WithDescription("List installed Claude skills and their tracked sources");
         }
     );
+
+    config
+        .AddCommand<TailCommand>("tail")
+        .WithDescription("Tail and pretty-print logs from stdin or files");
 
     config.AddCommand<VersionCommand>("version").WithDescription("Print the sm CLI version");
 });
