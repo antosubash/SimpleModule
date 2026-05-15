@@ -2,6 +2,7 @@ using SimpleModule.Cli.Commands.Dev;
 using SimpleModule.Cli.Commands.Doctor;
 using SimpleModule.Cli.Commands.Install;
 using SimpleModule.Cli.Commands.List;
+using SimpleModule.Cli.Commands.Maintenance;
 using SimpleModule.Cli.Commands.New;
 using SimpleModule.Cli.Commands.Skill;
 using SimpleModule.Cli.Commands.Version;
@@ -83,6 +84,16 @@ app.Configure(config =>
                 .WithDescription("List installed Claude skills and their tracked sources");
         }
     );
+
+    config
+        .AddCommand<DownCommand>("down")
+        .WithDescription("Enable maintenance mode (writes the .maintenance sentinel)")
+        .WithExample("down", "--secret", "let-me-in", "--retry", "60")
+        .WithExample("down", "--status");
+
+    config
+        .AddCommand<UpCommand>("up")
+        .WithDescription("Disable maintenance mode (removes the .maintenance sentinel)");
 
     config.AddCommand<VersionCommand>("version").WithDescription("Print the sm CLI version");
 });
