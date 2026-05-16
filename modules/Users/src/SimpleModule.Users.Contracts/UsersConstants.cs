@@ -53,6 +53,9 @@ public static class UsersConstants
         public const string ResetAuthenticator = "/Manage/ResetAuthenticator";
         public const string GenerateRecoveryCodes = "/Manage/GenerateRecoveryCodes";
         public const string SignOutEverywhere = "/Manage/SignOutEverywhere";
+        public const string SendPhoneVerificationCode = "/Manage/SendPhoneVerificationCode";
+        public const string ConfirmPhoneNumber = "/Manage/ConfirmPhoneNumber";
+        public const string RemovePhoneNumber = "/Manage/RemovePhoneNumber";
     }
 
     public static class TokenPurposes

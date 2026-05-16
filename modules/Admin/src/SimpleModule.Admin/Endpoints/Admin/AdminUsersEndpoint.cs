@@ -174,6 +174,17 @@ public class AdminUsersEndpoint : IEndpoint
             }
         );
 
+        // POST /admin/users/{id}/force-phone-reverify — Force phone re-verification
+        group.MapPost(
+            "/{id}/force-phone-reverify",
+            async Task<IResult> (string id, IUserAdminContracts userAdmin) =>
+            {
+                await userAdmin.ForcePhoneReverificationAsync(UserId.From(id));
+
+                return TypedResults.Redirect($"/admin/users/{id}/edit?tab=security");
+            }
+        );
+
         // POST /admin/users/{id}/disable-2fa — Disable two-factor authentication
         group.MapPost(
             "/{id}/disable-2fa",
