@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
@@ -49,6 +50,7 @@ public class ForgotPasswordEndpoint : IViewEndpoint
                 }
             )
             .AllowAnonymous()
-            .DisableAntiforgery();
+            .DisableAntiforgery()
+            .RateLimit("auth-strict");
     }
 }

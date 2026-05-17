@@ -19,16 +19,18 @@ public static class InertiaMiddleware
         return app.Use(
             async (context, next) =>
             {
-                context.Response.Headers["X-Inertia-Version"] = Version;
+                context.Response.Headers[InertiaHttpExtensions.InertiaVersionHeader] = Version;
 
                 if (
-                    context.Request.Headers.ContainsKey("X-Inertia")
+                    context.Request.IsInertia()
                     && context.Request.Method == "GET"
-                    && context.Request.Headers["X-Inertia-Version"].FirstOrDefault() != Version
+                    && context
+                        .Request.Headers[InertiaHttpExtensions.InertiaVersionHeader]
+                        .FirstOrDefault() != Version
                 )
                 {
                     context.Response.StatusCode = 409;
-                    context.Response.Headers["X-Inertia-Location"] =
+                    context.Response.Headers[InertiaHttpExtensions.InertiaLocationHeader] =
                         context.Request.GetEncodedUrl();
                     return;
                 }
@@ -38,7 +40,7 @@ public static class InertiaMiddleware
                 // Inertia protocol: convert 302 redirects to 303 for
                 // PUT/PATCH/DELETE so the browser follows with GET
                 if (
-                    context.Request.Headers.ContainsKey("X-Inertia")
+                    context.Request.IsInertia()
                     && context.Response.StatusCode == 302
                     && context.Request.Method != "GET"
                 )

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Users.Constants;
@@ -117,6 +118,7 @@ public partial class LoginEndpoint : IViewEndpoint
                 }
             )
             .AllowAnonymous()
-            .DisableAntiforgery();
+            .DisableAntiforgery()
+            .RateLimit("auth-strict");
     }
 }

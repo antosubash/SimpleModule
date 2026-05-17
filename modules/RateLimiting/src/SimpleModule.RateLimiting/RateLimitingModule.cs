@@ -22,6 +22,11 @@ public class RateLimitingModule : IModule
             RateLimitingConstants.ModuleName
         );
         services.AddValidatorsFromAssemblyContaining<RateLimitingModule>();
+        services.AddSingleton<RateLimitRuleCache>();
+        services.AddSingleton<IRateLimitRuleSource>(sp =>
+            sp.GetRequiredService<RateLimitRuleCache>()
+        );
+        services.AddHostedService(sp => sp.GetRequiredService<RateLimitRuleCache>());
     }
 
     public void ConfigureRateLimits(IRateLimitBuilder builder)
