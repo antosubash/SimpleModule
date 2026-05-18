@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
     <ProjectReference Include="..\SimpleModule.RateLimiting.Contracts\SimpleModule.RateLimiting.Contracts.csproj" />
+    <InternalsVisibleTo Include="SimpleModule.RateLimiting.Tests" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Locales/*.json" />

@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using SimpleModule.Core;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
@@ -24,7 +25,8 @@ public class TokenEndpoint : IEndpoint
     {
         app.MapPost(ConnectRouteConstants.ConnectToken, (Delegate)HandleAsync)
             .ExcludeFromDescription()
-            .AllowAnonymous();
+            .AllowAnonymous()
+            .RateLimit(RateLimitPolicies.AuthStrict);
     }
 
     private static async Task<IResult> HandleAsync(HttpContext context)
