@@ -51,6 +51,6 @@ public class ForgotPasswordEndpoint : IViewEndpoint
             )
             .AllowAnonymous()
             .DisableAntiforgery()
-            .RateLimit("auth-strict");
+            .RateLimit(RateLimitPolicies.AuthStrict);
     }
 }

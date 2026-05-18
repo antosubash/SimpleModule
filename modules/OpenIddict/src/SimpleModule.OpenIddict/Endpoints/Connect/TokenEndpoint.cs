@@ -26,7 +26,7 @@ public class TokenEndpoint : IEndpoint
         app.MapPost(ConnectRouteConstants.ConnectToken, (Delegate)HandleAsync)
             .ExcludeFromDescription()
             .AllowAnonymous()
-            .RateLimit("auth-strict");
+            .RateLimit(RateLimitPolicies.AuthStrict);
     }
 
     private static async Task<IResult> HandleAsync(HttpContext context)

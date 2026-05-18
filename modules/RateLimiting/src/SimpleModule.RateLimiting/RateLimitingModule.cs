@@ -35,7 +35,7 @@ public class RateLimitingModule : IModule
             .Add(
                 new RateLimitPolicyDefinition
                 {
-                    Name = "fixed-default",
+                    Name = RateLimitPolicies.FixedDefault,
                     PolicyType = RateLimitPolicyType.FixedWindow,
                     Target = RateLimitTarget.Ip,
                     PermitLimit = 60,
@@ -45,7 +45,7 @@ public class RateLimitingModule : IModule
             .Add(
                 new RateLimitPolicyDefinition
                 {
-                    Name = "sliding-strict",
+                    Name = RateLimitPolicies.SlidingStrict,
                     PolicyType = RateLimitPolicyType.SlidingWindow,
                     Target = RateLimitTarget.IpAndUser,
                     PermitLimit = 30,
@@ -56,7 +56,7 @@ public class RateLimitingModule : IModule
             .Add(
                 new RateLimitPolicyDefinition
                 {
-                    Name = "token-bucket",
+                    Name = RateLimitPolicies.TokenBucket,
                     PolicyType = RateLimitPolicyType.TokenBucket,
                     Target = RateLimitTarget.Ip,
                     TokenLimit = 100,
@@ -67,7 +67,7 @@ public class RateLimitingModule : IModule
             .Add(
                 new RateLimitPolicyDefinition
                 {
-                    Name = "auth-strict",
+                    Name = RateLimitPolicies.AuthStrict,
                     PolicyType = RateLimitPolicyType.FixedWindow,
                     Target = RateLimitTarget.Ip,
                     PermitLimit = 10,

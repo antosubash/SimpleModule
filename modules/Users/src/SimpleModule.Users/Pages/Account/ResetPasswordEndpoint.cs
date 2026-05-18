@@ -74,6 +74,6 @@ public class ResetPasswordEndpoint : IViewEndpoint
             )
             .AllowAnonymous()
             .DisableAntiforgery()
-            .RateLimit("auth-strict");
+            .RateLimit(RateLimitPolicies.AuthStrict);
     }
 }

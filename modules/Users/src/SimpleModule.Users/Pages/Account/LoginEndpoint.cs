@@ -119,6 +119,6 @@ public partial class LoginEndpoint : IViewEndpoint
             )
             .AllowAnonymous()
             .DisableAntiforgery()
-            .RateLimit("auth-strict");
+            .RateLimit(RateLimitPolicies.AuthStrict);
     }
 }
