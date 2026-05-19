@@ -53,6 +53,20 @@ public class AdminRolesEndpointTests
         return role.Id;
     }
 
+    private async Task<ApplicationRole?> FindRoleByNameAsync(string name)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        return await roleManager.FindByNameAsync(name);
+    }
+
+    private async Task<ApplicationRole?> FindRoleByIdAsync(string id)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
+        return await roleManager.FindByIdAsync(id);
+    }
+
     [Fact]
     public async Task GetRoles_AsAdmin_Returns200()
     {
@@ -86,21 +100,25 @@ public class AdminRolesEndpointTests
     }
 
     [Fact]
-    public async Task CreateRole_ValidData_Redirects()
+    public async Task CreateRole_ValidData_PersistsRole()
     {
         var client = CreateAdminClient();
+        var roleName = $"NewRole-{Guid.NewGuid().ToString()[..8]}";
 
         using var content = new FormUrlEncodedContent(
             new Dictionary<string, string>
             {
-                ["name"] = $"NewRole-{Guid.NewGuid().ToString()[..8]}",
+                ["name"] = roleName,
                 ["description"] = "A new test role",
             }
         );
 
         var response = await client.PostAsync("/admin/roles", content);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        var role = await FindRoleByNameAsync(roleName);
+        role.Should().NotBeNull();
+        role!.Description.Should().Be("A new test role");
     }
 
     [Fact]
@@ -140,33 +158,39 @@ public class AdminRolesEndpointTests
     }
 
     [Fact]
-    public async Task UpdateRole_ValidData_Redirects()
+    public async Task UpdateRole_ValidData_PersistsChanges()
     {
         var roleId = await SeedTestRoleAsync();
+        var newName = $"UpdatedRole-{Guid.NewGuid().ToString()[..8]}";
         var client = CreateAdminClient();
 
         using var content = new FormUrlEncodedContent(
             new Dictionary<string, string>
             {
-                ["name"] = $"UpdatedRole-{Guid.NewGuid().ToString()[..8]}",
+                ["name"] = newName,
                 ["description"] = "Updated description",
             }
         );
 
         var response = await client.PostAsync($"/admin/roles/{roleId}", content);
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        var role = await FindRoleByIdAsync(roleId);
+        role.Should().NotBeNull();
+        role!.Name.Should().Be(newName);
+        role.Description.Should().Be("Updated description");
     }
 
     [Fact]
-    public async Task DeleteRole_NoUsers_Redirects()
+    public async Task DeleteRole_NoUsers_RemovesRole()
     {
         var roleId = await SeedTestRoleAsync();
         var client = CreateAdminClient();
 
         var response = await client.DeleteAsync($"/admin/roles/{roleId}");
-
         response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+
+        (await FindRoleByIdAsync(roleId)).Should().BeNull();
     }
 
     [Fact]

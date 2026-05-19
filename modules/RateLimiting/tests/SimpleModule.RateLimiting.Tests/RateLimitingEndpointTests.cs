@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Claims;
 using FluentAssertions;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.Tests.Shared.Fixtures;
 
 namespace SimpleModule.RateLimiting.Tests;
@@ -34,7 +35,7 @@ public class RateLimitingEndpointTests
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("fixed-default");
+        content.Should().Contain(RateLimitPolicies.FixedDefault);
     }
 
     [Fact]

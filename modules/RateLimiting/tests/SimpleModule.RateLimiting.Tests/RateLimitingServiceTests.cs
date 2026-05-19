@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -12,6 +13,7 @@ public sealed class RateLimitingServiceTests : IDisposable
 {
     private readonly RateLimitingDbContext _db;
     private readonly RateLimitingService _service;
+    private readonly RecordingRuleSource _ruleSource = new();
 
     public RateLimitingServiceTests()
     {
@@ -30,7 +32,11 @@ public sealed class RateLimitingServiceTests : IDisposable
         _db = new RateLimitingDbContext(dbOptions, databaseOptions);
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
-        _service = new RateLimitingService(_db, NullLogger<RateLimitingService>.Instance);
+        _service = new RateLimitingService(
+            _db,
+            _ruleSource,
+            NullLogger<RateLimitingService>.Instance
+        );
     }
 
     [Fact]
@@ -136,10 +142,57 @@ public sealed class RateLimitingServiceTests : IDisposable
         await act.Should().ThrowAsync<Core.Exceptions.NotFoundException>();
     }
 
+    [Fact]
+    public async Task CreateRuleAsync_ShouldRefreshRuleSource()
+    {
+        await _service.CreateRuleAsync(new CreateRateLimitRuleRequest { PolicyName = "x" });
+
+        _ruleSource.RefreshCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task UpdateRuleAsync_ShouldRefreshRuleSource()
+    {
+        var created = await _service.CreateRuleAsync(
+            new CreateRateLimitRuleRequest { PolicyName = "x" }
+        );
+        _ruleSource.RefreshCount = 0;
+
+        await _service.UpdateRuleAsync(created.Id, new UpdateRateLimitRuleRequest());
+
+        _ruleSource.RefreshCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task DeleteRuleAsync_ShouldRefreshRuleSource()
+    {
+        var created = await _service.CreateRuleAsync(
+            new CreateRateLimitRuleRequest { PolicyName = "x" }
+        );
+        _ruleSource.RefreshCount = 0;
+
+        await _service.DeleteRuleAsync(created.Id);
+
+        _ruleSource.RefreshCount.Should().Be(1);
+    }
+
     public void Dispose()
     {
         _db.Database.CloseConnection();
         _db.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private sealed class RecordingRuleSource : IRateLimitRuleSource
+    {
+        public int RefreshCount { get; set; }
+
+        public RateLimitPolicyDefinition? FindForPath(PathString path) => null;
+
+        public Task RefreshAsync(CancellationToken cancellationToken = default)
+        {
+            RefreshCount++;
+            return Task.CompletedTask;
+        }
     }
 }

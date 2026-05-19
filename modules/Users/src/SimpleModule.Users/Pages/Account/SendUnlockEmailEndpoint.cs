@@ -59,6 +59,6 @@ public class SendUnlockEmailEndpoint : IViewEndpoint
             )
             .AllowAnonymous()
             .DisableAntiforgery()
-            .RateLimit("auth-strict");
+            .RateLimit(RateLimitPolicies.AuthStrict);
     }
 }

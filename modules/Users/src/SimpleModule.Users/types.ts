@@ -4,6 +4,8 @@ export interface AdminUserDto {
   displayName: string;
   email: string;
   emailConfirmed: boolean;
+  phoneNumber: string;
+  phoneNumberConfirmed: boolean;
   twoFactorEnabled: boolean;
   roles: string[];
   isLockedOut: boolean;

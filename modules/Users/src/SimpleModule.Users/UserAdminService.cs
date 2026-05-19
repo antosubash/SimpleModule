@@ -254,6 +254,15 @@ public sealed class UserAdminService(
         await userManager.UpdateAsync(user);
     }
 
+    public async Task ForcePhoneReverificationAsync(UserId id)
+    {
+        var user =
+            await userManager.FindByIdAsync(id.Value) ?? throw new NotFoundException("User", id);
+
+        user.PhoneNumberConfirmed = false;
+        await userManager.UpdateAsync(user);
+    }
+
     public async Task DisableTwoFactorAsync(UserId id)
     {
         var user =
@@ -270,6 +279,8 @@ public sealed class UserAdminService(
             DisplayName = user.DisplayName,
             Email = user.Email,
             EmailConfirmed = user.EmailConfirmed,
+            PhoneNumber = user.PhoneNumber,
+            PhoneNumberConfirmed = user.PhoneNumberConfirmed,
             TwoFactorEnabled = user.TwoFactorEnabled,
             Roles = roles,
             IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
