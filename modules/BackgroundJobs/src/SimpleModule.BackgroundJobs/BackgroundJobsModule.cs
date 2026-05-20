@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.BackgroundJobs.Queue;
+using SimpleModule.BackgroundJobs.Scheduler;
 using SimpleModule.BackgroundJobs.Services;
 using SimpleModule.BackgroundJobs.Worker;
 using SimpleModule.Core;
@@ -46,6 +48,17 @@ public class BackgroundJobsModule : IModule
         services.AddScoped<IBackgroundJobs, BackgroundJobsService>();
         services.AddScoped<IBackgroundJobsContracts, BackgroundJobsContractsService>();
 
+        // Scheduler primitives — available in both producer and consumer hosts so
+        // modules can register schedules anywhere.
+        if (!services.Any(s => s.ServiceType == typeof(IScheduler)))
+        {
+            services.AddSingleton<IScheduler>(new SchedulerRegistry());
+        }
+        services.AddScoped<IJobMutex, DatabaseJobMutex>();
+        services.AddScoped<IInstanceLeader, DatabaseInstanceLeader>();
+        services.Configure<SchedulerOptions>(configuration.GetSection("BackgroundJobs:Scheduler"));
+        services.TryAddSingleton(TimeProvider.System);
+
         // Progress flushing runs in whichever host owns the module — both producer and consumer.
         services.AddHostedService<ProgressFlushService>();
 
@@ -54,6 +67,7 @@ public class BackgroundJobsModule : IModule
             services.AddSingleton(WorkerIdentity.Create());
             services.AddHostedService<JobProcessorService>();
             services.AddHostedService<StalledJobSweeperService>();
+            services.AddHostedService<SchedulerService>();
         }
     }
 
