@@ -61,8 +61,8 @@ export const UsersKeys = {
     OneRecoveryCodeDescription: 'TwoFactor.OneRecoveryCodeDescription',
     OneRecoveryCodeLinkText: 'TwoFactor.OneRecoveryCodeLinkText',
     OneRecoveryCodeTitle: 'TwoFactor.OneRecoveryCodeTitle',
-    ResetAuthenticatorApp: 'TwoFactor.ResetAuthenticatorApp',
     RecoveryCodesRemaining: 'TwoFactor.RecoveryCodesRemaining',
+    ResetAuthenticatorApp: 'TwoFactor.ResetAuthenticatorApp',
     ResetRecoveryCodes: 'TwoFactor.ResetRecoveryCodes',
     SetUpAuthenticatorApp: 'TwoFactor.SetUpAuthenticatorApp',
     Status: {
