@@ -1,6 +1,7 @@
 using SimpleModule.Cli.Commands.Dev;
 using SimpleModule.Cli.Commands.Doctor;
 using SimpleModule.Cli.Commands.Install;
+using SimpleModule.Cli.Commands.Jobs;
 using SimpleModule.Cli.Commands.List;
 using SimpleModule.Cli.Commands.Maintenance;
 using SimpleModule.Cli.Commands.New;
@@ -61,6 +62,18 @@ app.Configure(config =>
     config
         .AddCommand<DoctorCommand>("doctor")
         .WithDescription("Validate project structure and conventions");
+
+    config.AddBranch(
+        "jobs",
+        jobsBranch =>
+        {
+            jobsBranch.SetDescription("Inspect background-job state");
+            jobsBranch
+                .AddCommand<JobsListScheduledCommand>("list-scheduled")
+                .WithDescription("List declarative scheduled jobs with next/last run times")
+                .WithExample("jobs", "list-scheduled");
+        }
+    );
 
     config.AddBranch(
         "skill",

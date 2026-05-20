@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SimpleModule.BackgroundJobs.Contracts;
+using SimpleModule.BackgroundJobs.Scheduler;
 using SimpleModule.BackgroundJobs.Services;
 
 namespace SimpleModule.BackgroundJobs.Worker;
@@ -85,7 +86,11 @@ public sealed partial class JobProcessorService(
             await queue.CompleteAsync(entry.Id, ct);
             LogCompleted(logger, entry.Id, jobType.Name);
 
-            if (entry.CronExpression is not null && entry.RecurringName is not null)
+            if (IsScheduledJobEntry(entry))
+            {
+                await ReleaseSchedulerMutexAsync(scope.ServiceProvider, entry, ct);
+            }
+            else if (entry.CronExpression is not null && entry.RecurringName is not null)
             {
                 await ScheduleNextRecurringAsync(queue, entry, ct);
             }
@@ -99,6 +104,10 @@ public sealed partial class JobProcessorService(
 #pragma warning restore CA1031
         {
             LogJobError(logger, entry.Id, jobType.Name, ex);
+            if (IsScheduledJobEntry(entry))
+            {
+                await ReleaseSchedulerMutexAsync(scope.ServiceProvider, entry, ct);
+            }
             if (entry.AttemptCount < _options.MaxAttempts)
             {
                 var delay = TimeSpan.FromSeconds(_options.RetryBaseDelay.TotalSeconds * Math.Pow(2, entry.AttemptCount - 1));
@@ -114,6 +123,21 @@ public sealed partial class JobProcessorService(
                 await queue.FailAsync(entry.Id, ex.Message, ct);
             }
         }
+    }
+
+    private static bool IsScheduledJobEntry(JobQueueEntry entry) =>
+        entry.RecurringName is not null
+        && entry.RecurringName.StartsWith(SchedulerOptions.ScheduledJobSentinel, StringComparison.Ordinal);
+
+    private static async Task ReleaseSchedulerMutexAsync(
+        IServiceProvider sp,
+        JobQueueEntry entry,
+        CancellationToken ct
+    )
+    {
+        var scheduledName = entry.RecurringName![SchedulerOptions.ScheduledJobSentinel.Length..];
+        var mutex = sp.GetRequiredService<IJobMutex>();
+        await mutex.ReleaseAsync(SchedulerService.MutexNameFor(scheduledName), ct);
     }
 
     private static async Task ScheduleNextRecurringAsync(IJobQueue queue, JobQueueEntry entry, CancellationToken ct)
