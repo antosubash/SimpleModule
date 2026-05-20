@@ -16,10 +16,17 @@ interface Props {
   returnUrl: string;
   showTestAccounts: boolean;
   passkeyEnabled: boolean;
+  signedOutEverywhere?: boolean;
   errors?: { email?: string };
 }
 
-export default function Login({ returnUrl, showTestAccounts, passkeyEnabled, errors }: Props) {
+export default function Login({
+  returnUrl,
+  showTestAccounts,
+  passkeyEnabled,
+  signedOutEverywhere,
+  errors,
+}: Props) {
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
 
@@ -95,6 +102,11 @@ export default function Login({ returnUrl, showTestAccounts, passkeyEnabled, err
 
           <Card>
             <CardContent className="p-8">
+              {signedOutEverywhere && (
+                <div className="alert-success mb-4 text-sm" role="status">
+                  Signed out of all devices. Sign in to continue.
+                </div>
+              )}
               {errors?.email && (
                 <div className="alert-danger mb-4 text-sm" role="alert">
                   {errors.email}

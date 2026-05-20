@@ -80,7 +80,7 @@ This avoids class conflicts (e.g., `p-4` and `p-2` don't both end up in the DOM 
 
 | Component | Description |
 |---|---|
-| `Button` | Button with variants (default, destructive, outline, secondary, ghost, link) |
+| `Button` | Button with variants (`primary`, `secondary`, `ghost`, `danger`, `outline`) and sizes (`sm`, `default`, `lg`) |
 | `Input` | Text input with variants |
 | `Textarea` | Multi-line text input |
 | `Checkbox` | Checkbox input |
@@ -150,6 +150,31 @@ function CreateForm() {
     </form>
   );
 }
+```
+
+### Button Variants
+
+```tsx
+import { Button } from '@simplemodule/ui';
+
+<Button>Save</Button>                          {/* variant="primary" by default */}
+<Button variant="secondary">Cancel</Button>
+<Button variant="ghost">Dismiss</Button>
+<Button variant="danger">Delete</Button>
+<Button variant="outline">Learn more</Button>
+
+<Button size="sm">Compact</Button>
+<Button size="lg">Hero CTA</Button>
+```
+
+`asChild` forwards the variant styles to a child element (useful with `<Link>`):
+
+```tsx
+import { Link } from '@inertiajs/react';
+
+<Button asChild>
+  <Link href="/customers/new">New customer</Link>
+</Button>
 ```
 
 ### Data Grid Page

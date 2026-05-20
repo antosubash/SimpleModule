@@ -92,6 +92,11 @@
     <Project Path="modules/Email/src/SimpleModule.Email/SimpleModule.Email.csproj" />
     <Project Path="modules/Email/tests/SimpleModule.Email.Tests/SimpleModule.Email.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/Notifications/">
+    <Project Path="modules/Notifications/src/SimpleModule.Notifications.Contracts/SimpleModule.Notifications.Contracts.csproj" />
+    <Project Path="modules/Notifications/src/SimpleModule.Notifications/SimpleModule.Notifications.csproj" />
+    <Project Path="modules/Notifications/tests/SimpleModule.Notifications.Tests/SimpleModule.Notifications.Tests.csproj" />
+  </Folder>
   <Folder Name="/template/">
     <Project Path="template/SimpleModule.Host/SimpleModule.Host.csproj" />
     <Project Path="template/SimpleModule.Worker/SimpleModule.Worker.csproj" />

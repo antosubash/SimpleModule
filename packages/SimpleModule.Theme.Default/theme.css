@@ -370,7 +370,7 @@
     pointer-events: auto;
   }
 
-  /* --- Nav Link --- */
+  /* --- Nav Link (public layout) --- */
   .nav-link-active,
   .nav-link-inactive {
     @apply block px-4 py-2.5 rounded-xl text-sm no-underline transition-all duration-150;
@@ -383,6 +383,33 @@
   }
   .nav-link-inactive:hover {
     @apply bg-surface-raised text-text;
+  }
+
+  /* --- Sidebar Nav Link (app layout, with icon) --- */
+  .sidebar-nav-link-active,
+  .sidebar-nav-link-inactive {
+    @apply flex items-center gap-3 px-3 py-2 rounded-xl text-sm no-underline transition-all duration-150 outline-none focus-visible:ring-4 focus-visible:ring-primary-ring;
+  }
+  .sidebar-nav-link-active {
+    @apply font-medium text-primary bg-primary-subtle;
+  }
+  .sidebar-nav-link-inactive {
+    @apply text-text-secondary;
+  }
+  .sidebar-nav-link-inactive:hover {
+    @apply bg-surface-raised text-text;
+  }
+}
+
+/* ============================================================
+   Focus Ring Utilities
+   ============================================================ */
+@layer utilities {
+  .focus-ring {
+    @apply outline-none focus-visible:ring-4 focus-visible:ring-primary-ring focus-visible:border-primary;
+  }
+  .focus-ring-danger {
+    @apply outline-none focus-visible:ring-4 focus-visible:ring-danger-bg focus-visible:border-danger;
   }
 }
 

@@ -1,0 +1,8 @@
+{
+  "extends": "@simplemodule/tsconfig/base",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}

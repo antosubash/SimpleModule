@@ -5,6 +5,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Email.Contracts;
 using SimpleModule.Email.Contracts.Events;
 using Wolverine;
+using Wolverine.EntityFrameworkCore;
 
 namespace SimpleModule.Email.Jobs;
 
@@ -12,7 +13,7 @@ public partial class RetryFailedEmailsJob(
     EmailDbContext db,
     IBackgroundJobs backgroundJobs,
     IOptions<EmailModuleOptions> options,
-    IMessageBus bus,
+    IDbContextOutbox<EmailDbContext> outbox,
     ILogger<RetryFailedEmailsJob> logger
 ) : IModuleJob
 {
@@ -37,17 +38,17 @@ public partial class RetryFailedEmailsJob(
             message.RetryCount++;
             message.Status = EmailStatus.Retrying;
             message.ErrorMessage = null;
+
+            await outbox.PublishAsync(
+                new EmailRetryAttemptEvent(message.Id, message.To, message.RetryCount)
+            );
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        await outbox.SaveChangesAndFlushMessagesAsync(cancellationToken);
 
         foreach (var message in failedMessages)
         {
             LogRetryAttempt(logger, message.Id, message.To, message.RetryCount);
-            await bus.PublishAsync(
-                new EmailRetryAttemptEvent(message.Id, message.To, message.RetryCount)
-            );
-
             await backgroundJobs.EnqueueAsync<SendEmailJob>(
                 new SendEmailJobData(message.Id),
                 cancellationToken

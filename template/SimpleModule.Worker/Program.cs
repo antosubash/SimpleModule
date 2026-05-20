@@ -10,7 +10,7 @@ using SimpleModule.Storage.Local;
 var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
 builder.Services.AddLocalStorage(builder.Configuration);
-builder.AddSimpleModuleWorker();
+builder.AddSimpleModuleWorker(ModuleExtensions.ModuleAssemblies);
 
 // Source-generated: registers all module services and lifecycle hosting.
 builder.Services.AddModules(builder.Configuration);

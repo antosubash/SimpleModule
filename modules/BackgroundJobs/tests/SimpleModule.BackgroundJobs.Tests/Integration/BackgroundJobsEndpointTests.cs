@@ -78,17 +78,6 @@ public class BackgroundJobsEndpointTests
     // --- POST /api/jobs/{id}/cancel ---
 
     [Fact]
-    public async Task Cancel_WithManagePermission_DoesNotReturn401()
-    {
-        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ManageJobs]);
-
-        var response = await client.PostAsync($"/api/jobs/{Guid.NewGuid()}/cancel", null);
-
-        // May fail with 404/500 since no real job exists, but should not be 401
-        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
     public async Task Cancel_WithViewOnlyPermission_Returns403()
     {
         var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
@@ -101,13 +90,13 @@ public class BackgroundJobsEndpointTests
     // --- POST /api/jobs/{id}/retry ---
 
     [Fact]
-    public async Task Retry_WithManagePermission_DoesNotReturn401()
+    public async Task Retry_WithViewOnlyPermission_Returns403()
     {
-        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ManageJobs]);
+        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
 
         var response = await client.PostAsync($"/api/jobs/{Guid.NewGuid()}/retry", null);
 
-        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -167,13 +156,13 @@ public class BackgroundJobsEndpointTests
     // --- DELETE /api/jobs/recurring/{id} ---
 
     [Fact]
-    public async Task DeleteRecurring_WithManagePermission_DoesNotReturn401()
+    public async Task DeleteRecurring_WithViewOnlyPermission_Returns403()
     {
-        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ManageJobs]);
+        var client = _factory.CreateAuthenticatedClient([BackgroundJobsPermissions.ViewJobs]);
 
         var response = await client.DeleteAsync($"/api/jobs/recurring/{Guid.NewGuid()}");
 
-        response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]

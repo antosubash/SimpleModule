@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.RateLimiting;
 using SimpleModule.RateLimiting.Contracts;
 
 namespace SimpleModule.RateLimiting;
 
 public partial class RateLimitingService(
     RateLimitingDbContext db,
+    IRateLimitRuleSource ruleSource,
     ILogger<RateLimitingService> logger
 ) : IRateLimitingContracts
 {
@@ -43,6 +45,7 @@ public partial class RateLimitingService(
 
         db.Rules.Add(rule);
         await db.SaveChangesAsync();
+        await ruleSource.RefreshAsync();
 
         LogRuleCreated(logger, rule.Id, rule.PolicyName);
 
@@ -73,6 +76,7 @@ public partial class RateLimitingService(
         rule.IsEnabled = request.IsEnabled;
 
         await db.SaveChangesAsync();
+        await ruleSource.RefreshAsync();
 
         LogRuleUpdated(logger, rule.Id, rule.PolicyName);
 
@@ -89,6 +93,7 @@ public partial class RateLimitingService(
 
         db.Rules.Remove(rule);
         await db.SaveChangesAsync();
+        await ruleSource.RefreshAsync();
 
         LogRuleDeleted(logger, id);
     }

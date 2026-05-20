@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core;
 using SimpleModule.Database;
@@ -7,6 +8,14 @@ namespace SimpleModule.Hosting;
 public class SimpleModuleOptions
 {
     private readonly List<Action<IServiceCollection>> _moduleOptionsActions = [];
+
+    /// <summary>
+    /// Module assemblies to scan for Wolverine handlers. Set by the source-generated
+    /// <c>AddSimpleModule()</c> from <c>ModuleExtensions.ModuleAssemblies</c>; not
+    /// intended for user code.
+    /// </summary>
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public IReadOnlyList<Assembly> ModuleAssemblies { get; set; } = [];
 
     public bool EnableSwagger { get; set; } = true;
 

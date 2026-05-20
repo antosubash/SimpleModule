@@ -89,13 +89,14 @@ The `DomainEventInterceptor` (registered by the hosting layer) picks up queued e
 
 Wolverine routes `PublishAsync` to **every matching handler** in the process:
 
-- **In-process only.** The framework configures Wolverine with no external transports and no durable outbox — events are not persisted and are not retried across process restarts.
+- **Durable inbox/outbox.** The framework persists envelopes to the configured database (PostgreSQL, SQL Server, or SQLite) via Wolverine's EF Core integration — `PersistMessagesWithPostgresql/SqlServer/Sqlite` plus `UseDurableInboxOnAllListeners()`. Events queued by `SaveChangesAndFlushMessagesAsync` commit atomically with the EF write, so handlers never run for a transaction that rolled back.
+- **Restart-safe.** Envelopes in flight when the process dies are picked up by the next instance and dispatched.
 - **Handler isolation.** Each handler runs in its own dispatch. A failing handler does not stop dispatch to the others.
 - **Exceptions surface.** By default, handler exceptions are logged and rethrown once all handlers have been attempted. If you need finer control, configure Wolverine policies in `builder.Host.UseWolverine(opts => ...)`.
 - **Audit capture.** The AuditLogs module wraps `IMessageBus` with `AuditingMessageBus`, which records an audit entry for every published `IEvent`. Audit failures are swallowed and logged — they never break the primary operation.
 
-::: warning Not a durable queue
-Wolverine is running in-memory here. For work that must survive a restart, use the [Background Jobs](/guide/background-jobs) module instead of relying on events.
+::: tip Long-running work
+Handlers still run inline with the publishing scope. For anything expensive (PDF rendering, external HTTP, batch writes) hand off to the [Background Jobs](/guide/background-jobs) module from inside the handler rather than blocking the dispatch.
 :::
 
 ## Handler Best Practices

@@ -237,7 +237,7 @@ public class WebApplicationFactoryTests
         }
     }
 
-    private sealed record NoopEvent : IEvent;
+    private sealed record NoopEvent : DomainEvent;
 
     // ── Authenticated client ────────────────────────────────────────
 

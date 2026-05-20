@@ -102,12 +102,12 @@ public partial class EmailService
         template.IsHtml = request.IsHtml;
         template.DefaultReplyTo = request.DefaultReplyTo;
 
-        await db.SaveChangesAsync();
-
-        LogTemplateUpdated(logger, template.Id, template.Name);
-        await bus.PublishAsync(
+        await outbox.PublishAsync(
             new EmailTemplateUpdatedEvent(template.Id, template.Name, changedFields)
         );
+        await outbox.SaveChangesAndFlushMessagesAsync();
+
+        LogTemplateUpdated(logger, template.Id, template.Name);
 
         return template;
     }
@@ -120,10 +120,11 @@ public partial class EmailService
 
         var templateName = template.Name;
         db.EmailTemplates.Remove(template);
-        await db.SaveChangesAsync();
+
+        await outbox.PublishAsync(new EmailTemplateDeletedEvent(id, templateName));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         LogTemplateDeleted(logger, id);
-        await bus.PublishAsync(new EmailTemplateDeletedEvent(id, templateName));
     }
 
     [LoggerMessage(

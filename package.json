@@ -5,6 +5,7 @@
   "workspaces": [
     "modules/*/src/*",
     "packages/SimpleModule.Client",
+    "packages/SimpleModule.Echo",
     "packages/SimpleModule.Theme.Default",
     "packages/SimpleModule.TsConfig",
     "packages/SimpleModule.UI",

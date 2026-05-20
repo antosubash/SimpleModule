@@ -4,11 +4,6 @@ import { DarkModeToggle } from './dark-mode-toggle';
 import type { MenuItem, SharedProps } from './types';
 import { UserDropdown } from './user-dropdown';
 
-const ACTIVE_CLASS =
-  'flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-primary bg-primary-subtle no-underline transition-all duration-150';
-const INACTIVE_CLASS =
-  'flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-text-secondary no-underline hover:bg-surface-raised hover:text-text transition-all duration-150';
-
 function isActiveUrl(url: string, pathname: string): boolean {
   if (url === '/') return pathname === '/';
   return pathname.toLowerCase().startsWith(url.toLowerCase());
@@ -30,7 +25,11 @@ function NavLink({
 }) {
   const active = isActiveUrl(item.url, pathname);
   return (
-    <Link href={item.url} className={active ? ACTIVE_CLASS : INACTIVE_CLASS} onClick={onClick}>
+    <Link
+      href={item.url}
+      className={active ? 'sidebar-nav-link-active' : 'sidebar-nav-link-inactive'}
+      onClick={onClick}
+    >
       <SidebarIcon icon={item.icon} />
       <span className="sidebar-label">{item.label}</span>
     </Link>

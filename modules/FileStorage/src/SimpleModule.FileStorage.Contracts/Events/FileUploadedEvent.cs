@@ -7,4 +7,4 @@ public sealed record FileUploadedEvent(
     string FileName,
     long FileSize,
     string ContentType
-) : IEvent;
+) : DomainEvent;

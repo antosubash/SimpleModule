@@ -36,7 +36,7 @@ public static partial class SimpleModuleHostExtensions
         );
     }
 
-    private static void BridgeAspireConnectionString(ConfigurationManager configuration)
+    internal static void BridgeAspireConnectionString(ConfigurationManager configuration)
     {
         var aspireConnectionString = configuration.GetConnectionString("simplemoduledb");
         if (!string.IsNullOrEmpty(aspireConnectionString))
@@ -45,7 +45,7 @@ public static partial class SimpleModuleHostExtensions
         }
     }
 
-    private static DatabaseProvider ValidateDatabaseConfiguration(
+    internal static DatabaseProvider ValidateDatabaseConfiguration(
         ConfigurationManager configuration
     )
     {

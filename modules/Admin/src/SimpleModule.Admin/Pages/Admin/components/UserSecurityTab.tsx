@@ -17,6 +17,8 @@ import { AdminKeys } from '@/Locales/keys';
 interface UserDetail {
   id: string;
   emailConfirmed: boolean;
+  phoneNumber: string | null;
+  phoneNumberConfirmed: boolean;
   twoFactorEnabled: boolean;
   isLockedOut: boolean;
   accessFailedCount: number;
@@ -28,10 +30,17 @@ interface Props {
   user: UserDetail;
   isSelf: boolean;
   onReverify: () => void;
+  onReverifyPhone: () => void;
   onDisable2fa: () => void;
 }
 
-export function UserSecurityTab({ user, isSelf, onReverify, onDisable2fa }: Props) {
+export function UserSecurityTab({
+  user,
+  isSelf,
+  onReverify,
+  onReverifyPhone,
+  onDisable2fa,
+}: Props) {
   const { t } = useTranslation('Admin');
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
@@ -124,6 +133,33 @@ export function UserSecurityTab({ user, isSelf, onReverify, onDisable2fa }: Prop
             <Button variant="outline" onClick={onReverify}>
               {t(AdminKeys.UsersEdit.ForceReverifyButton)}
             </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t(AdminKeys.UsersEdit.PhoneVerificationTitle)}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {user.phoneNumber ? (
+            <>
+              <p className="text-sm text-text-muted mb-1">{user.phoneNumber}</p>
+              <p className="text-sm text-text-muted mb-3">
+                {t(AdminKeys.UsersEdit.PhoneVerificationStatus, {
+                  status: user.phoneNumberConfirmed
+                    ? t(AdminKeys.UsersEdit.PhoneVerified)
+                    : t(AdminKeys.UsersEdit.PhoneNotVerified),
+                })}
+              </p>
+              {user.phoneNumberConfirmed && (
+                <Button variant="outline" onClick={onReverifyPhone}>
+                  {t(AdminKeys.UsersEdit.ForceReverifyPhoneButton)}
+                </Button>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-text-muted">{t(AdminKeys.UsersEdit.PhoneNotSet)}</p>
           )}
         </CardContent>
       </Card>
