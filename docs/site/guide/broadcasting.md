@@ -1,3 +1,7 @@
+---
+outline: deep
+---
+
 # Broadcasting
 
 Real-time push from server to browser, layered on SignalR.
