@@ -1,6 +1,6 @@
 namespace SimpleModule.BackgroundJobs.Scheduler;
 
-public interface IInstanceLeader
+internal interface IInstanceLeader
 {
     /// <summary>
     /// Try to acquire (or renew) a named lease for <paramref name="ownerId"/>.

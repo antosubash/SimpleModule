@@ -21,4 +21,11 @@ internal static class CronCalculator
         var tz = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         return cron.GetNextOccurrence(fromInclusiveExclusive, tz, inclusive: false);
     }
+
+    /// <summary>UTC-only next-occurrence helper for the legacy recurring path.</summary>
+    public static DateTimeOffset? GetNextOccurrenceUtc(string expression, DateTime fromUtc)
+    {
+        var next = Parse(expression).GetNextOccurrence(fromUtc, inclusive: false);
+        return next is null ? null : new DateTimeOffset(next.Value, TimeSpan.Zero);
+    }
 }

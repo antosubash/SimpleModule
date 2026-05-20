@@ -4,7 +4,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 
 namespace SimpleModule.BackgroundJobs.Scheduler;
 
-public sealed partial class DatabaseJobMutex(
+internal sealed partial class DatabaseJobMutex(
     BackgroundJobsDbContext db,
     ILogger<DatabaseJobMutex> logger
 ) : IJobMutex

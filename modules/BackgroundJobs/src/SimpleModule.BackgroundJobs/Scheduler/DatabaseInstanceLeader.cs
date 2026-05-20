@@ -4,7 +4,7 @@ using SimpleModule.BackgroundJobs.Contracts;
 
 namespace SimpleModule.BackgroundJobs.Scheduler;
 
-public sealed partial class DatabaseInstanceLeader(
+internal sealed partial class DatabaseInstanceLeader(
     BackgroundJobsDbContext db,
     ILogger<DatabaseInstanceLeader> logger
 ) : IInstanceLeader

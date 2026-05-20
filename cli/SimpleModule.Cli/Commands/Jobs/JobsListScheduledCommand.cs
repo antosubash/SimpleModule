@@ -165,13 +165,10 @@ public sealed class JobsListScheduledCommand : Command<JobsListScheduledSettings
             ? "[dim]—[/]"
             : Markup.Escape(value.Value.ToString("yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture));
 
-    private static string ShortType(string assemblyQualifiedName)
-    {
-        var comma = assemblyQualifiedName.IndexOf(',', StringComparison.Ordinal);
-        var fullName = comma < 0 ? assemblyQualifiedName : assemblyQualifiedName[..comma].Trim();
-        var lastDot = fullName.LastIndexOf('.');
-        return lastDot < 0 ? fullName : fullName[(lastDot + 1)..];
-    }
+    // Mirrors BackgroundJobsInternalConstants.GetShortTypeName — kept inline because
+    // the CLI doesn't reference the BackgroundJobs assembly.
+    private static string ShortType(string assemblyQualifiedName) =>
+        assemblyQualifiedName.Split(',')[0].Split('.').Last();
 
     private sealed record ScheduleRow(
         string Name,

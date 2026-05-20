@@ -11,10 +11,6 @@ export interface ScheduledJobDto {
   nextRunAt: string | null;
 }
 
-export interface ModuleJobRegistration {
-  jobType: any;
-}
-
 export interface JobDetailDto {
   id: string;
   jobType: string;

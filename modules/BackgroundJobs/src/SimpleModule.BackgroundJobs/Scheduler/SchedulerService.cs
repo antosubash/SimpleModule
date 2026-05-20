@@ -15,7 +15,7 @@ namespace SimpleModule.BackgroundJobs.Scheduler;
 /// <c>OnOneServer</c> lease, then enqueues each due definition (respecting
 /// the per-job <c>WithoutOverlapping</c> mutex).
 /// </summary>
-public sealed partial class SchedulerService(
+internal sealed partial class SchedulerService(
     IServiceScopeFactory scopeFactory,
     IScheduler registry,
     WorkerIdentity identity,
@@ -88,22 +88,21 @@ public sealed partial class SchedulerService(
             }
         }
 
-        var dueStates = await db
+        var dueNames = await db
             .ScheduledJobStates.Where(s =>
                 s.IsEnabled && s.NextRunAt != null && s.NextRunAt <= now
             )
+            .Select(s => s.Name)
             .ToListAsync(ct);
 
-        if (dueStates.Count == 0)
+        if (dueNames.Count == 0)
             return;
 
-        var mutex = sp.GetRequiredService<IJobMutex>();
-        var queue = sp.GetRequiredService<IJobQueue>();
         var byName = definitions.ToDictionary(d => d.Name, StringComparer.Ordinal);
 
-        foreach (var state in dueStates)
+        foreach (var name in dueNames)
         {
-            if (!byName.TryGetValue(state.Name, out var def))
+            if (!byName.TryGetValue(name, out var def))
             {
                 // Definition was removed in code but row remains — skip silently.
                 continue;
@@ -111,30 +110,37 @@ public sealed partial class SchedulerService(
 
             try
             {
-                await ProcessOneAsync(state, def, mutex, queue, now, ct);
+                await ProcessOneAsync(name, def, now, ct);
             }
 #pragma warning disable CA1031
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                LogDefinitionError(logger, state.Name, ex);
+                LogDefinitionError(logger, name, ex);
             }
         }
-
-        await db.SaveChangesAsync(ct);
     }
 
+    // Fresh scope per due definition so mutex/queue saves never flush other
+    // tracked state, and so a failure in one definition can't leave the
+    // outer DbContext with partially-modified rows.
     private async Task ProcessOneAsync(
-        ScheduledJobState state,
+        string name,
         ScheduledJobDefinition def,
-        IJobMutex mutex,
-        IJobQueue queue,
         DateTimeOffset now,
         CancellationToken ct
     )
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var sp = scope.ServiceProvider;
+        var db = sp.GetRequiredService<BackgroundJobsDbContext>();
+        var state = await db.ScheduledJobStates.FirstOrDefaultAsync(s => s.Name == name, ct);
+        if (state is null)
+            return;
+
         if (state.WithoutOverlapping)
         {
+            var mutex = sp.GetRequiredService<IJobMutex>();
             var acquired = await mutex.TryAcquireAsync(
                 MutexNameFor(state.Name),
                 identity.Id,
@@ -151,11 +157,13 @@ public sealed partial class SchedulerService(
                     now
                 );
                 state.UpdatedAt = now;
+                await db.SaveChangesAsync(ct);
                 return;
             }
         }
 
         var jobId = Guid.NewGuid();
+        var queue = sp.GetRequiredService<IJobQueue>();
         await queue.EnqueueAsync(
             new JobQueueEntry(
                 jobId,
@@ -178,11 +186,13 @@ public sealed partial class SchedulerService(
             now
         );
         state.UpdatedAt = now;
+        await db.SaveChangesAsync(ct);
 
         LogEnqueued(logger, state.Name, jobId, state.NextRunAt);
     }
 
-    internal static string MutexNameFor(string scheduledJobName) => "mutex:" + scheduledJobName;
+    internal static string MutexNameFor(string scheduledJobName) =>
+        SchedulerOptions.MutexPrefix + scheduledJobName;
 
     [LoggerMessage(
         Level = LogLevel.Information,

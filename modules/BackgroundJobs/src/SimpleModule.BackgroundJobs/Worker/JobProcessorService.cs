@@ -1,5 +1,4 @@
 // modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/Worker/JobProcessorService.cs
-using Cronos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -135,21 +134,19 @@ public sealed partial class JobProcessorService(
         CancellationToken ct
     )
     {
-        var scheduledName = entry.RecurringName![SchedulerOptions.ScheduledJobSentinel.Length..];
         var mutex = sp.GetRequiredService<IJobMutex>();
+        var scheduledName = entry.RecurringName![SchedulerOptions.ScheduledJobSentinel.Length..];
         await mutex.ReleaseAsync(SchedulerService.MutexNameFor(scheduledName), ct);
     }
 
     private static async Task ScheduleNextRecurringAsync(IJobQueue queue, JobQueueEntry entry, CancellationToken ct)
     {
-        var format = entry.CronExpression!.Split(' ').Length > 5 ? CronFormat.IncludeSeconds : CronFormat.Standard;
-        var cron = CronExpression.Parse(entry.CronExpression, format);
-        var next = cron.GetNextOccurrence(DateTime.UtcNow, inclusive: false);
-        if (!next.HasValue) return;
+        var next = CronCalculator.GetNextOccurrenceUtc(entry.CronExpression!, DateTime.UtcNow);
+        if (next is null) return;
 
         await queue.EnqueueAsync(new JobQueueEntry(
             Guid.NewGuid(), entry.JobTypeName, entry.SerializedData,
-            new DateTimeOffset(next.Value, TimeSpan.Zero),
+            next.Value,
             JobQueueEntryState.Pending, 0, entry.CronExpression, entry.RecurringName,
             DateTimeOffset.UtcNow), ct);
     }

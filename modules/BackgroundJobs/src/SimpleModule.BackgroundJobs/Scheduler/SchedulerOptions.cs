@@ -4,6 +4,7 @@ public sealed class SchedulerOptions
 {
     public const string LeaseName = "scheduler";
     public const string ScheduledJobSentinel = "schedule:";
+    public const string MutexPrefix = "mutex:";
 
     /// <summary>How often the scheduler tick runs.</summary>
     public TimeSpan TickInterval { get; set; } = TimeSpan.FromSeconds(30);

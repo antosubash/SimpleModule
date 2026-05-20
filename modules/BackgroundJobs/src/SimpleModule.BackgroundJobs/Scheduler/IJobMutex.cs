@@ -1,6 +1,6 @@
 namespace SimpleModule.BackgroundJobs.Scheduler;
 
-public interface IJobMutex
+internal interface IJobMutex
 {
     Task<bool> TryAcquireAsync(
         string name,

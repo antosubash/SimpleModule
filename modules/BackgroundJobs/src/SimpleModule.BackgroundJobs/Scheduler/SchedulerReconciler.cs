@@ -79,14 +79,27 @@ internal static partial class SchedulerReconciler
             return;
         }
 
-        var cronChanged = !string.Equals(
-            row.CronExpression,
-            def.CronExpression,
-            StringComparison.Ordinal
-        );
-        var tzChanged = !string.Equals(row.TimeZoneId, def.TimeZoneId, StringComparison.Ordinal);
+        var jobType = def.JobType.AssemblyQualifiedName!;
+        var changed =
+            !string.Equals(row.JobTypeName, jobType, StringComparison.Ordinal)
+            || !string.Equals(row.CronExpression, def.CronExpression, StringComparison.Ordinal)
+            || !string.Equals(row.TimeZoneId, def.TimeZoneId, StringComparison.Ordinal)
+            || !string.Equals(row.Payload, payload, StringComparison.Ordinal)
+            || row.WithoutOverlapping != def.WithoutOverlapping
+            || row.OnOneServer != def.OnOneServer
+            || row.NextRunAt is null;
 
-        row.JobTypeName = def.JobType.AssemblyQualifiedName!;
+        if (!changed)
+        {
+            // Nothing to do; avoid a no-op UPDATE on every tick.
+            return;
+        }
+
+        var cronOrTzChanged =
+            !string.Equals(row.CronExpression, def.CronExpression, StringComparison.Ordinal)
+            || !string.Equals(row.TimeZoneId, def.TimeZoneId, StringComparison.Ordinal);
+
+        row.JobTypeName = jobType;
         row.CronExpression = def.CronExpression;
         row.TimeZoneId = def.TimeZoneId;
         row.Payload = payload;
@@ -94,7 +107,7 @@ internal static partial class SchedulerReconciler
         row.OnOneServer = def.OnOneServer;
         row.UpdatedAt = now;
 
-        if (cronChanged || tzChanged || row.NextRunAt is null)
+        if (cronOrTzChanged || row.NextRunAt is null)
         {
             row.NextRunAt = TryGetNextOccurrence(def.CronExpression, def.TimeZoneId, now);
         }
