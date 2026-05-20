@@ -88,19 +88,16 @@ export const routes = {
   },
   tenants: {
     api: {
-      deleteTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      deleteTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       getTenantFeatures: (id: string | number) => `/api/tenants/${id}/features`,
-      setTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      setTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       addHost: (id: string | number) => `/api/tenants/${id}/hosts`,
       changeStatus: (id: string | number) => `/api/tenants/${id}/status`,
       create: () => '/api/tenants' as const,
       delete: (id: string | number) => `/api/tenants/${id}`,
       getAll: () => '/api/tenants' as const,
       getById: (id: string | number) => `/api/tenants/${id}`,
-      removeHost: (id: string | number, hostId: string | number) =>
-        `/api/tenants/${id}/hosts/${hostId}`,
+      removeHost: (id: string | number, hostId: string | number) => `/api/tenants/${id}/hosts/${hostId}`,
       update: (id: string | number) => `/api/tenants/${id}`,
     },
     views: {
@@ -170,8 +167,7 @@ export const routes = {
       manageIndex: () => '/Identity/Account/Manage' as const,
       personalData: () => '/Identity/Account/Manage/PersonalData' as const,
       removePhoneNumber: () => '/Identity/Account/Manage/RemovePhoneNumber' as const,
-      sendPhoneVerificationCode: () =>
-        '/Identity/Account/Manage/SendPhoneVerificationCode' as const,
+      sendPhoneVerificationCode: () => '/Identity/Account/Manage/SendPhoneVerificationCode' as const,
       setPassword: () => '/Identity/Account/Manage/SetPassword' as const,
     },
   },
@@ -216,8 +212,7 @@ export const routes = {
       userinfo: () => '/connect/userinfo' as const,
       activeSessions: () => '/Identity/Account/Manage/ActiveSessions' as const,
       revokeOtherSessions: () => '/Identity/Account/Manage/ActiveSessions/revoke-others' as const,
-      revokeSession: (tokenId: string | number) =>
-        `/Identity/Account/Manage/ActiveSessions/${tokenId}/revoke`,
+      revokeSession: (tokenId: string | number) => `/Identity/Account/Manage/ActiveSessions/${tokenId}/revoke`,
     },
     views: {
       clientsCreate: () => '/openiddict/clients/create' as const,
@@ -228,8 +223,7 @@ export const routes = {
   admin: {
     api: {
       adminRoles: () => '/admin/roles' as const,
-      adminSessions: (id: string | number, tokenId: string | number) =>
-        `/admin/users/${id}/sessions/${tokenId}`,
+      adminSessions: (id: string | number, tokenId: string | number) => `/admin/users/${id}/sessions/${tokenId}`,
       adminUsers: () => '/admin/users' as const,
     },
     views: {
@@ -243,3 +237,4 @@ export const routes = {
     },
   },
 } as const;
+

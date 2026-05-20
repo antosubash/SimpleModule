@@ -48,60 +48,6 @@ export const routes = {
       browse: () => '/files' as const,
     },
   },
-  marketplace: {
-    api: {
-      getById: (id: string | number) => `/api/marketplace/${id}`,
-      search: () => '/api/marketplace' as const,
-    },
-    views: {
-      browse: () => '/marketplace' as const,
-      detail: (id: string | number) => `/marketplace/${id}`,
-    },
-  },
-  pageBuilder: {
-    api: {
-      create: () => '/api/pagebuilder' as const,
-      delete: (id: string | number) => `/api/pagebuilder/${id}`,
-      getAll: () => '/api/pagebuilder' as const,
-      getById: (id: string | number) => `/api/pagebuilder/${id}`,
-      permanentDelete: (id: string | number) => `/api/pagebuilder/${id}/permanent`,
-      publish: (id: string | number) => `/api/pagebuilder/${id}/publish`,
-      restore: (id: string | number) => `/api/pagebuilder/${id}/restore`,
-      trash: () => '/api/pagebuilder/trash' as const,
-      unpublish: (id: string | number) => `/api/pagebuilder/${id}/unpublish`,
-      updateContent: (id: string | number) => `/api/pagebuilder/${id}/content`,
-      update: (id: string | number) => `/api/pagebuilder/${id}`,
-      addTagToPage: (id: string | number) => `/api/pagebuilder/${id}/tags`,
-      getAllTags: () => '/api/pagebuilder/tags' as const,
-      removeTagFromPage: (id: string | number, tagId: string | number) =>
-        `/api/pagebuilder/${id}/tags/${tagId}`,
-      createTemplate: () => '/api/pagebuilder/templates' as const,
-      deleteTemplate: (id: string | number) => `/api/pagebuilder/templates/${id}`,
-      getAllTemplates: () => '/api/pagebuilder/templates' as const,
-    },
-    views: {
-      editor: () => '/pages/new' as const,
-      manage: () => '/pages/manage' as const,
-      pagesList: () => '/pages' as const,
-      viewerDraft: (slug: string | number) => `/pages/view/${slug}/draft`,
-      viewer: (slug: string | number) => `/pages/view/${slug}`,
-    },
-  },
-  products: {
-    api: {
-      create: () => '/api/products' as const,
-      delete: (id: string | number) => `/api/products/${id}`,
-      getAll: () => '/api/products' as const,
-      getById: (id: string | number) => `/api/products/${id}`,
-      update: (id: string | number) => `/api/products/${id}`,
-    },
-    views: {
-      browse: () => '/products' as const,
-      create: () => '/products/create' as const,
-      edit: (id: string | number) => `/products/${id}/edit`,
-      manage: () => '/products/manage' as const,
-    },
-  },
   rateLimiting: {
     api: {
       create: () => '/api/rate-limiting' as const,
@@ -142,19 +88,16 @@ export const routes = {
   },
   tenants: {
     api: {
-      deleteTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      deleteTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       getTenantFeatures: (id: string | number) => `/api/tenants/${id}/features`,
-      setTenantFeature: (id: string | number, flagName: string | number) =>
-        `/api/tenants/${id}/features/${flagName}`,
+      setTenantFeature: (id: string | number, flagName: string | number) => `/api/tenants/${id}/features/${flagName}`,
       addHost: (id: string | number) => `/api/tenants/${id}/hosts`,
       changeStatus: (id: string | number) => `/api/tenants/${id}/status`,
       create: () => '/api/tenants' as const,
       delete: (id: string | number) => `/api/tenants/${id}`,
       getAll: () => '/api/tenants' as const,
       getById: (id: string | number) => `/api/tenants/${id}`,
-      removeHost: (id: string | number, hostId: string | number) =>
-        `/api/tenants/${id}/hosts/${hostId}`,
+      removeHost: (id: string | number, hostId: string | number) => `/api/tenants/${id}/hosts/${hostId}`,
       update: (id: string | number) => `/api/tenants/${id}`,
     },
     views: {
@@ -211,13 +154,20 @@ export const routes = {
       resetAuthenticator: () => '/Identity/Account/Manage/ResetAuthenticator' as const,
       resetPasswordConfirmation: () => '/Identity/Account/ResetPasswordConfirmation' as const,
       resetPassword: () => '/Identity/Account/ResetPassword' as const,
+      sendUnlockEmailConfirmation: () => '/Identity/Account/SendUnlockEmailConfirmation' as const,
+      sendUnlockEmail: () => '/Identity/Account/SendUnlockEmail' as const,
+      signOutEverywhere: () => '/Identity/Account/Manage/SignOutEverywhere' as const,
       twoFactorAuthentication: () => '/Identity/Account/Manage/TwoFactorAuthentication' as const,
+      unlockAccount: () => '/Identity/Account/UnlockAccount' as const,
       changePassword: () => '/Identity/Account/Manage/ChangePassword' as const,
+      confirmPhoneNumber: () => '/Identity/Account/Manage/ConfirmPhoneNumber' as const,
       deletePersonalData: () => '/Identity/Account/Manage/DeletePersonalData' as const,
       email: () => '/Identity/Account/Manage/Email' as const,
       externalLogins: () => '/Identity/Account/Manage/ExternalLogins' as const,
       manageIndex: () => '/Identity/Account/Manage' as const,
       personalData: () => '/Identity/Account/Manage/PersonalData' as const,
+      removePhoneNumber: () => '/Identity/Account/Manage/RemovePhoneNumber' as const,
+      sendPhoneVerificationCode: () => '/Identity/Account/Manage/SendPhoneVerificationCode' as const,
       setPassword: () => '/Identity/Account/Manage/SetPassword' as const,
     },
   },
@@ -238,29 +188,31 @@ export const routes = {
       dashboard: () => '/email/dashboard' as const,
       editTemplate: (id: string | number) => `/email/templates/${id}/edit`,
       history: () => '/email/history' as const,
+      settings: () => '/email/settings' as const,
       templates: () => '/email/templates' as const,
     },
   },
-  orders: {
+  notifications: {
     api: {
-      create: () => '/api/orders' as const,
-      delete: (id: string | number) => `/api/orders/${id}`,
-      getAll: () => '/api/orders' as const,
-      getById: (id: string | number) => `/api/orders/${id}`,
-      update: (id: string | number) => `/api/orders/${id}`,
+      listNotifications: () => '/api/notifications' as const,
+      markAllRead: () => '/api/notifications/read-all' as const,
+      markRead: (id: string | number) => `/api/notifications/${id}/read`,
+      unreadCount: () => '/api/notifications/unread-count' as const,
     },
     views: {
-      create: () => '/orders/create' as const,
-      edit: (id: string | number) => `/orders/${id}/edit`,
-      list: () => '/orders' as const,
+      inbox: () => '/notifications' as const,
     },
   },
   openIddict: {
     api: {
       authorization: () => '/connect/authorize' as const,
       logout: () => '/connect/endsession' as const,
+      oAuthCallback: () => '/oauth-callback' as const,
       token: () => '/connect/token' as const,
       userinfo: () => '/connect/userinfo' as const,
+      activeSessions: () => '/Identity/Account/Manage/ActiveSessions' as const,
+      revokeOtherSessions: () => '/Identity/Account/Manage/ActiveSessions/revoke-others' as const,
+      revokeSession: (tokenId: string | number) => `/Identity/Account/Manage/ActiveSessions/${tokenId}/revoke`,
     },
     views: {
       clientsCreate: () => '/openiddict/clients/create' as const,
@@ -271,8 +223,7 @@ export const routes = {
   admin: {
     api: {
       adminRoles: () => '/admin/roles' as const,
-      adminSessions: (id: string | number, tokenId: string | number) =>
-        `/admin/users/${id}/sessions/${tokenId}`,
+      adminSessions: (id: string | number, tokenId: string | number) => `/admin/users/${id}/sessions/${tokenId}`,
       adminUsers: () => '/admin/users' as const,
     },
     views: {
@@ -286,3 +237,4 @@ export const routes = {
     },
   },
 } as const;
+
