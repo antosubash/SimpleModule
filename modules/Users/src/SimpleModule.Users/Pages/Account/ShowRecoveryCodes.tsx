@@ -10,7 +10,11 @@ interface Props {
   statusMessage?: string;
 }
 
-function downloadCodes(codes: string[], header: string, fileName = 'simplemodule-recovery-codes.txt') {
+function downloadCodes(
+  codes: string[],
+  header: string,
+  fileName = 'simplemodule-recovery-codes.txt',
+) {
   const body = [header, '', ...codes].join('\n');
   const blob = new Blob([body], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
