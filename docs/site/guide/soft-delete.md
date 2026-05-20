@@ -59,7 +59,7 @@ var trashed = await db.Customers
 `WithTrashed` / `OnlyTrashed` ignore only the soft-delete filter. The multi-tenant filter (and any other named filter) stays active, so tenant isolation is preserved when admins browse the trash.
 :::
 
-## ISoftDeleteService<T>
+## ISoftDeleteService\<T\>
 
 For per-row recovery operations, register `ISoftDeleteService<T>` and inject it into your endpoints or services.
 

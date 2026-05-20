@@ -50,6 +50,7 @@ export default defineConfig({
           text: 'Communication',
           items: [
             { text: 'Events', link: '/guide/events' },
+            { text: 'Broadcasting', link: '/guide/broadcasting' },
             { text: 'Permissions', link: '/guide/permissions' },
             { text: 'Menus', link: '/guide/menus' },
             { text: 'Settings', link: '/guide/settings' },
@@ -61,6 +62,9 @@ export default defineConfig({
           items: [
             { text: 'Background Jobs', link: '/guide/background-jobs' },
             { text: 'File Storage', link: '/guide/file-storage' },
+            { text: 'Notifications', link: '/guide/notifications' },
+            { text: 'Rate Limiting', link: '/guide/rate-limiting' },
+            { text: 'Identity & Sessions', link: '/guide/identity' },
             { text: 'Localization', link: '/guide/localization' },
             { text: 'Error Pages', link: '/guide/error-pages' },
           ],
