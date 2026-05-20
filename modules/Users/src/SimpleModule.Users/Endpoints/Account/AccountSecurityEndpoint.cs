@@ -108,7 +108,9 @@ public partial class AccountSecurityEndpoint : IEndpoint
                             new
                             {
                                 recoveryCodes = recoveryCodes!.ToArray(),
-                                statusMessage = "Your authenticator app has been verified.",
+                                userEmail = user.Email,
+                                generatedAt = DateTimeOffset.UtcNow.ToString("O"),
+                                statusKey = "authenticator-verified",
                             }
                         );
                     }
@@ -197,7 +199,9 @@ public partial class AccountSecurityEndpoint : IEndpoint
                     new
                     {
                         recoveryCodes = recoveryCodes!.ToArray(),
-                        statusMessage = "You have generated new recovery codes.",
+                        userEmail = user.Email,
+                        generatedAt = DateTimeOffset.UtcNow.ToString("O"),
+                        statusKey = "recovery-codes-generated",
                     }
                 );
             }
