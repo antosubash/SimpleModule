@@ -208,7 +208,6 @@ export class Echo {
     void this.subscribe(channel);
 
     return () => {
-      // biome-ignore lint/style/noNonNullAssertion: set/byEvent captured above and only nullable per typing
       set?.delete(handler as EventHandler);
       if (set?.size === 0) {
         byEvent?.delete(event);

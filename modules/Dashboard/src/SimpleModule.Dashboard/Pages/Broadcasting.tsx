@@ -22,9 +22,9 @@ export default function Broadcasting({ channel, userId, fireUrl }: Props) {
       title="Live broadcasting"
       description="Smoke test for the SignalR hub and the @simplemodule/echo client."
     >
-      {channel ? (
+      {channel && userId ? (
         <EchoProvider>
-          <DemoBody channel={channel} userId={userId!} fireUrl={fireUrl} />
+          <DemoBody channel={channel} userId={userId} fireUrl={fireUrl} />
         </EchoProvider>
       ) : (
         <Alert variant="warning">

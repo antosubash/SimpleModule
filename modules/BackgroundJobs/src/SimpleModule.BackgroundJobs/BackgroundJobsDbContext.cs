@@ -14,11 +14,17 @@ public class BackgroundJobsDbContext(
 {
     public DbSet<JobProgress> JobProgress => Set<JobProgress>();
     public DbSet<JobQueueEntryEntity> JobQueueEntries => Set<JobQueueEntryEntity>();
+    public DbSet<ScheduledJobState> ScheduledJobStates => Set<ScheduledJobState>();
+    public DbSet<JobMutex> JobMutexes => Set<JobMutex>();
+    public DbSet<JobLease> JobLeases => Set<JobLease>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new JobProgressConfiguration());
         modelBuilder.ApplyConfiguration(new JobQueueEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new ScheduledJobStateConfiguration());
+        modelBuilder.ApplyConfiguration(new JobMutexConfiguration());
+        modelBuilder.ApplyConfiguration(new JobLeaseConfiguration());
         modelBuilder.ApplyModuleSchema(BackgroundJobsConstants.ModuleName, dbOptions.Value);
     }
 

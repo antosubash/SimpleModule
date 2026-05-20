@@ -1,9 +1,9 @@
 // modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/Services/BackgroundJobsService.cs
 using System.Text.Json;
-using Cronos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SimpleModule.BackgroundJobs.Contracts;
+using SimpleModule.BackgroundJobs.Scheduler;
 using static SimpleModule.BackgroundJobs.BackgroundJobsInternalConstants;
 
 namespace SimpleModule.BackgroundJobs.Services;
@@ -81,12 +81,8 @@ public sealed partial class BackgroundJobsService(
     )
         where TJob : IModuleJob
     {
-        // Validate cron expression
-        var format =
-            cronExpression.Split(' ').Length > 5 ? CronFormat.IncludeSeconds : CronFormat.Standard;
-        var cron = CronExpression.Parse(cronExpression, format);
         var next =
-            cron.GetNextOccurrence(DateTime.UtcNow, inclusive: false)
+            CronCalculator.GetNextOccurrenceUtc(cronExpression, DateTime.UtcNow)
             ?? throw new InvalidOperationException(
                 $"Cron '{cronExpression}' has no next occurrence."
             );
@@ -110,7 +106,7 @@ public sealed partial class BackgroundJobsService(
                 id,
                 jobType.AssemblyQualifiedName!,
                 serialized,
-                new DateTimeOffset(next, TimeSpan.Zero),
+                next,
                 JobQueueEntryState.Pending,
                 0,
                 cronExpression,
@@ -152,15 +148,9 @@ public sealed partial class BackgroundJobsService(
 
         if (isDisabled && row.CronExpression is not null)
         {
-            var format =
-                row.CronExpression.Split(' ').Length > 5
-                    ? CronFormat.IncludeSeconds
-                    : CronFormat.Standard;
-            var cron = CronExpression.Parse(row.CronExpression, format);
-            var next = cron.GetNextOccurrence(DateTime.UtcNow, inclusive: false);
-            row.ScheduledAt = next.HasValue
-                ? new DateTimeOffset(next.Value, TimeSpan.Zero)
-                : DateTimeOffset.UtcNow;
+            row.ScheduledAt =
+                CronCalculator.GetNextOccurrenceUtc(row.CronExpression, DateTime.UtcNow)
+                ?? DateTimeOffset.UtcNow;
         }
         else
         {
