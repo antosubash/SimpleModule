@@ -2,8 +2,21 @@
 // Extracts TypeScript route definitions from TypeScriptRoutes.g.cs
 // Usage: node scripts/extract-routes.mjs <generated-dir> <output-path>
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+} from 'fs';
 import { resolve, dirname, join } from 'path';
+
+function writeIfChanged(path, contents) {
+  if (existsSync(path) && readFileSync(path, 'utf-8') === contents) {
+    return false;
+  }
+  writeFileSync(path, contents);
+  return true;
+}
 
 const generatedDir = process.argv[2];
 const outputPath =
@@ -34,10 +47,9 @@ if (!tsMatch) {
 
 const tsContent = tsMatch[1];
 const outPath = resolve(outputPath);
+const next = `// Auto-generated from endpoint Route constants \u2014 do not edit\n${tsContent}`;
 
 mkdirSync(dirname(outPath), { recursive: true });
-writeFileSync(
-  outPath,
-  `// Auto-generated from endpoint Route constants \u2014 do not edit\n${tsContent}`,
-);
-console.log(`Wrote routes to ${outPath}`);
+if (writeIfChanged(outPath, next)) {
+  console.log(`Wrote routes to ${outPath}`);
+}
