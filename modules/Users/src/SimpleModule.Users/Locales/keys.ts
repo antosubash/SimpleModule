@@ -69,6 +69,7 @@ export const UsersKeys = {
       '2faDisabled': 'TwoFactor.Status.2faDisabled',
       AuthenticatorVerified: 'TwoFactor.Status.AuthenticatorVerified',
       BrowserForgotten: 'TwoFactor.Status.BrowserForgotten',
+      RecoveryCodesGenerated: 'TwoFactor.Status.RecoveryCodesGenerated',
     },
     Title: 'TwoFactor.Title',
   },

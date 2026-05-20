@@ -5,9 +5,9 @@ import { UsersKeys } from '@/Locales/keys';
 
 interface Props {
   recoveryCodes: string[];
-  userEmail?: string | null;
-  generatedAt?: string | null;
-  statusMessage?: string;
+  userEmail: string;
+  generatedAt: string;
+  statusKey?: 'authenticator-verified' | 'recovery-codes-generated';
 }
 
 function downloadCodes(
@@ -31,13 +31,18 @@ export default function ShowRecoveryCodes({
   recoveryCodes,
   userEmail,
   generatedAt,
-  statusMessage,
+  statusKey,
 }: Props) {
   const { t } = useTranslation('Users');
   const printHeader = t(UsersKeys.ShowRecoveryCodes.PrintHeader, {
-    email: userEmail ?? '',
-    date: generatedAt ?? new Date().toISOString(),
+    email: userEmail,
+    date: generatedAt,
   });
+  const statusKeyToTranslation = {
+    'authenticator-verified': UsersKeys.TwoFactor.Status.AuthenticatorVerified,
+    'recovery-codes-generated': UsersKeys.TwoFactor.Status.RecoveryCodesGenerated,
+  } as const;
+  const statusMessage = statusKey ? t(statusKeyToTranslation[statusKey]) : null;
 
   return (
     <ManageLayout activePage="TwoFactorAuthentication">

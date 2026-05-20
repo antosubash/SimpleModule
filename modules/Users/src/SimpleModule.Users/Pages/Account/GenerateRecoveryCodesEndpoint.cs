@@ -9,12 +9,8 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
-// Recovery codes are stored hashed (like passwords). There is intentionally
-// no "get my existing codes" endpoint — once the user closes the
-// ShowRecoveryCodes page they can only download/print the fresh set if they
-// did so at generation time, or regenerate, which invalidates the old set.
-// Do not add a "retrieve codes" code path; the cryptographic contract makes
-// it impossible to honor and users would build a false expectation.
+// Recovery codes are stored hashed: there is no "retrieve codes" endpoint by design.
+// The plaintext is only available at generation time (here and on regenerate).
 public class GenerateRecoveryCodesEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.GenerateRecoveryCodes;

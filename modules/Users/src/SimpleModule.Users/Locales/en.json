@@ -21,6 +21,7 @@
   "TwoFactor.Status.BrowserForgotten": "The current browser has been forgotten. When you login again from this browser you will be prompted for your 2FA code.",
   "TwoFactor.Status.2faDisabled": "2FA has been disabled. You can reenable 2FA when you setup an authenticator app.",
   "TwoFactor.Status.AuthenticatorVerified": "Your authenticator app has been verified.",
+  "TwoFactor.Status.RecoveryCodesGenerated": "You have generated new recovery codes.",
   "EnableAuthenticator.Title": "Configure authenticator app",
   "EnableAuthenticator.Intro": "To use an authenticator app go through the following steps:",
   "EnableAuthenticator.Step1": "Download a two-factor authenticator app like Microsoft Authenticator or Google Authenticator.",
