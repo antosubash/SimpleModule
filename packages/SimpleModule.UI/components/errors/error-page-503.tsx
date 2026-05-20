@@ -9,7 +9,9 @@ export default function ErrorPage503({ message, retryAfterSeconds, until }: Main
   const retryHint =
     retryAfterSeconds && retryAfterSeconds > 0
       ? `Please try again in about ${retryAfterSeconds} seconds.`
-      : null;
+      : until
+        ? `Expected back online by ${until}.`
+        : null;
 
   return (
     <ErrorPageLayout
