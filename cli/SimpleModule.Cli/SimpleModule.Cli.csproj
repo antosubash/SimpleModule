@@ -9,6 +9,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NetEscapades.EnumGenerators" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Npgsql" />
     <PackageReference Include="Spectre.Console.Cli" />
   </ItemGroup>
   <ItemGroup>
@@ -59,6 +61,14 @@
     <EmbeddedResource
       Include="..\..\template\SimpleModule.Host\Properties\launchSettings.json"
       LogicalName="Templates.Host.Properties.launchSettings.json"
+    />
+    <EmbeddedResource
+      Include="..\..\scripts\extract-ts-types.mjs"
+      LogicalName="Templates.scripts.extract-ts-types.mjs"
+    />
+    <EmbeddedResource
+      Include="..\..\scripts\extract-routes.mjs"
+      LogicalName="Templates.scripts.extract-routes.mjs"
     />
   </ItemGroup>
 </Project>

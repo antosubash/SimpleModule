@@ -2,8 +2,22 @@
 // Extracts TypeScript interfaces from per-module DtoTypeScript_*.g.cs files
 // Usage: node scripts/extract-ts-types.mjs <generated-dir> <modules-dir>
 
-import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import {
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  existsSync,
+} from 'fs';
 import { resolve, join } from 'path';
+
+function writeIfChanged(path, contents) {
+  if (existsSync(path) && readFileSync(path, 'utf-8') === contents) {
+    return false;
+  }
+  writeFileSync(path, contents);
+  return true;
+}
 
 const generatedDir = process.argv[2];
 const modulesDir = process.argv[3] || 'modules';
@@ -52,9 +66,8 @@ for (const file of files) {
   mkdirSync(resolve(modulesDir, moduleName, 'src', projectDir), {
     recursive: true,
   });
-  writeFileSync(
-    outPath,
-    `// Auto-generated from [Dto] types \u2014 do not edit\n${tsContent}`,
-  );
-  console.log(`Wrote ${moduleName} types to ${outPath}`);
+  const next = `// Auto-generated from [Dto] types \u2014 do not edit\n${tsContent}`;
+  if (writeIfChanged(outPath, next)) {
+    console.log(`Wrote ${moduleName} types to ${outPath}`);
+  }
 }
