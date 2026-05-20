@@ -15,6 +15,7 @@ using SimpleModule.Core.Constants;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Health;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.Maintenance;
 using SimpleModule.Core.Menu;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.Core.Security;
@@ -24,6 +25,7 @@ using SimpleModule.Database.Interceptors;
 using SimpleModule.DevTools;
 using SimpleModule.Hosting.Broadcasting;
 using SimpleModule.Hosting.Inertia;
+using SimpleModule.Hosting.Maintenance;
 using SimpleModule.Hosting.Middleware;
 using SimpleModule.Hosting.RateLimiting;
 using Wolverine;
@@ -132,6 +134,12 @@ public static partial class SimpleModuleHostExtensions
 
         builder.Services.TryAddSingleton(TimeProvider.System);
         builder.Services.AddSingleton<ISignedUrlGenerator, SignedUrlGenerator>();
+
+        // Maintenance mode — file-based sentinel poll, written by `sm down` /
+        // cleared by `sm up`. Resolved as singleton because it caches state
+        // for a short interval.
+        builder.Services.Configure<MaintenanceModeOptions>(_ => { });
+        builder.Services.TryAddSingleton<IMaintenanceStateProvider, FileSystemMaintenanceStateProvider>();
 
         if (options.EnableHealthChecks)
         {
@@ -292,6 +300,11 @@ public static partial class SimpleModuleHostExtensions
         // favicon loads on anonymous pages like /Identity/Account/Login. Static
         // files are intentionally public.
         app.MapStaticAssets().AllowAnonymous();
+
+        // Maintenance gate runs after static assets (so the 503 page can load
+        // its CSS) but before auth (so anonymous users get 503 rather than a
+        // login redirect). Health probes are exempt inside the middleware.
+        app.UseMiddleware<MaintenanceModeMiddleware>();
 
         app.UseAuthentication();
         app.UseAuthorization();
