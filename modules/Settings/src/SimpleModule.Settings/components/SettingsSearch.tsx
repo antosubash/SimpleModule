@@ -1,5 +1,5 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { Input, Toggle } from '@simplemodule/ui';
+import { SearchInput, Toggle } from '@simplemodule/ui';
 import { SettingsKeys } from '@/Locales/keys';
 
 interface SettingsSearchProps {
@@ -21,13 +21,12 @@ export default function SettingsSearch({
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-      <Input
+      <SearchInput
         aria-label={t(SettingsKeys.AdminSettings.SearchPlaceholder)}
         placeholder={t(SettingsKeys.AdminSettings.SearchPlaceholder)}
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         className="sm:max-w-xs"
-        prefix={<span aria-hidden="true">&#128269;</span>}
       />
       <Toggle
         pressed={showOnlyModified}

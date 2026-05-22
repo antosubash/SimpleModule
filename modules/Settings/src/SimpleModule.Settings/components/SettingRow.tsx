@@ -1,5 +1,5 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { Badge, Button } from '@simplemodule/ui';
+import { Badge, Button, Label } from '@simplemodule/ui';
 import { SettingsKeys } from '@/Locales/keys';
 import type { SettingDefinition } from './SettingField';
 import SettingField from './SettingField';
@@ -22,10 +22,10 @@ interface SettingRowProps {
   namespace: 'AdminSettings' | 'UserSettings';
 }
 
-const scopeColorMap: Record<number, string> = {
-  0: 'bg-danger-bg text-danger-text',
-  1: 'bg-info-bg text-primary',
-  2: 'bg-success-bg text-success-text',
+const scopeBadgeVariant: Record<number, 'danger' | 'info' | 'success'> = {
+  0: 'danger',
+  1: 'info',
+  2: 'success',
 };
 
 function formatResolved(value: unknown): string | null {
@@ -48,7 +48,7 @@ export default function SettingRow({
   const { t } = useTranslation('Settings');
   const keys = SettingsKeys[namespace];
 
-  const scopeClass = scopeColorMap[definition.scope] ?? 'bg-surface-raised text-text-secondary';
+  const scopeVariant = scopeBadgeVariant[definition.scope] ?? 'default';
 
   const scopeLabel = (() => {
     switch (definition.scope) {
@@ -79,10 +79,10 @@ export default function SettingRow({
       : undefined;
 
   return (
-    <div className="py-5 first:pt-0 last:pb-0">
+    <div className="px-6 py-5 first:rounded-t-2xl last:rounded-b-2xl">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1.5">
         <div className="flex flex-wrap items-center gap-2 min-w-0">
-          <label htmlFor={definition.key} className="text-sm font-semibold text-text">
+          <Label htmlFor={definition.key} className="text-sm font-semibold text-text">
             {definition.displayName}
             {definition.required && (
               <span
@@ -93,12 +93,8 @@ export default function SettingRow({
                 *
               </span>
             )}
-          </label>
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${scopeClass}`}
-          >
-            {scopeLabel}
-          </span>
+          </Label>
+          <Badge variant={scopeVariant}>{scopeLabel}</Badge>
           {valueInfo.isOverridden && <Badge variant="warning">{t(keys.Overridden)}</Badge>}
           {!valueInfo.isOverridden && namespace === 'UserSettings' && (
             <Badge variant="default">{t(keys.Default)}</Badge>

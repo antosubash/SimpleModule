@@ -1,3 +1,4 @@
+import { Card } from '@simplemodule/ui';
 import { toAnchorId } from './SettingsGroupNav';
 
 interface SettingGroupProps {
@@ -11,16 +12,18 @@ export default function SettingGroup({ group, children }: SettingGroupProps) {
       id={toAnchorId(group)}
       aria-labelledby={`${toAnchorId(group)}-heading`}
       data-testid="setting-card"
+      className="scroll-mt-32"
     >
       <h2
         id={`${toAnchorId(group)}-heading`}
-        className="sticky top-14 z-20 -mx-4 bg-surface/95 backdrop-blur-sm px-4 py-2 text-xs font-semibold uppercase tracking-widest text-text-muted border-b border-border sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        className="text-base font-bold mb-3 flex items-center gap-2 before:content-[''] before:w-1 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-primary before:to-accent"
+        style={{ fontFamily: 'var(--font-display)' }}
       >
         {group}
       </h2>
-      <div className="bg-surface rounded-xl border border-border divide-y divide-border px-4 sm:px-6 mt-3">
+      <Card padding="none" className="divide-y divide-border">
         {children}
-      </div>
+      </Card>
     </section>
   );
 }
