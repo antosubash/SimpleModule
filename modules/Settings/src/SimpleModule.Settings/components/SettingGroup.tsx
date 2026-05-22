@@ -1,30 +1,22 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@simplemodule/ui';
-import type { SettingDefinition } from './SettingField';
-import SettingField from './SettingField';
+import { toAnchorId } from './SettingsGroupNav';
 
 interface SettingGroupProps {
   group: string;
-  definitions: SettingDefinition[];
-  values: Record<string, string | null>;
-  onSave: (key: string, value: string, scope: number) => Promise<void>;
+  children: React.ReactNode;
 }
 
-export default function SettingGroup({ group, definitions, values, onSave }: SettingGroupProps) {
+export default function SettingGroup({ group, children }: SettingGroupProps) {
   return (
-    <Card data-testid="setting-card">
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle>{group}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
-        {definitions.map((def) => (
-          <div key={def.key}>
-            <label htmlFor={def.key} className="text-sm font-medium">
-              {def.displayName}
-            </label>
-            <SettingField definition={def} currentValue={values[def.key]} onSave={onSave} />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <section id={toAnchorId(group)} aria-labelledby={`${toAnchorId(group)}-heading`}>
+      <h2
+        id={`${toAnchorId(group)}-heading`}
+        className="sticky top-14 z-20 -mx-4 bg-surface/95 backdrop-blur-sm px-4 py-2 text-xs font-semibold uppercase tracking-widest text-text-muted border-b border-border sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+      >
+        {group}
+      </h2>
+      <div className="bg-surface rounded-xl border border-border divide-y divide-border px-4 sm:px-6 mt-3">
+        {children}
+      </div>
+    </section>
   );
 }
