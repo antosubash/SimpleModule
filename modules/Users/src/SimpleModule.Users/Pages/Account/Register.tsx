@@ -31,14 +31,19 @@ export default function Register({ returnUrl, externalLogins, errors }: Props) {
             <div
               className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center text-white text-xl font-bold shadow-lg"
               style={{
-                background: 'linear-gradient(135deg,var(--color-primary),var(--color-accent))',
+                background: 'var(--color-primary)',
               }}
             >
               S
             </div>
             <h1
-              className="text-2xl font-extrabold tracking-tight"
-              style={{ fontFamily: "'Sora',sans-serif" }}
+              className="text-3xl tracking-tight"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontWeight: 500,
+                fontVariationSettings: '"opsz" 144, "SOFT" 30',
+                letterSpacing: '-0.035em',
+              }}
             >
               Create an account
             </h1>

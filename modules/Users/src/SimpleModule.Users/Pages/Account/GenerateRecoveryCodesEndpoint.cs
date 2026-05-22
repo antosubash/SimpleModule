@@ -9,6 +9,8 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Pages.Account;
 
+// Recovery codes are stored hashed: there is no "retrieve codes" endpoint by design.
+// The plaintext is only available at generation time (here and on regenerate).
 public class GenerateRecoveryCodesEndpoint : IViewEndpoint
 {
     public const string Route = UsersConstants.Routes.GenerateRecoveryCodes;

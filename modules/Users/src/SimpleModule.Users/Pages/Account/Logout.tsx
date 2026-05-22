@@ -18,7 +18,10 @@ export default function Logout({ isAuthenticated }: Props) {
           {isAuthenticated ? (
             <Card>
               <CardContent className="p-8">
-                <h1 className="text-xl font-bold mb-2" style={{ fontFamily: "'Sora',sans-serif" }}>
+                <h1
+                  className="text-xl font-bold mb-2"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
                   Log out?
                 </h1>
                 <p className="text-sm text-text-muted mb-6">
@@ -40,7 +43,10 @@ export default function Logout({ isAuthenticated }: Props) {
           ) : (
             <Card>
               <CardContent className="p-8">
-                <h1 className="text-xl font-bold mb-2" style={{ fontFamily: "'Sora',sans-serif" }}>
+                <h1
+                  className="text-xl font-bold mb-2"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
                   Logged out
                 </h1>
                 <p className="text-sm text-text-muted mb-6">

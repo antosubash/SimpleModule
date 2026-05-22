@@ -1,6 +1,14 @@
 // Auto-generated from [Dto] types — do not edit
-export interface ModuleJobRegistration {
-  jobType: any;
+export interface ScheduledJobDto {
+  name: string;
+  jobType: string;
+  cronExpression: string;
+  timeZoneId: string;
+  withoutOverlapping: boolean;
+  onOneServer: boolean;
+  isEnabled: boolean;
+  lastRunAt: string | null;
+  nextRunAt: string | null;
 }
 
 export interface JobDetailDto {

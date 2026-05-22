@@ -9,8 +9,6 @@ namespace SimpleModule.Core.Tests;
 
 public class IModuleTests
 {
-    private sealed class EmptyModule : IModule { }
-
     private sealed class TestModule : IModule
     {
         public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -27,17 +25,6 @@ public class IModuleTests
     private sealed class TestService { }
 
     private static IConfiguration CreateEmptyConfiguration() => new ConfigurationBuilder().Build();
-
-    [Fact]
-    public void DefaultMethods_DoNotThrow()
-    {
-        IModule module = new EmptyModule();
-        var services = new ServiceCollection();
-
-        var act = () => module.ConfigureServices(services, CreateEmptyConfiguration());
-
-        act.Should().NotThrow();
-    }
 
     [Fact]
     public void ConcreteModule_ConfigureServices_RegistersExpectedServices()

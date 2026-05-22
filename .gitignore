@@ -430,6 +430,9 @@ template/SimpleModule.Host/wwwroot/*
 # Tailwind CSS module scan directory
 template/SimpleModule.Host/Styles/_scan/
 
+# Design system preview compiled CSS (derived from theme.css + Tailwind)
+docs/design-system/app.css
+
 *.stamp
 
 # k6 load test output

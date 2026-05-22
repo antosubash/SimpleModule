@@ -251,11 +251,23 @@ public sealed class ProjectTemplates
 
         var content = File.ReadAllText(path);
 
-        // Replace file includes: monorepo paths → project paths
-        content = content.Replace(
-            "\"modules/**\", \"packages/**\", \"template/**\", \"tests/**\"",
-            "\"src/**\", \"tests/**\"",
-            StringComparison.Ordinal
+        // The monorepo's files.includes references top-level directories (modules/**,
+        // packages/**, template/**) that don't exist in scaffolded projects. Swap the
+        // whole array; leave the rest of biome.json verbatim.
+        var scaffoldedIncludes =
+            "\"includes\": [\n"
+            + "      \"src/**\",\n"
+            + "      \"tests/**\",\n"
+            + "      \"!**/wwwroot\",\n"
+            + "      \"!src/modules/*/src/*/types.ts\",\n"
+            + "      \"!src/*.Host/ClientApp/routes.ts\"\n"
+            + "    ]";
+
+        content = Regex.Replace(
+            content,
+            "\"includes\"\\s*:\\s*\\[[^\\]]*\\]",
+            scaffoldedIncludes,
+            RegexOptions.Singleline
         );
 
         return content;
@@ -716,7 +728,9 @@ public sealed class ProjectTemplates
                 "check": "biome check .",
                 "check:fix": "biome check --write .",
                 "build": "cross-env VITE_MODE=prod npm run build --workspaces --if-present",
-                "build:dev": "cross-env VITE_MODE=dev npm run build --workspaces --if-present"
+                "build:dev": "cross-env VITE_MODE=dev npm run build --workspaces --if-present",
+                "generate:types": "dotnet build src/{{projectName}}.Host && node scripts/extract-ts-types.mjs src/{{projectName}}.Host/obj/Debug/net10.0/generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator src/modules",
+                "generate:routes": "dotnet build src/{{projectName}}.Host && node scripts/extract-routes.mjs src/{{projectName}}.Host/obj/Debug/net10.0/generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator src/{{projectName}}.Host/ClientApp/routes.ts"
               },
               "devDependencies": {
                 "@biomejs/biome": "^2.4.10",
@@ -742,6 +756,12 @@ public sealed class ProjectTemplates
             }
             """;
     }
+
+    public static string ExtractTsTypesScript() =>
+        EmbeddedResourceReader.ReadTemplate("Templates.scripts.extract-ts-types.mjs");
+
+    public static string ExtractRoutesScript() =>
+        EmbeddedResourceReader.ReadTemplate("Templates.scripts.extract-routes.mjs");
 
     private static string FallbackBiomeJson() =>
         """
@@ -777,7 +797,13 @@ public sealed class ProjectTemplates
                 }
               },
               "files": {
-                "includes": ["src/**", "tests/**", "!**/wwwroot"]
+                "includes": [
+                  "src/**",
+                  "tests/**",
+                  "!**/wwwroot",
+                  "!src/modules/*/src/*/types.ts",
+                  "!src/*.Host/ClientApp/routes.ts"
+                ]
               }
             }
             """;

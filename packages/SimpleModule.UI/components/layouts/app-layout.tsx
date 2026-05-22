@@ -84,12 +84,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Link
           href="/"
           className="flex items-center gap-2 no-underline font-bold text-text"
-          style={{ fontFamily: "'Sora',sans-serif" }}
+          style={{ fontFamily: 'var(--font-display)' }}
         >
           <span
             className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
             style={{
-              background: 'linear-gradient(135deg,var(--color-primary),var(--color-accent))',
+              background: 'var(--color-primary)',
             }}
           >
             S
@@ -107,12 +107,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/"
               className="flex items-center gap-2.5 no-underline font-bold text-text group"
-              style={{ fontFamily: "'Sora',sans-serif" }}
+              style={{ fontFamily: 'var(--font-display)' }}
             >
               <span
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105 shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg,var(--color-primary),var(--color-accent))',
+                  background: 'var(--color-primary)',
                 }}
               >
                 S

@@ -156,6 +156,41 @@ All paths are normalized to forward slashes internally. The `StoragePathHelper` 
 - Leading/trailing slashes are normalized
 - File names and folder names are extracted consistently across providers
 
+## Signed URLs
+
+Use `ISignedUrlGenerator` when you need to hand a recipient a time-bound, anonymous link to a protected endpoint — typical for download links pasted into emails, share-by-link flows, or browser redirects to a file the user is allowed to fetch right now but not in general.
+
+```csharp
+public sealed class ShareReportEndpoint(ISignedUrlGenerator urls) : IEndpoint
+{
+    public void Map(IEndpointRouteBuilder app) =>
+        app.MapPost("/api/reports/{id}/share", (ReportId id) =>
+        {
+            var url = urls.Sign(
+                path: $"/api/reports/{id}/export",
+                expiresAt: DateTimeOffset.UtcNow.AddMinutes(15),
+                purpose: "report-export");
+
+            return Results.Ok(new { url });
+        });
+}
+```
+
+On the endpoint that consumes the link, gate it with `RequireSignedUrl(purpose)`:
+
+```csharp
+public sealed class ExportByLinkEndpoint : IEndpoint
+{
+    public void Map(IEndpointRouteBuilder app) =>
+        app.MapGet("/api/reports/{id}/export", Handle)
+           .RequireSignedUrl(purpose: "report-export");
+}
+```
+
+`RequireSignedUrl` calls `AllowAnonymous()` and replaces the auth check with a signature check — a missing, tampered, expired, or wrong-purpose link returns `403`. The validated `SignedUrlClaims` (path, purpose, expiry) are stashed on `HttpContext.Items` and retrievable via `httpContext.GetSignedUrlClaims()` if the handler needs them.
+
+The `purpose` string is a free-form scope. Use distinct purposes per flow (`report-export`, `email-confirm`, `account-unlock`) so a leaked link from one flow cannot be replayed against another endpoint.
+
 ## Next Steps
 
 - [Configuration](/reference/configuration) -- all storage configuration options

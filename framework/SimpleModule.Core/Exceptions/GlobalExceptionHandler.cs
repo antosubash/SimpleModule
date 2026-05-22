@@ -68,7 +68,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
 
         httpContext.Response.StatusCode = statusCode;
 
-        if (httpContext.Request.Headers.ContainsKey("X-Inertia"))
+        if (httpContext.Request.IsInertia())
         {
             return await WriteInertiaErrorAsync(httpContext, statusCode, title, detail);
         }
@@ -112,8 +112,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             version = InertiaMiddleware.Version,
         };
 
-        httpContext.Response.Headers["X-Inertia"] = "true";
-        httpContext.Response.Headers["Vary"] = "X-Inertia";
+        httpContext.Response.Headers[InertiaHttpExtensions.InertiaHeader] = "true";
+        httpContext.Response.Headers["Vary"] = InertiaHttpExtensions.InertiaHeader;
         httpContext.Response.ContentType = "application/json";
         var json = JsonSerializer.Serialize(pageData, InertiaJsonOptions);
         await httpContext.Response.WriteAsync(json);

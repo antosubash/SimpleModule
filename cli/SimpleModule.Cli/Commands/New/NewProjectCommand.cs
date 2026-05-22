@@ -133,6 +133,18 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             ProjectTemplates.NugetConfig(solution?.RootPath)
         );
 
+        // ── Type-generation scripts ───────────────────────────
+        var scriptsDir = Path.Combine(rootDir, "scripts");
+        Directory.CreateDirectory(scriptsDir);
+        File.WriteAllText(
+            Path.Combine(scriptsDir, "extract-ts-types.mjs"),
+            ProjectTemplates.ExtractTsTypesScript()
+        );
+        File.WriteAllText(
+            Path.Combine(scriptsDir, "extract-routes.mjs"),
+            ProjectTemplates.ExtractRoutesScript()
+        );
+
         // ── Host project ──────────────────────────────────────
         File.WriteAllText(
             Path.Combine(hostDir, $"{projectName}.Host.csproj"),
@@ -290,6 +302,8 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         Plan(Path.Combine(rootDir, "tsconfig.json"));
         Plan(Path.Combine(rootDir, ".editorconfig"));
         Plan(Path.Combine(rootDir, "nuget.config"));
+        Plan(Path.Combine(rootDir, "scripts", "extract-ts-types.mjs"));
+        Plan(Path.Combine(rootDir, "scripts", "extract-routes.mjs"));
 
         // Host project files
         Plan(Path.Combine(hostDir, $"{projectName}.Host.csproj"));
