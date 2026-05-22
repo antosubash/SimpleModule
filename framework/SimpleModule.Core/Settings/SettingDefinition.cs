@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using SimpleModule.Core;
 
 namespace SimpleModule.Core.Settings;
 
-[Dto]
 public class SettingDefinition
 {
     public string Key { get; set; } = string.Empty;

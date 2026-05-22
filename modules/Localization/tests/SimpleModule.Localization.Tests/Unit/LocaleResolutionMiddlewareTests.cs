@@ -232,12 +232,30 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
             return Task.FromResult(language);
         }
 
+        public Task<System.Text.Json.JsonElement?> ResolveUserSettingElementAsync(
+            string key,
+            string userId
+        )
+        {
+            if (language is null)
+                return Task.FromResult<System.Text.Json.JsonElement?>(null);
+            using var doc = System.Text.Json.JsonDocument.Parse(
+                System.Text.Json.JsonSerializer.Serialize(language)
+            );
+            return Task.FromResult<System.Text.Json.JsonElement?>(doc.RootElement.Clone());
+        }
+
         public Task SetSettingAsync(
             string key,
-            string value,
+            System.Text.Json.JsonElement value,
             SettingScope scope,
             string? userId = null
         )
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task SetManyAsync(IReadOnlyList<BulkSettingUpdate> updates)
         {
             return Task.CompletedTask;
         }
@@ -247,9 +265,25 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
             return Task.CompletedTask;
         }
 
-        public Task<IEnumerable<Setting>> GetSettingsAsync(SettingsFilter? filter = null)
+        public Task ResetToDefaultAsync(string key, SettingScope scope, string? userId = null)
         {
-            return Task.FromResult<IEnumerable<Setting>>([]);
+            return Task.CompletedTask;
+        }
+
+        public Task<IEnumerable<SettingValueDto>> GetSettingValuesAsync(
+            SettingsFilter? filter = null
+        )
+        {
+            return Task.FromResult<IEnumerable<SettingValueDto>>([]);
+        }
+
+        public Task<SettingValueDto?> GetSettingValueAsync(
+            string key,
+            SettingScope scope,
+            string? userId = null
+        )
+        {
+            return Task.FromResult<SettingValueDto?>(null);
         }
     }
 

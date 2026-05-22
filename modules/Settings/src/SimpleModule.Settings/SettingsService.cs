@@ -295,13 +295,7 @@ public sealed partial class SettingsService(
         };
     }
 
-    private bool IsSensitive(string key)
-    {
-        // Sensitive flag will be added to SettingDefinition by Specialist 1.
-        // Returning false until then keeps the build passing.
-        _ = definitions.GetDefinition(key);
-        return false;
-    }
+    private bool IsSensitive(string key) => definitions.GetDefinition(key)?.Sensitive ?? false;
 
     private static JsonElement? ParseElement(string? raw)
     {
