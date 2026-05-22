@@ -13,6 +13,11 @@ interface NumberInputProps extends RootHTMLProps {
   min?: number;
   /** Inclusive maximum value. */
   max?: number;
+  /**
+   * Value to restore when the user clears the input and blurs without typing
+   * a new number. Defaults to `min` when provided, otherwise `0`.
+   */
+  emptyFallback?: number;
 }
 
 const clamp = (n: number, min?: number, max?: number) => {
@@ -22,14 +27,54 @@ const clamp = (n: number, min?: number, max?: number) => {
 };
 
 const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ className, value, onChange, step = 1, min, max, disabled, ...props }, ref) => {
+  (
+    { className, value, onChange, step = 1, min, max, disabled, emptyFallback, onBlur, ...props },
+    ref,
+  ) => {
+    // Local string state mirrors `value` so the user can type freely (including
+    // an empty string while editing) without the controlled prop snapping the
+    // field back. The numeric `value` is the source of truth on render/blur.
+    const [display, setDisplay] = React.useState(String(value));
+    const valueRef = React.useRef(value);
+
+    React.useEffect(() => {
+      if (value !== valueRef.current) {
+        setDisplay(String(value));
+        valueRef.current = value;
+      }
+    }, [value]);
+
     const atMin = typeof min === 'number' && value <= min;
     const atMax = typeof max === 'number' && value >= max;
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const next = Number.parseFloat(e.target.value);
+      const raw = e.target.value;
+      setDisplay(raw);
+      if (raw === '' || raw === '-') return; // mid-edit; don't emit yet
+      const next = Number.parseFloat(raw);
       if (Number.isNaN(next)) return;
-      onChange(clamp(next, min, max));
+      const clamped = clamp(next, min, max);
+      valueRef.current = clamped;
+      onChange(clamped);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      if (display === '' || display === '-' || Number.isNaN(Number.parseFloat(display))) {
+        const restore = emptyFallback ?? min ?? 0;
+        setDisplay(String(restore));
+        if (restore !== value) {
+          valueRef.current = restore;
+          onChange(restore);
+        }
+      }
+      onBlur?.(e);
+    };
+
+    const setNumeric = (next: number) => {
+      const clamped = clamp(next, min, max);
+      setDisplay(String(clamped));
+      valueRef.current = clamped;
+      onChange(clamped);
     };
 
     return (
@@ -39,7 +84,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           variant="secondary"
           size="sm"
           className="rounded-r-none border-r-0 px-3"
-          onClick={() => onChange(clamp(value - step, min, max))}
+          onClick={() => setNumeric(value - step)}
           disabled={disabled || atMin}
           aria-label="Decrement"
         >
@@ -52,6 +97,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
             stroke="currentColor"
             strokeWidth="2.5"
             strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
@@ -67,8 +113,9 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
             // Hide the native spinner so our custom controls are the only affordance.
             '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
           )}
-          value={value}
+          value={display}
           onChange={handleInput}
+          onBlur={handleBlur}
           step={step}
           min={min}
           max={max}
@@ -80,7 +127,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           variant="secondary"
           size="sm"
           className="rounded-l-none border-l-0 px-3"
-          onClick={() => onChange(clamp(value + step, min, max))}
+          onClick={() => setNumeric(value + step)}
           disabled={disabled || atMax}
           aria-label="Increment"
         >
@@ -93,6 +140,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
             stroke="currentColor"
             strokeWidth="2.5"
             strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />

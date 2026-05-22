@@ -437,6 +437,12 @@
   .z-50 {
     z-index: 50;
   }
+  .z-\[60\] {
+    z-index: 60;
+  }
+  .z-\[90\] {
+    z-index: 90;
+  }
   .z-\[100\] {
     z-index: 100;
   }
@@ -3583,6 +3589,16 @@
       appearance: none;
     }
   }
+  .\[\&\:\:-webkit-search-cancel-button\]\:appearance-none {
+    &::-webkit-search-cancel-button {
+      appearance: none;
+    }
+  }
+  .\[\&\:\:-webkit-search-decoration\]\:appearance-none {
+    &::-webkit-search-decoration {
+      appearance: none;
+    }
+  }
   .\[\&\:has\(\[aria-selected\]\)\]\:bg-primary-subtle {
     &:has([aria-selected]) {
       background-color: var(--color-primary-subtle);
@@ -4866,7 +4882,6 @@
     width: 100%;
     font-size: var(--text-sm);
     line-height: var(--tw-leading, var(--text-sm--line-height));
-    border-collapse: collapse;
   }
   table th {
     padding-inline: calc(var(--spacing) * 4);
@@ -4904,10 +4919,10 @@
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
-  table tbody tr {
+  table[data-interactive] tbody tr {
     transition: background-color var(--duration-fast) var(--ease-out);
   }
-  table tbody tr:hover {
+  table[data-interactive] tbody tr:hover {
     background: var(--color-surface-raised);
   }
   ::-webkit-scrollbar {

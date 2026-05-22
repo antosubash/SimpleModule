@@ -864,7 +864,6 @@
   /* biome-ignore lint/style/noDescendingSpecificity: base layer table styles in @layer are intentional */
   table {
     @apply w-full text-sm;
-    border-collapse: collapse;
   }
   /* biome-ignore lint/style/noDescendingSpecificity: base layer table styles require element+element selectors */
   table th {
@@ -895,10 +894,13 @@
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
-  table tbody tr {
+  /* Row hover affordance — opt in by setting `data-interactive` on the
+     <table> so read-only tables (recovery codes, dashboard error lists,
+     RateLimiting policy summaries) don't pick up an interactive cue. */
+  table[data-interactive] tbody tr {
     transition: background-color var(--duration-fast) var(--ease-out);
   }
-  table tbody tr:hover {
+  table[data-interactive] tbody tr:hover {
     background: var(--color-surface-raised);
   }
 

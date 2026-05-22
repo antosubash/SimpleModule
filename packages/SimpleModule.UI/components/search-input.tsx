@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { cn } from '../lib/utils';
 import { Input, type InputProps } from './input';
 import { Kbd } from './kbd';
 
@@ -25,13 +26,19 @@ const SearchIcon = () => (
 );
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ shortcut, placeholder = 'Search…', suffix, ...props }, ref) => (
+  ({ className, shortcut, placeholder = 'Search…', suffix, ...props }, ref) => (
     <Input
       ref={ref}
       type="search"
       placeholder={placeholder}
       prefix={<SearchIcon />}
       suffix={suffix ?? (shortcut ? <Kbd>{shortcut}</Kbd> : undefined)}
+      // Hide the native webkit/blink search clear (×) button so it does not
+      // overlap or compete with the suffix slot.
+      className={cn(
+        '[&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none',
+        className,
+      )}
       {...props}
     />
   ),

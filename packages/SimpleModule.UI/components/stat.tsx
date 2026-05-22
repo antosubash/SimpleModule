@@ -3,22 +3,27 @@ import * as React from 'react';
 import { cn } from '../lib/utils';
 
 const statVariants = cva(
-  'bg-surface border border-border rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-200',
+  'bg-surface border border-border rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-200 text-left',
   {
     variants: {
       interactive: {
-        true: 'hover:border-border-strong hover:shadow-md hover:-translate-y-px cursor-pointer',
+        true: 'hover:border-border-strong hover:shadow-md cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-primary-ring',
+        false: '',
+      },
+      lift: {
+        true: 'hover:-translate-y-px',
         false: '',
       },
     },
     defaultVariants: {
       interactive: false,
+      lift: false,
     },
   },
 );
 
 interface StatProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'children'>,
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'children'>,
     VariantProps<typeof statVariants> {
   /** Headline value, e.g. `14`, `2.7`, `98.4`, `v1.4`. */
   value: React.ReactNode;
@@ -91,22 +96,56 @@ const TrendIcon = ({ trend }: { trend: NonNullable<StatProps['trend']> }) => {
   );
 };
 
-const Stat = React.forwardRef<HTMLDivElement, StatProps>(
-  ({ className, interactive, value, unit, label, trend, change, ...props }, ref) => (
-    <div ref={ref} className={cn(statVariants({ interactive }), className)} {...props}>
-      <div className="flex items-baseline gap-2">
-        <span className="dash-stat">{value}</span>
-        {unit && <span className="text-sm font-normal text-text-muted">{unit}</span>}
-        {trend && (
-          <span className={cn('inline-flex items-center', TREND_COLOR[trend])}>
-            <TrendIcon trend={trend} />
-          </span>
-        )}
+/**
+ * Dashboard tile metric.
+ *
+ * When `onClick` is provided the Stat renders as a `<button>` so it is fully
+ * keyboard-operable and exposes the correct semantic role to assistive tech.
+ * Otherwise it renders as a plain `<div>`.
+ */
+const Stat = React.forwardRef<HTMLElement, StatProps>(
+  ({ className, interactive, lift, value, unit, label, trend, change, onClick, ...props }, ref) => {
+    const isInteractive = interactive ?? onClick != null;
+    const body = (
+      <>
+        <div className="flex items-baseline gap-2">
+          <span className="dash-stat">{value}</span>
+          {unit && <span className="text-sm font-normal text-text-muted">{unit}</span>}
+          {trend && (
+            <span className={cn('inline-flex items-center', TREND_COLOR[trend])}>
+              <TrendIcon trend={trend} />
+            </span>
+          )}
+        </div>
+        <p className="dash-label">{label}</p>
+        {change && <p className="mt-1 text-xs text-text-muted">{change}</p>}
+      </>
+    );
+
+    if (isInteractive) {
+      return (
+        <button
+          ref={ref as React.Ref<HTMLButtonElement>}
+          type="button"
+          onClick={onClick as React.MouseEventHandler<HTMLButtonElement>}
+          className={cn(statVariants({ interactive: true, lift }), 'w-full', className)}
+          {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+        >
+          {body}
+        </button>
+      );
+    }
+
+    return (
+      <div
+        ref={ref as React.Ref<HTMLDivElement>}
+        className={cn(statVariants({ interactive: false, lift }), className)}
+        {...(props as React.HTMLAttributes<HTMLDivElement>)}
+      >
+        {body}
       </div>
-      <p className="dash-label">{label}</p>
-      {change && <p className="mt-1 text-xs text-text-muted">{change}</p>}
-    </div>
-  ),
+    );
+  },
 );
 Stat.displayName = 'Stat';
 
