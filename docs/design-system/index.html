@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SimpleModule · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Geist:wght@300..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./app.css">
+<script>
+  var stored = localStorage.getItem('theme');
+  var shouldBeDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (shouldBeDark) document.documentElement.classList.add('dark');
+  function toggleTheme() {
+    var d = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', d ? 'dark' : 'light');
+    var t = document.getElementById('theme-label');
+    if (t) t.textContent = d ? 'Dark' : 'Light';
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    var t = document.getElementById('theme-label');
+    if (t) t.textContent = document.documentElement.classList.contains('dark') ? 'Dark' : 'Light';
+  });
+</script>
+<style>
+  .ds-page { --ds-gap: 6rem; --ds-inner-gap: 2.5rem; }
+  .ds-section { padding-block: var(--ds-gap); border-top: 1px solid var(--color-border); }
+  .ds-section:first-of-type { padding-top: 2rem; border-top: none; }
+  #hero { padding-bottom: calc(var(--ds-gap) + 1rem); }
+  #hero h1 { margin-top: 1rem; }
+  .ds-section-header { margin-bottom: var(--ds-inner-gap); }
+  .ds-eyebrow { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+  .ds-h2 { font-family: var(--font-display); font-variation-settings: "opsz" 144, "SOFT" 30; font-weight: 500; font-size: clamp(1.75rem, 3.5vw, 2.5rem); letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 0.75rem; }
+  .ds-h3 { font-family: var(--font-display); font-variation-settings: "opsz" 144, "SOFT" 20; font-weight: 500; font-size: 1.25rem; letter-spacing: -0.02em; }
+  .ds-lede { color: var(--color-text-secondary); max-width: 56ch; line-height: 1.6; }
+  .ds-grid { display: grid; gap: 1rem; }
+  .ds-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ds-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ds-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ds-grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .ds-grid-3, .ds-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ds-grid-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 640px) {
+    .ds-grid-2, .ds-grid-3, .ds-grid-4 { grid-template-columns: minmax(0, 1fr); }
+    .ds-grid-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .ds-swatch { aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--color-border); position: relative; overflow: hidden; }
+  .ds-swatch-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 0.5rem; display: flex; justify-content: space-between; gap: 0.5rem; }
+  .ds-swatch-label .ds-token { color: var(--color-text); }
+  .ds-swatch-label .ds-value { color: var(--color-text-muted); }
+  .ds-stack > * + * { margin-top: 1rem; }
+  .ds-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .ds-meta { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); }
+  .ds-spec-row { display: grid; grid-template-columns: 12rem 1fr; gap: 1.5rem; align-items: center; padding-block: 0.75rem; border-bottom: 1px solid var(--color-border); }
+  @media (max-width: 640px) {
+    .ds-spec-row { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; align-items: start; padding-block: 1rem; }
+  }
+  .ds-spec-row:last-child { border-bottom: none; }
+  .ds-spec-label { font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-text-secondary); }
+  .ds-tile-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); }
+  .ds-tile { padding: 1.25rem; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-surface); }
+  .ds-radius-block { background: var(--color-surface-raised); border: 1px solid var(--color-border); height: 4rem; }
+  .ds-shadow-block { width: 4rem; height: 4rem; border-radius: 12px; background: var(--color-surface); border: 1px solid var(--color-border); }
+  .ds-space-bar { background: var(--color-primary); height: 8px; border-radius: 4px; }
+  .ds-nav-preview { width: 16rem; max-width: 100%; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 18px; padding: 1rem 0.75rem; }
+  @media (max-width: 640px) { .ds-nav-preview { width: 100%; } }
+  .ds-toc { position: sticky; top: 1.5rem; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; max-height: calc(100vh - 3rem); overflow-y: auto; padding-right: 0.5rem; }
+  .ds-toc a { display: block; padding: 0.3rem 0 0.3rem 0.75rem; color: var(--color-text-muted); text-decoration: none; border-left: 1px solid transparent; }
+  .ds-toc a:hover { color: var(--color-text); border-left-color: var(--color-border-strong); }
+  .ds-toc p.ds-eyebrow { margin-top: 1.25rem; margin-bottom: 0.5rem; padding-left: 0.75rem; }
+  .ds-toc p.ds-eyebrow:first-child { margin-top: 0; }
+
+  /* Demo helpers — used inside component cards */
+  .demo-card { padding: 2rem; }
+  .demo-box {
+    background: var(--color-surface-sunken);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 2.5rem 1.5rem;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 14rem;
+  }
+  .demo-anatomy-label {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-muted);
+    display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+  .demo-anatomy-label::before {
+    content: ""; display: inline-block; width: 18px; height: 1px; background: var(--color-text-muted);
+  }
+  .state-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+  .state-cell { padding: 1rem; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+  .state-cell-label { font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-muted); }
+
+  /* Motion demo */
+  .motion-ball { width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--color-primary); display: block; }
+  .motion-track { position: relative; height: 1.75rem; background: var(--color-surface-sunken); border-radius: 999px; overflow: hidden; }
+  .motion-track .motion-ball { position: absolute; top: 0; left: 0; animation: slide 2s infinite alternate; }
+  .motion-track[data-ease="out"] .motion-ball { animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+  .motion-track[data-ease="in-out"] .motion-ball { animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  .motion-track[data-ease="spring"] .motion-ball { animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .motion-track[data-ease="linear"] .motion-ball { animation-timing-function: linear; }
+  @keyframes slide { to { left: calc(100% - 1.75rem); } }
+
+  /* Dialog/Sheet backdrop demo */
+  .ovl-backdrop { position: absolute; inset: 0; background: oklch(0 0 0 / 0.5); border-radius: 14px; }
+  .ovl-stage { position: relative; }
+
+  /* Toggle switch demo */
+  .switch { display: inline-flex; align-items: center; gap: 0.65rem; cursor: pointer; }
+  .switch-track { width: 2.5rem; height: 1.35rem; border-radius: 999px; background: var(--color-border-strong); position: relative; transition: background var(--duration-fast) var(--ease-out); }
+  .switch-thumb { position: absolute; top: 2px; left: 2px; width: calc(1.35rem - 4px); height: calc(1.35rem - 4px); border-radius: 50%; background: white; box-shadow: var(--shadow-sm); transition: transform var(--duration-fast) var(--ease-out); }
+  .switch[data-on="true"] .switch-track { background: var(--color-primary); }
+  .switch[data-on="true"] .switch-thumb { transform: translateX(1.15rem); }
+
+  /* Radio + Checkbox visuals */
+  .check, .radio { width: 1.05rem; height: 1.05rem; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--color-border-strong); background: var(--color-surface); }
+  .check { border-radius: 4px; }
+  .radio { border-radius: 50%; }
+  .check[data-on="true"], .radio[data-on="true"] { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+  .radio[data-on="true"]::after { content: ""; width: 0.5rem; height: 0.5rem; background: white; border-radius: 50%; }
+
+  /* Slider */
+  .slider { height: 6px; background: var(--color-border); border-radius: 999px; position: relative; }
+  .slider-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--color-primary); border-radius: 999px; }
+  .slider-thumb { position: absolute; top: 50%; width: 1rem; height: 1rem; border-radius: 50%; background: var(--color-primary); border: 2px solid var(--color-surface); transform: translate(-50%, -50%); box-shadow: var(--shadow-sm); }
+
+  /* Avatars */
+  .avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--color-surface-sunken); color: var(--color-text-secondary); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; border: 1px solid var(--color-border); position: relative; overflow: hidden; }
+  .avatar-status { position: absolute; bottom: 0; right: 0; width: 0.5rem; height: 0.5rem; border-radius: 50%; border: 2px solid var(--color-surface); background: var(--color-success); }
+  .avatar-group { display: inline-flex; }
+  .avatar-group .avatar { margin-left: -0.6rem; box-shadow: 0 0 0 2px var(--color-surface); }
+  .avatar-group .avatar:first-child { margin-left: 0; }
+
+  /* Breadcrumb */
+  .crumb { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--color-text-muted); }
+  .crumb a { color: var(--color-text-secondary); text-decoration: none; }
+  .crumb a:hover { color: var(--color-text); }
+  .crumb-sep { color: var(--color-border-strong); }
+  .crumb [aria-current="page"] { color: var(--color-text); }
+
+  /* Pagination */
+  .page-link { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 8px; font-family: var(--font-mono); font-size: 0.78rem; color: var(--color-text-secondary); background: var(--color-surface); }
+  .page-link:hover { background: var(--color-surface-raised); color: var(--color-text); }
+  .page-link[aria-current="page"] { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+
+  /* Tabs */
+  .tabs-list { display: flex; gap: 0; border-bottom: 1px solid var(--color-border); margin-bottom: 1.5rem; }
+  .tab { padding: 0.65rem 1rem; font-size: 0.875rem; color: var(--color-text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
+  .tab:hover { color: var(--color-text); }
+  .tab[aria-selected="true"] { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 500; }
+
+  /* Accordion */
+  .acc-item { border-bottom: 1px solid var(--color-border); }
+  .acc-item:last-child { border-bottom: none; }
+  .acc-trigger { display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; font-weight: 500; cursor: pointer; }
+  .acc-trigger svg { transition: transform var(--duration-fast) var(--ease-out); }
+  .acc-item[data-open="true"] .acc-trigger svg { transform: rotate(180deg); }
+  .acc-content { font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.6; padding-bottom: 1rem; }
+  .acc-item[data-open="false"] .acc-content { display: none; }
+
+  /* Skeleton */
+  .skel { display: block; background: var(--color-surface-raised); border-radius: 6px; overflow: hidden; position: relative; }
+  .skel::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--color-border) 50%, transparent); animation: shimmer 1.4s infinite; }
+  @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  /* Note: this is the ONLY linear-gradient on the page — shimmer mask, not a brand gradient. */
+
+  /* Progress */
+  .progress { height: 8px; background: var(--color-border); border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--color-primary); border-radius: 999px; transition: width var(--duration-moderate) var(--ease-out); }
+
+  /* Tooltip + Popover demo */
+  .tip {
+    position: absolute;
+    background: var(--color-dark); color: white;
+    padding: 0.35rem 0.6rem; border-radius: 6px;
+    font-size: 0.75rem; white-space: nowrap;
+    box-shadow: var(--shadow-md);
+  }
+  .tip::after {
+    content: ""; position: absolute;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+  }
+  .tip[data-side="top"] { bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+  .tip[data-side="top"]::after { top: 100%; left: 50%; transform: translateX(-50%); border-top: 5px solid var(--color-dark); }
+  .dark .tip { background: oklch(0.92 0.005 80); color: oklch(0.16 0.006 60); }
+  .dark .tip[data-side="top"]::after { border-top-color: oklch(0.92 0.005 80); }
+
+  /* Dropdown */
+  .dropdown {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    padding: 0.35rem;
+    min-width: 12rem;
+  }
+  .dropdown-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem 0.65rem; border-radius: 8px; font-size: 0.85rem; color: var(--color-text-secondary); cursor: pointer; }
+  .dropdown-item:hover, .dropdown-item[data-hover="true"] { background: var(--color-surface-raised); color: var(--color-text); }
+  .dropdown-divider { height: 1px; background: var(--color-border); margin: 0.3rem 0; }
+  .dropdown-shortcut { margin-left: auto; font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-muted); }
+
+  /* Anatomy callouts */
+  .anatomy { position: relative; display: inline-block; padding: 3rem 6rem; }
+  .anatomy-callout { position: absolute; font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-text-secondary); white-space: nowrap; }
+  .anatomy-callout::before { content: ""; position: absolute; background: var(--color-border-strong); }
+
+  /* Do / Don't markers */
+  .dd-card { padding: 1.25rem; border-radius: 14px; border: 1px solid var(--color-border); background: var(--color-surface); }
+  .dd-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .dd-do { color: var(--color-success); }
+  .dd-dont { color: var(--color-danger); }
+
+  /* Toast demo */
+  .toast {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    max-width: 24rem;
+  }
+  .toast-icon { width: 1.25rem; height: 1.25rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; shrink: 0; }
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+
+<div class="ds-page max-w-7xl mx-auto px-6 sm:px-10 pt-10 sm:pt-14 pb-32 relative z-10">
+
+  <!-- ============================================================
+       Header
+       ============================================================ -->
+  <header class="flex items-center justify-between" style="padding-bottom: 2.5rem; margin-bottom: 4rem; border-bottom: 1px solid var(--color-border);">
+    <div class="ds-row">
+      <span class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-semibold text-sm shrink-0" aria-hidden="true">S</span>
+      <div>
+        <div class="text-base font-medium" style="font-family: var(--font-display); letter-spacing: -0.02em;">SimpleModule</div>
+        <div class="ds-meta">design system · v2.0</div>
+      </div>
+    </div>
+    <div class="ds-row" style="gap: 0.5rem;">
+      <span class="ds-meta">Theme:</span>
+      <button onclick="toggleTheme()" class="btn-secondary btn-sm">
+        <span id="theme-label">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="grid lg:grid-cols-[1fr_13rem] gap-12">
+  <main style="min-width:0">
+
+  <!-- ============================================================
+       Hero
+       ============================================================ -->
+  <section id="hero" class="ds-section">
+    <p class="ds-eyebrow">Foundations</p>
+    <h1 style="font-family: var(--font-display); font-variation-settings: 'opsz' 144, 'SOFT' 50; font-weight: 400; font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1.02; letter-spacing: -0.04em; margin-bottom: 1.5rem;">
+      A measured<br><em style="font-variation-settings: 'opsz' 144, 'SOFT' 100;">design system</em><br>for SimpleModule.
+    </h1>
+    <p class="ds-lede" style="font-size: 1.125rem;">
+      One file of tokens. Two carefully tuned themes. Every component below
+      is a real piece of the system — toggle the theme to see every surface,
+      shadow, and accent re-balance.
+    </p>
+    <div class="ds-row mt-8" style="gap: 0.75rem;">
+      <a href="#typography" class="btn-primary">Browse foundations</a>
+      <a href="#components" class="btn-secondary">Skip to components</a>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       FOUNDATIONS
+       ===================================================================== -->
+
+  <!-- ============================================================
+       Typography
+       ============================================================ -->
+  <section id="typography" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Typography</p>
+      <h2 class="ds-h2">Two voices, both intentional.</h2>
+      <p class="ds-lede">
+        <strong style="color: var(--color-text);">Fraunces</strong> — a variable serif with <code class="font-mono text-xs">opsz</code> and <code class="font-mono text-xs">SOFT</code> axes — handles every display moment. <strong style="color: var(--color-text);">Geist</strong> carries body copy and UI labels. JetBrains Mono for code.
+      </p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Display 1 · h1</span><h1 style="font-size: 3rem; margin: 0; font-variation-settings: 'opsz' 144, 'SOFT' 50; font-weight: 500;">The quick brown fox</h1></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Display 2 · h2</span><h2 style="font-size: 2rem; margin: 0;">The quick brown fox</h2></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Display 3 · h3</span><h3 style="font-size: 1.5rem; margin: 0;">The quick brown fox jumps</h3></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Body large</span><p style="font-size: 1.125rem; line-height: 1.6; margin: 0;">The quick brown fox jumps over the lazy dog.</p></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Body · default</span><p style="font-size: 0.9375rem; line-height: 1.6; margin: 0; color: var(--color-text-secondary);">The quick brown fox jumps over the lazy dog and contemplates its options.</p></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Small · caption</span><p style="font-size: 0.8125rem; margin: 0; color: var(--color-text-muted);">Auxiliary text, captions, and metadata.</p></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Mono · code</span><code style="font-family: var(--font-mono); font-size: 0.85rem; background: var(--color-surface-sunken); padding: 2px 6px; border-radius: 4px;">const result = await fetch('/api/users');</code></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Label · uppercase</span><span class="dash-label" style="margin: 0;">section heading style</span></div>
+    </div>
+  </section>
+
+  <!-- Color -->
+  <section id="palette" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Color</p>
+      <h2 class="ds-h2">An OKLCH-tuned palette.</h2>
+      <p class="ds-lede">Every color is defined in OKLCH so light and dark variants share the same hue and chroma — only lightness shifts.</p>
+    </div>
+
+    <div style="margin-bottom: 2.5rem;">
+      <p class="ds-eyebrow">Brand</p>
+      <div class="ds-grid ds-grid-6">
+        <div><div class="ds-swatch" style="background: var(--color-primary)"></div><div class="ds-swatch-label"><span class="ds-token">primary</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-primary-hover)"></div><div class="ds-swatch-label"><span class="ds-token">primary‑hover</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-primary-light)"></div><div class="ds-swatch-label"><span class="ds-token">primary‑light</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-primary-subtle)"></div><div class="ds-swatch-label"><span class="ds-token">primary‑subtle</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-accent)"></div><div class="ds-swatch-label"><span class="ds-token">accent</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-accent-hover)"></div><div class="ds-swatch-label"><span class="ds-token">accent‑hover</span></div></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2.5rem;">
+      <p class="ds-eyebrow">Semantic</p>
+      <div class="ds-grid ds-grid-4">
+        <div><div class="ds-swatch" style="background: var(--color-success)"></div><div class="ds-swatch-label"><span class="ds-token">success</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-danger)"></div><div class="ds-swatch-label"><span class="ds-token">danger</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-warning)"></div><div class="ds-swatch-label"><span class="ds-token">warning</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-info)"></div><div class="ds-swatch-label"><span class="ds-token">info</span></div></div>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 2.5rem;">
+      <p class="ds-eyebrow">Surfaces</p>
+      <div class="ds-grid ds-grid-4">
+        <div><div class="ds-swatch" style="background: var(--color-surface)"></div><div class="ds-swatch-label"><span class="ds-token">surface</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-surface-raised)"></div><div class="ds-swatch-label"><span class="ds-token">surface‑raised</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-surface-sunken)"></div><div class="ds-swatch-label"><span class="ds-token">surface‑sunken</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-code-bg)"></div><div class="ds-swatch-label"><span class="ds-token">code‑bg</span></div></div>
+      </div>
+    </div>
+
+    <div>
+      <p class="ds-eyebrow">Text &amp; borders</p>
+      <div class="ds-grid ds-grid-6">
+        <div><div class="ds-swatch" style="background: var(--color-text)"></div><div class="ds-swatch-label"><span class="ds-token">text</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-text-secondary)"></div><div class="ds-swatch-label"><span class="ds-token">text‑secondary</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-text-muted)"></div><div class="ds-swatch-label"><span class="ds-token">text‑muted</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-border)"></div><div class="ds-swatch-label"><span class="ds-token">border</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-border-strong)"></div><div class="ds-swatch-label"><span class="ds-token">border‑strong</span></div></div>
+        <div><div class="ds-swatch" style="background: var(--color-text-inverse); border-color: var(--color-border-strong);"></div><div class="ds-swatch-label"><span class="ds-token">text‑inverse</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spacing -->
+  <section id="spacing" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Spacing</p>
+      <h2 class="ds-h2">A 4px-rooted scale.</h2>
+      <p class="ds-lede">Tailwind's default scale, used consistently. Components hit 2 / 3 / 4 / 5 / 6 internally; sections use 12 / 16 / 24.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">1 · 4px</span><div class="ds-space-bar" style="width: 4px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">2 · 8px</span><div class="ds-space-bar" style="width: 8px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">3 · 12px</span><div class="ds-space-bar" style="width: 12px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">4 · 16px</span><div class="ds-space-bar" style="width: 16px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">5 · 20px</span><div class="ds-space-bar" style="width: 20px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">6 · 24px</span><div class="ds-space-bar" style="width: 24px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">8 · 32px</span><div class="ds-space-bar" style="width: 32px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">12 · 48px</span><div class="ds-space-bar" style="width: 48px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">16 · 64px</span><div class="ds-space-bar" style="width: 64px;"></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">24 · 96px</span><div class="ds-space-bar" style="width: 96px;"></div></div>
+    </div>
+  </section>
+
+  <!-- Radius -->
+  <section id="radius" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Radius</p>
+      <h2 class="ds-h2">Generous, but not playful.</h2>
+      <p class="ds-lede">Default UI surfaces use <code class="font-mono text-xs">rounded-xl</code> (12px). Small controls use <code class="font-mono text-xs">rounded-lg</code> (8px).</p>
+    </div>
+    <div class="ds-grid ds-grid-6">
+      <div><div class="ds-radius-block" style="border-radius: 0"></div><div class="ds-swatch-label"><span class="ds-token">none</span><span class="ds-value">0</span></div></div>
+      <div><div class="ds-radius-block" style="border-radius: 4px"></div><div class="ds-swatch-label"><span class="ds-token">sm</span><span class="ds-value">4px</span></div></div>
+      <div><div class="ds-radius-block" style="border-radius: 8px"></div><div class="ds-swatch-label"><span class="ds-token">lg</span><span class="ds-value">8px</span></div></div>
+      <div><div class="ds-radius-block" style="border-radius: 12px"></div><div class="ds-swatch-label"><span class="ds-token">xl</span><span class="ds-value">12px</span></div></div>
+      <div><div class="ds-radius-block" style="border-radius: 16px"></div><div class="ds-swatch-label"><span class="ds-token">2xl</span><span class="ds-value">16px</span></div></div>
+      <div><div class="ds-radius-block" style="border-radius: 9999px"></div><div class="ds-swatch-label"><span class="ds-token">full</span><span class="ds-value">∞</span></div></div>
+    </div>
+  </section>
+
+  <!-- Elevation -->
+  <section id="shadow" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Elevation</p>
+      <h2 class="ds-h2">Five steps of depth.</h2>
+      <p class="ds-lede">Shadows tune themselves per mode — heavier &amp; darker in dark, soft &amp; warm in light.</p>
+    </div>
+    <div class="card" style="padding: 3rem 2rem; background: var(--color-surface-sunken);">
+      <div class="ds-row" style="justify-content: space-around; gap: 2.5rem;">
+        <div style="text-align:center;"><div class="ds-shadow-block" style="box-shadow: var(--shadow-xs);"></div><div class="ds-tile-label" style="margin-top:0.75rem;">xs</div></div>
+        <div style="text-align:center;"><div class="ds-shadow-block" style="box-shadow: var(--shadow-sm);"></div><div class="ds-tile-label" style="margin-top:0.75rem;">sm</div></div>
+        <div style="text-align:center;"><div class="ds-shadow-block" style="box-shadow: var(--shadow-md);"></div><div class="ds-tile-label" style="margin-top:0.75rem;">md</div></div>
+        <div style="text-align:center;"><div class="ds-shadow-block" style="box-shadow: var(--shadow-lg);"></div><div class="ds-tile-label" style="margin-top:0.75rem;">lg</div></div>
+        <div style="text-align:center;"><div class="ds-shadow-block" style="box-shadow: var(--shadow-xl);"></div><div class="ds-tile-label" style="margin-top:0.75rem;">xl</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Motion (NEW) -->
+  <section id="motion" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Motion</p>
+      <h2 class="ds-h2">Movement with intent.</h2>
+      <p class="ds-lede">Durations and easings are exposed as CSS variables. Use <code class="font-mono text-xs">--ease-out</code> for entries, <code class="font-mono text-xs">--ease-in-out</code> for transitions, <code class="font-mono text-xs">--ease-spring</code> sparingly for delight.</p>
+    </div>
+    <div class="card demo-card">
+      <p class="ds-eyebrow" style="margin-bottom:1rem;">Durations</p>
+      <div class="ds-spec-row"><span class="ds-spec-label">--duration-instant</span><span class="ds-meta" style="color:var(--color-text-secondary)">80ms · click feedback, focus rings</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--duration-fast</span><span class="ds-meta" style="color:var(--color-text-secondary)">150ms · hover states, small ui</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--duration-base</span><span class="ds-meta" style="color:var(--color-text-secondary)">200ms · default for transitions</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--duration-moderate</span><span class="ds-meta" style="color:var(--color-text-secondary)">300ms · accordion, sheet, dropdown</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--duration-slow</span><span class="ds-meta" style="color:var(--color-text-secondary)">500ms · page transitions only</span></div>
+
+      <p class="ds-eyebrow" style="margin: 2rem 0 1rem;">Easings (live)</p>
+      <div class="ds-grid ds-grid-2" style="gap: 1.25rem;">
+        <div><div class="ds-spec-label" style="margin-bottom: 0.5rem;">--ease-out</div><div class="motion-track" data-ease="out"><span class="motion-ball"></span></div></div>
+        <div><div class="ds-spec-label" style="margin-bottom: 0.5rem;">--ease-in-out</div><div class="motion-track" data-ease="in-out"><span class="motion-ball"></span></div></div>
+        <div><div class="ds-spec-label" style="margin-bottom: 0.5rem;">--ease-spring</div><div class="motion-track" data-ease="spring"><span class="motion-ball"></span></div></div>
+        <div><div class="ds-spec-label" style="margin-bottom: 0.5rem;">linear (avoid for UI)</div><div class="motion-track" data-ease="linear"><span class="motion-ball"></span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Layering (NEW) -->
+  <section id="layering" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Foundations · Layering</p>
+      <h2 class="ds-h2">Z-index, named.</h2>
+      <p class="ds-lede">Never reach for a number. Pick a semantic layer and let the system order it correctly.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-base</span><span class="ds-meta" style="color:var(--color-text-secondary)">0 · normal page flow</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-sticky</span><span class="ds-meta" style="color:var(--color-text-secondary)">10 · sticky table headers, footnote bars</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-overlay</span><span class="ds-meta" style="color:var(--color-text-secondary)">20 · sticky page header</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-sidebar</span><span class="ds-meta" style="color:var(--color-text-secondary)">40 · app sidebar above content</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-dropdown</span><span class="ds-meta" style="color:var(--color-text-secondary)">50 · menus, popovers, command-k</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-modal</span><span class="ds-meta" style="color:var(--color-text-secondary)">60 · dialog + backdrop</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-toast</span><span class="ds-meta" style="color:var(--color-text-secondary)">80 · transient notifications</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-tooltip</span><span class="ds-meta" style="color:var(--color-text-secondary)">90 · always wins</span></div>
+
+      <p class="ds-eyebrow" style="margin: 2rem 0 1rem;">Opacity scale</p>
+      <div class="ds-spec-row"><span class="ds-spec-label">--opacity-disabled</span><span class="ds-meta" style="color:var(--color-text-secondary)">0.45 · for disabled controls</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--opacity-muted</span><span class="ds-meta" style="color:var(--color-text-secondary)">0.65 · de-emphasized icon, hint</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--opacity-overlay</span><span class="ds-meta" style="color:var(--color-text-secondary)">0.78 · glass / sticky bar</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--opacity-backdrop</span><span class="ds-meta" style="color:var(--color-text-secondary)">0.5 · modal backdrop</span></div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       COMPONENTS · INPUTS & CONTROLS
+       ===================================================================== -->
+
+  <!-- Buttons -->
+  <section id="buttons" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Buttons</p>
+      <h2 class="ds-h2">Buttons.</h2>
+      <p class="ds-lede">Five variants, three sizes, full keyboard focus support. Primary is flat emerald — no gradient.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Variants</span><div class="ds-row"><button class="btn-primary">Primary</button><button class="btn-secondary">Secondary</button><button class="btn-outline">Outline</button><button class="btn-ghost">Ghost</button><button class="btn-danger">Danger</button></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Sizes</span><div class="ds-row"><button class="btn-primary btn-sm">Small</button><button class="btn-primary">Default</button><button class="btn-primary btn-lg">Large</button></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">With icon</span><div class="ds-row"><button class="btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>Continue</button><button class="btn-secondary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</button><button class="btn-danger"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Delete</button></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Disabled</span><div class="ds-row"><button class="btn-primary" disabled style="opacity:var(--opacity-disabled);cursor:not-allowed;">Primary</button><button class="btn-secondary" disabled style="opacity:var(--opacity-disabled);cursor:not-allowed;">Secondary</button></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Loading</span><div class="ds-row"><button class="btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 0.8s linear infinite;"><path d="M21 12a9 9 0 0 1-9 9" stroke-linecap="round"/></svg>Saving…</button></div></div>
+    </div>
+  </section>
+
+  <!-- Text inputs -->
+  <section id="inputs" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Text inputs</p>
+      <h2 class="ds-h2">Text fields.</h2>
+      <p class="ds-lede">One visual treatment across types — text, email, password, telephone — with a 4px focus ring keyed to primary.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-grid ds-grid-2" style="gap: 1.5rem 2.5rem;">
+        <div><label for="i1">Default</label><input id="i1" type="text" placeholder="Type something…"></div>
+        <div><label for="i2">Email</label><input id="i2" type="email" placeholder="you@company.com"></div>
+        <div><label for="i3">Password</label><input id="i3" type="password" placeholder="••••••••"></div>
+        <div><label for="i4">Read-only</label><input id="i4" type="text" value="alex@simplemodule.dev" readonly style="background: var(--color-surface-sunken); color: var(--color-text-secondary);"></div>
+        <div><label for="i5">With error</label><input id="i5" type="text" placeholder="Required field" style="border-color: var(--color-danger); box-shadow: 0 0 0 4px var(--color-danger-bg);"><p class="validation-message" style="margin-top: 0.5rem;">This field is required.</p></div>
+        <div><label for="i6">Disabled</label><input id="i6" type="text" value="Cannot edit" disabled style="opacity:var(--opacity-disabled);cursor:not-allowed;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Selection controls (NEW) -->
+  <section id="selection" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Selection controls</p>
+      <h2 class="ds-h2">Checkboxes, radios, switches.</h2>
+      <p class="ds-lede">Three control families for boolean and single-choice selection. Switches are reserved for state that takes effect immediately.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Checkbox</span><div class="ds-row" style="gap: 1.5rem;">
+        <label class="ds-row" style="gap: 0.5rem; cursor:pointer;"><span class="check" data-on="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span style="font-size:0.9rem;">Subscribe to changelog</span></label>
+        <label class="ds-row" style="gap: 0.5rem; cursor:pointer;"><span class="check" data-on="false"></span><span style="font-size:0.9rem;">Email me about beta features</span></label>
+        <label class="ds-row" style="gap: 0.5rem; opacity:var(--opacity-disabled);cursor:not-allowed;"><span class="check"></span><span style="font-size:0.9rem;">Disabled option</span></label>
+      </div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Radio group</span><div class="ds-row" style="gap: 1.5rem;">
+        <label class="ds-row" style="gap: 0.5rem; cursor:pointer;"><span class="radio" data-on="true"></span><span style="font-size:0.9rem;">Public</span></label>
+        <label class="ds-row" style="gap: 0.5rem; cursor:pointer;"><span class="radio"></span><span style="font-size:0.9rem;">Unlisted</span></label>
+        <label class="ds-row" style="gap: 0.5rem; cursor:pointer;"><span class="radio"></span><span style="font-size:0.9rem;">Private</span></label>
+      </div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Switch</span><div class="ds-row" style="gap: 2rem;">
+        <span class="switch" data-on="true"><span class="switch-track"><span class="switch-thumb"></span></span><span style="font-size:0.9rem;">Email notifications</span></span>
+        <span class="switch" data-on="false"><span class="switch-track"><span class="switch-thumb"></span></span><span style="font-size:0.9rem;">Two-factor auth</span></span>
+      </div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Slider</span><div style="width:100%; max-width: 24rem;">
+        <div class="slider"><div class="slider-fill" style="width: 60%;"></div><div class="slider-thumb" style="left: 60%;"></div></div>
+        <div class="ds-row" style="justify-content: space-between; margin-top: 0.5rem;"><span class="ds-meta">0</span><span class="ds-meta" style="color:var(--color-text);">60</span><span class="ds-meta">100</span></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- Specialized inputs (NEW) -->
+  <section id="special-inputs" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Specialized inputs</p>
+      <h2 class="ds-h2">Search, number, textarea, select, file.</h2>
+      <p class="ds-lede">Composite controls that build on the base input. Note the optional affordances (icons, steppers, badges).</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-grid ds-grid-2" style="gap: 1.5rem 2.5rem;">
+
+        <div>
+          <label>Search</label>
+          <div style="position: relative;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" placeholder="Search modules, endpoints…" style="padding-left: 2.5rem;">
+            <span style="position:absolute; right:0.6rem; top:50%; transform:translateY(-50%); font-family:var(--font-mono); font-size:0.65rem; color:var(--color-text-muted); background:var(--color-surface-sunken); padding:2px 5px; border-radius:4px; border:1px solid var(--color-border);">⌘K</span>
+          </div>
+        </div>
+
+        <div>
+          <label>Number with steppers</label>
+          <div class="ds-row" style="gap:0; align-items:stretch;">
+            <button class="btn-secondary btn-sm" style="border-radius: 12px 0 0 12px; padding: 0 0.75rem;">−</button>
+            <input type="text" value="12" style="border-radius: 0; text-align: center; width: 5rem; flex: 0 0 auto;">
+            <button class="btn-secondary btn-sm" style="border-radius: 0 12px 12px 0; padding: 0 0.75rem;">+</button>
+          </div>
+        </div>
+
+        <div>
+          <label>Textarea</label>
+          <textarea rows="3" placeholder="Add context for the audit log…" style="font-family: var(--font-body); font-size: 0.875rem;" class="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-surface border border-border rounded-xl text-text transition-all duration-200 placeholder-text-muted"></textarea>
+        </div>
+
+        <div>
+          <label>Select</label>
+          <div style="position: relative;">
+            <button class="ds-row" style="width:100%; justify-content: space-between; padding: 0.65rem 0.85rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; font-size: 0.9rem; cursor: pointer; color: var(--color-text);">
+              <span>Production</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted);"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label>Tag input</label>
+          <div class="ds-row" style="gap: 0.4rem; padding: 0.55rem 0.65rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px;">
+            <span class="badge-info" style="padding: 0.2rem 0.55rem;">react ×</span>
+            <span class="badge-info" style="padding: 0.2rem 0.55rem;">typescript ×</span>
+            <span class="badge-info" style="padding: 0.2rem 0.55rem;">tailwind ×</span>
+            <input type="text" placeholder="Add tag…" style="flex:1; min-width: 6rem; border: none; background: transparent; padding: 0; box-shadow: none;">
+          </div>
+        </div>
+
+        <div>
+          <label>File upload</label>
+          <div style="border: 1.5px dashed var(--color-border-strong); border-radius: 12px; padding: 1.25rem; text-align: center; background: var(--color-surface-sunken);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-text-muted); margin: 0 auto 0.5rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0;"><strong style="color: var(--color-primary);">Click to upload</strong> or drag and drop</p>
+            <p class="ds-meta" style="margin-top: 0.25rem;">PNG, JPG, SVG up to 4 MB</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       COMPONENTS · DISPLAY
+       ===================================================================== -->
+
+  <!-- Badges -->
+  <section id="badges" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Badges</p>
+      <h2 class="ds-h2">Badges &amp; tags.</h2>
+      <p class="ds-lede">Pill-shaped, semantic. Use sparingly to surface status, not category.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Semantic</span><div class="ds-row"><span class="badge-success">Active</span><span class="badge-info">Beta</span><span class="badge-warning">Deprecated</span><span class="badge-danger">Critical</span></div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">With dot</span><div class="ds-row"><span class="badge-success"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;"></span>Online</span><span class="badge-warning"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;"></span>Degraded</span><span class="badge-danger"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:6px;"></span>Offline</span></div></div>
+    </div>
+  </section>
+
+  <!-- Avatars (NEW) -->
+  <section id="avatars" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Avatars</p>
+      <h2 class="ds-h2">Avatars.</h2>
+      <p class="ds-lede">Initials by default, image when available. Stack with negative margin and a 2px surface ring.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Sizes</span><div class="ds-row">
+        <span class="avatar" style="width:1.5rem; height:1.5rem; font-size:0.65rem;">AJ</span>
+        <span class="avatar">AJ</span>
+        <span class="avatar" style="width:3rem; height:3rem; font-size:0.95rem;">AJ</span>
+        <span class="avatar" style="width:4rem; height:4rem; font-size:1.15rem;">AJ</span>
+      </div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">With status</span><div class="ds-row">
+        <span class="avatar">AJ<span class="avatar-status"></span></span>
+        <span class="avatar">MK<span class="avatar-status" style="background: var(--color-warning);"></span></span>
+        <span class="avatar">RL<span class="avatar-status" style="background: var(--color-text-muted);"></span></span>
+      </div></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Group</span><div class="avatar-group">
+        <span class="avatar">AJ</span>
+        <span class="avatar">MK</span>
+        <span class="avatar">RL</span>
+        <span class="avatar">SC</span>
+        <span class="avatar" style="background: var(--color-primary-subtle); color: var(--color-primary);">+4</span>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- Alerts -->
+  <section id="alerts" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Alerts</p>
+      <h2 class="ds-h2">Alerts.</h2>
+      <p class="ds-lede">Inline feedback. Persistent — unlike toasts, alerts stay until dismissed or resolved.</p>
+    </div>
+    <div class="ds-stack">
+      <div class="alert-success"><strong>Migration completed.</strong> 14 modules registered without conflicts.</div>
+      <div class="alert-info"><strong>Heads up.</strong> A new release is available. See the changelog for breaking changes.</div>
+      <div class="alert-warning"><strong>Pending migration.</strong> One migration is staged but not applied: <code style="font-family: var(--font-mono);">AddRecoveryCodes</code>.</div>
+      <div class="alert-danger"><strong>Build failed.</strong> Source generator diagnostic SM0014: contract type missing <code style="font-family: var(--font-mono);">[Dto]</code> attribute.</div>
+    </div>
+  </section>
+
+  <!-- Toasts (NEW) -->
+  <section id="toasts" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Toasts</p>
+      <h2 class="ds-h2">Toasts.</h2>
+      <p class="ds-lede">Transient. Stacked from <code class="font-mono text-xs">bottom-right</code> by default. Auto-dismiss after 5–8s; errors require explicit close.</p>
+    </div>
+    <div class="card demo-card" style="position: relative; min-height: 18rem; background: var(--color-surface-sunken); padding: 0;">
+      <div style="position:absolute; inset: 0; padding: 1rem;">
+        <div class="ds-meta" style="position:absolute; top:0.75rem; left:1rem;">stage · bottom-right stack</div>
+        <div style="position: absolute; bottom: 1rem; right: 1rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 26rem;">
+          <div class="toast">
+            <span class="toast-icon" style="background: var(--color-success);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <div style="flex:1;">
+              <p style="font-size: 0.875rem; font-weight: 500; margin: 0;">Module published</p>
+              <p style="font-size: 0.78rem; color: var(--color-text-muted); margin: 0.15rem 0 0;">Products module v1.4 is now live.</p>
+            </div>
+          </div>
+          <div class="toast">
+            <span class="toast-icon" style="background: var(--color-warning);">!</span>
+            <div style="flex:1;">
+              <p style="font-size: 0.875rem; font-weight: 500; margin: 0;">Slow query detected</p>
+              <p style="font-size: 0.78rem; color: var(--color-text-muted); margin: 0.15rem 0 0;">GET /audit/logs · 11.2 ms p50</p>
+            </div>
+          </div>
+          <div class="toast">
+            <span class="toast-icon" style="background: var(--color-danger);">×</span>
+            <div style="flex:1;">
+              <p style="font-size: 0.875rem; font-weight: 500; margin: 0;">Save failed</p>
+              <p style="font-size: 0.78rem; color: var(--color-text-muted); margin: 0.15rem 0 0;">Email field is required.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       COMPONENTS · OVERLAYS
+       ===================================================================== -->
+
+  <!-- Tooltip + Popover (NEW) -->
+  <section id="tooltip" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Tooltip &amp; popover</p>
+      <h2 class="ds-h2">Tooltip and popover.</h2>
+      <p class="ds-lede">Tooltips clarify icons and labels. Popovers carry interactive content. Both anchor to a trigger and respect <code class="font-mono text-xs">--z-tooltip</code> / <code class="font-mono text-xs">--z-dropdown</code>.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-grid ds-grid-2" style="gap: 2rem;">
+        <div class="demo-box">
+          <button class="btn-ghost" style="position: relative;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span class="tip" data-side="top">Auto-generated from the OpenAPI spec</span>
+          </button>
+        </div>
+        <div class="demo-box">
+          <div style="position: relative;">
+            <button class="btn-secondary">Filter <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div style="position:absolute; top: calc(100% + 6px); left: 0; width: 17rem;" class="dropdown">
+              <p class="ds-eyebrow" style="margin: 0.25rem 0.5rem 0.5rem;">Filter modules</p>
+              <label class="dropdown-item"><span class="check" data-on="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>Active</span></label>
+              <label class="dropdown-item"><span class="check"></span><span>Deprecated</span></label>
+              <label class="dropdown-item"><span class="check"></span><span>Archived</span></label>
+              <div class="dropdown-divider"></div>
+              <div class="ds-row" style="padding: 0.25rem 0.5rem; justify-content: space-between;">
+                <button class="btn-ghost btn-sm" style="padding: 0.25rem 0.5rem;">Clear</button>
+                <button class="btn-primary btn-sm" style="padding: 0.25rem 0.65rem;">Apply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-row" style="margin-top: 1.25rem; gap: 2rem;">
+        <span class="ds-meta">tooltip · <code class="font-mono text-xs">--z-tooltip</code></span>
+        <span class="ds-meta">popover · <code class="font-mono text-xs">--z-dropdown</code></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dropdown menu (NEW) -->
+  <section id="dropdown" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Dropdown menu</p>
+      <h2 class="ds-h2">Dropdown menu.</h2>
+      <p class="ds-lede">Action menus on user buttons, kebab menus, contextual actions. Supports icons, shortcuts, dividers, danger items.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="demo-box">
+        <div class="dropdown">
+          <div class="dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>Edit</span><span class="dropdown-shortcut">⌘ E</span></div>
+          <div class="dropdown-item" data-hover="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Duplicate</span><span class="dropdown-shortcut">⌘ D</span></div>
+          <div class="dropdown-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span>Share link</span></div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" style="color: var(--color-danger);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete</span><span class="dropdown-shortcut">⌫</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dialog (NEW) -->
+  <section id="dialog" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Dialog</p>
+      <h2 class="ds-h2">Dialog.</h2>
+      <p class="ds-lede">For destructive confirmations or focused tasks. Always pair with a backdrop and trap focus inside the panel.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="demo-box ovl-stage">
+        <div class="ovl-backdrop"></div>
+        <div class="glass-card" style="position: relative; padding: 2rem; max-width: 24rem; z-index: 1;">
+          <h3 class="ds-h3" style="margin: 0 0 0.5rem;">Delete module "Products"?</h3>
+          <p style="font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.55; margin-bottom: 1.5rem;">
+            This will remove the module from this workspace and revoke all referenced contracts. The operation is reversible for 7 days.
+          </p>
+          <div class="ds-row" style="justify-content: flex-end;">
+            <button class="btn-secondary">Cancel</button>
+            <button class="btn-danger">Delete module</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sheet (NEW) -->
+  <section id="sheet" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Sheet</p>
+      <h2 class="ds-h2">Sheet / drawer.</h2>
+      <p class="ds-lede">Side panel for detail or quick edit. Slides in from the right with <code class="font-mono text-xs">--duration-moderate</code> + <code class="font-mono text-xs">--ease-out</code>.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="demo-box ovl-stage" style="min-height: 22rem; padding: 0; align-items: stretch; justify-content: flex-end;">
+        <div class="ovl-backdrop"></div>
+        <div style="position: relative; z-index: 1; width: 22rem; max-width: 100%; background: var(--color-surface); border-left: 1px solid var(--color-border); box-shadow: var(--shadow-xl); display: flex; flex-direction: column;">
+          <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-border); display:flex; align-items:center; justify-content: space-between;">
+            <div>
+              <p class="ds-eyebrow" style="margin:0">Edit user</p>
+              <p style="font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; margin: 0.15rem 0 0;">alex@simplemodule.dev</p>
+            </div>
+            <button class="btn-ghost btn-sm" style="padding: 0.4rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div style="padding: 1.25rem 1.5rem; flex: 1;">
+            <div class="form-group"><label>Display name</label><input type="text" value="Alex Johnson"></div>
+            <div class="form-group"><label>Role</label><div style="position:relative;"><button class="ds-row" style="width:100%; justify-content: space-between; padding: 0.65rem 0.85rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; font-size: 0.9rem;"><span>Administrator</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button></div></div>
+          </div>
+          <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 0.5rem;">
+            <button class="btn-secondary btn-sm">Cancel</button>
+            <button class="btn-primary btn-sm">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tabs (NEW) -->
+  <section id="tabs" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Tabs</p>
+      <h2 class="ds-h2">Tabs.</h2>
+      <p class="ds-lede">Underline-style. The active tab inherits primary color and bottom border; tabs do not wrap.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="tabs-list">
+        <div class="tab" aria-selected="true">Overview</div>
+        <div class="tab">Endpoints <span class="badge-info" style="margin-left:0.4rem; padding: 0.1rem 0.4rem;">24</span></div>
+        <div class="tab">Settings</div>
+        <div class="tab">Audit log</div>
+      </div>
+      <div>
+        <h3 class="ds-h3" style="margin: 0 0 0.5rem;">Module overview</h3>
+        <p style="color: var(--color-text-secondary); font-size: 0.9rem; line-height: 1.6;">The Products module exposes 24 endpoints across 5 controllers. Health is nominal and latency is within target.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accordion (NEW) -->
+  <section id="accordion" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Accordion</p>
+      <h2 class="ds-h2">Accordion.</h2>
+      <p class="ds-lede">Stack of disclosure panels. One or many can be open at once depending on configuration.</p>
+    </div>
+    <div class="card demo-card" style="padding: 0.5rem 2rem;">
+      <div class="acc-item" data-open="true">
+        <div class="acc-trigger">What is a SimpleModule module?<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="acc-content">A module is a self-contained .NET project that exposes endpoints, services, contracts, and React pages. Modules communicate only through contracts or the event bus, never by reaching into another module's internals.</div>
+      </div>
+      <div class="acc-item" data-open="false">
+        <div class="acc-trigger">How is the page registry kept in sync?<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="acc-content">The C# source generator discovers IViewEndpoint implementations and writes them into a generated extension method. The React side requires a matching entry in <code class="font-mono text-xs">Pages/index.ts</code>.</div>
+      </div>
+      <div class="acc-item" data-open="false">
+        <div class="acc-trigger">Can I share state between modules?<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></div>
+        <div class="acc-content">No shared mutable state. Use the event bus for fire-and-forget notifications or contracts for synchronous queries.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       COMPONENTS · NAVIGATION & STATE
+       ===================================================================== -->
+
+  <!-- Breadcrumb (NEW) -->
+  <section id="breadcrumb" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Breadcrumb</p>
+      <h2 class="ds-h2">Breadcrumb.</h2>
+      <p class="ds-lede">Page lineage. The current page is non-clickable and styled with the primary text color.</p>
+    </div>
+    <div class="card demo-card">
+      <nav class="crumb">
+        <a href="#">Dashboard</a>
+        <span class="crumb-sep">/</span>
+        <a href="#">Modules</a>
+        <span class="crumb-sep">/</span>
+        <a href="#">Products</a>
+        <span class="crumb-sep">/</span>
+        <span aria-current="page">Endpoints</span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- Pagination (NEW) -->
+  <section id="pagination" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Pagination</p>
+      <h2 class="ds-h2">Pagination.</h2>
+      <p class="ds-lede">Use under tables. Show page numbers when fewer than 8 pages exist; otherwise condense with ellipses.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-row" style="justify-content: space-between;">
+        <span class="ds-meta">Showing 1–10 of 142 modules</span>
+        <div class="ds-row" style="gap: 0.4rem;">
+          <a href="#" class="page-link" aria-label="Previous"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg></a>
+          <a href="#" class="page-link" aria-current="page">1</a>
+          <a href="#" class="page-link">2</a>
+          <a href="#" class="page-link">3</a>
+          <span class="page-link" style="border: none; background: transparent;">…</span>
+          <a href="#" class="page-link">15</a>
+          <a href="#" class="page-link" aria-label="Next"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading states (NEW) -->
+  <section id="loading" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Loading states</p>
+      <h2 class="ds-h2">Loading states.</h2>
+      <p class="ds-lede">
+        Pick the right state for the right wait: <strong style="color:var(--color-text)">skeleton</strong> for content shape known in advance, <strong style="color:var(--color-text)">progress</strong> for measurable work, <strong style="color:var(--color-text)">spinner</strong> for sub-second indeterminate waits.
+      </p>
+    </div>
+    <div class="ds-grid ds-grid-3">
+      <div class="card">
+        <p class="ds-eyebrow">Skeleton</p>
+        <div class="ds-stack" style="margin-top: 1rem;">
+          <span class="skel" style="height: 1.25rem; width: 65%;"></span>
+          <span class="skel" style="height: 0.85rem;"></span>
+          <span class="skel" style="height: 0.85rem; width: 80%;"></span>
+          <div class="ds-row" style="margin-top: 0.75rem; gap: 0.65rem;"><span class="skel" style="width: 2rem; height: 2rem; border-radius: 50%;"></span><div style="flex:1;"><span class="skel" style="display:block; height: 0.75rem; width: 50%; margin-bottom: 0.35rem;"></span><span class="skel" style="display:block; height: 0.65rem; width: 30%;"></span></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="ds-eyebrow">Progress</p>
+        <div class="ds-stack" style="margin-top: 1rem;">
+          <div><div class="ds-row" style="justify-content: space-between; margin-bottom: 0.4rem;"><span style="font-size: 0.8rem;">Importing modules</span><span class="ds-meta">62%</span></div><div class="progress"><div class="progress-fill" style="width: 62%;"></div></div></div>
+          <div><div class="ds-row" style="justify-content: space-between; margin-bottom: 0.4rem;"><span style="font-size: 0.8rem;">Migrating database</span><span class="ds-meta">100%</span></div><div class="progress"><div class="progress-fill" style="width: 100%; background: var(--color-success);"></div></div></div>
+        </div>
+      </div>
+      <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; min-height: 11rem;">
+        <p class="ds-eyebrow" style="align-self: flex-start;">Spinner</p>
+        <span class="spinner" style="margin: 0; width: 1.5rem; height: 1.5rem; border-width: 2.5px;"></span>
+        <span class="ds-meta">Loading…</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       COMPONENTS · CONTAINERS
+       ===================================================================== -->
+
+  <!-- Cards -->
+  <section id="cards" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Cards</p>
+      <h2 class="ds-h2">Cards.</h2>
+      <p class="ds-lede">Three styles: <code class="font-mono text-xs">.card</code> (flat), <code class="font-mono text-xs">.dash-card</code> (hover-lift), <code class="font-mono text-xs">.glass-card</code> (translucent, blurred).</p>
+    </div>
+    <div class="ds-grid ds-grid-3">
+      <div class="card"><p class="ds-tile-label">card · flat</p><p class="ds-h3" style="margin: 0.5rem 0;">Standard surface</p><p style="color: var(--color-text-secondary); font-size: 0.875rem; line-height: 1.55;">Grouped content with no interactive intent.</p></div>
+      <div class="dash-card"><p class="ds-tile-label">dash‑card · hover</p><p class="ds-h3" style="margin: 0.5rem 0;">Dashboard tile</p><p style="color: var(--color-text-secondary); font-size: 0.875rem; line-height: 1.55;">Hover lifts 1px and expands the shadow.</p></div>
+      <div class="glass-card" style="padding: 1.25rem;"><p class="ds-tile-label">glass‑card · blur</p><p class="ds-h3" style="margin: 0.5rem 0;">Glass surface</p><p style="color: var(--color-text-secondary); font-size: 0.875rem; line-height: 1.55;">Translucent. Best over an atmospheric background.</p></div>
+    </div>
+  </section>
+
+  <!-- Tables -->
+  <section id="tables" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Tables</p>
+      <h2 class="ds-h2">Tables.</h2>
+      <p class="ds-lede">Default styling applies to every <code class="font-mono text-xs">&lt;table&gt;</code>. Use the mono family for numeric columns to keep them aligned.</p>
+    </div>
+    <div class="card overflow-hidden p-0">
+      <div class="overflow-x-auto">
+      <table class="min-w-[640px]">
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Endpoint</th>
+            <th>Status</th>
+            <th class="num">Latency</th>
+            <th class="num">Calls</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="text-text">Products</td><td><code class="font-mono text-xs">GET /products</code></td><td><span class="badge-success">200</span></td><td class="num">2.4 ms</td><td class="num">12,094</td></tr>
+          <tr><td class="text-text">Orders</td><td><code class="font-mono text-xs">POST /orders</code></td><td><span class="badge-success">201</span></td><td class="num">8.1 ms</td><td class="num">3,217</td></tr>
+          <tr><td class="text-text">Users</td><td><code class="font-mono text-xs">GET /users/me</code></td><td><span class="badge-info">304</span></td><td class="num">0.9 ms</td><td class="num">88,401</td></tr>
+          <tr><td class="text-text">AuditLogs</td><td><code class="font-mono text-xs">GET /audit/logs</code></td><td><span class="badge-warning">429</span></td><td class="num">11.2 ms</td><td class="num">412</td></tr>
+          <tr><td class="text-text">Email</td><td><code class="font-mono text-xs">POST /email/send</code></td><td><span class="badge-danger">500</span></td><td class="num">42.7 ms</td><td class="num">17</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Data grid pattern (NEW) -->
+  <section id="datagrid" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Data grid</p>
+      <h2 class="ds-h2">Data grid.</h2>
+      <p class="ds-lede">Tables plus toolbar (search + filter + bulk actions) plus pagination. The canonical list view.</p>
+    </div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <!-- Toolbar -->
+      <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-border); display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <div style="position: relative; min-width: 18rem; flex: 1; max-width: 28rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute; left:0.85rem; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search 142 modules…" style="padding-left: 2.5rem; padding-top: 0.55rem; padding-bottom: 0.55rem;">
+        </div>
+        <button class="btn-secondary btn-sm">Filter <span class="badge-info" style="margin-left:0.4rem; padding: 0.1rem 0.4rem;">2</span></button>
+        <button class="btn-secondary btn-sm">Sort: Recent ▾</button>
+        <span style="flex:1"></span>
+        <button class="btn-primary btn-sm">New module</button>
+      </div>
+
+      <!-- Bulk-action bar -->
+      <div style="padding: 0.85rem 1.5rem; background: var(--color-primary-subtle); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; gap: 1rem; font-size: 0.875rem;">
+        <span class="check" data-on="true"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+        <strong style="color: var(--color-primary); margin-right: 0.5rem;">3 selected</strong>
+        <button class="btn-ghost btn-sm">Tag…</button>
+        <button class="btn-ghost btn-sm">Archive</button>
+        <button class="btn-ghost btn-sm" style="color: var(--color-danger);">Delete</button>
+      </div>
+
+      <!-- Data table -->
+      <div class="overflow-x-auto">
+      <table class="min-w-[640px]">
+        <thead>
+          <tr>
+            <th class="w-10"><span class="check opacity-40" data-on="true"></span></th>
+            <th>Module</th>
+            <th>Owner</th>
+            <th>Health</th>
+            <th class="num">Endpoints</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="check" data-on="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></td><td class="text-text font-medium">Products</td><td><span class="inline-flex items-center gap-2"><span class="avatar w-6 h-6 text-[0.6rem]">AJ</span><span class="text-sm">Alex J.</span></span></td><td><span class="badge-success">healthy</span></td><td class="num">24</td></tr>
+          <tr><td><span class="check" data-on="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></td><td class="text-text font-medium">Orders</td><td><span class="inline-flex items-center gap-2"><span class="avatar w-6 h-6 text-[0.6rem]">MK</span><span class="text-sm">Maya K.</span></span></td><td><span class="badge-success">healthy</span></td><td class="num">18</td></tr>
+          <tr><td><span class="check" data-on="true"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></td><td class="text-text font-medium">Users</td><td><span class="inline-flex items-center gap-2"><span class="avatar w-6 h-6 text-[0.6rem]">RL</span><span class="text-sm">Rumi L.</span></span></td><td><span class="badge-warning">degraded</span></td><td class="num">12</td></tr>
+          <tr><td><span class="check"></span></td><td class="text-text font-medium">AuditLogs</td><td><span class="inline-flex items-center gap-2"><span class="avatar w-6 h-6 text-[0.6rem]">SC</span><span class="text-sm">Sam C.</span></span></td><td><span class="badge-success">healthy</span></td><td class="num">8</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <!-- Footer / pagination -->
+      <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <span class="ds-meta">Showing 1–4 of 142 modules</span>
+        <div class="ds-row" style="gap: 0.4rem;">
+          <a href="#" class="page-link" aria-label="Previous"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg></a>
+          <a href="#" class="page-link" aria-current="page">1</a>
+          <a href="#" class="page-link">2</a>
+          <a href="#" class="page-link">3</a>
+          <a href="#" class="page-link" aria-label="Next"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Code -->
+  <section id="code" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Components · Code</p>
+      <h2 class="ds-h2">Code.</h2>
+      <p class="ds-lede">Block and inline code share the JetBrains Mono family. The block uses a dark inverted surface in both themes.</p>
+    </div>
+    <pre class="code-block" style="margin: 0;">[Module("Products", RoutePrefix = "/products")]
+public sealed class ProductsModule : IModule
+{
+    public void ConfigureServices(IServiceCollection services)
+        =&gt; services.AddScoped&lt;IProductRepository, ProductRepository&gt;();
+
+    public void ConfigureEndpoints(IEndpointRouteBuilder app)
+    {
+        // Auto-discovered IEndpoint implementations attach here.
+    }
+}</pre>
+  </section>
+
+  <!-- =====================================================================
+       PATTERNS
+       ===================================================================== -->
+
+  <!-- Top nav (NEW) -->
+  <section id="top-nav" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Top navigation</p>
+      <h2 class="ds-h2">Top navigation bar.</h2>
+      <p class="ds-lede">For marketing &amp; public-facing pages. Translucent surface using <code class="font-mono text-xs">--opacity-overlay</code> + backdrop-blur.</p>
+    </div>
+    <div class="border border-border rounded-[18px] overflow-hidden">
+      <header class="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 bg-surface-overlay border-b border-border" style="backdrop-filter: blur(12px);">
+        <div class="flex items-center gap-2.5 sm:gap-8 min-w-0">
+          <div class="flex items-center gap-2.5 shrink-0">
+            <span class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-white text-xs font-semibold">S</span>
+            <span class="font-medium text-sm sm:text-base font-display tracking-tight">SimpleModule</span>
+          </div>
+          <nav class="hidden md:flex items-center gap-5 text-sm">
+            <a href="#" class="text-text font-medium no-underline">Product</a>
+            <a href="#" class="text-text-secondary no-underline">Docs</a>
+            <a href="#" class="text-text-secondary no-underline">Pricing</a>
+            <a href="#" class="text-text-secondary no-underline">Changelog</a>
+          </nav>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <a href="#" class="btn-ghost btn-sm hidden sm:inline-flex">Sign in</a>
+          <a href="#" class="btn-primary btn-sm">Get started</a>
+          <button class="md:hidden btn-ghost btn-sm" aria-label="Open menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+      </header>
+      <div class="py-12 px-6 sm:px-8 text-center bg-surface-sunken">
+        <p class="ds-meta">page content goes here</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Page header (NEW) -->
+  <section id="page-header" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Page header</p>
+      <h2 class="ds-h2">Page header.</h2>
+      <p class="ds-lede">Title + description + actions. Optional breadcrumb on top. Sets the visual anchor for every list / detail view.</p>
+    </div>
+    <div class="card demo-card">
+      <nav class="crumb" style="margin-bottom: 1rem;">
+        <a href="#">Dashboard</a><span class="crumb-sep">/</span>
+        <a href="#">Modules</a><span class="crumb-sep">/</span>
+        <span aria-current="page">Products</span>
+      </nav>
+      <div class="ds-row" style="justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1 style="font-family: var(--font-display); font-variation-settings: 'opsz' 144, 'SOFT' 30; font-weight: 500; font-size: clamp(1.75rem, 3.5vw, 2.25rem); letter-spacing: -0.03em; margin: 0;">Products</h1>
+          <p style="color: var(--color-text-secondary); font-size: 0.95rem; margin-top: 0.5rem;">24 endpoints · 12,094 requests in the last hour</p>
+        </div>
+        <div class="ds-row" style="gap: 0.5rem;">
+          <button class="btn-secondary">Export</button>
+          <button class="btn-primary">New endpoint</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Composed forms (existing kept) -->
+  <section id="forms" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Composed forms</p>
+      <h2 class="ds-h2">Composed forms.</h2>
+      <p class="ds-lede">End-to-end pattern using glass card, inputs, primary + ghost buttons, and the spacing rhythm.</p>
+    </div>
+    <div class="ds-grid ds-grid-2" style="gap: 2rem; align-items: start;">
+      <div class="glass-card" style="padding: 2.25rem;">
+        <div style="text-align: center; margin-bottom: 1.75rem;">
+          <div style="width: 3rem; height: 3rem; border-radius: 14px; background: var(--color-primary); display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 600; margin-bottom: 1rem;">S</div>
+          <h3 class="ds-h3" style="font-size: 1.625rem; margin: 0;">Welcome back</h3>
+          <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-top: 0.5rem;">Sign in to your SimpleModule account</p>
+        </div>
+        <div class="form-group"><label for="lf-e">Work email</label><input id="lf-e" type="email" placeholder="alex@company.com"></div>
+        <div class="form-group"><label for="lf-p">Password</label><input id="lf-p" type="password" placeholder="••••••••"></div>
+        <button class="btn-primary" style="width: 100%; margin-top: 0.5rem;">Sign in</button>
+        <p style="text-align: center; font-size: 0.8125rem; color: var(--color-text-muted); margin-top: 1.25rem;">New here? <a href="#" style="color: var(--color-primary); font-weight: 500;">Create an account</a></p>
+      </div>
+      <div class="ds-stack" style="padding: 1.5rem 0;">
+        <div><p class="ds-eyebrow">Anatomy</p><p style="color: var(--color-text-secondary); line-height: 1.6; font-size: 0.9375rem;">The login card uses <code class="font-mono text-xs">glass-card</code> over the ambient background. Inside: 2.25rem padding, centered logo block, 1.625rem display heading, body in muted secondary, then form groups stacked on the 5-unit (20px) gap.</p></div>
+        <div><p class="ds-eyebrow">Why a glass card?</p><p style="color: var(--color-text-secondary); line-height: 1.6; font-size: 0.9375rem;">On marketing / auth pages, the glass surface separates the form from atmospheric backgrounds without forcing a hard rectangle. In dark mode the inner 1px highlight ring adds depth.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sidebar nav (existing kept) -->
+  <section id="sidebar" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Sidebar navigation</p>
+      <h2 class="ds-h2">Sidebar navigation.</h2>
+      <p class="ds-lede">The active state gets a left-edge primary rail plus a tinted background — never a gradient.</p>
+    </div>
+    <div class="ds-row" style="align-items: flex-start; gap: 2rem;">
+      <nav class="ds-nav-preview">
+        <div style="padding: 0.5rem 0.75rem 1rem 0.75rem; display: flex; align-items: center; gap: 0.625rem;">
+          <span style="width: 1.75rem; height: 1.75rem; border-radius: 8px; background: var(--color-primary); display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600;">S</span>
+          <span style="font-family: var(--font-display); font-weight: 500; letter-spacing: -0.02em;">SimpleModule</span>
+        </div>
+        <a href="#sidebar" class="sidebar-nav-link-active" style="margin: 0.125rem 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+        <a href="#sidebar" class="sidebar-nav-link-inactive" style="margin: 0.125rem 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-8-4-8 4 8 4 8-4zM4 12l8 4 8-4M4 17l8 4 8-4"/></svg><span>Modules</span></a>
+        <a href="#sidebar" class="sidebar-nav-link-inactive" style="margin: 0.125rem 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg><span>Users</span></a>
+        <a href="#sidebar" class="sidebar-nav-link-inactive" style="margin: 0.125rem 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg><span>Audit logs</span></a>
+        <a href="#sidebar" class="sidebar-nav-link-inactive" style="margin: 0.125rem 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08 4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08 4.24-4.24"/></svg><span>Settings</span></a>
+      </nav>
+      <div class="ds-stack" style="flex: 1; padding: 1rem 0;">
+        <div><p class="ds-eyebrow">Active state</p><p style="color: var(--color-text-secondary); line-height: 1.6; font-size: 0.9375rem;"><code class="font-mono text-xs">.sidebar-nav-link-active</code> applies primary text color, a <code class="font-mono text-xs">--color-primary-subtle</code> tinted background, and a 3px solid emerald rail on the left.</p></div>
+        <div><p class="ds-eyebrow">Inactive state</p><p style="color: var(--color-text-secondary); line-height: 1.6; font-size: 0.9375rem;">Uses <code class="font-mono text-xs">--color-text-secondary</code> by default, fades up to <code class="font-mono text-xs">--color-text</code> on hover with a raised surface tint.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detail view (NEW) -->
+  <section id="detail-view" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Detail view</p>
+      <h2 class="ds-h2">Detail with side panel.</h2>
+      <p class="ds-lede">Master-detail layout where the right rail carries metadata, activity, or related items. Stacks under content on mobile.</p>
+    </div>
+    <div class="card overflow-hidden p-0">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_18rem]">
+        <div class="p-8 border-b md:border-b-0 md:border-r border-border">
+          <h3 class="ds-h3" style="font-size: 1.5rem; margin: 0 0 0.75rem;">GET /products/:id</h3>
+          <p style="color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 1.5rem;">Returns the product matching the given identifier. Includes pricing, availability, and the most-recent revision metadata.</p>
+          <div class="tabs-list" style="margin-bottom: 1rem;"><div class="tab" aria-selected="true">Schema</div><div class="tab">Examples</div><div class="tab">History</div></div>
+          <pre class="code-block" style="margin: 0;">{
+  "id": "prod_aZx1",
+  "name": "Wide-band Adapter",
+  "price": 24.95,
+  "availability": "in_stock"
+}</pre>
+        </div>
+        <aside style="padding: 1.5rem;">
+          <p class="ds-eyebrow">Metadata</p>
+          <div class="ds-stack" style="margin-top: 0.75rem; font-size: 0.85rem;">
+            <div class="ds-row" style="justify-content: space-between;"><span class="ds-meta">Owner</span><span class="ds-row" style="gap:0.4rem;"><span class="avatar" style="width:1.25rem;height:1.25rem;font-size:0.55rem;">AJ</span><span>Alex J.</span></span></div>
+            <div class="ds-row" style="justify-content: space-between;"><span class="ds-meta">Auth</span><span>Bearer</span></div>
+            <div class="ds-row" style="justify-content: space-between;"><span class="ds-meta">Latency p50</span><span class="ds-meta" style="color:var(--color-text);">2.4 ms</span></div>
+            <div class="ds-row" style="justify-content: space-between;"><span class="ds-meta">Last deploy</span><span class="ds-meta" style="color:var(--color-text);">2h ago</span></div>
+          </div>
+          <p class="ds-eyebrow" style="margin-top: 1.75rem;">Tags</p>
+          <div class="ds-row" style="gap: 0.4rem; margin-top: 0.5rem;">
+            <span class="badge-info">stable</span><span class="badge-success">cached</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form wizard (NEW) -->
+  <section id="wizard" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Form wizard</p>
+      <h2 class="ds-h2">Stepped form.</h2>
+      <p class="ds-lede">Reserve for flows with mutually exclusive decisions. Show the full step list — never hide future steps from the user.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-row" style="gap: 0; justify-content: space-between; margin-bottom: 2rem;">
+        <div class="ds-row" style="flex: 1; gap: 0.65rem;">
+          <span style="width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--color-primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <span style="font-size: 0.85rem; font-weight: 500;">Basics</span>
+        </div>
+        <div style="flex: 1; height: 1px; background: var(--color-border-strong); align-self: center;"></div>
+        <div class="ds-row" style="flex: 1; gap: 0.65rem; justify-content: center;">
+          <span style="width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--color-primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">2</span>
+          <span style="font-size: 0.85rem; font-weight: 500;">Contracts</span>
+        </div>
+        <div style="flex: 1; height: 1px; background: var(--color-border); align-self: center;"></div>
+        <div class="ds-row" style="flex: 1; gap: 0.65rem; justify-content: flex-end;">
+          <span style="width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--color-surface); color: var(--color-text-muted); border: 1px solid var(--color-border); display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem;">3</span>
+          <span style="font-size: 0.85rem; color: var(--color-text-muted);">Review</span>
+        </div>
+      </div>
+
+      <h3 class="ds-h3" style="margin: 0 0 1rem;">Step 2 · Contracts</h3>
+      <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">Choose which interfaces this module exposes to other modules.</p>
+      <div class="ds-grid ds-grid-2" style="gap: 1.5rem 2rem;">
+        <div><label>Public interface name</label><input type="text" value="IProductsContracts"></div>
+        <div><label>Namespace</label><input type="text" value="SimpleModule.Products.Contracts"></div>
+      </div>
+      <div class="ds-row" style="justify-content: space-between; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+        <button class="btn-secondary">← Back</button>
+        <button class="btn-primary">Continue →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error pages (NEW) -->
+  <section id="errors" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Error pages</p>
+      <h2 class="ds-h2">404 / 403 / 500.</h2>
+      <p class="ds-lede">Same shape, different copy. The number is set in display serif at the top; the action is always actionable.</p>
+    </div>
+    <div class="ds-grid ds-grid-3">
+      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center;">
+        <p style="font-family: var(--font-display); font-variation-settings: 'opsz' 144, 'SOFT' 100; font-weight: 400; font-size: 4rem; line-height: 1; color: var(--color-text-muted); margin: 0;">404</p>
+        <h3 class="ds-h3" style="margin: 0.5rem 0;">Page not found</h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">Check the URL or head back to the dashboard.</p>
+        <button class="btn-primary btn-sm">Back to dashboard</button>
+      </div>
+      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center;">
+        <p style="font-family: var(--font-display); font-variation-settings: 'opsz' 144, 'SOFT' 100; font-weight: 400; font-size: 4rem; line-height: 1; color: var(--color-warning); margin: 0;">403</p>
+        <h3 class="ds-h3" style="margin: 0.5rem 0;">Permission denied</h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">You don't have access to this module.</p>
+        <button class="btn-secondary btn-sm">Request access</button>
+      </div>
+      <div class="card" style="padding: 2.5rem 1.5rem; text-align: center;">
+        <p style="font-family: var(--font-display); font-variation-settings: 'opsz' 144, 'SOFT' 100; font-weight: 400; font-size: 4rem; line-height: 1; color: var(--color-danger); margin: 0;">500</p>
+        <h3 class="ds-h3" style="margin: 0.5rem 0;">Something broke</h3>
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1.5rem;">We've logged the error. Please try again.</p>
+        <button class="btn-secondary btn-sm">Reload</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Empty state (existing kept) -->
+  <section id="empty" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Patterns · Empty state</p>
+      <h2 class="ds-h2">Empty states.</h2>
+      <p class="ds-lede">A friendly nudge when there's nothing to show. Always pair with a clear next action.</p>
+    </div>
+    <div class="card" style="padding: 4rem 2rem; text-align: center;">
+      <div style="width: 3.5rem; height: 3.5rem; border-radius: 50%; background: var(--color-surface-sunken); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; color: var(--color-text-muted);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+      <h3 class="ds-h3" style="margin: 0 0 0.5rem;">No modules match this filter</h3>
+      <p style="color: var(--color-text-secondary); max-width: 36ch; margin: 0 auto 1.75rem; line-height: 1.55;">Try widening your search, or scaffold a new module to get started.</p>
+      <div class="ds-row" style="justify-content: center;"><button class="btn-secondary">Clear filters</button><button class="btn-primary">New module</button></div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       DOCUMENTATION
+       ===================================================================== -->
+
+  <!-- Anatomy (NEW) -->
+  <section id="anatomy" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · Anatomy</p>
+      <h2 class="ds-h2">Component anatomy.</h2>
+      <p class="ds-lede">The named parts of a button. Every component in this system has a similar anatomy diagram in its source file.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="demo-box" style="min-height: 16rem;">
+        <button class="btn-primary btn-lg" id="anatomy-btn" style="position: relative;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          Continue
+        </button>
+      </div>
+      <div class="ds-grid ds-grid-2" style="margin-top: 1.5rem; gap: 0.5rem 2rem;">
+        <div class="demo-anatomy-label"><strong style="color: var(--color-text); font-family: var(--font-body); font-weight: 500;">Container</strong> · padding 0.625rem 2rem, radius 12px</div>
+        <div class="demo-anatomy-label"><strong style="color: var(--color-text); font-family: var(--font-body); font-weight: 500;">Surface</strong> · solid <code style="font-family: var(--font-mono);">--color-primary</code></div>
+        <div class="demo-anatomy-label"><strong style="color: var(--color-text); font-family: var(--font-body); font-weight: 500;">Leading icon</strong> · 16px, stroke 2.2, gap 0.5rem</div>
+        <div class="demo-anatomy-label"><strong style="color: var(--color-text); font-family: var(--font-body); font-weight: 500;">Label</strong> · Geist 500, letter-spacing -0.005em</div>
+        <div class="demo-anatomy-label"><strong style="color: var(--color-text); font-family: var(--font-body); font-weight: 500;">Elevation</strong> · <code style="font-family: var(--font-mono);">--shadow-primary</code></div>
+        <div class="demo-anatomy-label"><strong style="color: var(--color-text); font-family: var(--font-body); font-weight: 500;">Focus ring</strong> · 4px <code style="font-family: var(--font-mono);">--color-primary-ring</code></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- State matrix (NEW) -->
+  <section id="state-matrix" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · State matrix</p>
+      <h2 class="ds-h2">Every state, every variant.</h2>
+      <p class="ds-lede">A state matrix is the contract a component owes the system. Every interactive component should render correctly in each of these states.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="state-grid">
+        <div class="state-cell"><button class="btn-primary">Continue</button><span class="state-cell-label">default</span></div>
+        <div class="state-cell"><button class="btn-primary" style="box-shadow: var(--shadow-primary-hover); transform: translateY(-1px); background: var(--color-primary-hover);">Continue</button><span class="state-cell-label">hover</span></div>
+        <div class="state-cell"><button class="btn-primary" style="transform: scale(0.97);">Continue</button><span class="state-cell-label">active</span></div>
+        <div class="state-cell"><button class="btn-primary" style="box-shadow: 0 0 0 4px var(--color-primary-ring), var(--shadow-primary);">Continue</button><span class="state-cell-label">focus</span></div>
+        <div class="state-cell"><button class="btn-primary" disabled style="opacity: var(--opacity-disabled); cursor: not-allowed;">Continue</button><span class="state-cell-label">disabled</span></div>
+        <div class="state-cell"><button class="btn-primary"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: spin 0.8s linear infinite;"><path d="M21 12a9 9 0 0 1-9 9" stroke-linecap="round"/></svg>Saving</button><span class="state-cell-label">loading</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Do's & don'ts (NEW) -->
+  <section id="dos-donts" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · Do's &amp; don'ts</p>
+      <h2 class="ds-h2">Do's and don'ts.</h2>
+      <p class="ds-lede">The shortest path to consistent design is removing options. Below are the most common foot-guns.</p>
+    </div>
+    <div class="ds-grid ds-grid-2">
+      <div class="dd-card">
+        <span class="dd-label dd-do"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Do</span>
+        <p style="font-size: 0.9rem; line-height: 1.55; margin: 0 0 0.85rem;">Use a single <strong>primary</strong> button per surface to focus attention.</p>
+        <div class="ds-row"><button class="btn-primary btn-sm">Save</button><button class="btn-secondary btn-sm">Cancel</button></div>
+      </div>
+      <div class="dd-card">
+        <span class="dd-label dd-dont"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Don't</span>
+        <p style="font-size: 0.9rem; line-height: 1.55; margin: 0 0 0.85rem;">Stack multiple primary buttons. The user can't tell which action you prefer.</p>
+        <div class="ds-row"><button class="btn-primary btn-sm">Save</button><button class="btn-primary btn-sm">Publish</button></div>
+      </div>
+
+      <div class="dd-card">
+        <span class="dd-label dd-do"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Do</span>
+        <p style="font-size: 0.9rem; line-height: 1.55; margin: 0 0 0.85rem;">Reach for an alert when feedback is persistent and contextual.</p>
+        <div class="alert-info" style="padding: 0.75rem 1rem;">3 endpoints need attention.</div>
+      </div>
+      <div class="dd-card">
+        <span class="dd-label dd-dont"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Don't</span>
+        <p style="font-size: 0.9rem; line-height: 1.55; margin: 0 0 0.85rem;">Use a toast for persistent state — it disappears before users react.</p>
+        <div class="toast" style="max-width: 100%; box-shadow: var(--shadow-md);">
+          <span class="toast-icon" style="background: var(--color-info);">i</span>
+          <p style="font-size: 0.85rem; margin: 0;">3 endpoints need attention.</p>
+        </div>
+      </div>
+
+      <div class="dd-card">
+        <span class="dd-label dd-do"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Do</span>
+        <p style="font-size: 0.9rem; line-height: 1.55; margin: 0;">Reuse semantic colors. Success is emerald everywhere.</p>
+      </div>
+      <div class="dd-card">
+        <span class="dd-label dd-dont"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Don't</span>
+        <p style="font-size: 0.9rem; line-height: 1.55; margin: 0;">Introduce a one-off hex value. If the token isn't there, add one — don't bypass.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Accessibility (NEW) -->
+  <section id="a11y" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · Accessibility</p>
+      <h2 class="ds-h2">Accessibility.</h2>
+      <p class="ds-lede">WCAG 2.1 AA is the baseline. Every interactive component must be keyboard-operable and survive a screen-reader.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Contrast</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Body text ≥ 4.5:1; large text ≥ 3:1; UI controls ≥ 3:1 against adjacent surface.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Focus visible</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Every interactive element exposes a 4px focus ring using <code class="font-mono text-xs">--color-primary-ring</code>. Never remove the outline.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Keyboard</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">All controls reachable via <kbd style="font-family: var(--font-mono); font-size: 0.7rem; background: var(--color-surface-sunken); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--color-border);">Tab</kbd>. Menus and dialogs trap focus while open; <kbd style="font-family: var(--font-mono); font-size: 0.7rem; background: var(--color-surface-sunken); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--color-border);">Esc</kbd> always closes.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">ARIA</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Use semantic HTML first; reach for ARIA only when no semantic element exists. Active tabs use <code class="font-mono text-xs">aria-selected</code>, current page <code class="font-mono text-xs">aria-current</code>.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Reduced motion</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Honor <code class="font-mono text-xs">prefers-reduced-motion</code>. Skip non-essential transitions; preserve state changes.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Color independence</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Never convey information by color alone — always pair with text, icon, or position.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Touch targets</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Minimum 44×44 px hit area for touch. Icon buttons must include accessible names.</span></div>
+    </div>
+  </section>
+
+  <!-- Composition rules (NEW) -->
+  <section id="composition" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · Composition</p>
+      <h2 class="ds-h2">Composition rules.</h2>
+      <p class="ds-lede">What can combine with what. Following these prevents the most common patterns of UI confusion.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Modal</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">May contain forms, alerts, and tables. May not contain another modal, a sheet, or a sidebar.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Sheet</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">May contain forms and tabs. May not contain a modal. Can be replaced by a route in mobile breakpoints.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Toast</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Max 3 stacked. Never contains buttons except a single "undo" affordance. Auto-dismiss between 5–8 s.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Alert</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">May contain inline links and a single dismiss control. May not contain other alerts or toasts.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Card</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">May not be nested more than once deep. If you find yourself wanting card-in-card, you want a list or a section.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Primary button</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">One per surface. Pair with secondary / ghost for cancel.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Tooltip</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">No interactive content (use popover instead). No tooltip on a touchscreen-only target.</span></div>
+    </div>
+  </section>
+
+  <!-- Voice & tone (NEW) -->
+  <section id="voice" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · Voice &amp; tone</p>
+      <h2 class="ds-h2">How we write.</h2>
+      <p class="ds-lede">Direct, technical, warm. We talk to developers — assume competence; never patronize. Errors apologize once and offer recourse.</p>
+    </div>
+    <div class="ds-grid ds-grid-2">
+      <div class="dd-card">
+        <span class="dd-label dd-do"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Do</span>
+        <p style="font-size: 0.9rem; margin: 0 0 0.5rem; color: var(--color-text);">"Migration completed. 14 modules registered."</p>
+        <p class="ds-meta">Outcome first, count second, no exclamation.</p>
+      </div>
+      <div class="dd-card">
+        <span class="dd-label dd-dont"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Don't</span>
+        <p style="font-size: 0.9rem; margin: 0 0 0.5rem; color: var(--color-text);">"🎉 Great job! Your migration was super successful!!"</p>
+        <p class="ds-meta">Cheerleading. Emoji noise. The work is its own reward.</p>
+      </div>
+      <div class="dd-card">
+        <span class="dd-label dd-do"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Do</span>
+        <p style="font-size: 0.9rem; margin: 0 0 0.5rem; color: var(--color-text);">"Couldn't reach the database. Retry, or check the connection string."</p>
+        <p class="ds-meta">Plain cause + clear action. No blame.</p>
+      </div>
+      <div class="dd-card">
+        <span class="dd-label dd-dont"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>Don't</span>
+        <p style="font-size: 0.9rem; margin: 0 0 0.5rem; color: var(--color-text);">"An unexpected error occurred. Please contact support."</p>
+        <p class="ds-meta">Vague + dead-end. Tells the user nothing they can act on.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Versioning (NEW) -->
+  <section id="versioning" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Documentation · Versioning</p>
+      <h2 class="ds-h2">Versioning &amp; migration.</h2>
+      <p class="ds-lede">The design system follows semver. The current version is <code class="font-mono text-xs">2.0.0</code>.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">Major</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Visible visual change to existing components, or token renames. Requires migration notes.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Minor</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">New components, tokens, or non-breaking variants. Safe to upgrade.</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">Patch</span><span style="font-size: 0.875rem; color: var(--color-text-secondary);">Visual fixes, accessibility improvements, doc updates. Always safe.</span></div>
+      <div class="mt-10 pt-8 border-t border-border">
+        <div class="flex items-center justify-between mb-5">
+          <p class="ds-eyebrow m-0">Changelog · v2.0.0</p>
+          <span class="ds-meta">2026-05-22</span>
+        </div>
+        <ul class="list-none p-0 m-0 flex flex-col gap-4">
+          <li class="flex items-start gap-4">
+            <span class="badge-warning shrink-0 w-24 justify-center">breaking</span>
+            <span class="text-sm leading-relaxed text-text-secondary">Removed all <code class="font-mono text-xs">linear-gradient</code> surface treatments; primary buttons are now flat.</span>
+          </li>
+          <li class="flex items-start gap-4">
+            <span class="badge-info shrink-0 w-24 justify-center">added</span>
+            <span class="text-sm leading-relaxed text-text-secondary">Motion tokens (<code class="font-mono text-xs">--duration-*</code>, <code class="font-mono text-xs">--ease-*</code>).</span>
+          </li>
+          <li class="flex items-start gap-4">
+            <span class="badge-info shrink-0 w-24 justify-center">added</span>
+            <span class="text-sm leading-relaxed text-text-secondary">Z-index and opacity scales.</span>
+          </li>
+          <li class="flex items-start gap-4">
+            <span class="badge-info shrink-0 w-24 justify-center">added</span>
+            <span class="text-sm leading-relaxed text-text-secondary">Fraunces (display) + Geist (body) typography.</span>
+          </li>
+          <li class="flex items-start gap-4">
+            <span class="badge-success shrink-0 w-24 justify-center">changed</span>
+            <span class="text-sm leading-relaxed text-text-secondary">Dark mode shifted from cold slate to warm graphite (OKLCH hue 60).</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tokens reference (existing kept) -->
+  <section id="tokens" class="ds-section">
+    <div class="ds-section-header">
+      <p class="ds-eyebrow">Reference · Tokens</p>
+      <h2 class="ds-h2">Token names.</h2>
+      <p class="ds-lede">Custom properties live under <code class="font-mono text-xs">@theme</code> in <code class="font-mono text-xs">packages/SimpleModule.Theme.Default/theme.css</code> and override in <code class="font-mono text-xs">.dark</code>.</p>
+    </div>
+    <div class="card demo-card">
+      <div class="ds-spec-row"><span class="ds-spec-label">--color-primary</span><span class="ds-meta" style="color: var(--color-text-secondary);">oklch(0.62 0.16 158)  ·  dark: 0.72</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--color-accent</span><span class="ds-meta" style="color: var(--color-text-secondary);">oklch(0.50 0.11 192)  ·  dark: 0.62</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--color-surface</span><span class="ds-meta" style="color: var(--color-text-secondary);">light: white  ·  dark: oklch(0.205 0.006 60)</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--color-text</span><span class="ds-meta" style="color: var(--color-text-secondary);">light: 0.22  ·  dark: 0.96</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--font-display</span><span class="ds-meta" style="color: var(--color-text-secondary);">"Fraunces", serif</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--font-body</span><span class="ds-meta" style="color: var(--color-text-secondary);">"Geist", system-ui</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--font-mono</span><span class="ds-meta" style="color: var(--color-text-secondary);">"JetBrains Mono"</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--shadow-lg</span><span class="ds-meta" style="color: var(--color-text-secondary);">12px 24px / 0.12 (mode-aware)</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--duration-base</span><span class="ds-meta" style="color: var(--color-text-secondary);">200ms</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--ease-out</span><span class="ds-meta" style="color: var(--color-text-secondary);">cubic-bezier(0.16, 1, 0.3, 1)</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--z-modal</span><span class="ds-meta" style="color: var(--color-text-secondary);">60</span></div>
+      <div class="ds-spec-row"><span class="ds-spec-label">--opacity-disabled</span><span class="ds-meta" style="color: var(--color-text-secondary);">0.45</span></div>
+    </div>
+  </section>
+
+  <footer style="margin-top: 6rem; text-align: center; font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-text-muted); letter-spacing: 0.04em;">
+    SimpleModule design system v2.0 · toggle the theme in the top right
+  </footer>
+
+  </main>
+
+  <!-- TOC -->
+  <aside class="hidden lg:block">
+    <div class="ds-toc">
+      <p class="ds-eyebrow">Foundations</p>
+      <a href="#typography">Typography</a>
+      <a href="#palette">Color</a>
+      <a href="#spacing">Spacing</a>
+      <a href="#radius">Radius</a>
+      <a href="#shadow">Elevation</a>
+      <a href="#motion">Motion</a>
+      <a href="#layering">Layering</a>
+
+      <p class="ds-eyebrow">Inputs</p>
+      <a href="#buttons">Buttons</a>
+      <a href="#inputs">Text inputs</a>
+      <a href="#selection">Selection</a>
+      <a href="#special-inputs">Specialized</a>
+
+      <p class="ds-eyebrow">Display</p>
+      <a href="#badges">Badges</a>
+      <a href="#avatars">Avatars</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#toasts">Toasts</a>
+
+      <p class="ds-eyebrow">Overlays</p>
+      <a href="#tooltip">Tooltip &amp; Popover</a>
+      <a href="#dropdown">Dropdown</a>
+      <a href="#dialog">Dialog</a>
+      <a href="#sheet">Sheet</a>
+      <a href="#tabs">Tabs</a>
+      <a href="#accordion">Accordion</a>
+
+      <p class="ds-eyebrow">Nav &amp; state</p>
+      <a href="#breadcrumb">Breadcrumb</a>
+      <a href="#pagination">Pagination</a>
+      <a href="#loading">Loading</a>
+
+      <p class="ds-eyebrow">Containers</p>
+      <a href="#cards">Cards</a>
+      <a href="#tables">Tables</a>
+      <a href="#datagrid">Data grid</a>
+      <a href="#code">Code</a>
+
+      <p class="ds-eyebrow">Patterns</p>
+      <a href="#top-nav">Top nav</a>
+      <a href="#page-header">Page header</a>
+      <a href="#forms">Composed form</a>
+      <a href="#sidebar">Sidebar nav</a>
+      <a href="#detail-view">Detail view</a>
+      <a href="#wizard">Wizard</a>
+      <a href="#errors">Error pages</a>
+      <a href="#empty">Empty state</a>
+
+      <p class="ds-eyebrow">Documentation</p>
+      <a href="#anatomy">Anatomy</a>
+      <a href="#state-matrix">State matrix</a>
+      <a href="#dos-donts">Do's &amp; don'ts</a>
+      <a href="#a11y">Accessibility</a>
+      <a href="#composition">Composition</a>
+      <a href="#voice">Voice &amp; tone</a>
+      <a href="#versioning">Versioning</a>
+      <a href="#tokens">Tokens</a>
+    </div>
+  </aside>
+
+  </div>
+</div>
+
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+
+</body>
+</html>

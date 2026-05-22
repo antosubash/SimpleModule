@@ -131,12 +131,12 @@ export function MobileOverlay({
           <Link
             href="/"
             className="flex items-center gap-2.5 no-underline font-bold text-text"
-            style={{ fontFamily: "'Sora',sans-serif" }}
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             <span
               className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
               style={{
-                background: 'linear-gradient(135deg,var(--color-primary),var(--color-accent))',
+                background: 'var(--color-primary)',
               }}
             >
               S

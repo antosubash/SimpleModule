@@ -5,3 +5,4 @@
 @source "../../../modules/**/Views/**/*.tsx";
 @source "../../../modules/**/Pages/**/*.tsx";
 @source "./_scan/";
+@source "../../../docs/design-system/";

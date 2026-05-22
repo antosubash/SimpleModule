@@ -57,7 +57,7 @@ export function UserDropdown({ displayName, userInitial, items, csrfToken }: Use
         <span
           className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm"
           style={{
-            background: 'linear-gradient(135deg,var(--color-primary),var(--color-accent))',
+            background: 'var(--color-primary)',
           }}
         >
           {userInitial}

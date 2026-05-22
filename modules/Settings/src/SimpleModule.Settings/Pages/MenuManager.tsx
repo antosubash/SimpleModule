@@ -6,6 +6,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  EmptyState,
   PageShell,
   ScrollArea,
   Tooltip,
@@ -187,24 +188,25 @@ export default function MenuManager({ menuItems: initial, availablePages }: Menu
             </CardHeader>
             <CardContent className="p-0">
               {menus.length === 0 ? (
-                <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-                  <svg
-                    className="mb-3 h-10 w-10 text-text-secondary opacity-40"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                  </svg>
-                  <p className="text-sm font-medium text-text-secondary">
-                    {t(SettingsKeys.MenuManager.EmptyTitle)}
-                  </p>
-                  <p className="mt-1 text-xs text-text-secondary">
-                    {t(SettingsKeys.MenuManager.EmptyDescription)}
-                  </p>
-                </div>
+                <EmptyState
+                  icon={
+                    <svg
+                      aria-hidden="true"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                  }
+                  title={t(SettingsKeys.MenuManager.EmptyTitle)}
+                  description={t(SettingsKeys.MenuManager.EmptyDescription)}
+                />
               ) : (
                 <ScrollArea className="max-h-[500px]">
                   <div className="px-3 pb-3">
@@ -238,24 +240,26 @@ export default function MenuManager({ menuItems: initial, availablePages }: Menu
                   onDelete={handleDelete}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <svg
-                    className="mb-3 h-10 w-10 text-text-secondary opacity-40"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                  </svg>
-                  <p className="text-sm font-medium text-text-secondary">
-                    {t(SettingsKeys.MenuManager.NoItemSelectedTitle)}
-                  </p>
-                  <p className="mt-1 text-xs text-text-secondary">
-                    {t(SettingsKeys.MenuManager.NoItemSelectedDescription)}
-                  </p>
-                </div>
+                <EmptyState
+                  icon={
+                    <svg
+                      aria-hidden="true"
+                      width="22"
+                      height="22"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                      <path d="M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg>
+                  }
+                  title={t(SettingsKeys.MenuManager.NoItemSelectedTitle)}
+                  description={t(SettingsKeys.MenuManager.NoItemSelectedDescription)}
+                />
               )}
             </CardContent>
           </Card>

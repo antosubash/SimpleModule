@@ -11,7 +11,7 @@ const Section = React.forwardRef<HTMLElement, SectionProps>(
       {title && (
         <h2
           className="text-base font-bold mb-4 pb-3 flex items-center gap-2 before:content-[''] before:w-1 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-primary before:to-accent"
-          style={{ fontFamily: "'Sora', system-ui, sans-serif" }}
+          style={{ fontFamily: 'var(--font-display)' }}
         >
           {title}
         </h2>

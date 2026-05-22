@@ -73,10 +73,13 @@ export {
   DropdownMenuSub,
   DropdownMenuTrigger,
 } from './dropdown-menu';
+export { EmptyState, type EmptyStateProps } from './empty-state';
 export { Field, FieldDescription, FieldError, FieldGroup } from './field';
+export { FilterBar, type FilterBarProps } from './filter-bar';
 export { Grid, gridVariants } from './grid';
 export { HoverCard, HoverCardContent, HoverCardTrigger } from './hover-card';
 export { Input, inputVariants } from './input';
+export { Kbd, type KbdProps } from './kbd';
 export { Label } from './label';
 export type { MenuItem, PublicMenuItem, SharedProps } from './layouts';
 // Layouts
@@ -87,6 +90,7 @@ export {
   resolveLayout,
   UserDropdown,
 } from './layouts';
+export { NumberInput, type NumberInputProps } from './number-input';
 export { PageHeader } from './page-header';
 export { type BreadcrumbEntry, PageShell, type PageShellProps } from './page-shell';
 export { Popover, PopoverContent, PopoverTrigger } from './popover';
@@ -94,6 +98,7 @@ export { Progress } from './progress';
 export { RadioGroup, RadioGroupItem } from './radio-group';
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './resizable';
 export { ScrollArea, ScrollBar } from './scroll-area';
+export { SearchInput, type SearchInputProps } from './search-input';
 export { Section } from './section';
 export {
   Select,
@@ -136,6 +141,7 @@ export { Skeleton } from './skeleton';
 export { Slider } from './slider';
 export { Spinner, spinnerVariants } from './spinner';
 export { Stack, stackVariants } from './stack';
+export { Stat, type StatProps, statVariants } from './stat';
 export { Switch } from './switch';
 export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';

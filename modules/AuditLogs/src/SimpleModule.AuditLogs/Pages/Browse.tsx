@@ -1,6 +1,13 @@
 import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { Button, Card, CardContent, PageShell, TooltipProvider } from '@simplemodule/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  EmptyState,
+  PageShell,
+  TooltipProvider,
+} from '@simplemodule/ui';
 import { type FormEvent, useState } from 'react';
 import { AuditLogsKeys } from '@/Locales/keys';
 import type { AuditEntry, AuditQueryRequest } from '@/types';
@@ -141,18 +148,38 @@ export default function Browse({ result, filters }: Props) {
 
         {result.items.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-lg font-medium text-text">{t(AuditLogsKeys.Browse.EmptyTitle)}</p>
-              <p className="mt-1 text-sm text-text-muted">
-                {hasActiveFilters
-                  ? t(AuditLogsKeys.Browse.EmptyWithFilters)
-                  : t(AuditLogsKeys.Browse.EmptyNoFilters)}
-              </p>
-              {hasActiveFilters && (
-                <Button variant="secondary" className="mt-4" onClick={clearFilters}>
-                  {t(AuditLogsKeys.Browse.ClearFilters)}
-                </Button>
-              )}
+            <CardContent>
+              <EmptyState
+                icon={
+                  <svg
+                    aria-hidden="true"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                }
+                title={t(AuditLogsKeys.Browse.EmptyTitle)}
+                description={
+                  hasActiveFilters
+                    ? t(AuditLogsKeys.Browse.EmptyWithFilters)
+                    : t(AuditLogsKeys.Browse.EmptyNoFilters)
+                }
+                secondaryAction={
+                  hasActiveFilters ? (
+                    <Button variant="secondary" onClick={clearFilters}>
+                      {t(AuditLogsKeys.Browse.ClearFilters)}
+                    </Button>
+                  ) : undefined
+                }
+              />
             </CardContent>
           </Card>
         ) : (
