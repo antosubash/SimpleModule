@@ -1,14 +1,18 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@simplemodule/ui';
+import {
+  EmptyState,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@simplemodule/ui';
 import { PolicyTypeBadge, TargetBadge } from './PolicyBadges';
 import type { ActivePolicy } from './rate-limiting-types';
 
 export function ActivePoliciesTable({ policies }: { policies: ActivePolicy[] }) {
   if (policies.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
-        No active rate limit policies.
-      </p>
-    );
+    return <EmptyState title="No active rate limit policies" />;
   }
 
   return (

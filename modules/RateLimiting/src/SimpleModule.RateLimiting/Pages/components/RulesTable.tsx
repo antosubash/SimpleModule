@@ -1,5 +1,6 @@
 import {
   Button,
+  EmptyState,
   Switch,
   Table,
   TableBody,
@@ -20,9 +21,10 @@ interface Props {
 export function RulesTable({ rules, onToggle, onDelete }: Props) {
   if (rules.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
-        No rate limit rules configured yet.
-      </p>
+      <EmptyState
+        title="No rate limit rules yet"
+        description="Configure your first rule to start protecting your endpoints."
+      />
     );
   }
 
