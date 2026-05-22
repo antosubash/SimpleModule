@@ -50,6 +50,7 @@
       "!modules/*/src/*/types.ts",
       "!packages/SimpleModule.Client/src/routes.ts",
       "!template/SimpleModule.Host/ClientApp/routes.ts",
+      "!docs/design-system",
       "!test-projects"
     ]
   }

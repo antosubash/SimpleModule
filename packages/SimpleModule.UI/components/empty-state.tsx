@@ -3,7 +3,7 @@ import { cn } from '../lib/utils';
 
 type HeadingLevel = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
-interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+interface EmptyStateProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
   /** Icon shown inside a circular surface above the title. */
   icon?: React.ReactNode;
   /** Headline. */
