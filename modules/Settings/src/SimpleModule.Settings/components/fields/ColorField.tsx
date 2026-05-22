@@ -1,11 +1,11 @@
 import { Button, Input } from '@simplemodule/ui';
 import { useState } from 'react';
-import { useSavedFlash, validateColor, validateRequired } from './common';
+import { useSavedFlash, useSyncedLocal, validateColor, validateRequired } from './common';
 import type { FieldProps } from './types';
 
 export default function ColorField({ definition, value, onSave, onDirty, disabled }: FieldProps) {
   const initial = typeof value === 'string' ? value : '#000000';
-  const [local, setLocal] = useState(initial);
+  const [local, setLocal] = useSyncedLocal(initial);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, flash] = useSavedFlash();

@@ -44,6 +44,18 @@ export function validateColor(value: string): string | null {
   return null;
 }
 
+export function useSyncedLocal<T>(initial: T): [T, (v: T) => void] {
+  const [local, setLocal] = useState<T>(initial);
+  const lastRef = useRef(initial);
+  useEffect(() => {
+    if (lastRef.current !== initial) {
+      lastRef.current = initial;
+      setLocal(initial);
+    }
+  }, [initial]);
+  return [local, setLocal];
+}
+
 export function useSavedFlash(): [boolean, () => void] {
   const [saved, setSaved] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

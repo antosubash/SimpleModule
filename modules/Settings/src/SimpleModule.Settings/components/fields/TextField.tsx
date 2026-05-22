@@ -1,6 +1,6 @@
 import { Button, Input } from '@simplemodule/ui';
 import { useState } from 'react';
-import { useSavedFlash, validatePattern, validateRequired } from './common';
+import { useSavedFlash, useSyncedLocal, validatePattern, validateRequired } from './common';
 import type { FieldProps } from './types';
 
 export default function TextField({
@@ -12,7 +12,7 @@ export default function TextField({
   autoFocus,
 }: FieldProps) {
   const initial = typeof value === 'string' ? value : '';
-  const [local, setLocal] = useState(initial);
+  const [local, setLocal] = useSyncedLocal(initial);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, flash] = useSavedFlash();

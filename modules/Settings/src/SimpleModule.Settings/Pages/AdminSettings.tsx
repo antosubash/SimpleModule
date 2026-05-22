@@ -99,7 +99,7 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
     setValueMap((prev) => {
       const next = new Map(prev);
       const existing = next.get(key);
-      next.set(key, { key, scope: scope as 0 | 1 | 2, value, isOverridden: true, ...existing });
+      next.set(key, { ...existing, key, scope: scope as 0 | 1 | 2, value, isOverridden: true });
       return next;
     });
   };
@@ -156,11 +156,11 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
         for (const { key, scope, value } of updates) {
           const existing = next.get(key);
           next.set(key, {
+            ...existing,
             key,
             scope: scope as 0 | 1 | 2,
             value,
             isOverridden: true,
-            ...existing,
           });
         }
         return next;

@@ -1,9 +1,10 @@
 import { Switch } from '@simplemodule/ui';
 import { useState } from 'react';
+import { useSyncedLocal } from './common';
 import type { FieldProps } from './types';
 
 export default function BoolField({ definition, value, onSave, onDirty, disabled }: FieldProps) {
-  const [checked, setChecked] = useState(value === true);
+  const [checked, setChecked] = useSyncedLocal(value === true);
   const [saving, setSaving] = useState(false);
 
   const handleChange = async (next: boolean) => {

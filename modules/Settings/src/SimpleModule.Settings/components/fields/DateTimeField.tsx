@@ -1,6 +1,6 @@
 import { Button, Input } from '@simplemodule/ui';
 import { useState } from 'react';
-import { useSavedFlash, validateRequired } from './common';
+import { useSavedFlash, useSyncedLocal, validateRequired } from './common';
 import type { FieldProps } from './types';
 
 function isoToLocal(iso: string): string {
@@ -34,7 +34,7 @@ export default function DateTimeField({
   autoFocus,
 }: FieldProps) {
   const isoInitial = typeof value === 'string' ? value : '';
-  const [local, setLocal] = useState(isoToLocal(isoInitial));
+  const [local, setLocal] = useSyncedLocal(isoToLocal(isoInitial));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, flash] = useSavedFlash();

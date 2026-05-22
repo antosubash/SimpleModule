@@ -1,10 +1,11 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@simplemodule/ui';
 import { useState } from 'react';
+import { useSyncedLocal } from './common';
 import type { FieldProps } from './types';
 
 export default function SelectField({ definition, value, onSave, onDirty, disabled }: FieldProps) {
   const initial = typeof value === 'string' ? value : '';
-  const [local, setLocal] = useState(initial);
+  const [local, setLocal] = useSyncedLocal(initial);
   const [saving, setSaving] = useState(false);
 
   const options = definition.allowedValues ?? [];

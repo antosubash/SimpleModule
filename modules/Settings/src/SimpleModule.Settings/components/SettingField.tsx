@@ -39,14 +39,7 @@ const fieldMap = {
 
 export default function SettingField(props: SettingFieldProps): React.JSX.Element {
   const Field = fieldMap[props.definition.type] ?? TextField;
-  return (
-    <div className="space-y-2">
-      {props.definition.description && (
-        <p className="text-sm text-muted-foreground">{props.definition.description}</p>
-      )}
-      <Field {...props} />
-    </div>
-  );
+  return <Field {...props} />;
 }
 
 export type { SettingDefinition };

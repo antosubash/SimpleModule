@@ -1,6 +1,6 @@
 import { Button, Input } from '@simplemodule/ui';
 import { useState } from 'react';
-import { useSavedFlash, validateRange, validateRequired } from './common';
+import { useSavedFlash, useSyncedLocal, validateRange, validateRequired } from './common';
 import type { FieldProps } from './types';
 
 export default function NumberField({
@@ -12,7 +12,7 @@ export default function NumberField({
   autoFocus,
 }: FieldProps) {
   const initial = value !== null && value !== undefined ? String(value) : '';
-  const [local, setLocal] = useState(initial);
+  const [local, setLocal] = useSyncedLocal(initial);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, flash] = useSavedFlash();

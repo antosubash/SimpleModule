@@ -1,6 +1,6 @@
 import { Button, Input } from '@simplemodule/ui';
 import { useState } from 'react';
-import { useSavedFlash, validateRequired } from './common';
+import { useSavedFlash, useSyncedLocal, validateRequired } from './common';
 import type { FieldProps } from './types';
 
 export default function PasswordField({
@@ -14,7 +14,7 @@ export default function PasswordField({
   const hasExistingValue = definition.sensitive ? value !== null && value !== undefined : !!value;
   const initial = definition.sensitive ? '' : typeof value === 'string' ? value : '';
 
-  const [local, setLocal] = useState(initial);
+  const [local, setLocal] = useSyncedLocal(initial);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);

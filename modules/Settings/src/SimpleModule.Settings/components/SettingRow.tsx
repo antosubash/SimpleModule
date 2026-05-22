@@ -28,6 +28,12 @@ const scopeColorMap: Record<number, string> = {
   2: 'bg-success-bg text-success-text',
 };
 
+function formatResolved(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value);
+}
+
 export default function SettingRow({
   definition,
   valueInfo,
@@ -57,10 +63,9 @@ export default function SettingRow({
     }
   })();
 
-  const resolvedDisplay =
-    showResolvedValue && valueInfo.resolvedValue !== undefined && valueInfo.resolvedValue !== null
-      ? String(valueInfo.resolvedValue)
-      : (definition.defaultValue ?? null);
+  const resolvedDisplay = showResolvedValue
+    ? (formatResolved(valueInfo.resolvedValue) ?? formatResolved(definition.defaultValue))
+    : null;
 
   const handleSave = async (value: unknown) => {
     await onSave(definition.key, definition.scope, value);
@@ -74,74 +79,67 @@ export default function SettingRow({
       : undefined;
 
   return (
-    <div className="py-4 first:pt-0 last:pb-0">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-6">
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-text">
-              {definition.displayName}
-              {definition.required && (
-                <span
-                  className="ml-0.5 text-danger-text"
-                  title={t(SettingsKeys.AdminSettings.RequiredAsterisk)}
-                  aria-hidden="true"
-                >
-                  *
-                </span>
-              )}
-            </span>
-
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${scopeClass}`}
-            >
-              {scopeLabel}
-            </span>
-
-            {valueInfo.isOverridden && <Badge variant="warning">{t(keys.Overridden)}</Badge>}
-
-            {!valueInfo.isOverridden && namespace === 'UserSettings' && (
-              <Badge variant="default">{t(keys.Default)}</Badge>
-            )}
-          </div>
-
-          {definition.description && (
-            <p className="text-xs text-text-secondary mb-2">{definition.description}</p>
-          )}
-
-          {showResolvedValue && resolvedDisplay !== null && (
-            <p className="text-xs text-text-muted mb-2">
-              {t(keys.Current)}:{' '}
-              <span className="font-mono text-text-secondary">{resolvedDisplay}</span>{' '}
-              <span className="text-text-muted">
-                &#8592; ({valueInfo.isOverridden ? t(keys.YourOverride) : t(keys.InheritedDefault)})
+    <div className="py-5 first:pt-0 last:pb-0">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1.5">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <label htmlFor={definition.key} className="text-sm font-semibold text-text">
+            {definition.displayName}
+            {definition.required && (
+              <span
+                className="ml-0.5 text-danger-text"
+                title={t(SettingsKeys.AdminSettings.RequiredAsterisk)}
+                aria-hidden="true"
+              >
+                *
               </span>
-            </p>
+            )}
+          </label>
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${scopeClass}`}
+          >
+            {scopeLabel}
+          </span>
+          {valueInfo.isOverridden && <Badge variant="warning">{t(keys.Overridden)}</Badge>}
+          {!valueInfo.isOverridden && namespace === 'UserSettings' && (
+            <Badge variant="default">{t(keys.Default)}</Badge>
           )}
-        </div>
-
-        <div className="flex-shrink-0 w-full sm:w-72">
-          <SettingField
-            definition={definition}
-            value={valueInfo.value}
-            onSave={handleSave}
-            onDirty={onDirty ? (isDirty: boolean) => onDirty(definition.key, isDirty) : undefined}
-            disabled={disabled}
-          />
         </div>
 
         {!bulkMode && handleReset && (
-          <div className="flex-shrink-0 self-start sm:self-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleReset}
-              className="text-text-secondary hover:text-danger-text whitespace-nowrap"
-            >
-              {t(keys.ResetToDefault)}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className="text-text-secondary hover:text-danger-text whitespace-nowrap -my-1"
+          >
+            {t(keys.ResetToDefault)}
+          </Button>
         )}
       </div>
+
+      {definition.description && (
+        <p className="text-sm text-text-secondary mb-3 max-w-prose">{definition.description}</p>
+      )}
+
+      <div className="max-w-xl">
+        <SettingField
+          definition={definition}
+          value={valueInfo.value}
+          onSave={handleSave}
+          onDirty={onDirty ? (isDirty: boolean) => onDirty(definition.key, isDirty) : undefined}
+          disabled={disabled}
+        />
+      </div>
+
+      {showResolvedValue && resolvedDisplay !== null && (
+        <p className="text-xs text-text-muted mt-2">
+          {t(keys.Current)}:{' '}
+          <span className="font-mono text-text-secondary">{resolvedDisplay}</span>{' '}
+          <span className="text-text-muted">
+            &#8592; ({valueInfo.isOverridden ? t(keys.YourOverride) : t(keys.InheritedDefault)})
+          </span>
+        </p>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { Button, Textarea } from '@simplemodule/ui';
 import { useState } from 'react';
-import { useSavedFlash, validateRequired } from './common';
+import { useSavedFlash, useSyncedLocal, validateRequired } from './common';
 import type { FieldProps } from './types';
 
 export default function MultilineTextField({
@@ -12,7 +12,7 @@ export default function MultilineTextField({
   autoFocus,
 }: FieldProps) {
   const initial = typeof value === 'string' ? value : '';
-  const [local, setLocal] = useState(initial);
+  const [local, setLocal] = useSyncedLocal(initial);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, flash] = useSavedFlash();
