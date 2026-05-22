@@ -19,8 +19,13 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
     >
       <div className="shrink-0">
         <h1
-          className="text-xl sm:text-2xl font-extrabold tracking-tight"
-          style={{ fontFamily: "'Sora', sans-serif" }}
+          className="text-2xl sm:text-3xl tracking-tight"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 500,
+            fontVariationSettings: '"opsz" 144, "SOFT" 30',
+            letterSpacing: '-0.035em',
+          }}
         >
           <span className="gradient-text">{title}</span>
         </h1>

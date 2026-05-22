@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  EmptyState,
   Input,
   PageShell,
   Table,
@@ -129,11 +130,27 @@ export default function Templates({ result, filters }: Props) {
         {/* Results Table */}
         {result.items.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-lg font-medium text-text">{t(EmailKeys.Templates.EmptyTitle)}</p>
-              <p className="mt-1 text-sm text-text-muted">
-                {t(EmailKeys.Templates.EmptyDescription)}
-              </p>
+            <CardContent>
+              <EmptyState
+                icon={
+                  <svg
+                    aria-hidden="true"
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                }
+                title={t(EmailKeys.Templates.EmptyTitle)}
+                description={t(EmailKeys.Templates.EmptyDescription)}
+              />
             </CardContent>
           </Card>
         ) : (
