@@ -16,17 +16,8 @@ public class GetSettingEndpoint : IEndpoint
                 Route,
                 async Task<IResult> (string key, SettingScope scope, ISettingsContracts settings) =>
                 {
-                    var value = await settings.GetSettingAsync(key, scope);
-                    return value is not null
-                        ? TypedResults.Ok(
-                            new
-                            {
-                                key,
-                                value,
-                                scope,
-                            }
-                        )
-                        : TypedResults.NotFound();
+                    var dto = await settings.GetSettingValueAsync(key, scope);
+                    return dto is not null ? TypedResults.Ok(dto) : TypedResults.NotFound();
                 }
             )
             .RequireAuthorization();

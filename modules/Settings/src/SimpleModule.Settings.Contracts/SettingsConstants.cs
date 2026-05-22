@@ -13,7 +13,9 @@ public static class SettingsConstants
             public const string GetSettings = "/";
             public const string GetSetting = "/{key}";
             public const string GetDefinitions = "/definitions";
+            public const string GetResolvedSetting = "/{key}/resolved";
             public const string UpdateSetting = "/";
+            public const string BulkUpdateSettings = "/bulk";
             public const string DeleteSetting = "/{key}";
             public const string GetMySettings = "/me";
             public const string UpdateMySetting = "/me";

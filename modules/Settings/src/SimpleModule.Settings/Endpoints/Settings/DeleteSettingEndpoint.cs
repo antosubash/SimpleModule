@@ -17,7 +17,7 @@ public class DeleteSettingEndpoint : IEndpoint
                 Route,
                 async (string key, SettingScope scope, ISettingsContracts settings) =>
                 {
-                    await settings.DeleteSettingAsync(key, scope);
+                    await settings.ResetToDefaultAsync(key, scope);
                     return TypedResults.NoContent();
                 }
             )

@@ -16,7 +16,7 @@ public class UpdateMySettingEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                async (
+                async Task<IResult> (
                     UpdateSettingRequest request,
                     ISettingsContracts settings,
                     ClaimsPrincipal principal
@@ -26,13 +26,22 @@ public class UpdateMySettingEndpoint : IEndpoint
                     if (string.IsNullOrEmpty(userId))
                         return Results.Unauthorized();
 
-                    await settings.SetSettingAsync(
-                        request.Key,
-                        request.Value ?? string.Empty,
-                        SettingScope.User,
-                        userId
-                    );
-                    return TypedResults.NoContent();
+                    try
+                    {
+                        await settings.SetSettingAsync(
+                            request.Key,
+                            request.Value,
+                            SettingScope.User,
+                            userId
+                        );
+                        return TypedResults.NoContent();
+                    }
+                    catch (SettingValidationException ex)
+                    {
+                        return TypedResults.ValidationProblem(
+                            new Dictionary<string, string[]> { [ex.Key] = ex.Errors.ToArray() }
+                        );
+                    }
                 }
             )
             .RequireAuthorization();

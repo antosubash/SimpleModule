@@ -6,20 +6,23 @@ using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Settings.Endpoints.Settings;
 
-public class UpdateSettingEndpoint : IEndpoint
+public class BulkUpdateSettingsEndpoint : IEndpoint
 {
-    public const string Route = SettingsConstants.Routes.Api.UpdateSetting;
+    public const string Route = SettingsConstants.Routes.Api.BulkUpdateSettings;
     public const string Method = "PUT";
 
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                async Task<IResult> (UpdateSettingRequest request, ISettingsContracts settings) =>
+                async Task<IResult> (
+                    BulkUpdateSettingsRequest request,
+                    ISettingsContracts settings
+                ) =>
                 {
                     try
                     {
-                        await settings.SetSettingAsync(request.Key, request.Value, request.Scope);
-                        return TypedResults.NoContent();
+                        await settings.SetManyAsync(request.Updates);
+                        return TypedResults.Ok(new { count = request.Updates.Count });
                     }
                     catch (SettingValidationException ex)
                     {
