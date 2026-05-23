@@ -4,6 +4,9 @@ import { defineConfig, devices } from '@playwright/test';
  * Root-level config that delegates to tests/e2e.
  * Allows `npx playwright test` from repo root to work correctly.
  */
+
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'https://localhost:5001';
+
 export default defineConfig({
   testDir: './tests/e2e/tests',
   fullyParallel: true,
@@ -12,7 +15,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', {}], ...(process.env.CI ? [['github', {}] as const] : [])],
   use: {
-    baseURL: 'https://localhost:5001',
+    baseURL,
     trace: 'on-first-retry',
     ignoreHTTPSErrors: true,
     screenshot: 'only-on-failure',
@@ -44,13 +47,13 @@ export default defineConfig({
   ],
   webServer: {
     command: 'dotnet run --project template/SimpleModule.Host',
-    url: 'https://localhost:5001/health/live',
+    url: `${baseURL}/health/live`,
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 60_000,
     env: {
       ...process.env,
-      ASPNETCORE_URLS: 'https://localhost:5001',
+      ASPNETCORE_URLS: baseURL,
       Database__DefaultConnection: 'Data Source=e2e-test.db',
     },
   },

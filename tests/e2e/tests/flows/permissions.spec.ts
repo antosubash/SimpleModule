@@ -15,7 +15,7 @@ test.describe('Permission System', () => {
     });
 
     test('can access settings page', async ({ page }) => {
-      await page.goto('/settings');
+      await page.goto('/settings/me');
       await expect(page.getByRole('heading', { name: /settings/i })).toBeVisible();
     });
   });
@@ -25,10 +25,10 @@ test.describe('Permission System', () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
     test('admin API rejects unauthenticated request', async ({ request }) => {
-      const response = await request.get('/api/admin/users', {
+      const response = await request.get('/admin/users', {
         maxRedirects: 0,
       });
-      // Identity cookie scheme returns 302 redirect to login for unauthenticated requests
+      // Identity cookie scheme returns 302 redirect to login for unauthenticated browser requests
       expect(response.status()).toBe(302);
     });
 
