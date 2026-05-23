@@ -14,9 +14,22 @@ public class GetSettingEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                async Task<IResult> (string key, SettingScope scope, ISettingsContracts settings) =>
+                async Task<IResult> (
+                    string key,
+                    SettingScope? scope,
+                    ISettingsContracts settings
+                ) =>
                 {
-                    var dto = await settings.GetSettingValueAsync(key, scope);
+                    if (scope is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Query parameter 'scope' is required.",
+                            statusCode: StatusCodes.Status400BadRequest,
+                            title: "Missing required parameter"
+                        );
+                    }
+
+                    var dto = await settings.GetSettingValueAsync(key, scope.Value);
                     return dto is not null ? TypedResults.Ok(dto) : TypedResults.NotFound();
                 }
             )

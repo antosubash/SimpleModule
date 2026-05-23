@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 
 namespace SimpleModule.Settings.Endpoints.Settings;
@@ -19,6 +21,16 @@ public class BulkUpdateSettingsEndpoint : IEndpoint
                     ISettingsContracts settings
                 ) =>
                 {
+                    var userScopedKey = request.Updates.FirstOrDefault(u => u.Scope == SettingScope.User)?.Key;
+                    if (userScopedKey is not null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Use /api/settings/me to set user-scoped settings.",
+                            statusCode: StatusCodes.Status400BadRequest,
+                            title: "Invalid scope"
+                        );
+                    }
+
                     try
                     {
                         await settings.SetManyAsync(request.Updates);
@@ -32,5 +44,5 @@ public class BulkUpdateSettingsEndpoint : IEndpoint
                     }
                 }
             )
-            .RequireAuthorization();
+            .RequirePermission(SettingsPermissions.Update);
 }
