@@ -209,8 +209,10 @@ public sealed class SettingsServiceTests : IDisposable
         b.Should().Be("\"val2\"");
     }
 
+    // BUG-5: SetManyAsync with User scope should throw SettingValidationException (→ 400),
+    // not InvalidOperationException (→ 500).
     [Fact]
-    public async Task SetManyAsync_ThrowsForUserScope()
+    public async Task SetManyAsync_ThrowsSettingValidationException_ForUserScope()
     {
         var updates = new List<BulkSettingUpdate>
         {
@@ -223,7 +225,10 @@ public sealed class SettingsServiceTests : IDisposable
         };
 
         var act = () => _service.SetManyAsync(updates);
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should()
+            .ThrowAsync<SettingValidationException>(
+                "bulk updates must reject User scope with a clean 400 error, not a 500"
+            );
     }
 
     [Fact]
@@ -250,6 +255,100 @@ public sealed class SettingsServiceTests : IDisposable
         var act = () =>
             svc.SetSettingAsync("count", JsonString("not-a-number"), SettingScope.Application);
         await act.Should().ThrowAsync<SettingValidationException>();
+    }
+
+    // BUG-1: Email type with a Pattern should produce exactly ONE validation error,
+    // not two (one from ValidateType + one from ValidatePattern).
+    [Fact]
+    public async Task Validate_Email_WithPattern_ProducesExactlyOneError()
+    {
+        var registry = new SettingsDefinitionRegistry([
+            new SettingDefinition
+            {
+                Key = "contact.email",
+                DisplayName = "Contact Email",
+                Scope = SettingScope.Application,
+                Type = SettingType.Email,
+                // Pattern would also reject the value, but should be skipped for Email type.
+                Pattern = @"^[^@]+@example\.com$",
+            },
+        ]);
+        var svc = new SettingsService(
+            _db,
+            registry,
+            _cache,
+            new Lazy<IMessageBus>(() => Substitute.For<IMessageBus>()),
+            Options.Create(new SettingsModuleOptions()),
+            NullLogger<SettingsService>.Instance
+        );
+
+        var ex = await Assert.ThrowsAsync<SettingValidationException>(() =>
+            svc.SetSettingAsync(
+                "contact.email",
+                JsonString("not-an-email"),
+                SettingScope.Application
+            )
+        );
+        ex.Errors
+            .Should()
+            .HaveCount(1, "ValidatePattern must be skipped for Email type to avoid duplicate errors");
+    }
+
+    // BUG-2: URL validator must reject file:// URIs, relative paths, and non-http/https schemes.
+    [Theory]
+    [InlineData("file:///etc/passwd")]
+    [InlineData("/foo/bar")]
+    [InlineData("ftp://example.com/file")]
+    public async Task Validate_Url_RejectsNonHttpSchemes(string value)
+    {
+        var registry = new SettingsDefinitionRegistry([
+            new SettingDefinition
+            {
+                Key = "site.url",
+                DisplayName = "Site URL",
+                Scope = SettingScope.Application,
+                Type = SettingType.Url,
+            },
+        ]);
+        var svc = new SettingsService(
+            _db,
+            registry,
+            _cache,
+            new Lazy<IMessageBus>(() => Substitute.For<IMessageBus>()),
+            Options.Create(new SettingsModuleOptions()),
+            NullLogger<SettingsService>.Instance
+        );
+
+        var act = () => svc.SetSettingAsync("site.url", JsonString(value), SettingScope.Application);
+        await act.Should().ThrowAsync<SettingValidationException>();
+    }
+
+    [Theory]
+    [InlineData("https://example.com")]
+    [InlineData("http://localhost:5001/api")]
+    public async Task Validate_Url_AcceptsHttpAndHttps(string value)
+    {
+        var registry = new SettingsDefinitionRegistry([
+            new SettingDefinition
+            {
+                Key = "site.url2",
+                DisplayName = "Site URL",
+                Scope = SettingScope.Application,
+                Type = SettingType.Url,
+            },
+        ]);
+        var svc = new SettingsService(
+            _db,
+            registry,
+            _cache,
+            new Lazy<IMessageBus>(() => Substitute.For<IMessageBus>()),
+            Options.Create(new SettingsModuleOptions()),
+            NullLogger<SettingsService>.Instance
+        );
+
+        var act = () =>
+            svc.SetSettingAsync("site.url2", JsonString(value), SettingScope.Application);
+        await act.Should().NotThrowAsync();
     }
 
     public void Dispose()
