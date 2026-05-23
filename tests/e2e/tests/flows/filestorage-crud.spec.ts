@@ -153,14 +153,16 @@ test.describe('FileStorage permissions', () => {
           },
         },
       });
-      expect(response.status()).toBe(302);
+      // API endpoints return 401 for unauthenticated requests (no redirect for non-browser clients)
+      expect(response.status()).toBe(401);
     });
 
     test('delete is rejected', async ({ request }) => {
       const response = await request.delete('/api/files/1', {
         maxRedirects: 0,
       });
-      expect(response.status()).toBe(302);
+      // API endpoints return 401 for unauthenticated requests (no redirect for non-browser clients)
+      expect(response.status()).toBe(401);
     });
   });
 });
