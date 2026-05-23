@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using SimpleModule.Core.Settings;
+using SimpleModule.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 
@@ -14,6 +15,9 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
     private static string UniqueKey(string prefix) => $"{prefix}.{Guid.NewGuid():N}";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private HttpClient CreateAdminClient() =>
+        factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
     private static UpdateSettingRequest StringRequest(
         string key,
@@ -30,7 +34,7 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_StoresValue_ReadableViaGetSetting()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = CreateAdminClient();
         var key = UniqueKey("integration");
 
         var updateResponse = await client.PutAsJsonAsync(
@@ -46,14 +50,13 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var body = await getResponse.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("key").GetString().Should().Be(key);
         body.GetProperty("isOverridden").GetBoolean().Should().BeTrue();
-        // Value is a JsonElement containing the decoded string "hello"
         body.GetProperty("value").GetString().Should().Be("hello");
     }
 
     [Fact]
     public async Task DeleteSetting_RemovesValue_SubsequentGetReturns404()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = CreateAdminClient();
         var key = UniqueKey("delete");
 
         await client.PutAsJsonAsync(
@@ -91,7 +94,7 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task BulkUpdateSettings_StoresMultipleValues()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = CreateAdminClient();
         var key1 = UniqueKey("bulk1");
         var key2 = UniqueKey("bulk2");
 
@@ -158,7 +161,6 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var client = factory.CreateAuthenticatedClient();
         var key = UniqueKey("resolved");
 
-        // No value set, resolved should return null (no definition default either)
         var response = await client.GetAsync($"/api/settings/{key}/resolved");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -172,5 +174,103 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var client = factory.CreateClient();
         var response = await client.GetAsync("/api/settings");
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    // GAP-PERM: write endpoints require Settings.Update permission
+
+    [Fact]
+    public async Task UpdateSetting_WithoutPermission_Returns403()
+    {
+        var client = factory.CreateAuthenticatedClient();
+        var response = await client.PutAsJsonAsync(
+            "/api/settings",
+            StringRequest(UniqueKey("perm"), "value", SettingScope.Application),
+            JsonOptions
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task DeleteSetting_WithoutPermission_Returns403()
+    {
+        var client = factory.CreateAuthenticatedClient();
+        var response = await client.DeleteAsync($"/api/settings/some.key?scope=1");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task BulkUpdateSettings_WithoutPermission_Returns403()
+    {
+        var client = factory.CreateAuthenticatedClient();
+        var request = new BulkUpdateSettingsRequest
+        {
+            Updates =
+            [
+                new BulkSettingUpdate
+                {
+                    Key = UniqueKey("bulk-perm"),
+                    Scope = SettingScope.Application,
+                    Value = JsonSerializer.Deserialize<JsonElement>("\"v\""),
+                },
+            ],
+        };
+        var response = await client.PutAsJsonAsync("/api/settings/bulk", request, JsonOptions);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // BUG-3: GET /api/settings/{key} without ?scope returns 400
+
+    [Fact]
+    public async Task GetSetting_WithoutScope_Returns400()
+    {
+        var client = factory.CreateAuthenticatedClient();
+        var response = await client.GetAsync("/api/settings/any.key");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // BUG-4: DELETE /api/settings/{key} without ?scope returns 400
+
+    [Fact]
+    public async Task DeleteSetting_WithoutScope_Returns400()
+    {
+        var client = CreateAdminClient();
+        var response = await client.DeleteAsync("/api/settings/any.key");
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // BUG-6: PUT /api/settings with scope=User returns 400
+
+    [Fact]
+    public async Task UpdateSetting_WithUserScope_Returns400()
+    {
+        var client = CreateAdminClient();
+        var response = await client.PutAsJsonAsync(
+            "/api/settings",
+            StringRequest(UniqueKey("user-scope"), "value", SettingScope.User),
+            JsonOptions
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // BUG-6: PUT /api/settings/bulk with any User-scope entry returns 400
+
+    [Fact]
+    public async Task BulkUpdateSettings_WithUserScopeEntry_Returns400()
+    {
+        var client = CreateAdminClient();
+        var request = new BulkUpdateSettingsRequest
+        {
+            Updates =
+            [
+                new BulkSettingUpdate
+                {
+                    Key = UniqueKey("bulk-user"),
+                    Scope = SettingScope.User,
+                    Value = JsonSerializer.Deserialize<JsonElement>("\"v\""),
+                },
+            ],
+        };
+        var response = await client.PutAsJsonAsync("/api/settings/bulk", request, JsonOptions);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }
