@@ -16,6 +16,9 @@ export interface FeatureFlagOverride {
   isEnabled: boolean;
 }
 
+export interface FeatureFlagsFeatures {
+}
+
 export interface SetOverrideRequest {
   overrideType: any;
   overrideValue: string;
