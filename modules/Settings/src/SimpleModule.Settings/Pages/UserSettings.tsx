@@ -1,5 +1,5 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { Container } from '@simplemodule/ui';
+import { Button, Container, EmptyState } from '@simplemodule/ui';
 import { useCallback, useMemo, useState } from 'react';
 import type { SettingDefinition } from '@/components/SettingField';
 import SettingGroup from '@/components/SettingGroup';
@@ -13,6 +13,14 @@ interface UserSettingValueDto {
   value: unknown | null;
   resolvedValue: unknown | null;
   isOverridden: boolean;
+}
+
+interface ValidationProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  errors?: Record<string, string[]>;
 }
 
 interface UserSettingsProps {
@@ -50,6 +58,21 @@ function matchesSearch(def: SettingDefinition, query: string): boolean {
   );
 }
 
+async function parseErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as ValidationProblemDetails;
+    if (body.detail) return body.detail;
+    if (body.title) return body.title;
+    if (body.errors) {
+      const messages = Object.values(body.errors).flat();
+      if (messages.length > 0) return messages.join(' ');
+    }
+  } catch {
+    // not JSON — fall through to generic message
+  }
+  return `HTTP ${res.status}`;
+}
+
 export default function UserSettings({ definitions, settings }: UserSettingsProps) {
   const { t } = useTranslation('Settings');
 
@@ -59,6 +82,7 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
 
   const [query, setQuery] = useState('');
   const [onlyOverridden, setOnlyOverridden] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const filteredDefs = useMemo(() => {
     return definitions.filter((def) => {
@@ -75,11 +99,17 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
   const groupNames = useMemo(() => Object.keys(grouped), [grouped]);
 
   const handleSave = useCallback(async (key: string, _scope: number, value: unknown) => {
-    await fetch('/api/settings/me', {
+    setErrorMessage(null);
+    const res = await fetch('/api/settings/me', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, value, scope: 2 }),
     });
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res);
+      setErrorMessage(detail);
+      return;
+    }
     setValueMap((prev) => {
       const next = new Map(prev);
       const existing = next.get(key);
@@ -91,7 +121,13 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
   }, []);
 
   const handleReset = useCallback(async (key: string, _scope: number) => {
-    await fetch(`/api/settings/me/${encodeURIComponent(key)}`, { method: 'DELETE' });
+    setErrorMessage(null);
+    const res = await fetch(`/api/settings/me/${encodeURIComponent(key)}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res);
+      setErrorMessage(detail);
+      return;
+    }
     setValueMap((prev) => {
       const next = new Map(prev);
       const existing = next.get(key);
@@ -120,7 +156,10 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <SettingsSearch
             query={query}
-            onQueryChange={setQuery}
+            onQueryChange={(q) => {
+              setQuery(q);
+              setErrorMessage(null);
+            }}
             showOnlyModified={onlyOverridden}
             onShowOnlyModifiedChange={setOnlyOverridden}
             modifiedLabel={t(SettingsKeys.UserSettings.OnlyOverridden)}
@@ -128,56 +167,88 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
         </div>
       </div>
 
-      {groupNames.length === 0 ? (
-        <p className="py-12 text-center text-sm text-text-muted">No settings match your search.</p>
-      ) : (
-        <div className="flex gap-8">
-          <aside className="hidden lg:block w-48 flex-shrink-0">
-            <nav aria-label="Settings groups" className="sticky top-28 space-y-0.5">
-              {groupNames.map((group) => (
-                <a
-                  key={group}
-                  href={`#${toAnchorId(group)}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document
-                      .getElementById(toAnchorId(group))
-                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
-                  className="block rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-raised hover:text-text transition-colors duration-150"
-                >
-                  {group}
-                </a>
-              ))}
-            </nav>
-          </aside>
-
-          <div className="flex-1 min-w-0 space-y-8 pb-8">
-            {groupNames.map((group) => (
-              <SettingGroup key={group} group={group}>
-                {(grouped[group] ?? []).map((def) => {
-                  const v = valueMap.get(def.key);
-                  return (
-                    <SettingRow
-                      key={def.key}
-                      definition={def}
-                      valueInfo={{
-                        value: v?.value ?? null,
-                        isOverridden: v?.isOverridden ?? false,
-                        resolvedValue: v?.resolvedValue ?? null,
-                      }}
-                      onSave={handleSave}
-                      onReset={handleReset}
-                      showResolvedValue
-                      namespace="UserSettings"
-                    />
-                  );
-                })}
-              </SettingGroup>
-            ))}
-          </div>
+      {errorMessage !== null && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger-text"
+        >
+          <p className="font-semibold">{t(SettingsKeys.UserSettings.SaveErrorTitle)}</p>
+          <p className="mt-0.5">{errorMessage}</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-2 h-auto px-2 py-1 text-xs"
+            onClick={() => setErrorMessage(null)}
+          >
+            Dismiss
+          </Button>
         </div>
       )}
+
+      <div className="flex gap-8">
+        <aside className="hidden lg:block w-48 flex-shrink-0">
+          <nav aria-label="Settings groups" className="sticky top-28 space-y-0.5">
+            {groupNames.map((group) => (
+              <a
+                key={group}
+                href={`#${toAnchorId(group)}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document
+                    .getElementById(toAnchorId(group))
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="block rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-raised hover:text-text transition-colors duration-150"
+              >
+                {group}
+              </a>
+            ))}
+          </nav>
+        </aside>
+
+        <div className="flex-1 min-w-0 pb-8">
+          {groupNames.length === 0 ? (
+            <EmptyState
+              title={t(SettingsKeys.UserSettings.NoResults)}
+              description={
+                query ? `No settings match "${query}". Try a different search term.` : undefined
+              }
+              secondaryAction={
+                query ? (
+                  <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+                    Clear search
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <div className="space-y-8">
+              {groupNames.map((group) => (
+                <SettingGroup key={group} group={group}>
+                  {(grouped[group] ?? []).map((def) => {
+                    const v = valueMap.get(def.key);
+                    return (
+                      <SettingRow
+                        key={def.key}
+                        definition={def}
+                        valueInfo={{
+                          value: v?.value ?? null,
+                          isOverridden: v?.isOverridden ?? false,
+                          resolvedValue: v?.resolvedValue ?? null,
+                        }}
+                        onSave={handleSave}
+                        onReset={handleReset}
+                        showResolvedValue
+                        namespace="UserSettings"
+                      />
+                    );
+                  })}
+                </SettingGroup>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </Container>
   );
 }

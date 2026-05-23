@@ -1,5 +1,14 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { PageShell, Tabs, TabsContent, TabsList, TabsTrigger, Toggle } from '@simplemodule/ui';
+import {
+  Button,
+  EmptyState,
+  PageShell,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Toggle,
+} from '@simplemodule/ui';
 import { useCallback, useMemo, useState } from 'react';
 import type { SettingDefinition } from '@/components/SettingField';
 import SettingGroup from '@/components/SettingGroup';
@@ -16,6 +25,14 @@ interface SettingValueDto {
   isOverridden: boolean;
   userId?: string | null;
   updatedAt?: string | null;
+}
+
+interface ValidationProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  errors?: Record<string, string[]>;
 }
 
 interface AdminSettingsProps {
@@ -53,6 +70,21 @@ function matchesSearch(def: SettingDefinition, query: string): boolean {
   );
 }
 
+async function parseErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as ValidationProblemDetails;
+    if (body.detail) return body.detail;
+    if (body.title) return body.title;
+    if (body.errors) {
+      const messages = Object.values(body.errors).flat();
+      if (messages.length > 0) return messages.join(' ');
+    }
+  } catch {
+    // not JSON — fall through to generic message
+  }
+  return `HTTP ${res.status}`;
+}
+
 export default function AdminSettings({ definitions, settings }: AdminSettingsProps) {
   const { t } = useTranslation('Settings');
 
@@ -68,6 +100,7 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
     Map<string, { scope: number; value: unknown }>
   >(new Map());
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const systemDefs = useMemo(() => definitions.filter((d) => d.scope === 0), [definitions]);
   const appDefs = useMemo(() => definitions.filter((d) => d.scope === 1), [definitions]);
@@ -91,11 +124,17 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
       setPendingValues((prev) => new Map(prev).set(key, { scope, value }));
       return;
     }
-    await fetch('/api/settings', {
+    setErrorMessage(null);
+    const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, scope, value }),
     });
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res);
+      setErrorMessage(detail);
+      return;
+    }
     setValueMap((prev) => {
       const next = new Map(prev);
       const existing = next.get(key);
@@ -105,9 +144,15 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
   };
 
   const handleReset = async (key: string, scope: number) => {
-    await fetch(`/api/settings/${encodeURIComponent(key)}?scope=${scope}`, {
+    setErrorMessage(null);
+    const res = await fetch(`/api/settings/${encodeURIComponent(key)}?scope=${scope}`, {
       method: 'DELETE',
     });
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res);
+      setErrorMessage(detail);
+      return;
+    }
     setValueMap((prev) => {
       const next = new Map(prev);
       const existing = next.get(key);
@@ -140,17 +185,23 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
   const handleBulkSave = async () => {
     if (pendingValues.size === 0) return;
     setBulkSaving(true);
+    setErrorMessage(null);
     try {
       const updates = Array.from(pendingValues.entries()).map(([key, { scope, value }]) => ({
         key,
         scope,
         value,
       }));
-      await fetch('/api/settings/bulk', {
+      const res = await fetch('/api/settings/bulk', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ updates }),
       });
+      if (!res.ok) {
+        const detail = await parseErrorDetail(res);
+        setErrorMessage(detail);
+        return;
+      }
       setValueMap((prev) => {
         const next = new Map(prev);
         for (const { key, scope, value } of updates) {
@@ -177,66 +228,95 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
     setDirtyKeys(new Set());
   };
 
+  const toolbar = (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <SettingsSearch
+        query={query}
+        onQueryChange={(q) => {
+          setQuery(q);
+          setErrorMessage(null);
+        }}
+        showOnlyModified={showOnlyModified}
+        onShowOnlyModifiedChange={setShowOnlyModified}
+        modifiedLabel={t(SettingsKeys.AdminSettings.ShowOnlyModified)}
+      />
+      <Toggle
+        pressed={bulkMode}
+        onPressedChange={(v) => {
+          setBulkMode(v);
+          if (!v) handleDiscard();
+        }}
+        variant="outline"
+        aria-label={t(SettingsKeys.AdminSettings.BulkEditToggle)}
+      >
+        {t(SettingsKeys.AdminSettings.BulkEditToggle)}
+      </Toggle>
+    </div>
+  );
+
   const renderGroups = (defs: SettingDefinition[]) => {
     const filtered = filterDefs(defs);
     const grouped = groupDefinitions(filtered);
     const groupNames = Object.keys(grouped);
 
-    if (groupNames.length === 0) {
-      return (
-        <p className="py-12 text-center text-sm text-text-muted">No settings match your search.</p>
-      );
-    }
-
     return (
-      <SettingsLayout
-        groups={groupNames}
-        toolbar={
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <SettingsSearch
-              query={query}
-              onQueryChange={setQuery}
-              showOnlyModified={showOnlyModified}
-              onShowOnlyModifiedChange={setShowOnlyModified}
-              modifiedLabel={t(SettingsKeys.AdminSettings.ShowOnlyModified)}
-            />
-            <Toggle
-              pressed={bulkMode}
-              onPressedChange={(v) => {
-                setBulkMode(v);
-                if (!v) handleDiscard();
-              }}
-              variant="outline"
-              aria-label={t(SettingsKeys.AdminSettings.BulkEditToggle)}
+      <SettingsLayout groups={groupNames} toolbar={toolbar}>
+        {errorMessage !== null && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger-text"
+          >
+            <p className="font-semibold">{t(SettingsKeys.AdminSettings.SaveErrorTitle)}</p>
+            <p className="mt-0.5">{errorMessage}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 h-auto px-2 py-1 text-xs"
+              onClick={() => setErrorMessage(null)}
             >
-              {t(SettingsKeys.AdminSettings.BulkEditToggle)}
-            </Toggle>
+              Dismiss
+            </Button>
           </div>
-        }
-      >
-        {groupNames.map((group) => (
-          <SettingGroup key={group} group={group}>
-            {(grouped[group] ?? []).map((def) => {
-              const v = valueMap.get(def.key);
-              const pending = pendingValues.get(def.key);
-              return (
-                <SettingRow
-                  key={def.key}
-                  definition={def}
-                  valueInfo={{
-                    value: pending?.value ?? v?.value ?? null,
-                    isOverridden: v?.isOverridden ?? false,
-                  }}
-                  onSave={handleSave}
-                  onReset={handleReset}
-                  onDirty={handleDirty}
-                  bulkMode={bulkMode}
-                  namespace="AdminSettings"
-                />
-              );
-            })}
-          </SettingGroup>
-        ))}
+        )}
+        {groupNames.length === 0 ? (
+          <EmptyState
+            title={t(SettingsKeys.AdminSettings.NoResults)}
+            description={
+              query ? `No settings match "${query}". Try a different search term.` : undefined
+            }
+            secondaryAction={
+              query ? (
+                <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+                  Clear search
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          groupNames.map((group) => (
+            <SettingGroup key={group} group={group}>
+              {(grouped[group] ?? []).map((def) => {
+                const v = valueMap.get(def.key);
+                const pending = pendingValues.get(def.key);
+                return (
+                  <SettingRow
+                    key={def.key}
+                    definition={def}
+                    valueInfo={{
+                      value: pending?.value ?? v?.value ?? null,
+                      isOverridden: v?.isOverridden ?? false,
+                    }}
+                    onSave={handleSave}
+                    onReset={handleReset}
+                    onDirty={handleDirty}
+                    bulkMode={bulkMode}
+                    namespace="AdminSettings"
+                  />
+                );
+              })}
+            </SettingGroup>
+          ))
+        )}
       </SettingsLayout>
     );
   };
