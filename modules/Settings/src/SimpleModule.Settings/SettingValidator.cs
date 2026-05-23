@@ -76,7 +76,8 @@ internal static class SettingValidator
             case SettingType.Url:
                 if (
                     value.ValueKind != JsonValueKind.String
-                    || !Uri.TryCreate(value.GetString(), UriKind.Absolute, out _)
+                    || !Uri.TryCreate(value.GetString(), UriKind.Absolute, out var uri)
+                    || uri.Scheme is not ("http" or "https")
                 )
                     errors.Add($"Setting '{definition.Key}' must be a valid absolute URL.");
                 break;
@@ -124,6 +125,17 @@ internal static class SettingValidator
         if (string.IsNullOrEmpty(definition.Pattern))
             return;
         if (value.ValueKind != JsonValueKind.String)
+            return;
+
+        // Structured types enforce their own format via ValidateType; skip the user-supplied
+        // Pattern to prevent reporting two errors for the same invalid value.
+        if (
+            definition.Type
+            is SettingType.Email
+                or SettingType.Url
+                or SettingType.Color
+                or SettingType.DateTime
+        )
             return;
 
         try

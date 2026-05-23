@@ -145,6 +145,17 @@ public sealed partial class SettingsService(
 
     public async Task SetManyAsync(IReadOnlyList<BulkSettingUpdate> updates)
     {
+        // User-scoped settings cannot be bulk-updated because there is no authenticated
+        // user identity in a bulk request. Callers must use /api/settings/me instead.
+        var userScopedKey = updates.FirstOrDefault(u => u.Scope == SettingScope.User)?.Key;
+        if (userScopedKey is not null)
+            throw new SettingValidationException(
+                userScopedKey,
+                [
+                    "Bulk updates do not support User scope; use /api/settings/me for per-user settings.",
+                ]
+            );
+
         foreach (var update in updates)
         {
             var definition = definitions.GetDefinition(update.Key);
@@ -160,11 +171,6 @@ public sealed partial class SettingsService(
 
         foreach (var update in updates)
         {
-            if (update.Scope == SettingScope.User)
-                throw new InvalidOperationException(
-                    "BulkUpdateSettings does not support User scope; use UpdateMySetting for user-scoped values."
-                );
-
             var storageValue = update.Value.GetRawText();
 
             var existing = await db.Settings.FirstOrDefaultAsync(s =>

@@ -129,6 +129,34 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
         get2.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    // BUG-5: PUT /api/settings/bulk with a User-scope entry must return 400, not 500.
+    [Fact]
+    public async Task BulkUpdateSettings_WithUserScope_Returns400()
+    {
+        var client = factory.CreateAuthenticatedClient();
+
+        var request = new BulkUpdateSettingsRequest
+        {
+            Updates =
+            [
+                new BulkSettingUpdate
+                {
+                    Key = "app.theme",
+                    Scope = SettingScope.User,
+                    Value = JsonSerializer.Deserialize<JsonElement>("\"dark\""),
+                },
+            ],
+        };
+
+        var response = await client.PutAsJsonAsync("/api/settings/bulk", request, JsonOptions);
+        response.StatusCode
+            .Should()
+            .Be(
+                HttpStatusCode.BadRequest,
+                "User-scope entries in a bulk request must return 400 with a useful message, not 500"
+            );
+    }
+
     [Fact]
     public async Task UpdateMySetting_StoresUserScopedValue_ReadableViaGetMySettings()
     {
