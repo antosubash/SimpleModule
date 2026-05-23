@@ -123,13 +123,14 @@ public sealed class EventDurabilityE2ETests(SimpleModuleWebApplicationFactory fa
         // Belt-and-suspenders companion to the test above: a real HTTP request that
         // hits a service which internally calls bus.PublishAsync. Ensures the full
         // ASP.NET → service → Wolverine path works under the durable wiring.
-        var client = factory.CreateAuthenticatedClient();
+        // Settings.Update permission claim — write endpoints are gated on it.
+        var client = factory.CreateAuthenticatedClient(["Settings.Update"]);
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 key = "verify.api.event",
-                value = "\"hello\"",
+                value = "hello",
                 scope = 0,
             }
         );

@@ -1,30 +1,29 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@simplemodule/ui';
-import type { SettingDefinition } from './SettingField';
-import SettingField from './SettingField';
+import { Card } from '@simplemodule/ui';
+import { toAnchorId } from './SettingsGroupNav';
 
 interface SettingGroupProps {
   group: string;
-  definitions: SettingDefinition[];
-  values: Record<string, string | null>;
-  onSave: (key: string, value: string, scope: number) => Promise<void>;
+  children: React.ReactNode;
 }
 
-export default function SettingGroup({ group, definitions, values, onSave }: SettingGroupProps) {
+export default function SettingGroup({ group, children }: SettingGroupProps) {
   return (
-    <Card data-testid="setting-card">
-      <CardHeader className="p-4 sm:p-6">
-        <CardTitle>{group}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:space-y-6 sm:p-6">
-        {definitions.map((def) => (
-          <div key={def.key}>
-            <label htmlFor={def.key} className="text-sm font-medium">
-              {def.displayName}
-            </label>
-            <SettingField definition={def} currentValue={values[def.key]} onSave={onSave} />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <section
+      id={toAnchorId(group)}
+      aria-labelledby={`${toAnchorId(group)}-heading`}
+      data-testid="setting-card"
+      className="scroll-mt-32"
+    >
+      <h2
+        id={`${toAnchorId(group)}-heading`}
+        className="text-base font-bold mb-3 flex items-center gap-2 before:content-[''] before:w-1 before:h-5 before:rounded-full before:bg-gradient-to-b before:from-primary before:to-accent"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
+        {group}
+      </h2>
+      <Card padding="none" className="divide-y divide-border">
+        {children}
+      </Card>
+    </section>
   );
 }
