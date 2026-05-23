@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.AuditLogs;
 using SimpleModule.BackgroundJobs;
+using SimpleModule.Core.Maintenance;
 using SimpleModule.Database;
 using SimpleModule.Email;
 using SimpleModule.FeatureFlags;
@@ -91,6 +92,19 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
             RemoveHostedService<SimpleModule.Email.Jobs.EmailJobRegistrationHostedService>(
                 services
             );
+
+            // Replace the file-based maintenance state provider with a no-op so that
+            // a leftover .maintenance sentinel on the developer's machine (or a CI
+            // agent that ran `sm down`) cannot block API requests and cause spurious
+            // test failures with 503 responses.
+            var maintenanceDescriptor = services.SingleOrDefault(d =>
+                d.ServiceType == typeof(IMaintenanceStateProvider)
+            );
+            if (maintenanceDescriptor is not null)
+            {
+                services.Remove(maintenanceDescriptor);
+            }
+            services.AddSingleton<IMaintenanceStateProvider, NullMaintenanceStateProvider>();
 
             // Add test authentication scheme that bypasses OpenIddict validation
             services.AddTestAuthentication();
@@ -181,5 +195,15 @@ public partial class SimpleModuleWebApplicationFactory : WebApplicationFactory<P
             // an empty temp DB is acceptable for test cleanup.
         }
 #pragma warning restore CA1031
+    }
+
+    /// <summary>
+    /// Always reports the application as live. Prevents a stale <c>.maintenance</c>
+    /// sentinel on the developer's machine from returning 503 for every test request.
+    /// </summary>
+    private sealed class NullMaintenanceStateProvider : IMaintenanceStateProvider
+    {
+        public ValueTask<MaintenanceState?> GetAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult<MaintenanceState?>(null);
     }
 }
