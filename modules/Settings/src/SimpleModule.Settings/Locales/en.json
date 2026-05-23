@@ -1,4 +1,7 @@
 {
+  "AdminSettings.NoResults": "No settings match your search.",
+  "AdminSettings.SaveError": "{detail}",
+  "AdminSettings.SaveErrorTitle": "Failed to save setting",
   "AdminSettings.Title": "Settings",
   "AdminSettings.TabSystem": "System",
   "AdminSettings.TabApplication": "Application",
@@ -18,6 +21,9 @@
   "AdminSettings.ScopeSystem": "System",
   "AdminSettings.ScopeApplication": "Application",
   "AdminSettings.ScopeUser": "User",
+  "UserSettings.NoResults": "No settings match your search.",
+  "UserSettings.SaveError": "{detail}",
+  "UserSettings.SaveErrorTitle": "Failed to save setting",
   "UserSettings.Title": "My Settings",
   "UserSettings.BadgeOverridden": "Overridden",
   "UserSettings.BadgeDefault": "Default",
