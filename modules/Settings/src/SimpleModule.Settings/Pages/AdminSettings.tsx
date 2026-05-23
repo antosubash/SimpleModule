@@ -245,7 +245,7 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
 
   return (
     <PageShell title={t(SettingsKeys.AdminSettings.Title)} size="lg">
-      <Tabs defaultValue="system">
+      <Tabs defaultValue="system" className="mt-2">
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="system">{t(SettingsKeys.AdminSettings.TabSystem)}</TabsTrigger>
           <TabsTrigger value="application">

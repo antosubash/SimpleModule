@@ -28,6 +28,9 @@ const scopeBadgeVariant: Record<number, 'danger' | 'info' | 'success'> = {
   2: 'success',
 };
 
+// Wide types (Json, MultilineText) need their own row below the label.
+const WIDE_TYPES = new Set([3, 9]);
+
 function formatResolved(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value === 'string') return value;
@@ -49,6 +52,7 @@ export default function SettingRow({
   const keys = SettingsKeys[namespace];
 
   const scopeVariant = scopeBadgeVariant[definition.scope] ?? 'default';
+  const isWide = WIDE_TYPES.has(definition.type);
 
   const scopeLabel = (() => {
     switch (definition.scope) {
@@ -78,57 +82,32 @@ export default function SettingRow({
         }
       : undefined;
 
-  return (
-    <div className="px-6 py-5 first:rounded-t-2xl last:rounded-b-2xl">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-1.5">
-        <div className="flex flex-wrap items-center gap-2 min-w-0">
-          <Label htmlFor={definition.key} className="text-sm font-semibold text-text">
-            {definition.displayName}
-            {definition.required && (
-              <span
-                className="ml-0.5 text-danger-text"
-                title={t(SettingsKeys.AdminSettings.RequiredAsterisk)}
-                aria-hidden="true"
-              >
-                *
-              </span>
-            )}
-          </Label>
-          <Badge variant={scopeVariant}>{scopeLabel}</Badge>
-          {valueInfo.isOverridden && <Badge variant="warning">{t(keys.Overridden)}</Badge>}
-          {!valueInfo.isOverridden && namespace === 'UserSettings' && (
-            <Badge variant="default">{t(keys.Default)}</Badge>
+  const labelBlock = (
+    <div className="min-w-0 flex-1">
+      <div className="flex flex-wrap items-center gap-2 mb-1">
+        <Label htmlFor={definition.key} className="text-sm font-semibold text-text">
+          {definition.displayName}
+          {definition.required && (
+            <span
+              className="ml-0.5 text-danger-text"
+              title={t(SettingsKeys.AdminSettings.RequiredAsterisk)}
+              aria-hidden="true"
+            >
+              *
+            </span>
           )}
-        </div>
-
-        {!bulkMode && handleReset && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            className="text-text-secondary hover:text-danger-text whitespace-nowrap -my-1"
-          >
-            {t(keys.ResetToDefault)}
-          </Button>
+        </Label>
+        <Badge variant={scopeVariant}>{scopeLabel}</Badge>
+        {valueInfo.isOverridden && <Badge variant="warning">{t(keys.Overridden)}</Badge>}
+        {!valueInfo.isOverridden && namespace === 'UserSettings' && (
+          <Badge variant="default">{t(keys.Default)}</Badge>
         )}
       </div>
-
       {definition.description && (
-        <p className="text-sm text-text-secondary mb-3 max-w-prose">{definition.description}</p>
+        <p className="text-sm text-text-secondary max-w-prose">{definition.description}</p>
       )}
-
-      <div className="max-w-xl">
-        <SettingField
-          definition={definition}
-          value={valueInfo.value}
-          onSave={handleSave}
-          onDirty={onDirty ? (isDirty: boolean) => onDirty(definition.key, isDirty) : undefined}
-          disabled={disabled}
-        />
-      </div>
-
       {showResolvedValue && resolvedDisplay !== null && (
-        <p className="text-xs text-text-muted mt-2">
+        <p className="text-xs text-text-muted mt-1.5">
           {t(keys.Current)}:{' '}
           <span className="font-mono text-text-secondary">{resolvedDisplay}</span>{' '}
           <span className="text-text-muted">
@@ -136,6 +115,51 @@ export default function SettingRow({
           </span>
         </p>
       )}
+    </div>
+  );
+
+  const fieldBlock = (
+    <SettingField
+      definition={definition}
+      value={valueInfo.value}
+      onSave={handleSave}
+      onDirty={onDirty ? (isDirty: boolean) => onDirty(definition.key, isDirty) : undefined}
+      disabled={disabled}
+    />
+  );
+
+  const resetButton = !bulkMode && handleReset && (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleReset}
+      className="text-text-secondary hover:text-danger-text whitespace-nowrap shrink-0"
+    >
+      {t(keys.ResetToDefault)}
+    </Button>
+  );
+
+  if (isWide) {
+    return (
+      <div className="px-6 py-5">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          {labelBlock}
+          {resetButton}
+        </div>
+        {fieldBlock}
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-6 py-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+        {labelBlock}
+        <div className="flex items-center gap-3 shrink-0 sm:w-72">
+          <div className="flex-1 min-w-0">{fieldBlock}</div>
+          {resetButton}
+        </div>
+      </div>
     </div>
   );
 }
