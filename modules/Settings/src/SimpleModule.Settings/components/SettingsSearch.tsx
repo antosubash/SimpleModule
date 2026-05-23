@@ -1,5 +1,6 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { SearchInput, Toggle } from '@simplemodule/ui';
+import { Checkbox, Label, SearchInput } from '@simplemodule/ui';
+import { useId } from 'react';
 import { SettingsKeys } from '@/Locales/keys';
 
 interface SettingsSearchProps {
@@ -18,9 +19,10 @@ export default function SettingsSearch({
   modifiedLabel,
 }: SettingsSearchProps) {
   const { t } = useTranslation('Settings');
+  const checkboxId = useId();
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
       <SearchInput
         aria-label={t(SettingsKeys.AdminSettings.SearchPlaceholder)}
         placeholder={t(SettingsKeys.AdminSettings.SearchPlaceholder)}
@@ -28,15 +30,19 @@ export default function SettingsSearch({
         onChange={(e) => onQueryChange(e.target.value)}
         className="sm:max-w-xs"
       />
-      <Toggle
-        pressed={showOnlyModified}
-        onPressedChange={onShowOnlyModifiedChange}
-        variant="outline"
-        size="default"
-        aria-label={modifiedLabel}
-      >
-        {modifiedLabel}
-      </Toggle>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={checkboxId}
+          checked={showOnlyModified}
+          onCheckedChange={(v) => onShowOnlyModifiedChange(v === true)}
+        />
+        <Label
+          htmlFor={checkboxId}
+          className="text-sm text-text-secondary cursor-pointer whitespace-nowrap"
+        >
+          {modifiedLabel}
+        </Label>
+      </div>
     </div>
   );
 }
