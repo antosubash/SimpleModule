@@ -83,8 +83,8 @@ export default function SettingRow({
       : undefined;
 
   const labelBlock = (
-    <div className="min-w-0 flex-1">
-      <div className="flex flex-wrap items-center gap-2 mb-1">
+    <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="flex flex-wrap items-center gap-2">
         <Label htmlFor={definition.key} className="text-sm font-semibold text-text">
           {definition.displayName}
           {definition.required && (
@@ -107,7 +107,7 @@ export default function SettingRow({
         <p className="text-sm text-text-secondary max-w-prose">{definition.description}</p>
       )}
       {showResolvedValue && resolvedDisplay !== null && (
-        <p className="text-xs text-text-muted mt-1.5">
+        <p className="text-xs text-text-muted">
           {t(keys.Current)}:{' '}
           <span className="font-mono text-text-secondary">{resolvedDisplay}</span>{' '}
           <span className="text-text-muted">
@@ -141,7 +141,7 @@ export default function SettingRow({
 
   if (isWide) {
     return (
-      <div className="px-6 py-5">
+      <div className="px-6 py-6">
         <div className="flex items-start justify-between gap-4 mb-3">
           {labelBlock}
           {resetButton}
@@ -152,8 +152,8 @@ export default function SettingRow({
   }
 
   return (
-    <div className="px-6 py-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+    <div className="px-6 py-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
         {labelBlock}
         <div className="flex items-center gap-3 shrink-0 sm:w-72">
           <div className="flex-1 min-w-0">{fieldBlock}</div>
