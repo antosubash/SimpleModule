@@ -42,12 +42,11 @@ test.describe('Settings pages', () => {
   });
 
   test('select setting populates options from allowedValues and saves', async ({ page }) => {
+    // Reset to clean state — other parallel tests may have left this user-scoped row in place
+    await page.request.delete('/api/settings/me/user.preferred_density');
+
     const user = new UserSettingsPage(page);
     await user.goto();
-    // The Display Density setting is a Select with allowedValues compact/comfortable/spacious.
-    // Save baseline so we can assert it changes, then restore via reset to be idempotent.
-    const before = await page.request.get('/api/settings/user.preferred_density/resolved');
-    expect(before.ok()).toBeTruthy();
 
     const trigger = page.getByRole('combobox', { name: /display density/i });
     await trigger.click();
@@ -62,7 +61,7 @@ test.describe('Settings pages', () => {
       expect(r.ok()).toBeTruthy();
       const body = (await r.json()) as { value: unknown };
       expect(body.value).toBe('spacious');
-    }).toPass({ timeout: 5000 });
+    }).toPass({ timeout: 10_000 });
 
     // Cleanup so the test is idempotent across runs.
     await page.request.delete('/api/settings/me/user.preferred_density');

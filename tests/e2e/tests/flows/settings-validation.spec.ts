@@ -267,6 +267,9 @@ test.describe('Settings validation flows', () => {
       });
 
       test('discard clears the pending queue — save bar disappears', async ({ page }) => {
+        // Start from a clean state so the new value is guaranteed to differ from the stored one
+        await page.request.delete('/api/settings/app.primary_color?scope=1');
+
         await page.goto('/settings/manage');
         await page.getByRole('tab', { name: /application/i }).click();
 
@@ -274,12 +277,12 @@ test.describe('Settings validation flows', () => {
         await page.getByPlaceholder(/search settings/i).fill('primary color');
 
         const hexInput = page.locator('input[maxlength="7"]');
-        await hexInput.fill('#005500');
+        await hexInput.fill('#abcdef');
 
-        const saveBtn = page.getByRole('button', { name: /^save$/i }).first();
-        if (await saveBtn.isVisible()) {
-          await saveBtn.click();
-        }
+        await page
+          .getByRole('button', { name: /^save$/i })
+          .first()
+          .click();
 
         await expect(page.getByRole('button', { name: 'Discard' })).toBeVisible({ timeout: 5000 });
         await page.getByRole('button', { name: 'Discard' }).click();
