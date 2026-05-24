@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
 using SimpleModule.Core.Settings;
+using SimpleModule.Settings;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 
@@ -18,14 +19,14 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_ValidRequest_Returns204()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = UniqueKey("test.formrequest"),
-                Value = "\"hello\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"hello\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -34,17 +35,17 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task UpdateSetting_NullValue_StoresEmptyString()
+    public async Task UpdateSetting_NullJsonValue_Returns204()
     {
-        // Value is string? — null value is coerced to empty string by the endpoint.
-        var client = factory.CreateAuthenticatedClient();
+        // Value is JsonElement — a JSON null is a valid JsonElement with ValueKind.Null.
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = UniqueKey("test.nullvalue"),
-                Value = (string?)null,
+                Value = JsonSerializer.Deserialize<JsonElement>("null"),
                 Scope = SettingScope.Application,
             }
         );
@@ -56,7 +57,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     public async Task UpdateSetting_KeyWithWhitespace_TrimsAndSucceeds()
     {
         // Prepare() should trim whitespace from the key before validation runs.
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
         var baseKey = UniqueKey("test.trimmed");
 
         var response = await client.PutAsJsonAsync(
@@ -64,7 +65,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
             new
             {
                 Key = $"  {baseKey}  ",
-                Value = "\"trimmed\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"trimmed\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -77,14 +78,14 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_EmptyKey_Returns422WithKeyError()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = "",
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -96,14 +97,14 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_CamelCaseKey_Returns204()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = "test.camelCaseKey",
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -114,14 +115,14 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_TrailingDot_Returns422()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = "app.",
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -134,14 +135,14 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     public async Task UpdateSetting_InvalidKeyFormat_Returns422()
     {
         // "INVALID KEY!" contains spaces and special chars — should fail even after trim.
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = "INVALID KEY!",
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -153,7 +154,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_KeyTooLong_Returns422()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
         // MaximumLength(256) means 256 is valid but 257 is not.
         var longKey = "a." + new string('a', 256);
 
@@ -162,7 +163,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
             new
             {
                 Key = longKey,
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -174,18 +175,11 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task UpdateSetting_InvalidScopeEnum_Returns422()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         // Use raw JSON to send scope=99 which is not a valid SettingScope value.
         using var content = new StringContent(
-            JsonSerializer.Serialize(
-                new
-                {
-                    Key = "test.scope",
-                    Value = "\"x\"",
-                    Scope = 99,
-                }
-            ),
+            """{"Key":"test.scope","Value":"x","Scope":99}""",
             System.Text.Encoding.UTF8,
             "application/json"
         );
@@ -303,14 +297,14 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task ValidationError_ResponseHasCorrectRfc7807Shape()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.Update]);
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
             new
             {
                 Key = "",
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );
@@ -356,7 +350,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
             new
             {
                 Key = "",
-                Value = "\"test\"",
+                Value = JsonSerializer.Deserialize<JsonElement>("\"test\""),
                 Scope = SettingScope.Application,
             }
         );

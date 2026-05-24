@@ -21,7 +21,7 @@ namespace Settings.Tests.Integration;
 [Collection(TestCollections.Integration)]
 public class SettingsValidationEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
-    private static string UniqueKey(string prefix) => $"qa.{prefix}.{Guid.NewGuid():N}";
+    private static string UniqueKey(string prefix) => $"qa.{prefix}.k{Guid.NewGuid():N}";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -318,7 +318,7 @@ public class SettingsValidationEndpointTests(SimpleModuleWebApplicationFactory f
         // PUT /api/settings rejects User scope at the admin endpoint to prevent ghost rows
         // (UserId=null). Callers must use /api/settings/me for per-user values.
         var client = AdminClient();
-        var key = UniqueKey("user-scope-ghost");
+        var key = UniqueKey("userscopeghost");
 
         var response = await client.PutAsJsonAsync(
             "/api/settings",
@@ -420,7 +420,7 @@ public class SettingsValidationEndpointTests(SimpleModuleWebApplicationFactory f
     public async Task ScopeIsolation_SystemAndApplicationAreSeparateRows()
     {
         var client = AdminClient();
-        var key = UniqueKey("scope-isolation");
+        var key = UniqueKey("scopeIsolation");
 
         // Set different values at System and Application scope
         await client.PutAsJsonAsync(
