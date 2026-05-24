@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
+using SimpleModule.Settings.FormRequests;
 
 namespace SimpleModule.Settings.Endpoints.UserSettings;
 
@@ -17,7 +18,7 @@ public class UpdateMySettingEndpoint : IEndpoint
         app.MapPut(
                 Route,
                 async Task<IResult> (
-                    UpdateSettingRequest request,
+                    UpdateMySettingFormRequest request,
                     ISettingsContracts settings,
                     ClaimsPrincipal principal
                 ) =>
