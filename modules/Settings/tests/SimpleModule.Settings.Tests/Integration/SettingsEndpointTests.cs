@@ -12,7 +12,7 @@ namespace Settings.Tests.Integration;
 [Collection(TestCollections.Integration)]
 public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
-    private static string UniqueKey(string prefix) => $"{prefix}.{Guid.NewGuid():N}";
+    private static string UniqueKey(string prefix) => $"{prefix}.k{Guid.NewGuid():N}";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 

@@ -22,6 +22,11 @@ export interface UpdateMenuItemFormRequest {
   isHomePage: boolean;
 }
 
+export interface UpdateMySettingFormRequest {
+  key: string;
+  value: string;
+}
+
 export interface UpdateSettingFormRequest {
   key: string;
   value: string;

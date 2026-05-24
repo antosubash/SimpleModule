@@ -11,7 +11,7 @@ namespace Settings.Tests.Integration;
 [Collection(TestCollections.Integration)]
 public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
-    private static string UniqueKey(string prefix) => $"{prefix}.{Guid.NewGuid():N}";
+    private static string UniqueKey(string prefix) => $"{prefix}.k{Guid.NewGuid():N}";
 
     // ─── UpdateSetting: valid requests ────────────────────────────────────────
 
@@ -34,9 +34,9 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     }
 
     [Fact]
-    public async Task UpdateSetting_NullValue_Returns204()
+    public async Task UpdateSetting_NullValue_StoresEmptyString()
     {
-        // Value is string? — null means "clear the setting", which is a valid operation.
+        // Value is string? — null value is coerced to empty string by the endpoint.
         var client = factory.CreateAuthenticatedClient();
 
         var response = await client.PutAsJsonAsync(
@@ -94,9 +94,45 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     }
 
     [Fact]
+    public async Task UpdateSetting_CamelCaseKey_Returns204()
+    {
+        var client = factory.CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync(
+            "/api/settings",
+            new
+            {
+                Key = "test.camelCaseKey",
+                Value = "\"test\"",
+                Scope = SettingScope.Application,
+            }
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task UpdateSetting_TrailingDot_Returns422()
+    {
+        var client = factory.CreateAuthenticatedClient();
+
+        var response = await client.PutAsJsonAsync(
+            "/api/settings",
+            new
+            {
+                Key = "app.",
+                Value = "\"test\"",
+                Scope = SettingScope.Application,
+            }
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
+        await AssertProblemHasFieldError(response, "Key");
+    }
+
+    [Fact]
     public async Task UpdateSetting_InvalidKeyFormat_Returns422()
     {
-        // Keys must be dotted lowercase identifiers (e.g. "app.theme").
         // "INVALID KEY!" contains spaces and special chars — should fail even after trim.
         var client = factory.CreateAuthenticatedClient();
 
