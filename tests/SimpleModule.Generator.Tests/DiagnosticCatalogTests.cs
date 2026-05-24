@@ -177,6 +177,12 @@ public class DiagnosticCatalogTests
             DiagnosticSeverity.Error,
             "SimpleModule.Generator"
         ),
+        ["FormRequestNotSealed"] = ("SM0056", DiagnosticSeverity.Error, "SimpleModule.Generator"),
+        ["FormRequestDoesNotExtendBase"] = (
+            "SM0057",
+            DiagnosticSeverity.Error,
+            "SimpleModule.Generator"
+        ),
     };
 
     [Fact]

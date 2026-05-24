@@ -47,6 +47,7 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<AgentDefinitionRecord> AgentDefinitions,
     ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
     ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
+    ImmutableArray<FormRequestInfoRecord> FormRequests,
     ImmutableArray<string> ContractsAssemblyNames,
     bool HasAgentsAssembly,
     bool HasRagAssembly,
@@ -79,6 +80,7 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<AgentDefinitionRecord>.Empty,
         ImmutableArray<AgentToolProviderRecord>.Empty,
         ImmutableArray<KnowledgeSourceRecord>.Empty,
+        ImmutableArray<FormRequestInfoRecord>.Empty,
         ImmutableArray<string>.Empty,
         false,
         false,
@@ -103,6 +105,7 @@ internal readonly record struct DiscoveryData(
             && AgentDefinitions.SequenceEqual(other.AgentDefinitions)
             && AgentToolProviders.SequenceEqual(other.AgentToolProviders)
             && KnowledgeSources.SequenceEqual(other.KnowledgeSources)
+            && FormRequests.SequenceEqual(other.FormRequests)
             && ContractsAssemblyNames.SequenceEqual(other.ContractsAssemblyNames)
             && HasAgentsAssembly == other.HasAgentsAssembly
             && HasRagAssembly == other.HasRagAssembly
@@ -128,6 +131,7 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, AgentDefinitions);
         hash = HashHelper.HashArray(hash, AgentToolProviders);
         hash = HashHelper.HashArray(hash, KnowledgeSources);
+        hash = HashHelper.HashArray(hash, FormRequests);
         hash = HashHelper.HashArray(hash, ContractsAssemblyNames);
         hash = HashHelper.Combine(hash, HasAgentsAssembly.GetHashCode());
         hash = HashHelper.Combine(hash, HasRagAssembly.GetHashCode());

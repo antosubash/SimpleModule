@@ -12,7 +12,7 @@ namespace Settings.Tests.Integration;
 [Collection(TestCollections.Integration)]
 public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
 {
-    private static string UniqueKey(string prefix) => $"{prefix}.{Guid.NewGuid():N}";
+    private static string UniqueKey(string prefix) => $"{prefix}.k{Guid.NewGuid():N}";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -208,7 +208,7 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
             [
                 new BulkSettingUpdate
                 {
-                    Key = UniqueKey("bulk-perm"),
+                    Key = UniqueKey("bulkperm"),
                     Scope = SettingScope.Application,
                     Value = JsonSerializer.Deserialize<JsonElement>("\"v\""),
                 },
@@ -246,7 +246,7 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
         var client = CreateAdminClient();
         var response = await client.PutAsJsonAsync(
             "/api/settings",
-            StringRequest(UniqueKey("user-scope"), "value", SettingScope.User),
+            StringRequest(UniqueKey("userscope"), "value", SettingScope.User),
             JsonOptions
         );
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -264,7 +264,7 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
             [
                 new BulkSettingUpdate
                 {
-                    Key = UniqueKey("bulk-user"),
+                    Key = UniqueKey("bulkuser"),
                     Scope = SettingScope.User,
                     Value = JsonSerializer.Deserialize<JsonElement>("\"v\""),
                 },

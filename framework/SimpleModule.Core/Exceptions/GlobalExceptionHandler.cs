@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +10,6 @@ namespace SimpleModule.Core.Exceptions;
 public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
     : IExceptionHandler
 {
-    private static readonly JsonSerializerOptions InertiaJsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
-
     public async ValueTask<bool> TryHandleAsync(
         HttpContext httpContext,
         Exception exception,
@@ -70,7 +64,9 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
 
         if (httpContext.Request.IsInertia())
         {
-            return await WriteInertiaErrorAsync(httpContext, statusCode, title, detail);
+            var inertiaResult = new InertiaErrorResult(statusCode, title, detail);
+            await inertiaResult.ExecuteAsync(httpContext);
+            return true;
         }
 
         var problemDetails = new ProblemDetails
@@ -86,37 +82,6 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         }
 
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
-        return true;
-    }
-
-    private static async ValueTask<bool> WriteInertiaErrorAsync(
-        HttpContext httpContext,
-        int statusCode,
-        string title,
-        string message
-    )
-    {
-        var component = $"Error/{statusCode}";
-        var props = new
-        {
-            status = statusCode,
-            title,
-            message,
-        };
-
-        var pageData = new
-        {
-            component,
-            props,
-            url = httpContext.Request.Path + httpContext.Request.QueryString,
-            version = InertiaMiddleware.Version,
-        };
-
-        httpContext.Response.Headers[InertiaHttpExtensions.InertiaHeader] = "true";
-        httpContext.Response.Headers["Vary"] = InertiaHttpExtensions.InertiaHeader;
-        httpContext.Response.ContentType = "application/json";
-        var json = JsonSerializer.Serialize(pageData, InertiaJsonOptions);
-        await httpContext.Response.WriteAsync(json);
         return true;
     }
 }

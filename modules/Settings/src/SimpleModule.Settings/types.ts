@@ -31,6 +31,40 @@ export interface UpdateSettingRequest {
   value: any;
 }
 
+export interface CreateMenuItemFormRequest {
+  parentId: any | null;
+  label: string;
+  url: string;
+  pageRoute: string;
+  icon: string;
+  cssClass: string;
+  openInNewTab: boolean;
+  isVisible: boolean;
+  isHomePage: boolean;
+}
+
+export interface UpdateMenuItemFormRequest {
+  label: string;
+  url: string;
+  pageRoute: string;
+  icon: string;
+  cssClass: string;
+  openInNewTab: boolean;
+  isVisible: boolean;
+  isHomePage: boolean;
+}
+
+export interface UpdateMySettingFormRequest {
+  key: string;
+  value: any;
+}
+
+export interface UpdateSettingFormRequest {
+  key: string;
+  value: any;
+  scope: any;
+}
+
 export interface CreateMenuItemRequest {
   parentId: any | null;
   label: string;

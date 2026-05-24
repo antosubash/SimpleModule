@@ -211,7 +211,17 @@ internal static class SymbolDiscovery
             moduleOptionsList
         );
 
-        // Step 3g: Agent definitions, tool providers, knowledge sources
+        // Step 3g: FormRequest types
+        var formRequests = new List<FormRequestInfo>();
+        FormRequestFinder.Discover(
+            refAssemblies,
+            compilation.Assembly.GlobalNamespace,
+            s,
+            formRequests,
+            cancellationToken
+        );
+
+        // Step 3h: Agent definitions, tool providers, knowledge sources
         var agentDefinitions = new List<DiscoveredTypeInfo>();
         var agentToolProviders = new List<DiscoveredTypeInfo>();
         var knowledgeSources = new List<DiscoveredTypeInfo>();
@@ -253,6 +263,7 @@ internal static class SymbolDiscovery
             agentDefinitions,
             agentToolProviders,
             knowledgeSources,
+            formRequests,
             contractsAssemblyMap,
             s.HasAgentsAssembly,
             s.HasRagAssembly,

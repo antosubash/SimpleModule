@@ -156,3 +156,11 @@ internal sealed class DiscoveredTypeInfo
     public string FullyQualifiedName { get; set; } = "";
     public string ModuleName { get; set; } = "";
 }
+
+internal sealed class FormRequestInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public bool IsSealed { get; set; }
+    public bool ExtendsFormRequest { get; set; }
+    public SourceLocationRecord? Location { get; set; }
+}

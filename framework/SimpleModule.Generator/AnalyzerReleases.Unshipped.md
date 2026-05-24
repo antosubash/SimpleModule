@@ -40,3 +40,5 @@ SM0052 | SimpleModule.Generator | Error | Module assembly name does not follow n
 SM0053 | SimpleModule.Generator | Error | Module has no matching Contracts assembly
 SM0054 | SimpleModule.Generator | Info | Endpoint missing Route const field
 SM0055 | SimpleModule.Generator | Error | Entity class must live in a Contracts assembly
+SM0056 | SimpleModule.Generator | Error | FormRequest class must be sealed
+SM0057 | SimpleModule.Generator | Error | FormRequest class must extend FormRequest<TSelf>

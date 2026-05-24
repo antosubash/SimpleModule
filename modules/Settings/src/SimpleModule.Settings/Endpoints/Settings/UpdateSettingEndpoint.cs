@@ -5,6 +5,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
+using SimpleModule.Settings.FormRequests;
 
 namespace SimpleModule.Settings.Endpoints.Settings;
 
@@ -16,7 +17,7 @@ public class UpdateSettingEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                async Task<IResult> (UpdateSettingRequest request, ISettingsContracts settings) =>
+                async Task<IResult> (UpdateSettingFormRequest request, ISettingsContracts settings) =>
                 {
                     if (request.Scope == SettingScope.User)
                     {
