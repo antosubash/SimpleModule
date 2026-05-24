@@ -236,5 +236,27 @@ internal static class DtoFinder
         }
 
         FindDtoTypes(hostGlobalNamespace, symbols.DtoAttribute, dtoTypes, cancellationToken);
+
+        // [FormRequest] types also get TypeScript interfaces (same path as [Dto])
+        if (symbols.FormRequestAttribute is null)
+            return;
+
+        foreach (var assemblySymbol in refAssemblies)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            FindDtoTypes(
+                assemblySymbol.GlobalNamespace,
+                symbols.FormRequestAttribute,
+                dtoTypes,
+                cancellationToken
+            );
+        }
+
+        FindDtoTypes(
+            hostGlobalNamespace,
+            symbols.FormRequestAttribute,
+            dtoTypes,
+            cancellationToken
+        );
     }
 }

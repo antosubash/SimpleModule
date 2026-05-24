@@ -29,6 +29,7 @@ internal static class DiscoveryDataBuilder
         List<DiscoveredTypeInfo> agentDefinitions,
         List<DiscoveredTypeInfo> agentToolProviders,
         List<DiscoveredTypeInfo> knowledgeSources,
+        List<FormRequestInfo> formRequests,
         Dictionary<string, string> contractsAssemblyMap,
         bool hasAgentsAssembly,
         bool hasRagAssembly,
@@ -173,6 +174,14 @@ internal static class DiscoveryDataBuilder
                 .ToImmutableArray(),
             knowledgeSources
                 .Select(k => new KnowledgeSourceRecord(k.FullyQualifiedName, k.ModuleName))
+                .ToImmutableArray(),
+            formRequests
+                .Select(f => new FormRequestInfoRecord(
+                    f.FullyQualifiedName,
+                    f.IsSealed,
+                    f.ExtendsFormRequest,
+                    f.Location
+                ))
                 .ToImmutableArray(),
             contractsAssemblyMap.Keys.ToImmutableArray(),
             hasAgentsAssembly,

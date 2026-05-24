@@ -12,5 +12,6 @@ internal sealed class DiagnosticEmitter : IEmitter
         ContractAndDtoChecks.Run(context, data);
         PermissionFeatureChecks.Run(context, data);
         EndpointChecks.Run(context, data);
+        FormRequestChecks.Run(context, data);
     }
 }

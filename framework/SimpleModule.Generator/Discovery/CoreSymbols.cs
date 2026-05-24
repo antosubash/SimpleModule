@@ -27,6 +27,8 @@ internal readonly record struct CoreSymbols(
     INamedTypeSymbol? ModuleFeatures,
     INamedTypeSymbol? SaveChangesInterceptor,
     INamedTypeSymbol? ModuleOptions,
+    INamedTypeSymbol? FormRequestAttribute,
+    INamedTypeSymbol? FormRequestBase,
     bool HasAgentsAssembly,
     bool HasRagAssembly
 )
@@ -80,6 +82,12 @@ internal readonly record struct CoreSymbols(
                 "Microsoft.EntityFrameworkCore.Diagnostics.ISaveChangesInterceptor"
             ),
             ModuleOptions: compilation.GetTypeByMetadataName("SimpleModule.Core.IModuleOptions"),
+            FormRequestAttribute: compilation.GetTypeByMetadataName(
+                "SimpleModule.Core.FormRequests.FormRequestAttribute"
+            ),
+            FormRequestBase: compilation.GetTypeByMetadataName(
+                "SimpleModule.Core.FormRequests.FormRequest`1"
+            ),
             HasAgentsAssembly: compilation.GetTypeByMetadataName(
                 "SimpleModule.Agents.SimpleModuleAgentExtensions"
             )
