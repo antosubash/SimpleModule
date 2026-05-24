@@ -241,13 +241,20 @@ internal static class DtoFinder
         if (symbols.FormRequestAttribute is null)
             return;
 
+        // Build a set of already-discovered FQNs so types with both [Dto] and
+        // [FormRequest] are not added twice (which would cause duplicate TS exports).
+        var existingFqns = new HashSet<string>();
+        foreach (var d in dtoTypes)
+            existingFqns.Add(d.FullyQualifiedName);
+
+        var formRequestDtos = new List<DtoTypeInfo>();
         foreach (var assemblySymbol in refAssemblies)
         {
             cancellationToken.ThrowIfCancellationRequested();
             FindDtoTypes(
                 assemblySymbol.GlobalNamespace,
                 symbols.FormRequestAttribute,
-                dtoTypes,
+                formRequestDtos,
                 cancellationToken
             );
         }
@@ -255,8 +262,14 @@ internal static class DtoFinder
         FindDtoTypes(
             hostGlobalNamespace,
             symbols.FormRequestAttribute,
-            dtoTypes,
+            formRequestDtos,
             cancellationToken
         );
+
+        foreach (var dto in formRequestDtos)
+        {
+            if (!existingFqns.Contains(dto.FullyQualifiedName))
+                dtoTypes.Add(dto);
+        }
     }
 }

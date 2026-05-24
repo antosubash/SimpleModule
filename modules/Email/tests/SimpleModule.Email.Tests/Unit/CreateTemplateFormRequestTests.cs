@@ -2,7 +2,6 @@ using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using SimpleModule.Core.Authorization;
 using SimpleModule.Core.FormRequests;
 using SimpleModule.Email.FormRequests;
 
@@ -18,46 +17,16 @@ public class CreateTemplateFormRequestTests
     private readonly FormRequestEndpointFilter _filter = new();
 
     // ─── Authorize ────────────────────────────────────────────────────────────
+    // Authorization is handled at the endpoint level via .RequirePermission(),
+    // not in the FormRequest. The default Authorize() returns true.
 
     [Fact]
-    public void Authorize_UserWithManageTemplatesPermission_ReturnsTrue()
-    {
-        var user = MakeUser(EmailPermissions.ManageTemplates);
-        var request = ValidRequest();
-
-        request.Authorize(user).Should().BeTrue();
-    }
-
-    [Fact]
-    public void Authorize_UserWithoutPermission_ReturnsFalse()
-    {
-        var user = MakeUser("SomeOtherPermission");
-        var request = ValidRequest();
-
-        request.Authorize(user).Should().BeFalse();
-    }
-
-    [Fact]
-    public void Authorize_AnonymousUser_ReturnsFalse()
+    public void Authorize_ReturnsTrue_BecauseAuthorizationIsAtEndpointLevel()
     {
         var user = new ClaimsPrincipal(new ClaimsIdentity());
         var request = ValidRequest();
 
-        request.Authorize(user).Should().BeFalse();
-    }
-
-    [Fact]
-    public async Task Filter_UnauthorizedUser_Returns403()
-    {
-        var request = ValidRequest();
-        var context = CreateContext(request); // no permission claims
-
-        var result = await _filter.InvokeAsync(
-            context,
-            _ => ValueTask.FromResult<object?>(Results.Ok())
-        );
-
-        result.Should().BeOfType<ProblemHttpResult>().Which.StatusCode.Should().Be(403);
+        request.Authorize(user).Should().BeTrue();
     }
 
     // ─── Prepare / normalization ──────────────────────────────────────────────
@@ -430,12 +399,6 @@ public class CreateTemplateFormRequestTests
             Body = "<p>Welcome to the platform!</p>",
             IsHtml = true,
         };
-
-    private static ClaimsPrincipal MakeUser(string permission)
-    {
-        var claims = new[] { new Claim("permission", permission) };
-        return new ClaimsPrincipal(new ClaimsIdentity(claims, "test"));
-    }
 
     private static DefaultEndpointFilterInvocationContext CreateContext(
         CreateTemplateFormRequest request,

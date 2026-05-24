@@ -16,5 +16,10 @@ public sealed class RuleConfigurator<T>
         Expression<Func<T, IEnumerable<TProperty>>> expression
     ) => _validator.RuleForEach(expression);
 
+    public void When(Func<T, bool> condition, Action action) => _validator.When(condition, action);
+
+    public void Unless(Func<T, bool> condition, Action action) =>
+        _validator.Unless(condition, action);
+
     internal InlineValidator<T> Build() => _validator;
 }

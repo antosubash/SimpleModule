@@ -56,7 +56,7 @@ public class ModuleDiscovererGeneratorTests
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(_escapeGroup)"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(app)"
             );
     }
 
@@ -96,7 +96,7 @@ public class ModuleDiscovererGeneratorTests
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_EndpointOnlyModule).ConfigureEndpoints(_escapeGroup)"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_EndpointOnlyModule).ConfigureEndpoints(app)"
             );
     }
 

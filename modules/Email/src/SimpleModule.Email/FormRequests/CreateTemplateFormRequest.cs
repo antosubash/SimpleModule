@@ -1,8 +1,5 @@
-using System.Security.Claims;
 using System.Text.RegularExpressions;
 using FluentValidation;
-using SimpleModule.Core.Authorization;
-using SimpleModule.Core.Extensions;
 using SimpleModule.Core.FormRequests;
 
 namespace SimpleModule.Email.FormRequests;
@@ -16,9 +13,6 @@ public sealed partial class CreateTemplateFormRequest : FormRequest<CreateTempla
     public string Body { get; set; } = "";
     public bool IsHtml { get; set; } = true;
     public string? DefaultReplyTo { get; set; }
-
-    public override bool Authorize(ClaimsPrincipal user) =>
-        user.HasPermission(EmailPermissions.ManageTemplates);
 
     public override void Prepare()
     {

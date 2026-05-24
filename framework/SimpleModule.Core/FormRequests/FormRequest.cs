@@ -11,7 +11,11 @@ public abstract class FormRequest
 
     public async Task<ValidationResult> ValidateRulesAsync(
         CancellationToken cancellationToken = default
-    ) => await ValidateAsync(cancellationToken);
+    )
+    {
+        Prepare();
+        return await ValidateAsync(cancellationToken);
+    }
 
     internal abstract Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken);
 }

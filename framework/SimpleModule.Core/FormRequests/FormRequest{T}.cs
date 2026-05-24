@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using FluentValidation;
 using FluentValidation.Results;
 
@@ -7,8 +6,7 @@ namespace SimpleModule.Core.FormRequests;
 public abstract class FormRequest<TSelf> : FormRequest
     where TSelf : FormRequest<TSelf>
 {
-    private static readonly ConcurrentDictionary<Type, InlineValidator<TSelf>> ValidatorCache =
-        new();
+    private static volatile InlineValidator<TSelf>? _cachedValidator;
 
     protected abstract void ConfigureRules(RuleConfigurator<TSelf> rules);
 
@@ -16,15 +14,15 @@ public abstract class FormRequest<TSelf> : FormRequest
         CancellationToken cancellationToken
     )
     {
-        var validator = ValidatorCache.GetOrAdd(
-            typeof(TSelf),
-            _ =>
-            {
-                var configurator = new RuleConfigurator<TSelf>();
-                ConfigureRules(configurator);
-                return configurator.Build();
-            }
-        );
+        var validator = _cachedValidator;
+        if (validator is null)
+        {
+            var configurator = new RuleConfigurator<TSelf>();
+            ConfigureRules(configurator);
+            validator = configurator.Build();
+            Interlocked.CompareExchange(ref _cachedValidator, validator, null);
+            validator = _cachedValidator;
+        }
 
         return await validator.ValidateAsync((TSelf)this, cancellationToken);
     }

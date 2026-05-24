@@ -98,19 +98,13 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         }
 
         // Manual ConfigureEndpoints (escape hatch)
-        // Wrap in a group with FormRequestFilter so FormRequest types work in escape-hatch modules.
         foreach (var module in modules.Where(m => m.HasConfigureEndpoints))
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine();
-            sb.AppendLine("        {");
             sb.AppendLine(
-                $"            var _escapeGroup = app.MapGroup(\"\").AddFormRequestFilter();"
+                $"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureEndpoints(app);"
             );
-            sb.AppendLine(
-                $"            ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureEndpoints(_escapeGroup);"
-            );
-            sb.AppendLine("        }");
         }
 
         sb.AppendLine();

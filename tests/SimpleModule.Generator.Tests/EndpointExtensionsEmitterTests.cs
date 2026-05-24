@@ -119,11 +119,11 @@ public class EndpointExtensionsEmitterTests
 
         // Should NOT auto-register endpoints because HasConfigureEndpoints is true
         endpointExt.Should().NotContain("new global::TestApp.Endpoints.AutoEndpoint()");
-        // Should use the escape hatch wrapped in a FormRequestFilter group
+        // Should use the escape hatch passing app directly
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_CustomModule).ConfigureEndpoints(_escapeGroup);"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_CustomModule).ConfigureEndpoints(app);"
             );
     }
 
@@ -153,7 +153,7 @@ public class EndpointExtensionsEmitterTests
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_ManualModule).ConfigureEndpoints(_escapeGroup);"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_ManualModule).ConfigureEndpoints(app);"
             );
     }
 

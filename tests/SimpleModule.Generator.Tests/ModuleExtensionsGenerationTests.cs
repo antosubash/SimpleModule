@@ -111,7 +111,7 @@ public class ModuleExtensionsGenerationTests
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(_escapeGroup)"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_TestModule).ConfigureEndpoints(app)"
             );
     }
 
