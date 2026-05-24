@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FluentValidation.Results;
 
 namespace SimpleModule.Core.FormRequests;
 
@@ -8,7 +9,9 @@ public abstract class FormRequest
 
     public virtual void Prepare() { }
 
-    internal abstract Task<FluentValidation.Results.ValidationResult> ValidateAsync(
-        CancellationToken cancellationToken
-    );
+    public async Task<ValidationResult> ValidateRulesAsync(
+        CancellationToken cancellationToken = default
+    ) => await ValidateAsync(cancellationToken);
+
+    internal abstract Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken);
 }

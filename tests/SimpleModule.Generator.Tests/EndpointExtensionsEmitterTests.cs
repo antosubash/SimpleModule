@@ -39,7 +39,7 @@ public class EndpointExtensionsEmitterTests
         endpointExt
             .Should()
             .Contain(
-                "var group = app.MapGroup(\"/api/products\").WithTags(\"Products\").RequireAuthorization();"
+                "var group = app.MapGroup(\"/api/products\").WithTags(\"Products\").RequireAuthorization().AddFormRequestFilter();"
             );
         endpointExt.Should().Contain("new global::TestApp.Endpoints.ListEndpoint().Map(group);");
     }
@@ -75,8 +75,12 @@ public class EndpointExtensionsEmitterTests
 
         var endpointExt = GetGeneratedSource(result, "EndpointExtensions.g.cs");
 
-        endpointExt.Should().Contain("new global::TestApp.Endpoints.PingEndpoint().Map(app);");
-        endpointExt.Should().NotContain("MapGroup");
+        endpointExt
+            .Should()
+            .Contain(
+                "var group = app.MapGroup(\"\").WithTags(\"Misc\").RequireAuthorization().AddFormRequestFilter();"
+            );
+        endpointExt.Should().Contain("new global::TestApp.Endpoints.PingEndpoint().Map(group);");
     }
 
     [Fact]
@@ -115,11 +119,11 @@ public class EndpointExtensionsEmitterTests
 
         // Should NOT auto-register endpoints because HasConfigureEndpoints is true
         endpointExt.Should().NotContain("new global::TestApp.Endpoints.AutoEndpoint()");
-        // Should use the escape hatch instead
+        // Should use the escape hatch wrapped in a FormRequestFilter group
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_CustomModule).ConfigureEndpoints(app);"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_CustomModule).ConfigureEndpoints(_escapeGroup);"
             );
     }
 
@@ -149,7 +153,7 @@ public class EndpointExtensionsEmitterTests
         endpointExt
             .Should()
             .Contain(
-                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_ManualModule).ConfigureEndpoints(app);"
+                "((global::SimpleModule.Core.IModule)ModuleExtensions.s_TestApp_ManualModule).ConfigureEndpoints(_escapeGroup);"
             );
     }
 

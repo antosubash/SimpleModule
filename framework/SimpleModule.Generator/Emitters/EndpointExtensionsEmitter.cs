@@ -52,9 +52,12 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
             }
             else
             {
+                sb.AppendLine(
+                    $"            var group = app.MapGroup(\"\").WithTags(\"{module.ModuleName}\").RequireAuthorization().AddFormRequestFilter();"
+                );
                 foreach (var endpoint in module.Endpoints)
                 {
-                    EmitEndpointRegistration(sb, endpoint, "app");
+                    EmitEndpointRegistration(sb, endpoint, "group");
                 }
             }
 
@@ -95,13 +98,19 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         }
 
         // Manual ConfigureEndpoints (escape hatch)
+        // Wrap in a group with FormRequestFilter so FormRequest types work in escape-hatch modules.
         foreach (var module in modules.Where(m => m.HasConfigureEndpoints))
         {
             var fieldName = TypeMappingHelpers.GetModuleFieldName(module.FullyQualifiedName);
             sb.AppendLine();
+            sb.AppendLine("        {");
             sb.AppendLine(
-                $"        ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureEndpoints(app);"
+                $"            var _escapeGroup = app.MapGroup(\"\").AddFormRequestFilter();"
             );
+            sb.AppendLine(
+                $"            ((global::SimpleModule.Core.IModule)ModuleExtensions.{fieldName}).ConfigureEndpoints(_escapeGroup);"
+            );
+            sb.AppendLine("        }");
         }
 
         sb.AppendLine();
