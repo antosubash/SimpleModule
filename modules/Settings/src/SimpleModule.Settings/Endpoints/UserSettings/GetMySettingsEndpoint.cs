@@ -25,23 +25,27 @@ public class GetMySettingsEndpoint : IEndpoint
                     if (string.IsNullOrEmpty(userId))
                         return Results.Unauthorized();
 
-                    var definitions = registry.GetDefinitions(SettingScope.User);
-                    var results = new List<object>();
+                    var defs = registry.GetDefinitions(SettingScope.User);
+                    var results = new List<UserSettingValueDto>(defs.Count);
 
-                    foreach (var def in definitions)
+                    foreach (var def in defs)
                     {
-                        var resolved = await settings.ResolveUserSettingAsync(def.Key, userId);
-                        var userValue = await settings.GetSettingAsync(
+                        var userDto = await settings.GetSettingValueAsync(
                             def.Key,
                             SettingScope.User,
                             userId
                         );
+                        var resolvedElement = await settings.ResolveUserSettingElementAsync(
+                            def.Key,
+                            userId
+                        );
                         results.Add(
-                            new
+                            new UserSettingValueDto
                             {
-                                definition = def,
-                                value = resolved,
-                                isOverridden = userValue is not null,
+                                Key = def.Key,
+                                Value = userDto?.Value,
+                                ResolvedValue = resolvedElement,
+                                IsOverridden = userDto is not null,
                             }
                         );
                     }

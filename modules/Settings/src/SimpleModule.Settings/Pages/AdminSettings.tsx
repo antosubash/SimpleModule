@@ -1,85 +1,353 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { PageShell, Tabs, TabsContent, TabsList, TabsTrigger } from '@simplemodule/ui';
-import { useMemo, useState } from 'react';
+import {
+  Button,
+  EmptyState,
+  PageShell,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  Toggle,
+} from '@simplemodule/ui';
+import { useCallback, useMemo, useState } from 'react';
 import type { SettingDefinition } from '@/components/SettingField';
 import SettingGroup from '@/components/SettingGroup';
+import SettingRow from '@/components/SettingRow';
+import SettingsBulkSaveBar from '@/components/SettingsBulkSaveBar';
+import SettingsLayout from '@/components/SettingsLayout';
+import SettingsSearch from '@/components/SettingsSearch';
 import { SettingsKeys } from '@/Locales/keys';
 
-interface StoredSetting {
+interface SettingValueDto {
   key: string;
-  value: string | null;
-  scope: number;
+  scope: 0 | 1 | 2;
+  value: unknown | null;
+  isOverridden: boolean;
+  userId?: string | null;
+  updatedAt?: string | null;
+}
+
+interface ValidationProblemDetails {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  errors?: Record<string, string[]>;
 }
 
 interface AdminSettingsProps {
   definitions: SettingDefinition[];
-  settings: StoredSetting[];
+  settings: SettingValueDto[];
+}
+
+function buildValueMap(settings: SettingValueDto[]): Map<string, SettingValueDto> {
+  const map = new Map<string, SettingValueDto>();
+  for (const s of settings) {
+    map.set(s.key, s);
+  }
+  return map;
+}
+
+function groupDefinitions(defs: SettingDefinition[]): Record<string, SettingDefinition[]> {
+  const groups: Record<string, SettingDefinition[]> = {};
+  const sorted = [...defs].sort((a, b) => a.order - b.order);
+  for (const def of sorted) {
+    const group = def.group ?? 'General';
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(def);
+  }
+  return groups;
+}
+
+function matchesSearch(def: SettingDefinition, query: string): boolean {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return (
+    def.displayName.toLowerCase().includes(q) ||
+    def.key.toLowerCase().includes(q) ||
+    (def.group ?? '').toLowerCase().includes(q) ||
+    (def.description ?? '').toLowerCase().includes(q)
+  );
+}
+
+async function parseErrorDetail(res: Response): Promise<string> {
+  try {
+    const body = (await res.json()) as ValidationProblemDetails;
+    if (body.detail) return body.detail;
+    if (body.title) return body.title;
+    if (body.errors) {
+      const messages = Object.values(body.errors).flat();
+      if (messages.length > 0) return messages.join(' ');
+    }
+  } catch {
+    // not JSON — fall through to generic message
+  }
+  return `HTTP ${res.status}`;
 }
 
 export default function AdminSettings({ definitions, settings }: AdminSettingsProps) {
   const { t } = useTranslation('Settings');
-  const [settingsMap, setSettingsMap] = useState<Record<string, string | null>>(() => {
-    const map: Record<string, string | null> = {};
-    for (const s of settings) {
-      map[s.key] = s.value;
-    }
-    return map;
-  });
+
+  const [valueMap, setValueMap] = useState<Map<string, SettingValueDto>>(() =>
+    buildValueMap(settings),
+  );
+
+  const [query, setQuery] = useState('');
+  const [showOnlyModified, setShowOnlyModified] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
+  const [pendingValues, setPendingValues] = useState<
+    Map<string, { scope: number; value: unknown }>
+  >(new Map());
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const systemDefs = useMemo(() => definitions.filter((d) => d.scope === 0), [definitions]);
   const appDefs = useMemo(() => definitions.filter((d) => d.scope === 1), [definitions]);
 
-  const groupBy = (defs: SettingDefinition[]) => {
-    const groups: Record<string, SettingDefinition[]> = {};
-    for (const def of defs) {
-      const group = def.group ?? 'General';
-      if (!groups[group]) groups[group] = [];
-      groups[group].push(def);
-    }
-    return groups;
-  };
+  const filterDefs = useCallback(
+    (defs: SettingDefinition[]): SettingDefinition[] => {
+      return defs.filter((def) => {
+        if (!matchesSearch(def, query)) return false;
+        if (showOnlyModified) {
+          const v = valueMap.get(def.key);
+          return v?.isOverridden ?? false;
+        }
+        return true;
+      });
+    },
+    [query, showOnlyModified, valueMap],
+  );
 
-  const handleSave = async (key: string, value: string, scope: number) => {
-    await fetch('/api/settings', {
+  const handleSave = async (key: string, scope: number, value: unknown) => {
+    if (bulkMode) {
+      setPendingValues((prev) => new Map(prev).set(key, { scope, value }));
+      return;
+    }
+    setErrorMessage(null);
+    const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value, scope }),
+      body: JSON.stringify({ key, scope, value }),
     });
-    setSettingsMap((prev) => ({ ...prev, [key]: value }));
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res);
+      setErrorMessage(detail);
+      return;
+    }
+    setValueMap((prev) => {
+      const next = new Map(prev);
+      const existing = next.get(key);
+      next.set(key, { ...existing, key, scope: scope as 0 | 1 | 2, value, isOverridden: true });
+      return next;
+    });
   };
 
+  const handleReset = async (key: string, scope: number) => {
+    setErrorMessage(null);
+    const res = await fetch(`/api/settings/${encodeURIComponent(key)}?scope=${scope}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const detail = await parseErrorDetail(res);
+      setErrorMessage(detail);
+      return;
+    }
+    setValueMap((prev) => {
+      const next = new Map(prev);
+      const existing = next.get(key);
+      if (existing) {
+        next.set(key, { ...existing, value: null, isOverridden: false });
+      }
+      return next;
+    });
+    setDirtyKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setPendingValues((prev) => {
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+  };
+
+  const handleDirty = useCallback((key: string, isDirty: boolean) => {
+    setDirtyKeys((prev) => {
+      const next = new Set(prev);
+      if (isDirty) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
+
+  const handleBulkSave = async () => {
+    if (pendingValues.size === 0) return;
+    setBulkSaving(true);
+    setErrorMessage(null);
+    try {
+      const updates = Array.from(pendingValues.entries()).map(([key, { scope, value }]) => ({
+        key,
+        scope,
+        value,
+      }));
+      const res = await fetch('/api/settings/bulk', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
+      if (!res.ok) {
+        const detail = await parseErrorDetail(res);
+        setErrorMessage(detail);
+        return;
+      }
+      setValueMap((prev) => {
+        const next = new Map(prev);
+        for (const { key, scope, value } of updates) {
+          const existing = next.get(key);
+          next.set(key, {
+            ...existing,
+            key,
+            scope: scope as 0 | 1 | 2,
+            value,
+            isOverridden: true,
+          });
+        }
+        return next;
+      });
+      setPendingValues(new Map());
+      setDirtyKeys(new Set());
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const handleDiscard = () => {
+    setPendingValues(new Map());
+    setDirtyKeys(new Set());
+  };
+
+  const toolbar = (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <SettingsSearch
+        query={query}
+        onQueryChange={(q) => {
+          setQuery(q);
+          setErrorMessage(null);
+        }}
+        showOnlyModified={showOnlyModified}
+        onShowOnlyModifiedChange={setShowOnlyModified}
+        modifiedLabel={t(SettingsKeys.AdminSettings.ShowOnlyModified)}
+      />
+      <Toggle
+        pressed={bulkMode}
+        onPressedChange={(v) => {
+          setBulkMode(v);
+          if (!v) handleDiscard();
+        }}
+        variant="outline"
+        aria-label={t(SettingsKeys.AdminSettings.BulkEditToggle)}
+      >
+        {t(SettingsKeys.AdminSettings.BulkEditToggle)}
+      </Toggle>
+    </div>
+  );
+
+  const renderGroups = (defs: SettingDefinition[]) => {
+    const filtered = filterDefs(defs);
+    const grouped = groupDefinitions(filtered);
+    const groupNames = Object.keys(grouped);
+
+    return (
+      <SettingsLayout groups={groupNames} toolbar={toolbar}>
+        {errorMessage !== null && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger-text"
+          >
+            <p className="font-semibold">{t(SettingsKeys.AdminSettings.SaveErrorTitle)}</p>
+            <p className="mt-0.5">{errorMessage}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 h-auto px-2 py-1 text-xs"
+              onClick={() => setErrorMessage(null)}
+            >
+              Dismiss
+            </Button>
+          </div>
+        )}
+        {groupNames.length === 0 ? (
+          <EmptyState
+            title={t(SettingsKeys.AdminSettings.NoResults)}
+            description={
+              query ? `No settings match "${query}". Try a different search term.` : undefined
+            }
+            secondaryAction={
+              query ? (
+                <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+                  Clear search
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          groupNames.map((group) => (
+            <SettingGroup key={group} group={group}>
+              {(grouped[group] ?? []).map((def) => {
+                const v = valueMap.get(def.key);
+                const pending = pendingValues.get(def.key);
+                return (
+                  <SettingRow
+                    key={def.key}
+                    definition={def}
+                    valueInfo={{
+                      value: pending?.value ?? v?.value ?? null,
+                      isOverridden: v?.isOverridden ?? false,
+                    }}
+                    onSave={handleSave}
+                    onReset={handleReset}
+                    onDirty={handleDirty}
+                    bulkMode={bulkMode}
+                    namespace="AdminSettings"
+                  />
+                );
+              })}
+            </SettingGroup>
+          ))
+        )}
+      </SettingsLayout>
+    );
+  };
+
+  const totalDirty = bulkMode ? pendingValues.size : dirtyKeys.size;
+
   return (
-    <PageShell title={t(SettingsKeys.AdminSettings.Title)}>
-      <Tabs defaultValue="system">
+    <PageShell title={t(SettingsKeys.AdminSettings.Title)} size="lg">
+      <Tabs defaultValue="system" className="mt-2">
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="system">{t(SettingsKeys.AdminSettings.TabSystem)}</TabsTrigger>
           <TabsTrigger value="application">
             {t(SettingsKeys.AdminSettings.TabApplication)}
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="system" className="space-y-4 sm:space-y-6">
-          {Object.entries(groupBy(systemDefs)).map(([group, defs]) => (
-            <SettingGroup
-              key={group}
-              group={group}
-              definitions={defs}
-              values={settingsMap}
-              onSave={handleSave}
-            />
-          ))}
+        <TabsContent value="system" className="mt-4">
+          {renderGroups(systemDefs)}
         </TabsContent>
-        <TabsContent value="application" className="space-y-4 sm:space-y-6">
-          {Object.entries(groupBy(appDefs)).map(([group, defs]) => (
-            <SettingGroup
-              key={group}
-              group={group}
-              definitions={defs}
-              values={settingsMap}
-              onSave={handleSave}
-            />
-          ))}
+        <TabsContent value="application" className="mt-4">
+          {renderGroups(appDefs)}
         </TabsContent>
       </Tabs>
+
+      {bulkMode && (
+        <SettingsBulkSaveBar
+          dirtyCount={totalDirty}
+          onSaveAll={handleBulkSave}
+          onDiscard={handleDiscard}
+          saving={bulkSaving}
+        />
+      )}
     </PageShell>
   );
 }

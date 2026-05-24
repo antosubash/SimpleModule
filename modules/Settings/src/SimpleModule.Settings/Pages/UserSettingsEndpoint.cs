@@ -26,29 +26,33 @@ public class UserSettingsEndpoint : IViewEndpoint
                     var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
                     var definitions = registry.GetDefinitions(SettingScope.User);
 
-                    var userSettings = new List<object>();
+                    var userSettings = new List<UserSettingValueDto>(definitions.Count);
                     foreach (var def in definitions)
                     {
-                        var resolved = await settings.ResolveUserSettingAsync(
-                            def.Key,
-                            userId ?? string.Empty
-                        );
-                        var userValue = await settings.GetSettingAsync(
+                        var userDto = await settings.GetSettingValueAsync(
                             def.Key,
                             SettingScope.User,
                             userId
                         );
+                        var resolvedElement = await settings.ResolveUserSettingElementAsync(
+                            def.Key,
+                            userId ?? string.Empty
+                        );
                         userSettings.Add(
-                            new
+                            new UserSettingValueDto
                             {
-                                definition = def,
-                                value = resolved,
-                                isOverridden = userValue is not null,
+                                Key = def.Key,
+                                Value = userDto?.Value,
+                                ResolvedValue = resolvedElement,
+                                IsOverridden = userDto is not null,
                             }
                         );
                     }
 
-                    return Inertia.Render("Settings/UserSettings", new { settings = userSettings });
+                    return Inertia.Render(
+                        "Settings/UserSettings",
+                        new { definitions, settings = userSettings }
+                    );
                 }
             )
             .RequireAuthorization();

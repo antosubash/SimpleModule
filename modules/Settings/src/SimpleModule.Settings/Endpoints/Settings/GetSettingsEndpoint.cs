@@ -14,10 +14,15 @@ public class GetSettingsEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                async (ISettingsContracts settings, SettingScope? scope) =>
+                async (ISettingsContracts settings, SettingScope? scope, string? group) =>
                 {
-                    var filter = scope is not null ? new SettingsFilter { Scope = scope } : null;
-                    var results = await settings.GetSettingsAsync(filter);
+                    SettingsFilter? filter = null;
+                    if (scope is not null || group is not null)
+                    {
+                        filter = new SettingsFilter { Scope = scope, Group = group };
+                    }
+
+                    var results = await settings.GetSettingValuesAsync(filter);
                     return TypedResults.Ok(results);
                 }
             )
