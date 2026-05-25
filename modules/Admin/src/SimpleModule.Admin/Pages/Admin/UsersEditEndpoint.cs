@@ -6,7 +6,7 @@ using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
-using SimpleModule.OpenIddict.Contracts;
+using SimpleModule.Identity.Contracts;
 using SimpleModule.Permissions.Contracts;
 using SimpleModule.Users.Contracts;
 
@@ -26,7 +26,7 @@ public class UsersEditEndpoint : IViewEndpoint
                     IUserAdminContracts userAdmin,
                     IRoleAdminContracts roleAdmin,
                     IPermissionContracts permissionContracts,
-                    IOpenIddictSessionContracts sessionContracts,
+                    ISessionContracts sessionContracts,
                     PermissionRegistry permissionRegistry,
                     string? tab
                 ) =>

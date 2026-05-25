@@ -6,6 +6,7 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Hosting;
 using SimpleModule.Database;
+using SimpleModule.Identity.Contracts;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.OpenIddict.Hosting;
 using SimpleModule.OpenIddict.Services;
@@ -19,6 +20,30 @@ public class OpenIddictModule : IModule
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        var provider = configuration.GetValue<string>("Identity:Provider");
+        if (string.Equals(provider, "Keycloak", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddModuleDbContext<OpenIddictAppDbContext>(
+                configuration,
+                OpenIddictModuleConstants.ModuleName,
+                opts => opts.UseOpenIddict()
+            );
+            services
+                .AddOpenIddict()
+                .AddCore(options =>
+                {
+                    options.UseEntityFrameworkCore().UseDbContext<OpenIddictAppDbContext>();
+                });
+            services.AddSingleton<IHostDbContextContributor, OpenIddictDbContextContributor>();
+            services.AddScoped<IOpenIddictSessionContracts>(sp =>
+                (IOpenIddictSessionContracts)
+                    new OpenIddictSessionContractsAdapter(
+                        sp.GetRequiredService<ISessionContracts>()
+                    )
+            );
+            return;
+        }
+
         // DbContext with OpenIddict EF Core extension
         // Note: OpenIddict manages its own tables internally (no public DbSet<T> properties).
         // The unified HostDbContext also calls UseOpenIddict() for EF Core migrations.
@@ -106,7 +131,16 @@ public class OpenIddictModule : IModule
         services.AddHostedService<OpenIddictSeedService>();
 
         // Session management contracts
-        services.AddScoped<IOpenIddictSessionContracts, OpenIddictSessionService>();
+        services.AddScoped<OpenIddictSessionService>();
+        services.AddScoped<IOpenIddictSessionContracts>(sp =>
+            sp.GetRequiredService<OpenIddictSessionService>()
+        );
+        services.AddScoped<ISessionContracts>(sp =>
+            sp.GetRequiredService<OpenIddictSessionService>()
+        );
+
+        // Identity provider metadata
+        services.AddSingleton<IIdentityProvider, OpenIddictIdentityProvider>();
 
         // Host-level contributions
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, OpenIddictSwaggerGenSetup>();

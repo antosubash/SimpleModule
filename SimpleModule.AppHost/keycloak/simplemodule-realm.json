@@ -1,0 +1,120 @@
+{
+  "realm": "simplemodule",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      {
+        "name": "Admin",
+        "description": "Full administrative access"
+      },
+      {
+        "name": "User",
+        "description": "Standard user access"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "simplemodule-app",
+      "name": "SimpleModule Application",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "simplemodule-dev-secret",
+      "redirectUris": [
+        "https://localhost:5001/keycloak/callback",
+        "http://localhost:5000/keycloak/callback",
+        "https://localhost:*/keycloak/callback",
+        "http://localhost:*/keycloak/callback"
+      ],
+      "webOrigins": ["*"],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "simplemodule-admin",
+      "name": "SimpleModule Admin Service Account",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "simplemodule-admin-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@simplemodule.dev",
+      "email": "admin@simplemodule.dev",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["Admin", "User"]
+    },
+    {
+      "username": "user@simplemodule.dev",
+      "email": "user@simplemodule.dev",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Test",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "User123!",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["User"]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "web-origins",
+    "acr",
+    "profile",
+    "roles",
+    "email"
+  ]
+}

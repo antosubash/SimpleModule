@@ -21,6 +21,27 @@ public class UsersModule : IModule
     {
         services.AddModuleDbContext<UsersDbContext>(configuration, UsersConstants.ModuleName);
 
+        if (IsExternalIdentityProvider(configuration))
+        {
+            ConfigureExternalMode(services);
+        }
+        else
+        {
+            ConfigureLocalMode(services, configuration);
+        }
+    }
+
+    private static bool IsExternalIdentityProvider(IConfiguration configuration)
+    {
+        var provider = configuration.GetValue<string>("Identity:Provider");
+        return string.Equals(provider, "Keycloak", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void ConfigureLocalMode(
+        IServiceCollection services,
+        IConfiguration configuration
+    )
+    {
         services
             .AddIdentity<ApplicationUser, ApplicationRole>()
             .AddEntityFrameworkStores<UsersDbContext>()
@@ -28,7 +49,6 @@ public class UsersModule : IModule
 
         services.Configure<IdentityPasskeyOptions>(configuration.GetSection("Passkeys"));
 
-        // Opt into Identity Schema Version 3 to enable the AspNetUserPasskeys table
         services.Configure<IdentityOptions>(options =>
             options.Stores.SchemaVersion = IdentitySchemaVersions.Version3
         );
@@ -39,10 +59,6 @@ public class UsersModule : IModule
             options.LogoutPath = "/Identity/Account/Logout";
             options.AccessDeniedPath = "/Identity/Account/AccessDenied";
 
-            // /api/* clients (JS, CLI, integration tests) want a bare 401 — not a
-            // 302 to /Identity/Account/Login. The default cookie handler sniffs the
-            // Accept header but inconsistently, leading to 401 for some routes and
-            // 302 for others. Force 401 for any unauthenticated /api request.
             options.Events.OnRedirectToLogin = context =>
             {
                 if (
@@ -75,17 +91,35 @@ public class UsersModule : IModule
             };
         });
 
-        // Bridge UsersModuleOptions into ASP.NET Identity options
         services.AddSingleton<IPostConfigureOptions<IdentityOptions>, ApplyUsersModuleOptions>();
         services.AddSingleton<
             IPostConfigureOptions<SecurityStampValidatorOptions>,
             ApplySecurityStampValidatorOptions
         >();
 
+        services.AddScoped<IUserContracts, UserService>();
+        services.AddScoped<IUserAdminContracts, UserAdminService>();
+        services.AddScoped<IRoleAdminContracts, RoleAdminService>();
         services.AddHostedService<UserSeedService>();
         services.AddSingleton<IEmailSender<ApplicationUser>, ConsoleEmailSender>();
         services.AddSingleton<IAccountUnlockEmailSender, ConsoleAccountUnlockEmailSender>();
         services.AddSingleton<ISmsSender, ConsoleSmsSender>();
+    }
+
+    private static void ConfigureExternalMode(IServiceCollection services)
+    {
+        services
+            .AddIdentity<ApplicationUser, ApplicationRole>()
+            .AddEntityFrameworkStores<UsersDbContext>()
+            .AddDefaultTokenProviders();
+
+        services.Configure<IdentityOptions>(options =>
+            options.Stores.SchemaVersion = IdentitySchemaVersions.Version3
+        );
+
+        services.AddScoped<IUserContracts, ExternalUserService>();
+        services.AddScoped<IUserAdminContracts, ExternalUserAdminService>();
+        services.AddScoped<IRoleAdminContracts, ExternalRoleAdminService>();
     }
 
     public void ConfigurePermissions(PermissionRegistryBuilder builder)

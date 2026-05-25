@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Extensions;
+using SimpleModule.Identity.Contracts;
 using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.OpenIddict.Pages.OpenIddict.ActiveSessions;

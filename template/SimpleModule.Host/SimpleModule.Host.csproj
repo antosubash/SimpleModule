@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\modules\Dashboard\src\SimpleModule.Dashboard\SimpleModule.Dashboard.csproj" />
     <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users\SimpleModule.Users.csproj" />
     <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />
+    <ProjectReference Include="..\..\modules\Keycloak\src\SimpleModule.Keycloak\SimpleModule.Keycloak.csproj" />
     <ProjectReference Include="..\..\modules\Permissions\src\SimpleModule.Permissions\SimpleModule.Permissions.csproj" />
     <ProjectReference Include="..\..\modules\Admin\src\SimpleModule.Admin\SimpleModule.Admin.csproj" />
     <ProjectReference Include="..\..\modules\Settings\src\SimpleModule.Settings\SimpleModule.Settings.csproj" />

@@ -12,6 +12,6 @@
     <ProjectReference Include="..\SimpleModule.Admin.Contracts\SimpleModule.Admin.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Users\src\SimpleModule.Users.Contracts\SimpleModule.Users.Contracts.csproj" />
     <ProjectReference Include="..\..\..\..\modules\Permissions\src\SimpleModule.Permissions.Contracts\SimpleModule.Permissions.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\..\modules\OpenIddict\src\SimpleModule.OpenIddict.Contracts\SimpleModule.OpenIddict.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Identity\src\SimpleModule.Identity.Contracts\SimpleModule.Identity.Contracts.csproj" />
   </ItemGroup>
 </Project>

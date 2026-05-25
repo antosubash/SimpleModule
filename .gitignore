@@ -447,3 +447,7 @@ template/SimpleModule.Host/storage/
 # Temporary refactor baseline — not committed
 baseline/
 .claude/settings.local.json
+
+# Verification artifacts
+.verify/
+.qa/

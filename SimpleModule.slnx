@@ -37,10 +37,17 @@
     <Project Path="modules/Permissions/src/SimpleModule.Permissions/SimpleModule.Permissions.csproj" />
     <Project Path="modules/Permissions/tests/SimpleModule.Permissions.Tests/SimpleModule.Permissions.Tests.csproj" />
   </Folder>
+  <Folder Name="/modules/Identity/">
+    <Project Path="modules/Identity/src/SimpleModule.Identity.Contracts/SimpleModule.Identity.Contracts.csproj" />
+  </Folder>
   <Folder Name="/modules/OpenIddict/">
     <Project Path="modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/SimpleModule.OpenIddict.Contracts.csproj" />
     <Project Path="modules/OpenIddict/src/SimpleModule.OpenIddict/SimpleModule.OpenIddict.csproj" />
     <Project Path="modules/OpenIddict/tests/SimpleModule.OpenIddict.Tests/SimpleModule.OpenIddict.Tests.csproj" />
+  </Folder>
+  <Folder Name="/modules/Keycloak/">
+    <Project Path="modules/Keycloak/src/SimpleModule.Keycloak.Contracts/SimpleModule.Keycloak.Contracts.csproj" />
+    <Project Path="modules/Keycloak/src/SimpleModule.Keycloak/SimpleModule.Keycloak.csproj" />
   </Folder>
   <Folder Name="/modules/Admin/">
     <Project Path="modules/Admin/src/SimpleModule.Admin.Contracts/SimpleModule.Admin.Contracts.csproj" />

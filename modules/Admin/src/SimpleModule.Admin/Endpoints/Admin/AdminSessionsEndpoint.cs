@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
-using SimpleModule.OpenIddict.Contracts;
+using SimpleModule.Identity.Contracts;
 
 namespace SimpleModule.Admin.Endpoints.Admin;
 
@@ -22,11 +22,7 @@ public class AdminSessionsEndpoint : IEndpoint
         // DELETE /admin/users/{id}/sessions/{tokenId} — Revoke individual session
         group.MapDelete(
             "/{tokenId}",
-            async Task<IResult> (
-                string id,
-                string tokenId,
-                IOpenIddictSessionContracts sessionContracts
-            ) =>
+            async Task<IResult> (string id, string tokenId, ISessionContracts sessionContracts) =>
             {
                 await sessionContracts.RevokeSessionAsync(tokenId);
 
@@ -37,7 +33,7 @@ public class AdminSessionsEndpoint : IEndpoint
         // DELETE /admin/users/{id}/sessions — Revoke all sessions
         group.MapDelete(
             "/",
-            async Task<IResult> (string id, IOpenIddictSessionContracts sessionContracts) =>
+            async Task<IResult> (string id, ISessionContracts sessionContracts) =>
             {
                 await sessionContracts.RevokeAllSessionsForUserAsync(id);
 

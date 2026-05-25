@@ -205,6 +205,22 @@ export const routes = {
       inbox: () => '/notifications' as const,
     },
   },
+  admin: {
+    api: {
+      adminRoles: () => '/admin/roles' as const,
+      adminSessions: (id: string | number, tokenId: string | number) => `/admin/users/${id}/sessions/${tokenId}`,
+      adminUsers: () => '/admin/users' as const,
+    },
+    views: {
+      hub: () => '/admin' as const,
+      rolesCreate: () => '/admin/roles/create' as const,
+      rolesEdit: (id: string | number) => `/admin/roles/${id}/edit`,
+      roles: () => '/admin/roles' as const,
+      usersCreate: () => '/admin/users/create' as const,
+      usersEdit: (id: string | number) => `/admin/users/${id}/edit`,
+      users: () => '/admin/users' as const,
+    },
+  },
   openIddict: {
     api: {
       authorization: () => '/connect/authorize' as const,
@@ -220,22 +236,6 @@ export const routes = {
       clientsCreate: () => '/openiddict/clients/create' as const,
       clientsEdit: (id: string | number) => `/openiddict/clients/${id}/edit`,
       clients: () => '/openiddict/clients' as const,
-    },
-  },
-  admin: {
-    api: {
-      adminRoles: () => '/admin/roles' as const,
-      adminSessions: (id: string | number, tokenId: string | number) => `/admin/users/${id}/sessions/${tokenId}`,
-      adminUsers: () => '/admin/users' as const,
-    },
-    views: {
-      hub: () => '/admin' as const,
-      rolesCreate: () => '/admin/roles/create' as const,
-      rolesEdit: (id: string | number) => `/admin/roles/${id}/edit`,
-      roles: () => '/admin/roles' as const,
-      usersCreate: () => '/admin/users/create' as const,
-      usersEdit: (id: string | number) => `/admin/users/${id}/edit`,
-      users: () => '/admin/users' as const,
     },
   },
 } as const;

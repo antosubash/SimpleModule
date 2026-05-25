@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using OpenIddict.Abstractions;
+using SimpleModule.Identity.Contracts;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 using static OpenIddict.Abstractions.OpenIddictConstants;
