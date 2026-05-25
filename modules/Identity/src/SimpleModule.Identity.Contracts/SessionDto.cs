@@ -1,9 +1,9 @@
 using SimpleModule.Core;
 
-namespace SimpleModule.OpenIddict.Contracts;
+namespace SimpleModule.Identity.Contracts;
 
 [Dto]
-public class UserSessionDto
+public class SessionDto
 {
     public string TokenId { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;

@@ -63,6 +63,7 @@ export interface CreateAdminUserRequest {
 }
 
 export interface CreateUserRequest {
+  id: string;
   email: string;
   displayName: string;
   password: string;

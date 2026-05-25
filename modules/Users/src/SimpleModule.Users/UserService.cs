@@ -7,7 +7,9 @@ using Wolverine;
 
 namespace SimpleModule.Users;
 
-public partial class UserService(
+#pragma warning disable CA1812 // Avoid uninstantiated internal classes (instantiated via DI)
+
+internal sealed partial class UserService(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     IMessageBus bus,
@@ -55,6 +57,11 @@ public partial class UserService(
             Email = request.Email,
             DisplayName = request.DisplayName,
         };
+
+        if (request.Id is not null)
+        {
+            user.Id = request.Id;
+        }
 
         var result = await userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)

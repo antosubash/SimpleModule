@@ -5,7 +5,8 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users;
 
-public sealed class RoleAdminService(
+#pragma warning disable CA1812 // Instantiated via DI
+internal sealed class RoleAdminService(
     RoleManager<ApplicationRole> roleManager,
     UserManager<ApplicationUser> userManager
 ) : IRoleAdminContracts

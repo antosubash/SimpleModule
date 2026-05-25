@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Admin.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Menu;
-using SimpleModule.OpenIddict.Contracts;
+using SimpleModule.Identity.Contracts;
 
 namespace SimpleModule.Admin;
 
@@ -18,8 +18,8 @@ public class AdminModule : IModule
 
     public void ConfigureMiddleware(IApplicationBuilder app)
     {
-        // Admin's session-management endpoints inject IOpenIddictSessionContracts, whose
-        // implementation lives in SimpleModule.OpenIddict (not its Contracts assembly).
+        // Admin's session-management endpoints inject ISessionContracts, whose
+        // implementation lives in an identity provider module (OpenIddict, Keycloak, etc.).
         // Without that module installed, minimal-API parameter binding falls through to
         // body-binding and the host crashes at MapModuleEndpoints with the misleading
         // "Body was inferred but the method does not allow inferred body parameters."
@@ -27,12 +27,12 @@ public class AdminModule : IModule
         // Use IServiceProviderIsService so we don't actually instantiate the (scoped)
         // service from the root provider.
         var probe = app.ApplicationServices.GetRequiredService<IServiceProviderIsService>();
-        if (!probe.IsService(typeof(IOpenIddictSessionContracts)))
+        if (!probe.IsService(typeof(ISessionContracts)))
         {
             throw new InvalidOperationException(
-                "SimpleModule.Admin requires SimpleModule.OpenIddict to be installed. "
-                    + "Add a reference to the SimpleModule.OpenIddict package (or project) "
-                    + "so IOpenIddictSessionContracts can be resolved by Admin's session endpoints."
+                "SimpleModule.Admin requires an identity provider module (OpenIddict or Keycloak) to be installed. "
+                    + "Add a reference to an identity provider module "
+                    + "so ISessionContracts can be resolved by Admin's session endpoints."
             );
         }
     }

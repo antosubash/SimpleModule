@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Description>Contracts for SimpleModule Keycloak identity provider module.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\modules\Identity\src\SimpleModule.Identity.Contracts\SimpleModule.Identity.Contracts.csproj" />
+  </ItemGroup>
+</Project>
