@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,6 +9,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using SimpleModule.Core;
 using SimpleModule.Identity.Contracts;
 using SimpleModule.Keycloak.Contracts;
+using SimpleModule.Keycloak.Hosting;
 using SimpleModule.Keycloak.Services;
 
 namespace SimpleModule.Keycloak;
@@ -101,9 +103,20 @@ public class KeycloakModule : IModule
 
                     options.CallbackPath = KeycloakModuleConstants.Routes.Callback;
 
-                    // Map Keycloak claims to well-known types
                     options.TokenValidationParameters.NameClaimType = "preferred_username";
-                    options.TokenValidationParameters.RoleClaimType = "roles";
+                    options.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
+
+                    // Keycloak puts roles in a nested realm_access JSON object.
+                    // Extract roles from the token at OIDC level so they're baked
+                    // into the cookie identity before any ClaimsTransformation runs.
+                    options.Events = new OpenIdConnectEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            KeycloakOidcEvents.OnTokenValidated(context);
+                            return Task.CompletedTask;
+                        },
+                    };
                 }
             )
             .AddPolicyScheme(

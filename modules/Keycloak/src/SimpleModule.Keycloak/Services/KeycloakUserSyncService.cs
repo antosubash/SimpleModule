@@ -1,28 +1,18 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Extensions;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Keycloak.Services;
 
-/// <summary>
-/// Just-in-time (JIT) user provisioning service. When a user authenticates
-/// via Keycloak, this service ensures a local <see cref="ApplicationUser"/>
-/// shadow record exists so that the rest of the SimpleModule infrastructure
-/// (permissions, settings, audit logs, etc.) can reference the user.
-///
-/// Called from <see cref="KeycloakClaimsTransformation"/> after claims are mapped.
-/// </summary>
 public sealed partial class KeycloakUserSyncService(
     IUserContracts userContracts,
+    RoleManager<ApplicationRole> roleManager,
+    UserManager<ApplicationUser> userManager,
     ILogger<KeycloakUserSyncService> logger
 )
 {
-    /// <summary>
-    /// Ensures a local user record exists for the authenticated principal.
-    /// Creates a new shadow user if one does not exist; updates email/display
-    /// name if they have changed in Keycloak.
-    /// </summary>
     public async Task SyncUserAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default
@@ -43,6 +33,12 @@ public sealed partial class KeycloakUserSyncService(
             ?? principal.FindFirstValue("name")
             ?? email;
 
+        var keycloakRoles = principal
+            .FindAll(ClaimTypes.Role)
+            .Select(c => c.Value)
+            .Where(r => !string.IsNullOrEmpty(r))
+            .ToList();
+
         var existingUser = await userContracts.GetUserByIdAsync(UserId.From(userId));
 
         if (existingUser is null)
@@ -52,11 +48,9 @@ public sealed partial class KeycloakUserSyncService(
             await userContracts.CreateUserAsync(
                 new CreateUserRequest
                 {
-                    Id = userId, // Keycloak sub — ensures lookup by ID finds the shadow user
+                    Id = userId,
                     Email = email,
                     DisplayName = displayName,
-                    // Keycloak-managed users don't use local passwords.
-                    // Set a random value that cannot be guessed.
                     Password = Guid.NewGuid().ToString("N") + "!Aa1",
                 }
             );
@@ -72,6 +66,50 @@ public sealed partial class KeycloakUserSyncService(
                 UserId.From(userId),
                 new UpdateUserRequest { Email = email, DisplayName = displayName }
             );
+        }
+
+        await SyncRolesAsync(userId, keycloakRoles);
+    }
+
+    private async Task SyncRolesAsync(string userId, List<string> keycloakRoles)
+    {
+        foreach (var roleName in keycloakRoles)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                LogCreatingRole(logger, roleName);
+                await roleManager.CreateAsync(
+                    new ApplicationRole
+                    {
+                        Name = roleName,
+                        Description = $"Synced from Keycloak",
+                        CreatedAt = DateTime.UtcNow,
+                    }
+                );
+            }
+        }
+
+        var user = await userManager.FindByIdAsync(userId);
+        if (user is null)
+            return;
+
+        var currentRoles = await userManager.GetRolesAsync(user);
+        var rolesToAdd = keycloakRoles
+            .Except(currentRoles, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var rolesToRemove = currentRoles
+            .Except(keycloakRoles, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (rolesToAdd.Count > 0)
+        {
+            LogSyncingRoles(logger, userId, rolesToAdd.Count);
+            await userManager.AddToRolesAsync(user, rolesToAdd);
+        }
+
+        if (rolesToRemove.Count > 0)
+        {
+            await userManager.RemoveFromRolesAsync(user, rolesToRemove);
         }
     }
 
@@ -91,4 +129,13 @@ public sealed partial class KeycloakUserSyncService(
         string email,
         string displayName
     );
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Creating local role: {RoleName}")]
+    private static partial void LogCreatingRole(ILogger logger, string roleName);
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Syncing roles for user {UserId}: adding {Count} role(s)"
+    )]
+    private static partial void LogSyncingRoles(ILogger logger, string userId, int count);
 }
