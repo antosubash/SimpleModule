@@ -117,6 +117,56 @@ public class SettingsModule : IModule
                     DefaultValue = "true",
                     Type = SettingType.Bool,
                 }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = "app.primary_color",
+                    DisplayName = "Primary Color",
+                    Description = "Brand color used throughout the application",
+                    Group = "Appearance",
+                    Scope = SettingScope.Application,
+                    DefaultValue = "\"#3b82f6\"",
+                    Type = SettingType.Color,
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = "app.support_email",
+                    DisplayName = "Support Email",
+                    Description = "Email address displayed on support pages",
+                    Group = "General",
+                    Scope = SettingScope.Application,
+                    Type = SettingType.Email,
+                    Pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+                    Placeholder = "support@example.com",
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = "app.welcome_message",
+                    DisplayName = "Welcome Message",
+                    Description = "Message shown to users on the dashboard",
+                    Group = "General",
+                    Scope = SettingScope.Application,
+                    Type = SettingType.MultilineText,
+                    Placeholder = "Welcome to the application!",
+                }
+            )
+            .Add(
+                new SettingDefinition
+                {
+                    Key = "user.preferred_density",
+                    DisplayName = "Display Density",
+                    Description = "Controls spacing and size of UI elements",
+                    Group = "Appearance",
+                    Scope = SettingScope.User,
+                    DefaultValue = "\"comfortable\"",
+                    Type = SettingType.Select,
+                    AllowedValues = ["compact", "comfortable", "spacious"],
+                }
             );
     }
 }

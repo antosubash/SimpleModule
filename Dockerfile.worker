@@ -49,8 +49,11 @@ COPY modules/Dashboard/src/SimpleModule.Dashboard.Contracts/*.csproj modules/Das
 COPY modules/Dashboard/src/SimpleModule.Dashboard/*.csproj modules/Dashboard/src/SimpleModule.Dashboard/
 COPY modules/Users/src/SimpleModule.Users.Contracts/*.csproj modules/Users/src/SimpleModule.Users.Contracts/
 COPY modules/Users/src/SimpleModule.Users/*.csproj modules/Users/src/SimpleModule.Users/
+COPY modules/Identity/src/SimpleModule.Identity.Contracts/*.csproj modules/Identity/src/SimpleModule.Identity.Contracts/
 COPY modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/*.csproj modules/OpenIddict/src/SimpleModule.OpenIddict.Contracts/
 COPY modules/OpenIddict/src/SimpleModule.OpenIddict/*.csproj modules/OpenIddict/src/SimpleModule.OpenIddict/
+COPY modules/Keycloak/src/SimpleModule.Keycloak.Contracts/*.csproj modules/Keycloak/src/SimpleModule.Keycloak.Contracts/
+COPY modules/Keycloak/src/SimpleModule.Keycloak/*.csproj modules/Keycloak/src/SimpleModule.Keycloak/
 COPY modules/Permissions/src/SimpleModule.Permissions.Contracts/*.csproj modules/Permissions/src/SimpleModule.Permissions.Contracts/
 COPY modules/Permissions/src/SimpleModule.Permissions/*.csproj modules/Permissions/src/SimpleModule.Permissions/
 COPY modules/Admin/src/SimpleModule.Admin.Contracts/*.csproj modules/Admin/src/SimpleModule.Admin.Contracts/

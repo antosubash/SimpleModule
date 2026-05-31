@@ -8,7 +8,8 @@ using Wolverine;
 
 namespace SimpleModule.Users;
 
-public sealed class UserAdminService(
+#pragma warning disable CA1812 // Instantiated via DI
+internal sealed class UserAdminService(
     UserManager<ApplicationUser> userManager,
     UsersDbContext db,
     IMessageBus bus

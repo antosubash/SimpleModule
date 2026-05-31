@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
+using SimpleModule.Settings.FormRequests;
 
 namespace SimpleModule.Settings.Endpoints.UserSettings;
 
@@ -16,8 +17,8 @@ public class UpdateMySettingEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 Route,
-                async (
-                    UpdateSettingRequest request,
+                async Task<IResult> (
+                    UpdateMySettingFormRequest request,
                     ISettingsContracts settings,
                     ClaimsPrincipal principal
                 ) =>
@@ -26,13 +27,22 @@ public class UpdateMySettingEndpoint : IEndpoint
                     if (string.IsNullOrEmpty(userId))
                         return Results.Unauthorized();
 
-                    await settings.SetSettingAsync(
-                        request.Key,
-                        request.Value ?? string.Empty,
-                        SettingScope.User,
-                        userId
-                    );
-                    return TypedResults.NoContent();
+                    try
+                    {
+                        await settings.SetSettingAsync(
+                            request.Key,
+                            request.Value,
+                            SettingScope.User,
+                            userId
+                        );
+                        return TypedResults.NoContent();
+                    }
+                    catch (SettingValidationException ex)
+                    {
+                        return TypedResults.ValidationProblem(
+                            new Dictionary<string, string[]> { [ex.Key] = ex.Errors.ToArray() }
+                        );
+                    }
                 }
             )
             .RequireAuthorization();

@@ -258,6 +258,56 @@ This is cosmetic organization -- all modules share one connection.
 
 Override `ConfigureEndpoints` on the module class for non-standard routes.
 
+### Form Requests
+
+Form Requests bundle parameter binding, authorization, validation, and data normalization into a single class. The handler receives an already-valid request object.
+
+```csharp
+[FormRequest]
+public sealed class CreateProductRequest : FormRequest<CreateProductRequest>
+{
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+
+    public override bool Authorize(ClaimsPrincipal user)
+        => user.HasPermission("Products.Create");
+
+    public override void Prepare()
+    {
+        Name = Name.Trim();
+    }
+
+    protected override void ConfigureRules(RuleConfigurator<CreateProductRequest> rules)
+    {
+        rules.RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        rules.RuleFor(x => x.Price).GreaterThan(0);
+    }
+}
+```
+
+**Pipeline:** `Bind → Authorize → Prepare → Validate → Handler`
+
+- `Authorize` returns `false` → **403 Forbidden** (short-circuit)
+- `Prepare` normalizes data before validation runs
+- Validation fails → **422 Unprocessable Entity** with RFC 7807 problem+json:
+
+```json
+{
+  "title": "Validation Error",
+  "status": 422,
+  "detail": "One or more validation errors occurred.",
+  "errors": { "Name": ["'Name' must not be empty."] }
+}
+```
+
+**Rules:**
+- FormRequest classes **must be sealed** (SM0056)
+- FormRequest classes **must extend `FormRequest<TSelf>`** (SM0057)
+- `[FormRequest]` types get TypeScript interfaces auto-generated (same as `[Dto]`)
+- The filter runs on all module route groups automatically
+- Existing endpoints using `IValidator<T>` + manual validation are unaffected (opt-in)
+- FluentValidation is used under the hood — `RuleFor()` API is standard FluentValidation
+
 ---
 
 ## 7. Frontend
@@ -477,6 +527,13 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 |------------|----------|------|
 | SM0049 | Error | Each endpoint must be in its own file |
 | SM0054 | Info | Endpoint should declare a `public const string Route` field |
+
+### Form Requests
+
+| Diagnostic | Severity | Rule |
+|------------|----------|------|
+| SM0056 | Error | FormRequest class must be sealed |
+| SM0057 | Error | FormRequest class must extend `FormRequest<TSelf>` |
 
 ### Module Metadata
 

@@ -4,7 +4,180 @@ outline: deep
 
 # Identity & Sessions
 
-The Users module owns the local identity store; the OpenIddict module owns issued tokens. This page covers the user-facing flows that span them: account lockout recovery, phone verification, active-session management, and global sign-out.
+SimpleModule supports pluggable identity providers. The default is **OpenIddict** (self-hosted OAuth2/OIDC server). An alternative **Keycloak** module delegates authentication to an external Keycloak instance.
+
+## Choosing an Identity Provider
+
+Set `Identity:Provider` in configuration to switch providers:
+
+| Value | Provider | Use case |
+|-------|----------|----------|
+| *(empty/omitted)* | OpenIddict | Self-contained apps, no external dependencies |
+| `Keycloak` | Keycloak | SSO, social login, MFA, LDAP federation, enterprise IdP |
+
+Both modules can coexist in the same Host project — only the configured one activates at startup.
+
+```json
+// appsettings.json — Keycloak mode
+{
+  "Identity": {
+    "Provider": "Keycloak"
+  },
+  "Keycloak": {
+    "Authority": "http://localhost:8080/realms/simplemodule",
+    "ClientId": "simplemodule-app",
+    "ClientSecret": "your-client-secret",
+    "Realm": "simplemodule",
+    "AdminApiBaseUrl": "http://localhost:8080/admin/realms/simplemodule",
+    "AdminClientId": "simplemodule-admin",
+    "AdminClientSecret": "your-admin-secret",
+    "RequireHttpsMetadata": true
+  }
+}
+```
+
+## Architecture
+
+### Provider-Agnostic Contracts (Identity.Contracts)
+
+All modules depend on `SimpleModule.Identity.Contracts`, never on a specific provider:
+
+```csharp
+// Provider-agnostic session management
+public interface ISessionContracts
+{
+    Task<IReadOnlyList<SessionDto>> GetActiveSessionsForUserAsync(string userId, ...);
+    Task<RevokeSessionResult> TryRevokeSessionForUserAsync(string tokenId, string userId, ...);
+    Task RevokeAllSessionsForUserAsync(string userId, ...);
+    Task RevokeOtherSessionsForUserAsync(string userId, string? currentTokenId, ...);
+}
+
+// Provider metadata
+public interface IIdentityProvider
+{
+    string Name { get; }
+    bool SupportsLocalUsers { get; }
+}
+```
+
+`SessionDto` carries `TokenId`, `Type`, `ApplicationName`, `CreationDate`, `ExpirationDate`, and `IsCurrent`.
+
+`TryRevokeSessionForUserAsync` returns `RevokeSessionResult.NotFound` for unknown or cross-user tokens and `BlockedCurrent` when the caller tries to revoke their own session.
+
+### Smart Authentication
+
+Both providers use a "SmartAuth" policy scheme that selects the authentication handler per-request:
+
+| Request | OpenIddict | Keycloak |
+|---------|-----------|----------|
+| `Authorization: Bearer <token>` | OpenIddict validation | JWT Bearer (Keycloak-issued) |
+| Cookie (browser/Inertia) | ASP.NET Identity cookie | OIDC cookie (Keycloak redirect) |
+
+### Users Module Dual-Mode
+
+The Users module adapts automatically based on the active provider:
+
+| Aspect | OpenIddict mode | Keycloak mode |
+|--------|----------------|---------------|
+| User store | ASP.NET Identity (local DB) | ASP.NET Identity (local DB) + JIT sync from Keycloak |
+| Login pages | Local Inertia views | Redirect to Keycloak |
+| Password management | Local | Keycloak |
+| `IUserContracts` | `UserService` (via `UserManager`) | `ExternalUserService` (direct EF) |
+| Admin user management | Full CRUD | Read-only (mutations throw `NotSupportedException`) |
+
+## OpenIddict (Default)
+
+Self-hosted OAuth2/OIDC server. No external dependencies.
+
+### Grant Types
+
+- **Authorization Code + PKCE** — standard browser flow
+- **Refresh Token** — token renewal
+- **Password Grant** — development/load testing only (set `OpenIddict:AllowPasswordGrant: true`)
+
+### Certificate Management
+
+Production requires signing and encryption certificates:
+
+```json
+{
+  "OpenIddict": {
+    "SigningCertPath": "/certs/signing.pfx",
+    "EncryptionCertPath": "/certs/encryption.pfx",
+    "CertPassword": "your-cert-password"
+  }
+}
+```
+
+Development uses ephemeral keys automatically.
+
+### OpenIddict Session Management
+
+Sessions are exposed via `IOpenIddictSessionContracts` (extends `ISessionContracts`). Tokens sharing an `AuthorizationId` collapse into a single session row so users can't revoke half of their own login.
+
+## Keycloak
+
+Delegates authentication to an external [Keycloak](https://www.keycloak.org/) server.
+
+### Keycloak Configuration
+
+| Setting | Description |
+|---------|-------------|
+| `Keycloak:Authority` | Realm URL, e.g. `https://keycloak.example.com/realms/simplemodule` |
+| `Keycloak:ClientId` | Application client ID (confidential, auth code + PKCE) |
+| `Keycloak:ClientSecret` | Application client secret |
+| `Keycloak:Realm` | Realm name |
+| `Keycloak:AdminApiBaseUrl` | Admin REST API URL, e.g. `https://keycloak.example.com/admin/realms/simplemodule` |
+| `Keycloak:AdminClientId` | Service account client ID for admin API |
+| `Keycloak:AdminClientSecret` | Service account client secret |
+| `Keycloak:RequireHttpsMetadata` | `true` in production, `false` for local dev |
+
+### Claims Transformation
+
+Keycloak uses non-standard claim structures. `KeycloakClaimsTransformation` normalizes them before `PermissionClaimsTransformation` runs:
+
+| Keycloak claim | Mapped to |
+|---------------|-----------|
+| `realm_access.roles` (JSON) | Individual `ClaimTypes.Role` claims |
+| `preferred_username` | `ClaimTypes.Name` |
+| `sub` | Used as-is (same as OpenIddict) |
+
+### JIT User Provisioning
+
+When a Keycloak user first authenticates, `KeycloakUserSyncService` creates a local shadow `ApplicationUser` record with `Id = Keycloak sub`. On subsequent logins, email and display name are updated if they changed in Keycloak.
+
+This ensures local modules (permissions, audit logs, settings) can reference users by ID without depending on the Keycloak API.
+
+### Session Management
+
+`KeycloakSessionService` implements `ISessionContracts` via the [Keycloak Admin REST API](https://www.keycloak.org/docs-api/latest/rest-api/index.html). Token management for the admin API uses a singleton `KeycloakTokenCache` with thread-safe double-checked locking.
+
+### Sign Out Everywhere
+
+The Keycloak module handles `UserSignedOutEverywhereEvent` (published by the Users module) by calling `RevokeAllSessionsForUserAsync`, which maps to `POST /admin/realms/{realm}/users/{userId}/logout` on the Keycloak Admin API.
+
+## Development with Aspire
+
+The Aspire AppHost includes a Keycloak launch profile:
+
+```bash
+# Default (OpenIddict)
+dotnet run --project SimpleModule.AppHost
+
+# Keycloak mode
+dotnet run --project SimpleModule.AppHost --launch-profile keycloak
+```
+
+The `keycloak` profile starts a Keycloak 26.2 container with a pre-imported realm containing:
+
+| Test User | Password | Roles |
+|-----------|----------|-------|
+| `admin@simplemodule.dev` | `Admin123!` | Admin, User |
+| `user@simplemodule.dev` | `User123!` | User |
+
+Keycloak Admin Console: `http://localhost:8080` (admin/admin)
+
+The realm import JSON is at `SimpleModule.AppHost/keycloak/simplemodule-realm.json`.
 
 ## Account lockout and self-service unlock
 
@@ -14,19 +187,9 @@ When ASP.NET Identity locks an account after repeated failed logins the user is 
 2. Generates a single-use token bound to the user and the `AccountUnlock` purpose.
 3. Calls `IAccountUnlockEmailSender.SendUnlockLinkAsync(email, unlockLink)`.
 
-Clicking the link lands on `/Identity/Account/UnlockAccount`, which validates the token, calls `userManager.SetLockoutEndDateAsync(...)` to clear the lockout, and signs the user out so they re-enter credentials.
+Clicking the link validates the token, clears the lockout, and signs the user out for re-authentication.
 
-`IAccountUnlockEmailSender` defaults to `ConsoleAccountUnlockEmailSender` (logs the link). Replace it with a production implementation that hands off to your transactional mail provider:
-
-```csharp
-public sealed class MailgunAccountUnlockEmailSender(IMailgunClient client) : IAccountUnlockEmailSender
-{
-    public Task SendUnlockLinkAsync(string email, string unlockLink) =>
-        client.SendAsync(to: email, subject: "Unlock your account", html: Templates.Unlock(unlockLink));
-}
-```
-
-Register the replacement in `Program.cs` after `AddSimpleModuleInfrastructure()`:
+`IAccountUnlockEmailSender` defaults to `ConsoleAccountUnlockEmailSender` (logs the link). Replace it with a production implementation:
 
 ```csharp
 builder.Services.AddScoped<IAccountUnlockEmailSender, MailgunAccountUnlockEmailSender>();
@@ -34,61 +197,7 @@ builder.Services.AddScoped<IAccountUnlockEmailSender, MailgunAccountUnlockEmailS
 
 ## Phone number confirmation
 
-The account manage page collects an unconfirmed phone number and offers `Send code`. That action posts to `/Identity/Account/Manage/SendPhoneVerificationCode`, which uses `userManager.GenerateChangePhoneNumberTokenAsync(...)` and dispatches via `ISmsSender`:
-
-```csharp
-public interface ISmsSender
-{
-    Task SendVerificationCodeAsync(
-        ApplicationUser user,
-        string phoneNumber,
-        string code,
-        CancellationToken cancellationToken = default);
-}
-```
-
-Provide your own implementation (Twilio, Vonage, AWS SNS) and register it the same way as the unlock sender. The default `ConsoleSmsSender` writes the code to logs for local development.
-
-`/Identity/Account/Manage/ConfirmPhoneNumber` verifies the code with `userManager.ChangePhoneNumberAsync(...)`, which sets both the number and `PhoneNumberConfirmed = true`. `/Identity/Account/Manage/RemovePhoneNumber` clears both fields.
-
-## Active sessions
-
-Every refresh token issued by OpenIddict represents a live session. The manage page at `/Identity/Account/Manage` lists them so a user can audit and revoke individual logins without changing their password.
-
-Sessions are exposed via `IOpenIddictSessionContracts`. The session-grouped overload collapses access + refresh tokens that share an `AuthorizationId` into a single row, so a user can't accidentally revoke half of their own login:
-
-```csharp
-public interface IOpenIddictSessionContracts
-{
-    Task<IReadOnlyList<UserSessionDto>> GetActiveSessionsForUserAsync(
-        string userId,
-        string? currentTokenId,
-        CancellationToken cancellationToken = default);
-
-    Task<RevokeSessionResult> TryRevokeSessionForUserAsync(
-        string tokenId,
-        string userId,
-        string? currentTokenId,
-        CancellationToken cancellationToken = default);
-
-    Task RevokeAllSessionsForUserAsync(string userId, CancellationToken cancellationToken = default);
-
-    Task RevokeOtherSessionsForUserAsync(
-        string userId,
-        string? currentTokenId,
-        CancellationToken cancellationToken = default);
-}
-```
-
-`UserSessionDto` carries `TokenId`, `Type`, `ApplicationName`, `CreationDate`, `ExpirationDate`, and an `IsCurrent` flag set when the row belongs to the request's own session.
-
-`TryRevokeSessionForUserAsync` returns `RevokeSessionResult.NotFound` (404) for unknown or cross-user tokens — the endpoint deliberately does not distinguish "doesn't exist" from "belongs to someone else" — and `BlockedCurrent` (400) when the caller tries to revoke their own session, which would log them out mid-request.
-
-## Sign out everywhere
-
-`/Identity/Account/Manage/SignOutEverywhere` calls `RevokeOtherSessionsForUserAsync` (passing the current token id) and then bumps the user's security stamp via `userManager.UpdateSecurityStampAsync(...)`. The stamp change invalidates every cookie auth ticket issued before the bump, so even browser sessions held outside the OAuth flow are forced through re-authentication.
-
-For credential-compromise flows, combine `RevokeAllSessionsForUserAsync` with `UpdateSecurityStampAsync` so even cookie-based sessions issued before the stamp bump are invalidated.
+The account manage page uses `ISmsSender` for phone verification codes. Default `ConsoleSmsSender` logs to console. Provide a Twilio/Vonage/AWS SNS implementation for production.
 
 ## Next Steps
 

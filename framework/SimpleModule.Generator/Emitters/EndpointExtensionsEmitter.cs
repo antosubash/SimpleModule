@@ -18,6 +18,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Http;");
         sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
         sb.AppendLine("using SimpleModule.Core.Authorization;");
+        sb.AppendLine("using SimpleModule.Core.FormRequests;");
         sb.AppendLine();
         sb.AppendLine("namespace SimpleModule.Core;");
         sb.AppendLine();
@@ -42,7 +43,7 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
             if (!string.IsNullOrEmpty(module.RoutePrefix))
             {
                 sb.AppendLine(
-                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\").WithTags(\"{module.ModuleName}\").RequireAuthorization();"
+                    $"            var group = app.MapGroup(\"{module.RoutePrefix}\").WithTags(\"{module.ModuleName}\").RequireAuthorization().AddFormRequestFilter();"
                 );
                 foreach (var endpoint in module.Endpoints)
                 {
@@ -51,9 +52,12 @@ internal sealed class EndpointExtensionsEmitter : IEmitter
             }
             else
             {
+                sb.AppendLine(
+                    $"            var group = app.MapGroup(\"\").WithTags(\"{module.ModuleName}\").RequireAuthorization().AddFormRequestFilter();"
+                );
                 foreach (var endpoint in module.Endpoints)
                 {
-                    EmitEndpointRegistration(sb, endpoint, "app");
+                    EmitEndpointRegistration(sb, endpoint, "group");
                 }
             }
 

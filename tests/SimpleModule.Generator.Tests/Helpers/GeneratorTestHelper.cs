@@ -85,6 +85,25 @@ public static class GeneratorTestHelper
         );
     }
 
+    /// <summary>
+    /// Creates a compilation that includes FluentValidation and the SimpleModule.Core assembly
+    /// so that FormRequest&lt;T&gt; and RuleConfigurator&lt;T&gt; are resolvable by the generator.
+    /// </summary>
+    public static CSharpCompilation CreateCompilationWithFormRequestSupport(params string[] sources)
+    {
+        var compilation = CreateCompilation(sources);
+
+        var extraRefs = new List<MetadataReference>
+        {
+            MetadataReference.CreateFromFile(typeof(FluentValidation.IValidator).Assembly.Location),
+            MetadataReference.CreateFromFile(
+                typeof(FluentValidation.AbstractValidator<>).Assembly.Location
+            ),
+        };
+
+        return compilation.AddReferences(extraRefs);
+    }
+
     public static CSharpCompilation CreateCompilationWithEfCore(params string[] sources)
     {
         var compilation = CreateCompilation(sources);

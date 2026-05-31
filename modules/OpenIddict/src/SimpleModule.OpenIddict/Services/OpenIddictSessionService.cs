@@ -1,20 +1,22 @@
 using OpenIddict.Abstractions;
+using SimpleModule.Identity.Contracts;
 using SimpleModule.OpenIddict.Contracts;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace SimpleModule.OpenIddict.Services;
 
-public sealed class OpenIddictSessionService(
+#pragma warning disable CA1812 // Instantiated via DI
+internal sealed class OpenIddictSessionService(
     IOpenIddictTokenManager tokenManager,
     IOpenIddictApplicationManager appManager
 ) : IOpenIddictSessionContracts
 {
-    public async Task<IReadOnlyList<UserSessionDto>> GetActiveSessionsForUserAsync(
+    public async Task<IReadOnlyList<SessionDto>> GetActiveSessionsForUserAsync(
         string userId,
         CancellationToken cancellationToken = default
     )
     {
-        var sessions = new List<UserSessionDto>();
+        var sessions = new List<SessionDto>();
         var appNameCache = new Dictionary<string, string?>();
 
         await foreach (var token in tokenManager.FindBySubjectAsync(userId, cancellationToken))
@@ -27,7 +29,7 @@ public sealed class OpenIddictSessionService(
         return sessions;
     }
 
-    public async Task<IReadOnlyList<UserSessionDto>> GetActiveSessionsForUserAsync(
+    public async Task<IReadOnlyList<SessionDto>> GetActiveSessionsForUserAsync(
         string userId,
         string? currentTokenId,
         CancellationToken cancellationToken = default
@@ -61,7 +63,7 @@ public sealed class OpenIddictSessionService(
             bucket.Add(row.Value);
         }
 
-        var sessions = new List<UserSessionDto>(groups.Count);
+        var sessions = new List<SessionDto>(groups.Count);
         foreach (var bucket in groups.Values)
         {
             // Prefer a refresh token as the anchor so the row reflects the longer-
@@ -102,7 +104,7 @@ public sealed class OpenIddictSessionService(
                 );
 
             sessions.Add(
-                new UserSessionDto
+                new SessionDto
                 {
                     TokenId = anchor.TokenId,
                     Type = anchor.Type,
@@ -254,7 +256,7 @@ public sealed class OpenIddictSessionService(
         }
     }
 
-    private async Task<UserSessionDto?> BuildDtoAsync(
+    private async Task<SessionDto?> BuildDtoAsync(
         object token,
         Dictionary<string, string?> appNameCache,
         CancellationToken cancellationToken
@@ -270,7 +272,7 @@ public sealed class OpenIddictSessionService(
             cancellationToken
         );
 
-        return new UserSessionDto
+        return new SessionDto
         {
             TokenId = row.Value.TokenId,
             Type = row.Value.Type,

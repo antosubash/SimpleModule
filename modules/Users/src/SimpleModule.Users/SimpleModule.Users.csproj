@@ -4,6 +4,9 @@
     <Description>Users module for SimpleModule. User authentication and identity management via ASP.NET Core Identity.</Description>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="SimpleModule.Users.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <EmbeddedResource Include="Locales/*.json" />
   </ItemGroup>
   <ItemGroup>

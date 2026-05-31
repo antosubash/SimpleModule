@@ -1,11 +1,10 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Endpoints;
-using SimpleModule.Core.Validation;
 using SimpleModule.Email.Contracts;
+using SimpleModule.Email.FormRequests;
 
 namespace SimpleModule.Email.Endpoints.Templates;
 
@@ -17,20 +16,20 @@ public class CreateTemplateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                async (
-                    CreateEmailTemplateRequest request,
-                    IValidator<CreateEmailTemplateRequest> validator,
-                    IEmailContracts emailContracts
-                ) =>
+                async (CreateTemplateFormRequest request, IEmailContracts emailContracts) =>
                 {
-                    var validation = await validator.ValidateAsync(request);
-                    if (!validation.IsValid)
-                        throw new Core.Exceptions.ValidationException(
-                            validation.ToValidationErrors()
-                        );
+                    var dto = new CreateEmailTemplateRequest
+                    {
+                        Name = request.Name,
+                        Slug = request.Slug,
+                        Subject = request.Subject,
+                        Body = request.Body,
+                        IsHtml = request.IsHtml,
+                        DefaultReplyTo = request.DefaultReplyTo,
+                    };
 
                     return await CrudEndpoints.Create(
-                        () => emailContracts.CreateTemplateAsync(request),
+                        () => emailContracts.CreateTemplateAsync(dto),
                         t => $"/api/email/templates/{t.Id.Value}"
                     );
                 }

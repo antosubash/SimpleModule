@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings.Contracts;
 
@@ -15,11 +16,20 @@ public class DeleteSettingEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
                 Route,
-                async (string key, SettingScope scope, ISettingsContracts settings) =>
+                async Task<IResult> (string key, SettingScope? scope, ISettingsContracts settings) =>
                 {
-                    await settings.DeleteSettingAsync(key, scope);
+                    if (scope is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Query parameter 'scope' is required.",
+                            statusCode: StatusCodes.Status400BadRequest,
+                            title: "Missing required parameter"
+                        );
+                    }
+
+                    await settings.ResetToDefaultAsync(key, scope.Value);
                     return TypedResults.NoContent();
                 }
             )
-            .RequireAuthorization();
+            .RequirePermission(SettingsPermissions.Update);
 }

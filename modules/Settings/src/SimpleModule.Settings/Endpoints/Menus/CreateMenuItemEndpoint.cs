@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Settings.Contracts;
+using SimpleModule.Settings.FormRequests;
 using SimpleModule.Settings.Services;
 
 namespace SimpleModule.Settings.Endpoints.Menus;
@@ -15,10 +16,22 @@ public class CreateMenuItemEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 Route,
-                async (CreateMenuItemRequest request, PublicMenuService service) =>
+                async (CreateMenuItemFormRequest request, PublicMenuService service) =>
                 {
-                    var entity = await service.CreateAsync(request);
-                    var dto = new PublicMenuItemDto
+                    var dto = new CreateMenuItemRequest
+                    {
+                        ParentId = request.ParentId,
+                        Label = request.Label,
+                        Url = request.Url,
+                        PageRoute = request.PageRoute,
+                        Icon = request.Icon,
+                        CssClass = request.CssClass,
+                        OpenInNewTab = request.OpenInNewTab,
+                        IsVisible = request.IsVisible,
+                        IsHomePage = request.IsHomePage,
+                    };
+                    var entity = await service.CreateAsync(dto);
+                    var result = new PublicMenuItemDto
                     {
                         Id = entity.Id,
                         ParentId = entity.ParentId,
@@ -32,7 +45,7 @@ public class CreateMenuItemEndpoint : IEndpoint
                         IsHomePage = entity.IsHomePage,
                         SortOrder = entity.SortOrder,
                     };
-                    return TypedResults.Created($"/api/settings/menus/{entity.Id}", dto);
+                    return TypedResults.Created($"/api/settings/menus/{entity.Id}", result);
                 }
             )
             .RequireAuthorization();

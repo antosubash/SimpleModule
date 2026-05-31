@@ -106,3 +106,12 @@ export interface UpdateEmailTemplateRequest {
   defaultReplyTo: string;
 }
 
+export interface CreateTemplateFormRequest {
+  name: string;
+  slug: string;
+  subject: string;
+  body: string;
+  isHtml: boolean;
+  defaultReplyTo: string;
+}
+
