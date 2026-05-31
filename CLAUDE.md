@@ -14,6 +14,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Modular monolith framework for .NET with compile-time module discovery via Roslyn source generators. Frontend uses React 19 + Inertia.js served via a static HTML shell.
 
+## Local database (shared dev-services stack)
+
+**Do NOT start your own Postgres container.** All repos in `~/Repos` share one
+stack defined in `~/Repos/dev-services` (one PostGIS + Redis + MinIO + Adminer on
+the `devnet` Docker network). Start it once with `make up` there.
+
+- Local dev defaults to **SQLite** (`app.db`), so Postgres is optional here.
+- To use Postgres, point the app at the shared server: `localhost:5432`,
+  `postgres`/`postgres`, database **`simplemodule`** (already created by the
+  shared stack's init SQL).
+- This repo's own `docker-compose.yml` starts a `postgres:17` container (db
+  `simplemodule`, creds `simplemodule`/`simplemodule`). Prefer the shared stack
+  and skip it — running both conflicts on port 5432. Running via the Aspire
+  AppHost also provisions its own Postgres (`simplemoduledb`); that's a separate
+  path from the shared stack.
+
+If 5432 is taken by an old per-project container, stop that container rather than
+remapping ports. To add a database, edit `dev-services/init/01-databases.sql`.
+
 ## Build & Run
 
 ```bash
