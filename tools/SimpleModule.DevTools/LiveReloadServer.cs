@@ -235,19 +235,24 @@ public static class LiveReloadEndpointExtensions
         app.UseWebSockets();
 
         app.Map(
-            LiveReloadPath,
-            async (HttpContext context, LiveReloadServer server) =>
-            {
-                if (!context.WebSockets.IsWebSocketRequest)
+                LiveReloadPath,
+                async (HttpContext context, LiveReloadServer server) =>
                 {
-                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                    return;
-                }
+                    if (!context.WebSockets.IsWebSocketRequest)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                        return;
+                    }
 
-                using var ws = await context.WebSockets.AcceptWebSocketAsync();
-                await server.HandleWebSocketAsync(ws);
-            }
-        );
+                    using var ws = await context.WebSockets.AcceptWebSocketAsync();
+                    await server.HandleWebSocketAsync(ws);
+                }
+            )
+            // The dev live-reload socket must be public: the framework's
+            // authenticated-by-default fallback policy would otherwise challenge the
+            // handshake with a 302 to the login page (never a 101 upgrade), so the
+            // browser client reconnects forever, flooding the console (#233).
+            .AllowAnonymous();
 
         return app;
     }
