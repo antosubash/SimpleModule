@@ -99,4 +99,87 @@ public sealed partial class NewProjectScaffoldTests
         var content = File.ReadAllText(Path.Combine(rootDir, "package.json"));
         content.Should().Contain("file:");
     }
+
+    [Fact]
+    public void Scaffold_ShipsFaviconSvg()
+    {
+        // Issue #225: index.html links /favicon.svg and Program.cs maps /favicon.ico to it,
+        // so the scaffold must ship the file (otherwise both 404 on every page).
+        var (projectName, rootDir) = ScaffoldStandalone();
+
+        var favicon = Path.Combine(rootDir, "src", $"{projectName}.Host", "wwwroot", "favicon.svg");
+        File.Exists(favicon).Should().BeTrue();
+        File.ReadAllText(favicon).Should().Contain("<svg");
+    }
+
+    [Fact]
+    public void Scaffold_ModuleAndContractsUseBareAssemblyNames()
+    {
+        // Issue #228: the module (RCL) AssemblyName must equal the directory basename so the
+        // Vite pages bundle (named from the basename) serves at /_content/{AssemblyName}/ and
+        // resolves. The contracts AssemblyName must stay paired (module + ".Contracts") so the
+        // source generator discovers the module's contract implementations.
+        var (_, rootDir) = ScaffoldStandalone();
+
+        var moduleCsproj = File.ReadAllText(
+            Path.Combine(rootDir, "src", "modules", "Items", "src", "Items", "Items.csproj")
+        );
+        moduleCsproj.Should().Contain("<AssemblyName>Items</AssemblyName>");
+        moduleCsproj.Should().NotContain("<AssemblyName>SimpleModule.Items</AssemblyName>");
+
+        var contractsCsproj = File.ReadAllText(
+            Path.Combine(
+                rootDir,
+                "src",
+                "modules",
+                "Items",
+                "src",
+                "Items.Contracts",
+                "Items.Contracts.csproj"
+            )
+        );
+        contractsCsproj.Should().Contain("<AssemblyName>Items.Contracts</AssemblyName>");
+    }
+
+    [Fact]
+    public void Scaffold_EventRecordDerivesFromDomainEvent()
+    {
+        // Issue #218: IEvent requires EventId/OccurredAt, so generated event records must derive
+        // from DomainEvent (which supplies them) rather than implementing IEvent directly.
+        var (_, rootDir) = ScaffoldStandalone();
+
+        var eventFile = File.ReadAllText(
+            Path.Combine(
+                rootDir,
+                "src",
+                "modules",
+                "Items",
+                "src",
+                "Items.Contracts",
+                "Events",
+                "ItemCreatedEvent.cs"
+            )
+        );
+        eventFile.Should().Contain(": DomainEvent");
+        eventFile.Should().NotContain(": IEvent");
+    }
+
+    [Fact]
+    public void RootPackageJson_PinsNpmDependenciesToNpmVersion_NotFrameworkVersion()
+    {
+        // Issue #219: the @simplemodule/* npm packages are not always published in lockstep with
+        // NuGet, so the scaffold must pin them to the resolved npm version independently.
+        var templates = new Templates.ProjectTemplates(
+            solution: null,
+            frameworkVersion: "0.0.40",
+            npmVersion: "0.0.36"
+        );
+
+        var packageJson = templates.RootPackageJson("TestApp", frameworkPackagesPath: null);
+
+        packageJson.Should().Contain("\"@simplemodule/client\": \"^0.0.36\"");
+        packageJson.Should().Contain("\"@simplemodule/ui\": \"^0.0.36\"");
+        packageJson.Should().Contain("\"@simplemodule/theme-default\": \"^0.0.36\"");
+        packageJson.Should().NotContain("0.0.40");
+    }
 }

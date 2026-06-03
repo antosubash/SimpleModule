@@ -32,6 +32,11 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             solution
         );
 
+        // The @simplemodule/* npm packages are not always published in lockstep with NuGet,
+        // so pin them to the latest published npm version rather than the framework version
+        // (otherwise `npm install` fails with notarget — see issue #219).
+        var npmVersion = NpmVersionResolver.ResolveVersion(frameworkVersion);
+
         if (settings.DryRun)
         {
             var ops = PlanFiles(projectName, rootDir);
@@ -47,7 +52,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
                 ctx =>
                 {
                     ctx.Status("Scaffolding project files...");
-                    ScaffoldProject(projectName, rootDir, solution, frameworkVersion);
+                    ScaffoldProject(projectName, rootDir, solution, frameworkVersion, npmVersion);
                 }
             );
 
@@ -70,10 +75,15 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         string projectName,
         string rootDir,
         SolutionContext? solution,
-        string frameworkVersion
+        string frameworkVersion,
+        string? npmVersion = null
     )
     {
-        var projectTemplates = new ProjectTemplates(solution, frameworkVersion);
+        var projectTemplates = new ProjectTemplates(
+            solution,
+            frameworkVersion,
+            npmVersion ?? frameworkVersion
+        );
         var moduleTemplates = new ModuleTemplates(solution);
 
         const string moduleName = "Items";
@@ -154,6 +164,10 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         File.WriteAllText(
             Path.Combine(hostDir, "wwwroot", "index.html"),
             HostTemplates.IndexHtml()
+        );
+        File.WriteAllText(
+            Path.Combine(hostDir, "wwwroot", "favicon.svg"),
+            HostTemplates.FaviconSvg()
         );
         File.WriteAllText(Path.Combine(hostDir, "ClientApp", "app.tsx"), HostTemplates.AppTsx());
         File.WriteAllText(
@@ -309,6 +323,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         Plan(Path.Combine(hostDir, $"{projectName}.Host.csproj"));
         Plan(Path.Combine(hostDir, "Program.cs"));
         Plan(Path.Combine(hostDir, "wwwroot", "index.html"));
+        Plan(Path.Combine(hostDir, "wwwroot", "favicon.svg"));
         Plan(Path.Combine(hostDir, "ClientApp", "app.tsx"));
         Plan(Path.Combine(hostDir, "ClientApp", "vite.config.ts"));
         Plan(Path.Combine(hostDir, "ClientApp", "vite.dev.config.ts"));

@@ -1,4 +1,29 @@
 <Project>
+  <!-- Resolve the npm workspace root. In the monorepo, RepoRoot is supplied by
+       Directory.Build.props. In a downstream consumer that references the
+       SimpleModule.Hosting NuGet package, RepoRoot is undefined, so fall back to the
+       nearest ancestor directory containing package.json (the npm workspace root where
+       node_modules is installed). -->
+  <PropertyGroup>
+    <RepoRoot Condition="'$(RepoRoot)' == ''"
+      >$([MSBuild]::EnsureTrailingSlash($([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', 'package.json'))))</RepoRoot
+    >
+  </PropertyGroup>
+  <!-- Frontend build-integration paths. Defaults target a consumer scaffold layout
+       (theme from the @simplemodule/theme-default npm package, modules under src/modules,
+       routes emitted into the host's ClientApp). The monorepo overrides these in its
+       Directory.Build.props to point at the in-repo packages/ and modules/ folders. -->
+  <PropertyGroup>
+    <SimpleModuleThemeCss Condition="'$(SimpleModuleThemeCss)' == ''"
+      >$(RepoRoot)node_modules/@simplemodule/theme-default/theme.css</SimpleModuleThemeCss
+    >
+    <SimpleModuleModulesDir Condition="'$(SimpleModuleModulesDir)' == ''"
+      >$(RepoRoot)src/modules</SimpleModuleModulesDir
+    >
+    <SimpleModuleRoutesOutput Condition="'$(SimpleModuleRoutesOutput)' == ''"
+      >$(MSBuildProjectDirectory)/ClientApp/routes.ts</SimpleModuleRoutesOutput
+    >
+  </PropertyGroup>
   <!-- Build configuration -->
   <PropertyGroup>
     <TailwindCli Condition="'$(OS)' == 'Windows_NT'"
@@ -19,7 +44,7 @@
       Include="$(MSBuildProjectDirectory)/Styles/**/*.css"
       Exclude="$(MSBuildProjectDirectory)/Styles/_scan/**"
     />
-    <TailwindSourceFiles Include="$(RepoRoot)packages/SimpleModule.Theme.Default/theme.css" />
+    <TailwindSourceFiles Include="$(SimpleModuleThemeCss)" Condition="Exists('$(SimpleModuleThemeCss)')" />
   </ItemGroup>
   <!-- Incremental Vite: track ClientApp source files -->
   <ItemGroup Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(RepoRoot)node_modules'))">
@@ -95,7 +120,7 @@
     Outputs="$(ExtractDtoStamp)"
   >
     <Exec
-      Command="node &quot;$(RepoRoot)scripts/extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)modules&quot;"
+      Command="node &quot;$(RepoRoot)scripts/extract-ts-types.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(SimpleModuleModulesDir)&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
     <Touch Files="$(ExtractDtoStamp)" AlwaysCreate="true" />
@@ -109,7 +134,7 @@
     Outputs="$(ExtractRoutesStamp)"
   >
     <Exec
-      Command="node &quot;$(RepoRoot)scripts/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(RepoRoot)packages/SimpleModule.Client/src/routes.ts&quot;"
+      Command="node &quot;$(RepoRoot)scripts/extract-routes.mjs&quot; &quot;$(IntermediateOutputPath)generated/SimpleModule.Generator/SimpleModule.Generator.ModuleDiscovererGenerator&quot; &quot;$(SimpleModuleRoutesOutput)&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)"
     />
     <Touch Files="$(ExtractRoutesStamp)" AlwaysCreate="true" />

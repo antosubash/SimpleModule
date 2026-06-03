@@ -41,7 +41,8 @@ public sealed class ModuleTemplates
             ReplaceFrameworkProjectRefs(
                 TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName)
             ),
-            $"SimpleModule.{moduleName}.Contracts"
+            $"SimpleModule.{moduleName}.Contracts",
+            $"{moduleName}.Contracts"
         );
     }
 
@@ -60,7 +61,8 @@ public sealed class ModuleTemplates
             ReplaceFrameworkProjectRefs(
                 TemplateExtractor.TransformCsproj(refPath, _refModule!, moduleName, stripPatterns)
             ),
-            $"SimpleModule.{moduleName}"
+            $"SimpleModule.{moduleName}",
+            moduleName
         );
     }
 
@@ -803,12 +805,25 @@ public sealed class ModuleTemplates
 
     /// <summary>
     /// Ensures the csproj content has explicit RootNamespace and AssemblyName set to the
-    /// expected SimpleModule.&lt;Module&gt; convention. This guards against the analyzer's SM0052
-    /// (assembly naming) and SM0053 (matching contracts assembly) checks when the csproj
-    /// filename and namespace prefix don't naturally agree.
+    /// expected convention. This guards against the analyzer's SM0052 (assembly naming) and
+    /// SM0053 (matching contracts assembly) checks when the csproj filename and namespace
+    /// prefix don't naturally agree.
     /// </summary>
-    private static string EnsureAssemblyName(string csprojContent, string expectedName)
+    /// <param name="rootNamespace">The RootNamespace to insert when missing.</param>
+    /// <param name="assemblyName">
+    /// The AssemblyName to insert when missing. Defaults to <paramref name="rootNamespace"/>.
+    /// The module (RCL) project passes the bare module name here so its served static-web-asset
+    /// base path (<c>/_content/{AssemblyName}/</c>) matches the Vite pages bundle name, which is
+    /// derived from the project directory basename.
+    /// </param>
+    private static string EnsureAssemblyName(
+        string csprojContent,
+        string rootNamespace,
+        string? assemblyName = null
+    )
     {
+        assemblyName ??= rootNamespace;
+
         var hasAssembly = csprojContent.Contains("<AssemblyName>", StringComparison.Ordinal);
         var hasRoot = csprojContent.Contains("<RootNamespace>", StringComparison.Ordinal);
 
@@ -833,12 +848,12 @@ public sealed class ModuleTemplates
 
         if (!hasRoot)
         {
-            toInsert.Add($"{indent}<RootNamespace>{expectedName}</RootNamespace>");
+            toInsert.Add($"{indent}<RootNamespace>{rootNamespace}</RootNamespace>");
         }
 
         if (!hasAssembly)
         {
-            toInsert.Add($"{indent}<AssemblyName>{expectedName}</AssemblyName>");
+            toInsert.Add($"{indent}<AssemblyName>{assemblyName}</AssemblyName>");
         }
 
         lines.InsertRange(insertAt, toInsert);
@@ -967,7 +982,11 @@ public sealed class ModuleTemplates
                 <TargetFramework>net10.0</TargetFramework>
                 <OutputType>Library</OutputType>
                 <RootNamespace>SimpleModule.{moduleName}.Contracts</RootNamespace>
-                <AssemblyName>SimpleModule.{moduleName}.Contracts</AssemblyName>
+                <!-- AssemblyName matches the directory basename and stays paired with the bare
+                     module assembly: the source generator discovers a module's contract
+                     implementations by looking for the module-assembly-name + ".Contracts"
+                     assembly, so both must use the bare name. -->
+                <AssemblyName>{moduleName}.Contracts</AssemblyName>
               </PropertyGroup>
               <ItemGroup>
                 <PackageReference Include="SimpleModule.Core" />
@@ -982,7 +1001,10 @@ public sealed class ModuleTemplates
                 <TargetFramework>net10.0</TargetFramework>
                 <OutputType>Library</OutputType>
                 <RootNamespace>SimpleModule.{moduleName}</RootNamespace>
-                <AssemblyName>SimpleModule.{moduleName}</AssemblyName>
+                <!-- AssemblyName must equal the project directory basename so the RCL
+                     serves wwwroot at /_content/{moduleName}/ and the Vite pages bundle
+                     ({moduleName}.pages.js, named from the directory basename) resolves. -->
+                <AssemblyName>{moduleName}</AssemblyName>
               </PropertyGroup>
               <ItemGroup>
                 <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -1052,7 +1074,7 @@ public sealed class ModuleTemplates
 
             namespace SimpleModule.{{moduleName}}.Contracts.Events;
 
-            public sealed record {{singularName}}CreatedEvent(int {{singularName}}Id) : IEvent;
+            public sealed record {{singularName}}CreatedEvent(int {{singularName}}Id) : DomainEvent;
             """;
 
     private static string FallbackModuleClass(string moduleName, string singularName) =>
