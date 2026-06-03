@@ -22,6 +22,13 @@ public static class RateLimitingSetup
         IRateLimitPolicyRegistry registry
     )
     {
+        // Seed framework defaults (e.g. auth-strict) so policy names referenced by
+        // framework endpoints are always registered, even without the optional
+        // SimpleModule.RateLimiting module. Modules that defined the policy already
+        // win — see RateLimitDefaults. Without this, auth endpoints 500 with
+        // "no such policy exists" when RateLimiting isn't installed (#222).
+        RateLimitDefaults.EnsureFrameworkDefaults(registry);
+
         services.AddSingleton(registry);
 
         services.AddRateLimiter(options =>
