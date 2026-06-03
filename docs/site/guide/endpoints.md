@@ -400,6 +400,10 @@ app.MapGet("/", (ICustomerContracts customers) => ...);
 
 ## Validation
 
+::: tip Prefer Form Requests
+For most endpoints, the recommended approach is a [Form Request](/guide/form-requests) — a `[FormRequest]` class that binds, authorizes, normalizes, and validates the request body before your handler runs. The manual `IValidator<T>` pattern below still works and is useful when a contract DTO is validated in several places.
+:::
+
 Request validation uses **[FluentValidation](https://docs.fluentvalidation.net/)**. Write an `AbstractValidator<T>` for every request DTO that needs validation.
 
 ```csharp

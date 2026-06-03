@@ -199,6 +199,40 @@ builder.Services.AddScoped<IAccountUnlockEmailSender, MailgunAccountUnlockEmailS
 
 The account manage page uses `ISmsSender` for phone verification codes. Default `ConsoleSmsSender` logs to console. Provide a Twilio/Vonage/AWS SNS implementation for production.
 
+## Two-factor authentication and recovery codes
+
+Users manage two-factor authentication from `/Identity/Account/Manage/TwoFactorAuthentication`. Enabling an authenticator app walks through setup → verify a code → view recovery codes. Recovery codes let a user sign in if they lose their authenticator device.
+
+### Generating recovery codes
+
+The generate flow lives at `/Identity/Account/Manage/GenerateRecoveryCodes`:
+
+| Method | Behaviour |
+|--------|-----------|
+| `GET` | Renders the confirmation page (2FA must be enabled) |
+| `POST` | Generates 10 new codes via `UserManager.GenerateNewTwoFactorRecoveryCodesAsync` and renders them once |
+
+Codes are **hashed at rest**, exactly like passwords — the plaintext is shown only at generation time. There is no "retrieve codes" API by design; if a user loses them, they regenerate, which invalidates the previous set.
+
+### Download and print
+
+The page that shows freshly generated codes (`ShowRecoveryCodes`) offers two ways to save them off-screen:
+
+- **Download** — builds a `simplemodule-recovery-codes.txt` file in the browser with a header line (`generated for {email} on {date}`) followed by one code per line.
+- **Print** — calls `window.print()` with a scoped `@media print` stylesheet that hides page chrome and prints only the codes as black-on-white monospace.
+
+Both run entirely client-side; the codes never make a second round-trip to the server.
+
+### Remaining-codes status
+
+The two-factor page reflects how many codes are left:
+
+| Codes remaining | Treatment |
+|-----------------|-----------|
+| 4 or more | Neutral status line ("Recovery codes: N remaining") |
+| 2–3 | Warning alert with a link to regenerate |
+| 0–1 | Danger alert with a link to regenerate |
+
 ## Next Steps
 
 - [Permissions](/guide/permissions) — claims-based authorization layered on top of identity.

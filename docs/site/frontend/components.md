@@ -64,6 +64,9 @@ This avoids class conflicts (e.g., `p-4` and `p-2` don't both end up in the DOM 
 | `Skeleton` | Loading placeholder |
 | `Spinner` | Loading spinner with size variants |
 | `Progress` | Progress bar |
+| `Stat` | Dashboard metric tile -- value, unit, label, trend, and optional `interactive`/`lift` |
+| `EmptyState` | Standard empty-state block with icon, title, description, and action slots |
+| `FilterBar` | Toolbar for list pages with `search`, `controls`, and `actions` slots |
 
 ### Navigation
 
@@ -80,8 +83,11 @@ This avoids class conflicts (e.g., `p-4` and `p-2` don't both end up in the DOM 
 
 | Component | Description |
 |---|---|
-| `Button` | Button with variants (`primary`, `secondary`, `ghost`, `danger`, `outline`) and sizes (`sm`, `default`, `lg`) |
+| `Button` | Button with variants (`primary`, `secondary`, `ghost`, `danger`, `outline`) and sizes (`sm`, `default`, `lg`, `icon`) |
 | `Input` | Text input with variants |
+| `SearchInput` | Search field with a leading icon and optional `shortcut` hint |
+| `NumberInput` | Numeric input with stepper buttons; clamps to `min`/`max` |
+| `Kbd` | Inline keyboard key cap (e.g. `⌘K`) |
 | `Textarea` | Multi-line text input |
 | `Checkbox` | Checkbox input |
 | `RadioGroup` | Radio button group (`RadioGroup`, `RadioGroupItem`) |
@@ -189,9 +195,52 @@ export default function Manage({ customers }) {
       description="Manage your customer list."
       columns={columns}
       data={customers}
+      // Shown automatically when data is empty:
+      emptyTitle="No customers yet"
+      emptyDescription="Create your first customer to get started."
     />
   );
 }
+```
+
+`DataGridPage` renders an `EmptyState` internally when `data` is empty; `emptyTitle`, `emptyDescription`, `emptyIcon`, and `emptyAction` customize it.
+
+### Dashboard Stats
+
+```tsx
+import { Stat } from '@simplemodule/ui';
+
+<div className="grid gap-4 sm:grid-cols-3">
+  <Stat label="Active users" value={1284} trend="up" change="+12% vs last week" />
+  <Stat label="Avg. latency" value={98} unit="ms" trend="down" />
+  <Stat label="Error rate" value="0.4%" trend="flat" onClick={openDetails} />
+</div>
+```
+
+When `onClick` is provided, `Stat` renders as a keyboard-accessible `<button>` and turns on the `interactive` affordance.
+
+### Filter Bar with Search
+
+```tsx
+import { FilterBar, SearchInput, Button } from '@simplemodule/ui';
+
+<FilterBar
+  search={<SearchInput placeholder="Search customers" shortcut="⌘K" />}
+  controls={<Button variant="secondary" size="sm">Filters</Button>}
+  actions={<Button>New customer</Button>}
+/>
+```
+
+### Empty State
+
+```tsx
+import { EmptyState, Button } from '@simplemodule/ui';
+
+<EmptyState
+  title="No results"
+  description="Try adjusting your search or filters."
+  action={<Button variant="secondary">Clear search</Button>}
+/>
 ```
 
 ## Dependencies
