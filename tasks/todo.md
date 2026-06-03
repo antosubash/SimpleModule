@@ -1,21 +1,38 @@
-# CLI Bug Fixes (GitHub issues)
+# Data-correctness / concurrency bug fixes (#232, #230, #227, #233) [+ #229 separate]
 
-Branch: claude/cli-bug-fixes-2OKyG
+Branch: fix/data-correctness-bugs (off main). One commit per issue.
 
-- [x] #218 Generated event records implement `IEvent` → now derive from `DomainEvent` (FallbackEventClass)
-- [x] #225 `sm new project` references `/favicon.svg` but ships none → embed + write `wwwroot/favicon.svg`
-- [x] #219 Scaffold pinned `@simplemodule/*` npm deps to framework (NuGet) version → new `NpmVersionResolver` resolves the latest *published* npm version; threaded through `ProjectTemplates`/`ScaffoldProject`
-- [x] #228 Module `AssemblyName` = `SimpleModule.X` but dir basename = `X` → bundle 404. Set module AssemblyName to bare `X` AND contracts to `X.Contracts` (required so the generator's `module + ".Contracts"` pairing still discovers contract impls — otherwise SM0025)
-- [x] #221 `SimpleModule.Hosting.targets` undefined `$(RepoRoot)` + monorepo paths → added RepoRoot fallback (nearest package.json) + overridable `SimpleModuleThemeCss`/`SimpleModuleModulesDir`/`SimpleModuleRoutesOutput` props with consumer defaults; monorepo overrides them in `Directory.Build.props` (scoped via `packages/` check)
+## Plan
+- [ ] **#230** `EntityInterceptor` overwrites `CreatedBy` from HttpContext → background jobs can't create user-owned rows
+  - [ ] Failing test: pre-set `CreatedBy` with no HTTP user is preserved
+  - [ ] Fix: only set `CreatedBy` when unset; guard `CreatedAt == default`
+- [ ] **#227** `ApplyModuleSchema` ignores `DatabaseOptions.Provider`
+  - [ ] Failing test: explicit Provider overrides SQLite-looking connection string
+  - [ ] Fix: pass `dbOptions.Provider` + module's effective connection to `Detect`
+- [ ] **#232** `AuditMiddleware` races `SettingsDbContext` (Task.WhenAll over 5 reads) → 500s
+  - [ ] Failing test: concurrency-guard stub `ISettingsContracts` (fails if >1 in-flight)
+  - [ ] Fix: read the 5 settings sequentially
+- [ ] **#233** live-reload WS 302→infinite retry
+  - [ ] Fix: `.AllowAnonymous()` on `/dev/live-reload` (root cause); + client give-up cap
+- [ ] CI green → PR
 
-## Verification
-- [x] dotnet build CLI — succeeds
-- [x] dotnet test CLI tests — 136/136 pass (incl. scaffold `dotnet build` against published NuGet, now green)
-- [x] dotnet build template host — succeeds; integrated Vite + Tailwind build runs (validates #221 targets)
+## Deferred to its own PR
+- **#229** child entity (no DbSet) gets wrong/no schema prefix in generated HostDbContext — latent (no in-tree repro); generator change emitting EF-model traversal, higher risk. Handle carefully after this PR.
 
 ## Review
-- #228 root cause was subtler than the issue described: bare module AssemblyName alone breaks
-  the generator's module↔contracts pairing (ContractFinder uses `moduleAssembly.Name + ".Contracts"`).
-  Both assembly names must go bare together; namespaces stay `SimpleModule.X(.Contracts)`.
-- #219 falls back to the framework version when the npm registry is unreachable (offline),
-  preserving deterministic test behavior (ScaffoldProject's npmVersion defaults to frameworkVersion).
+
+Four fixes, one commit each, all CI green (build 0 errors, tests 0 failures, npm check + e2e 66/66).
+
+- **#230** `EntityInterceptor.SetCreationFields` now only defaults `CreatedBy`/`CreatedAt` when unset → background jobs can set an owner. +2 tests (Database 89).
+- **#227** `ApplyModuleSchema` passes `dbOptions.Provider` to `Detect` → explicit provider wins. +1 test.
+- **#232** `AuditMiddleware` reads its 5 settings sequentially (was `Task.WhenAll` on one scoped DbContext → races). +1 concurrency-guard test (AuditLogs 38).
+- **#233** `/dev/live-reload` endpoint `.AllowAnonymous()` (root cause: auth fallback 302'd the handshake) + client gives up after 60 attempts. +1 endpoint-metadata test (DevTools 35).
+
+Deferred: **#229** (child entity schema prefix in generated HostDbContext) — latent, riskier generator change; its own PR.
+
+## Verification (done)
+- [x] `dotnet build` — 0 errors
+- [x] `dotnet test --no-build` — 0 failures
+- [x] `npm run check` — green; typecheck 13/13
+- [x] `npm run build` — clean
+- [x] `npm run test:smoke -w tests/e2e` — 66 passed
