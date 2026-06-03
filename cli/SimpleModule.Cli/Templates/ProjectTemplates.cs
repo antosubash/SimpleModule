@@ -9,11 +9,21 @@ public sealed class ProjectTemplates
     private const string BaseProjectName = "SimpleModule";
     private readonly SolutionContext? _solution;
     private readonly string _frameworkVersion;
+    private readonly string _npmVersion;
 
     public ProjectTemplates(SolutionContext? solution, string frameworkVersion)
+        : this(solution, frameworkVersion, frameworkVersion) { }
+
+    /// <param name="npmVersion">
+    /// Version to pin the <c>@simplemodule/*</c> npm dependencies to. The npm packages are not
+    /// always published in lockstep with NuGet, so this may differ from
+    /// <paramref name="frameworkVersion"/> (see issue #219).
+    /// </param>
+    public ProjectTemplates(SolutionContext? solution, string frameworkVersion, string npmVersion)
     {
         _solution = solution;
         _frameworkVersion = frameworkVersion;
+        _npmVersion = npmVersion;
     }
 
     public string Slnx(string projectName)
@@ -233,7 +243,7 @@ public sealed class ProjectTemplates
 
     public string RootPackageJson(string projectName, string? frameworkPackagesPath)
     {
-        return GenerateRootPackageJson(projectName, frameworkPackagesPath, _frameworkVersion);
+        return GenerateRootPackageJson(projectName, frameworkPackagesPath, _npmVersion);
     }
 
     public string BiomeJson()
@@ -689,7 +699,7 @@ public sealed class ProjectTemplates
     private static string GenerateRootPackageJson(
         string projectName,
         string? frameworkPackagesPath,
-        string frameworkVersion
+        string npmVersion
     )
     {
         // npm 'name' field must be lowercase; workspace glob uses actual project casing.
@@ -708,9 +718,9 @@ public sealed class ProjectTemplates
         }
         else
         {
-            clientDep = $"\"^{frameworkVersion}\"";
-            uiDep = $"\"^{frameworkVersion}\"";
-            themeDep = $"\"^{frameworkVersion}\"";
+            clientDep = $"\"^{npmVersion}\"";
+            uiDep = $"\"^{npmVersion}\"";
+            themeDep = $"\"^{npmVersion}\"";
         }
 
         return $$"""

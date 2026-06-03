@@ -111,6 +111,15 @@ public sealed class HostTemplates
     }
 
     /// <summary>
+    /// Copy favicon.svg as-is. The host's index.html links <c>/favicon.svg</c> and
+    /// Program.cs maps <c>/favicon.ico</c> to it, so the scaffold must ship the file.
+    /// </summary>
+    public static string FaviconSvg()
+    {
+        return EmbeddedResourceReader.ReadTemplate("Templates.Host.wwwroot.favicon.svg");
+    }
+
+    /// <summary>
     /// Copy app.tsx as-is.
     /// </summary>
     public static string AppTsx()

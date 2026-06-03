@@ -47,6 +47,16 @@
       Pattern="*.mjs"
       Priority="1" />
   </ItemGroup>
+  <!-- Frontend build-integration paths consumed by SimpleModule.Hosting.targets.
+       The shipped targets default these to a consumer (NuGet) scaffold layout; here we
+       override them to the monorepo layout. Scoped to the monorepo via the packages/ check
+       so a Directory.Build.props copied into a scaffolded project (which has no packages/
+       directory) falls back to the consumer defaults. -->
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)packages')">
+    <SimpleModuleThemeCss>$(RepoRoot)packages/SimpleModule.Theme.Default/theme.css</SimpleModuleThemeCss>
+    <SimpleModuleModulesDir>$(RepoRoot)modules</SimpleModuleModulesDir>
+    <SimpleModuleRoutesOutput>$(RepoRoot)packages/SimpleModule.Client/src/routes.ts</SimpleModuleRoutesOutput>
+  </PropertyGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <AnalysisLevel>latest-all</AnalysisLevel>

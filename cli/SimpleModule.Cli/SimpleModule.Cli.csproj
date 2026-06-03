@@ -35,6 +35,10 @@
       LogicalName="Templates.Host.wwwroot.index.html"
     />
     <EmbeddedResource
+      Include="..\..\template\SimpleModule.Host\wwwroot\favicon.svg"
+      LogicalName="Templates.Host.wwwroot.favicon.svg"
+    />
+    <EmbeddedResource
       Include="..\..\template\SimpleModule.Host\ClientApp\app.tsx"
       LogicalName="Templates.Host.ClientApp.app.tsx"
     />
