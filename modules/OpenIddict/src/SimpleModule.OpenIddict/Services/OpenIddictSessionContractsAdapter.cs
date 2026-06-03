@@ -1,9 +1,11 @@
+using SimpleModule.Core;
 using SimpleModule.Identity.Contracts;
 using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.OpenIddict.Services;
 
 #pragma warning disable CA1812
+[ManualContractRegistration]
 internal sealed class OpenIddictSessionContractsAdapter(ISessionContracts inner)
     : IOpenIddictSessionContracts
 {

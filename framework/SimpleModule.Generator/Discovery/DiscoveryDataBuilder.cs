@@ -122,6 +122,7 @@ internal static class DiscoveryDataBuilder
                     c.IsPublic,
                     c.IsAbstract,
                     c.DependsOnDbContext,
+                    c.IsManuallyRegistered,
                     c.Location,
                     c.Lifetime
                 ))

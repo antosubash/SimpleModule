@@ -102,6 +102,13 @@ internal sealed class ContractImplementationInfo
     public bool IsPublic { get; set; }
     public bool IsAbstract { get; set; }
     public bool DependsOnDbContext { get; set; }
+
+    /// <summary>
+    /// True when the class carries [ManualContractRegistration] — the owning module
+    /// registers it itself, so the generator skips auto-registration and the
+    /// SM0026/SM0028 contract diagnostics for it.
+    /// </summary>
+    public bool IsManuallyRegistered { get; set; }
     public SourceLocationRecord? Location { get; set; }
     public int Lifetime { get; set; } = 1; // Default: Scoped (ServiceLifetime.Scoped = 1)
 }

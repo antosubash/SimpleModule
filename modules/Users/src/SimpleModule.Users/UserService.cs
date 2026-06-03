@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Contracts.Events;
 using Wolverine;
@@ -9,6 +10,7 @@ namespace SimpleModule.Users;
 
 #pragma warning disable CA1812 // Avoid uninstantiated internal classes (instantiated via DI)
 
+[ManualContractRegistration]
 internal sealed partial class UserService(
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,

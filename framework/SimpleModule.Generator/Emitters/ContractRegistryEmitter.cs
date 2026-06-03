@@ -20,10 +20,12 @@ internal sealed class ContractRegistryEmitter : IEmitter
 
         // Group by interface and only include interfaces with exactly one valid implementation
         // (matching what ModuleExtensionsEmitter actually registers with the DI container).
+        // Manually-registered implementations are excluded for the same reason they're
+        // excluded from auto-registration — the module wires them conditionally.
         var implsByInterface = new Dictionary<string, List<ContractImplementationRecord>>();
         foreach (var impl in data.ContractImplementations)
         {
-            if (!impl.IsPublic || impl.IsAbstract)
+            if (!impl.IsPublic || impl.IsAbstract || impl.IsManuallyRegistered)
                 continue;
 
             if (!implsByInterface.TryGetValue(impl.InterfaceFqn, out var list))

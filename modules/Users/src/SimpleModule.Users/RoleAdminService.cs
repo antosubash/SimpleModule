@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SimpleModule.Core;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users;
 
 #pragma warning disable CA1812 // Instantiated via DI
+[ManualContractRegistration]
 internal sealed class RoleAdminService(
     RoleManager<ApplicationRole> roleManager,
     UserManager<ApplicationUser> userManager
