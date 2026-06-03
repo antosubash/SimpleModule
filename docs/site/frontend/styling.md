@@ -27,15 +27,18 @@ The `@simplemodule/theme-default` package (`packages/SimpleModule.Theme.Default/
 
 ### Color Tokens
 
+Colors are defined in **OKLCH** for perceptually even lightness and vivid, accessible hues. The palette is "quiet editorial" — emerald primary, rose danger, amber warning, sky info, with warm-leaning neutrals.
+
 #### Primary & Accent
 
 | Token | Light | Purpose |
 |---|---|---|
-| `--color-primary` | `#059669` | Primary actions, links, focus rings |
-| `--color-primary-hover` | `#047857` | Primary hover state |
-| `--color-primary-light` | `#34d399` | Light primary variant |
-| `--color-primary-subtle` | `rgba(5, 150, 105, 0.08)` | Subtle backgrounds |
-| `--color-accent` | `#0f766e` | Gradient endpoints, deep emphasis (teal) |
+| `--color-primary` | `oklch(0.62 0.16 158)` | Primary actions, links, focus rings (emerald) |
+| `--color-primary-hover` | `oklch(0.55 0.17 158)` | Primary hover state |
+| `--color-primary-light` | `oklch(0.78 0.16 158)` | Light primary variant |
+| `--color-primary-subtle` | `oklch(0.62 0.16 158 / 0.09)` | Subtle backgrounds |
+| `--color-primary-ring` | `oklch(0.62 0.16 158 / 0.32)` | Focus ring color |
+| `--color-accent` | `oklch(0.5 0.11 192)` | Deep emphasis (teal) |
 
 #### Semantic Colors
 
@@ -50,24 +53,49 @@ The `@simplemodule/theme-default` package (`packages/SimpleModule.Theme.Default/
 
 | Token | Light | Dark |
 |---|---|---|
-| `--color-surface` | `#ffffff` | `#0f172a` |
-| `--color-surface-raised` | `#f8fafc` | `#1e293b` |
-| `--color-surface-sunken` | `#f1f5f9` | `#0b1120` |
-| `--color-text` | `#0f172a` | `#f1f5f9` |
-| `--color-text-secondary` | `#475569` | `#94a3b8` |
-| `--color-text-muted` | `#94a3b8` | `#64748b` |
+| `--color-surface` | `oklch(1 0 0)` | `oklch(0.205 0.006 60)` |
+| `--color-surface-raised` | `oklch(0.985 0.003 80)` | `oklch(0.245 0.007 60)` |
+| `--color-surface-sunken` | `oklch(0.965 0.005 80)` | `oklch(0.16 0.006 60)` |
+| `--color-text` | `oklch(0.22 0.015 250)` | `oklch(0.96 0.005 80)` |
+| `--color-text-secondary` | `oklch(0.45 0.015 250)` | `oklch(0.74 0.008 80)` |
+| `--color-text-muted` | `oklch(0.62 0.012 250)` | `oklch(0.55 0.008 80)` |
 
-All tokens are accessible as Tailwind utilities. For example, `bg-surface`, `text-primary`, `border-border-strong`.
+Dark surfaces sit at hue 60 (toward amber) at very low chroma — a warm graphite that never reads as cold blue. All tokens are accessible as Tailwind utilities, for example `bg-surface`, `text-primary`, `border-border-strong`.
 
 ### Shadows
 
-The theme defines themeable shadows used by button components:
+The theme defines a layered, OKLCH-based shadow scale. `--shadow-xs` through `--shadow-xl` cover elevation; colored variants tint buttons:
 
 ```css
---shadow-primary: 0 4px 14px rgba(5, 150, 105, 0.35);
---shadow-primary-hover: 0 6px 20px rgba(5, 150, 105, 0.5);
---shadow-danger: 0 4px 14px rgba(225, 29, 72, 0.25);
---shadow-danger-hover: 0 6px 20px rgba(225, 29, 72, 0.4);
+--shadow-xs: 0 1px 2px 0 oklch(0.18 0.012 260 / 0.05);
+--shadow-sm: 0 1px 2px 0 oklch(0.18 0.012 260 / 0.06), 0 1px 3px 0 oklch(0.18 0.012 260 / 0.04);
+--shadow-md: 0 4px 8px -2px oklch(0.18 0.012 260 / 0.08), 0 2px 4px -2px oklch(0.18 0.012 260 / 0.05);
+--shadow-lg: 0 12px 24px -8px oklch(0.18 0.012 260 / 0.12), 0 4px 8px -4px oklch(0.18 0.012 260 / 0.06);
+--shadow-xl: 0 24px 48px -12px oklch(0.18 0.012 260 / 0.18), 0 8px 16px -8px oklch(0.18 0.012 260 / 0.08);
+--shadow-primary: 0 6px 18px -4px oklch(0.62 0.16 158 / 0.42), 0 2px 4px -2px oklch(0.62 0.16 158 / 0.25);
+--shadow-danger: 0 6px 18px -4px oklch(0.6 0.21 17 / 0.32);
+```
+
+In dark mode the elevation shadows deepen and the primary shadow becomes a colored glow.
+
+### Motion, Layering & Opacity
+
+The theme also exposes scales for animation, stacking, and opacity so components stay consistent:
+
+```css
+/* Motion */
+--duration-instant: 80ms;  --duration-fast: 150ms;  --duration-base: 200ms;
+--duration-moderate: 300ms;  --duration-slow: 500ms;
+--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+/* Z-index stack */
+--z-sticky: 10;  --z-overlay: 20;  --z-sidebar: 40;  --z-dropdown: 50;
+--z-modal: 60;  --z-toast: 80;  --z-tooltip: 90;
+
+/* Opacity */
+--opacity-disabled: 0.45;  --opacity-muted: 0.65;
+--opacity-overlay: 0.78;  --opacity-backdrop: 0.5;
 ```
 
 ## Dark Mode {#dark-mode}
@@ -76,11 +104,11 @@ Dark mode is built into the theme via the `.dark` class selector. When the `.dar
 
 ```css
 .dark {
-  --color-surface: #0f172a;
-  --color-surface-raised: #1e293b;
-  --color-text: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-border: #1e293b;
+  --color-surface: oklch(0.205 0.006 60);
+  --color-surface-raised: oklch(0.245 0.007 60);
+  --color-text: oklch(0.96 0.005 80);
+  --color-text-secondary: oklch(0.74 0.008 80);
+  --color-border: oklch(0.3 0.008 60);
   /* ... all tokens are overridden */
 }
 ```
@@ -94,14 +122,18 @@ The theme provides pre-built CSS component classes in the `@layer components` bl
 ### Buttons
 
 ```css
-.btn-primary     /* Gradient background, white text, elevated shadow */
+.btn-primary     /* Flat solid emerald, white text, elevated shadow */
 .btn-secondary   /* Surface background, bordered */
 .btn-ghost       /* Transparent, subtle hover */
-.btn-danger      /* Red background, elevated shadow */
+.btn-danger      /* Solid rose background, elevated shadow */
 .btn-outline     /* Transparent, primary border */
 .btn-sm          /* Small size modifier */
 .btn-lg          /* Large size modifier */
 ```
+
+::: tip
+Design-system v2 removed gradient surface treatments — the primary button and accents are now flat solid color. Legacy helpers like `.gradient-text` are kept for compatibility but render as solid primary.
+:::
 
 ### Cards & Surfaces
 
@@ -132,21 +164,36 @@ The theme provides pre-built CSS component classes in the `@layer components` bl
 ### Utilities
 
 ```css
-.gradient-text       /* Gradient-filled text */
-.gradient-border     /* Gradient border using mask technique */
-.bg-mesh             /* Animated background gradient mesh */
+.font-display        /* Fraunces display serif (headings, stat values) */
+.font-body           /* Geist body sans */
+.dash-stat           /* Large display-font metric value */
+.dash-label          /* Small uppercase metric label */
+.gradient-text       /* Compatibility shim — now renders solid primary */
+.gradient-border     /* Primary border using mask technique */
+.bg-mesh             /* Flat ambient background fill */
 .spinner             /* CSS loading spinner */
+```
+
+### Tables
+
+Base table styles ship globally. Row-hover is **opt-in** — set `data-interactive` on the `<table>` so read-only tables (recovery codes, dashboard lists) don't pick up an interactive cue. Add the `.num` class to a `td`/`th` for right-aligned, tabular-figure numeric columns.
+
+```html
+<table data-interactive>
+  <thead><tr><th>Name</th><th class="num">Requests</th></tr></thead>
+  ...
+</table>
 ```
 
 ## Typography
 
-The theme sets two font families:
+The theme sets three font families, exposed as `--font-body`, `--font-display`, and `--font-mono`:
 
-- **Body text**: `"DM Sans"`, system-ui, sans-serif
-- **Headings**: `"Sora"`, "DM Sans", system-ui, sans-serif
-- **Code**: `"JetBrains Mono"`, "Fira Code", monospace
+- **Body text** (`--font-body`): `"Geist"`, "Inter", system-ui, sans-serif
+- **Display / headings** (`--font-display`): `"Fraunces"`, serif fallbacks
+- **Code** (`--font-mono`): `"JetBrains Mono"`, "Fira Code", monospace
 
-Headings (`h1`-`h6`) are styled in the base layer with tight tracking and bold weight.
+Headings (`h1`-`h6`) use the display serif with tight tracking. Apply `.font-display` or `.font-body` directly when you need the family on non-heading elements (for example, stat values).
 
 ## Theme Customization
 

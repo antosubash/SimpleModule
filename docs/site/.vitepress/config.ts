@@ -41,6 +41,7 @@ export default defineConfig({
           items: [
             { text: 'Modules', link: '/guide/modules' },
             { text: 'Endpoints', link: '/guide/endpoints' },
+            { text: 'Form Requests', link: '/guide/form-requests' },
             { text: 'Contracts & DTOs', link: '/guide/contracts' },
             { text: 'Database', link: '/guide/database' },
             { text: 'Soft Delete', link: '/guide/soft-delete' },
