@@ -1,6 +1,10 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SimpleModule.Core;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.Database;
@@ -27,6 +31,29 @@ public class RateLimitingModule : IModule
             sp.GetRequiredService<RateLimitRuleCache>()
         );
         services.AddHostedService(sp => sp.GetRequiredService<RateLimitRuleCache>());
+    }
+
+    public void ConfigureHost(IHost host)
+    {
+        // Ensure the RateLimiting_Rules table exists before the rule cache's
+        // hosted service queries it on startup (dev convenience; prod uses
+        // migrations). ConfigureHost runs in the StartingAsync lifecycle phase,
+        // strictly before any IHostedService.StartAsync, so the table is present
+        // by the time RateLimitRuleCache reads it. Mirrors BackgroundJobsModule.
+        using var scope = host.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RateLimitingDbContext>();
+        if (!db.Database.EnsureCreated())
+        {
+            try
+            {
+                db.GetService<IRelationalDatabaseCreator>()?.CreateTables();
+            }
+#pragma warning disable CA1031
+            catch
+            { /* tables already exist */
+            }
+#pragma warning restore CA1031
+        }
     }
 
     public void ConfigureRateLimits(IRateLimitBuilder builder)

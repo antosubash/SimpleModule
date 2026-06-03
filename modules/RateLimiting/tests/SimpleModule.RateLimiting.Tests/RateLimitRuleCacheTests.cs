@@ -118,6 +118,47 @@ public sealed class RateLimitRuleCacheTests : IAsyncLifetime, IDisposable
     }
 
     [Fact]
+    public async Task RefreshAsync_DoesNotThrow_WhenTableMissing()
+    {
+        // Simulates a legacy dev DB created by EnsureCreated() before the
+        // RateLimiting module was added: the RateLimiting_Rules table is absent.
+        // RefreshAsync runs from IHostedService.StartAsync, so an unhandled
+        // exception here crashes the whole host (#223). It must degrade to "no
+        // DB-defined rules" instead.
+        var dbOptions = new DbContextOptionsBuilder<RateLimitingDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        var databaseOptions = Options.Create(
+            new DatabaseOptions
+            {
+                ModuleConnections = new Dictionary<string, string>
+                {
+                    ["RateLimiting"] = "Data Source=:memory:",
+                },
+            }
+        );
+        using var db = new RateLimitingDbContext(dbOptions, databaseOptions);
+        await db.Database.OpenConnectionAsync(); // keep the :memory: DB alive, but DON'T EnsureCreated
+        try
+        {
+            using var services = new ServiceCollection().AddSingleton(db).BuildServiceProvider();
+            var cache = new RateLimitRuleCache(
+                services.GetRequiredService<IServiceScopeFactory>(),
+                NullLogger<RateLimitRuleCache>.Instance
+            );
+
+            var startup = async () => await cache.StartAsync(CancellationToken.None);
+
+            await startup.Should().NotThrowAsync();
+            cache.FindForPath("/api/users").Should().BeNull();
+        }
+        finally
+        {
+            await db.Database.CloseConnectionAsync();
+        }
+    }
+
+    [Fact]
     public async Task RefreshAsync_PicksUpNewRules()
     {
         await _cache.RefreshAsync();
