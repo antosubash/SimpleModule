@@ -1,38 +1,78 @@
-# Data-correctness / concurrency bug fixes (#232, #230, #227, #233) [+ #229 separate]
+# Task: Design-system consistency pass across all module pages
 
-Branch: fix/data-correctness-bugs (off main). One commit per issue.
+Goal: every page uses the design system consistently → run /qa → open PR with screenshots.
 
-## Plan
-- [ ] **#230** `EntityInterceptor` overwrites `CreatedBy` from HttpContext → background jobs can't create user-owned rows
-  - [ ] Failing test: pre-set `CreatedBy` with no HTTP user is preserved
-  - [ ] Fix: only set `CreatedBy` when unset; guard `CreatedAt == default`
-- [ ] **#227** `ApplyModuleSchema` ignores `DatabaseOptions.Provider`
-  - [ ] Failing test: explicit Provider overrides SQLite-looking connection string
-  - [ ] Fix: pass `dbOptions.Provider` + module's effective connection to `Detect`
-- [ ] **#232** `AuditMiddleware` races `SettingsDbContext` (Task.WhenAll over 5 reads) → 500s
-  - [ ] Failing test: concurrency-guard stub `ISettingsContracts` (fails if >1 in-flight)
-  - [ ] Fix: read the 5 settings sequentially
-- [ ] **#233** live-reload WS 302→infinite retry
-  - [ ] Fix: `.AllowAnonymous()` on `/dev/live-reload` (root cause); + client give-up cap
-- [ ] CI green → PR
+Scope: 13 tracked modules with `.tsx` source. The 8 untracked dirs (Agents, Chat, Datasets,
+Map, Marketplace, Orders, PageBuilder, Products) are stale build artifacts with NO source — left untouched, flagged to user.
 
-## Deferred to its own PR
-- **#229** child entity (no DbSet) gets wrong/no schema prefix in generated HostDbContext — latent (no in-tree repro); generator change emitting EF-model traversal, higher risk. Handle carefully after this PR.
+Out of scope (noted, not changed): i18n hardcoded-string gaps; the intentional centered-card
+auth-page layout (only token/control bugs inside auth pages are fixed, not forced into PageShell).
+
+## Fixes (from parallel line-level audit)
+
+### HIGH — color tokens breaking dark mode / raw controls
+- [ ] Tenants/tenantStatus.ts — raw palette → Badge variant map (success/warning/danger)
+- [ ] Tenants/Browse.tsx, Manage.tsx — status span → <Badge>
+- [ ] Tenants/Features.tsx — text-green/red-600 → <Badge>
+- [ ] BackgroundJobs/Dashboard.tsx — text-red-500, border-red-200, hover:bg-red-50 → semantic
+- [ ] BackgroundJobs/Detail.tsx — text-red-600, border-red-200, bg-red-50/text-red-800 → semantic
+- [ ] FeatureFlags/Manage.tsx:264 — raw <input type=checkbox> → <Checkbox>
+- [ ] RateLimiting/components/RulesTable.tsx — text-muted-foreground (undefined) → text-text-muted
+- [ ] Email/History.tsx — text-destructive (undefined) → text-danger
+- [ ] OpenIddict/OAuthCallback.tsx — text-muted → text-text-muted
+- [ ] Dashboard/Home.tsx — text-white → text-text-inverse
+- [ ] Users/Login.tsx, Register.tsx — text-white + inline var → bg-primary text-text-inverse; raw checkbox → Checkbox
+- [ ] Users/LoginWith2fa.tsx — raw checkbox → Checkbox
+
+### MEDIUM — hand-rolled layout → PageShell; custom markup → DS components
+- [ ] Settings/UserSettings.tsx — Container+h1 → PageShell; error banner → Alert
+- [ ] Settings/AdminSettings.tsx — error banner → Alert
+- [ ] Admin/RolesCreate, RolesEdit, UsersCreate, UsersEdit — Container+Breadcrumb+h1 → PageShell
+- [ ] Admin/Roles.tsx — raw <button> dismiss → Button
+- [ ] OpenIddict/ClientsCreate, ClientsEdit — Container+Breadcrumb+h1 → PageShell
+- [ ] OpenIddict/ActiveSessions.tsx — custom empty <p> → EmptyState
+- [ ] Tenants/Create, Edit, Features — Container+Breadcrumb+h1 → PageShell
+- [ ] Tenants/Features.tsx — custom empty → EmptyState
+- [ ] Notifications/Inbox.tsx — custom empty → EmptyState
+- [ ] Users/ManageIndex.tsx, Email.tsx — custom span badge → Badge
+- [ ] Users/ExternalLogins.tsx — raw <table> → Table
+- [ ] Users/Logout.tsx, PersonalData.tsx — <a class=btn-*> → Button
+- [ ] Users/ManagePasskeys.tsx — custom empty → EmptyState
+
+### LOW
+- [ ] BackgroundJobs — bare border/border-b → border-border
+- [ ] FileStorage/Browse.tsx — hover:bg-muted/50 → hover:bg-surface-raised
+
+## Verify
+- [ ] npm run check (biome) + typecheck
+- [ ] dotnet build
+- [ ] npm run validate-pages
+- [ ] /qa
+- [ ] PR with screenshots
 
 ## Review
 
-Four fixes, one commit each, all CI green (build 0 errors, tests 0 failures, npm check + e2e 66/66).
+34 page files across 13 modules refactored onto the design system. Net −120 LOC
+(PageShell migrations removed boilerplate). No behavior/i18n changes.
 
-- **#230** `EntityInterceptor.SetCreationFields` now only defaults `CreatedBy`/`CreatedAt` when unset → background jobs can set an owner. +2 tests (Database 89).
-- **#227** `ApplyModuleSchema` passes `dbOptions.Provider` to `Detect` → explicit provider wins. +1 test.
-- **#232** `AuditMiddleware` reads its 5 settings sequentially (was `Task.WhenAll` on one scoped DbContext → races). +1 concurrency-guard test (AuditLogs 38).
-- **#233** `/dev/live-reload` endpoint `.AllowAnonymous()` (root cause: auth fallback 302'd the handshake) + client gives up after 60 attempts. +1 endpoint-metadata test (DevTools 35).
+- **PageShell migrations:** Admin Roles/Users Create+Edit, OpenIddict Clients Create+Edit,
+  Tenants Create/Edit/Features, Settings UserSettings — hand-rolled Container+Breadcrumb+h1
+  replaced with `<PageShell>`.
+- **Semantic color tokens:** removed raw palette (text-red/green/yellow-*, text-white) and
+  undefined tokens (text-destructive, text-muted-foreground, text-muted) across BackgroundJobs,
+  Tenants, Email, Dashboard, RateLimiting, OpenIddict, Users → dark-mode-correct semantic tokens.
+- **DS component swaps:** Checkbox (FeatureFlags, Login, LoginWith2fa), Badge (Tenants, Users),
+  Table (Users ExternalLogins), Alert (Settings), Button (Users), EmptyState (Tenants,
+  Notifications, OpenIddict, Users).
+- **Bonus fix:** FeatureFlags override form `form.reset()` crash (pre-existing; found in QA).
 
-Deferred: **#229** (child entity schema prefix in generated HostDbContext) — latent, riskier generator change; its own PR.
+Out of scope (left as-is): i18n hardcoded strings; the intentional centered-card auth layout;
+8 untracked stale build-artifact dirs (Agents/Chat/Datasets/Map/Marketplace/Orders/PageBuilder/
+Products) — flagged to the user, not touched.
 
 ## Verification (done)
-- [x] `dotnet build` — 0 errors
-- [x] `dotnet test --no-build` — 0 failures
-- [x] `npm run check` — green; typecheck 13/13
-- [x] `npm run build` — clean
-- [x] `npm run test:smoke -w tests/e2e` — 66 passed
+- [x] biome check · validate-pages · validate:i18n (0/0) · validate:framework-scope · typecheck 13/13
+- [x] dotnet build SimpleModule.Host — 0 warnings, 0 errors
+- [x] npm run build:dev — all workspaces
+- [x] /qa in real browser (light + dark): PageShell, color tokens, Badge/Table/EmptyState/Alert,
+      Checkbox form posting — all verified; 1 pre-existing bug found + fixed + re-tested

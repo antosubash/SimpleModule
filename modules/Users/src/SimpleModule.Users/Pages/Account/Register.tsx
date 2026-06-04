@@ -28,12 +28,7 @@ export default function Register({ returnUrl, externalLogins, errors }: Props) {
       <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div
-              className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center text-white text-xl font-bold shadow-lg"
-              style={{
-                background: 'var(--color-primary)',
-              }}
-            >
+            <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center bg-primary text-text-inverse text-xl font-bold shadow-lg">
               S
             </div>
             <h1

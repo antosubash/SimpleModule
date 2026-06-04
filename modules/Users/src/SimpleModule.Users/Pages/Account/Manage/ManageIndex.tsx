@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import {
+  Badge,
   Button,
   Dialog,
   DialogContent,
@@ -104,11 +105,7 @@ export default function ManageIndex({
                   onChange={(e) => setInputPhone(e.target.value)}
                   placeholder="Please enter your phone number."
                 />
-                {showVerifiedBadge && (
-                  <span className="text-success font-bold" title="Verified">
-                    &#10003;
-                  </span>
-                )}
+                {showVerifiedBadge && <Badge variant="success">Verified</Badge>}
               </div>
             </Field>
             <div className="flex flex-wrap gap-2">

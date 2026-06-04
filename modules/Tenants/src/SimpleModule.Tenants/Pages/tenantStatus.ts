@@ -4,8 +4,9 @@ export const statusLabels: Record<number, string> = {
   2: 'Inactive',
 };
 
-export const statusColors: Record<number, string> = {
-  0: 'text-green-600',
-  1: 'text-yellow-600',
-  2: 'text-red-600',
-};
+export const statusVariant: Record<number, 'default' | 'info' | 'success' | 'danger' | 'warning'> =
+  {
+    0: 'success',
+    1: 'warning',
+    2: 'danger',
+  };

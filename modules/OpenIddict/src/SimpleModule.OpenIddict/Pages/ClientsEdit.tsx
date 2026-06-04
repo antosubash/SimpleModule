@@ -1,23 +1,17 @@
 import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   Checkbox,
-  Container,
   Field,
   FieldGroup,
   Input,
   Label,
+  PageShell,
   Select,
   SelectContent,
   SelectItem,
@@ -70,22 +64,13 @@ export default function ClientsEdit({
   }
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/openiddict/clients">
-              {t(OpenIddictKeys.ClientsEdit.Breadcrumb)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(OpenIddictKeys.ClientsEdit.BreadcrumbPage)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">{t(OpenIddictKeys.ClientsEdit.Title)}</h1>
-
+    <PageShell
+      title={t(OpenIddictKeys.ClientsEdit.Title)}
+      breadcrumbs={[
+        { label: t(OpenIddictKeys.ClientsEdit.Breadcrumb), href: '/openiddict/clients' },
+        { label: t(OpenIddictKeys.ClientsEdit.BreadcrumbPage) },
+      ]}
+    >
       <Tabs
         value={tab}
         onValueChange={(value) =>
@@ -233,6 +218,6 @@ export default function ClientsEdit({
           </CardContent>
         </Card>
       )}
-    </Container>
+    </PageShell>
   );
 }

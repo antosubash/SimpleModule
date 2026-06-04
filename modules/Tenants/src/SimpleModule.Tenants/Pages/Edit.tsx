@@ -2,20 +2,14 @@ import { router } from '@inertiajs/react';
 import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
-  Container,
   Field,
   FieldGroup,
   Input,
   Label,
+  PageShell,
   Table,
   TableBody,
   TableCell,
@@ -57,30 +51,21 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
   }
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href={routes.tenants.views.manage()}>
-              {t(TenantsKeys.Manage.Title)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(TenantsKeys.Edit.Breadcrumb, { name: tenant.name })}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Edit.Title)}</h1>
+    <PageShell
+      title={t(TenantsKeys.Edit.Title)}
+      breadcrumbs={[
+        { label: t(TenantsKeys.Manage.Title), href: routes.tenants.views.manage() },
+        { label: t(TenantsKeys.Edit.Breadcrumb, { name: tenant.name }) },
+      ]}
+      actions={
         <Button
           variant="ghost"
           onClick={() => router.get(routes.tenants.views.features(tenant.id))}
         >
           {t(TenantsKeys.Edit.ManageFeaturesButton)}
         </Button>
-      </div>
-
+      }
+    >
       <Card>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
@@ -186,6 +171,6 @@ export default function Edit({ tenant }: { tenant: Tenant }) {
           </div>
         </CardContent>
       </Card>
-    </Container>
+    </PageShell>
   );
 }

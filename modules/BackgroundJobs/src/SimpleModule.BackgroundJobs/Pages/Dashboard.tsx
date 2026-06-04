@@ -65,7 +65,7 @@ export default function Dashboard({
             <CardTitle>{t(BackgroundJobsKeys.Dashboard.FailedJobs)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-red-500">{failedCount}</div>
+            <div className="text-3xl font-bold text-danger">{failedCount}</div>
             <Button
               variant="ghost"
               size="sm"
@@ -104,7 +104,7 @@ export default function Dashboard({
               {activeJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border p-3"
+                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-border p-3"
                 >
                   <div>
                     <span className="font-medium">{job.jobType}</span>
@@ -132,7 +132,7 @@ export default function Dashboard({
                 <button
                   type="button"
                   key={job.id}
-                  className="flex w-full items-center justify-between rounded-md border border-red-200 p-3 text-left hover:bg-red-50"
+                  className="flex w-full items-center justify-between rounded-md border border-danger/30 p-3 text-left hover:bg-danger-bg"
                   onClick={() => router.get(`/admin/jobs/${job.id}`)}
                 >
                   <span className="font-medium">{job.jobType}</span>
