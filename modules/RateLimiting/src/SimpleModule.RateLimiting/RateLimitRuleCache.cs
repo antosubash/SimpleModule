@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,10 +31,23 @@ internal sealed partial class RateLimitRuleCache(
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<RateLimitingDbContext>();
 
-        var rules = await db
-            .Rules.AsNoTracking()
-            .Where(r => r.IsEnabled)
-            .ToListAsync(cancellationToken);
+        List<RateLimitRule> rules;
+        try
+        {
+            rules = await db
+                .Rules.AsNoTracking()
+                .Where(r => r.IsEnabled)
+                .ToListAsync(cancellationToken);
+        }
+        catch (DbException ex)
+        {
+            // The RateLimiting_Rules table may not exist yet — e.g. EnsureCreated() ran on an
+            // existing dev database before this module was added, or migrations haven't been
+            // applied. Degrade gracefully (keep the current snapshot, no DB-defined rules at
+            // startup) instead of crashing the host from a hosted-service StartAsync.
+            LogRefreshFailed(logger, ex);
+            return;
+        }
 
         var compiled = rules
             .Select(Compile)
@@ -141,4 +155,11 @@ internal sealed partial class RateLimitRuleCache(
         Message = "Rate-limit rule cache refreshed: {Count} enabled rules loaded"
     )]
     private static partial void LogRefreshed(ILogger logger, int count);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Rate-limit rule cache refresh failed; continuing without DB-defined rules. "
+            + "The RateLimiting_Rules table may be missing or unmigrated."
+    )]
+    private static partial void LogRefreshFailed(ILogger logger, Exception exception);
 }

@@ -130,6 +130,44 @@ public sealed class RateLimitRuleCacheTests : IAsyncLifetime, IDisposable
         _cache.FindForPath("/api/things").Should().NotBeNull();
     }
 
+    [Fact]
+    public async Task RefreshAsync_DoesNotThrow_WhenRulesTableMissing()
+    {
+        // Regression for #223: a missing RateLimiting_Rules table (e.g. EnsureCreated ran
+        // before the module was added) must degrade gracefully rather than crash the host.
+        var dbOptions = new DbContextOptionsBuilder<RateLimitingDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        var databaseOptions = Options.Create(
+            new DatabaseOptions
+            {
+                ModuleConnections = new Dictionary<string, string>
+                {
+                    ["RateLimiting"] = "Data Source=:memory:",
+                },
+            }
+        );
+
+        await using var emptyDb = new RateLimitingDbContext(dbOptions, databaseOptions);
+        await emptyDb.Database.OpenConnectionAsync(); // open the connection but never create tables
+
+        var services = new ServiceCollection();
+        services.AddSingleton(emptyDb);
+        await using var provider = services.BuildServiceProvider();
+
+        var cache = new RateLimitRuleCache(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<RateLimitRuleCache>.Instance
+        );
+
+        var act = () => cache.RefreshAsync();
+
+        await act.Should().NotThrowAsync();
+        cache.FindForPath("/api/users").Should().BeNull();
+
+        await emptyDb.Database.CloseConnectionAsync();
+    }
+
     private static RateLimitRule NewRule(
         string name,
         string? pattern,
