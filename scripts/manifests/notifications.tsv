@@ -1,0 +1,24 @@
+# Notifications pilot — feature-folder migration manifest.
+# Columns: OLD_PATH	NEW_PATH	ASSEMBLY_NAME
+
+# --- Infrastructure moves (impl project) ---
+modules/Notifications/src/SimpleModule.Notifications/NotificationsDbContext.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/NotificationsDbContext.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Services/NotificationService.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/NotificationService.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Services/Notifier.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Notifier.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Services/NotificationsLog.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/NotificationsLog.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Channels/INotificationChannel.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Channels/INotificationChannel.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Channels/INotificationChannelRegistry.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Channels/INotificationChannelRegistry.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Channels/DatabaseChannel.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Channels/DatabaseChannel.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Channels/MailChannel.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Channels/MailChannel.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Channels/LogSmsChannel.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Channels/LogSmsChannel.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/EntityConfigurations/NotificationConfiguration.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/EntityConfigurations/NotificationConfiguration.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Jobs/DispatchNotificationJob.cs	modules/Notifications/src/SimpleModule.Notifications/Infrastructure/Jobs/DispatchNotificationJob.cs	SimpleModule.Notifications
+
+# --- Feature moves: endpoints (impl project) ---
+modules/Notifications/src/SimpleModule.Notifications/Endpoints/Notifications/ListNotificationsEndpoint.cs	modules/Notifications/src/SimpleModule.Notifications/Features/Notifications/List/ListNotificationsEndpoint.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Endpoints/Notifications/UnreadCountEndpoint.cs	modules/Notifications/src/SimpleModule.Notifications/Features/Notifications/UnreadCount/UnreadCountEndpoint.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Endpoints/Notifications/MarkReadEndpoint.cs	modules/Notifications/src/SimpleModule.Notifications/Features/Notifications/MarkRead/MarkReadEndpoint.cs	SimpleModule.Notifications
+modules/Notifications/src/SimpleModule.Notifications/Endpoints/Notifications/MarkAllReadEndpoint.cs	modules/Notifications/src/SimpleModule.Notifications/Features/Notifications/MarkAllRead/MarkAllReadEndpoint.cs	SimpleModule.Notifications
+
+# --- Feature-scoped DTO move (contracts project) ---
+modules/Notifications/src/SimpleModule.Notifications.Contracts/QueryNotificationsRequest.cs	modules/Notifications/src/SimpleModule.Notifications.Contracts/Features/Notifications/List/QueryNotificationsRequest.cs	SimpleModule.Notifications.Contracts

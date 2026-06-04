@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using SimpleModule.Notifications.Channels;
 using SimpleModule.Notifications.Contracts;
-using SimpleModule.Notifications.Jobs;
-using SimpleModule.Notifications.Services;
+using SimpleModule.Notifications.Infrastructure;
+using SimpleModule.Notifications.Infrastructure.Channels;
+using SimpleModule.Notifications.Infrastructure.Jobs;
 using SimpleModule.Users.Contracts;
 using Wolverine;
 
@@ -16,7 +16,7 @@ public sealed class NotifierTests
     {
         public string Name { get; } = name;
         public List<(NotificationRecipient Recipient, INotification Notification)> Calls { get; } =
-            [];
+        [];
 
         public Task SendAsync(
             NotificationRecipient recipient,
@@ -64,9 +64,10 @@ public sealed class NotifierTests
         );
 
         var recipient = new NotificationRecipient(UserId.From("u1"), "u1@test.com");
-        var notification = new TestNotification(
-            [NotificationsConstants.Channels.Database, NotificationsConstants.Channels.Mail]
-        );
+        var notification = new TestNotification([
+            NotificationsConstants.Channels.Database,
+            NotificationsConstants.Channels.Mail,
+        ]);
 
         await sut.SendNowAsync(recipient, notification);
 
@@ -88,9 +89,10 @@ public sealed class NotifierTests
 
         var recipient = new NotificationRecipient(UserId.From("u1"));
         const string unregisteredChannel = "unregistered";
-        var notification = new TestNotification(
-            [unregisteredChannel, NotificationsConstants.Channels.Database]
-        );
+        var notification = new TestNotification([
+            unregisteredChannel,
+            NotificationsConstants.Channels.Database,
+        ]);
 
         await sut.SendNowAsync(recipient, notification);
 
@@ -135,13 +137,15 @@ public sealed class NotifierTests
         );
 
         var recipient = new NotificationRecipient(UserId.From("u1"), "u1@test.com");
-        var notification = new TestNotification(
-            [NotificationsConstants.Channels.Database, NotificationsConstants.Channels.Mail]
-        );
+        var notification = new TestNotification([
+            NotificationsConstants.Channels.Database,
+            NotificationsConstants.Channels.Mail,
+        ]);
 
         await sut.SendAsync(recipient, notification);
 
         jobs.EnqueuedJobs.Should().HaveCount(2);
-        jobs.EnqueuedJobs.Should().AllSatisfy(j => j.JobType.Should().Be<DispatchNotificationJob>());
+        jobs.EnqueuedJobs.Should()
+            .AllSatisfy(j => j.JobType.Should().Be<DispatchNotificationJob>());
     }
 }

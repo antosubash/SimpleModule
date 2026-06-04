@@ -10,6 +10,7 @@ using SimpleModule.FeatureFlags;
 using SimpleModule.FileStorage;
 using SimpleModule.Host;
 using SimpleModule.Notifications;
+using SimpleModule.Notifications.Infrastructure;
 using SimpleModule.OpenIddict;
 using SimpleModule.Permissions;
 using SimpleModule.RateLimiting;

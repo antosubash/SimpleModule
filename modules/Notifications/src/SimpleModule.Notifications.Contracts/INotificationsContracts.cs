@@ -1,4 +1,5 @@
 using SimpleModule.Core;
+using SimpleModule.Notifications.Contracts.Features.Notifications.List;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Notifications.Contracts;
