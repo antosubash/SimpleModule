@@ -175,32 +175,48 @@ public sealed class AuditMiddleware(RequestDelegate next, IFusionCache cache)
         ISettingsContracts settings
     )
     {
-        var results = await Task.WhenAll(
-            settings.GetSettingAsync("auditlogs.capture.http", Core.Settings.SettingScope.System),
-            settings.GetSettingAsync(
-                "auditlogs.capture.requestbodies",
-                Core.Settings.SettingScope.System
-            ),
-            settings.GetSettingAsync(
-                "auditlogs.capture.querystrings",
-                Core.Settings.SettingScope.System
-            ),
-            settings.GetSettingAsync(
-                "auditlogs.capture.useragent",
-                Core.Settings.SettingScope.System
-            ),
-            settings.GetSettingAsync("auditlogs.excluded.paths", Core.Settings.SettingScope.System)
+        // Awaited sequentially, not via Task.WhenAll: ISettingsContracts is scoped over a
+        // single SettingsDbContext, and on a cold cache each call queries it. Running them
+        // concurrently races the DbContext ("A second operation was started on this context
+        // instance"), which surfaces as intermittent 500s on the first request after start.
+        var captureHttpRaw = await settings.GetSettingAsync(
+            "auditlogs.capture.http",
+            Core.Settings.SettingScope.System
+        );
+        var captureBodyRaw = await settings.GetSettingAsync(
+            "auditlogs.capture.requestbodies",
+            Core.Settings.SettingScope.System
+        );
+        var captureQsRaw = await settings.GetSettingAsync(
+            "auditlogs.capture.querystrings",
+            Core.Settings.SettingScope.System
+        );
+        var captureUaRaw = await settings.GetSettingAsync(
+            "auditlogs.capture.useragent",
+            Core.Settings.SettingScope.System
+        );
+        var excludedPathsRaw = await settings.GetSettingAsync(
+            "auditlogs.excluded.paths",
+            Core.Settings.SettingScope.System
         );
 
-        var captureHttp = !string.Equals(results[0], "false", StringComparison.OrdinalIgnoreCase);
+        var captureHttp = !string.Equals(
+            captureHttpRaw,
+            "false",
+            StringComparison.OrdinalIgnoreCase
+        );
 
-        var captureBody = !string.Equals(results[1], "false", StringComparison.OrdinalIgnoreCase);
+        var captureBody = !string.Equals(
+            captureBodyRaw,
+            "false",
+            StringComparison.OrdinalIgnoreCase
+        );
 
-        var captureQs = !string.Equals(results[2], "false", StringComparison.OrdinalIgnoreCase);
+        var captureQs = !string.Equals(captureQsRaw, "false", StringComparison.OrdinalIgnoreCase);
 
-        var captureUa = string.Equals(results[3], "true", StringComparison.OrdinalIgnoreCase);
+        var captureUa = string.Equals(captureUaRaw, "true", StringComparison.OrdinalIgnoreCase);
 
-        return (captureHttp, captureBody, captureQs, captureUa, results[4]);
+        return (captureHttp, captureBody, captureQs, captureUa, excludedPathsRaw);
     }
 
     private static string[] ParseExcludedPaths(string? rawPaths)

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -54,7 +55,7 @@ public sealed class AuditMiddlewareTests : IDisposable
             .Received(1)
             .GetSettingAsync("auditlogs.excluded.paths", Arg.Any<SettingScope>());
 
-        // Verify all settings were fetched via Task.WhenAll (batch call)
+        // Verify all five settings were fetched (sequentially, over the scoped DbContext)
         // Total calls should be exactly 5
         await settings.Received(5).GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>());
     }
@@ -277,6 +278,29 @@ public sealed class AuditMiddlewareTests : IDisposable
         await next.Received(1).Invoke(context);
     }
 
+    [Fact]
+    public async Task InvokeAsync_LoadsSettingsSequentially_NeverConcurrently()
+    {
+        // Regression for #232: GetSettingAsync runs over a single scoped SettingsDbContext,
+        // which is not thread-safe. The middleware must await each lookup sequentially rather
+        // than fanning out via Task.WhenAll, otherwise the DbContext races and throws.
+        var settings = new ConcurrencyTrackingSettings();
+        var channel = new AuditChannel();
+        var next = Substitute.For<RequestDelegate>();
+
+        var context = new DefaultHttpContext();
+        context.Request.Path = "/api/test";
+        context.Request.Method = "GET";
+        context.RequestServices = CreateServiceProvider(settings, channel);
+
+        var middleware = new AuditMiddleware(next, _cache);
+
+        await middleware.InvokeAsync(context);
+
+        settings.MaxObservedConcurrency.Should().Be(1);
+        await next.Received(1).Invoke(context);
+    }
+
     private static IServiceProvider CreateServiceProvider(
         ISettingsContracts settings,
         AuditChannel channel
@@ -294,5 +318,73 @@ public sealed class AuditMiddlewareTests : IDisposable
         serviceProvider.GetService(typeof(AuditChannel)).Returns(channel);
         serviceProvider.GetService(typeof(ISettingsContracts)).Returns(null);
         return serviceProvider;
+    }
+
+    /// <summary>
+    /// Stand-in for the scoped settings service that records the peak number of overlapping
+    /// <see cref="GetSettingAsync(string, SettingScope, string?)"/> calls. A correctly
+    /// sequential caller keeps this at 1; a Task.WhenAll fan-out drives it above 1 (mirroring
+    /// the DbContext race in #232).
+    /// </summary>
+    private sealed class ConcurrencyTrackingSettings : ISettingsContracts
+    {
+        private int _current;
+
+        public int MaxObservedConcurrency { get; private set; }
+
+        public async Task<string?> GetSettingAsync(
+            string key,
+            SettingScope scope,
+            string? userId = null
+        )
+        {
+            var observed = Interlocked.Increment(ref _current);
+            MaxObservedConcurrency = Math.Max(MaxObservedConcurrency, observed);
+            try
+            {
+                // Yield so overlapping callers (if any) have a chance to enter before this returns.
+                await Task.Yield();
+                return "true";
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _current);
+            }
+        }
+
+        public Task<T?> GetSettingAsync<T>(string key, SettingScope scope, string? userId = null) =>
+            throw new NotSupportedException();
+
+        public Task<string?> ResolveUserSettingAsync(string key, string userId) =>
+            throw new NotSupportedException();
+
+        public Task<JsonElement?> ResolveUserSettingElementAsync(string key, string userId) =>
+            throw new NotSupportedException();
+
+        public Task SetSettingAsync(
+            string key,
+            JsonElement value,
+            SettingScope scope,
+            string? userId = null
+        ) => throw new NotSupportedException();
+
+        public Task SetManyAsync(IReadOnlyList<BulkSettingUpdate> updates) =>
+            throw new NotSupportedException();
+
+        public Task DeleteSettingAsync(string key, SettingScope scope, string? userId = null) =>
+            throw new NotSupportedException();
+
+        public Task ResetToDefaultAsync(string key, SettingScope scope, string? userId = null) =>
+            throw new NotSupportedException();
+
+        public Task<IEnumerable<SettingValueDto>> GetSettingValuesAsync(
+            SettingsFilter? filter = null
+        ) => throw new NotSupportedException();
+
+        public Task<SettingValueDto?> GetSettingValueAsync(
+            string key,
+            SettingScope scope,
+            string? userId = null
+        ) => throw new NotSupportedException();
     }
 }
