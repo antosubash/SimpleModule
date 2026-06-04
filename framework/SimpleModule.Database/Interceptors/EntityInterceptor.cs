@@ -88,10 +88,14 @@ public sealed class EntityInterceptor(
 
     private static void SetCreationFields(EntityEntry entry, DateTimeOffset now, string? userId)
     {
-        if (entry.Entity is IHasCreationTime c)
+        // Creation fields are stamped once and then preserved. Only default them
+        // when the caller hasn't set a value, so an explicitly-assigned creator
+        // (e.g. a background job creating a row on behalf of a user, where there is
+        // no HttpContext) isn't clobbered with the ambient — possibly null — user (#230).
+        if (entry.Entity is IHasCreationTime c && c.CreatedAt == default)
             c.CreatedAt = now;
 
-        if (entry.Entity is IAuditable a)
+        if (entry.Entity is IAuditable a && string.IsNullOrEmpty(a.CreatedBy))
             a.CreatedBy = userId;
     }
 

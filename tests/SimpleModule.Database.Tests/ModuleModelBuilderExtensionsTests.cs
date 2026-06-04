@@ -57,6 +57,33 @@ public sealed class ModuleModelBuilderExtensionsTests : IDisposable
     }
 
     [Fact]
+    public void ExplicitProvider_OverridesConnectionStringHeuristic()
+    {
+        // DefaultConnection looks like SQLite, but Provider is set explicitly to
+        // PostgreSql. The explicit provider must win, so entities get a schema —
+        // not a SQLite table-name prefix (#227).
+        var options = new DbContextOptionsBuilder<SharedPostgresDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        var dbOptions = Options.Create(
+            new DatabaseOptions
+            {
+                DefaultConnection = "Data Source=app.db", // looks like SQLite
+                Provider = "PostgreSql", // explicit override wins
+            }
+        );
+        using var db = new SharedPostgresDbContext(options, dbOptions);
+
+        var schemas = db.Model.GetEntityTypes().Select(e => e.GetSchema()).Distinct().ToList();
+
+        schemas.Should().AllBe("testmodule");
+        db.Model.GetEntityTypes()
+            .Select(e => e.GetTableName())
+            .Should()
+            .NotContain(t => t!.StartsWith("TestModule_"));
+    }
+
+    [Fact]
     public void SharedPostgresDb_SetsSchemaToLowercaseModuleName()
     {
         var options = new DbContextOptionsBuilder<SharedPostgresDbContext>()

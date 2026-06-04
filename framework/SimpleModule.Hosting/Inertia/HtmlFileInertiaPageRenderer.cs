@@ -200,6 +200,8 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
           var url=protocol+'//'+location.host+'/dev/live-reload';
           var reconnectDelay=1000;
           var maxReconnectDelay=10000;
+          var maxAttempts=60;
+          var attempts=0;
           var cssVersion=0;
 
           function connect(){
@@ -207,6 +209,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
             ws.onopen=function(){
               console.log('[LiveReload] Connected');
               reconnectDelay=1000;
+              attempts=0;
             };
             ws.onmessage=function(event){
               try{
@@ -222,6 +225,11 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
               }
             };
             ws.onclose=function(){
+              attempts++;
+              if(attempts>maxAttempts){
+                console.warn('[LiveReload] Giving up after '+maxAttempts+' attempts. Reload the page to retry.');
+                return;
+              }
               console.log('[LiveReload] Disconnected, reconnecting in '+(reconnectDelay/1000)+'s...');
               setTimeout(connect,reconnectDelay);
               reconnectDelay=Math.min(reconnectDelay*2,maxReconnectDelay);
