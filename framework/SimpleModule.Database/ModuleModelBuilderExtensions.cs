@@ -17,8 +17,12 @@ public static class ModuleModelBuilderExtensions
         if (hasOwnConnection)
             return;
 
+        // Honor an explicitly-configured provider; only fall back to sniffing the
+        // connection string when none is set. Otherwise a host that sets
+        // Database:Provider but leaves a connection string that looks like another
+        // provider would pick the wrong schema strategy (#227).
         var connectionString = dbOptions.DefaultConnection;
-        var provider = DatabaseProviderDetector.Detect(connectionString);
+        var provider = DatabaseProviderDetector.Detect(connectionString, dbOptions.Provider);
 
         if (provider == DatabaseProvider.Sqlite)
         {

@@ -44,4 +44,3 @@ Notes / follow-ups:
 - [x] `npm run build` — all module bundles built
 - [x] `dotnet build` — 0 errors
 - [x] `dotnet test --no-build` — 0 failures across all projects
-- [x] `npm run test:smoke -w tests/e2e` — 66 passed

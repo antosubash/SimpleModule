@@ -54,9 +54,55 @@ public sealed class AuditMiddlewareTests : IDisposable
             .Received(1)
             .GetSettingAsync("auditlogs.excluded.paths", Arg.Any<SettingScope>());
 
-        // Verify all settings were fetched via Task.WhenAll (batch call)
-        // Total calls should be exactly 5
+        // Total calls should be exactly 5 (one per setting key)
         await settings.Received(5).GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>());
+    }
+
+    [Fact]
+    public async Task InvokeAsync_ReadsSettingsSequentially_NeverConcurrentlyOnSharedContext()
+    {
+        // The five settings reads share the request's scoped SettingsDbContext.
+        // A DbContext forbids concurrent operations, so they must run one at a
+        // time — otherwise EF throws "A second operation was started..." and the
+        // request 500s intermittently (#232). This stub fails if it ever observes
+        // more than one read in flight at once.
+        var settings = Substitute.For<ISettingsContracts>();
+        var channel = new AuditChannel();
+        var next = Substitute.For<RequestDelegate>();
+
+        var context = new DefaultHttpContext();
+        context.RequestServices = CreateServiceProvider(settings, channel);
+
+        var gate = new object();
+        var inFlight = 0;
+        var maxInFlight = 0;
+
+        settings
+            .GetSettingAsync(Arg.Any<string>(), Arg.Any<SettingScope>())
+            .Returns(_ => TrackedReadAsync());
+
+        async Task<string?> TrackedReadAsync()
+        {
+            lock (gate)
+            {
+                inFlight++;
+                maxInFlight = Math.Max(maxInFlight, inFlight);
+            }
+            await Task.Delay(25); // widen the window so any overlap is observed
+            lock (gate)
+            {
+                inFlight--;
+            }
+            return "true";
+        }
+
+        var middleware = new AuditMiddleware(next, _cache);
+
+        await middleware.InvokeAsync(context);
+
+        maxInFlight
+            .Should()
+            .Be(1, "settings reads share one scoped DbContext and must not overlap");
     }
 
     [Fact]

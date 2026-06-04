@@ -60,6 +60,35 @@ public sealed partial class EntityInterceptorTests
     }
 
     [Fact]
+    public async Task Added_Auditable_Entity_Preserves_Explicit_CreatedBy_Without_Current_User()
+    {
+        // A background job (no HTTP user) creating a row on behalf of a user sets
+        // CreatedBy itself. The interceptor must not clobber it with null (#230).
+        await using var fixture = CreateFixture(); // no current user
+        var entity = new AuditableTestEntity { Name = "Test", CreatedBy = "owner-456" };
+
+        fixture.Context.AuditableEntities.Add(entity);
+        await fixture.Context.SaveChangesAsync();
+
+        entity.CreatedBy.Should().Be("owner-456");
+    }
+
+    [Fact]
+    public async Task Added_Auditable_Entity_Preserves_Explicit_CreatedBy_Over_Current_User()
+    {
+        // An explicitly-set creator wins over the ambient HTTP user, but the
+        // modification stamp still reflects who performed this save.
+        await using var fixture = CreateFixture(TestUserId);
+        var entity = new AuditableTestEntity { Name = "Test", CreatedBy = "owner-456" };
+
+        fixture.Context.AuditableEntities.Add(entity);
+        await fixture.Context.SaveChangesAsync();
+
+        entity.CreatedBy.Should().Be("owner-456");
+        entity.UpdatedBy.Should().Be(TestUserId);
+    }
+
+    [Fact]
     public async Task Modified_Auditable_Entity_Updates_UpdatedBy_Only()
     {
         await using var fixture = CreateFixture(TestUserId);
