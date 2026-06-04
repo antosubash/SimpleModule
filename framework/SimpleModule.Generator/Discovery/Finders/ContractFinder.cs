@@ -83,6 +83,7 @@ internal static class ContractFinder
                                 DependsOnDbContext = DbContextFinder.HasDbContextConstructorParam(
                                     typeSymbol
                                 ),
+                                IsManuallyRegistered = HasManualRegistrationAttribute(typeSymbol),
                                 Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                                 Lifetime = GetContractLifetime(typeSymbol),
                             }
@@ -91,6 +92,26 @@ internal static class ContractFinder
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// True when the type carries [ManualContractRegistration]. Such implementations
+    /// are wired manually by their owning module, so the generator must not
+    /// auto-register them and must skip the SM0026/SM0028 contract diagnostics.
+    /// </summary>
+    internal static bool HasManualRegistrationAttribute(INamedTypeSymbol typeSymbol)
+    {
+        foreach (var attr in typeSymbol.GetAttributes())
+        {
+            var attrName = attr.AttributeClass?.ToDisplayString(
+                SymbolDisplayFormat.FullyQualifiedFormat
+            );
+            if (attrName == "global::SimpleModule.Core.ManualContractRegistrationAttribute")
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>

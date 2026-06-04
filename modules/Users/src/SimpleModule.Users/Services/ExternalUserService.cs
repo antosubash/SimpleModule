@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 using SimpleModule.Users.Contracts.Events;
 using Wolverine;
@@ -7,6 +8,7 @@ using Wolverine;
 namespace SimpleModule.Users.Services;
 
 #pragma warning disable CA1812 // Instantiated via DI
+[ManualContractRegistration]
 internal sealed partial class ExternalUserService(
     UsersDbContext db,
     IMessageBus bus,

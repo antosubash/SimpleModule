@@ -278,6 +278,109 @@ public class ContractAutoDiscoveryTests
     }
 
     [Fact]
+    public void ManualImplementations_DoNotEmitContractDiagnostics()
+    {
+        // A module with a provider-swappable contract ships several implementations
+        // and registers one conditionally in ConfigureServices. Marking each with
+        // [ManualContractRegistration] must suppress SM0026 (multiple impls) and
+        // SM0028 (impl must be public) while still satisfying the contract so SM0025
+        // (no impl) does not fire. Mirrors the Users/OpenIddict provider design (#236).
+        var contractsSource = """
+            namespace TestAssembly.Contracts
+            {
+                public interface IProductContracts
+                {
+                    void DoSomething();
+                }
+            }
+            """;
+
+        var hostSource = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
+            using TestAssembly.Contracts;
+
+            namespace TestAssembly
+            {
+                [Module("TestAssembly")]
+                public class TestAssemblyModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+
+                [ManualContractRegistration]
+                public sealed class LocalProductService : IProductContracts
+                {
+                    public void DoSomething() { }
+                }
+
+                [ManualContractRegistration]
+                internal sealed class ExternalProductService : IProductContracts
+                {
+                    public void DoSomething() { }
+                }
+            }
+            """;
+
+        var compilation = CreateMultiAssemblyCompilation(contractsSource, hostSource);
+        var (_, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Should().NotContain(d => d.Id == "SM0025");
+        diagnostics.Should().NotContain(d => d.Id == "SM0026");
+        diagnostics.Should().NotContain(d => d.Id == "SM0028");
+    }
+
+    [Fact]
+    public void ManualImplementation_IsNotAutoRegistered()
+    {
+        // A [ManualContractRegistration] implementation must not be auto-wired by the
+        // generator — its module registers it itself, so a generated AddScoped would
+        // double-register (or pick the wrong provider).
+        var contractsSource = """
+            namespace TestAssembly.Contracts
+            {
+                public interface IProductContracts
+                {
+                    void DoSomething();
+                }
+            }
+            """;
+
+        var hostSource = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
+            using TestAssembly.Contracts;
+
+            namespace TestAssembly
+            {
+                [Module("TestAssembly")]
+                public class TestAssemblyModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+
+                [ManualContractRegistration]
+                public sealed class ProductService : IProductContracts
+                {
+                    public void DoSomething() { }
+                }
+            }
+            """;
+
+        var compilation = CreateMultiAssemblyCompilation(contractsSource, hostSource);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var moduleExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+
+        moduleExt.Should().NotContain("ProductService");
+    }
+
+    [Fact]
     public void AbstractImplementation_EmitsSM0029()
     {
         var contractsSource = """

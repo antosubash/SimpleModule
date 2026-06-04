@@ -1,4 +1,5 @@
 using OpenIddict.Abstractions;
+using SimpleModule.Core;
 using SimpleModule.Identity.Contracts;
 using SimpleModule.OpenIddict.Contracts;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -6,6 +7,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace SimpleModule.OpenIddict.Services;
 
 #pragma warning disable CA1812 // Instantiated via DI
+[ManualContractRegistration]
 internal sealed class OpenIddictSessionService(
     IOpenIddictTokenManager tokenManager,
     IOpenIddictApplicationManager appManager

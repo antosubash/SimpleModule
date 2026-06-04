@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,10 +31,27 @@ internal sealed partial class RateLimitRuleCache(
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<RateLimitingDbContext>();
 
-        var rules = await db
-            .Rules.AsNoTracking()
-            .Where(r => r.IsEnabled)
-            .ToListAsync(cancellationToken);
+        List<RateLimitRule> rules;
+        try
+        {
+            rules = await db
+                .Rules.AsNoTracking()
+                .Where(r => r.IsEnabled)
+                .ToListAsync(cancellationToken);
+        }
+        catch (DbException ex)
+        {
+            // The RateLimiting_Rules table may not exist yet — e.g. the module was
+            // added to a dev DB previously created by EnsureCreated(), which does
+            // not add tables to an existing database. Because RefreshAsync runs from
+            // IHostedService.StartAsync, throwing here would crash the whole host
+            // (#223). Degrade to "no DB-defined rules"; static policies from
+            // ConfigureRateLimits still apply, and the cache self-heals on the next
+            // refresh once the schema exists. DbException covers SQLite/Postgres/
+            // SQL Server "missing relation" without swallowing logic errors.
+            LogTableUnavailable(logger, ex);
+            return;
+        }
 
         var compiled = rules
             .Select(Compile)
@@ -141,4 +159,11 @@ internal sealed partial class RateLimitRuleCache(
         Message = "Rate-limit rule cache refreshed: {Count} enabled rules loaded"
     )]
     private static partial void LogRefreshed(ILogger logger, int count);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Rate-limit rules table unavailable; serving static policies only "
+            + "until the schema is created. Run migrations or recreate the dev database."
+    )]
+    private static partial void LogTableUnavailable(ILogger logger, Exception exception);
 }
