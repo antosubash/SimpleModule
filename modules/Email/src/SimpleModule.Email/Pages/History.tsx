@@ -191,7 +191,7 @@ export default function History({ result, filters }: Props) {
                       <TableCell className="text-text-muted">
                         {m.sentAt ? new Date(m.sentAt).toLocaleString() : '-'}
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-destructive">
+                      <TableCell className="max-w-[200px] truncate text-danger">
                         {m.errorMessage ?? '-'}
                       </TableCell>
                     </TableRow>

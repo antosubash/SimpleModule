@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Button } from '@simplemodule/ui';
+import { Button, Table, TableBody, TableCell, TableRow } from '@simplemodule/ui';
 import ManageLayout from '@/components/ManageLayout';
 
 interface LoginInfo {
@@ -51,12 +51,12 @@ export default function ExternalLogins({
       {currentLogins.length > 0 && (
         <>
           <h3 className="text-xl font-bold mb-4">Registered Logins</h3>
-          <table className="w-full mb-6">
-            <tbody>
+          <Table className="mb-6">
+            <TableBody>
               {currentLogins.map((login) => (
-                <tr key={login.loginProvider}>
-                  <td className="py-2">{login.providerDisplayName ?? login.loginProvider}</td>
-                  <td className="py-2 text-right">
+                <TableRow key={login.loginProvider}>
+                  <TableCell>{login.providerDisplayName ?? login.loginProvider}</TableCell>
+                  <TableCell className="text-right">
                     {showRemoveButton && (
                       <Button
                         type="button"
@@ -66,11 +66,11 @@ export default function ExternalLogins({
                         Remove
                       </Button>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </>
       )}
       {otherLogins.length > 0 && (

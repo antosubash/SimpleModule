@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
+  Badge,
   Button,
   DataGridPage,
   Dialog,
@@ -20,7 +21,7 @@ import {
 import { useState } from 'react';
 import { TenantsKeys } from '@/Locales/keys';
 import type { Tenant } from '@/types';
-import { statusColors, statusLabels } from './tenantStatus';
+import { statusLabels, statusVariant } from './tenantStatus';
 
 export default function Manage({ tenants }: { tenants: Tenant[] }) {
   const { t } = useTranslation('Tenants');
@@ -66,9 +67,9 @@ export default function Manage({ tenants }: { tenants: Tenant[] }) {
                   <TableCell className="font-medium text-text">{tenant.name}</TableCell>
                   <TableCell className="text-text-muted">{tenant.slug}</TableCell>
                   <TableCell>
-                    <span className={`font-medium ${statusColors[tenant.status]}`}>
+                    <Badge variant={statusVariant[tenant.status]}>
                       {statusLabels[tenant.status]}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-text-muted">{tenant.hosts.length}</TableCell>
                   <TableCell className="text-text-muted">{tenant.editionName ?? '-'}</TableCell>

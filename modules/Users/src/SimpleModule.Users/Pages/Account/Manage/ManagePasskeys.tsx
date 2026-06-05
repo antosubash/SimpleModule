@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Button } from '@simplemodule/ui';
+import { Button, EmptyState } from '@simplemodule/ui';
 import { useState } from 'react';
 import ManageLayout from '@/components/ManageLayout';
 import { startPasskeyRegistration } from '../../passkey';
@@ -85,7 +85,7 @@ export default function ManagePasskeys({ passkeys }: Props) {
       )}
 
       {passkeys.length === 0 ? (
-        <p className="text-sm text-text-muted mb-4">No passkeys registered yet.</p>
+        <EmptyState headingLevel="h4" title="No passkeys registered yet." />
       ) : (
         <ul className="space-y-2 mb-4">
           {passkeys.map((passkey) => (

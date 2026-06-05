@@ -1,21 +1,15 @@
 import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
-  Container,
   Field,
   FieldDescription,
   FieldGroup,
   Input,
   Label,
+  PageShell,
   Select,
   SelectContent,
   SelectItem,
@@ -35,22 +29,13 @@ export default function ClientsCreate() {
   }
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/openiddict/clients">
-              {t(OpenIddictKeys.ClientsCreate.Breadcrumb)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(OpenIddictKeys.ClientsCreate.BreadcrumbPage)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">{t(OpenIddictKeys.ClientsCreate.Title)}</h1>
-
+    <PageShell
+      title={t(OpenIddictKeys.ClientsCreate.Title)}
+      breadcrumbs={[
+        { label: t(OpenIddictKeys.ClientsCreate.Breadcrumb), href: '/openiddict/clients' },
+        { label: t(OpenIddictKeys.ClientsCreate.BreadcrumbPage) },
+      ]}
+    >
       <Card>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
@@ -113,6 +98,6 @@ export default function ClientsCreate() {
           </form>
         </CardContent>
       </Card>
-    </Container>
+    </PageShell>
   );
 }

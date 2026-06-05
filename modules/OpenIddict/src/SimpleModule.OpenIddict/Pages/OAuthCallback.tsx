@@ -5,5 +5,5 @@ export default function OAuthCallback() {
     window.location.href = `/${window.location.search}`;
   }, []);
 
-  return <p className="text-center text-muted">Completing authentication...</p>;
+  return <p className="text-center text-text-muted">Completing authentication...</p>;
 }

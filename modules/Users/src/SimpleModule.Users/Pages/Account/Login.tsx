@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Container,
   Field,
   FieldGroup,
@@ -83,12 +84,7 @@ export default function Login({
       <div className="flex items-center justify-center min-h-[calc(100vh-12rem)]">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <div
-              className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center text-white text-xl font-bold shadow-lg"
-              style={{
-                background: 'var(--color-primary)',
-              }}
-            >
+            <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center bg-primary text-text-inverse text-xl font-bold shadow-lg">
               S
             </div>
             <h1
@@ -142,15 +138,15 @@ export default function Login({
                     />
                   </Field>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer mb-0">
-                      <input
-                        type="checkbox"
-                        name="rememberMe"
-                        value="true"
-                        className="w-4 h-4 rounded border-border text-primary accent-primary"
-                      />
-                      Remember me
-                    </label>
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="rememberMe" name="rememberMe" value="true" />
+                      <Label
+                        htmlFor="rememberMe"
+                        className="text-sm text-text-secondary cursor-pointer mb-0"
+                      >
+                        Remember me
+                      </Label>
+                    </div>
                     <a
                       href="/Identity/Account/ForgotPassword"
                       className="text-xs text-text-muted hover:text-primary no-underline transition-colors"

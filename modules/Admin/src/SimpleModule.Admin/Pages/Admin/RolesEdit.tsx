@@ -1,22 +1,16 @@
 import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  Container,
   Field,
   FieldGroup,
   Input,
   Label,
+  PageShell,
   Table,
   TableBody,
   TableCell,
@@ -65,22 +59,13 @@ export default function RolesEdit({
   ];
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/roles">
-              {t(AdminKeys.RolesEdit.BreadcrumbRoles)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(AdminKeys.RolesEdit.BreadcrumbEdit)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">{t(AdminKeys.RolesEdit.Title)}</h1>
-
+    <PageShell
+      title={t(AdminKeys.RolesEdit.Title)}
+      breadcrumbs={[
+        { label: t(AdminKeys.RolesEdit.BreadcrumbRoles), href: '/admin/roles' },
+        { label: t(AdminKeys.RolesEdit.BreadcrumbEdit) },
+      ]}
+    >
       <TabNav tabs={tabs} activeTab={tab} baseUrl={`/admin/roles/${role.id}/edit`} />
 
       {tab === 'details' && (
@@ -180,6 +165,6 @@ export default function RolesEdit({
           </CardContent>
         </Card>
       )}
-    </Container>
+    </PageShell>
   );
 }

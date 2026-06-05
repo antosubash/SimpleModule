@@ -2,20 +2,14 @@ import { router } from '@inertiajs/react';
 import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
-  Container,
   Field,
   FieldGroup,
   Input,
   Label,
+  PageShell,
 } from '@simplemodule/ui';
 import { TenantsKeys } from '@/Locales/keys';
 
@@ -29,22 +23,13 @@ export default function Create() {
   }
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href={routes.tenants.views.manage()}>
-              {t(TenantsKeys.Manage.Title)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(TenantsKeys.Create.Breadcrumb)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Create.Title)}</h1>
-
+    <PageShell
+      title={t(TenantsKeys.Create.Title)}
+      breadcrumbs={[
+        { label: t(TenantsKeys.Manage.Title), href: routes.tenants.views.manage() },
+        { label: t(TenantsKeys.Create.Breadcrumb) },
+      ]}
+    >
       <Card>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
@@ -94,6 +79,6 @@ export default function Create() {
           </form>
         </CardContent>
       </Card>
-    </Container>
+    </PageShell>
   );
 }
