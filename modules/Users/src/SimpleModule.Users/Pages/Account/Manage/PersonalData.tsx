@@ -19,12 +19,9 @@ export default function PersonalData() {
         <input type="hidden" name="__RequestVerificationToken" value={csrfToken ?? ''} />
         <Button type="submit">Download</Button>
       </form>
-      <a
-        href="/Identity/Account/Manage/DeletePersonalData"
-        className="btn-danger inline-block no-underline"
-      >
-        Delete
-      </a>
+      <Button asChild variant="danger">
+        <a href="/Identity/Account/Manage/DeletePersonalData">Delete</a>
+      </Button>
     </ManageLayout>
   );
 }

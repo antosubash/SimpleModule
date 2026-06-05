@@ -55,11 +55,7 @@ export default function Roles({ roles }: Props) {
   const errorAlert = deleteError ? (
     <div className="rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger flex items-center justify-between">
       <span>{deleteError}</span>
-      <button
-        type="button"
-        className="text-danger hover:text-danger/80"
-        onClick={() => setDeleteError(null)}
-      >
+      <Button variant="ghost" size="sm" onClick={() => setDeleteError(null)}>
         <svg
           className="w-4 h-4"
           fill="none"
@@ -70,7 +66,7 @@ export default function Roles({ roles }: Props) {
         >
           <path d="M18 6 6 18M6 6l12 12" />
         </svg>
-      </button>
+      </Button>
     </div>
   ) : null;
 

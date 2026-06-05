@@ -8,7 +8,9 @@ export class PasskeysPage {
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /passkeys/i });
+    // Exact match: the empty state ("No passkeys registered yet.") is also a
+    // heading, so a loose /passkeys/i regex matches two elements.
+    return this.page.getByRole('heading', { name: 'Passkeys', exact: true });
   }
 
   get addPasskeyButton() {

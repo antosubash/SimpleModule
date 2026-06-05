@@ -152,7 +152,7 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
             <TableBody>
               {parentFolder !== undefined && currentFolder && (
                 <TableRow
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer hover:bg-surface-raised"
                   onClick={() =>
                     router.get(
                       routes.fileStorage.views.browse(),
@@ -168,7 +168,7 @@ export default function Browse({ files, folders, currentFolder, parentFolder }: 
               {folders.map((f) => (
                 <TableRow
                   key={f}
-                  className="cursor-pointer hover:bg-muted/50"
+                  className="cursor-pointer hover:bg-surface-raised"
                   onClick={() => router.get(routes.fileStorage.views.browse(), { folder: f })}
                 >
                   <TableCell className="font-medium">

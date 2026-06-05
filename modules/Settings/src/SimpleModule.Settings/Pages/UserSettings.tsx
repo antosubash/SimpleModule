@@ -1,5 +1,12 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
-import { Button, Container, EmptyState } from '@simplemodule/ui';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  EmptyState,
+  PageShell,
+} from '@simplemodule/ui';
 import { useCallback, useMemo, useState } from 'react';
 import type { SettingDefinition } from '@/components/SettingField';
 import SettingGroup from '@/components/SettingGroup';
@@ -144,11 +151,7 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
   }, []);
 
   return (
-    <Container className="space-y-0">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">
-        {t(SettingsKeys.UserSettings.Title)}
-      </h1>
-
+    <PageShell title={t(SettingsKeys.UserSettings.Title)} size="lg">
       <div
         className="sticky z-30 -mx-4 bg-surface/95 backdrop-blur-sm border-b border-border px-4 py-3 mb-6 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         style={{ top: 0 }}
@@ -168,12 +171,9 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
       </div>
 
       {errorMessage !== null && (
-        <div
-          role="alert"
-          className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger-text"
-        >
-          <p className="font-semibold">{t(SettingsKeys.UserSettings.SaveErrorTitle)}</p>
-          <p className="mt-0.5">{errorMessage}</p>
+        <Alert variant="danger" className="mb-4">
+          <AlertTitle>{t(SettingsKeys.UserSettings.SaveErrorTitle)}</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
           <Button
             variant="ghost"
             size="sm"
@@ -182,7 +182,7 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
           >
             Dismiss
           </Button>
-        </div>
+        </Alert>
       )}
 
       <div className="flex gap-8">
@@ -249,6 +249,6 @@ export default function UserSettings({ definitions, settings }: UserSettingsProp
           )}
         </div>
       </div>
-    </Container>
+    </PageShell>
   );
 }

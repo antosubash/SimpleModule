@@ -1,5 +1,8 @@
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   Button,
   EmptyState,
   PageShell,
@@ -262,12 +265,9 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
     return (
       <SettingsLayout groups={groupNames} toolbar={toolbar}>
         {errorMessage !== null && (
-          <div
-            role="alert"
-            className="mb-4 rounded-lg border border-danger/20 bg-danger-bg px-4 py-3 text-sm text-danger-text"
-          >
-            <p className="font-semibold">{t(SettingsKeys.AdminSettings.SaveErrorTitle)}</p>
-            <p className="mt-0.5">{errorMessage}</p>
+          <Alert variant="danger" className="mb-4">
+            <AlertTitle>{t(SettingsKeys.AdminSettings.SaveErrorTitle)}</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
             <Button
               variant="ghost"
               size="sm"
@@ -276,7 +276,7 @@ export default function AdminSettings({ definitions, settings }: AdminSettingsPr
             >
               Dismiss
             </Button>
-          </div>
+          </Alert>
         )}
         {groupNames.length === 0 ? (
           <EmptyState

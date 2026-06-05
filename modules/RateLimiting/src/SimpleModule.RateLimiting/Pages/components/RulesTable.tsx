@@ -56,7 +56,7 @@ export function RulesTable({ rules, onToggle, onDelete }: Props) {
                 ? `${rule.tokenLimit} tokens`
                 : `${rule.permitLimit} req/${rule.windowSeconds}s`}
             </TableCell>
-            <TableCell className="text-muted-foreground text-sm">
+            <TableCell className="text-text-muted text-sm">
               {rule.endpointPattern ?? 'All'}
             </TableCell>
             <TableCell>

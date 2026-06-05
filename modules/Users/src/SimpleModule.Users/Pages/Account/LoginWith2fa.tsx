@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Container,
   Field,
   FieldGroup,
@@ -53,15 +54,15 @@ export default function LoginWith2fa({ rememberMe, returnUrl, errors }: Props) {
                     <Label htmlFor="twoFactorCode">Authenticator code</Label>
                     <Input id="twoFactorCode" name="twoFactorCode" required autoComplete="off" />
                   </Field>
-                  <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer mb-0">
-                    <input
-                      type="checkbox"
-                      name="rememberMachine"
-                      value="true"
-                      className="w-4 h-4 rounded border-border accent-primary"
-                    />
-                    Remember this machine
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <Checkbox id="rememberMachine" name="rememberMachine" value="true" />
+                    <Label
+                      htmlFor="rememberMachine"
+                      className="text-sm text-text-secondary cursor-pointer mb-0"
+                    >
+                      Remember this machine
+                    </Label>
+                  </div>
                   <Button type="submit" className="w-full">
                     Log in
                   </Button>

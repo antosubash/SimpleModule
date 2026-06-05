@@ -1,21 +1,15 @@
 import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
   Card,
   CardContent,
   Checkbox,
-  Container,
   Field,
   FieldGroup,
   Input,
   Label,
+  PageShell,
 } from '@simplemodule/ui';
 import { useState } from 'react';
 import { AdminKeys } from '@/Locales/keys';
@@ -50,22 +44,13 @@ export default function UsersCreate({ allRoles }: Props) {
   }
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/users">
-              {t(AdminKeys.UsersCreate.BreadcrumbUsers)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(AdminKeys.UsersCreate.BreadcrumbCreate)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">{t(AdminKeys.UsersCreate.Title)}</h1>
-
+    <PageShell
+      title={t(AdminKeys.UsersCreate.Title)}
+      breadcrumbs={[
+        { label: t(AdminKeys.UsersCreate.BreadcrumbUsers), href: '/admin/users' },
+        { label: t(AdminKeys.UsersCreate.BreadcrumbCreate) },
+      ]}
+    >
       <Card>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit}>
@@ -124,6 +109,6 @@ export default function UsersCreate({ allRoles }: Props) {
           </form>
         </CardContent>
       </Card>
-    </Container>
+    </PageShell>
   );
 }

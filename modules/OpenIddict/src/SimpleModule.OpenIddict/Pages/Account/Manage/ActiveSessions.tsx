@@ -3,6 +3,7 @@ import { routes } from '@simplemodule/client/routes';
 import {
   Badge,
   Button,
+  EmptyState,
   Table,
   TableBody,
   TableCell,
@@ -56,7 +57,10 @@ export default function ActiveSessions({ sessions }: Props) {
           )}
         </div>
         {sessions.length === 0 ? (
-          <p className="text-sm text-text-muted">No active sessions.</p>
+          <EmptyState
+            title="No active sessions."
+            description="Apps and devices that are currently signed in to your account will appear here."
+          />
         ) : (
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <Table>

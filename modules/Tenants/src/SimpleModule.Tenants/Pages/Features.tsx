@@ -2,16 +2,12 @@ import { router } from '@inertiajs/react';
 import { routes } from '@simplemodule/client/routes';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
+  Badge,
   Button,
   Card,
   CardContent,
-  Container,
+  EmptyState,
+  PageShell,
   Table,
   TableBody,
   TableCell,
@@ -67,40 +63,31 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
     });
   }
 
+  const breadcrumbs = [
+    { label: t(TenantsKeys.Manage.Title), href: routes.tenants.views.manage() },
+    { label: tenant.name, href: routes.tenants.views.edit(tenant.id) },
+    { label: t(TenantsKeys.Features.Breadcrumb) },
+  ];
+
   if (flags.length === 0) {
     return (
-      <Container className="space-y-4 sm:space-y-6">
-        <h1 className="text-2xl font-bold tracking-tight">{t(TenantsKeys.Features.EmptyTitle)}</h1>
-        <p className="text-text-muted">{t(TenantsKeys.Features.EmptyDescription)}</p>
-      </Container>
+      <PageShell
+        title={t(TenantsKeys.Features.Title, { name: tenant.name })}
+        breadcrumbs={breadcrumbs}
+      >
+        <EmptyState
+          title={t(TenantsKeys.Features.EmptyTitle)}
+          description={t(TenantsKeys.Features.EmptyDescription)}
+        />
+      </PageShell>
     );
   }
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href={routes.tenants.views.manage()}>
-              {t(TenantsKeys.Manage.Title)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href={routes.tenants.views.edit(tenant.id)}>
-              {tenant.name}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(TenantsKeys.Features.Breadcrumb)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <h1 className="text-2xl font-bold tracking-tight">
-        {t(TenantsKeys.Features.Title, { name: tenant.name })}
-      </h1>
-
+    <PageShell
+      title={t(TenantsKeys.Features.Title, { name: tenant.name })}
+      breadcrumbs={breadcrumbs}
+    >
       <Card>
         <CardContent className="p-4 sm:p-6">
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -126,11 +113,11 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
                         <TableCell className="font-mono text-sm">{flag.name}</TableCell>
                         <TableCell className="text-text-muted">{flag.description || '-'}</TableCell>
                         <TableCell>
-                          <span className={flag.isEnabled ? 'text-green-600' : 'text-red-600'}>
+                          <Badge variant={flag.isEnabled ? 'success' : 'default'}>
                             {flag.isEnabled
                               ? t(TenantsKeys.Features.On)
                               : t(TenantsKeys.Features.Off)}
-                          </span>
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Button
@@ -162,6 +149,6 @@ export default function Features({ tenant, flags, tenantOverrides }: Props) {
           </div>
         </CardContent>
       </Card>
-    </Container>
+    </PageShell>
   );
 }
