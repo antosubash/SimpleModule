@@ -675,9 +675,16 @@ public class DiagnosticTests
         hostDbContext.Should().Contain("Products");
         hostDbContext.Should().Contain("InventoryItems");
 
-        // Each module should get its own schema
-        hostDbContext.Should().Contain("SetSchema(\"product\")");
-        hostDbContext.Should().Contain("SetSchema(\"productinventory\")");
+        // Each entity should be attributed to its own module in the schema-isolation seed map
+        // (the helper lowercases these to schema names at runtime).
+        hostDbContext
+            .Should()
+            .Contain("[typeof(global::TestApp.Product.ProductEntity)] = \"Product\"");
+        hostDbContext
+            .Should()
+            .Contain(
+                "[typeof(global::TestApp.ProductInventory.InventoryItem)] = \"ProductInventory\""
+            );
     }
 
     #endregion
@@ -823,7 +830,9 @@ public class DiagnosticTests
             .ToString();
 
         hostDbContext.Should().Contain("Orders");
-        hostDbContext.Should().Contain("SetSchema(\"orders\")");
+        hostDbContext
+            .Should()
+            .Contain("[typeof(global::TestApp.Company.Division.Orders.Order)] = \"Orders\"");
     }
 
     #endregion

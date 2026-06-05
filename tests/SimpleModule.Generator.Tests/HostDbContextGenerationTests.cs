@@ -379,8 +379,14 @@ public class HostDbContextGenerationTests
 
     #region Schema isolation
 
+    // Schema isolation is delegated to the runtime helper
+    // SimpleModule.Database.ModuleModelBuilderExtensions.ApplyHostModuleSchemas, which resolves
+    // navigation-reachable child entities to their owning module (#229). The generator only
+    // emits the entity→module seed map and the helper call; the prefix/schema semantics are
+    // verified at runtime in SimpleModule.Database.Tests.
+
     [Fact]
-    public void SchemaIsolation_NonSqlite_SetsSchemaPerModule()
+    public void SchemaIsolation_BuildsModuleByEntityTypeSeedMap()
     {
         var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(
             ModuleWithDbContext,
@@ -389,13 +395,22 @@ public class HostDbContextGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var source = GetHostDbContext(result);
-        source.Should().Contain("if (provider != DatabaseProvider.Sqlite)");
-        source.Should().Contain(".Metadata.SetSchema(\"products\")");
-        source.Should().Contain(".Metadata.SetSchema(\"orders\")");
+        source
+            .Should()
+            .Contain(
+                "var moduleByEntityType = new global::System.Collections.Generic.Dictionary<global::System.Type, string>"
+            );
+        source
+            .Should()
+            .Contain("[typeof(global::TestApp.Products.Contracts.Product)] = \"Products\"");
+        source.Should().Contain("[typeof(global::TestApp.Orders.Contracts.Order)] = \"Orders\"");
+        source
+            .Should()
+            .Contain("[typeof(global::TestApp.Orders.Contracts.OrderItem)] = \"Orders\"");
     }
 
     [Fact]
-    public void SchemaIsolation_Sqlite_PrefixesTables()
+    public void SchemaIsolation_InvokesApplyHostModuleSchemasHelper()
     {
         var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(
             ModuleWithDbContext,
@@ -404,12 +419,16 @@ public class HostDbContextGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var source = GetHostDbContext(result);
-        source.Should().Contain(".ToTable(\"Products_\"");
-        source.Should().Contain(".ToTable(\"Orders_\"");
+        source
+            .Should()
+            .Contain(
+                "global::SimpleModule.Database.ModuleModelBuilderExtensions.ApplyHostModuleSchemas("
+            );
+        source.Should().Contain("builder, dbOptions.Value, moduleByEntityType,");
     }
 
     [Fact]
-    public void IdentityFallbackSchema_AssignsRemainingEntitiesToIdentityModule()
+    public void SchemaIsolation_WithIdentity_PassesIdentityModuleName()
     {
         var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(
             ModuleWithDbContext,
@@ -418,59 +437,33 @@ public class HostDbContextGenerationTests
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var source = GetHostDbContext(result);
-        // Identity tables (not explicitly assigned) should get the Users schema
-        source.Should().Contain("if (entityType.GetSchema() is null)");
-        source.Should().Contain("entityType.SetSchema(\"users\")");
+        // Remaining (Identity) tables fall back to the "Users" module inside the helper.
+        source.Should().Contain("moduleByEntityType, \"Users\");");
     }
 
     [Fact]
-    public void NoIdentityDbContext_NoFallbackSchemaLoop()
+    public void SchemaIsolation_WithoutIdentity_PassesNullIdentityModule()
     {
         var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(ModuleWithDbContext);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var source = GetHostDbContext(result);
-        source.Should().NotContain("if (entityType.GetSchema() is null)");
+        source.Should().Contain("moduleByEntityType, null);");
     }
 
     [Fact]
-    public void SchemaIsolation_UsesDatabaseProviderDetector()
-    {
-        var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(ModuleWithDbContext);
-        var result = GeneratorTestHelper.RunGenerator(compilation);
-
-        var source = GetHostDbContext(result);
-        source.Should().Contain("DatabaseProviderDetector.Detect(");
-        source.Should().Contain("dbOptions.Value.DefaultConnection");
-        source.Should().Contain("dbOptions.Value.Provider");
-    }
-
-    [Fact]
-    public void Sqlite_IdentityTablesPrefixed()
+    public void IdentityDbContextOnly_NoDbSets_SeedMapEmpty_FallsBackToIdentity()
     {
         var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(
-            ModuleWithDbContext,
             ModuleWithIdentityDbContext
         );
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
         var source = GetHostDbContext(result);
-        source.Should().Contain("Prefix Identity tables for SQLite");
-        source.Should().Contain("entityType.SetTableName(\"Users_\" + tableName)");
-    }
-
-    [Fact]
-    public void Sqlite_IdentityPrefixing_SkipsAlreadyPrefixedTables()
-    {
-        var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(
-            ModuleWithDbContext,
-            ModuleWithIdentityDbContext
-        );
-        var result = GeneratorTestHelper.RunGenerator(compilation);
-
-        var source = GetHostDbContext(result);
-        // Should check for Products_ prefix before applying Users_ prefix
-        source.Should().Contain("tableName.StartsWith(\"Products_\"");
+        // No module declares a DbSet, so the seed map has no entries...
+        source.Should().NotContain("[typeof(");
+        // ...and every (Identity) entity is swept into the Users module by the helper.
+        source.Should().Contain("moduleByEntityType, \"Users\");");
     }
 
     #endregion
@@ -675,10 +668,12 @@ public class HostDbContextGenerationTests
                 "ApplyConfiguration(new global::TestApp.Orders.EntityConfigurations.OrderItemConfiguration()"
             );
 
-        // Should have schemas for all modules
-        source.Should().Contain("SetSchema(\"products\")");
-        source.Should().Contain("SetSchema(\"orders\")");
-        source.Should().Contain("SetSchema(\"users\")");
+        // Should seed all module entities and fall back to the identity module ("Users")
+        source
+            .Should()
+            .Contain("[typeof(global::TestApp.Products.Contracts.Product)] = \"Products\"");
+        source.Should().Contain("[typeof(global::TestApp.Orders.Contracts.Order)] = \"Orders\"");
+        source.Should().Contain("moduleByEntityType, \"Users\");");
     }
 
     #endregion
@@ -883,8 +878,8 @@ public class HostDbContextGenerationTests
         // Should have zero extra DbSet properties (no "=>" expression body for DbSet)
         hostSource.Should().NotContain("=> Set<");
 
-        // Should still have schema isolation
-        hostSource.Should().Contain("SetSchema(\"users\")");
+        // Should still have schema isolation — all (Identity) entities fall back to "Users".
+        hostSource.Should().Contain("moduleByEntityType, \"Users\");");
     }
 
     [Fact]
