@@ -9,6 +9,7 @@ using Wolverine;
 namespace SimpleModule.Users;
 
 #pragma warning disable CA1812 // Instantiated via DI
+[ManualContractRegistration]
 internal sealed class UserAdminService(
     UserManager<ApplicationUser> userManager,
     UsersDbContext db,

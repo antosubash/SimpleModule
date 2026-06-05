@@ -102,6 +102,7 @@ internal readonly record struct ContractImplementationRecord(
     bool IsPublic,
     bool IsAbstract,
     bool DependsOnDbContext,
+    bool IsManuallyRegistered,
     SourceLocationRecord? Location,
     int Lifetime
 );

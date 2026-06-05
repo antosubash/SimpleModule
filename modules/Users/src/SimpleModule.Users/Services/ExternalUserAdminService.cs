@@ -4,6 +4,7 @@ using SimpleModule.Users.Contracts;
 namespace SimpleModule.Users.Services;
 
 #pragma warning disable CA1812 // Instantiated via DI
+[ManualContractRegistration]
 internal sealed class ExternalUserAdminService : IUserAdminContracts
 {
     public Task<PagedResult<AdminUserDto>> GetUsersPagedAsync(

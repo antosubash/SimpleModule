@@ -1,8 +1,10 @@
+using SimpleModule.Core;
 using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Users.Services;
 
 #pragma warning disable CA1812 // Instantiated via DI
+[ManualContractRegistration]
 internal sealed class ExternalRoleAdminService : IRoleAdminContracts
 {
     public Task<IReadOnlyList<RoleDto>> GetAllRolesAsync()

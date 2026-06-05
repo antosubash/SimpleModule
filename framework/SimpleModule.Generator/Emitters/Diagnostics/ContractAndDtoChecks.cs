@@ -89,6 +89,14 @@ internal static class ContractAndDtoChecks
         // SM0029: Abstract implementations
         foreach (var impl in data.ContractImplementations)
         {
+            // [ManualContractRegistration] implementations are wired by their module
+            // (often conditionally), not auto-registered, so visibility/abstractness
+            // constraints that exist purely for cross-assembly auto-wiring don't apply.
+            if (impl.IsManuallyRegistered)
+            {
+                continue;
+            }
+
             if (!impl.IsPublic)
             {
                 context.ReportDiagnostic(
@@ -135,13 +143,16 @@ internal static class ContractAndDtoChecks
             }
         }
 
-        // SM0026: Multiple valid implementations for the same interface
+        // SM0026: Multiple valid implementations for the same interface.
+        // Manually-registered implementations are excluded: a provider-swappable
+        // contract legitimately has several implementations that the module selects
+        // between at runtime (e.g. local vs external identity provider).
         foreach (var kvp in implsByInterface)
         {
             var validImpls = new List<ContractImplementationRecord>();
             foreach (var impl in kvp.Value)
             {
-                if (impl.IsPublic && !impl.IsAbstract)
+                if (impl.IsPublic && !impl.IsAbstract && !impl.IsManuallyRegistered)
                     validImpls.Add(impl);
             }
 

@@ -103,11 +103,13 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine();
         sb.AppendLine("        // Auto-discovered contract implementations");
 
-        // Group by interface FQN and only emit if exactly one valid implementation
+        // Group by interface FQN and only emit if exactly one valid implementation.
+        // Manually-registered implementations are skipped — their module wires them
+        // itself in ConfigureServices (often conditionally per provider).
         var implsByInterface = new Dictionary<string, List<ContractImplementationRecord>>();
         foreach (var impl in data.ContractImplementations)
         {
-            if (!impl.IsPublic || impl.IsAbstract)
+            if (!impl.IsPublic || impl.IsAbstract || impl.IsManuallyRegistered)
                 continue;
 
             if (!implsByInterface.TryGetValue(impl.InterfaceFqn, out var list))
