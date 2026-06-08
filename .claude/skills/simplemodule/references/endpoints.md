@@ -13,7 +13,7 @@ Both implement `void Map(IEndpointRouteBuilder app)`. The source generator disco
 
 One endpoint per file. Class name = `{Action}Endpoint`. Place in:
 - `Endpoints/{Feature}/` for `IEndpoint`
-- `Views/` for `IViewEndpoint`
+- `Pages/` for `IViewEndpoint` (co-located with its `.tsx` component; optionally grouped in feature subfolders)
 
 ## API Endpoints with CrudEndpoints Helper
 
@@ -40,11 +40,11 @@ public class GetByIdEndpoint : IEndpoint
 public class CreateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPost("/", (CreateProductRequest request, IProductContracts contracts) =>
+        app.MapPost("/", async (CreateProductRequest request, IValidator<CreateProductRequest> validator, IProductContracts contracts) =>
         {
-            var validation = CreateRequestValidator.Validate(request);
-            if (!validation.IsValid) throw new ValidationException(validation.Errors);
-            return CrudEndpoints.Create(
+            var validation = await validator.ValidateAsync(request);
+            if (!validation.IsValid) throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
+            return await CrudEndpoints.Create(
                 () => contracts.CreateProductAsync(request),
                 p => $"{ProductsConstants.RoutePrefix}/{p.Id}");
         })
@@ -55,11 +55,11 @@ public class CreateEndpoint : IEndpoint
 public class UpdateEndpoint : IEndpoint
 {
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPut("/{id}", (ProductId id, UpdateProductRequest request, IProductContracts contracts) =>
+        app.MapPut("/{id}", async (ProductId id, UpdateProductRequest request, IValidator<UpdateProductRequest> validator, IProductContracts contracts) =>
         {
-            var validation = UpdateRequestValidator.Validate(request);
-            if (!validation.IsValid) throw new ValidationException(validation.Errors);
-            return CrudEndpoints.Update(() => contracts.UpdateProductAsync(id, request));
+            var validation = await validator.ValidateAsync(request);
+            if (!validation.IsValid) throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
+            return await CrudEndpoints.Update(() => contracts.UpdateProductAsync(id, request));
         })
         .RequirePermission(ProductsPermissions.Update);
 }

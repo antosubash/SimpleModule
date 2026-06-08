@@ -9,7 +9,7 @@ description: >
   "event bus", "permissions", "menu", "settings", "database context", "contracts",
   "IModule", "IEndpoint", "IViewEndpoint", "Inertia", "CrudEndpoints",
   "debug module", "review module", "module status", "SM00", "source generator diagnostic",
-  "module not found", "page 404", "event bus", "settings", "IEventBus", "SettingDefinition".
+  "module not found", "page 404", "event bus", "settings", "IMessageBus", "Wolverine", "SettingDefinition".
 ---
 
 # SimpleModule Framework Guide
@@ -25,9 +25,9 @@ SimpleModule is a **modular monolith** for .NET 10 with compile-time module disc
 ```
 modules/{Name}/
   src/SimpleModule.{Name}.Contracts/    # Public API (interfaces, DTOs, events, constants)
-  src/SimpleModule.{Name}/              # Implementation (module class, services, endpoints, views)
+  src/SimpleModule.{Name}/              # Implementation (module class, services, endpoints, pages)
   tests/SimpleModule.{Name}.Tests/      # Tests (unit + integration)
-framework/                              # Core, Database, Generator, Hosting, Blazor, Storage
+framework/                              # Core, Database, Generator, Hosting, Storage(.Local/.Azure/.S3), Testing
 template/SimpleModule.Host/             # Host app calling generated extension methods
 ```
 
@@ -44,7 +44,7 @@ Every module has two assemblies plus optional tests:
 - `I{Name}Contracts.cs` — service interface for cross-module use
 - DTOs marked with `[Dto]` — auto-generates TypeScript interfaces
 - Value objects using Vogen (`[ValueObject<int>]`) for type-safe IDs
-- Domain events implementing `IEvent`
+- Domain events inheriting `DomainEvent` (marker interface `IEvent`, both in `SimpleModule.Core.Events`)
 - Permission constants implementing `IModulePermissions`
 
 **Project file pattern:**
@@ -66,22 +66,23 @@ Every module has two assemblies plus optional tests:
 - `{Name}Module.cs` — implements `IModule`, decorated with `[Module]`
 - `{Name}ContractsService.cs` — implements `I{Name}Contracts`
 - `{Name}DbContext.cs` — EF Core context (if module has data)
-- `Endpoints/{Name}/` — API endpoint classes implementing `IEndpoint`
-- `Views/` — view endpoint classes implementing `IViewEndpoint` + React `.tsx` components
+- `Endpoints/{Feature}/` — API endpoint classes implementing `IEndpoint`
+- `Pages/` — view endpoint classes implementing `IViewEndpoint`, co-located with their React `.tsx` components (optionally grouped in feature subfolders)
 - `Pages/index.ts` — page registry mapping route names to React components
 - `EntityConfigurations/` — EF Core entity configurations
 - `vite.config.ts` and `package.json` — frontend build config
 
 **Project file pattern:**
 ```xml
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" />
+    <!-- Add only if the module owns a DbContext:
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" /> -->
     <ProjectReference Include="..\SimpleModule.{Name}.Contracts\SimpleModule.{Name}.Contracts.csproj" />
   </ItemGroup>
 </Project>
@@ -136,9 +137,13 @@ public class {Name}Module : IModule
 | `ConfigureMenu(IMenuBuilder)` | Navigation items |
 | `ConfigurePermissions(PermissionRegistryBuilder)` | Permission definitions |
 | `ConfigureSettings(ISettingsBuilder)` | Application settings |
+| `ConfigureFeatureFlags(IFeatureFlagBuilder)` | Feature flag definitions |
+| `ConfigureAgents(IAgentBuilder)` | AI agent registrations |
+| `ConfigureRateLimits(IRateLimitBuilder)` | Rate-limit policies |
+| `ConfigureHost(IHost)` | Host-level integration (e.g. DB init) after services are built |
 | `OnStartAsync(CancellationToken)` | Startup initialization |
 | `OnStopAsync(CancellationToken)` | Graceful shutdown cleanup |
-| `CheckHealthAsync(CancellationToken)` | Health status reporting |
+| `CheckHealthAsync(CancellationToken)` | Per-module health status (`Task<ModuleHealthStatus>`) |
 
 ## Endpoint Patterns
 
@@ -165,7 +170,7 @@ See [references/cross-module.md](references/cross-module.md) for events, contrac
 When adding a new module, ensure:
 
 1. Contracts project created with constants, interface, and DTOs
-2. Implementation project uses `Microsoft.NET.Sdk.Razor` with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
+2. Implementation project uses `Microsoft.NET.Sdk.StaticWebAssets` with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
 3. Module class decorated with `[Module]` and implements `IModule`
 4. `ProjectReference` added to `template/SimpleModule.Host/SimpleModule.Host.csproj`
 5. Both projects added to `SimpleModule.slnx` under `/modules/{Name}/` folder
@@ -178,68 +183,75 @@ When adding a new module, ensure:
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | Module not discovered at build | Missing `[Module]` attribute or wrong project not referenced in Host | Add `[Module]` to module class; add `<ProjectReference>` to Host `.csproj` |
-| Page navigates but shows blank | Missing `Pages/index.ts` entry | Add `'Module/Page': () => import('../Views/Page')` to Pages/index.ts |
+| Page navigates but shows blank | Missing `Pages/index.ts` entry | Add `'Module/Page': () => import('./Page')` to Pages/index.ts |
 | SM0011 diagnostic | Direct impl→impl project reference | Reference only the `.Contracts` project; inject `I{Name}Contracts` interface |
 | SM0014 diagnostic | No public interfaces in Contracts assembly | Add `I{Name}Contracts` to the Contracts project |
 | SM0025 diagnostic | No implementation for contract interface | Create `{Name}ContractsService` implementing `I{Name}Contracts` and register in `ConfigureServices` |
 | SM0041/SM0042 diagnostic | View endpoint misconfigured | Ensure `Inertia.Render` name is prefixed with module name; add `ViewPrefix` to `[Module]` attribute |
 | `TreatWarningsAsErrors` build failure | Nullable, unused variable, or analyzer warning | Fix the warning; suppress in `.editorconfig` only if genuinely intentional |
-| Event handler never called | Handler not registered in DI | Add `services.AddScoped<IEventHandler<MyEvent>, MyHandler>()` in `ConfigureServices` |
+| Event handler never called | Class/method doesn't match Wolverine's convention | Name the class `*Handler`/`*Consumer` with a `Handle`/`Consume` method (first param = the event); Wolverine auto-discovers it — no DI registration |
 | Cross-module data wrong | Injecting impl class directly | Always inject `I{Name}Contracts` interface, never the concrete service class |
 
 ## Events Pattern
 
-Define events in the **Contracts** assembly as `record` types:
+Cross-module events use [Wolverine](https://wolverinefx.net/) for in-process messaging. Define events in the **Contracts** assembly as `record` types inheriting `DomainEvent` (which supplies `EventId` and `OccurredAt`):
 
 ```csharp
 // In SimpleModule.{Name}.Contracts
-public record OrderPlaced(OrderId OrderId, decimal Total) : IEvent;
+using SimpleModule.Core.Events;
+
+public sealed record OrderPlaced(OrderId OrderId, decimal Total) : DomainEvent;
 ```
 
-Publish from a service:
+Publish by injecting Wolverine's `IMessageBus`:
 
 ```csharp
-// Awaits all handlers before returning
-await _eventBus.PublishAsync(new OrderPlaced(order.Id, order.Total), ct);
+using Wolverine;
 
-// Fire-and-forget (background task, not awaited)
-_eventBus.PublishInBackground(new OrderPlaced(order.Id, order.Total));
-```
-
-Handle in any module:
-
-```csharp
-public sealed class SendConfirmationEmailHandler : IEventHandler<OrderPlaced>
+public class OrderService(OrdersDbContext db, IMessageBus bus)
 {
-    public async Task HandleAsync(OrderPlaced evt, CancellationToken ct)
+    public async Task PlaceAsync(OrderId id, decimal total)
     {
-        // use evt.OrderId, evt.Total
+        // Fire-and-forget: enqueues on the local queue, returns immediately.
+        await bus.PublishAsync(new OrderPlaced(id, total));
+
+        // Or run inline and await the handlers, propagating the first failure:
+        // await bus.InvokeAsync(new OrderPlaced(id, total));
     }
 }
 ```
 
-Register in `ConfigureServices`:
+Handle in any module — Wolverine auto-discovers handlers by convention (class name ending in `Handler`/`Consumer`, method named `Handle`/`HandleAsync`/`Consume`/`ConsumeAsync`, first parameter is the event, remaining parameters resolved from DI):
 
 ```csharp
-services.AddScoped<IEventHandler<OrderPlaced>, SendConfirmationEmailHandler>();
+public class OrderPlacedHandler
+{
+    public Task Handle(OrderPlaced evt, IEmailContracts email, CancellationToken ct)
+    {
+        // use evt.OrderId, evt.Total
+        return Task.CompletedTask;
+    }
+}
 ```
 
-**Semantics:** Handlers run sequentially. A failing handler throws `AggregateException`. Write handlers to be idempotent.
+**No DI registration needed** — Wolverine scans loaded assemblies at startup. Non-conventional classes can opt in with `[WolverineHandler]`.
+
+**Semantics:** Wolverine routes by the message's runtime type; each handler chain runs in its own scope with independent exception isolation. Make handlers idempotent — messages may be re-run. See [references/cross-module.md](references/cross-module.md) for retry/error-queue policies.
 
 ## Settings Pattern
 
 Register setting definitions in `ConfigureSettings` on the module class:
 
 ```csharp
-public void ConfigureSettings(ISettingsBuilder builder)
+public void ConfigureSettings(ISettingsBuilder settings)
 {
-    builder.AddDefinition(new SettingDefinition
+    settings.Add(new SettingDefinition
     {
         Key = "Orders.MaxItemsPerOrder",
         DisplayName = "Max Items Per Order",
         Group = "Orders",
         Scope = SettingScope.Application,   // System | Application | User
-        Type = SettingType.Number,          // Text | Number | Bool | Json
+        Type = SettingType.Number,          // Text | Number | Bool | Json | Select | Color | Url | Email | Password | MultilineText | DateTime
         DefaultValue = "50",
     });
 }

@@ -102,21 +102,24 @@ public class ProductServiceTests : IDisposable
 ```csharp
 public class CreateRequestValidatorTests
 {
+    // FluentValidation validators are instantiated and called via the instance API
+    private readonly CreateRequestValidator _validator = new();
+
     [Fact]
     public void Validate_EmptyName_ReturnsError()
     {
         var request = new CreateProductRequest { Name = "", Price = 10 };
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainKey("Name");
+        result.Errors.Should().Contain(e => e.PropertyName == "Name");
     }
 
     [Fact]
     public void Validate_ValidRequest_ReturnsValid()
     {
         var request = new CreateProductRequest { Name = "Widget", Price = 5.99m };
-        var result = CreateRequestValidator.Validate(request);
+        var result = _validator.Validate(request);
 
         result.IsValid.Should().BeTrue();
     }

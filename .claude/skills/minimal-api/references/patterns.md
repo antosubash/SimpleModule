@@ -55,13 +55,17 @@ public class CreateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/",
-                (CreateProductRequest request, IProductContracts productContracts) =>
+                async (
+                    CreateProductRequest request,
+                    IValidator<CreateProductRequest> validator,
+                    IProductContracts productContracts
+                ) =>
                 {
-                    var validation = CreateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
 
-                    return CrudEndpoints.Create(
+                    return await CrudEndpoints.Create(
                         () => productContracts.CreateProductAsync(request),
                         p => $"{ProductsConstants.RoutePrefix}/{p.Id}"
                     );
@@ -78,13 +82,18 @@ public class UpdateEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
                 "/{id}",
-                (ProductId id, UpdateProductRequest request, IProductContracts productContracts) =>
+                async (
+                    ProductId id,
+                    UpdateProductRequest request,
+                    IValidator<UpdateProductRequest> validator,
+                    IProductContracts productContracts
+                ) =>
                 {
-                    var validation = UpdateRequestValidator.Validate(request);
+                    var validation = await validator.ValidateAsync(request);
                     if (!validation.IsValid)
-                        throw new ValidationException(validation.Errors);
+                        throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
 
-                    return CrudEndpoints.Update(() =>
+                    return await CrudEndpoints.Update(() =>
                         productContracts.UpdateProductAsync(id, request)
                     );
                 }
@@ -142,7 +151,7 @@ public class CreateEndpoint : IViewEndpoint
 
 ## Payload Transformation
 
-When the frontend sends a different shape than the domain request, use a private payload class. CA1812 is globally suppressed in `.editorconfig`, so no `[SuppressMessage]` is needed.
+When the frontend sends a different shape than the domain request, use a private payload class. CA1812 ("internal class never instantiated") is suppressed in `.editorconfig` for `Endpoints/` and `Pages/*Endpoint.cs` files, so a payload class defined inside an endpoint file needs no `[SuppressMessage]`.
 
 ```csharp
 public class CreateEndpoint : IViewEndpoint
@@ -347,10 +356,10 @@ app.MapDelete("/{id}", (PageId id, IPageBuilderContracts contracts) => ...)
 
 ## Permission Constants
 
-Define in the module's constants class:
+Define as a `sealed` class implementing `IModulePermissions` in the Contracts assembly (the generator auto-discovers it; SM0032 fails the build if it isn't sealed):
 
 ```csharp
-public static class ProductsPermissions
+public sealed class ProductsPermissions : IModulePermissions
 {
     public const string Create = "Products.Create";
     public const string View = "Products.View";

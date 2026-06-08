@@ -14,10 +14,10 @@ Every `IViewEndpoint` with `Inertia.Render()` **must** have a matching entry in 
 ```typescript
 // modules/{Name}/src/SimpleModule.{Name}/Pages/index.ts
 export const pages: Record<string, unknown> = {
-    '{Name}/Browse': () => import('../Views/Browse'),
-    '{Name}/Manage': () => import('../Views/Manage'),
-    '{Name}/Create': () => import('../Views/Create'),
-    '{Name}/Edit': () => import('../Views/Edit'),
+    '{Name}/Browse': () => import('./Browse'),
+    '{Name}/Manage': () => import('./Manage'),
+    '{Name}/Create': () => import('./Create'),
+    '{Name}/Edit': () => import('./Edit'),
 };
 ```
 
@@ -30,7 +30,7 @@ The key must match the first argument of `Inertia.Render()` exactly. If you forg
 ## React View Components
 
 ```tsx
-// modules/{Name}/src/SimpleModule.{Name}/Views/Browse.tsx
+// modules/{Name}/src/SimpleModule.{Name}/Pages/Browse.tsx
 import { PageShell } from '@simplemodule/ui/components';
 import type { Product } from '../types';
 

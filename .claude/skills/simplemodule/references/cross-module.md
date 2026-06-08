@@ -43,11 +43,12 @@ messaging; inject `IMessageBus` from `Wolverine`.
 ### Define Events (in Contracts)
 
 ```csharp
-public record OrderCreatedEvent(OrderId OrderId, UserId UserId, decimal Total) : IEvent;
+public sealed record OrderCreatedEvent(OrderId OrderId, UserId UserId, decimal Total) : DomainEvent;
 ```
 
-`IEvent` is a marker interface in `SimpleModule.Core.Events` — it costs
-nothing and makes "this type is a domain event" visible at the type level.
+`DomainEvent` (in `SimpleModule.Core.Events`) is the base record for events — it
+implements the `IEvent` marker and supplies `EventId` and `OccurredAt` so
+Wolverine's durable inbox can deduplicate redelivery.
 
 ### Publish Events
 
@@ -185,11 +186,12 @@ public void ConfigureMenu(IMenuBuilder menus)
 For operations that can fail without exceptions:
 
 ```csharp
+// _validator is an injected IValidator<CreateProductRequest>
 public async Task<Result<Product>> TryCreateAsync(CreateProductRequest request)
 {
-    var validation = CreateRequestValidator.Validate(request);
+    var validation = await _validator.ValidateAsync(request);
     if (!validation.IsValid)
-        return Result<Product>.Fail("Validation failed", validation.Errors);
+        return Result<Product>.Fail("Validation failed", validation.ToValidationErrors());
 
     var product = await CreateProductAsync(request);
     return Result<Product>.Ok(product);

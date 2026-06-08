@@ -7,7 +7,7 @@ description: >
   CrudEndpoints helpers, Inertia.Render, or form handling. Triggers on: "add endpoint",
   "create endpoint", "new endpoint", "API endpoint", "view endpoint", "MapGet", "MapPost",
   "MapPut", "MapDelete", "Inertia.Render", route handling, parameter binding questions,
-  or any work touching files in Endpoints/ or Views/ directories.
+  or any work touching files in Endpoints/ or Pages/ directories.
 ---
 
 # SimpleModule Minimal API Endpoints
@@ -25,7 +25,7 @@ Both implement `void Map(IEndpointRouteBuilder app)`. The source generator disco
 
 One endpoint per file. Class name = `{Action}Endpoint`. Place in:
 - `Endpoints/{Feature}/` for `IEndpoint`
-- `Views/` for `IViewEndpoint`
+- `Pages/` for `IViewEndpoint` (co-located with its `.tsx` component; optionally grouped in feature subfolders)
 
 ## Parameter Binding Rules
 
@@ -94,7 +94,7 @@ app.MapPost("/", async ([FromForm] string name, [FromForm] decimal price, ISvc s
 
 **Critical**: Every `IViewEndpoint` with `Inertia.Render("Module/Page", ...)` MUST have a matching entry in `Pages/index.ts`. Run `npm run validate-pages` to verify.
 
-**Note**: CA1812 ("internal class never instantiated") is suppressed via `.editorconfig` for `Endpoints/` and `Views/` directories. No `[SuppressMessage]` attributes needed on payload classes.
+**Note**: CA1812 ("internal class never instantiated") is suppressed via `.editorconfig` for `Endpoints/` and `Pages/` (`*Endpoint.cs`) directories. No `[SuppressMessage]` attributes needed on payload classes.
 
 ## Authorization
 
@@ -113,18 +113,27 @@ Note: `.RequireAuthorization()` is already applied to the route group by the sou
 
 ## Validation
 
-Use validator classes for complex validation, inline checks for simple cases:
+Use [FluentValidation](https://docs.fluentvalidation.net/). Define a `sealed` validator extending `AbstractValidator<T>`, register it once per module with `services.AddValidatorsFromAssemblyContaining<ThisModule>()` in `ConfigureServices`, then inject `IValidator<TRequest>` into the endpoint handler:
 
 ```csharp
-// Validator class pattern
-var validation = CreateRequestValidator.Validate(request);
-if (!validation.IsValid)
-    throw new ValidationException(validation.Errors);
+// Validator (lives next to the request DTO or in a Validators/ folder)
+public sealed class CreateRequestValidator : AbstractValidator<CreateRequest>
+{
+    public CreateRequestValidator() =>
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+}
 
-// Simple inline
-if (string.IsNullOrWhiteSpace(request.Name))
-    throw new ArgumentException("Name is required.", nameof(request));
+// In the endpoint lambda (async — inject IValidator<TRequest>)
+async (CreateRequest request, IValidator<CreateRequest> validator, IThingContracts contracts) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+        throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
+    // ...
+}
 ```
+
+`ToValidationErrors()` (in `SimpleModule.Core.Validation`) converts FluentValidation's `ValidationResult` into the `Dictionary<string, string[]>` that `ValidationException` and the RFC 7807 response writer expect. For trivial guards, a plain `ArgumentException` is still fine.
 
 ## Response Types
 
