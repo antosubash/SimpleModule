@@ -125,7 +125,7 @@ HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant
 
 ### .NET Backend
 
-- **SimpleModule.Core** — `IModule` interface, `[Module]` attribute, `IEndpoint` interface, `[Dto]` attribute, menu system (`IMenuRegistry`), event bus (`IEventBus`), Inertia integration.
+- **SimpleModule.Core** — `IModule` interface, `[Module]` attribute, `IEndpoint` interface, `[Dto]` attribute, menu system (`IMenuRegistry`), domain event base types (`IEvent`/`DomainEvent` in `SimpleModule.Core.Events`, dispatched in-process via Wolverine `IMessageBus`), Inertia integration.
 - **SimpleModule.Generator** — Roslyn `IIncrementalGenerator` (netstandard2.0). Scans referenced assemblies for `[Module]` classes, `IEndpoint` implementors, and `[Dto]` types. Generates: `AddModules()`, `MapModuleEndpoints()`, `CollectModuleMenuItems()`, JSON serializers, TypeScript interface definitions.
 - **SimpleModule.Host** — Host app (net10.0). Calls generated extension methods in `Program.cs`. Inertia middleware renders static HTML shell with embedded JSON props for React hydration.
 
@@ -221,20 +221,21 @@ sm doctor [--fix]           # validate project structure, auto-fix issues
 Use `sm new module <name>` (CLI) or manually:
 
 1. Create `modules/<Name>/`
-2. Create `modules/<Name>/src/<Name>.Contracts/` with:
-    - `<Name>.Contracts.csproj` (references Core only, `Microsoft.NET.Sdk`)
+2. Create `modules/<Name>/src/SimpleModule.<Name>.Contracts/` with:
+    - `SimpleModule.<Name>.Contracts.csproj` (`Microsoft.NET.Sdk`; references `framework/SimpleModule.Core` only)
     - `I<Name>Contracts.cs` — public interface for cross-module use
     - Shared DTO types marked with `[Dto]`
-3. Create `modules/<Name>/src/<Name>/` with:
-    - `<Name>.csproj` (references Core + Contracts; `Microsoft.NET.Sdk` with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`)
+3. Create `modules/<Name>/src/SimpleModule.<Name>/` with:
+    - `SimpleModule.<Name>.csproj` (`Microsoft.NET.Sdk.StaticWebAssets`; references Core + Contracts with `<FrameworkReference Include="Microsoft.AspNetCore.App" />`; add a `SimpleModule.Database` reference only if the module owns a DbContext)
     - `<Name>Module.cs` — implements `IModule` with `[Module("Name", RoutePrefix = "...")]`
-    - `Endpoints/<Name>/` — endpoint classes implementing `IEndpoint` (auto-discovered)
+    - `Endpoints/<Feature>/` — endpoint classes implementing `IEndpoint` (auto-discovered)
+    - `Pages/` — `IViewEndpoint` classes co-located with their React `.tsx` components (optionally grouped in feature subfolders)
     - `Pages/index.ts` — exports `pages` record mapping route names to React components
     - `vite.config.ts` — library mode build targeting `Pages/index.ts`
     - `package.json` — declare React/Inertia as peerDependencies
     - Register contract interface in `ConfigureServices`
     - **Escape hatch**: For non-standard routes, implement `ConfigureEndpoints` on the module class
-4. Create `modules/<Name>/tests/<Name>.Tests/` with xUnit test project
+4. Create `modules/<Name>/tests/SimpleModule.<Name>.Tests/` with xUnit test project
 5. Add `ProjectReference` to `template/SimpleModule.Host/SimpleModule.Host.csproj`
 6. Add all projects to `SimpleModule.slnx`
 

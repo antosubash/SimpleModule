@@ -58,13 +58,15 @@ Create `modules/<Name>/src/SimpleModule.<Name>/`:
 
 **SimpleModule.<Name>.csproj:**
 ```xml
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.StaticWebAssets">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\..\..\..\framework\SimpleModule.Core\SimpleModule.Core.csproj" />
+    <!-- Add only if the module owns a DbContext:
+    <ProjectReference Include="..\..\..\..\framework\SimpleModule.Database\SimpleModule.Database.csproj" /> -->
     <ProjectReference Include="..\SimpleModule.<Name>.Contracts\SimpleModule.<Name>.Contracts.csproj" />
   </ItemGroup>
 </Project>
@@ -139,7 +141,7 @@ Run `dotnet build` to confirm the source generator discovers the new module.
 ## Important Constraints
 
 - Contracts project uses `Microsoft.NET.Sdk` (plain library)
-- Implementation project uses `Microsoft.NET.Sdk.Razor` (ASP.NET + Razor)
+- Implementation project uses `Microsoft.NET.Sdk.StaticWebAssets` (ASP.NET + the module's static frontend bundle)
 - Implementation MUST include `<FrameworkReference Include="Microsoft.AspNetCore.App" />`
 - Module class MUST use `[Module]` attribute and implement `IModule`
 - Constants go in the Contracts project (shared dependency)
