@@ -122,12 +122,12 @@ export default function Detail({ job }: Props) {
       </div>
 
       {job.error && (
-        <Card className="mt-4 sm:mt-6 border-red-200">
+        <Card className="mt-4 sm:mt-6 border-danger/30">
           <CardHeader>
-            <CardTitle className="text-red-600">{t(BackgroundJobsKeys.Detail.ErrorCard)}</CardTitle>
+            <CardTitle className="text-danger">{t(BackgroundJobsKeys.Detail.ErrorCard)}</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="overflow-auto rounded bg-red-50 p-3 text-sm text-red-800">
+            <pre className="overflow-auto rounded bg-danger-bg p-3 text-sm text-danger-text">
               {job.error}
             </pre>
           </CardContent>
@@ -146,7 +146,7 @@ export default function Detail({ job }: Props) {
               {job.logs.map((log) => (
                 <div
                   key={log.timestamp}
-                  className="flex gap-2 sm:gap-3 border-b py-1.5 text-sm last:border-0"
+                  className="flex gap-2 sm:gap-3 border-b border-border py-1.5 text-sm last:border-0"
                 >
                   <span className="shrink-0 text-text-muted">
                     {new Date(log.timestamp).toLocaleTimeString()}

@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Badge, Button, Card, CardContent, PageShell } from '@simplemodule/ui';
+import { Badge, Button, Card, CardContent, EmptyState, PageShell } from '@simplemodule/ui';
 import type { Notification } from '../types';
 
 interface Props {
@@ -47,8 +47,8 @@ export default function Inbox({ items, totalCount, unreadCount }: Props) {
 
       {items.length === 0 ? (
         <Card>
-          <CardContent className="p-6 text-center text-text-muted">
-            You're all caught up.
+          <CardContent>
+            <EmptyState title="You're all caught up." />
           </CardContent>
         </Card>
       ) : (

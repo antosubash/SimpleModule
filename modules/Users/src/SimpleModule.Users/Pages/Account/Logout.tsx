@@ -52,12 +52,9 @@ export default function Logout({ isAuthenticated }: Props) {
                 <p className="text-sm text-text-muted mb-6">
                   You have been successfully logged out.
                 </p>
-                <a
-                  href="/Identity/Account/Login"
-                  className="btn-primary no-underline inline-block w-full"
-                >
-                  Sign in again
-                </a>
+                <Button asChild className="w-full">
+                  <a href="/Identity/Account/Login">Sign in again</a>
+                </Button>
               </CardContent>
             </Card>
           )}

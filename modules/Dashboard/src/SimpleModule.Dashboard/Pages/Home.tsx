@@ -144,7 +144,7 @@ function LandingView({ isDevelopment }: { isDevelopment: boolean }) {
   return (
     <Container className="flex items-center justify-center min-h-[calc(100vh-16rem)] px-4">
       <div className="text-center max-w-lg mx-auto w-full">
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center text-white text-xl sm:text-2xl font-bold shadow-lg bg-primary">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center text-text-inverse text-xl sm:text-2xl font-bold shadow-lg bg-primary">
           S
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold mb-3 tracking-tight">

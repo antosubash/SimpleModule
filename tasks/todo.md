@@ -1,46 +1,78 @@
-# Downstream-blocking bug fixes (#236, #220, #222, #223, #224)
+# Task: Design-system consistency pass across all module pages
 
-Goal: make the framework consumable by a downstream host again. One branch, one commit per issue, one PR closing all five (follows PR #231 precedent).
+Goal: every page uses the design system consistently → run /qa → open PR with screenshots.
 
-## Plan
+Scope: 13 tracked modules with `.tsx` source. The 8 untracked dirs (Agents, Chat, Datasets,
+Map, Marketplace, Orders, PageBuilder, Products) are stale build artifacts with NO source — left untouched, flagged to user.
 
-- [ ] **#223** RateLimitRuleCache crashes host on missing `RateLimiting_Rules` table
-  - [ ] Failing test: cache `RefreshAsync` against a context whose table was NOT created → must not throw, `FindForPath` returns null
-  - [ ] Fix: `catch (DbException)` in `RefreshAsync` (provider-agnostic), log warning, keep empty rules
-  - [ ] Add `ConfigureHost` to `RateLimitingModule` to create the table on legacy EnsureCreated DBs (mirror BackgroundJobs)
-- [ ] **#222** auth-strict policy missing when RateLimiting not installed → login 500
-  - [ ] Failing test: host pipeline without RateLimiting module, assert `auth-strict` policy resolvable
-  - [ ] Fix: seed framework-default `auth-strict` in `RateLimitingSetup.AddSimpleModuleRateLimiting` only if absent
-- [ ] **#224** Inertia resolver 404s on `/_content/<ShortName>/` before `SimpleModule.<Module>`
-  - [ ] Fix: reverse candidate order in `packages/SimpleModule.Client/src/resolve-page.ts`
-  - [ ] Check/adjust any resolve-page tests
-- [ ] **#236 / #220** SM0026 (dup impl) + SM0028 (internal impl) make framework unconsumable
-  - [ ] Add `[ManualContractRegistration]` attribute to SimpleModule.Core
-  - [ ] Generator: record flag in ContractFinder; skip SM0025/0026/0028 + auto-registration for manual impls; contract still counts as satisfied
-  - [ ] Generator unit test: two manual impls of one contract → no SM0026/0028, no auto-register, no SM0025
-  - [ ] Mark the 8 provider-swappable impls (Users/OpenIddict) with the attribute
-  - [ ] Verify Host build clean; confirm SM0028 from Users/OpenIddict gone
+Out of scope (noted, not changed): i18n hardcoded-string gaps; the intentional centered-card
+auth-page layout (only token/control bugs inside auth pages are fixed, not forced into PageShell).
 
-## Verification
-- [ ] `dotnet build` clean
-- [ ] `dotnet test` for touched modules + generator
-- [ ] `npm run check` for resolver change
-- [ ] Full local CI before PR
+## Fixes (from parallel line-level audit)
+
+### HIGH — color tokens breaking dark mode / raw controls
+- [ ] Tenants/tenantStatus.ts — raw palette → Badge variant map (success/warning/danger)
+- [ ] Tenants/Browse.tsx, Manage.tsx — status span → <Badge>
+- [ ] Tenants/Features.tsx — text-green/red-600 → <Badge>
+- [ ] BackgroundJobs/Dashboard.tsx — text-red-500, border-red-200, hover:bg-red-50 → semantic
+- [ ] BackgroundJobs/Detail.tsx — text-red-600, border-red-200, bg-red-50/text-red-800 → semantic
+- [ ] FeatureFlags/Manage.tsx:264 — raw <input type=checkbox> → <Checkbox>
+- [ ] RateLimiting/components/RulesTable.tsx — text-muted-foreground (undefined) → text-text-muted
+- [ ] Email/History.tsx — text-destructive (undefined) → text-danger
+- [ ] OpenIddict/OAuthCallback.tsx — text-muted → text-text-muted
+- [ ] Dashboard/Home.tsx — text-white → text-text-inverse
+- [ ] Users/Login.tsx, Register.tsx — text-white + inline var → bg-primary text-text-inverse; raw checkbox → Checkbox
+- [ ] Users/LoginWith2fa.tsx — raw checkbox → Checkbox
+
+### MEDIUM — hand-rolled layout → PageShell; custom markup → DS components
+- [ ] Settings/UserSettings.tsx — Container+h1 → PageShell; error banner → Alert
+- [ ] Settings/AdminSettings.tsx — error banner → Alert
+- [ ] Admin/RolesCreate, RolesEdit, UsersCreate, UsersEdit — Container+Breadcrumb+h1 → PageShell
+- [ ] Admin/Roles.tsx — raw <button> dismiss → Button
+- [ ] OpenIddict/ClientsCreate, ClientsEdit — Container+Breadcrumb+h1 → PageShell
+- [ ] OpenIddict/ActiveSessions.tsx — custom empty <p> → EmptyState
+- [ ] Tenants/Create, Edit, Features — Container+Breadcrumb+h1 → PageShell
+- [ ] Tenants/Features.tsx — custom empty → EmptyState
+- [ ] Notifications/Inbox.tsx — custom empty → EmptyState
+- [ ] Users/ManageIndex.tsx, Email.tsx — custom span badge → Badge
+- [ ] Users/ExternalLogins.tsx — raw <table> → Table
+- [ ] Users/Logout.tsx, PersonalData.tsx — <a class=btn-*> → Button
+- [ ] Users/ManagePasskeys.tsx — custom empty → EmptyState
+
+### LOW
+- [ ] BackgroundJobs — bare border/border-b → border-border
+- [ ] FileStorage/Browse.tsx — hover:bg-muted/50 → hover:bg-surface-raised
+
+## Verify
+- [ ] npm run check (biome) + typecheck
+- [ ] dotnet build
+- [ ] npm run validate-pages
+- [ ] /qa
+- [ ] PR with screenshots
 
 ## Review
 
-All five downstream-blocking bugs fixed, one commit each, all CI green.
+34 page files across 13 modules refactored onto the design system. Net −120 LOC
+(PageShell migrations removed boilerplate). No behavior/i18n changes.
 
-- **#223** — `RefreshAsync` now catches `DbException` (provider-agnostic) and `RateLimitingModule.ConfigureHost` ensures the table exists. Regression test added. RateLimiting tests 28/28.
-- **#222** — `RateLimitDefaults.EnsureFrameworkDefaults` (Core) seeds `auth-strict` in `AddSimpleModuleRateLimiting` (always emitted by the generator) only if absent; module definitions still win. Core tests +2.
-- **#236 / #220** — `[ManualContractRegistration]` (Core); generator skips auto-registration + SM0026/SM0028 for marked impls while keeping the contract satisfied (no SM0025). Applied to the 8 Users/OpenIddict provider-swappable impls (they stay `internal`). Verified: with SM0028 un-suppressed, the 7 Users/OpenIddict errors are gone (only the pre-existing #97 BackgroundJobs `DefaultJobExecutionContext` remains — out of scope). Generator tests +2 (208 total).
-- **#224** — resolver tries `SimpleModule.<Module>` first, then bare name; caches resolved assembly per module. Frontend check green; e2e smoke 66/66.
+- **PageShell migrations:** Admin Roles/Users Create+Edit, OpenIddict Clients Create+Edit,
+  Tenants Create/Edit/Features, Settings UserSettings — hand-rolled Container+Breadcrumb+h1
+  replaced with `<PageShell>`.
+- **Semantic color tokens:** removed raw palette (text-red/green/yellow-*, text-white) and
+  undefined tokens (text-destructive, text-muted-foreground, text-muted) across BackgroundJobs,
+  Tenants, Email, Dashboard, RateLimiting, OpenIddict, Users → dark-mode-correct semantic tokens.
+- **DS component swaps:** Checkbox (FeatureFlags, Login, LoginWith2fa), Badge (Tenants, Users),
+  Table (Users ExternalLogins), Alert (Settings), Button (Users), EmptyState (Tenants,
+  Notifications, OpenIddict, Users).
+- **Bonus fix:** FeatureFlags override form `form.reset()` crash (pre-existing; found in QA).
 
-Notes / follow-ups:
-- **#97** (`DefaultJobExecutionContext` internal → SM0028) is the same class of issue and could use `[ManualContractRegistration]`; left out of scope here. Once fixed, `SM0028` can be removed from the Host's `NoWarn` to guard against regressions.
+Out of scope (left as-is): i18n hardcoded strings; the intentional centered-card auth layout;
+8 untracked stale build-artifact dirs (Agents/Chat/Datasets/Map/Marketplace/Orders/PageBuilder/
+Products) — flagged to the user, not touched.
 
 ## Verification (done)
-- [x] `npm run check` — green (biome, validate-pages, i18n, framework-scope, typecheck 13/13)
-- [x] `npm run build` — all module bundles built
-- [x] `dotnet build` — 0 errors
-- [x] `dotnet test --no-build` — 0 failures across all projects
+- [x] biome check · validate-pages · validate:i18n (0/0) · validate:framework-scope · typecheck 13/13
+- [x] dotnet build SimpleModule.Host — 0 warnings, 0 errors
+- [x] npm run build:dev — all workspaces
+- [x] /qa in real browser (light + dark): PageShell, color tokens, Badge/Table/EmptyState/Alert,
+      Checkbox form posting — all verified; 1 pre-existing bug found + fixed + re-tested

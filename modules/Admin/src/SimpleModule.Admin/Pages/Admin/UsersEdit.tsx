@@ -2,20 +2,14 @@ import { router } from '@inertiajs/react';
 import { useTranslation } from '@simplemodule/client/use-translation';
 import {
   Badge,
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
   Button,
-  Container,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  PageShell,
 } from '@simplemodule/ui';
 import { useState } from 'react';
 import { TabNav } from '@/components/TabNav';
@@ -149,31 +143,24 @@ export default function UsersEdit({
   const dialogConfig = confirmAction ? confirmDialogConfig[confirmAction] : null;
 
   return (
-    <Container className="space-y-4 sm:space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/admin/users">
-              {t(AdminKeys.UsersEdit.BreadcrumbUsers)}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{t(AdminKeys.UsersEdit.BreadcrumbEdit)}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">{t(AdminKeys.UsersEdit.Title)}</h1>
-        {isSelf && <Badge variant="info">{t(AdminKeys.UsersEdit.BadgeYou)}</Badge>}
-        {user.isDeactivated && (
-          <Badge variant="default">{t(AdminKeys.UsersEdit.BadgeDeactivated)}</Badge>
-        )}
-        {user.isLockedOut && !user.isDeactivated && (
-          <Badge variant="danger">{t(AdminKeys.UsersEdit.BadgeLocked)}</Badge>
-        )}
-      </div>
-
+    <PageShell
+      title={t(AdminKeys.UsersEdit.Title)}
+      breadcrumbs={[
+        { label: t(AdminKeys.UsersEdit.BreadcrumbUsers), href: '/admin/users' },
+        { label: t(AdminKeys.UsersEdit.BreadcrumbEdit) },
+      ]}
+      actions={
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {isSelf && <Badge variant="info">{t(AdminKeys.UsersEdit.BadgeYou)}</Badge>}
+          {user.isDeactivated && (
+            <Badge variant="default">{t(AdminKeys.UsersEdit.BadgeDeactivated)}</Badge>
+          )}
+          {user.isLockedOut && !user.isDeactivated && (
+            <Badge variant="danger">{t(AdminKeys.UsersEdit.BadgeLocked)}</Badge>
+          )}
+        </div>
+      }
+    >
       <TabNav tabs={tabs} activeTab={tab} baseUrl={`/admin/users/${user.id}/edit`} />
 
       {tab === 'details' && (
@@ -231,6 +218,6 @@ export default function UsersEdit({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Container>
+    </PageShell>
   );
 }

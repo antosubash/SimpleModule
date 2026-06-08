@@ -28,18 +28,21 @@ public class UsersEndpoint : IViewEndpoint
                 ) =>
                 {
                     var pageSize = options.Value.UsersPageSize;
-                    var usersTask = userAdmin.GetUsersPagedAsync(
+
+                    // Await sequentially, not via Task.WhenAll: IUserAdminContracts and
+                    // IRoleAdminContracts are both backed by the same scoped UsersDbContext,
+                    // and EF Core forbids concurrent operations on one DbContext instance.
+                    // Running them in parallel intermittently threw "A second operation was
+                    // started on this context instance..." → HTTP 500 (#242). The roles list
+                    // is tiny, so the extra round-trip is negligible.
+                    var result = await userAdmin.GetUsersPagedAsync(
                         search,
                         page,
                         pageSize,
                         filterStatus,
                         filterRole
                     );
-                    var rolesTask = roleAdmin.GetAllRolesAsync();
-                    await Task.WhenAll(usersTask, rolesTask);
-
-                    var result = await usersTask;
-                    var allRoles = await rolesTask;
+                    var allRoles = await roleAdmin.GetAllRolesAsync();
                     var totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize);
 
                     return Inertia.Render(

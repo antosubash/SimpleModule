@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -68,7 +69,10 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
     e.preventDefault();
     if (!selectedFlag) return;
 
-    const formData = new FormData(e.currentTarget);
+    // Capture the form synchronously: React nullifies e.currentTarget after the
+    // handler's sync phase, so reading it after the awaits below would throw.
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const overrideType = Number(formData.get('overrideType'));
     const overrideValue = formData.get('overrideValue') as string;
     const isEnabled = formData.get('isEnabled') === 'on';
@@ -85,7 +89,7 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
     if (response.ok) {
       const newOverride: FeatureFlagOverride = await response.json();
       setOverrides((prev) => [...prev, newOverride]);
-      e.currentTarget.reset();
+      form.reset();
     }
   };
 
@@ -258,10 +262,10 @@ export default function Manage({ flags: initialFlags }: ManageProps) {
                 <Input id="overrideValue" name="overrideValue" required />
               </Field>
               <Field className="flex items-center gap-2">
+                <Checkbox id="isEnabled" name="isEnabled" defaultChecked />
                 <Label htmlFor="isEnabled">
                   {t(FeatureFlagsKeys.Manage.OverrideDialog.EnabledLabel)}
                 </Label>
-                <input type="checkbox" id="isEnabled" name="isEnabled" defaultChecked />
               </Field>
             </FieldGroup>
             <Button type="submit">{t(FeatureFlagsKeys.Manage.OverrideDialog.AddButton)}</Button>

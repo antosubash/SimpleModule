@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Button, Field, FieldGroup, Input, Label } from '@simplemodule/ui';
+import { Badge, Button, Field, FieldGroup, Input, Label } from '@simplemodule/ui';
 import ManageLayout from '@/components/ManageLayout';
 
 interface Props {
@@ -28,7 +28,7 @@ export default function Email({ email, isEmailConfirmed, newEmail, statusMessage
         <Label>Email</Label>
         <div className="flex items-center gap-2">
           <Input value={email ?? ''} disabled />
-          {isEmailConfirmed && <span className="text-success font-bold">&#10003;</span>}
+          {isEmailConfirmed && <Badge variant="success">Confirmed</Badge>}
         </div>
       </div>
       <form onSubmit={handleChangeEmail}>

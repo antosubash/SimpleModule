@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using SimpleModule.Core.Entities;
 
 namespace SimpleModule.Database;
@@ -49,6 +50,107 @@ public static class ModuleModelBuilderExtensions
         }
 
         ApplyEntityConventions(modelBuilder, provider);
+    }
+
+    /// <summary>
+    /// Applies schema isolation for the unified host <see cref="ModelBuilder"/> that merges
+    /// entities from every module. Unlike <see cref="ApplyModuleSchema"/> — which owns a single
+    /// module's context and can safely prefix <em>all</em> entities — the host model contains
+    /// entities from many modules, so each entity must be attributed to its owning module.
+    /// <para>
+    /// <paramref name="moduleByEntityType"/> maps each module's declared <c>DbSet&lt;T&gt;</c>
+    /// entity CLR type to its module name. Entities that are only reachable through a navigation
+    /// (e.g. a child collection whose element type has a key but no <c>DbSet</c>) are attributed
+    /// to the same module as the principal they relate to, by following foreign keys. Any entity
+    /// that still has no owning module (e.g. ASP.NET Identity tables, which ship no module
+    /// <c>DbSet</c>) is assigned to <paramref name="identityModuleName"/> when one is provided.
+    /// </para>
+    /// <para>
+    /// This is the fix for #229: previously a navigation-only child entity fell through the
+    /// per-DbSet pass and was swept into the identity module's schema (e.g. <c>Users_RecurringLine</c>)
+    /// instead of its real owner's (<c>Invoices_RecurringLine</c>), so the owning module's queries
+    /// hit a "no such table" error.
+    /// </para>
+    /// </summary>
+    public static void ApplyHostModuleSchemas(
+        this ModelBuilder modelBuilder,
+        DatabaseOptions dbOptions,
+        IReadOnlyDictionary<Type, string> moduleByEntityType,
+        string? identityModuleName
+    )
+    {
+        var provider = DatabaseProviderDetector.Detect(
+            dbOptions.DefaultConnection,
+            dbOptions.Provider
+        );
+
+        // 1. Seed ownership from the modules' declared DbSet entity types.
+        var moduleByEntity = new Dictionary<IMutableEntityType, string>();
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        {
+            if (moduleByEntityType.TryGetValue(entity.ClrType, out var module))
+            {
+                moduleByEntity[entity] = module;
+            }
+        }
+
+        // 2. Propagate ownership across foreign keys so navigation-reachable child entities
+        //    (which have no DbSet of their own) inherit their principal's module. Iterate to a
+        //    fixed point so multi-level chains (a child of a child) are also covered.
+        bool changed;
+        do
+        {
+            changed = false;
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                if (moduleByEntity.ContainsKey(entity))
+                {
+                    continue;
+                }
+
+                foreach (var foreignKey in entity.GetForeignKeys())
+                {
+                    if (moduleByEntity.TryGetValue(foreignKey.PrincipalEntityType, out var module))
+                    {
+                        moduleByEntity[entity] = module;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        } while (changed);
+
+        // 3. Apply the resolved module's schema/prefix; sweep anything still unowned into the
+        //    identity module (whose own tables ship no module DbSet).
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!moduleByEntity.TryGetValue(entity, out var module))
+            {
+                if (identityModuleName is null)
+                {
+                    continue;
+                }
+
+                module = identityModuleName;
+            }
+
+            if (provider == DatabaseProvider.Sqlite)
+            {
+                var prefix = $"{module}_";
+                var tableName = entity.GetTableName();
+                if (
+                    tableName is not null
+                    && !tableName.StartsWith(prefix, StringComparison.Ordinal)
+                )
+                {
+                    entity.SetTableName($"{prefix}{tableName}");
+                }
+            }
+            else
+            {
+                entity.SetSchema(module.ToLowerInvariant());
+            }
+        }
     }
 #pragma warning restore CA1308
 
