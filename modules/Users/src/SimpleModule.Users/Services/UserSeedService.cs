@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core.Hosting;
 using SimpleModule.Users.Constants;
 using SimpleModule.Users.Contracts;
 
@@ -108,30 +109,32 @@ public partial class UserSeedService(
         if (await userManager.FindByEmailAsync(email) is not null)
             return;
 
-        // The compiled-in default passwords are a Development convenience only.
-        // Outside Development, creating the admin account with a published
-        // default password would leave the deployment one POST /connect/token
-        // away from a fully-privileged token — fail host startup instead.
-        // The optional test user is simply skipped when no password is set.
+        // The compiled-in default passwords are a local/CI convenience only.
+        // In a real deployment (anything but Development/Testing) the configured
+        // password is mandatory: creating the admin account with a published
+        // default would leave it one POST /connect/token away from a
+        // fully-privileged token. Fail host startup for the required (admin)
+        // account; simply skip the optional demo user.
         var password = configuration[passwordConfigKey];
         if (string.IsNullOrEmpty(password))
         {
-            if (!environment.IsDevelopment())
+            if (environment.IsLocalOrTest())
             {
-                if (requiredOutsideDevelopment)
-                {
-                    throw new SeedConfigurationException(
-                        $"'{passwordConfigKey}' must be configured outside the Development "
-                            + $"environment. Refusing to create '{email}' with the compiled-in "
-                            + "default password."
-                    );
-                }
-
+                password = defaultPassword;
+            }
+            else if (requiredOutsideDevelopment)
+            {
+                throw new SeedConfigurationException(
+                    $"'{passwordConfigKey}' must be configured in the '{environment.EnvironmentName}' "
+                        + $"environment. Refusing to create '{email}' with the compiled-in default "
+                        + "password."
+                );
+            }
+            else
+            {
                 LogSkippingSeedUser(logger, email, passwordConfigKey);
                 return;
             }
-
-            password = defaultPassword;
         }
 
         LogSeedingUser(logger, email);

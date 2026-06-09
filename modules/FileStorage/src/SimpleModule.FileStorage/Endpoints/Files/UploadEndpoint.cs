@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
@@ -14,15 +15,30 @@ public class UploadEndpoint : IEndpoint
     public const string Route = FileStorageConstants.Routes.Upload;
     public const string Method = "POST";
 
-    public void Map(IEndpointRouteBuilder app) =>
+    public void Map(IEndpointRouteBuilder app)
+    {
+        // FileStorageModuleOptions is an IOptions singleton, so the size limit and
+        // the parsed extension allowlist are resolved once at registration time
+        // and captured — not re-split into a new HashSet on every upload request.
+        var options = app
+            .ServiceProvider.GetRequiredService<IOptions<FileStorageModuleOptions>>()
+            .Value;
+        var maxBytes = options.MaxFileSizeMb * 1024L * 1024L;
+        // An empty allowlist means "no restriction".
+        var allowedExtensions = options
+            .AllowedExtensions.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         app.MapPost(
                 Route,
                 async Task<IResult> (
                     IFormFile? file,
                     string? folder,
                     HttpContext context,
-                    IFileStorageContracts files,
-                    IOptions<FileStorageModuleOptions> options
+                    IFileStorageContracts files
                 ) =>
                 {
                     if (file is null || file.Length == 0)
@@ -30,23 +46,15 @@ public class UploadEndpoint : IEndpoint
                         return TypedResults.BadRequest("A file is required.");
                     }
 
-                    var maxBytes = options.Value.MaxFileSizeMb * 1024L * 1024L;
                     if (file.Length > maxBytes)
                     {
                         return TypedResults.Problem(
                             detail: $"File exceeds the maximum allowed size of "
-                                + $"{options.Value.MaxFileSizeMb} MB.",
+                                + $"{options.MaxFileSizeMb} MB.",
                             statusCode: StatusCodes.Status413PayloadTooLarge
                         );
                     }
 
-                    // An empty AllowedExtensions list means "no restriction".
-                    var allowedExtensions = options
-                        .Value.AllowedExtensions.Split(
-                            ',',
-                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
-                        )
-                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
                     var extension = Path.GetExtension(file.FileName);
                     if (
                         allowedExtensions.Count > 0
@@ -58,7 +66,7 @@ public class UploadEndpoint : IEndpoint
                     {
                         return TypedResults.BadRequest(
                             $"File type '{extension}' is not allowed. Allowed extensions: "
-                                + $"{options.Value.AllowedExtensions}"
+                                + $"{options.AllowedExtensions}"
                         );
                     }
 
@@ -76,4 +84,5 @@ public class UploadEndpoint : IEndpoint
             )
             .RequirePermission(FileStoragePermissions.Upload)
             .DisableAntiforgery();
+    }
 }

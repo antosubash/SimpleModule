@@ -68,8 +68,8 @@ public class OpenIddictModule : IModule
 
                 // Enable password grant in Development for load testing (k6, etc.).
                 // OpenIddictProductionGuard fails host startup if this is ever
-                // turned on in Production.
-                if (configuration.GetValue<bool>("OpenIddict:AllowPasswordGrant"))
+                // turned on in a real deployment.
+                if (configuration.GetValue<bool>(ConfigKeys.OpenIddictAllowPasswordGrant))
                 {
                     options.AllowPasswordFlow();
                 }

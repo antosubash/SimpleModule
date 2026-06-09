@@ -75,14 +75,30 @@ public static partial class SimpleModuleHostExtensions
                 return;
             }
 
-            foreach (var proxy in section.GetSection("KnownProxies").Get<string[]>() ?? [])
+            foreach (var proxy in ReadConfigList(section, "KnownProxies"))
             {
-                fhOptions.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+                if (!System.Net.IPAddress.TryParse(proxy, out var address))
+                {
+                    throw new InvalidOperationException(
+                        $"ForwardedHeaders:KnownProxies contains '{proxy}', which is not a valid "
+                            + "IP address."
+                    );
+                }
+
+                fhOptions.KnownProxies.Add(address);
             }
 
-            foreach (var network in section.GetSection("KnownNetworks").Get<string[]>() ?? [])
+            foreach (var network in ReadConfigList(section, "KnownNetworks"))
             {
-                fhOptions.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+                if (!System.Net.IPNetwork.TryParse(network, out var ipNetwork))
+                {
+                    throw new InvalidOperationException(
+                        $"ForwardedHeaders:KnownNetworks contains '{network}', which is not a valid "
+                            + "CIDR network (e.g. 10.0.0.0/8)."
+                    );
+                }
+
+                fhOptions.KnownIPNetworks.Add(ipNetwork);
             }
         });
 

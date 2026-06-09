@@ -99,6 +99,18 @@ function findCSharpEndpoints(content) {
     match = identifierPattern.exec(content);
   }
 
+  // Interpolated names — Inertia.Render($"{Module}/Browse", ...) — can't be
+  // resolved statically and would otherwise slip past both patterns above
+  // (the '$' is neither a quote nor an identifier start), letting an
+  // unregistered page pass validation. Report them so they're caught, not
+  // silently skipped — the exact failure mode this guard exists to prevent.
+  const interpolatedPattern = /Inertia\.Render\s*\(\s*\$"/g;
+  match = interpolatedPattern.exec(content);
+  while (match !== null) {
+    unresolved.add('$"…" (interpolated component name — use a literal or const)');
+    match = interpolatedPattern.exec(content);
+  }
+
   return { names, unresolved };
 }
 

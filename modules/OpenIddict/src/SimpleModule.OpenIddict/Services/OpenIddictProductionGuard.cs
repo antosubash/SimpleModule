@@ -1,16 +1,20 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using SimpleModule.Core.Hosting;
 using SimpleModule.OpenIddict.Contracts;
 
 namespace SimpleModule.OpenIddict.Services;
 
 /// <summary>
-/// Fails host startup when the OpenIddict configuration is unsafe for Production:
-/// the ROPC password grant must stay off (it lets anyone exchange leaked or default
-/// credentials for a fully-privileged token in a single request), and token
-/// signing/encryption must use real certificates — ephemeral keys are regenerated
-/// on every restart, invalidating all issued tokens, and signal a copy-pasted
-/// Development configuration.
+/// Fails host startup when the OpenIddict configuration is unsafe for a real
+/// deployment (anything but Development/Testing): the ROPC password grant must
+/// stay off (it lets anyone exchange leaked or default credentials for a
+/// fully-privileged token in a single request), and token signing/encryption
+/// must use real certificates — ephemeral keys are regenerated on every restart,
+/// invalidating all issued tokens, and signal a copy-pasted Development config.
+/// Shares <see cref="HostEnvironmentExtensions.IsLocalOrTest"/> with
+/// <c>UserSeedService</c> so the two guards never disagree about whether an
+/// environment is a real deployment.
 /// </summary>
 public sealed class OpenIddictProductionGuard(
     IConfiguration configuration,
@@ -19,16 +23,17 @@ public sealed class OpenIddictProductionGuard(
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!environment.IsProduction())
+        if (environment.IsLocalOrTest())
         {
             return Task.CompletedTask;
         }
 
-        if (configuration.GetValue<bool>("OpenIddict:AllowPasswordGrant"))
+        if (configuration.GetValue<bool>(ConfigKeys.OpenIddictAllowPasswordGrant))
         {
             throw new InvalidOperationException(
-                "'OpenIddict:AllowPasswordGrant' must not be enabled in Production. "
-                    + "The ROPC password grant exists for local load testing only."
+                $"'{ConfigKeys.OpenIddictAllowPasswordGrant}' must not be enabled in the "
+                    + $"'{environment.EnvironmentName}' environment. The ROPC password grant "
+                    + "exists for local load testing only."
             );
         }
 

@@ -35,15 +35,21 @@ public class UsersEditEndpoint : IViewEndpoint
                     if (user is null)
                         return TypedResults.NotFound();
 
-                    // Await sequentially, not via Task.WhenAll: these contracts can
-                    // resolve services backed by the same scoped DbContext, and EF Core
-                    // forbids concurrent operations on one context instance. Parallel
-                    // awaits intermittently surfaced as HTTP 500 (same class as #242).
-                    var allRoles = await roleAdmin.GetAllRolesAsync();
-                    var userPermissions = (
-                        await permissionContracts.GetPermissionsForUserAsync(UserId.From(id))
-                    ).ToList();
-                    var activeSessions = await sessionContracts.GetActiveSessionsForUserAsync(id);
+                    // These three contracts are backed by DISTINCT stores —
+                    // IRoleAdminContracts → UsersDbContext, IPermissionContracts →
+                    // PermissionsDbContext, ISessionContracts → the OpenIddict token
+                    // store / Keycloak — so unlike the AdminService case (#242) there
+                    // is no shared-DbContext concurrency hazard and they run in
+                    // parallel. (GetAdminUserByIdAsync above already completed, so no
+                    // other in-flight UsersDbContext operation overlaps GetAllRolesAsync.)
+                    var rolesTask = roleAdmin.GetAllRolesAsync();
+                    var permsTask = permissionContracts.GetPermissionsForUserAsync(UserId.From(id));
+                    var sessionsTask = sessionContracts.GetActiveSessionsForUserAsync(id);
+                    await Task.WhenAll(rolesTask, permsTask, sessionsTask);
+
+                    var allRoles = await rolesTask;
+                    var userPermissions = (await permsTask).ToList();
+                    var activeSessions = await sessionsTask;
 
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
                         kvp => kvp.Key,

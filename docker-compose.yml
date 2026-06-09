@@ -8,8 +8,10 @@ services:
       # local quickstart. Do NOT expose this stack to the internet as-is: set
       # ASPNETCORE_ENVIRONMENT=Production (which additionally enforces signing
       # certificates and refuses the password grant), apply migrations
-      # externally, and configure ForwardedHeaders__KnownProxies for your
-      # reverse proxy.
+      # externally, and trust your reverse proxy via a comma-separated
+      # ForwardedHeaders__KnownProxies=10.0.0.5,10.0.0.6 (or
+      # ForwardedHeaders__KnownNetworks=10.0.0.0/8). Without it X-Forwarded-For
+      # is ignored and per-IP rate limiting keys every client to the proxy IP.
       ASPNETCORE_ENVIRONMENT: Development
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
@@ -53,6 +55,13 @@ services:
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
       BackgroundJobs__WorkerMode: Consumer
+      # The worker runs the same module set as the api, including the user
+      # seeder. It must see the SAME seed passwords — otherwise whichever
+      # process wins the startup race seeds the admin account, and a worker
+      # without these would silently seed the compiled-in default password,
+      # defeating the api's required SEED_ADMIN_PASSWORD.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      Seed__UserPassword: ${SEED_USER_PASSWORD:-}
     volumes:
       - storage_data:/app/storage
     depends_on:

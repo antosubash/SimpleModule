@@ -34,10 +34,26 @@
 - [x] Dependabot config (nuget, npm, github-actions)
 - [x] `dotnet list package --vulnerable` CI step
 
-## Deferred (follow-ups)
-- Roslyn diagnostic (SM0060) for Task.WhenAll-over-contracts and SaveChanges+Publish-without-outbox — analyzer-grade flow analysis, separate PR
-- Generator decomposition to ForAttributeWithMetadataName
-- @simplemodule/ui vendoring + stale wwwroot chunk cleanup
+## Code-review round 1 — fixes applied
+- [x] ForwardedHeaders KnownProxies/KnownNetworks: accept comma-separated scalar (the form the docker-compose comment documents) as well as arrays; TryParse with a clear error instead of an opaque FormatException
+- [x] docker-compose worker: add Seed__AdminPassword/Seed__UserPassword — the worker runs UserSeedService too and would otherwise race-seed the default admin password
+- [x] FileStorageService.UploadFileAsync: scope blob-rollback to the pre-commit window so a post-commit outbox-flush failure can't dangle a committed row against a deleted blob
+- [x] Env-predicate consistency: shared HostEnvironmentExtensions.IsLocalOrTest (Development+Testing) used by both UserSeedService and OpenIddictProductionGuard — closes the Staging bypass and the Testing-startup-crash in one predicate
+- [x] UsersEditEndpoint: reverted to Task.WhenAll — the three contracts use distinct DbContexts (Users/Permissions/OpenIddict), so there was no race; corrected the misleading comment
+- [x] ConfigKeys.OpenIddictAllowPasswordGrant constant — replaced the three hardcoded "OpenIddict:AllowPasswordGrant" string literals (drift would silently disable the guard)
+- [x] validate-pages: detect interpolated Inertia.Render($"…") as unresolved instead of silently skipping it
+- [x] validate-i18n: same fail-on-zero self-check as validate-pages (locale dirs exist today; zero = path drift)
+- [x] UploadEndpoint: hoist size/extension parse to Map() time (resolve IOptions once, capture) instead of allocating a HashSet per request
+
+## Deferred (follow-ups — recorded, not silently dropped)
+- **Roslyn diagnostic (SM0060)** for Task.WhenAll-over-shared-DbContext and SaveChanges+Publish-without-outbox — durable fix for the recurring race/outbox classes (fixed by hand 3× now). Analyzer-grade flow analysis; separate PR. An interim regex guard like validate-framework-scope.mjs is a cheaper stopgap.
+- **Shared outbox helper** (`SaveAndPublishAsync<TDb>`) in SimpleModule.Database to encode the BeginTransaction→SaveChanges→Publish→flush ritual once — currently duplicated across TenantService/FileStorageService. Also: WolverineConfiguration wires PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents> but no entity implements it (dead idiom) — reconcile.
+- **Framework production-config validation abstraction** (IValidateOptions/ValidateOnStart) — OpenIddictProductionGuard + UserSeedService are two ad-hoc startup guards; a shared mechanism is the right altitude and fixes implicit guard ordering.
+- **Module options ↔ Settings store / appsettings binding**: generated RegisterModuleOptionsDefaults only calls AddOptions<T>() with no config binding, so the FileStorage admin Settings/appsettings keys don't drive the enforced IOptions values (enforcement honors code-configured/default values only).
+- **TenantFeatureHelper N+1**: serial GetOverridesAsync per flag; needs a bulk IFeatureFlagContracts method to collapse to one query.
+- **ForwardedHeaders typed options** on SimpleModuleOptions (typo'd keys currently silently yield loopback-only trust).
+- Generator decomposition to ForAttributeWithMetadataName.
+- @simplemodule/ui vendoring + stale wwwroot chunk cleanup.
 
 ## Review
 

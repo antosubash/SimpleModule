@@ -56,9 +56,16 @@ function parseJsonFile(filePath) {
 // Main
 const localesDirs = findModuleLocales(modulesDir);
 
+// Self-check: modules ship Locales directories today, so finding zero means the
+// scan path drifted out from under this script — the same silent-no-op failure
+// that let validate-pages.mjs validate nothing for months. Fail loudly rather
+// than report success over an empty set.
 if (localesDirs.length === 0) {
-  console.log('No Locales directories found. Nothing to validate.');
-  process.exit(0);
+  console.error(
+    `ERROR: No Locales directories found under '${modulesDir}'. The module layout ` +
+      'has likely changed — update findModuleLocales / the scan path.',
+  );
+  process.exit(1);
 }
 
 for (const { localesDir, project } of localesDirs) {
