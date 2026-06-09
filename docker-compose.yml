@@ -4,14 +4,28 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Development enables auto-migration. For production, apply migrations
-      # externally and set to Production.
+      # Development enables auto-migration and ephemeral signing keys for a
+      # local quickstart. Do NOT expose this stack to the internet as-is: set
+      # ASPNETCORE_ENVIRONMENT=Production (which additionally enforces signing
+      # certificates and refuses the password grant), apply migrations
+      # externally, and configure ForwardedHeaders__KnownProxies for your
+      # reverse proxy.
       ASPNETCORE_ENVIRONMENT: Development
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
       # Set to your public URL so OpenIddict registers correct redirect URIs.
       # Examples: https://app.simplemodule.dev, http://localhost:8080
       OpenIddict__BaseUrl: ${APP_BASE_URL:-http://localhost:8080}
+      # The ROPC password grant stays off even in this Development quickstart —
+      # combined with seeded credentials it would hand out fully-privileged
+      # tokens with a single POST /connect/token.
+      OpenIddict__AllowPasswordGrant: "false"
+      # Required: password for the seeded admin account. There is deliberately
+      # no default — put SEED_ADMIN_PASSWORD in your .env file.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      # Optional: password for the seeded demo user (outside Development the
+      # demo user is skipped entirely when this is unset).
+      Seed__UserPassword: ${SEED_USER_PASSWORD:-}
       # api stays in Producer mode — it enqueues jobs but never runs them.
       # All IModuleJob execution lives in the worker service below.
       BackgroundJobs__WorkerMode: Producer

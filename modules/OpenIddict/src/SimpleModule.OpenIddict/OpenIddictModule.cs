@@ -66,7 +66,9 @@ public class OpenIddictModule : IModule
 
                 options.AllowRefreshTokenFlow();
 
-                // Enable password grant in Development for load testing (k6, etc.)
+                // Enable password grant in Development for load testing (k6, etc.).
+                // OpenIddictProductionGuard fails host startup if this is ever
+                // turned on in Production.
                 if (configuration.GetValue<bool>("OpenIddict:AllowPasswordGrant"))
                 {
                     options.AllowPasswordFlow();
@@ -103,7 +105,9 @@ public class OpenIddictModule : IModule
                 }
                 else
                 {
-                    // Development/Testing: use ephemeral keys (avoids macOS keychain issues)
+                    // Development/Testing: use ephemeral keys (avoids macOS keychain
+                    // issues). OpenIddictProductionGuard fails host startup if
+                    // Production runs without certificates.
                     options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
                 }
 
@@ -126,6 +130,9 @@ public class OpenIddictModule : IModule
                 options.UseLocalServer();
                 options.UseAspNetCore();
             });
+
+        // Refuses unsafe Production configurations (password grant, ephemeral keys)
+        services.AddHostedService<OpenIddictProductionGuard>();
 
         // Seed service
         services.AddHostedService<OpenIddictSeedService>();

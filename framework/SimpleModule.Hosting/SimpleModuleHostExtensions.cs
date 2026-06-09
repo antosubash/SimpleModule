@@ -57,9 +57,33 @@ public static partial class SimpleModuleHostExtensions
         {
             fhOptions.ForwardedHeaders =
                 ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            // Allow any proxy in containerized/cloud environments
-            fhOptions.KnownIPNetworks.Clear();
-            fhOptions.KnownProxies.Clear();
+
+            // Proxy trust must be explicit. The previous behavior cleared
+            // KnownProxies/KnownIPNetworks, which let any client spoof
+            // X-Forwarded-For and bypass per-IP rate limiting. By default only
+            // loopback is trusted (the ASP.NET Core default); deployments behind
+            // a reverse proxy list it under ForwardedHeaders:KnownProxies /
+            // ForwardedHeaders:KnownNetworks, or — for closed networks where the
+            // proxy address is not static — opt into
+            // ForwardedHeaders:TrustAllProxies.
+            var section = builder.Configuration.GetSection("ForwardedHeaders");
+
+            if (section.GetValue<bool>("TrustAllProxies"))
+            {
+                fhOptions.KnownIPNetworks.Clear();
+                fhOptions.KnownProxies.Clear();
+                return;
+            }
+
+            foreach (var proxy in section.GetSection("KnownProxies").Get<string[]>() ?? [])
+            {
+                fhOptions.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+            }
+
+            foreach (var network in section.GetSection("KnownNetworks").Get<string[]>() ?? [])
+            {
+                fhOptions.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+            }
         });
 
         builder.Services.AddProblemDetails();
@@ -139,7 +163,10 @@ public static partial class SimpleModuleHostExtensions
         // cleared by `sm up`. Resolved as singleton because it caches state
         // for a short interval.
         builder.Services.Configure<MaintenanceModeOptions>(_ => { });
-        builder.Services.TryAddSingleton<IMaintenanceStateProvider, FileSystemMaintenanceStateProvider>();
+        builder.Services.TryAddSingleton<
+            IMaintenanceStateProvider,
+            FileSystemMaintenanceStateProvider
+        >();
 
         if (options.EnableHealthChecks)
         {
