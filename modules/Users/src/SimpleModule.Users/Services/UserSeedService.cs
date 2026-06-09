@@ -109,32 +109,25 @@ public partial class UserSeedService(
         if (await userManager.FindByEmailAsync(email) is not null)
             return;
 
-        // The compiled-in default passwords are a local/CI convenience only.
-        // In a real deployment (anything but Development/Testing) the configured
-        // password is mandatory: creating the admin account with a published
-        // default would leave it one POST /connect/token away from a
-        // fully-privileged token. Fail host startup for the required (admin)
-        // account; simply skip the optional demo user.
-        var password = configuration[passwordConfigKey];
-        if (string.IsNullOrEmpty(password))
+        var outcome = ResolveSeedPassword(
+            configuration[passwordConfigKey],
+            defaultPassword,
+            environment.IsLocalOrTest(),
+            requiredOutsideDevelopment,
+            out var password
+        );
+
+        switch (outcome)
         {
-            if (environment.IsLocalOrTest())
-            {
-                password = defaultPassword;
-            }
-            else if (requiredOutsideDevelopment)
-            {
+            case SeedPasswordOutcome.Fail:
                 throw new SeedConfigurationException(
                     $"'{passwordConfigKey}' must be configured in the '{environment.EnvironmentName}' "
                         + $"environment. Refusing to create '{email}' with the compiled-in default "
                         + "password."
                 );
-            }
-            else
-            {
+            case SeedPasswordOutcome.Skip:
                 LogSkippingSeedUser(logger, email, passwordConfigKey);
                 return;
-            }
         }
 
         LogSeedingUser(logger, email);
@@ -148,7 +141,9 @@ public partial class UserSeedService(
             CreatedAt = DateTime.UtcNow,
         };
 
-        var result = await userManager.CreateAsync(user, password);
+        // Only SeedPasswordOutcome.Seed falls through the switch above, and it
+        // always yields a non-null password.
+        var result = await userManager.CreateAsync(user, password!);
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(user, role);
@@ -160,6 +155,47 @@ public partial class UserSeedService(
                 LogSeedError(logger, error.Description);
             }
         }
+    }
+
+    /// <summary>
+    /// Decides how to seed a user's password. Extracted as a pure function so the
+    /// security-critical branching — never seed a real deployment with the
+    /// compiled-in default — is unit-testable without an Identity stack.
+    /// </summary>
+    /// <param name="configuredPassword">The password from configuration, if any.</param>
+    /// <param name="defaultPassword">The compiled-in fallback (local/CI only).</param>
+    /// <param name="isLocalOrTest">True for Development/Testing environments.</param>
+    /// <param name="requiredOutsideLocal">
+    /// True for the admin account (must fail closed); false for the optional demo
+    /// user (skipped when unconfigured in a real deployment).
+    /// </param>
+    /// <param name="password">The password to use when the outcome is <c>Seed</c>.</param>
+    internal static SeedPasswordOutcome ResolveSeedPassword(
+        string? configuredPassword,
+        string defaultPassword,
+        bool isLocalOrTest,
+        bool requiredOutsideLocal,
+        out string? password
+    )
+    {
+        if (!string.IsNullOrEmpty(configuredPassword))
+        {
+            password = configuredPassword;
+            return SeedPasswordOutcome.Seed;
+        }
+
+        // The compiled-in default passwords are a local/CI convenience only. In a
+        // real deployment (anything but Development/Testing) the configured
+        // password is mandatory: seeding the admin with a published default would
+        // leave it one POST /connect/token away from a fully-privileged token.
+        if (isLocalOrTest)
+        {
+            password = defaultPassword;
+            return SeedPasswordOutcome.Seed;
+        }
+
+        password = null;
+        return requiredOutsideLocal ? SeedPasswordOutcome.Fail : SeedPasswordOutcome.Skip;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Seeding role: {RoleName}")]
