@@ -431,8 +431,8 @@ xUnit.v3, FluentAssertions, Bogus, `SimpleModuleWebApplicationFactory`.
 
 ### Database
 
-- SQLite in-memory locally, PostgreSQL in CI.
-- Both providers tested in CI.
+- SQLite in-memory for unit and integration tests (shared connection per test factory).
+- A PostgreSQL CI test leg is planned but not yet implemented — `SimpleModuleWebApplicationFactory` currently supports SQLite only.
 
 ### Rules
 
@@ -600,7 +600,8 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 - `TreatWarningsAsErrors` is enabled globally via `Directory.Build.props`.
 - `AnalysisLevel=latest-all`, `AnalysisMode=All`.
 - Suppressed rules live in `.editorconfig`.
-- Tests run against both SQLite and PostgreSQL in CI.
+- CI tests run against SQLite. A PostgreSQL leg (postgres service + provider switch in the test factory) is a known gap.
+- CodeQL, Dependabot, and a vulnerable-package audit run in CI for security scanning.
 
 ---
 
