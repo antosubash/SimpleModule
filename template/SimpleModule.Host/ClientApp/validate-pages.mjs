@@ -7,15 +7,22 @@
  * between C# endpoints and TypeScript Pages/index.ts files.
  *
  * This script:
- * 1. Scans all C# files in each module's src/{ModuleName} directory
+ * 1. Scans all C# files in each module's src/ directory (the implementation
+ *    project lives at src/SimpleModule.{ModuleName}; obj/bin/wwwroot are skipped)
  * 2. Finds all Inertia.Render("ComponentName/...") calls
  * 3. Scans the module's Pages/index.ts file
  * 4. Finds all keys in the pages object export
  * 5. Compares the two lists and reports mismatches
  *
+ * Self-check: if zero C# files or zero Inertia.Render endpoints are found
+ * across the whole repo, the script fails. A layout change must never be able
+ * to silently turn this guard into a no-op again (it did once: the script
+ * scanned src/{ModuleName} while the real layout is src/SimpleModule.{ModuleName},
+ * so it validated zero files and always reported success).
+ *
  * Exit codes:
  *   0 = All modules have valid registrations
- *   1 = Mismatches found
+ *   1 = Mismatches found, or self-check failed
  */
 
 import fs from 'node:fs';
@@ -25,6 +32,10 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../../..');
 const modulesDir = path.resolve(projectRoot, 'modules');
+
+// Build-output and vendor directories that must never be scanned — stale
+// artifacts in obj/bin can contain Inertia.Render strings for deleted pages.
+const SKIPPED_DIRS = new Set(['obj', 'bin', 'node_modules', 'wwwroot', 'dist']);
 
 /**
  * Recursively find all .cs files in a directory
@@ -39,6 +50,7 @@ function findCSharpFiles(dir) {
       const fullPath = path.join(currentPath, entry.name);
 
       if (entry.isDirectory()) {
+        if (SKIPPED_DIRS.has(entry.name)) continue;
         walk(fullPath);
       } else if (entry.isFile() && entry.name.endsWith('.cs')) {
         files.push(fullPath);
@@ -54,19 +66,40 @@ function findCSharpFiles(dir) {
 }
 
 /**
- * Extract all Inertia.Render component names from a C# file
- * Pattern: Inertia\.Render\s*\(\s*"([^"]+)"
+ * Extract all Inertia.Render component names from a C# file.
+ * Handles both inline literals — Inertia.Render("Module/Page", ...) — and
+ * identifiers resolved against `const string Name = "Module/Page";`
+ * declarations in the same file (the ComponentName pattern).
+ * Returns { names, unresolved } where unresolved lists identifier arguments
+ * that could not be resolved to a string in this file.
  */
 function findCSharpEndpoints(content) {
-  const pattern = /Inertia\.Render\s*\(\s*"([^"]+)"/g;
-  const matches = new Set();
-  let match = pattern.exec(content);
+  const names = new Set();
+  const unresolved = new Set();
+
+  const literalPattern = /Inertia\.Render\s*\(\s*"([^"]+)"/g;
+  let match = literalPattern.exec(content);
   while (match !== null) {
-    matches.add(match[1]);
-    match = pattern.exec(content);
+    names.add(match[1]);
+    match = literalPattern.exec(content);
   }
 
-  return matches;
+  const identifierPattern = /Inertia\.Render\s*\(\s*([A-Za-z_][A-Za-z0-9_.]*)\s*[,)]/g;
+  match = identifierPattern.exec(content);
+  while (match !== null) {
+    const identifier = match[1];
+    const constName = identifier.split('.').pop();
+    const constPattern = new RegExp(`const\\s+string\\s+${constName}\\s*=\\s*"([^"]+)"`);
+    const constMatch = constPattern.exec(content);
+    if (constMatch) {
+      names.add(constMatch[1]);
+    } else {
+      unresolved.add(identifier);
+    }
+    match = identifierPattern.exec(content);
+  }
+
+  return { names, unresolved };
 }
 
 /**
@@ -100,32 +133,55 @@ function findTypeScriptPages(content) {
  */
 function validateModule(modulePath) {
   const moduleName = path.basename(modulePath);
-  const srcPath = path.join(modulePath, 'src', moduleName);
+  const srcRoot = path.join(modulePath, 'src');
+
+  // Implementation projects live at src/SimpleModule.{ModuleName} (plus a
+  // Contracts sibling). Scan every project directory under src/ rather than
+  // hard-coding one name, so a layout rename cannot silently skip files.
+  const projectDirs = fs.existsSync(srcRoot)
+    ? fs
+        .readdirSync(srcRoot, { withFileTypes: true })
+        .filter((e) => e.isDirectory() && !SKIPPED_DIRS.has(e.name))
+        .map((e) => path.join(srcRoot, e.name))
+    : [];
 
   // Find all C# endpoints
-  const csharpFiles = findCSharpFiles(srcPath);
   const csharpEndpoints = new Set();
+  const unresolvedRenders = [];
+  let csharpFileCount = 0;
 
-  for (const filePath of csharpFiles) {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const endpoints = findCSharpEndpoints(content);
+  for (const projectDir of projectDirs) {
+    for (const filePath of findCSharpFiles(projectDir)) {
+      csharpFileCount += 1;
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const { names, unresolved } = findCSharpEndpoints(content);
 
-    for (const endpoint of endpoints) {
-      csharpEndpoints.add(endpoint);
+      for (const endpoint of names) {
+        csharpEndpoints.add(endpoint);
+      }
+
+      for (const identifier of unresolved) {
+        unresolvedRenders.push(`${path.relative(modulePath, filePath)}: ${identifier}`);
+      }
     }
   }
 
-  // Find all TS pages
-  const pagesIndexPath = path.join(srcPath, 'Pages', 'index.ts');
-  let tsPages = new Set();
+  // Find all TS pages (Pages/index.ts in the implementation project)
+  const tsPages = new Set();
   let hasPages = false;
 
-  try {
-    const content = fs.readFileSync(pagesIndexPath, 'utf-8');
-    tsPages = findTypeScriptPages(content);
-    hasPages = true;
-  } catch (err) {
-    if (err.code !== 'ENOENT') throw err; // Re-throw non-file-not-found errors
+  for (const projectDir of projectDirs) {
+    const pagesIndexPath = path.join(projectDir, 'Pages', 'index.ts');
+
+    try {
+      const content = fs.readFileSync(pagesIndexPath, 'utf-8');
+      for (const page of findTypeScriptPages(content)) {
+        tsPages.add(page);
+      }
+      hasPages = true;
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err; // Re-throw non-file-not-found errors
+    }
   }
 
   // Compare
@@ -135,9 +191,12 @@ function validateModule(modulePath) {
   return {
     moduleName,
     hasPages,
+    csharpFileCount,
+    endpointCount: csharpEndpoints.size,
     missing,
     extra,
-    isValid: missing.length === 0 && extra.length === 0,
+    unresolvedRenders,
+    isValid: missing.length === 0 && extra.length === 0 && unresolvedRenders.length === 0,
   };
 }
 
@@ -164,10 +223,30 @@ function main() {
   // Print results
   console.log('\n=== Pages Registry Validation ===\n');
 
+  // Self-check: this guard once silently validated nothing because the module
+  // layout changed underneath it. If the scan finds no C# files or no
+  // Inertia.Render endpoints at all, the paths are wrong — fail loudly.
+  const totalCsFiles = results.reduce((sum, r) => sum + r.csharpFileCount, 0);
+  const totalEndpoints = results.reduce((sum, r) => sum + r.endpointCount, 0);
+
+  if (totalCsFiles === 0) {
+    console.error('❌ Self-check failed: scanned 0 C# files across all modules.');
+    console.error('   The module source layout has likely changed — update validate-pages.mjs.\n');
+    process.exit(1);
+  }
+
+  if (totalEndpoints === 0) {
+    console.error('❌ Self-check failed: found 0 Inertia.Render endpoints across all modules.');
+    console.error('   The module source layout has likely changed — update validate-pages.mjs.\n');
+    process.exit(1);
+  }
+
   const invalid = results.filter((r) => !r.isValid);
 
   if (invalid.length === 0) {
-    console.log('✅ All modules have valid Pages/index.ts registrations\n');
+    console.log(
+      `✅ All modules valid (${totalEndpoints} endpoints across ${totalCsFiles} C# files)\n`,
+    );
     process.exit(0);
   }
 
@@ -180,6 +259,16 @@ function main() {
 
     if (result.extra.length > 0) {
       console.log(`   Extra in Pages/index.ts: ${result.extra.join(', ')}`);
+    }
+
+    if (result.unresolvedRenders.length > 0) {
+      console.log(
+        '   Inertia.Render arguments that could not be resolved to a string ' +
+          '(use a literal or a same-file const):',
+      );
+      for (const entry of result.unresolvedRenders) {
+        console.log(`     ${entry}`);
+      }
     }
 
     console.log();
