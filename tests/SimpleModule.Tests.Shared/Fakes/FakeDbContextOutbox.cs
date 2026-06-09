@@ -44,6 +44,14 @@ public sealed class FakeDbContextOutbox<TDbContext>(TDbContext context)
     public async Task SaveChangesAndFlushMessagesAsync(CancellationToken token = default)
     {
         await DbContext.SaveChangesAsync(token);
+
+        // Mirror the production outbox, which commits an externally-started
+        // transaction before flushing messages (services that need a
+        // database-generated id save inside an explicit transaction first).
+        if (DbContext.Database.CurrentTransaction is not null)
+        {
+            await DbContext.Database.CommitTransactionAsync(token);
+        }
     }
 
     public Task FlushOutgoingMessagesAsync() => Task.CompletedTask;

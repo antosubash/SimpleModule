@@ -3,14 +3,14 @@ using Microsoft.Extensions.Logging;
 using SimpleModule.FileStorage.Contracts;
 using SimpleModule.FileStorage.Contracts.Events;
 using SimpleModule.Storage;
-using Wolverine;
+using Wolverine.EntityFrameworkCore;
 
 namespace SimpleModule.FileStorage;
 
 public sealed partial class FileStorageService(
     FileStorageDbContext db,
     IStorageProvider storageProvider,
-    IMessageBus bus,
+    IDbContextOutbox<FileStorageDbContext> outbox,
     ILogger<FileStorageService> logger
 ) : IFileStorageContracts
 {
@@ -77,11 +77,16 @@ public sealed partial class FileStorageService(
             };
 
             db.StoredFiles.Add(storedFile);
+
+            // FileStorageId is database-generated, so the row must be saved before
+            // the event can carry it. The explicit transaction keeps the row and the
+            // outbox envelope atomic: SaveChangesAndFlushMessagesAsync persists the
+            // envelope, commits the open transaction, and only then releases the
+            // event to the bus. The previous SaveChanges-then-PublishAsync pattern
+            // lost the event when the process died between the two calls.
+            await using var transaction = await db.Database.BeginTransactionAsync();
             await db.SaveChangesAsync();
-
-            LogFileUploaded(logger, storedFile.Id, storedFile.FileName);
-
-            await bus.PublishAsync(
+            await outbox.PublishAsync(
                 new FileUploadedEvent(
                     storedFile.Id,
                     storedFile.FileName,
@@ -89,6 +94,9 @@ public sealed partial class FileStorageService(
                     storedFile.ContentType
                 )
             );
+            await outbox.SaveChangesAndFlushMessagesAsync();
+
+            LogFileUploaded(logger, storedFile.Id, storedFile.FileName);
 
             return storedFile;
         }
@@ -113,7 +121,13 @@ public sealed partial class FileStorageService(
         var storagePath = file.StoragePath;
 
         db.StoredFiles.Remove(file);
-        await db.SaveChangesAsync();
+
+        // Publish through the outbox so the delete and the event commit atomically.
+        // Previously the event was published only after blob deletion succeeded, so
+        // a crash — or a failed blob delete — after the DB commit silently dropped
+        // FileDeletedEvent even though the file was gone from the system of record.
+        await outbox.PublishAsync(new FileDeletedEvent(file.Id, file.FileName));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         try
         {
@@ -128,8 +142,6 @@ public sealed partial class FileStorageService(
         }
 
         LogFileDeleted(logger, file.Id, file.FileName);
-
-        await bus.PublishAsync(new FileDeletedEvent(file.Id, file.FileName));
     }
 
     public async Task<Stream?> DownloadFileAsync(FileStorageId id)

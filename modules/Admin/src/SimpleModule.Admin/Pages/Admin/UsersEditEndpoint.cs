@@ -35,14 +35,15 @@ public class UsersEditEndpoint : IViewEndpoint
                     if (user is null)
                         return TypedResults.NotFound();
 
-                    var rolesTask = roleAdmin.GetAllRolesAsync();
-                    var permsTask = permissionContracts.GetPermissionsForUserAsync(UserId.From(id));
-                    var sessionsTask = sessionContracts.GetActiveSessionsForUserAsync(id);
-                    await Task.WhenAll(rolesTask, permsTask, sessionsTask);
-
-                    var allRoles = await rolesTask;
-                    var userPermissions = (await permsTask).ToList();
-                    var activeSessions = await sessionsTask;
+                    // Await sequentially, not via Task.WhenAll: these contracts can
+                    // resolve services backed by the same scoped DbContext, and EF Core
+                    // forbids concurrent operations on one context instance. Parallel
+                    // awaits intermittently surfaced as HTTP 500 (same class as #242).
+                    var allRoles = await roleAdmin.GetAllRolesAsync();
+                    var userPermissions = (
+                        await permissionContracts.GetPermissionsForUserAsync(UserId.From(id))
+                    ).ToList();
+                    var activeSessions = await sessionContracts.GetActiveSessionsForUserAsync(id);
 
                     var permissionsByModule = permissionRegistry.ByModule.ToDictionary(
                         kvp => kvp.Key,
