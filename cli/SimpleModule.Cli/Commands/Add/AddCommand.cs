@@ -82,7 +82,14 @@ public sealed class AddCommand : AsyncCommand<AddSettings>
                 return Fail($"Package {settings.PackageId} not found on '{source}'.");
             }
 
-            resolvedVersion = settings.Version ?? versions[^1];
+            // "Latest" prefers the highest stable version; prereleases only when
+            // nothing stable exists. The flat-container array's order is not
+            // guaranteed by every feed, so sort explicitly.
+            var sorted = versions.OrderBy(v => v, SemVerStringComparer.Instance).ToList();
+            resolvedVersion =
+                settings.Version
+                ?? sorted.LastOrDefault(v => !SemVerStringComparer.IsPrerelease(v))
+                ?? sorted[^1];
             if (!versions.Contains(resolvedVersion))
             {
                 return Fail(
@@ -183,7 +190,7 @@ public sealed class AddCommand : AsyncCommand<AddSettings>
             {
                 return Fail(
                     "Module migration run failed (the package reference is in place; fix the "
-                        + "database issue and re-run with SIMPLEMODULE_MIGRATE_ONLY=1):\n"
+                        + "database issue and re-run 'SIMPLEMODULE_MIGRATE_ONLY=1 dotnet run --project <host>'):\n"
                         + Tail(migrate.Error, migrate.Output)
                 );
             }

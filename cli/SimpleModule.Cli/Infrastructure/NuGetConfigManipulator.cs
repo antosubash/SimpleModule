@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 namespace SimpleModule.Cli.Infrastructure;
 
 /// <summary>
@@ -50,6 +53,14 @@ public static class NuGetConfigManipulator
         File.WriteAllLines(configPath, lines);
     }
 
-    private static string SourceKey(string feedDirectory) =>
-        "sm-local-" + Path.GetFileName(feedDirectory.TrimEnd(Path.DirectorySeparatorChar));
+    private static string SourceKey(string feedDirectory)
+    {
+        // Key on the full path (hashed) — two different feeds sharing a leaf
+        // directory name must not produce duplicate <add> keys, which NuGet
+        // rejects when parsing the config.
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(feedDirectory)));
+#pragma warning disable CA1308 // lowercase is conventional for nuget.config keys
+        return "sm-local-" + hash[..8].ToLowerInvariant();
+#pragma warning restore CA1308
+    }
 }

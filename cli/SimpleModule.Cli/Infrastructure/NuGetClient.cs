@@ -51,7 +51,7 @@ public static partial class NuGetClient
         }
 
         return candidates
-            .OrderByDescending(c => c.Version, VersionStringComparer.Instance)
+            .OrderByDescending(c => c.Version, SemVerStringComparer.Instance)
             .Select(c => c.Path)
             .FirstOrDefault();
     }
@@ -116,54 +116,6 @@ public static partial class NuGetClient
         throw new InvalidOperationException(
             $"Registry '{serviceIndexUrl}' exposes no PackageBaseAddress/3.0.0 resource."
         );
-    }
-
-    /// <summary>Orders dotted version strings numerically with release > prerelease.</summary>
-    private sealed class VersionStringComparer : IComparer<string>
-    {
-        public static readonly VersionStringComparer Instance = new();
-
-        public int Compare(string? x, string? y)
-        {
-            var (xCore, xPre) = Split(x ?? "");
-            var (yCore, yPre) = Split(y ?? "");
-
-            var xParts = xCore.Split('.');
-            var yParts = yCore.Split('.');
-            for (var i = 0; i < Math.Max(xParts.Length, yParts.Length); i++)
-            {
-                var xNum = i < xParts.Length && int.TryParse(xParts[i], out var xv) ? xv : 0;
-                var yNum = i < yParts.Length && int.TryParse(yParts[i], out var yv) ? yv : 0;
-                var byNum = xNum.CompareTo(yNum);
-                if (byNum != 0)
-                {
-                    return byNum;
-                }
-            }
-
-            if (xPre.Length == 0 && yPre.Length == 0)
-            {
-                return 0;
-            }
-
-            if (xPre.Length == 0)
-            {
-                return 1;
-            }
-
-            if (yPre.Length == 0)
-            {
-                return -1;
-            }
-
-            return string.CompareOrdinal(xPre, yPre);
-        }
-
-        private static (string Core, string Prerelease) Split(string version)
-        {
-            var dash = version.IndexOf('-', StringComparison.Ordinal);
-            return dash < 0 ? (version, "") : (version[..dash], version[(dash + 1)..]);
-        }
     }
 
     [GeneratedRegex("^[0-9]")]

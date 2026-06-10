@@ -31,7 +31,7 @@ public static class GlobalPackagesCache
             ? new[] { Path.Combine(packageDir, version.ToLowerInvariant()) }
             : Directory
                 .EnumerateDirectories(packageDir)
-                .OrderByDescending(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(d => Path.GetFileName(d), SemVerStringComparer.Instance)
                 .ToArray();
 
         foreach (var versionDir in versionDirs)

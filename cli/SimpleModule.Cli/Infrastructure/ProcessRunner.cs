@@ -17,6 +17,16 @@ public static class ProcessRunner
         IReadOnlyDictionary<string, string>? environment = null
     )
     {
+        // npm/npx are .cmd shims on Windows; CreateProcess cannot start them
+        // directly (and .NET blocks cmd files with ArgumentList), so route
+        // through cmd.exe there.
+        var actualArguments = arguments;
+        if (OperatingSystem.IsWindows() && fileName is "npx" or "npm")
+        {
+            actualArguments = ["/c", fileName, .. arguments];
+            fileName = "cmd.exe";
+        }
+
         var psi = new ProcessStartInfo
         {
             FileName = fileName,
@@ -25,7 +35,7 @@ public static class ProcessRunner
             UseShellExecute = false,
             WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory,
         };
-        foreach (var argument in arguments)
+        foreach (var argument in actualArguments)
         {
             psi.ArgumentList.Add(argument);
         }

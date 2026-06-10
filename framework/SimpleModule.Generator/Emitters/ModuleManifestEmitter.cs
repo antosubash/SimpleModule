@@ -128,10 +128,14 @@ internal static class ModuleManifestEmitter
         if (string.IsNullOrEmpty(coreVersion))
             return "";
 
+        // The assembly identity carries no prerelease tag, so the referenced Core
+        // may actually be a prerelease of this version. "-0" is SemVer's smallest
+        // prerelease: the bound admits prereleases of coreVersion itself, encoding
+        // that semantic in the manifest rather than in each consumer.
         var majorPart = coreVersion.Split('.')[0];
         return int.TryParse(majorPart, out var major)
-            ? $">={coreVersion} <{major + 1}.0.0"
-            : $">={coreVersion}";
+            ? $">={coreVersion}-0 <{major + 1}.0.0"
+            : $">={coreVersion}-0";
     }
 
     private static string StripGlobal(string fullyQualifiedName) =>

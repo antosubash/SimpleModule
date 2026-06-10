@@ -23,6 +23,12 @@ public sealed class PackSettings : CommandSettings
     [Description("Skip running the module's test project.")]
     public bool SkipTests { get; init; }
 
+    [CommandOption("--skip-externals-check")]
+    [Description(
+        "Treat inlined-React markers in the bundle as warnings instead of errors (escape hatch for false positives from React-ecosystem libraries like react-is)."
+    )]
+    public bool SkipExternalsCheck { get; init; }
+
     [CommandOption("-c|--configuration")]
     [Description("Build configuration. Default: Release")]
     public string Configuration { get; init; } = "Release";
@@ -86,18 +92,25 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
             var violations = BundleExternalsValidator.Validate(Path.Combine(implDir, "wwwroot"));
             if (violations.Count > 0)
             {
+                var color = settings.SkipExternalsCheck ? "yellow" : "red";
+                var symbol = settings.SkipExternalsCheck ? "!" : "✗";
                 foreach (var violation in violations)
                 {
                     AnsiConsole.MarkupLine(
-                        $"[red]✗ {Markup.Escape(Path.GetFileName(violation.File))} inlines a host-provided library (marker: {Markup.Escape(violation.Marker)})[/]"
+                        $"[{color}]{symbol} {Markup.Escape(Path.GetFileName(violation.File))} contains an inlined-React marker ({Markup.Escape(violation.Marker)})[/]"
                     );
                 }
 
-                return Fail(
-                    "Module bundles must externalize react, react-dom, react/jsx-runtime and "
-                        + "@inertiajs/react — they are provided by the host. Check the module's "
-                        + "vite.config.ts uses defineModuleConfig from @simplemodule/client."
-                );
+                if (!settings.SkipExternalsCheck)
+                {
+                    return Fail(
+                        "Module bundles must externalize react, react-dom, react/jsx-runtime and "
+                            + "@inertiajs/react — they are provided by the host. Check the module's "
+                            + "vite.config.ts uses defineModuleConfig from @simplemodule/client. "
+                            + "If the marker comes from a legitimately bundled library (e.g. react-is), "
+                            + "re-run with --skip-externals-check."
+                    );
+                }
             }
         }
 

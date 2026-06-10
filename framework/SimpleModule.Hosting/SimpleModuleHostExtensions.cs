@@ -243,7 +243,12 @@ public static partial class SimpleModuleHostExtensions
         )
         {
             using var scope = app.Services.CreateScope();
-            var infos = scope.ServiceProvider.GetServices<ModuleDbContextInfo>();
+            // Host context FIRST: if a packaged module's MigrateAsync ran before the
+            // host's EnsureCreatedAsync on a fresh database, EnsureCreated would see a
+            // non-empty database and silently skip creating the host tables.
+            var infos = scope
+                .ServiceProvider.GetServices<ModuleDbContextInfo>()
+                .OrderBy(i => i.ModuleName == DatabaseConstants.HostModuleName ? 0 : 1);
 
             foreach (var info in infos)
             {
@@ -280,6 +285,9 @@ public static partial class SimpleModuleHostExtensions
             app.Logger.LogInformation(
                 "SIMPLEMODULE_MIGRATE_ONLY=1: database initialization complete; exiting without starting the server."
             );
+            // Graceful teardown (Wolverine, DbContext pools, SQLite WAL) before the
+            // hard exit — Environment.Exit alone would skip all disposal.
+            await app.DisposeAsync();
             Environment.Exit(0);
         }
 

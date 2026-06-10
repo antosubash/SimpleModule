@@ -23,7 +23,19 @@ public sealed class ModuleManifestRegistry : IModuleManifestRegistry
             if (!seenAssemblies.Add(assembly.FullName ?? assembly.GetName().Name ?? ""))
                 continue;
 
-            var manifest = ModuleManifestReader.TryRead(assembly);
+            ModuleManifest? manifest;
+            try
+            {
+                manifest = ModuleManifestReader.TryRead(assembly);
+            }
+            catch (ModuleManifestException)
+            {
+                // One unreadable manifest (newer schemaVersion, corrupt JSON) must
+                // not take down every page render — the module simply behaves like
+                // a pre-manifest module and falls back to convention resolution.
+                continue;
+            }
+
             if (manifest is not null && !_byName.ContainsKey(manifest.Name))
                 _byName[manifest.Name] = manifest;
         }
