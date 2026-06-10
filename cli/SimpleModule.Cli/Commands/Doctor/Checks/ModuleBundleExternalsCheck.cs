@@ -32,9 +32,12 @@ public sealed class ModuleBundleExternalsCheck : IDoctorCheck
             {
                 foreach (var violation in violations)
                 {
+                    // Warning, not Fail: markers can come from legitimately
+                    // bundled React-ecosystem libs (react-is); `sm pack` is the
+                    // enforcement gate and has --skip-externals-check.
                     yield return new CheckResult(
                         $"{module} bundle externals",
-                        CheckStatus.Fail,
+                        CheckStatus.Warning,
                         $"{Path.GetFileName(violation.File)} contains inlined-React marker {violation.Marker} — "
                             + "externalize react/react-dom/@inertiajs/react via defineModuleConfig"
                     );

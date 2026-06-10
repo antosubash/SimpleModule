@@ -59,6 +59,11 @@ public sealed class UpgradeCommand : AsyncCommand<UpgradeSettings>
             )
             .ToList();
 
+        if (settings.Version is not null && settings.PackageId is null)
+        {
+            return Fail("--version requires a package id (versions are per-package).");
+        }
+
         if (installed.Count == 0)
         {
             return Fail(
@@ -69,6 +74,13 @@ public sealed class UpgradeCommand : AsyncCommand<UpgradeSettings>
         }
 
         var source = settings.Source ?? SmConfig.Load(solution.RootPath).Registry;
+        if (NuGetClient.IsLocalDirectorySource(source))
+        {
+            // The bumped reference must be restorable: register local feeds just
+            // like sm add does.
+            NuGetConfigManipulator.EnsureLocalSource(solution.RootPath, Path.GetFullPath(source));
+        }
+
         var hostVersion = HostFrameworkVersionResolver.Resolve(solution.RootPath);
         var upgraded = 0;
         var anyHasDbContext = false;
@@ -94,6 +106,15 @@ public sealed class UpgradeCommand : AsyncCommand<UpgradeSettings>
             }
 
             var manifest = NupkgManifestReader.TryRead(nupkgPath, reference.Id);
+            if (nupkgPath.Contains("sm-upgrade-", StringComparison.Ordinal))
+            {
+                try
+                {
+                    File.Delete(nupkgPath);
+                }
+                catch (IOException) { }
+            }
+
             if (manifest is null)
             {
                 return Fail(
@@ -210,7 +231,10 @@ public sealed class UpgradeCommand : AsyncCommand<UpgradeSettings>
             return (null, "", $"Version {target} of {packageId} not found on '{source}'.");
         }
 
-        var tempPath = Path.Combine(Path.GetTempPath(), $"{packageId}.{target}.nupkg");
+        var tempPath = Path.Combine(
+            Path.GetTempPath(),
+            $"sm-upgrade-{Guid.NewGuid():N}-{packageId}.{target}.nupkg"
+        );
         await NuGetClient.DownloadNupkgAsync(serviceIndex, packageId, target, tempPath);
         return (tempPath, target, null);
     }

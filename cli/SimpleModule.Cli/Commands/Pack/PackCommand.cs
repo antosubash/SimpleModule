@@ -231,14 +231,21 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
                     return FailResult("dotnet pack failed:\n" + Tail(pack.Error, pack.Output));
                 }
 
-                var created = System.Text.RegularExpressions.Regex.Match(
-                    pack.Output,
-                    "Successfully created package '([^']+)'"
-                );
-                if (created.Success)
+                // Locate the produced nupkg on disk — MSBuild's "Successfully
+                // created package" message is localized and unreliable to parse.
+                var packageId = Path.GetFileNameWithoutExtension(csproj);
+                var produced = Directory
+                    .EnumerateFiles(outputDir, packageId + ".*.nupkg")
+                    .OrderByDescending(File.GetLastWriteTimeUtc)
+                    .FirstOrDefault();
+                if (produced is null)
                 {
-                    packages.Add(created.Groups[1].Value);
+                    return FailResult(
+                        $"dotnet pack reported success but no {packageId}.*.nupkg was found in {outputDir}."
+                    );
                 }
+
+                packages.Add(produced);
             }
         }
         finally

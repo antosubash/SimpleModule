@@ -62,6 +62,16 @@ public sealed partial class PendingModuleMigrationsCheck : IDoctorCheck
         }
 
         var applied = ReadAppliedMigrations(dbPath);
+        if (applied is null)
+        {
+            yield return new CheckResult(
+                "Module migrations",
+                CheckStatus.Warning,
+                "the database could not be read (locked or recovering) — migration state unverified"
+            );
+            yield break;
+        }
+
         foreach (var (packageId, ids) in modulesWithMigrations)
         {
             var pending = ids.Where(id => !applied.Contains(id)).ToList();
@@ -120,7 +130,7 @@ public sealed partial class PendingModuleMigrationsCheck : IDoctorCheck
         return null;
     }
 
-    private static HashSet<string> ReadAppliedMigrations(string dbPath)
+    private static HashSet<string>? ReadAppliedMigrations(string dbPath)
     {
         var applied = new HashSet<string>(StringComparer.Ordinal);
         try
@@ -135,9 +145,14 @@ public sealed partial class PendingModuleMigrationsCheck : IDoctorCheck
                 applied.Add(reader.GetString(0));
             }
         }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 1)
+        {
+            // "no such table": EnsureCreated database — everything is pending.
+        }
         catch (SqliteException)
         {
-            // No history table yet (EnsureCreated database) — everything is pending.
+            // Locked/busy/corrupt: unknown state, NOT "all pending".
+            return null;
         }
 
         return applied;

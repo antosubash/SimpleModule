@@ -56,22 +56,27 @@ public sealed class PublishCommand : AsyncCommand<PublishSettings>
             "sm-publish-" + Guid.NewGuid().ToString("N")
         );
 
-        var (packExit, packages) = await PackCommand.RunAsync(
-            new PackSettings
-            {
-                ModulePath = settings.ModulePath,
-                Version = settings.Version,
-                SkipTests = settings.SkipTests,
-                Output = outputDir,
-            }
-        );
-        if (packExit != 0)
-        {
-            return packExit;
-        }
-
         try
         {
+            var (packExit, packages) = await PackCommand.RunAsync(
+                new PackSettings
+                {
+                    ModulePath = settings.ModulePath,
+                    Version = settings.Version,
+                    SkipTests = settings.SkipTests,
+                    Output = outputDir,
+                }
+            );
+            if (packExit != 0)
+            {
+                return packExit;
+            }
+
+            if (packages.Count == 0)
+            {
+                return Fail("Pack produced no packages — nothing to push.");
+            }
+
             var source = settings.Source ?? SmConfig.Load(Directory.GetCurrentDirectory()).Registry;
             var apiKey = settings.ApiKey ?? Environment.GetEnvironmentVariable("NUGET_API_KEY");
 

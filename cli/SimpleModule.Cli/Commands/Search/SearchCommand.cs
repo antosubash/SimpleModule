@@ -182,7 +182,9 @@ public sealed class SearchCommand : AsyncCommand<SearchSettings>
     )
     {
         var searchBase = await ResolveSearchServiceAsync(new Uri(serviceIndexUrl));
-        var query = Uri.EscapeDataString(settings.Query ?? "");
+        // Include the tag in the server-side query so tagged modules rank into
+        // the fetched window; the client-side tag filter below stays the gate.
+        var query = Uri.EscapeDataString(("simplemodule-module " + (settings.Query ?? "")).Trim());
         var url =
             $"{searchBase}?q={query}&take={Math.Max(settings.Take * 3, 30)}"
             + $"&prerelease={(settings.Prerelease ? "true" : "false")}";
@@ -257,10 +259,12 @@ public sealed class SearchCommand : AsyncCommand<SearchSettings>
         var parts = fileName.Split('.');
         for (var i = 1; i < parts.Length; i++)
         {
-            if (parts[i].Length > 0 && char.IsDigit(parts[i][0]))
+            var version = string.Join('.', parts[i..]);
+            // The version must look like "N.N..."; a digit-leading id segment
+            // (e.g. Acme.2FA) must not be mistaken for the version start.
+            if (System.Text.RegularExpressions.Regex.IsMatch(version, @"^\d+\.\d+"))
             {
                 var id = string.Join('.', parts[..i]);
-                var version = string.Join('.', parts[i..]);
                 if (id.Length > 0)
                 {
                     return (id, version);

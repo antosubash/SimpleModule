@@ -28,11 +28,33 @@ public static partial class PackageReferenceManipulator
         }
         else
         {
-            InsertReferenceLine(
-                csprojPath,
-                $"<PackageReference Include=\"{packageId}\" Version=\"{version}\" />"
-            );
+            // An existing single-line reference must have its Version UPDATED —
+            // InsertReferenceLine alone would no-op and silently skip upgrades.
+            if (!TryUpdateInlineVersion(csprojPath, packageId, version))
+            {
+                InsertReferenceLine(
+                    csprojPath,
+                    $"<PackageReference Include=\"{packageId}\" Version=\"{version}\" />"
+                );
+            }
         }
+    }
+
+    private static bool TryUpdateInlineVersion(string csprojPath, string packageId, string version)
+    {
+        var token = $"<PackageReference Include=\"{packageId}\"";
+        var lines = File.ReadAllLines(csprojPath).ToList();
+        var index = lines.FindIndex(l => l.Contains(token, StringComparison.Ordinal));
+        if (index < 0)
+        {
+            return false;
+        }
+
+        var indent = DetectIndent(lines[index], "    ");
+        lines[index] =
+            $"{indent}<PackageReference Include=\"{packageId}\" Version=\"{version}\" />";
+        File.WriteAllLines(csprojPath, lines);
+        return true;
     }
 
     public static bool RemovePackage(string csprojPath, string solutionRoot, string packageId)
