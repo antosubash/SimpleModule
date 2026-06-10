@@ -77,3 +77,61 @@ Notable finds while fixing:
   `SaveChangesAndFlushMessagesAsync`, which per Wolverine commits the open transaction
   before flushing. `FakeDbContextOutbox` now mirrors that commit behavior.
 
+# Task: Module distribution — Session 1 (package contract)
+
+Full plan: docs/superpowers/plans/2026-06-10-module-packaging-session1.md
+Branch: worktree-module-packaging-s1
+(Previous todo — design-system consistency pass — shipped in PR #243.)
+
+## Plan
+
+- [x] Marketplace-module audit → already deleted in b2698964 (PR #145); recommend leaving deleted, harvest NuGet-client patterns from history for Session 3 `sm search`
+- [x] Core: `ModuleManifest` model + `ModuleManifestAttribute` + `ModuleManifestReader` (schemaVersion gate, forward-compat parsing)
+- [x] Generator: `EventFinder` — events published (IEvent implementors) / consumed (Wolverine-convention handlers)
+- [x] Generator: `ModuleManifestEmitter` + `[Module(DisplayName=…)]` + `SimpleModuleProjectKind`/`SimpleModuleFrameworkCompat` build-property switches
+- [x] modules/Directory.Build.props: attach generator in module-kind to module impl projects
+- [x] Hosting: `IModuleManifestRegistry` + `sm-module-assets` JSON script injection in the HTML shell
+- [x] Client: manifest-first bundle resolution in resolve-page.ts (convention probing kept as fallback)
+- [x] Hosting: apply EF migrations for module DbContexts that bundle them
+- [x] Docs: docs/site/advanced/module-packaging.md (manifest schema v1, nupkg layout, externals contract, compat rules)
+- [x] Checkpoint: FeatureFlags packed → local feed → PackageReference in Host → page renders in browser (verified via Playwright, logged in as admin)
+
+## Review
+
+- All suites green: solution build 0 warnings; Core 258, Generator 213, Database 93, DevTools 35, CLI 136 (xunit v3 exe), 15 module suites all pass; `npm run check` + `validate-pages` clean.
+- Deviation: manifest is an assembly-level attribute, not an embedded resource — Roslyn generators cannot emit resources. `sm pack` (Session 2) will additionally extract `module-manifest.json` into the nupkg.
+- Next (Session 2): `sm pack` / `sm add` / `sm remove` / `sm list`; handle CPM (NU1008) on add; force production frontend build on pack.
+
+# Task: Module distribution — Session 2 (pack & add)
+
+Full plan: docs/superpowers/plans/2026-06-10-module-packaging-session2.md
+
+## Plan
+
+- [x] SmConfig (sm.json registry abstraction) + FrameworkCompatChecker (SemVer ranges, prerelease-aware lower bounds)
+- [x] AssemblyManifestReader (System.Reflection.Metadata, no assembly load) + NupkgManifestReader + ModuleManifestData
+- [x] PackageReferenceManipulator (CPM-aware, #259) + NuGetConfigManipulator + HostFrameworkVersionResolver
+- [x] NuGetClient (V3 service index + flat container + local feeds) + BundleExternalsValidator
+- [x] SIMPLEMODULE_MIGRATE_ONLY framework hook (deterministic CLI migrations, #258)
+- [x] sm pack (production vite build #260, externals fail-closed, tests, manifest validation, module-manifest.json in nupkg root)
+- [x] sm add (compat gate BEFORE changes, CPM-aware, nuget.config, build, migrate-only run, auto-doctor)
+- [x] sm remove (reference + CPM entry removed; loud schema/data left-behind warning)
+- [x] sm list packaged-modules table with framework compat status
+- [x] Scaffold src/modules/Directory.Build.props so downstream modules emit manifests (sm pack works for third parties)
+- [x] Checkpoint: packed FeatureFlags from worktree → sm new project Demo (0.0.99-local feed) → sm add (compat ✓, migrations ✓, doctor ✓) → module page renders in browser → sm pack Items (third-party proof) → sm remove with warning
+
+## Review
+
+- Bugs found & fixed by the checkpoint: generator emitted non-partial HostDbContext in non-identity hosts (CS0260 with Vogen conventions); TS type extraction created fake source-module dirs for installed packages; compat checker refused prereleases of the derived lower bound.
+- Issues filed: #261 (@simplemodule/ui not host-provided), #262 (bare scaffold 500s on RequirePermission without an auth module).
+- All suites green; full build 0 warnings.
+
+# Task: Module distribution — Session 3 (publish, search, upgrade)
+
+- [x] sm publish (pack pipeline + dotnet nuget push, --dry-run, --register stub with honest "not yet")
+- [x] sm search (local feed via manifests w/ inline compat; remote via NuGet search + simplemodule-module tag)
+- [x] sm upgrade (highest-stable resolve, compat gate w/ --force, CPM bump, build, migrate-only run)
+- [x] sm doctor: bundle externals (duplicate React), packaged manifest schemaVersion/compat, pending module migrations (SQLite __EFMigrationsHistory)
+- [x] FeatureFlags now bundles a reference EF migration (AddFeatureFlagChangeLog, idempotent SQL)
+- [x] Checkpoint lifecycle on local feed: search → add v1 → publish v2 (schema change) → upgrade REFUSED on incompatible host (compat gate + --force hint) → framework bump → upgrade v1→v2 → migration applied (sqlite verified) → doctor green
+- [x] docs/site/cli/packaging.md: publish/search/upgrade/doctor sections + full lifecycle walkthrough

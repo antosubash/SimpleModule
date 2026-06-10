@@ -30,10 +30,13 @@ internal static class DiscoveryDataBuilder
         List<DiscoveredTypeInfo> agentToolProviders,
         List<DiscoveredTypeInfo> knowledgeSources,
         List<FormRequestInfo> formRequests,
+        List<EventTypeRecord> eventTypes,
+        List<EventHandlerRecord> eventHandlers,
         Dictionary<string, string> contractsAssemblyMap,
         bool hasAgentsAssembly,
         bool hasRagAssembly,
-        string hostAssemblyName
+        string hostAssemblyName,
+        string coreAssemblyVersion
     )
     {
         return new DiscoveryData(
@@ -53,6 +56,8 @@ internal static class DiscoveryDataBuilder
                     m.HasConfigureRateLimits,
                     m.RoutePrefix,
                     m.ViewPrefix,
+                    m.DisplayName,
+                    m.Version,
                     m.Endpoints.Select(e => new EndpointInfoRecord(
                             e.FullyQualifiedName,
                             e.RequiredPermissions.ToImmutableArray(),
@@ -184,10 +189,13 @@ internal static class DiscoveryDataBuilder
                     f.Location
                 ))
                 .ToImmutableArray(),
+            eventTypes.ToImmutableArray(),
+            eventHandlers.ToImmutableArray(),
             contractsAssemblyMap.Keys.ToImmutableArray(),
             hasAgentsAssembly,
             hasRagAssembly,
-            hostAssemblyName
+            hostAssemblyName,
+            coreAssemblyVersion
         );
     }
 }

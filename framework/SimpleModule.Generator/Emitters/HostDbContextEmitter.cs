@@ -144,7 +144,11 @@ internal sealed class HostDbContextEmitter : IEmitter
         }
         else
         {
-            sb.AppendLine("public class HostDbContext(");
+            // Always partial: ValueConverterConventionsEmitter contributes a
+            // partial ConfigureConventions whenever Vogen value objects exist,
+            // independent of whether an Identity context is present (CS0260
+            // in non-identity hosts otherwise).
+            sb.AppendLine("public partial class HostDbContext(");
             sb.AppendLine("    DbContextOptions<HostDbContext> options,");
             sb.AppendLine("    IOptions<DatabaseOptions> dbOptions");
             sb.AppendLine(") : DbContext(options)");

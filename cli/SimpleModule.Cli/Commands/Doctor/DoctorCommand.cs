@@ -20,27 +20,8 @@ public sealed class DoctorCommand : Command<DoctorSettings>
 
         AnsiConsole.Write(new Rule("[blue]Project health check[/]").LeftJustified());
 
-        IDoctorCheck[] checks =
-        [
-            new SolutionStructureCheck(),
-            new ProjectReferenceCheck(),
-            new SlnxEntriesCheck(),
-            new CsprojConventionCheck(),
-            new ContractsIsolationCheck(),
-            new ModulePatternCheck(),
-            new ModuleAttributeCheck(),
-            new ViewEndpointNamingCheck(),
-            new PagesRegistryCheck(),
-            new ViteConfigCheck(),
-            new PackageJsonCheck(),
-            new NpmWorkspaceCheck(),
-        ];
-
-        var results = new List<CheckResult>();
-        foreach (var check in checks)
-        {
-            results.AddRange(check.Run(solution));
-        }
+        var checks = CreateChecks();
+        var results = RunChecks(solution);
 
         var fixedCount = 0;
         if (settings.Fix)
@@ -69,7 +50,39 @@ public sealed class DoctorCommand : Command<DoctorSettings>
         return failCount > 0 ? 1 : 0;
     }
 
-    private static void RenderResults(IReadOnlyList<CheckResult> results)
+    private static IDoctorCheck[] CreateChecks() =>
+        [
+            new SolutionStructureCheck(),
+            new ProjectReferenceCheck(),
+            new SlnxEntriesCheck(),
+            new CsprojConventionCheck(),
+            new ContractsIsolationCheck(),
+            new ModulePatternCheck(),
+            new ModuleAttributeCheck(),
+            new ViewEndpointNamingCheck(),
+            new PagesRegistryCheck(),
+            new ViteConfigCheck(),
+            new PackageJsonCheck(),
+            new NpmWorkspaceCheck(),
+            new ModuleBundleExternalsCheck(),
+            new PackagedModuleManifestCheck(),
+            new PendingModuleMigrationsCheck(),
+        ];
+
+    /// <summary>Runs all doctor checks; reused by other commands (e.g. sm add).</summary>
+    public static List<CheckResult> RunChecks(SolutionContext solution)
+    {
+        var results = new List<CheckResult>();
+        foreach (var check in CreateChecks())
+        {
+            results.AddRange(check.Run(solution));
+        }
+
+        return results;
+    }
+
+    /// <summary>Renders check results as the standard doctor table.</summary>
+    public static void RenderResults(IReadOnlyList<CheckResult> results)
     {
         // Failures first so they're the first thing the user sees, then warnings,
         // then passes. Preserve discovery order within each status bucket.

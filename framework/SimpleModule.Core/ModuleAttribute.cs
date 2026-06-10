@@ -10,6 +10,9 @@ public sealed class ModuleAttribute : Attribute
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
 
+    /// <summary>Human-readable module name for UIs and the module manifest. Defaults to <see cref="Name"/>.</summary>
+    public string DisplayName { get; set; } = "";
+
     public ModuleAttribute(string name, string version = "1.0.0")
     {
         Name = name;

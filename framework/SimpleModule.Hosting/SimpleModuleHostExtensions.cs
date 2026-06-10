@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Exceptions;
@@ -17,6 +19,7 @@ using SimpleModule.Core.Health;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Maintenance;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.Modules;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.Core.Security;
 using SimpleModule.Database;
@@ -27,6 +30,7 @@ using SimpleModule.Hosting.Broadcasting;
 using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Maintenance;
 using SimpleModule.Hosting.Middleware;
+using SimpleModule.Hosting.Modules;
 using SimpleModule.Hosting.RateLimiting;
 using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
@@ -112,6 +116,13 @@ public static partial class SimpleModuleHostExtensions
         }
 
         builder.Services.AddSingleton<IInertiaPageRenderer, HtmlFileInertiaPageRenderer>();
+
+        // Compile-time module manifests, read from each module assembly's
+        // [assembly: ModuleManifest] attribute. Resolved lazily so registration
+        // order relative to the generated AddModules() does not matter.
+        builder.Services.AddSingleton<IModuleManifestRegistry>(sp => new ModuleManifestRegistry(
+            sp.GetServices<IModule>()
+        ));
 
         // Unified caching abstraction (IFusionCache) shared across all modules.
         // Stampede-safe GetOrSetAsync built in; five-minute default entry duration.
@@ -220,14 +231,24 @@ public static partial class SimpleModuleHostExtensions
         // Database initialization
         // SQLite (file-based) always needs auto-initialization since the DB file may not exist.
         // Managed databases (PostgreSQL, SQL Server) skip this in production — apply migrations externally.
+        // SIMPLEMODULE_MIGRATE_ONLY=1 is the CLI's migration entry point (`sm add`/`sm upgrade`):
+        // it forces database initialization regardless of environment, then exits without
+        // serving traffic — the deterministic migration hook for installed packaged modules.
+        var migrateOnly = Environment.GetEnvironmentVariable("SIMPLEMODULE_MIGRATE_ONLY") == "1";
         var smOptions = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (
-            !app.Environment.IsProduction()
+            migrateOnly
+            || !app.Environment.IsProduction()
             || smOptions.DatabaseProvider == DatabaseProvider.Sqlite
         )
         {
             using var scope = app.Services.CreateScope();
-            var infos = scope.ServiceProvider.GetServices<ModuleDbContextInfo>();
+            // Host context FIRST: if a packaged module's MigrateAsync ran before the
+            // host's EnsureCreatedAsync on a fresh database, EnsureCreated would see a
+            // non-empty database and silently skip creating the host tables.
+            var infos = scope
+                .ServiceProvider.GetServices<ModuleDbContextInfo>()
+                .OrderBy(i => i.ModuleName == DatabaseConstants.HostModuleName ? 0 : 1);
 
             foreach (var info in infos)
             {
@@ -236,11 +257,14 @@ public static partial class SimpleModuleHostExtensions
 
                 // DbContexts with EF migrations use MigrateAsync; those without (e.g. scaffolded
                 // module contexts that ship no migrations) fall back to EnsureCreatedAsync so
-                // their tables exist on first run. Only the Host context typically ships
-                // migrations; module contexts rely on the unified HostDbContext for schema.
+                // their tables exist on first run. In-repo module contexts ship no migrations
+                // and rely on the unified HostDbContext for schema, but packaged (installed)
+                // modules MUST bundle their own EF migrations — EnsureCreated cannot evolve
+                // an existing database across module versions.
+                var hasMigrations = db.Database.GetMigrations().Any();
                 if (info.ModuleName == DatabaseConstants.HostModuleName)
                 {
-                    if (db.Database.GetMigrations().Any())
+                    if (hasMigrations)
                     {
                         await db.Database.MigrateAsync();
                     }
@@ -249,7 +273,22 @@ public static partial class SimpleModuleHostExtensions
                         await db.Database.EnsureCreatedAsync();
                     }
                 }
+                else if (hasMigrations)
+                {
+                    await db.Database.MigrateAsync();
+                }
             }
+        }
+
+        if (migrateOnly)
+        {
+            app.Logger.LogInformation(
+                "SIMPLEMODULE_MIGRATE_ONLY=1: database initialization complete; exiting without starting the server."
+            );
+            // Graceful teardown (Wolverine, DbContext pools, SQLite WAL) before the
+            // hard exit — Environment.Exit alone would skip all disposal.
+            await app.DisposeAsync();
+            Environment.Exit(0);
         }
 
         app.UseForwardedHeaders();

@@ -18,6 +18,8 @@ internal readonly record struct ModuleInfoRecord(
     bool HasConfigureRateLimits,
     string RoutePrefix,
     string ViewPrefix,
+    string DisplayName,
+    string Version,
     ImmutableArray<EndpointInfoRecord> Endpoints,
     ImmutableArray<ViewInfoRecord> Views,
     SourceLocationRecord? Location
@@ -39,6 +41,8 @@ internal readonly record struct ModuleInfoRecord(
             && HasConfigureRateLimits == other.HasConfigureRateLimits
             && RoutePrefix == other.RoutePrefix
             && ViewPrefix == other.ViewPrefix
+            && DisplayName == other.DisplayName
+            && Version == other.Version
             && Endpoints.SequenceEqual(other.Endpoints)
             && Views.SequenceEqual(other.Views)
             && Location == other.Location;
@@ -61,6 +65,8 @@ internal readonly record struct ModuleInfoRecord(
         hash = HashHelper.Combine(hash, HasConfigureRateLimits.GetHashCode());
         hash = HashHelper.Combine(hash, (RoutePrefix ?? "").GetHashCode());
         hash = HashHelper.Combine(hash, (ViewPrefix ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (DisplayName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (Version ?? "").GetHashCode());
         hash = HashHelper.HashArray(hash, Endpoints);
         hash = HashHelper.HashArray(hash, Views);
         hash = HashHelper.Combine(hash, Location.GetHashCode());
@@ -108,6 +114,13 @@ internal readonly record struct ModuleDependencyRecord(
     string ModuleName,
     string DependsOnModuleName,
     string ContractsAssemblyName
+);
+
+internal readonly record struct EventTypeRecord(string FullyQualifiedName, string ModuleName);
+
+internal readonly record struct EventHandlerRecord(
+    string EventFullyQualifiedName,
+    string ModuleName
 );
 
 internal readonly record struct IllegalModuleReferenceRecord(

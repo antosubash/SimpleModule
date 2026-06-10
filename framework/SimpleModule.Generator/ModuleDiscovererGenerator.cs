@@ -39,12 +39,41 @@ public class ModuleDiscovererGenerator : IIncrementalGenerator
                 SymbolDiscovery.Extract(compilation, cancellationToken)
         );
 
-        context.RegisterSourceOutput(
-            dataProvider,
-            static (spc, data) =>
+        // MSBuild properties surfaced via <CompilerVisibleProperty>:
+        //   SimpleModuleProjectKind = "Module" switches the generator from host
+        //   emission (AddModules, endpoint maps, ...) to emitting only the module
+        //   manifest attribute into the module's own assembly.
+        //   SimpleModuleFrameworkCompat overrides the manifest's compat range.
+        var optionsProvider = context.AnalyzerConfigOptionsProvider.Select(
+            static (provider, _) =>
             {
+                provider.GlobalOptions.TryGetValue(
+                    "build_property.SimpleModuleProjectKind",
+                    out var kind
+                );
+                provider.GlobalOptions.TryGetValue(
+                    "build_property.SimpleModuleFrameworkCompat",
+                    out var compat
+                );
+                return (Kind: kind ?? "", Compat: compat ?? "");
+            }
+        );
+
+        context.RegisterSourceOutput(
+            dataProvider.Combine(optionsProvider),
+            static (spc, pair) =>
+            {
+                var (data, options) = pair;
                 if (data.Modules.Length == 0)
                     return;
+
+                if (
+                    string.Equals(options.Kind, "Module", System.StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    ModuleManifestEmitter.Emit(spc, data, options.Compat);
+                    return;
+                }
 
                 foreach (var emitter in Emitters)
                 {

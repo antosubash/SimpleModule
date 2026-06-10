@@ -53,6 +53,42 @@ public sealed class ProjectTemplates
         return content.Replace(BaseProjectName, projectName, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Directory.Build.props for src/modules: runs the source generator in
+    /// module-kind on every module project so each module assembly carries its
+    /// compile-time manifest ([assembly: ModuleManifest]) — required by
+    /// <c>sm pack</c> and host-side bundle discovery. Standalone scaffolds get
+    /// the generator from NuGet (CPM-pinned); repo-clone scaffolds reference the
+    /// repo's generator project as an analyzer like in-repo modules do.
+    /// </summary>
+    public string ModulesDirectoryBuildProps()
+    {
+        var generatorReference = _solution is null
+            ? """<PackageReference Include="SimpleModule.Generator" PrivateAssets="all" />"""
+            : $"""<ProjectReference Include="{Path.Combine(_solution.RootPath, "framework", "SimpleModule.Generator", "SimpleModule.Generator.csproj")}" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />""";
+
+        return $"""
+            <Project>
+              <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+              <PropertyGroup>
+                <SimpleModuleProjectKind Condition="'$(SimpleModuleProjectKind)' == ''">Module</SimpleModuleProjectKind>
+              </PropertyGroup>
+              <ItemGroup>
+                <CompilerVisibleProperty Include="SimpleModuleProjectKind" />
+                <CompilerVisibleProperty Include="SimpleModuleFrameworkCompat" />
+              </ItemGroup>
+              <!-- Module-kind manifest emission. Contracts and test projects declare no
+                   [Module] class, so the analyzer would be dead weight there. -->
+              <ItemGroup
+                Condition="!$(MSBuildProjectName.EndsWith('.Tests')) And !$(MSBuildProjectName.EndsWith('.Contracts'))"
+              >
+                {generatorReference}
+              </ItemGroup>
+            </Project>
+
+            """;
+    }
+
     public string DirectoryBuildProps()
     {
         if (_solution is null)

@@ -37,8 +37,13 @@ internal static class ModuleFinder
                             attr.ConstructorArguments.Length > 0
                                 ? attr.ConstructorArguments[0].Value as string ?? ""
                                 : "";
+                        var moduleVersion =
+                            attr.ConstructorArguments.Length > 1
+                                ? attr.ConstructorArguments[1].Value as string ?? ""
+                                : "";
                         var routePrefix = "";
                         var viewPrefix = "";
+                        var displayName = "";
                         foreach (var namedArg in attr.NamedArguments)
                         {
                             if (
@@ -54,6 +59,13 @@ internal static class ModuleFinder
                             )
                             {
                                 viewPrefix = vPrefix;
+                            }
+                            else if (
+                                namedArg.Key == "DisplayName"
+                                && namedArg.Value.Value is string dName
+                            )
+                            {
+                                displayName = dName;
                             }
                         }
 
@@ -122,6 +134,8 @@ internal static class ModuleFinder
                                 ),
                                 RoutePrefix = routePrefix,
                                 ViewPrefix = viewPrefix,
+                                DisplayName = displayName,
+                                Version = moduleVersion,
                                 AssemblyName = typeSymbol.ContainingAssembly.Name,
                                 Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                             }

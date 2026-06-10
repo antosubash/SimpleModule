@@ -194,6 +194,19 @@ public class HostDbContextGenerationTests
     }
 
     [Fact]
+    public void PlainDbContext_HostIsPartial_ForVogenConventionsCounterpart()
+    {
+        // ValueConverterConventionsEmitter contributes a partial HostDbContext
+        // whenever Vogen value objects exist — the main declaration must be
+        // partial in BOTH the identity and plain branches or non-identity
+        // hosts fail with CS0260.
+        var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(ModuleWithDbContext);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        GetHostDbContext(result).Should().Contain("public partial class HostDbContext(");
+    }
+
+    [Fact]
     public void IdentityDbContext_HostExtendsIdentityDbContext()
     {
         var compilation = GeneratorTestHelper.CreateCompilationWithEfCore(
