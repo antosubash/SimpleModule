@@ -257,8 +257,9 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
             catch (IOException) { }
         }
 
+        var packageVersion = settings.Version ?? manifest!.Version;
         AnsiConsole.MarkupLine(
-            $"[green]✓ Packed {Markup.Escape(manifest!.DisplayName)} {Markup.Escape(manifest.Version)}[/] → [blue]{Markup.Escape(outputDir)}[/]"
+            $"[green]✓ Packed {Markup.Escape(manifest!.DisplayName)} {Markup.Escape(packageVersion)}[/] → [blue]{Markup.Escape(outputDir)}[/]"
         );
         AnsiConsole.MarkupLine(
             $"[dim]  schema: {Markup.Escape(manifest.Schema)}  permissions: {manifest.Permissions.Count}  pages: {manifest.Pages.Count}  frameworkCompat: {Markup.Escape(manifest.FrameworkCompat)}[/]"
