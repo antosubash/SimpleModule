@@ -3,14 +3,12 @@ using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Tenants.Contracts;
 using SimpleModule.Tenants.Contracts.Events;
-using Wolverine;
 using Wolverine.EntityFrameworkCore;
 
 namespace SimpleModule.Tenants;
 
 public sealed partial class TenantService(
     TenantsDbContext db,
-    IMessageBus bus,
     IDbContextOutbox<TenantsDbContext> outbox,
     ILogger<TenantService> logger
 ) : ITenantContracts
@@ -81,10 +79,19 @@ public sealed partial class TenantService(
         }
 
         db.Tenants.Add(entity);
+
+        // TenantId is database-generated, so the entity must be saved before the
+        // event can carry it. The explicit transaction keeps the tenant row and
+        // the outbox envelope atomic: SaveChangesAndFlushMessagesAsync persists
+        // the envelope, commits the open transaction, and only then releases the
+        // event to the bus. The previous SaveChanges-then-PublishAsync pattern
+        // lost the event when the process died between the two calls.
+        await using var transaction = await db.Database.BeginTransactionAsync();
         await db.SaveChangesAsync();
+        await outbox.PublishAsync(new TenantCreatedEvent(entity.Id, entity.Name, entity.Slug));
+        await outbox.SaveChangesAndFlushMessagesAsync();
 
         LogTenantCreated(logger, entity.Id, entity.Name);
-        await bus.PublishAsync(new TenantCreatedEvent(entity.Id, entity.Name, entity.Slug));
 
         return MapToDto(entity);
     }

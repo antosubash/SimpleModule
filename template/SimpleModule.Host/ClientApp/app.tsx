@@ -120,7 +120,10 @@ router.on('httpException', (event) => {
   showToast({ variant: 'error', title: 'Error', message, autoDismissMs: 8000 });
 });
 
-router.on('exception', (event) => {
+// Inertia v3 renamed this event — 'exception' no longer exists, so the old
+// router.on('exception', ...) handler was dead code and network failures
+// surfaced nothing.
+router.on('networkError', (event) => {
   event.preventDefault();
   showToast({
     variant: 'error',
@@ -222,14 +225,18 @@ const ERROR_PAGES: Record<string, { default: React.ComponentType }> = {
 createInertiaApp({
   resolve: async (name) => {
     if (name in ERROR_PAGES) {
-      return ERROR_PAGES[name];
+      return ERROR_PAGES[name].default;
     }
 
     try {
       const page = await resolvePage(name);
-      return resolveLayout(page);
+      return resolveLayout(page).default;
     } catch (err) {
-      showErrorToast(`Failed to load page "${name}". Try refreshing the page.`);
+      showToast({
+        variant: 'error',
+        title: 'Error',
+        message: `Failed to load page "${name}". Try refreshing the page.`,
+      });
       throw err;
     }
   },

@@ -13,9 +13,10 @@ public class FileStorageModuleOptions : IModuleOptions
     public int MaxFileSizeMb { get; set; } = 50;
 
     /// <summary>
-    /// Comma-separated list of allowed file extensions for uploads.
-    /// Default: ".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip"
+    /// Comma-separated list of allowed file extensions for uploads. An empty
+    /// string disables the extension check (any type allowed, size limit still
+    /// applies). The default covers common documents, plain text, and images.
     /// </summary>
     public string AllowedExtensions { get; set; } =
-        ".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip";
+        ".txt,.csv,.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip";
 }

@@ -3,9 +3,9 @@
 /**
  * typecheck.mjs
  *
- * Runs `tsc --noEmit` in every module and package that has a tsconfig.json.
- * Each project is checked independently so @/* path aliases resolve correctly.
- * All checks run in parallel for speed.
+ * Runs `tsc --noEmit` in every module and package that has a tsconfig.json,
+ * plus the Host ClientApp. Each project is checked independently so @/* path
+ * aliases resolve correctly. All checks run in parallel for speed.
  *
  * Exit codes:
  *   0 = All projects pass type checking
@@ -68,9 +68,26 @@ function checkProject(dir) {
   });
 }
 
+// The Host ClientApp must always be in this list — it is the Inertia
+// bootstrap that every module page loads through. It went unchecked once
+// (no tsconfig.json, not listed here) and shipped a ReferenceError in its
+// page-load error handler.
+const clientAppDir = path.join(
+  projectRoot,
+  'template',
+  'SimpleModule.Host',
+  'ClientApp',
+);
+
+if (!fs.existsSync(path.join(clientAppDir, 'tsconfig.json'))) {
+  console.error(`Missing tsconfig.json in ${clientAppDir} — ClientApp must be type-checked.`);
+  process.exit(1);
+}
+
 const projects = [
   ...findProjects(modulesDir, 'nested'),
   ...findProjects(packagesDir, 'flat'),
+  clientAppDir,
 ];
 
 const results = await Promise.all(projects.map(checkProject));

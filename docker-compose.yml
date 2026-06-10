@@ -4,14 +4,30 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Development enables auto-migration. For production, apply migrations
-      # externally and set to Production.
+      # Development enables auto-migration and ephemeral signing keys for a
+      # local quickstart. Do NOT expose this stack to the internet as-is: set
+      # ASPNETCORE_ENVIRONMENT=Production (which additionally enforces signing
+      # certificates and refuses the password grant), apply migrations
+      # externally, and trust your reverse proxy via a comma-separated
+      # ForwardedHeaders__KnownProxies=10.0.0.5,10.0.0.6 (or
+      # ForwardedHeaders__KnownNetworks=10.0.0.0/8). Without it X-Forwarded-For
+      # is ignored and per-IP rate limiting keys every client to the proxy IP.
       ASPNETCORE_ENVIRONMENT: Development
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
       # Set to your public URL so OpenIddict registers correct redirect URIs.
       # Examples: https://app.simplemodule.dev, http://localhost:8080
       OpenIddict__BaseUrl: ${APP_BASE_URL:-http://localhost:8080}
+      # The ROPC password grant stays off even in this Development quickstart —
+      # combined with seeded credentials it would hand out fully-privileged
+      # tokens with a single POST /connect/token.
+      OpenIddict__AllowPasswordGrant: "false"
+      # Required: password for the seeded admin account. There is deliberately
+      # no default — put SEED_ADMIN_PASSWORD in your .env file.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      # Optional: password for the seeded demo user (outside Development the
+      # demo user is skipped entirely when this is unset).
+      Seed__UserPassword: ${SEED_USER_PASSWORD:-}
       # api stays in Producer mode — it enqueues jobs but never runs them.
       # All IModuleJob execution lives in the worker service below.
       BackgroundJobs__WorkerMode: Producer
@@ -39,6 +55,13 @@ services:
       Database__DefaultConnection: "Host=postgres;Port=5432;Database=simplemodule;Username=simplemodule;Password=${POSTGRES_PASSWORD:-simplemodule}"
       Database__Provider: PostgreSQL
       BackgroundJobs__WorkerMode: Consumer
+      # The worker runs the same module set as the api, including the user
+      # seeder. It must see the SAME seed passwords — otherwise whichever
+      # process wins the startup race seeds the admin account, and a worker
+      # without these would silently seed the compiled-in default password,
+      # defeating the api's required SEED_ADMIN_PASSWORD.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      Seed__UserPassword: ${SEED_USER_PASSWORD:-}
     volumes:
       - storage_data:/app/storage
     depends_on:
