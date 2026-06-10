@@ -276,7 +276,7 @@ public static partial class SimpleModuleHostExtensions
 
         if (migrateOnly)
         {
-            Console.WriteLine(
+            app.Logger.LogInformation(
                 "SIMPLEMODULE_MIGRATE_ONLY=1: database initialization complete; exiting without starting the server."
             );
             Environment.Exit(0);
