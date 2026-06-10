@@ -125,3 +125,13 @@ Full plan: docs/superpowers/plans/2026-06-10-module-packaging-session2.md
 - Bugs found & fixed by the checkpoint: generator emitted non-partial HostDbContext in non-identity hosts (CS0260 with Vogen conventions); TS type extraction created fake source-module dirs for installed packages; compat checker refused prereleases of the derived lower bound.
 - Issues filed: #261 (@simplemodule/ui not host-provided), #262 (bare scaffold 500s on RequirePermission without an auth module).
 - All suites green; full build 0 warnings.
+
+# Task: Module distribution — Session 3 (publish, search, upgrade)
+
+- [x] sm publish (pack pipeline + dotnet nuget push, --dry-run, --register stub with honest "not yet")
+- [x] sm search (local feed via manifests w/ inline compat; remote via NuGet search + simplemodule-module tag)
+- [x] sm upgrade (highest-stable resolve, compat gate w/ --force, CPM bump, build, migrate-only run)
+- [x] sm doctor: bundle externals (duplicate React), packaged manifest schemaVersion/compat, pending module migrations (SQLite __EFMigrationsHistory)
+- [x] FeatureFlags now bundles a reference EF migration (AddFeatureFlagChangeLog, idempotent SQL)
+- [x] Checkpoint lifecycle on local feed: search → add v1 → publish v2 (schema change) → upgrade REFUSED on incompatible host (compat gate + --force hint) → framework bump → upgrade v1→v2 → migration applied (sqlite verified) → doctor green
+- [x] docs/site/cli/packaging.md: publish/search/upgrade/doctor sections + full lifecycle walkthrough

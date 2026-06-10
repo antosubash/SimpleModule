@@ -79,3 +79,83 @@ cleanup is a deliberate, manual decision.
 `sm list` shows source modules (with route prefixes and endpoint counts) and a
 second table of installed packaged modules with their versions and framework
 compatibility status against the current host.
+
+## sm publish
+
+```bash
+sm publish [module-path] [--version <x.y.z>] [--source <feed-or-url>] [--api-key <key>] [--dry-run] [--register]
+```
+
+Runs the full `sm pack` pipeline, then pushes the nupkgs with
+`dotnet nuget push`. The API key comes from `--api-key` or `NUGET_API_KEY`
+(not needed for local folder feeds). `--dry-run` validates everything and
+shows what would be pushed. `--register` is the extension point for the
+future SimpleModule marketplace — today it explains that registration is not
+available yet (packages are already discoverable via the
+`simplemodule-module` tag).
+
+## sm search
+
+```bash
+sm search [query] [--source <feed-or-url>] [--take <n>] [--prerelease]
+```
+
+Lists SimpleModule modules on a registry. Local folder feeds are scanned by
+reading each nupkg's manifest (framework compatibility shown inline); remote
+registries use the NuGet search API filtered by the `simplemodule-module`
+tag (compatibility is verified definitively at `sm add` time).
+
+## sm upgrade
+
+```bash
+sm upgrade [package-id] [--version <x.y.z>] [--source <feed>] [--force] [--skip-migrations]
+```
+
+Upgrades one installed module (or all of them when no id is given): resolves
+the highest stable version, validates the new manifest's `frameworkCompat`
+range — **refusing violations unless `--force`** — bumps the CPM-aware
+reference, rebuilds, and applies bundled migrations via the migrate-only run.
+
+## Doctor packaging checks
+
+`sm doctor` validates the packaging contract too:
+
+- **bundle externals** — source modules whose built bundles inline a React
+  copy (the duplicate-React failure mode) fail the check;
+- **packaged module manifests** — unreadable/newer `schemaVersion` manifests
+  and framework-incompatible installed modules fail;
+- **pending module migrations** — bundled migration ids are compared against
+  the SQLite `__EFMigrationsHistory` table (other providers get a
+  cannot-verify warning) and pending ones are listed with the command to run.
+
+## Full lifecycle walkthrough
+
+The complete loop, runnable against a local folder feed (`./feed`):
+
+```bash
+# 1. New host + module
+sm new project Shop && cd Shop && npm install
+sm new module Catalog
+
+# 2. Pack & publish v1
+sm publish src/modules/Catalog --version 1.0.0 --source ../feed
+
+# 3. Discover and install (in any other SimpleModule host)
+sm search catalog --source ../feed
+sm add Catalog --version 1.0.0 --source ../feed
+#   → compat gate, CPM reference, build, migrations, doctor
+
+# 4. Ship v2 with a schema change: add an EF migration to the module
+#    (Migrations/<timestamp>_AddXyz.cs with [DbContext]+[Migration]), then
+sm publish src/modules/Catalog --version 1.1.0 --source ../feed
+
+# 5. Upgrade — compat-checked, migrations applied
+sm upgrade Catalog --source ../feed
+sm doctor          # "Migrations Catalog: N migration(s) applied"
+
+# 6. Uninstall (data stays, loudly)
+sm remove Catalog
+```
+
+An incompatible upgrade (module built for a newer framework) is refused with
+the reason and a `--force` override hint.
