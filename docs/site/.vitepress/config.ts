@@ -117,6 +117,7 @@ export default defineConfig({
             { text: 'Source Generator', link: '/advanced/source-generator' },
             { text: 'Type Generation', link: '/advanced/type-generation' },
             { text: 'EF Core Interceptors', link: '/advanced/interceptors' },
+            { text: 'Module Packaging', link: '/advanced/module-packaging' },
             { text: 'Deployment', link: '/advanced/deployment' },
           ],
         },
