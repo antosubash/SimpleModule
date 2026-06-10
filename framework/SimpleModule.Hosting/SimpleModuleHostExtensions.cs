@@ -246,11 +246,14 @@ public static partial class SimpleModuleHostExtensions
 
                 // DbContexts with EF migrations use MigrateAsync; those without (e.g. scaffolded
                 // module contexts that ship no migrations) fall back to EnsureCreatedAsync so
-                // their tables exist on first run. Only the Host context typically ships
-                // migrations; module contexts rely on the unified HostDbContext for schema.
+                // their tables exist on first run. In-repo module contexts ship no migrations
+                // and rely on the unified HostDbContext for schema, but packaged (installed)
+                // modules MUST bundle their own EF migrations — EnsureCreated cannot evolve
+                // an existing database across module versions.
+                var hasMigrations = db.Database.GetMigrations().Any();
                 if (info.ModuleName == DatabaseConstants.HostModuleName)
                 {
-                    if (db.Database.GetMigrations().Any())
+                    if (hasMigrations)
                     {
                         await db.Database.MigrateAsync();
                     }
@@ -258,6 +261,10 @@ public static partial class SimpleModuleHostExtensions
                     {
                         await db.Database.EnsureCreatedAsync();
                     }
+                }
+                else if (hasMigrations)
+                {
+                    await db.Database.MigrateAsync();
                 }
             }
         }
