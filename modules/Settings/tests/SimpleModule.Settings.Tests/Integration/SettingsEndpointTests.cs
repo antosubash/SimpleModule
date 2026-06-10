@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.Core.Settings;
 using SimpleModule.Settings;
 using SimpleModule.Settings.Contracts;
@@ -73,6 +74,52 @@ public class SettingsEndpointTests(SimpleModuleWebApplicationFactory factory)
 
         var afterDelete = await client.GetAsync($"/api/settings/{key}?scope=1");
         afterDelete.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetSettings_WithoutViewPermission_ReturnsForbidden()
+    {
+        var client = factory.CreateAuthenticatedClient();
+
+        var response = await client.GetAsync("/api/settings");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetSettings_WithViewPermission_Returns200()
+    {
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.View]);
+
+        var response = await client.GetAsync("/api/settings");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetSettings_DoesNotExposeUserScopedValues()
+    {
+        // Seed a user-scoped value for some other user directly via the service.
+        using (var scope = factory.Services.CreateScope())
+        {
+            var settings = scope.ServiceProvider.GetRequiredService<ISettingsContracts>();
+            await settings.SetSettingAsync(
+                UniqueKey("leak"),
+                JsonSerializer.Deserialize<JsonElement>("\"secret\""),
+                SettingScope.User,
+                "some-other-user"
+            );
+        }
+
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.View]);
+
+        // Even explicitly asking for User scope must not enumerate other users' values.
+        var response = await client.GetAsync("/api/settings?scope=2");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var items = await response.Content.ReadFromJsonAsync<List<SettingValueDto>>(JsonOptions);
+        items.Should().NotBeNull();
+        items!.Should().NotContain(i => i.Scope == SettingScope.User);
     }
 
     [Fact]

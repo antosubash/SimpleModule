@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Menu;
 using SimpleModule.Settings.Contracts;
 
@@ -13,5 +14,5 @@ public class GetAvailablePagesEndpoint : IEndpoint
 
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(Route, (IReadOnlyList<AvailablePage> pages) => TypedResults.Ok(pages))
-            .RequireAuthorization();
+            .RequirePermission(SettingsPermissions.ManageMenus);
 }

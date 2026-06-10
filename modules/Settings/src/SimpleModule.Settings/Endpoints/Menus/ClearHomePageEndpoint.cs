@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.Services;
 
@@ -21,5 +22,5 @@ public class ClearHomePageEndpoint : IEndpoint
                     return TypedResults.NoContent();
                 }
             )
-            .RequireAuthorization();
+            .RequirePermission(SettingsPermissions.ManageMenus);
 }

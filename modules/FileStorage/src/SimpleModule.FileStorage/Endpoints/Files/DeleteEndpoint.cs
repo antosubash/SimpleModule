@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Authorization.Policies;
 using SimpleModule.FileStorage.Contracts;
 
 namespace SimpleModule.FileStorage.Endpoints.Files;
@@ -15,7 +16,12 @@ public class DeleteEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
                 Route,
-                async (FileStorageId id, HttpContext context, IFileStorageContracts files) =>
+                async (
+                    FileStorageId id,
+                    HttpContext context,
+                    IFileStorageContracts files,
+                    IAuthorizer authorizer
+                ) =>
                 {
                     var file = await files.GetFileByIdAsync(id);
                     if (file is null)
@@ -23,10 +29,13 @@ public class DeleteEndpoint : IEndpoint
                         return Results.NotFound();
                     }
 
-                    if (!FileOwnershipCheck.CanAccess(file, context.User))
-                    {
-                        return Results.Forbid();
-                    }
+                    // Owner-or-admin; FileStoragePolicy denies non-owners as 404.
+                    await authorizer.AuthorizeAsync(
+                        context.User,
+                        PolicyActions.Delete,
+                        file,
+                        context.RequestAborted
+                    );
 
                     await files.DeleteFileAsync(file);
                     return Results.NoContent();

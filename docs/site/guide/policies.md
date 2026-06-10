@@ -8,6 +8,14 @@ Permissions answer "can this user perform this kind of action?" (`Products.Updat
 
 A policy is a class that encapsulates every per-resource authorization rule for one entity, inspired by [Laravel's policy classes](https://laravel.com/docs/authorization#creating-policies). Policies **layer on top of** permissions — the permission stays on the endpoint as the coarse capability gate; the policy adds the instance check.
 
+The framework ships three reference policies:
+
+| Module | Policy | Rule |
+|--------|--------|------|
+| Notifications | `NotificationPolicy` | recipient-only; declarative `AuthorizeResource` form |
+| FileStorage | `FileStoragePolicy` | uploader-or-admin; imperative `IAuthorizer` form |
+| Users | `UserPolicy` | self-or-admin view/update, admin-only delete |
+
 ## Defining a Policy
 
 Implement `IPolicy<TResource>` in the module that owns the resource (SM0060). The class must be effectively `public` (SM0059) and non-generic (SM0061), and the resource type must be a contracts DTO — a `[Dto]` type or a type declared in your `.Contracts` assembly (SM0058).
