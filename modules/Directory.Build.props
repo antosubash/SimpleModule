@@ -9,4 +9,27 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" Condition="Exists('README.md')" />
   </ItemGroup>
+  <!--
+    Run the source generator in module-kind on module implementation projects so
+    each module assembly carries its compile-time manifest
+    ([assembly: ModuleManifest]). Module-kind emits ONLY the manifest — host-level
+    artifacts (AddModules, endpoint maps, ...) stay exclusive to host projects.
+    Contracts and test projects are excluded: they declare no [Module] class.
+  -->
+  <PropertyGroup>
+    <SimpleModuleProjectKind Condition="'$(SimpleModuleProjectKind)' == ''">Module</SimpleModuleProjectKind>
+  </PropertyGroup>
+  <ItemGroup>
+    <CompilerVisibleProperty Include="SimpleModuleProjectKind" />
+    <CompilerVisibleProperty Include="SimpleModuleFrameworkCompat" />
+  </ItemGroup>
+  <ItemGroup
+    Condition="!$(MSBuildProjectName.EndsWith('.Tests')) And !$(MSBuildProjectName.EndsWith('.Contracts'))"
+  >
+    <ProjectReference
+      Include="$(RepoRoot)framework/SimpleModule.Generator/SimpleModule.Generator.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
 </Project>
