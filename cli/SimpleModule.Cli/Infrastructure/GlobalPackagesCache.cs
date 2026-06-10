@@ -15,6 +15,45 @@ public static class GlobalPackagesCache
         );
 
     /// <summary>
+    /// Path of the package's main assembly in the cache, or null when absent.
+    /// Without a version the highest cached one is used.
+    /// </summary>
+    public static string? FindAssemblyPath(string packageId, string? version)
+    {
+        var packageDir = Path.Combine(RootPath, packageId.ToLowerInvariant());
+        if (!Directory.Exists(packageDir))
+        {
+            return null;
+        }
+
+        var versionDirs = version is not null
+            ? new[] { Path.Combine(packageDir, version.ToLowerInvariant()) }
+            : Directory
+                .EnumerateDirectories(packageDir)
+                .OrderByDescending(d => Path.GetFileName(d), SemVerStringComparer.Instance)
+                .ToArray();
+
+        foreach (var versionDir in versionDirs)
+        {
+            var libDir = Path.Combine(versionDir, "lib");
+            if (!Directory.Exists(libDir))
+            {
+                continue;
+            }
+
+            var dll = Directory
+                .EnumerateFiles(libDir, packageId + ".dll", SearchOption.AllDirectories)
+                .FirstOrDefault();
+            if (dll is not null)
+            {
+                return dll;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Returns the manifest for an installed package, or null when the package
     /// (or a manifest inside it) cannot be found. Without a version the highest
     /// cached one is used.

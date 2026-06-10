@@ -7,8 +7,11 @@ using SimpleModule.Cli.Commands.List;
 using SimpleModule.Cli.Commands.Maintenance;
 using SimpleModule.Cli.Commands.New;
 using SimpleModule.Cli.Commands.Pack;
+using SimpleModule.Cli.Commands.Publish;
 using SimpleModule.Cli.Commands.Remove;
+using SimpleModule.Cli.Commands.Search;
 using SimpleModule.Cli.Commands.Skill;
+using SimpleModule.Cli.Commands.Upgrade;
 using SimpleModule.Cli.Commands.Version;
 using Spectre.Console.Cli;
 
@@ -76,6 +79,26 @@ app.Configure(config =>
             "Remove an installed module's reference (database schema and data are left in place)"
         )
         .WithExample("remove", "SimpleModule.Products");
+
+    config
+        .AddCommand<PublishCommand>("publish")
+        .WithDescription("Pack a module and push it to a NuGet registry or local feed")
+        .WithExample("publish", "modules/Products", "--version", "1.2.0", "--dry-run")
+        .WithExample("publish", "modules/Products", "--source", "./feed");
+
+    config
+        .AddCommand<SearchCommand>("search")
+        .WithDescription("Search a registry for SimpleModule modules (simplemodule-module tag)")
+        .WithExample("search", "products")
+        .WithExample("search", "--source", "./feed");
+
+    config
+        .AddCommand<UpgradeCommand>("upgrade")
+        .WithDescription(
+            "Upgrade installed module packages (compat-checked; refuses violations unless --force)"
+        )
+        .WithExample("upgrade", "SimpleModule.Products")
+        .WithExample("upgrade", "--source", "./feed");
 
     config
         .AddCommand<PackCommand>("pack")

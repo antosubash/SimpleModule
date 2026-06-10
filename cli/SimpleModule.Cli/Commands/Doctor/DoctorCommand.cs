@@ -64,6 +64,9 @@ public sealed class DoctorCommand : Command<DoctorSettings>
             new ViteConfigCheck(),
             new PackageJsonCheck(),
             new NpmWorkspaceCheck(),
+            new ModuleBundleExternalsCheck(),
+            new PackagedModuleManifestCheck(),
+            new PendingModuleMigrationsCheck(),
         ];
 
     /// <summary>Runs all doctor checks; reused by other commands (e.g. sm add).</summary>

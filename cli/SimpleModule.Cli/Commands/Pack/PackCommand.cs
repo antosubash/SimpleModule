@@ -44,11 +44,24 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, PackSettings settings)
     {
+        var (exitCode, _) = await RunAsync(settings);
+        return exitCode;
+    }
+
+    /// <summary>
+    /// Runs the full pack pipeline; reused by <c>sm publish</c>. Returns the
+    /// produced nupkg paths on success.
+    /// </summary>
+    public static async Task<(int ExitCode, IReadOnlyList<string> Packages)> RunAsync(
+        PackSettings settings
+    )
+    {
+        var packages = new List<string>();
         var moduleDir = Path.GetFullPath(settings.ModulePath ?? ".");
         var (projects, resolveError) = PackPipeline.ResolveModuleProjects(moduleDir);
         if (projects is null)
         {
-            return Fail(resolveError!);
+            return FailResult(resolveError!);
         }
 
         var outputDir = Path.GetFullPath(
@@ -71,7 +84,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
         {
             if (!HasNodeModules(implDir))
             {
-                return Fail(
+                return FailResult(
                     "package.json found but no node_modules is available. "
                         + "Run 'npm install' before packing so the frontend bundle can be built."
                 );
@@ -85,7 +98,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
             );
             if (!vite.Success)
             {
-                return Fail("Frontend build failed:\n" + Tail(vite.Error, vite.Output));
+                return FailResult("Frontend build failed:\n" + Tail(vite.Error, vite.Output));
             }
 
             // 2. Externals validation — fail closed on inlined React
@@ -103,7 +116,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
 
                 if (!settings.SkipExternalsCheck)
                 {
-                    return Fail(
+                    return FailResult(
                         "Module bundles must externalize react, react-dom, react/jsx-runtime and "
                             + "@inertiajs/react — they are provided by the host. Check the module's "
                             + "vite.config.ts uses defineModuleConfig from @simplemodule/client. "
@@ -127,7 +140,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
         );
         if (!build.Success)
         {
-            return Fail("dotnet build failed:\n" + Tail(build.Error, build.Output));
+            return FailResult("dotnet build failed:\n" + Tail(build.Error, build.Output));
         }
 
         // 4. Tests
@@ -141,7 +154,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
             );
             if (!test.Success)
             {
-                return Fail("Module tests failed:\n" + Tail(test.Error, test.Output));
+                return FailResult("Module tests failed:\n" + Tail(test.Error, test.Output));
             }
         }
         else if (!settings.SkipTests)
@@ -153,7 +166,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
         var builtDll = FindBuiltAssembly(implDir, settings.Configuration, projects.AssemblyName);
         if (builtDll is null)
         {
-            return Fail(
+            return FailResult(
                 $"Could not locate the built assembly {projects.AssemblyName}.dll under bin/{settings.Configuration}."
             );
         }
@@ -171,7 +184,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
                 AnsiConsole.MarkupLine($"[red]✗ {Markup.Escape(error)}[/]");
             }
 
-            return Fail("Module manifest validation failed.");
+            return FailResult("Module manifest validation failed.");
         }
 
         // 6. Write module-manifest.json next to the project so the injected
@@ -215,7 +228,16 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
                 );
                 if (!pack.Success)
                 {
-                    return Fail("dotnet pack failed:\n" + Tail(pack.Error, pack.Output));
+                    return FailResult("dotnet pack failed:\n" + Tail(pack.Error, pack.Output));
+                }
+
+                var created = System.Text.RegularExpressions.Regex.Match(
+                    pack.Output,
+                    "Successfully created package '([^']+)'"
+                );
+                if (created.Success)
+                {
+                    packages.Add(created.Groups[1].Value);
                 }
             }
         }
@@ -235,7 +257,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
             $"[dim]  schema: {Markup.Escape(manifest.Schema)}  permissions: {manifest.Permissions.Count}  pages: {manifest.Pages.Count}  frameworkCompat: {Markup.Escape(manifest.FrameworkCompat)}[/]"
         );
 
-        return 0;
+        return (0, packages);
     }
 
     private static bool HasNodeModules(string implDir)
@@ -284,4 +306,7 @@ public sealed class PackCommand : AsyncCommand<PackSettings>
         AnsiConsole.MarkupLine($"[red]{Markup.Escape(message)}[/]");
         return 1;
     }
+
+    private static (int ExitCode, IReadOnlyList<string> Packages) FailResult(string message) =>
+        (Fail(message), []);
 }
