@@ -36,6 +36,19 @@ internal static class SymbolDiscovery
                 contractsAssemblies.Add(asm);
         }
 
+        // The referenced SimpleModule.Core version anchors the default framework
+        // compatibility range in emitted module manifests.
+        var coreAssemblyVersion = "";
+        foreach (var identity in compilation.ReferencedAssemblyNames)
+        {
+            if (string.Equals(identity.Name, "SimpleModule.Core", StringComparison.Ordinal))
+            {
+                coreAssemblyVersion =
+                    $"{identity.Version.Major}.{identity.Version.Minor}.{identity.Version.Build}";
+                break;
+            }
+        }
+
         var modules = new List<ModuleInfo>();
 
         foreach (var assemblySymbol in refAssemblies)
@@ -234,6 +247,21 @@ internal static class SymbolDiscovery
             knowledgeSources
         );
 
+        // Step 3i: Domain events published (IEvent implementors) and consumed
+        // (Wolverine-convention handler first parameters) per module
+        var eventTypes = new List<EventTypeRecord>();
+        var eventHandlers = new List<EventHandlerRecord>();
+        EventFinder.Discover(
+            modules,
+            moduleSymbols,
+            contractsAssemblySymbols,
+            contractsAssemblyMap,
+            s,
+            eventTypes,
+            eventHandlers,
+            cancellationToken
+        );
+
         // Step 4: Detect dependencies and illegal references
         var dependencies = new List<ModuleDependencyRecord>();
         var illegalReferences = new List<IllegalModuleReferenceRecord>();
@@ -264,10 +292,13 @@ internal static class SymbolDiscovery
             agentToolProviders,
             knowledgeSources,
             formRequests,
+            eventTypes,
+            eventHandlers,
             contractsAssemblyMap,
             s.HasAgentsAssembly,
             s.HasRagAssembly,
-            hostAssemblyName
+            hostAssemblyName,
+            coreAssemblyVersion
         );
     }
 }

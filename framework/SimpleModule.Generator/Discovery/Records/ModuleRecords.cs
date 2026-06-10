@@ -110,6 +110,13 @@ internal readonly record struct ModuleDependencyRecord(
     string ContractsAssemblyName
 );
 
+internal readonly record struct EventTypeRecord(string FullyQualifiedName, string ModuleName);
+
+internal readonly record struct EventHandlerRecord(
+    string EventFullyQualifiedName,
+    string ModuleName
+);
+
 internal readonly record struct IllegalModuleReferenceRecord(
     string ReferencingModuleName,
     string ReferencingAssemblyName,

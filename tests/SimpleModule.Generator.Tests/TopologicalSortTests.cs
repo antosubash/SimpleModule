@@ -248,10 +248,13 @@ public class TopologicalSortTests
             ImmutableArray<AgentToolProviderRecord>.Empty,
             ImmutableArray<KnowledgeSourceRecord>.Empty,
             ImmutableArray<FormRequestInfoRecord>.Empty,
+            ImmutableArray<EventTypeRecord>.Empty,
+            ImmutableArray<EventHandlerRecord>.Empty,
             ImmutableArray<string>.Empty,
             false,
             false,
-            "SimpleModule.Host"
+            "SimpleModule.Host",
+            ""
         );
 
         var result = TopologicalSort.SortModules(data);
@@ -325,10 +328,13 @@ public class TopologicalSortTests
             ImmutableArray<AgentToolProviderRecord>.Empty,
             ImmutableArray<KnowledgeSourceRecord>.Empty,
             ImmutableArray<FormRequestInfoRecord>.Empty,
+            ImmutableArray<EventTypeRecord>.Empty,
+            ImmutableArray<EventHandlerRecord>.Empty,
             ImmutableArray<string>.Empty,
             false,
             false,
-            "SimpleModule.Host"
+            "SimpleModule.Host",
+            ""
         );
 
         var result = TopologicalSort.SortModules(data);
@@ -418,10 +424,13 @@ public class TopologicalSortTests
             ImmutableArray<AgentToolProviderRecord>.Empty,
             ImmutableArray<KnowledgeSourceRecord>.Empty,
             ImmutableArray<FormRequestInfoRecord>.Empty,
+            ImmutableArray<EventTypeRecord>.Empty,
+            ImmutableArray<EventHandlerRecord>.Empty,
             ImmutableArray<string>.Empty,
             false,
             false,
-            "SimpleModule.Host"
+            "SimpleModule.Host",
+            ""
         );
 
         var result = TopologicalSort.SortModules(data);

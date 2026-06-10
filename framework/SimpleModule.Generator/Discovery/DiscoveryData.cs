@@ -48,10 +48,13 @@ internal readonly record struct DiscoveryData(
     ImmutableArray<AgentToolProviderRecord> AgentToolProviders,
     ImmutableArray<KnowledgeSourceRecord> KnowledgeSources,
     ImmutableArray<FormRequestInfoRecord> FormRequests,
+    ImmutableArray<EventTypeRecord> EventTypes,
+    ImmutableArray<EventHandlerRecord> EventHandlers,
     ImmutableArray<string> ContractsAssemblyNames,
     bool HasAgentsAssembly,
     bool HasRagAssembly,
-    string HostAssemblyName
+    string HostAssemblyName,
+    string CoreAssemblyVersion
 )
 {
     public bool HasAnyAgentContent =>
@@ -81,9 +84,12 @@ internal readonly record struct DiscoveryData(
         ImmutableArray<AgentToolProviderRecord>.Empty,
         ImmutableArray<KnowledgeSourceRecord>.Empty,
         ImmutableArray<FormRequestInfoRecord>.Empty,
+        ImmutableArray<EventTypeRecord>.Empty,
+        ImmutableArray<EventHandlerRecord>.Empty,
         ImmutableArray<string>.Empty,
         false,
         false,
+        "",
         ""
     );
 
@@ -106,10 +112,13 @@ internal readonly record struct DiscoveryData(
             && AgentToolProviders.SequenceEqual(other.AgentToolProviders)
             && KnowledgeSources.SequenceEqual(other.KnowledgeSources)
             && FormRequests.SequenceEqual(other.FormRequests)
+            && EventTypes.SequenceEqual(other.EventTypes)
+            && EventHandlers.SequenceEqual(other.EventHandlers)
             && ContractsAssemblyNames.SequenceEqual(other.ContractsAssemblyNames)
             && HasAgentsAssembly == other.HasAgentsAssembly
             && HasRagAssembly == other.HasRagAssembly
-            && HostAssemblyName == other.HostAssemblyName;
+            && HostAssemblyName == other.HostAssemblyName
+            && CoreAssemblyVersion == other.CoreAssemblyVersion;
     }
 
     public override int GetHashCode()
@@ -132,10 +141,13 @@ internal readonly record struct DiscoveryData(
         hash = HashHelper.HashArray(hash, AgentToolProviders);
         hash = HashHelper.HashArray(hash, KnowledgeSources);
         hash = HashHelper.HashArray(hash, FormRequests);
+        hash = HashHelper.HashArray(hash, EventTypes);
+        hash = HashHelper.HashArray(hash, EventHandlers);
         hash = HashHelper.HashArray(hash, ContractsAssemblyNames);
         hash = HashHelper.Combine(hash, HasAgentsAssembly.GetHashCode());
         hash = HashHelper.Combine(hash, HasRagAssembly.GetHashCode());
         hash = HashHelper.Combine(hash, (HostAssemblyName ?? "").GetHashCode());
+        hash = HashHelper.Combine(hash, (CoreAssemblyVersion ?? "").GetHashCode());
         return hash;
     }
 }
