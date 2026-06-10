@@ -6,7 +6,7 @@
     <title>SimpleModule — Modular Monolith Framework for .NET</title>
     <meta
       name="description"
-      content="A modular monolith framework for .NET 10 with compile-time module discovery via Roslyn source generators. React 19 + Inertia.js frontend served via Blazor SSR."
+      content="A modular monolith framework for .NET 10 with compile-time module discovery via Roslyn source generators. React 19 + Inertia.js frontend served via a static HTML shell."
     />
     <meta property="og:title" content="SimpleModule — Modular Monolith Framework for .NET" />
     <meta
@@ -149,7 +149,7 @@
             <h3 class="text-base font-bold mb-2">React 19 + Inertia.js</h3>
             <p class="text-sm text-text-secondary leading-relaxed">
               Build modern React frontends with server-driven navigation. Each module ships its own
-              pages bundle, dynamically loaded by the host app via Blazor SSR.
+              pages bundle, dynamically loaded by the host's static HTML shell.
             </p>
           </div>
 
@@ -191,8 +191,12 @@
             <h3 class="text-base font-bold mb-2">CLI Tooling</h3>
             <p class="text-sm text-text-secondary leading-relaxed">
               Scaffold projects, modules, and features with the
-              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">sm</code> CLI. Built-in
-              doctor command validates your project structure and auto-fixes issues.
+              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">sm</code> CLI. Run the
+              dev environment, validate and auto-fix project structure with
+              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">sm doctor</code>, and
+              toggle maintenance mode with
+              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">sm down</code> /
+              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">sm up</code>.
             </p>
           </div>
 
@@ -207,6 +211,50 @@
             <p class="text-sm text-text-secondary leading-relaxed">
               SQLite for development, PostgreSQL or SQL Server for production. Schema isolation per
               module with automatic table prefix management.
+            </p>
+          </div>
+
+          <!-- Feature 7 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Pluggable Identity</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              Choose OpenIddict or Keycloak as your identity provider. Passkey login, two-factor
+              auth with recovery codes, active session management, and sign-out everywhere.
+            </p>
+          </div>
+
+          <!-- Feature 8 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Events &amp; Real-time</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              In-process event bus via Wolverine with a durable inbox/outbox. Broadcast to browsers
+              over SignalR with the
+              <code class="text-xs bg-surface-sunken px-1.5 py-0.5 rounded">@simplemodule/echo</code>
+              client.
+            </p>
+          </div>
+
+          <!-- Feature 9 -->
+          <div class="glass-card p-6">
+            <div class="feature-icon mb-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            </div>
+            <h3 class="text-base font-bold mb-2">Form Requests</h3>
+            <p class="text-sm text-text-secondary leading-relaxed">
+              Typed request classes with a bind &rarr; authorize &rarr; validate pipeline per
+              endpoint. Validation rules generate matching TypeScript so the frontend stays in sync.
             </p>
           </div>
         </div>
@@ -262,7 +310,7 @@
             <pre class="code-block"><code><span style="color:#7dd3fc">// Endpoints/Blog/Browse.cs</span>
 <span style="color:#c084fc">public class</span> <span style="color:#34d399">Browse</span> : <span style="color:#34d399">IViewEndpoint</span>
 {
-    <span style="color:#c084fc">public static void</span> <span style="color:#93c5fd">Map</span>(<span style="color:#34d399">IEndpointRouteBuilder</span> app)
+    <span style="color:#c084fc">public void</span> <span style="color:#93c5fd">Map</span>(<span style="color:#34d399">IEndpointRouteBuilder</span> app)
     {
         app.MapGet(<span style="color:#fbbf24">"/"</span>, <span style="color:#c084fc">async</span> (
             <span style="color:#34d399">BlogDbContext</span> db,
@@ -324,12 +372,12 @@
             <span class="gradient-text">Batteries included</span>
           </h2>
           <p class="text-text-secondary text-lg max-w-2xl mx-auto">
-            Ship faster with 9 built-in modules covering authentication, administration, and common
-            application concerns.
+            Ship faster with 16 built-in modules covering identity, multi-tenancy, background jobs,
+            and common application concerns.
           </p>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <div class="module-card">
             <div class="module-icon">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -414,27 +462,95 @@
           <div class="module-card">
             <div class="module-icon">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h3 class="text-sm font-bold mb-1">Page Builder</h3>
-            <p class="text-xs text-text-secondary">Dynamic page composition</p>
+            <h3 class="text-sm font-bold mb-1">Keycloak</h3>
+            <p class="text-xs text-text-secondary">Pluggable Keycloak identity provider</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Feature Flags</h3>
+            <p class="text-xs text-text-secondary">Runtime feature toggles</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Tenants</h3>
+            <p class="text-xs text-text-secondary">Multi-tenancy support</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Background Jobs</h3>
+            <p class="text-xs text-text-secondary">Job execution &amp; declarative scheduling</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Localization</h3>
+            <p class="text-xs text-text-secondary">Multi-language content</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Rate Limiting</h3>
+            <p class="text-xs text-text-secondary">DB-defined rules applied at runtime</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Email</h3>
+            <p class="text-xs text-text-secondary">Templated email delivery</p>
+          </div>
+
+          <div class="module-card">
+            <div class="module-icon">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold mb-1">Notifications</h3>
+            <p class="text-xs text-text-secondary">Multi-channel notifications</p>
           </div>
         </div>
 
         <div class="text-center mt-10">
-          <p class="text-text-secondary text-lg mb-4">
-            ...and many more to come!
-          </p>
           <a
-            href="https://docs.simplemodule.dev/marketplace"
+            href="https://github.com/antosubash/SimpleModule/tree/main/modules"
+            target="_blank"
+            rel="noopener"
             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-surface text-text-secondary text-sm font-semibold no-underline hover:border-primary hover:text-text transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
             </svg>
-            Module Marketplace
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-subtle text-primary">Coming Soon</span>
+            Browse All Modules
           </a>
         </div>
       </div>
@@ -559,7 +675,7 @@
             <div class="step-number mt-0.5">4</div>
             <div class="flex-1 min-w-0">
               <h3 class="text-sm font-bold mb-1">Run your app</h3>
-              <pre class="code-block !mb-0"><code>npm run dev</code></pre>
+              <pre class="code-block !mb-0"><code>npm install &amp;&amp; npm run dev</code></pre>
             </div>
           </div>
         </div>
@@ -618,7 +734,9 @@
           </span>
         </div>
         <div class="flex items-center gap-6 text-sm text-text-secondary">
-          <a href="/getting-started/introduction" class="no-underline hover:text-text"
+          <a
+            href="https://docs.simplemodule.dev/getting-started/introduction"
+            class="no-underline hover:text-text"
             >Documentation</a
           >
           <a
