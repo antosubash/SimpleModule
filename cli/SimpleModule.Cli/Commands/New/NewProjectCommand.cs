@@ -122,6 +122,10 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
             Path.Combine(rootDir, "Directory.Packages.props"),
             projectTemplates.DirectoryPackagesProps()
         );
+        File.WriteAllText(
+            Path.Combine(modulesDir, "Directory.Build.props"),
+            projectTemplates.ModulesDirectoryBuildProps()
+        );
         File.WriteAllText(Path.Combine(rootDir, "global.json"), projectTemplates.GlobalJson());
         File.WriteAllText(
             Path.Combine(rootDir, "package.json"),
@@ -310,6 +314,7 @@ public sealed class NewProjectCommand : Command<NewProjectSettings>
         Plan(Path.Combine(rootDir, $"{projectName}.slnx"));
         Plan(Path.Combine(rootDir, "Directory.Build.props"));
         Plan(Path.Combine(rootDir, "Directory.Packages.props"));
+        Plan(Path.Combine(modulesDir, "Directory.Build.props"));
         Plan(Path.Combine(rootDir, "global.json"));
         Plan(Path.Combine(rootDir, "package.json"));
         Plan(Path.Combine(rootDir, "biome.json"));
