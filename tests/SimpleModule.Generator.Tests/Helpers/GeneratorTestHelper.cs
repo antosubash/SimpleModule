@@ -164,6 +164,26 @@ public static class GeneratorTestHelper
         return driver.GetRunResult();
     }
 
+    /// <summary>
+    /// Runs the generator with MSBuild build properties visible via analyzer config
+    /// (e.g. <c>build_property.SimpleModuleProjectKind</c>).
+    /// </summary>
+    public static GeneratorDriverRunResult RunGenerator(
+        CSharpCompilation compilation,
+        Dictionary<string, string> buildProperties
+    )
+    {
+        var generator = new ModuleDiscovererGenerator();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            [generator.AsSourceGenerator()],
+            optionsProvider: new TestAnalyzerConfigOptionsProvider(buildProperties)
+        );
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
+
+        return driver.GetRunResult();
+    }
+
     public static (
         GeneratorDriverRunResult Result,
         ImmutableArray<Diagnostic> Diagnostics

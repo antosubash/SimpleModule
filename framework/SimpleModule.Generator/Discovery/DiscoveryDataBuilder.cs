@@ -56,6 +56,8 @@ internal static class DiscoveryDataBuilder
                     m.HasConfigureRateLimits,
                     m.RoutePrefix,
                     m.ViewPrefix,
+                    m.DisplayName,
+                    m.Version,
                     m.Endpoints.Select(e => new EndpointInfoRecord(
                             e.FullyQualifiedName,
                             e.RequiredPermissions.ToImmutableArray(),

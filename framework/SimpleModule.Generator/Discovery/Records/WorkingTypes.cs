@@ -21,6 +21,8 @@ internal sealed class ModuleInfo
     public bool HasConfigureRateLimits { get; set; }
     public string RoutePrefix { get; set; } = "";
     public string ViewPrefix { get; set; } = "";
+    public string DisplayName { get; set; } = "";
+    public string Version { get; set; } = "";
     public List<EndpointInfo> Endpoints { get; set; } = new();
     public List<ViewInfo> Views { get; set; } = new();
     public SourceLocationRecord? Location { get; set; }
