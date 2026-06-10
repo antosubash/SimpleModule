@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
-using SimpleModule.Core.Extensions;
+using SimpleModule.Core.Authorization.Policies;
 using SimpleModule.Notifications.Contracts;
-using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Notifications.Endpoints.Notifications;
 
@@ -20,14 +19,27 @@ public class MarkReadEndpoint : IEndpoint
                 async Task<IResult> (
                     Guid id,
                     HttpContext context,
-                    INotificationsContracts notifications
+                    INotificationsContracts notifications,
+                    IAuthorizer authorizer
                 ) =>
                 {
-                    var ok = await notifications.MarkReadAsync(
-                        NotificationId.From(id),
-                        UserId.From(context.User.GetUserId()!)
+                    // Load → authorize → act: the permission gate below stays the coarse
+                    // capability check; NotificationPolicy owns the per-instance rule.
+                    var notification = await notifications.FindAsync(NotificationId.From(id));
+                    if (notification is null)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
+                    await authorizer.AuthorizeAsync(
+                        context.User,
+                        NotificationPolicy.MarkRead,
+                        notification,
+                        context.RequestAborted
                     );
-                    return ok ? TypedResults.NoContent() : TypedResults.NotFound();
+
+                    await notifications.MarkReadAsync(notification.Id);
+                    return TypedResults.NoContent();
                 }
             )
             .RequirePermission(NotificationsPermissions.ViewOwn);

@@ -199,6 +199,14 @@ internal readonly record struct InterceptorInfoRecord(
     }
 }
 
+internal readonly record struct PolicyInfoRecord(
+    string FullyQualifiedName,
+    string ResourceTypeFqn,
+    string ModuleName,
+    bool IsPublic,
+    SourceLocationRecord? Location
+);
+
 internal readonly record struct ModuleOptionsRecord(
     string FullyQualifiedName,
     string ModuleName,

@@ -29,6 +29,7 @@ internal readonly record struct CoreSymbols(
     INamedTypeSymbol? ModuleOptions,
     INamedTypeSymbol? FormRequestAttribute,
     INamedTypeSymbol? FormRequestBase,
+    INamedTypeSymbol? PolicyInterface,
     bool HasAgentsAssembly,
     bool HasRagAssembly
 )
@@ -87,6 +88,9 @@ internal readonly record struct CoreSymbols(
             ),
             FormRequestBase: compilation.GetTypeByMetadataName(
                 "SimpleModule.Core.FormRequests.FormRequest`1"
+            ),
+            PolicyInterface: compilation.GetTypeByMetadataName(
+                "SimpleModule.Core.Authorization.Policies.IPolicy`1"
             ),
             HasAgentsAssembly: compilation.GetTypeByMetadataName(
                 "SimpleModule.Agents.SimpleModuleAgentExtensions"

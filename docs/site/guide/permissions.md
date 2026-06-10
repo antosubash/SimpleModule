@@ -6,6 +6,8 @@ outline: deep
 
 SimpleModule includes a claims-based permission system that integrates with ASP.NET Core authorization. Each module defines its own permissions, registers them with the framework, and protects endpoints using attributes or extension methods.
 
+Permissions are coarse capability gates ("can this user update products at all?"). For instance-level rules — ownership, tenancy, state-based access — layer a [policy](/guide/policies) on top.
+
 ## Overview
 
 The permission system has three layers:

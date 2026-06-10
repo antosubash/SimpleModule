@@ -53,6 +53,7 @@ export default defineConfig({
             { text: 'Events', link: '/guide/events' },
             { text: 'Broadcasting', link: '/guide/broadcasting' },
             { text: 'Permissions', link: '/guide/permissions' },
+            { text: 'Policies', link: '/guide/policies' },
             { text: 'Menus', link: '/guide/menus' },
             { text: 'Settings', link: '/guide/settings' },
             { text: 'Inertia.js Integration', link: '/guide/inertia' },

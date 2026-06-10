@@ -164,6 +164,15 @@ internal sealed class DiscoveredTypeInfo
     public string ModuleName { get; set; } = "";
 }
 
+internal sealed class PolicyInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public string ResourceTypeFqn { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public bool IsPublic { get; set; }
+    public SourceLocationRecord? Location { get; set; }
+}
+
 internal sealed class FormRequestInfo
 {
     public string FullyQualifiedName { get; set; } = "";

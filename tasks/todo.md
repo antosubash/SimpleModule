@@ -1,78 +1,60 @@
-# Task: Design-system consistency pass across all module pages
+# Issue #162 — Policy classes for entity-level authorization — DONE
 
-Goal: every page uses the design system consistently → run /qa → open PR with screenshots.
-
-Scope: 13 tracked modules with `.tsx` source. The 8 untracked dirs (Agents, Chat, Datasets,
-Map, Marketplace, Orders, PageBuilder, Products) are stale build artifacts with NO source — left untouched, flagged to user.
-
-Out of scope (noted, not changed): i18n hardcoded-string gaps; the intentional centered-card
-auth-page layout (only token/control bugs inside auth pages are fixed, not forced into PageShell).
-
-## Fixes (from parallel line-level audit)
-
-### HIGH — color tokens breaking dark mode / raw controls
-- [ ] Tenants/tenantStatus.ts — raw palette → Badge variant map (success/warning/danger)
-- [ ] Tenants/Browse.tsx, Manage.tsx — status span → <Badge>
-- [ ] Tenants/Features.tsx — text-green/red-600 → <Badge>
-- [ ] BackgroundJobs/Dashboard.tsx — text-red-500, border-red-200, hover:bg-red-50 → semantic
-- [ ] BackgroundJobs/Detail.tsx — text-red-600, border-red-200, bg-red-50/text-red-800 → semantic
-- [ ] FeatureFlags/Manage.tsx:264 — raw <input type=checkbox> → <Checkbox>
-- [ ] RateLimiting/components/RulesTable.tsx — text-muted-foreground (undefined) → text-text-muted
-- [ ] Email/History.tsx — text-destructive (undefined) → text-danger
-- [ ] OpenIddict/OAuthCallback.tsx — text-muted → text-text-muted
-- [ ] Dashboard/Home.tsx — text-white → text-text-inverse
-- [ ] Users/Login.tsx, Register.tsx — text-white + inline var → bg-primary text-text-inverse; raw checkbox → Checkbox
-- [ ] Users/LoginWith2fa.tsx — raw checkbox → Checkbox
-
-### MEDIUM — hand-rolled layout → PageShell; custom markup → DS components
-- [ ] Settings/UserSettings.tsx — Container+h1 → PageShell; error banner → Alert
-- [ ] Settings/AdminSettings.tsx — error banner → Alert
-- [ ] Admin/RolesCreate, RolesEdit, UsersCreate, UsersEdit — Container+Breadcrumb+h1 → PageShell
-- [ ] Admin/Roles.tsx — raw <button> dismiss → Button
-- [ ] OpenIddict/ClientsCreate, ClientsEdit — Container+Breadcrumb+h1 → PageShell
-- [ ] OpenIddict/ActiveSessions.tsx — custom empty <p> → EmptyState
-- [ ] Tenants/Create, Edit, Features — Container+Breadcrumb+h1 → PageShell
-- [ ] Tenants/Features.tsx — custom empty → EmptyState
-- [ ] Notifications/Inbox.tsx — custom empty → EmptyState
-- [ ] Users/ManageIndex.tsx, Email.tsx — custom span badge → Badge
-- [ ] Users/ExternalLogins.tsx — raw <table> → Table
-- [ ] Users/Logout.tsx, PersonalData.tsx — <a class=btn-*> → Button
-- [ ] Users/ManagePasskeys.tsx — custom empty → EmptyState
-
-### LOW
-- [ ] BackgroundJobs — bare border/border-b → border-border
-- [ ] FileStorage/Browse.tsx — hover:bg-muted/50 → hover:bg-surface-raised
-
-## Verify
-- [ ] npm run check (biome) + typecheck
-- [ ] dotnet build
-- [ ] npm run validate-pages
-- [ ] /qa
-- [ ] PR with screenshots
+Laravel-style `IPolicy<TResource>` + `IAuthorizer` layered over string permissions.
 
 ## Review
 
-34 page files across 13 modules refactored onto the design system. Net −120 LOC
-(PageShell migrations removed boilerplate). No behavior/i18n changes.
+All phases complete. Verification: full `dotnet build` clean; Core.Tests 259 ✓,
+Generator.Tests 211 ✓ (incl. 5 new policy tests + catalog baseline), Database 93 ✓,
+DevTools 35 ✓, all 15 module suites ✓ (Notifications 23 incl. 4 new e2e policy tests);
+`npx biome check` clean on touched files; `npm run validate-pages` ✓. Generated
+`AddModules()` verified to contain `AddScoped<IPolicy<Notification>, NotificationPolicy>()`.
 
-- **PageShell migrations:** Admin Roles/Users Create+Edit, OpenIddict Clients Create+Edit,
-  Tenants Create/Edit/Features, Settings UserSettings — hand-rolled Container+Breadcrumb+h1
-  replaced with `<PageShell>`.
-- **Semantic color tokens:** removed raw palette (text-red/green/yellow-*, text-white) and
-  undefined tokens (text-destructive, text-muted-foreground, text-muted) across BackgroundJobs,
-  Tenants, Email, Dashboard, RateLimiting, OpenIddict, Users → dark-mode-correct semantic tokens.
-- **DS component swaps:** Checkbox (FeatureFlags, Login, LoginWith2fa), Badge (Tenants, Users),
-  Table (Users ExternalLogins), Alert (Settings), Button (Users), EmptyState (Tenants,
-  Notifications, OpenIddict, Users).
-- **Bonus fix:** FeatureFlags override form `form.reset()` crash (pre-existing; found in QA).
+Notable decisions:
+- Reference module is **Notifications** (issue suggested Products, which no longer exists).
+- Missing policy at check time throws `MissingPolicyException` (fail closed).
+- Deny→404 mapping via `PolicyAuthorizationOptions.NotFoundActions` (default `view`);
+  Notifications adds `markRead` to preserve its previous non-owner-404 behavior.
+- Declarative `.AuthorizeResource<T>()` ships with `IResourceResolver<T>` (documented,
+  not yet used by a module — imperative `IAuthorizer` is the primary path).
 
-Out of scope (left as-is): i18n hardcoded strings; the intentional centered-card auth layout;
-8 untracked stale build-artifact dirs (Agents/Chat/Datasets/Map/Marketplace/Orders/PageBuilder/
-Products) — flagged to the user, not touched.
+## Plan
 
-## Verification (done)
-- [x] biome check · validate-pages · validate:i18n (0/0) · validate:framework-scope · typecheck 13/13
-- [x] dotnet build SimpleModule.Host — 0 warnings, 0 errors
-- [x] npm run build:dev — all workspaces
-- [x] /qa in real browser (light + dark): PageShell, color tokens, Badge/Table/EmptyState/Alert,
-      Checkbox form posting — all verified; 1 pre-existing bug found + fixed + re-tested
+### Phase 1 — Core types (`framework/SimpleModule.Core/Authorization/Policies/`)
+- [x] `AuthorizationResult` — Allowed/Reason, `Allow()` / `Deny(reason)`
+- [x] `IPolicy<TResource>` — `AuthorizeAsync(ClaimsPrincipal, string action, TResource, CancellationToken)`
+- [x] `PolicyActions` — common action constants (View/Create/Update/Delete)
+- [x] `IAuthorizer` — `CheckAsync<T>` (result) + `AuthorizeAsync<T>` (throws)
+- [x] `Authorizer` — resolves all `IPolicy<T>` from DI; deny wins; missing policy → `MissingPolicyException` (fail closed)
+- [x] `PolicyAuthorizationOptions` — `NotFoundActions` (default: view) map deny → `NotFoundException` instead of `ForbiddenException`
+- [x] `IResourceResolver<TResource>` + `AuthorizeResource<TResource>(action, routeParam)` endpoint filter
+- [x] Register `IAuthorizer` in `SimpleModule.Hosting.AddSimpleModuleInfrastructure`
+
+### Phase 2 — Source generator
+- [x] `CoreSymbols`: resolve `IPolicy`1`
+- [x] `PolicyFinder` + `PolicyInfo`/`PolicyRecord`, wire into `SymbolDiscovery` / `DiscoveryData` / `DiscoveryDataBuilder`
+- [x] `ModuleExtensionsEmitter`: emit `services.AddScoped<IPolicy<X>, XPolicy>()`
+- [x] SM0058 diagnostic — policy resource type must be a contracts DTO ([Dto]/convention)
+- [x] CONSTITUTION diagnostics table + AnalyzerReleases.Unshipped.md
+
+### Phase 3 — Tests
+- [x] `tests/SimpleModule.Core.Tests/Authorization/AuthorizerTests.cs` — resolution, deny reason, missing policy, multi-policy precedence, 404 mapping
+- [x] `tests/SimpleModule.Generator.Tests/PolicyAutoDiscoveryTests.cs` — registration emitted, SM0058 reported
+- [x] Notifications policy unit tests
+
+### Phase 4 — Reference refactor (Notifications)
+- [x] `NotificationPolicy : IPolicy<Notification>` (owner or admin)
+- [x] Refactor `MarkReadEndpoint` to load → authorize → act via `IAuthorizer`
+
+### Phase 5 — Docs
+- [x] `docs/site/guide/policies.md` + VitePress sidebar entry
+- [x] CONSTITUTION.md authorization section update
+
+### Phase 6 — Verify & ship
+- [x] `dotnet build` clean (TreatWarningsAsErrors)
+- [x] `dotnet test` — Core, Generator, Notifications
+- [x] Commit, push branch, open PR closing #162
+
+## Notes
+- Products/Orders modules no longer exist (CLAUDE.md stale) → Notifications is the reference module
+- Highest existing diagnostic: SM0057 → new one is SM0058

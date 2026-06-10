@@ -98,21 +98,41 @@ public sealed class NotificationServiceTests : IDisposable
     {
         var n = await SeedAsync();
 
-        var result = await _sut.MarkReadAsync(n.Id, _userId);
+        await _sut.MarkReadAsync(n.Id);
 
-        result.Should().BeTrue();
         var refreshed = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
         refreshed.ReadAt.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task MarkReadAsync_WithDifferentUser_ReturnsFalse()
+    public async Task MarkReadAsync_AlreadyRead_KeepsOriginalReadAt()
     {
-        var n = await SeedAsync();
+        var n = await SeedAsync(readAt: DateTimeOffset.UtcNow.AddDays(-1));
+        var stored = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
 
-        var result = await _sut.MarkReadAsync(n.Id, UserId.From("not-the-owner"));
+        await _sut.MarkReadAsync(n.Id);
 
-        result.Should().BeFalse();
+        var refreshed = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
+        refreshed.ReadAt.Should().Be(stored.ReadAt);
+    }
+
+    [Fact]
+    public async Task FindAsync_ReturnsNotificationRegardlessOfOwner()
+    {
+        var n = await SeedAsync(userId: UserId.From("other-user"));
+
+        var found = await _sut.FindAsync(n.Id);
+
+        found.Should().NotBeNull();
+        found!.UserId.Should().Be(UserId.From("other-user"));
+    }
+
+    [Fact]
+    public async Task FindAsync_MissingNotification_ReturnsNull()
+    {
+        var found = await _sut.FindAsync(NotificationId.From(Guid.CreateVersion7()));
+
+        found.Should().BeNull();
     }
 
     [Fact]

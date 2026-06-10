@@ -77,6 +77,13 @@ public static class GeneratorTestHelper
         if (File.Exists(tasksPath))
             references.Add(MetadataReference.CreateFromFile(tasksPath));
 
+        // Add System.Security.Claims for ClaimsPrincipal (used by IPolicy<T> implementors)
+        references.Add(
+            MetadataReference.CreateFromFile(
+                typeof(System.Security.Claims.ClaimsPrincipal).Assembly.Location
+            )
+        );
+
         return CSharpCompilation.Create(
             "TestAssembly",
             syntaxTrees,

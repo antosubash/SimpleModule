@@ -137,6 +137,21 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             }
         }
 
+        if (data.Policies.Length > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        // Auto-discovered resource policies (IPolicy<T>)");
+            foreach (var policy in data.Policies)
+            {
+                if (!policy.IsPublic)
+                    continue;
+
+                sb.AppendLine(
+                    $"        services.AddScoped<global::SimpleModule.Core.Authorization.Policies.IPolicy<{policy.ResourceTypeFqn}>, {policy.FullyQualifiedName}>();"
+                );
+            }
+        }
+
         sb.AppendLine();
         sb.AppendLine("        var permissionBuilder = new PermissionRegistryBuilder();");
 

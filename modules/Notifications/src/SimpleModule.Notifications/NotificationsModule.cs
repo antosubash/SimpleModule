@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization.Policies;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Notifications.Channels;
@@ -41,6 +42,13 @@ public class NotificationsModule : IModule, IModuleServices
             NotificationsConstants.ModuleName
         );
         services.Configure<NotificationsModuleOptions>(configuration.GetSection("Notifications"));
+
+        // Denied markRead surfaces as 404 (like "view") so callers can't probe
+        // other users' notification IDs. NotificationPolicy itself is auto-registered
+        // by the source generator.
+        services.Configure<PolicyAuthorizationOptions>(o =>
+            o.NotFoundActions.Add(NotificationPolicy.MarkRead)
+        );
 
         services.AddScoped<INotificationsContracts, NotificationService>();
         services.AddScoped<INotifier, Notifier>();

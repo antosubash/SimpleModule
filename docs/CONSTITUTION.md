@@ -369,11 +369,25 @@ public sealed class CreateProductRequest : FormRequest<CreateProductRequest>
 - `.AllowAnonymous()` for public endpoints.
 - Never hardcode permission strings -- always use the permission constants.
 
+### Instance-Level Policies
+
+String permissions answer "can this user perform this kind of action?". Policies answer "can this user perform this action on *this* resource?" — ownership, tenancy, and state-machine rules.
+
+- Implement `IPolicy<TResource>` (in `SimpleModule.Core.Authorization.Policies`) in the module that owns the resource. Policies are auto-discovered by the source generator and registered as scoped services — no manual DI registration.
+- The resource type must be a contracts DTO — a `[Dto]` type or a public type in the module's `.Contracts` assembly (SM0058). Policies guard resources that cross module boundaries.
+- Policies **complement** permissions, they do not replace them: keep `.RequirePermission()` on the endpoint as the coarse capability gate, then check the instance rule via `IAuthorizer`.
+- Endpoints follow load → authorize → act: fetch the resource, call `IAuthorizer.AuthorizeAsync(user, action, resource)`, then perform the operation. Denial throws `ForbiddenException` (403), or `NotFoundException` (404) for actions listed in `PolicyAuthorizationOptions.NotFoundActions` (default: `view`) to prevent resource enumeration.
+- Use `PolicyActions` constants for CRUD verbs; declare module-specific actions as `public const string` on the policy class.
+- Multiple policies may target the same resource type (e.g. a tenancy policy plus an ownership policy); a single deny wins.
+- Collection scoping stays in queries (`WHERE UserId = @me`) — policies are for single-instance checks, not list filtering.
+- Reference implementation: `NotificationPolicy` in `modules/Notifications`.
+
 ### Rules
 
 - Permissions are owned by the defining module.
 - Other modules may reference permission constants from Contracts.
 - Not every module needs permissions.
+- Policies are owned by the module that owns the resource — never write a policy for another module's entity.
 
 ---
 
@@ -534,6 +548,12 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 |------------|----------|------|
 | SM0056 | Error | FormRequest class must be sealed |
 | SM0057 | Error | FormRequest class must extend `FormRequest<TSelf>` |
+
+### Policies
+
+| Diagnostic | Severity | Rule |
+|------------|----------|------|
+| SM0058 | Error | Policy resource type must be a contracts DTO |
 
 ### Module Metadata
 

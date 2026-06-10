@@ -183,6 +183,11 @@ public class DiagnosticCatalogTests
             DiagnosticSeverity.Error,
             "SimpleModule.Generator"
         ),
+        ["PolicyResourceMustBeDto"] = (
+            "SM0058",
+            DiagnosticSeverity.Error,
+            "SimpleModule.Generator"
+        ),
     };
 
     [Fact]
