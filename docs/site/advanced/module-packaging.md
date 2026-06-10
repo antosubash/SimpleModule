@@ -23,7 +23,7 @@ attach embedded resources. The manifest therefore travels as an assembly-level
 attribute, which is the closest in-assembly equivalent: readable at runtime via
 reflection (`ModuleManifestReader.TryRead(assembly)`) and by tooling via
 `System.Reflection.Metadata` without loading the assembly or its dependencies.
-`sm pack` (planned) additionally extracts the manifest to a
+`sm pack` additionally extracts the manifest to a
 `module-manifest.json` inside the nupkg so feeds and registries can read it
 without touching the assembly at all.
 :::
@@ -145,15 +145,21 @@ should use migrations from the start.
 
 Module bundles are Vite **library-mode** builds and MUST externalize:
 
-- `react`
-- `react-dom`
+- `react` (and `react/jsx-runtime`)
+- `react-dom` (and `react-dom/client`)
 - `@inertiajs/react`
-- `SimpleModule.UI` (the shared component library)
 
 These are provided by the host at runtime via the import map in the HTML shell.
 A module that bundles its own React copy breaks hooks (two React instances) and
-bloats every page load. `sm pack` (planned) validates the built bundle and
+bloats every page load. `sm pack` validates the built bundle and
 fails closed when one of the externals is found inlined.
+
+::: warning @simplemodule/ui is currently inlined
+The shared UI component library is not yet host-provided (no vendor bundle /
+import-map entry), so each module bundle statically includes the components it
+uses. Externalizing it is planned; when that lands the externals contract and
+the pack-time validation will extend to `@simplemodule/ui`.
+:::
 
 ### How the host finds module bundles
 
@@ -186,7 +192,7 @@ legacy convention probe: `/_content/SimpleModule.{Module}/…` then
   </PropertyGroup>
   ```
 
-- Installation tooling (`sm add`, planned) checks the host's framework version
+- Installation tooling (`sm add`) checks the host's framework version
   against this range **before** installing and refuses incompatible modules
   (override with `--force` at your own risk).
 

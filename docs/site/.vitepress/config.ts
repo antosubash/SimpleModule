@@ -94,6 +94,7 @@ export default defineConfig({
             { text: 'sm new module', link: '/cli/new-module' },
             { text: 'sm new feature', link: '/cli/new-feature' },
             { text: 'sm doctor', link: '/cli/doctor' },
+            { text: 'sm pack / add / remove', link: '/cli/packaging' },
           ],
         },
       ],
