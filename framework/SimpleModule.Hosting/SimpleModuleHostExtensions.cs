@@ -230,9 +230,14 @@ public static partial class SimpleModuleHostExtensions
         // Database initialization
         // SQLite (file-based) always needs auto-initialization since the DB file may not exist.
         // Managed databases (PostgreSQL, SQL Server) skip this in production — apply migrations externally.
+        // SIMPLEMODULE_MIGRATE_ONLY=1 is the CLI's migration entry point (`sm add`/`sm upgrade`):
+        // it forces database initialization regardless of environment, then exits without
+        // serving traffic — the deterministic migration hook for installed packaged modules.
+        var migrateOnly = Environment.GetEnvironmentVariable("SIMPLEMODULE_MIGRATE_ONLY") == "1";
         var smOptions = app.Services.GetRequiredService<SimpleModuleOptions>();
         if (
-            !app.Environment.IsProduction()
+            migrateOnly
+            || !app.Environment.IsProduction()
             || smOptions.DatabaseProvider == DatabaseProvider.Sqlite
         )
         {
@@ -267,6 +272,14 @@ public static partial class SimpleModuleHostExtensions
                     await db.Database.MigrateAsync();
                 }
             }
+        }
+
+        if (migrateOnly)
+        {
+            Console.WriteLine(
+                "SIMPLEMODULE_MIGRATE_ONLY=1: database initialization complete; exiting without starting the server."
+            );
+            Environment.Exit(0);
         }
 
         app.UseForwardedHeaders();
