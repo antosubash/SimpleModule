@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Exceptions;
@@ -17,6 +18,7 @@ using SimpleModule.Core.Health;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Maintenance;
 using SimpleModule.Core.Menu;
+using SimpleModule.Core.Modules;
 using SimpleModule.Core.RateLimiting;
 using SimpleModule.Core.Security;
 using SimpleModule.Database;
@@ -27,6 +29,7 @@ using SimpleModule.Hosting.Broadcasting;
 using SimpleModule.Hosting.Inertia;
 using SimpleModule.Hosting.Maintenance;
 using SimpleModule.Hosting.Middleware;
+using SimpleModule.Hosting.Modules;
 using SimpleModule.Hosting.RateLimiting;
 using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
@@ -112,6 +115,13 @@ public static partial class SimpleModuleHostExtensions
         }
 
         builder.Services.AddSingleton<IInertiaPageRenderer, HtmlFileInertiaPageRenderer>();
+
+        // Compile-time module manifests, read from each module assembly's
+        // [assembly: ModuleManifest] attribute. Resolved lazily so registration
+        // order relative to the generated AddModules() does not matter.
+        builder.Services.AddSingleton<IModuleManifestRegistry>(sp => new ModuleManifestRegistry(
+            sp.GetServices<IModule>()
+        ));
 
         // Unified caching abstraction (IFusionCache) shared across all modules.
         // Stampede-safe GetOrSetAsync built in; five-minute default entry duration.

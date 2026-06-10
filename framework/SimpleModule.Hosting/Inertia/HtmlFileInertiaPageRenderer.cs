@@ -1,9 +1,11 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.Core.Inertia;
+using SimpleModule.Core.Modules;
 using SimpleModule.Core.Security;
 using SimpleModule.DevTools;
 
@@ -21,9 +23,15 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
     private readonly string _beforePlaceholderViteDev;
     private readonly string _afterPlaceholderViteDev;
     private readonly bool _isDevelopment;
+    private readonly string? _moduleAssetsJson;
 
-    public HtmlFileInertiaPageRenderer(IWebHostEnvironment env)
+    public HtmlFileInertiaPageRenderer(
+        IWebHostEnvironment env,
+        IModuleManifestRegistry manifestRegistry
+    )
     {
+        _moduleAssetsJson = BuildModuleAssetsJson(manifestRegistry);
+
         var path = Path.Combine(env.WebRootPath, "index.html");
         var html = File.ReadAllText(path);
 
@@ -82,15 +90,35 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
                 ? "<script nonce=\"" + nonce + "\">" + LiveReloadClientScript + "</script>"
                 : "";
 
+        // Module bundle map for the client-side page resolver — lets it import the
+        // exact asset path from each module's manifest instead of probing
+        // /_content/ naming conventions. type="application/json" is inert data.
+        var moduleAssetsScript = _moduleAssetsJson is null
+            ? ""
+            : $"<script id=\"sm-module-assets\" type=\"application/json\" nonce=\"{nonce}\">{_moduleAssetsJson}</script>";
+
         httpContext.Response.ContentType = "text/html; charset=utf-8";
         return httpContext.Response.WriteAsync(
             string.Concat(
                 before.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal),
+                moduleAssetsScript,
                 $"<script data-page=\"app\" type=\"application/json\" nonce=\"{nonce}\">{pageJson}</script>",
                 devScript,
                 after.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal)
             )
         );
+    }
+
+    private static string? BuildModuleAssetsJson(IModuleManifestRegistry manifestRegistry)
+    {
+        var assets = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        foreach (var manifest in manifestRegistry.Manifests)
+        {
+            if (!string.IsNullOrEmpty(manifest.FrontendEntry))
+                assets[manifest.Name] = manifest.FrontendEntry;
+        }
+
+        return assets.Count == 0 ? null : JsonSerializer.Serialize(assets);
     }
 
     private static string BuildModuleCssLinks(IWebHostEnvironment env, string version)
