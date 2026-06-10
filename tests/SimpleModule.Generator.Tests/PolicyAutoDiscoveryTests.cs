@@ -262,6 +262,59 @@ public class PolicyAutoDiscoveryTests
     }
 
     [Fact]
+    public void ManuallyRegisteredInternalPolicy_NoDiagnosticsAndNotEmitted()
+    {
+        var source = """
+            using System.Security.Claims;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using SimpleModule.Core;
+            using SimpleModule.Core.Authorization.Policies;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace TestApp
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration)
+                    {
+                        services.AddScoped<IPolicy<Product>, ManualPolicy>();
+                    }
+                }
+
+                [Dto]
+                public class Product
+                {
+                    public string OwnerId { get; set; } = "";
+                }
+
+                // Internal is fine: the module registers it from within its own assembly.
+                [ManualContractRegistration]
+                internal sealed class ManualPolicy : IPolicy<Product>
+                {
+                    public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, string action, Product resource, CancellationToken cancellationToken = default) =>
+                        Task.FromResult(AuthorizationResult.Allow());
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (result, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics
+            .Should()
+            .NotContain(d => d.Id == "SM0059" || d.Id == "SM0061", "manual registration waives the auto-registration rules");
+        var moduleExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+        moduleExt.Should().NotContain("TryAddEnumerable(global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Scoped<global::SimpleModule.Core.Authorization.Policies.IPolicy<global::TestApp.Product>, global::TestApp.ManualPolicy>");
+    }
+
+    [Fact]
     public void GenericPolicy_ReportsSm0061AndIsNotRegistered()
     {
         var source = """

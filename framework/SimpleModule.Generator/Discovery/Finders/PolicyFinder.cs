@@ -6,53 +6,48 @@ namespace SimpleModule.Generator;
 
 internal static class PolicyFinder
 {
-    internal static void FindPolicyTypes(
-        INamespaceSymbol namespaceSymbol,
-        INamedTypeSymbol policyInterfaceSymbol,
-        INamedTypeSymbol? dtoAttributeSymbol,
+    /// <summary>
+    /// Invariant inputs for one policy scan, bundled so the recursive walk doesn't
+    /// thread two adjacent same-typed dictionaries through every call site.
+    /// </summary>
+    private readonly struct PolicyScanContext(
+        INamedTypeSymbol policyInterface,
+        INamedTypeSymbol? dtoAttribute,
         Dictionary<string, string> contractsAssemblyMap,
         Dictionary<string, string> moduleAssemblyMap,
-        string moduleName,
         List<PolicyInfo> results
+    )
+    {
+        public INamedTypeSymbol PolicyInterface { get; } = policyInterface;
+        public INamedTypeSymbol? DtoAttribute { get; } = dtoAttribute;
+        public Dictionary<string, string> ContractsAssemblyMap { get; } = contractsAssemblyMap;
+        public Dictionary<string, string> ModuleAssemblyMap { get; } = moduleAssemblyMap;
+        public List<PolicyInfo> Results { get; } = results;
+    }
+
+    private static void FindPolicyTypes(
+        INamespaceSymbol namespaceSymbol,
+        in PolicyScanContext context,
+        string moduleName
     )
     {
         foreach (var member in namespaceSymbol.GetMembers())
         {
             if (member is INamespaceSymbol childNs)
             {
-                FindPolicyTypes(
-                    childNs,
-                    policyInterfaceSymbol,
-                    dtoAttributeSymbol,
-                    contractsAssemblyMap,
-                    moduleAssemblyMap,
-                    moduleName,
-                    results
-                );
+                FindPolicyTypes(childNs, context, moduleName);
             }
             else if (member is INamedTypeSymbol typeSymbol)
             {
-                InspectType(
-                    typeSymbol,
-                    policyInterfaceSymbol,
-                    dtoAttributeSymbol,
-                    contractsAssemblyMap,
-                    moduleAssemblyMap,
-                    moduleName,
-                    results
-                );
+                InspectType(typeSymbol, context, moduleName);
             }
         }
     }
 
     private static void InspectType(
         INamedTypeSymbol typeSymbol,
-        INamedTypeSymbol policyInterfaceSymbol,
-        INamedTypeSymbol? dtoAttributeSymbol,
-        Dictionary<string, string> contractsAssemblyMap,
-        Dictionary<string, string> moduleAssemblyMap,
-        string moduleName,
-        List<PolicyInfo> results
+        in PolicyScanContext context,
+        string moduleName
     )
     {
         // Policies can only be classes; pruning here also keeps the nested-type
@@ -69,14 +64,14 @@ internal static class PolicyFinder
                 if (
                     !SymbolEqualityComparer.Default.Equals(
                         iface.OriginalDefinition,
-                        policyInterfaceSymbol
+                        context.PolicyInterface
                     )
                 )
                     continue;
 
                 var resourceType = iface.TypeArguments[0];
 
-                results.Add(
+                context.Results.Add(
                     new PolicyInfo
                     {
                         FullyQualifiedName = typeSymbol.ToDisplayString(
@@ -93,12 +88,11 @@ internal static class PolicyFinder
                         IsManuallyRegistered = ContractFinder.HasManualRegistrationAttribute(
                             typeSymbol
                         ),
-                        ResourceIsContractsDto = IsContractsDto(resourceType, dtoAttributeSymbol),
-                        ResourceModuleName = ResolveResourceModule(
+                        ResourceIsContractsDto = IsContractsDto(
                             resourceType,
-                            contractsAssemblyMap,
-                            moduleAssemblyMap
+                            context.DtoAttribute
                         ),
+                        ResourceModuleName = ResolveResourceModule(resourceType, context),
                         Location = SymbolHelpers.GetSourceLocation(typeSymbol),
                     }
                 );
@@ -108,15 +102,7 @@ internal static class PolicyFinder
         // Policies may be declared as nested classes — recurse into type members.
         foreach (var nested in typeSymbol.GetTypeMembers())
         {
-            InspectType(
-                nested,
-                policyInterfaceSymbol,
-                dtoAttributeSymbol,
-                contractsAssemblyMap,
-                moduleAssemblyMap,
-                moduleName,
-                results
-            );
+            InspectType(nested, context, moduleName);
         }
     }
 
@@ -135,7 +121,8 @@ internal static class PolicyFinder
     /// [Dto] or declared in a .Contracts assembly. Checked symbolically (not via the
     /// DtoTypes list) so contracts entities excluded from TS/JSON generation
     /// ([NoDtoGeneration], IEvent) still qualify. Non-public resources are rejected
-    /// because the generated registration could not reference them.
+    /// because the generated registration could not reference them. The suffix match
+    /// is case-insensitive to agree with SymbolDiscovery's contracts classification.
     /// </summary>
     private static bool IsContractsDto(ITypeSymbol resourceType, INamedTypeSymbol? dtoAttribute)
     {
@@ -145,7 +132,7 @@ internal static class PolicyFinder
         if (
             named.ContainingAssembly?.Name.EndsWith(
                 AssemblyConventions.ContractsSuffix,
-                StringComparison.Ordinal
+                StringComparison.OrdinalIgnoreCase
             ) == true
         )
         {
@@ -170,18 +157,17 @@ internal static class PolicyFinder
     /// </summary>
     private static string ResolveResourceModule(
         ITypeSymbol resourceType,
-        Dictionary<string, string> contractsAssemblyMap,
-        Dictionary<string, string> moduleAssemblyMap
+        in PolicyScanContext context
     )
     {
         var assemblyName = resourceType.ContainingAssembly?.Name;
         if (assemblyName is null)
             return "";
 
-        if (contractsAssemblyMap.TryGetValue(assemblyName, out var contractsModule))
+        if (context.ContractsAssemblyMap.TryGetValue(assemblyName, out var contractsModule))
             return contractsModule;
 
-        if (moduleAssemblyMap.TryGetValue(assemblyName, out var implModule))
+        if (context.ModuleAssemblyMap.TryGetValue(assemblyName, out var implModule))
             return implModule;
 
         return "";
@@ -207,41 +193,48 @@ internal static class PolicyFinder
         if (symbols.PolicyInterface is null)
             return;
 
+        var context = new PolicyScanContext(
+            symbols.PolicyInterface,
+            symbols.DtoAttribute,
+            contractsAssemblyMap,
+            moduleAssemblyMap,
+            policies
+        );
+
         var scanned = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
-
-        void Scan(IAssemblySymbol assembly, string moduleName)
-        {
-            if (!scanned.Add(assembly))
-                return;
-
-            FindPolicyTypes(
-                assembly.GlobalNamespace,
-                symbols.PolicyInterface,
-                symbols.DtoAttribute,
-                contractsAssemblyMap,
-                moduleAssemblyMap,
-                moduleName,
-                policies
-            );
-        }
 
         foreach (var module in modules)
         {
-            if (moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
-                Scan(typeSymbol.ContainingAssembly, module.ModuleName);
+            if (
+                moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol)
+                && scanned.Add(typeSymbol.ContainingAssembly)
+            )
+            {
+                FindPolicyTypes(
+                    typeSymbol.ContainingAssembly.GlobalNamespace,
+                    context,
+                    module.ModuleName
+                );
+            }
         }
 
         // All contracts assemblies — including ones whose name maps to no module, so a
         // policy there is still registered (its SM0060 ownership check is skipped).
         foreach (var contractsAssembly in contractsAssemblies)
         {
-            contractsAssemblyMap.TryGetValue(contractsAssembly.Name, out var moduleName);
-            Scan(contractsAssembly, moduleName ?? "");
+            if (scanned.Add(contractsAssembly))
+            {
+                contractsAssemblyMap.TryGetValue(contractsAssembly.Name, out var moduleName);
+                FindPolicyTypes(contractsAssembly.GlobalNamespace, context, moduleName ?? "");
+            }
         }
 
         // The compiling assembly: hosts may declare policies too (already covered when
         // the host itself contains a [Module] class).
-        moduleAssemblyMap.TryGetValue(hostAssembly.Name, out var hostModule);
-        Scan(hostAssembly, hostModule ?? "");
+        if (scanned.Add(hostAssembly))
+        {
+            moduleAssemblyMap.TryGetValue(hostAssembly.Name, out var hostModule);
+            FindPolicyTypes(hostAssembly.GlobalNamespace, context, hostModule ?? "");
+        }
     }
 }

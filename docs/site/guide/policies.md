@@ -111,6 +111,10 @@ app.MapPost(
 
 The filter loads the resource (404 when missing — including when an optional route parameter is omitted), authorizes the action, and only then invokes the handler. True misconfiguration fails loudly: a route parameter name that doesn't exist in the template, or a missing resolver registration, throws `InvalidOperationException` rather than masquerading as 404.
 
+::: warning Ordering with Form Requests
+Form Request validation is attached at the route-group level and therefore runs **before** endpoint-level filters like `AuthorizeResource`. An endpoint combining both validates the caller's payload before the instance-level authorization check — harmless for security (validation only reflects the caller's own input), but the validation work happens even for requests the policy will deny. Prefer the imperative `IAuthorizer` flow if that ordering matters.
+:::
+
 ## Imperative Checks: IAuthorizer
 
 When the handler needs the loaded resource (to render it, mutate it in place, or branch on its state), inject `IAuthorizer` and follow **load → authorize → act**:
@@ -150,7 +154,7 @@ More than one policy may target the same resource type — for example a tenancy
 
 - **List filtering** — collection scoping belongs in queries (`WHERE UserId = @me`), not in per-item policy checks. Policies guard single instances.
 - **Coarse capabilities** — "can this user use this feature at all" stays a permission string on the endpoint.
-- **Other modules' entities** — a policy lives in the module that owns the resource; SM0060 enforces it.
+- **Other modules' entities** — a policy lives in the module that owns the resource; SM0060 enforces it for module code. Policies declared in the host assembly are exempt (the host is the composition root and may layer host-wide rules on any resource) — use that power deliberately, since a host policy participates in deny-wins for the module's resource.
 - **Replacing service-level scoping** — contract methods keep their owner filters; policies add endpoint-level semantics on top, they don't substitute for defense in depth.
 
 ## Rules Summary

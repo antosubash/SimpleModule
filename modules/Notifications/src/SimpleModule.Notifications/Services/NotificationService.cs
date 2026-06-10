@@ -72,13 +72,25 @@ public class NotificationService(NotificationsDbContext db)
 
     public async Task<bool> MarkReadAsync(NotificationId id, UserId userId)
     {
-        // Single owner-scoped statement; the coalesce keeps an existing ReadAt so the
-        // call stays idempotent. Affected == 0 means missing or not owned by the caller.
-        var now = DateTimeOffset.UtcNow;
-        var affected = await db
-            .Notifications.Where(n => n.Id == id && n.UserId == userId)
-            .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAt, n => n.ReadAt ?? now));
-        return affected > 0;
+        // Deliberately load-modify-save rather than ExecuteUpdateAsync: the SaveChanges
+        // pipeline runs the framework interceptors (audit log entry, UpdatedAt,
+        // concurrency stamp rotation) that a set-based update would silently skip.
+        var notification = await db.Notifications.FirstOrDefaultAsync(n =>
+            n.Id == id && n.UserId == userId
+        );
+        if (notification is null)
+        {
+            return false;
+        }
+
+        if (notification.ReadAt is not null)
+        {
+            return true;
+        }
+
+        notification.ReadAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<int> MarkAllReadAsync(UserId userId)

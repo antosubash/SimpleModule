@@ -218,31 +218,9 @@ public static class GeneratorTestHelper
             builtRefs.Add(MetadataReference.CreateFromImage(ms.ToArray()));
         }
 
-        var hostRefs = new List<MetadataReference>([.. baseRefs, .. builtRefs]);
-        var aspNetDir = Path.GetDirectoryName(
-            typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location
-        );
-        if (aspNetDir is not null)
-        {
-            var diAbstractions = Path.Combine(
-                aspNetDir,
-                "Microsoft.Extensions.DependencyInjection.Abstractions.dll"
-            );
-            if (File.Exists(diAbstractions))
-                hostRefs.Add(MetadataReference.CreateFromFile(diAbstractions));
-        }
-        hostRefs.Add(
-            MetadataReference.CreateFromFile(
-                typeof(Microsoft.AspNetCore.Http.IResult).Assembly.Location
-            )
-        );
-
-        return CSharpCompilation.Create(
-            "TestAssembly",
-            [CSharpSyntaxTree.ParseText(hostSource)],
-            hostRefs,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-        );
+        // Compose the host side from CreateCompilation so the two paths share one
+        // reference list and can't drift.
+        return CreateCompilation(hostSource).AddReferences(builtRefs);
     }
 
     public static GeneratorDriverRunResult RunGenerator(CSharpCompilation compilation)

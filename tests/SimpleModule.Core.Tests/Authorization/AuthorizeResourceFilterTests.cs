@@ -12,22 +12,27 @@ using SimpleModule.Core.Exceptions;
 
 namespace SimpleModule.Core.Tests.Authorization;
 
+public sealed record FilterTestDoc(string Kind);
+
+public sealed record FilterTestOrphan(string Id);
+
 /// <summary>
 /// Shared TestServer host for the AuthorizeResource filter tests — booted once per
 /// class. The environment is pinned so Development middleware (developer exception
-/// page) can't swallow the exceptions the tests assert on.
+/// page) can't swallow the exceptions the tests assert on. The Doc policy decides by
+/// resource Kind: "allow" → allow, "hide" → DenyAsNotFound, anything else → Deny.
 /// </summary>
 public sealed class AuthorizeResourceAppFixture : IAsyncLifetime
 {
     public WebApplication App { get; private set; } = null!;
     public HttpClient Client { get; private set; } = null!;
 
-    private sealed class DocPolicy : IPolicy<AuthorizeResourceFilterTests.Doc>
+    private sealed class DocPolicy : IPolicy<FilterTestDoc>
     {
         public Task<AuthorizationResult> AuthorizeAsync(
             ClaimsPrincipal user,
             string action,
-            AuthorizeResourceFilterTests.Doc resource,
+            FilterTestDoc resource,
             CancellationToken cancellationToken = default
         ) =>
             Task.FromResult(
@@ -40,15 +45,12 @@ public sealed class AuthorizeResourceAppFixture : IAsyncLifetime
             );
     }
 
-    private sealed class DocResolver : IResourceResolver<AuthorizeResourceFilterTests.Doc>
+    private sealed class DocResolver : IResourceResolver<FilterTestDoc>
     {
-        public ValueTask<AuthorizeResourceFilterTests.Doc?> ResolveAsync(
+        public ValueTask<FilterTestDoc?> ResolveAsync(
             string routeValue,
             CancellationToken cancellationToken = default
-        ) =>
-            ValueTask.FromResult(
-                routeValue == "missing" ? null : new AuthorizeResourceFilterTests.Doc(routeValue)
-            );
+        ) => ValueTask.FromResult(routeValue == "missing" ? null : new FilterTestDoc(routeValue));
     }
 
     public async ValueTask InitializeAsync()
@@ -59,21 +61,18 @@ public sealed class AuthorizeResourceAppFixture : IAsyncLifetime
         builder.WebHost.UseTestServer();
         builder.Services.AddOptions<PolicyAuthorizationOptions>();
         builder.Services.AddScoped<IAuthorizer, Authorizer>();
-        builder.Services.AddScoped<IPolicy<AuthorizeResourceFilterTests.Doc>, DocPolicy>();
-        builder.Services.AddScoped<
-            IResourceResolver<AuthorizeResourceFilterTests.Doc>,
-            DocResolver
-        >();
+        builder.Services.AddScoped<IPolicy<FilterTestDoc>, DocPolicy>();
+        builder.Services.AddScoped<IResourceResolver<FilterTestDoc>, DocResolver>();
 
         App = builder.Build();
         App.MapGet("/docs/{id}", (string id) => Results.Ok(id))
-            .AuthorizeResource<AuthorizeResourceFilterTests.Doc>(PolicyActions.Update);
+            .AuthorizeResource<FilterTestDoc>(PolicyActions.Update);
         App.MapGet("/misnamed/{docId}", (string docId) => Results.Ok(docId))
-            .AuthorizeResource<AuthorizeResourceFilterTests.Doc>(PolicyActions.Update); // route param is NOT "id"
+            .AuthorizeResource<FilterTestDoc>(PolicyActions.Update); // route param is NOT "id"
         App.MapGet("/optional/{id?}", (string? id) => Results.Ok(id))
-            .AuthorizeResource<AuthorizeResourceFilterTests.Doc>(PolicyActions.Update);
+            .AuthorizeResource<FilterTestDoc>(PolicyActions.Update);
         App.MapGet("/orphans/{id}", (string id) => Results.Ok(id))
-            .AuthorizeResource<AuthorizeResourceFilterTests.Orphan>(PolicyActions.Update); // no resolver registered
+            .AuthorizeResource<FilterTestOrphan>(PolicyActions.Update); // no resolver registered
 
         await App.StartAsync();
         Client = App.GetTestClient();
@@ -94,10 +93,6 @@ public sealed class AuthorizeResourceAppFixture : IAsyncLifetime
 public sealed class AuthorizeResourceFilterTests(AuthorizeResourceAppFixture fixture)
     : IClassFixture<AuthorizeResourceAppFixture>
 {
-    public sealed record Doc(string Kind);
-
-    public sealed record Orphan(string Id);
-
     [Fact]
     public async Task AllowedResource_InvokesHandler()
     {

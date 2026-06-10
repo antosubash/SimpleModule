@@ -13,8 +13,9 @@ DevTools 35 ✓, all 15 module suites ✓ (Notifications 23 incl. 4 new e2e poli
 Notable decisions:
 - Reference module is **Notifications** (issue suggested Products, which no longer exists).
 - Missing policy at check time throws `MissingPolicyException` (fail closed).
-- Deny→404 mapping via `PolicyAuthorizationOptions.NotFoundActions` (default `view`);
-  Notifications adds `markRead` to preserve its previous non-owner-404 behavior.
+- Deny→404 mapping: `AuthorizationResult.DenyAsNotFound()` per decision (what
+  NotificationPolicy uses); `PolicyAuthorizationOptions.NotFoundActions` is an
+  empty-by-default host-level override.
 - Declarative `.AuthorizeResource<T>()` ships with `IResourceResolver<T>` (documented,
   not yet used by a module — imperative `IAuthorizer` is the primary path).
 
@@ -69,7 +70,7 @@ Notable decisions:
 - [x] `PolicyActions` — common action constants (View/Create/Update/Delete)
 - [x] `IAuthorizer` — `CheckAsync<T>` (result) + `AuthorizeAsync<T>` (throws)
 - [x] `Authorizer` — resolves all `IPolicy<T>` from DI; deny wins; missing policy → `MissingPolicyException` (fail closed)
-- [x] `PolicyAuthorizationOptions` — `NotFoundActions` (default: view) map deny → `NotFoundException` instead of `ForbiddenException`
+- [x] `PolicyAuthorizationOptions` — `NotFoundActions` host-level override (empty by default; superseded by per-decision `DenyAsNotFound`)
 - [x] `IResourceResolver<TResource>` + `AuthorizeResource<TResource>(action, routeParam)` endpoint filter
 - [x] Register `IAuthorizer` in `SimpleModule.Hosting.AddSimpleModuleInfrastructure`
 

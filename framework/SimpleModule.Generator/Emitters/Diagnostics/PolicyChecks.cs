@@ -18,10 +18,19 @@ internal static class PolicyChecks
             var policyName = TypeMappingHelpers.StripGlobalPrefix(policy.FullyQualifiedName);
             var resourceName = TypeMappingHelpers.StripGlobalPrefix(policy.ResourceTypeFqn);
 
+            // SM0059/SM0061 exist to catch policies the generator cannot register; a
+            // [ManualContractRegistration] policy is wired by its own module (which can
+            // reference internal types and close generics), so both rules are waived.
+            // SM0058/SM0060 are resource rules and still apply below.
+            var autoRegistered = !policy.IsManuallyRegistered;
+
             // SM0061: open generic policies cannot be registered; the resource type is
             // a type parameter, so the remaining checks would only add noise.
             if (policy.IsGeneric)
             {
+                if (!autoRegistered)
+                    continue;
+
                 if (reportedGeneric.Add(policy.FullyQualifiedName))
                 {
                     context.ReportDiagnostic(
@@ -53,7 +62,11 @@ internal static class PolicyChecks
 
             // SM0059: non-public policies are skipped by the registration emitter,
             // which would otherwise surface only as a runtime MissingPolicyException.
-            if (!policy.IsPublic && reportedNonPublic.Add(policy.FullyQualifiedName))
+            if (
+                autoRegistered
+                && !policy.IsPublic
+                && reportedNonPublic.Add(policy.FullyQualifiedName)
+            )
             {
                 context.ReportDiagnostic(
                     Diagnostic.Create(
