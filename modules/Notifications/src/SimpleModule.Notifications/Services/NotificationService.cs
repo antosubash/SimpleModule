@@ -89,7 +89,16 @@ public class NotificationService(NotificationsDbContext db)
         }
 
         notification.ReadAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // A concurrent request rotated the concurrency stamp (e.g. a double-click
+            // marking the same notification read) — the outcome the caller wanted
+            // already holds, so this is an idempotent success, not an error.
+        }
         return true;
     }
 

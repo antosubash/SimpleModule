@@ -24,25 +24,23 @@ internal static class PolicyChecks
             // SM0058/SM0060 are resource rules and still apply below.
             var autoRegistered = !policy.IsManuallyRegistered;
 
-            // SM0061: open generic policies cannot be registered; the resource type is
-            // a type parameter, so the remaining checks would only add noise.
-            if (policy.IsGeneric)
+            // SM0061: open generic policies cannot be auto-registered.
+            if (policy.IsGeneric && autoRegistered && reportedGeneric.Add(policy.FullyQualifiedName))
             {
-                if (!autoRegistered)
-                    continue;
-
-                if (reportedGeneric.Add(policy.FullyQualifiedName))
-                {
-                    context.ReportDiagnostic(
-                        Diagnostic.Create(
-                            DiagnosticDescriptors.PolicyMustNotBeGeneric,
-                            LocationHelper.ToLocation(policy.Location),
-                            policyName
-                        )
-                    );
-                }
-                continue;
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        DiagnosticDescriptors.PolicyMustNotBeGeneric,
+                        LocationHelper.ToLocation(policy.Location),
+                        policyName
+                    )
+                );
             }
+
+            // When the resource is the policy's own type parameter there is no concrete
+            // type to validate — the resource rules below would only add noise on top of
+            // SM0061. A generic policy with a CONCRETE resource still gets them.
+            if (policy.ResourceIsTypeParameter)
+                continue;
 
             // SM0058: resource must be an effectively-public contracts DTO ([Dto] or
             // in a .Contracts assembly). Determined symbolically at discovery so

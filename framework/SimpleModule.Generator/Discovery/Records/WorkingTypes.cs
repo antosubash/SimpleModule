@@ -172,6 +172,7 @@ internal sealed class PolicyInfo
     public bool IsPublic { get; set; }
     public bool IsGeneric { get; set; }
     public bool IsManuallyRegistered { get; set; }
+    public bool ResourceIsTypeParameter { get; set; }
     public bool ResourceIsContractsDto { get; set; }
 
     /// <summary>Module owning the resource type's assembly; "" when unattributable.</summary>

@@ -8,7 +8,7 @@ All phases complete. Verification: full `dotnet build` clean; Core.Tests 259 ✓
 Generator.Tests 211 ✓ (incl. 5 new policy tests + catalog baseline), Database 93 ✓,
 DevTools 35 ✓, all 15 module suites ✓ (Notifications 23 incl. 4 new e2e policy tests);
 `npx biome check` clean on touched files; `npm run validate-pages` ✓. Generated
-`AddModules()` verified to contain `AddScoped<IPolicy<Notification>, NotificationPolicy>()`.
+`AddModules()` verified to contain the generated `TryAddEnumerable(ServiceDescriptor.Scoped<IPolicy<Notification>, NotificationPolicy>())` registration.
 
 Notable decisions:
 - Reference module is **Notifications** (issue suggested Products, which no longer exists).
@@ -39,9 +39,11 @@ Notable decisions:
 9. SM0059/SM0061 deduped per class for multi-interface policies.
 10. Reference module now uses the declarative form: NotificationResolver +
     .AuthorizeResource<Notification>(MarkRead); MarkReadAsync is a single
-    owner-scoped ExecuteUpdateAsync; CancellationToken propagated through FindAsync.
+    CancellationToken propagated through FindAsync.
     CreateMultiAssemblyCompilation promoted to GeneratorTestHelper.
-    Authorizer guard-first (fail-closed check before the loop).
+    (Round 3 later reverted MarkReadAsync to tracked load-modify-save so the
+    SaveChanges interceptors run, and kept Authorizer's zero-alloc flag; round 4
+    made concurrent duplicate mark-read an idempotent success.)
 
 ## Code-review round 1 (all 10 findings addressed)
 

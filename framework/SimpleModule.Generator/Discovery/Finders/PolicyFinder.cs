@@ -88,6 +88,7 @@ internal static class PolicyFinder
                         IsManuallyRegistered = ContractFinder.HasManualRegistrationAttribute(
                             typeSymbol
                         ),
+                        ResourceIsTypeParameter = resourceType is ITypeParameterSymbol,
                         ResourceIsContractsDto = IsContractsDto(
                             resourceType,
                             context.DtoAttribute

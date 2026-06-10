@@ -63,7 +63,7 @@ There is no registration step. The source generator discovers every `IPolicy<T>`
 services.TryAddEnumerable(ServiceDescriptor.Scoped<IPolicy<Notification>, NotificationPolicy>());
 ```
 
-`TryAddEnumerable` deduplicates **type-based** manual registrations (`AddScoped<IPolicy<X>, XPolicy>()`). If you must register via factory, use the two-generic overload — `AddScoped<IPolicy<X>, XPolicy>(sp => ...)` — so the implementation type is visible to dedup, or opt out of auto-registration entirely with `[ManualContractRegistration]` on the policy class.
+`TryAddEnumerable` deduplicates **type-based** manual registrations (`AddScoped<IPolicy<X>, XPolicy>()`). If you must register via factory, use the two-generic overload — `AddScoped<IPolicy<X>, XPolicy>(sp => ...)` — so the implementation type is visible to dedup, or opt out of auto-registration entirely with `[ManualContractRegistration]` on the policy class. An opted-out policy is wired by its own module, so the auto-registration rules SM0059 (public) and SM0061 (non-generic) are waived for it; the resource rules (SM0058, SM0060) still apply.
 
 Use the `PolicyActions` constants (`view`, `create`, `update`, `delete`) for conventional verbs, and declare module-specific actions as `public const string` on the policy class so endpoints never hardcode action strings.
 
@@ -154,7 +154,7 @@ More than one policy may target the same resource type — for example a tenancy
 
 - **List filtering** — collection scoping belongs in queries (`WHERE UserId = @me`), not in per-item policy checks. Policies guard single instances.
 - **Coarse capabilities** — "can this user use this feature at all" stays a permission string on the endpoint.
-- **Other modules' entities** — a policy lives in the module that owns the resource; SM0060 enforces it for module code. Policies declared in the host assembly are exempt (the host is the composition root and may layer host-wide rules on any resource) — use that power deliberately, since a host policy participates in deny-wins for the module's resource.
+- **Other modules' entities** — a policy lives in the module that owns the resource; SM0060 enforces it for module code. Policies in assemblies that map to no module — a host assembly without its own `[Module]` class, or a shared library — are exempt, since the composition root may layer host-wide rules on any resource. Use that power deliberately: such a policy participates in deny-wins for the module's resource, and if your host declares its own `[Module]`, its policies count as that module's and SM0060 applies.
 - **Replacing service-level scoping** — contract methods keep their owner filters; policies add endpoint-level semantics on top, they don't substitute for defense in depth.
 
 ## Rules Summary
@@ -162,9 +162,9 @@ More than one policy may target the same resource type — for example a tenancy
 | Rule | Enforced by |
 |------|-------------|
 | Resource type must be a contracts DTO | SM0058 (build error) |
-| Policy class must be effectively public | SM0059 (build error) |
-| Policy must be owned by the resource's module | SM0060 (build error) |
-| Policy class must not be generic | SM0061 (build error) |
+| Policy class must be effectively public | SM0059 (build error; waived for `[ManualContractRegistration]`) |
+| Policy must be owned by the resource's module | SM0060 (build error; module code only — unmapped host/shared assemblies are exempt) |
+| Policy class must not be generic | SM0061 (build error; waived for `[ManualContractRegistration]`) |
 | Policies auto-registered as scoped services | Source generator (`TryAddEnumerable`) |
 | Missing policy at check time fails closed | `MissingPolicyException` |
 | Deny wins across multiple policies | `IAuthorizer` |
