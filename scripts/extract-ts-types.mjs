@@ -55,6 +55,12 @@ for (const file of files) {
 
   const tsContent = tsMatch[1];
   const projectDir = `SimpleModule.${moduleName}`;
+
+  // Package-installed modules have no source directory here — creating one
+  // would make the module look like a source module to tooling (sm list,
+  // doctor). Their TS types ship prebuilt inside the package instead.
+  if (!existsSync(resolve(modulesDir, moduleName))) continue;
+
   const outPath = resolve(
     modulesDir,
     moduleName,
