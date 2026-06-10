@@ -98,20 +98,34 @@ public sealed class NotificationServiceTests : IDisposable
     {
         var n = await SeedAsync();
 
-        await _sut.MarkReadAsync(n.Id);
+        var result = await _sut.MarkReadAsync(n.Id, _userId);
 
+        result.Should().BeTrue();
         var refreshed = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
         refreshed.ReadAt.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task MarkReadAsync_AlreadyRead_KeepsOriginalReadAt()
+    public async Task MarkReadAsync_WithDifferentUser_ReturnsFalse()
+    {
+        var n = await SeedAsync();
+
+        var result = await _sut.MarkReadAsync(n.Id, UserId.From("not-the-owner"));
+
+        result.Should().BeFalse();
+        var refreshed = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
+        refreshed.ReadAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task MarkReadAsync_AlreadyRead_ReturnsTrueAndKeepsOriginalReadAt()
     {
         var n = await SeedAsync(readAt: DateTimeOffset.UtcNow.AddDays(-1));
         var stored = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
 
-        await _sut.MarkReadAsync(n.Id);
+        var result = await _sut.MarkReadAsync(n.Id, _userId);
 
+        result.Should().BeTrue();
         var refreshed = await _db.Notifications.AsNoTracking().FirstAsync(x => x.Id == n.Id);
         refreshed.ReadAt.Should().Be(stored.ReadAt);
     }

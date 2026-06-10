@@ -188,6 +188,12 @@ public class DiagnosticCatalogTests
             DiagnosticSeverity.Error,
             "SimpleModule.Generator"
         ),
+        ["PolicyNotPublic"] = ("SM0059", DiagnosticSeverity.Error, "SimpleModule.Generator"),
+        ["PolicyForForeignResource"] = (
+            "SM0060",
+            DiagnosticSeverity.Error,
+            "SimpleModule.Generator"
+        ),
     };
 
     [Fact]

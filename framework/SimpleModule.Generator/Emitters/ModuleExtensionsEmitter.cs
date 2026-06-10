@@ -26,6 +26,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
         sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection.Extensions;");
         sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
         sb.AppendLine("using SimpleModule.Core.Authorization;");
@@ -140,14 +141,18 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         if (data.Policies.Length > 0)
         {
             sb.AppendLine();
-            sb.AppendLine("        // Auto-discovered resource policies (IPolicy<T>)");
+            sb.AppendLine("        // Auto-discovered resource policies (IPolicy<T>).");
+            sb.AppendLine(
+                "        // TryAddEnumerable dedups against manual registrations in ConfigureServices."
+            );
             foreach (var policy in data.Policies)
             {
+                // Non-public policies can't be referenced here; SM0059 reports them.
                 if (!policy.IsPublic)
                     continue;
 
                 sb.AppendLine(
-                    $"        services.AddScoped<global::SimpleModule.Core.Authorization.Policies.IPolicy<{policy.ResourceTypeFqn}>, {policy.FullyQualifiedName}>();"
+                    $"        services.TryAddEnumerable(global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Scoped<global::SimpleModule.Core.Authorization.Policies.IPolicy<{policy.ResourceTypeFqn}>, {policy.FullyQualifiedName}>());"
                 );
             }
         }

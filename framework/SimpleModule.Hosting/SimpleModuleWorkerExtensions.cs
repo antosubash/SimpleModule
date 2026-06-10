@@ -3,6 +3,7 @@ using JasperFx.Resources;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SimpleModule.Core.Authorization.Policies;
 using SimpleModule.Database.Interceptors;
 using Wolverine;
 using ZiggyCreatures.Caching.Fusion;
@@ -61,6 +62,11 @@ public static class SimpleModuleWorkerExtensions
 
         // HttpContextAccessor: EntityInterceptor returns null in non-HTTP contexts.
         builder.Services.AddHttpContextAccessor();
+
+        // AddModules() registers IPolicy<T> implementations, so the dispatcher must
+        // resolve here too — background handlers may authorize resources as well.
+        builder.Services.AddOptions<PolicyAuthorizationOptions>();
+        builder.Services.AddScoped<IAuthorizer, Authorizer>();
 
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityChangeInterceptor>();

@@ -170,6 +170,10 @@ internal sealed class PolicyInfo
     public string ResourceTypeFqn { get; set; } = "";
     public string ModuleName { get; set; } = "";
     public bool IsPublic { get; set; }
+    public bool ResourceIsContractsDto { get; set; }
+
+    /// <summary>Module owning the resource type's assembly; "" when unattributable.</summary>
+    public string ResourceModuleName { get; set; } = "";
     public SourceLocationRecord? Location { get; set; }
 }
 

@@ -52,7 +52,7 @@ public sealed class Authorizer(
             return;
         }
 
-        if (options.Value.NotFoundActions.Contains(action))
+        if (result.TreatAsNotFound || options.Value.NotFoundActions.Contains(action))
         {
             throw new NotFoundException();
         }

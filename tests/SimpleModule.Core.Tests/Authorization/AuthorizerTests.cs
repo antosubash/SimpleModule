@@ -50,6 +50,16 @@ public class AuthorizerTests
         ) => Task.FromResult(AuthorizationResult.Deny("Denied by second policy"));
     }
 
+    private sealed class DenyAsNotFoundPolicy : IPolicy<Widget>
+    {
+        public Task<AuthorizationResult> AuthorizeAsync(
+            ClaimsPrincipal user,
+            string action,
+            Widget resource,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult(AuthorizationResult.DenyAsNotFound("Hidden"));
+    }
+
     private static ClaimsPrincipal CreateUser(string userId) =>
         new(new ClaimsIdentity([new Claim("sub", userId)], "test"));
 
@@ -202,6 +212,39 @@ public class AuthorizerTests
 
         var act = () =>
             authorizer.AuthorizeAsync(CreateUser("user-2"), "archive", new Widget("user-1"));
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task CheckAsync_DenyAsNotFound_CarriesFlagAndReason()
+    {
+        var authorizer = CreateAuthorizer(s => s.AddScoped<IPolicy<Widget>, DenyAsNotFoundPolicy>());
+
+        var result = await authorizer.CheckAsync(
+            CreateUser("user-1"),
+            PolicyActions.Update,
+            new Widget("user-1")
+        );
+
+        result.IsAllowed.Should().BeFalse();
+        result.TreatAsNotFound.Should().BeTrue();
+        result.Reason.Should().Be("Hidden");
+    }
+
+    [Fact]
+    public async Task AuthorizeAsync_DenyAsNotFound_ThrowsNotFoundForAnyAction()
+    {
+        // The policy's per-decision flag wins even when the action is not in
+        // NotFoundActions — no host/module options mutation required.
+        var authorizer = CreateAuthorizer(s => s.AddScoped<IPolicy<Widget>, DenyAsNotFoundPolicy>());
+
+        var act = () =>
+            authorizer.AuthorizeAsync(
+                CreateUser("user-1"),
+                PolicyActions.Update,
+                new Widget("user-1")
+            );
 
         await act.Should().ThrowAsync<NotFoundException>();
     }

@@ -18,6 +18,25 @@ Notable decisions:
 - Declarative `.AuthorizeResource<T>()` ships with `IResourceResolver<T>` (documented,
   not yet used by a module — imperative `IAuthorizer` is the primary path).
 
+## Code-review fix round (all 10 findings addressed)
+
+1. Unscoped contract surface → `INotificationsContracts` restored to owner-scoped
+   `MarkReadAsync(id, userId)`; unscoped `FindAsync` moved to module-internal
+   `INotificationStore`. Also restores 404-on-race (bool result back).
+2. Internal policies silently skipped → SM0059 (Error: policy must be public).
+3. SM0058 false positive for `[NoDtoGeneration]`/`IEvent` contracts entities →
+   resource classified symbolically at discovery ([Dto] OR .Contracts assembly).
+4. Discovery scope → PolicyFinder now scans contracts assemblies and nested types.
+5. Global NotFoundActions mutation → `AuthorizationResult.DenyAsNotFound()` per
+   decision; NotificationsModule no longer touches host options.
+6. Worker host asymmetry → `AddSimpleModuleWorker` registers IAuthorizer + options.
+7. Duplicate-registration double execution → generated code uses `TryAddEnumerable`.
+8. Admin behavior widening → NotificationPolicy is owner-only again (admins not
+   exempt from instance rules; documented as deliberate).
+9. AuthorizeResource misconfig → missing route value throws InvalidOperationException;
+   6 new TestServer-based filter tests (allow/deny/hide/missing/misnamed/no-resolver).
+10. Foreign-module policies → SM0060 (Error: policy owned by resource's module).
+
 ## Plan
 
 ### Phase 1 — Core types (`framework/SimpleModule.Core/Authorization/Policies/`)

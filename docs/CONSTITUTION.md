@@ -373,13 +373,15 @@ public sealed class CreateProductRequest : FormRequest<CreateProductRequest>
 
 String permissions answer "can this user perform this kind of action?". Policies answer "can this user perform this action on *this* resource?" — ownership, tenancy, and state-machine rules.
 
-- Implement `IPolicy<TResource>` (in `SimpleModule.Core.Authorization.Policies`) in the module that owns the resource. Policies are auto-discovered by the source generator and registered as scoped services — no manual DI registration.
-- The resource type must be a contracts DTO — a `[Dto]` type or a public type in the module's `.Contracts` assembly (SM0058). Policies guard resources that cross module boundaries.
+- Implement `IPolicy<TResource>` (in `SimpleModule.Core.Authorization.Policies`) in the module that owns the resource (SM0060). Policy classes must be `public` (SM0059); they are auto-discovered by the source generator — in implementation and contracts assemblies, including nested classes — and registered as scoped services, deduplicated against manual registrations.
+- The resource type must be a contracts DTO — a `[Dto]` type or a type declared in a `.Contracts` assembly (SM0058). Policies guard resources that cross module boundaries.
 - Policies **complement** permissions, they do not replace them: keep `.RequirePermission()` on the endpoint as the coarse capability gate, then check the instance rule via `IAuthorizer`.
-- Endpoints follow load → authorize → act: fetch the resource, call `IAuthorizer.AuthorizeAsync(user, action, resource)`, then perform the operation. Denial throws `ForbiddenException` (403), or `NotFoundException` (404) for actions listed in `PolicyAuthorizationOptions.NotFoundActions` (default: `view`) to prevent resource enumeration.
+- Endpoints follow load → authorize → act: fetch the resource, call `IAuthorizer.AuthorizeAsync(user, action, resource)`, then perform the operation. Denial throws `ForbiddenException` (403). For anti-enumeration, return `AuthorizationResult.DenyAsNotFound(...)` from the policy (per-decision 404), or list actions in the host-level `PolicyAuthorizationOptions.NotFoundActions` (default: `view`). Modules must not mutate the host-level option set.
 - Use `PolicyActions` constants for CRUD verbs; declare module-specific actions as `public const string` on the policy class.
 - Multiple policies may target the same resource type (e.g. a tenancy policy plus an ownership policy); a single deny wins.
+- Keep contract methods owner-scoped (defense in depth for in-process callers); unscoped loaders used by the load → authorize → act flow belong on a module-internal interface, never on the public contract.
 - Collection scoping stays in queries (`WHERE UserId = @me`) — policies are for single-instance checks, not list filtering.
+- Policies do not inherit the Admin permission bypass — admin exemptions are an explicit, per-policy decision.
 - Reference implementation: `NotificationPolicy` in `modules/Notifications`.
 
 ### Rules
@@ -554,6 +556,8 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | Diagnostic | Severity | Rule |
 |------------|----------|------|
 | SM0058 | Error | Policy resource type must be a contracts DTO |
+| SM0059 | Error | Policy class must be public |
+| SM0060 | Error | Policy must be owned by the resource's module |
 
 ### Module Metadata
 

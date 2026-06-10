@@ -5,7 +5,9 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Notifications.Services;
 
-public class NotificationService(NotificationsDbContext db) : INotificationsContracts
+public class NotificationService(NotificationsDbContext db)
+    : INotificationsContracts,
+        INotificationStore
 {
     public async Task<PagedResult<Notification>> ListAsync(
         UserId userId,
@@ -64,16 +66,24 @@ public class NotificationService(NotificationsDbContext db) : INotificationsCont
     public async Task<Notification?> FindAsync(NotificationId id) =>
         await db.Notifications.AsNoTracking().FirstOrDefaultAsync(n => n.Id == id);
 
-    public async Task MarkReadAsync(NotificationId id)
+    public async Task<bool> MarkReadAsync(NotificationId id, UserId userId)
     {
-        var notification = await db.Notifications.FirstOrDefaultAsync(n => n.Id == id);
-        if (notification is null || notification.ReadAt is not null)
+        var notification = await db.Notifications.FirstOrDefaultAsync(n =>
+            n.Id == id && n.UserId == userId
+        );
+        if (notification is null)
         {
-            return;
+            return false;
+        }
+
+        if (notification.ReadAt is not null)
+        {
+            return true;
         }
 
         notification.ReadAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<int> MarkAllReadAsync(UserId userId)

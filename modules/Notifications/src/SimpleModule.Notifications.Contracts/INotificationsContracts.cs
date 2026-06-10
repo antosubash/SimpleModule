@@ -10,15 +10,11 @@ public interface INotificationsContracts
     Task<Notification?> GetByIdAsync(NotificationId id, UserId userId);
 
     /// <summary>
-    /// Loads a notification without owner scoping. Callers are responsible for the
-    /// instance-level check via <c>IAuthorizer</c> + <c>NotificationPolicy</c>.
+    /// Marks a notification read. Owner-scoped: returns false when the notification
+    /// does not exist or belongs to another user — cross-module callers cannot mutate
+    /// other users' notifications. Instance-level authorization with richer semantics
+    /// (reasons, 404 mapping) lives in <c>NotificationPolicy</c> at the endpoint.
     /// </summary>
-    Task<Notification?> FindAsync(NotificationId id);
-
-    /// <summary>
-    /// Marks a notification read. Authorization happens at the endpoint via
-    /// <c>NotificationPolicy</c> — this method assumes the caller is allowed.
-    /// </summary>
-    Task MarkReadAsync(NotificationId id);
+    Task<bool> MarkReadAsync(NotificationId id, UserId userId);
     Task<int> MarkAllReadAsync(UserId userId);
 }

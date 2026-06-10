@@ -44,7 +44,7 @@ public sealed class NotificationPolicyTests
     [Theory]
     [InlineData(PolicyActions.View)]
     [InlineData(NotificationPolicy.MarkRead)]
-    public async Task NonOwner_IsDenied(string action)
+    public async Task NonOwner_IsDeniedAsNotFound(string action)
     {
         var result = await _sut.AuthorizeAsync(
             CreateUser("user-2"),
@@ -53,19 +53,22 @@ public sealed class NotificationPolicyTests
         );
 
         result.IsAllowed.Should().BeFalse();
+        result.TreatAsNotFound.Should().BeTrue();
         result.Reason.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
-    public async Task Admin_IsAllowedForOthersNotifications()
+    public async Task Admin_IsNotExemptFromOwnership()
     {
+        // Marking read mutates the recipient's inbox state — admins get no carve-out.
         var result = await _sut.AuthorizeAsync(
             CreateUser("admin-1", WellKnownRoles.Admin),
             NotificationPolicy.MarkRead,
             CreateNotification("user-1")
         );
 
-        result.IsAllowed.Should().BeTrue();
+        result.IsAllowed.Should().BeFalse();
+        result.TreatAsNotFound.Should().BeTrue();
     }
 
     [Fact]
@@ -78,6 +81,7 @@ public sealed class NotificationPolicyTests
         );
 
         result.IsAllowed.Should().BeFalse();
+        result.TreatAsNotFound.Should().BeFalse();
     }
 
     [Fact]

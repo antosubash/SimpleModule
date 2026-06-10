@@ -1,7 +1,9 @@
 using System.Net;
 using System.Security.Claims;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Notifications.Contracts;
 using SimpleModule.Tests.Shared.Fixtures;
 using SimpleModule.Users.Contracts;
@@ -11,8 +13,8 @@ namespace SimpleModule.Notifications.Tests.Integration;
 /// <summary>
 /// End-to-end coverage of the policy-based authorization flow: the MarkRead endpoint
 /// loads the notification, dispatches to <see cref="NotificationPolicy"/> via
-/// IAuthorizer, and denial for non-owners surfaces as 404 (configured through
-/// PolicyAuthorizationOptions in the module).
+/// IAuthorizer, and ownership denials surface as 404 (DenyAsNotFound) so callers
+/// cannot probe other users' notification IDs.
 /// </summary>
 [Collection(TestCollections.Integration)]
 public sealed class MarkReadEndpointTests(SimpleModuleWebApplicationFactory factory)
@@ -35,11 +37,23 @@ public sealed class MarkReadEndpointTests(SimpleModuleWebApplicationFactory fact
         return notification;
     }
 
-    private HttpClient CreateClientFor(string userId) =>
-        factory.CreateAuthenticatedClient(
+    private async Task<DateTimeOffset?> GetReadAtAsync(NotificationId id)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NotificationsDbContext>();
+        var notification = await db.Notifications.AsNoTracking().FirstAsync(n => n.Id == id);
+        return notification.ReadAt;
+    }
+
+    private HttpClient CreateClientFor(string userId, params string[] roles)
+    {
+        var claims = new List<Claim> { new("sub", userId) };
+        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+        return factory.CreateAuthenticatedClient(
             [NotificationsPermissions.ViewOwn],
-            new Claim("sub", userId)
+            [.. claims]
         );
+    }
 
     [Fact]
     public async Task MarkRead_AsOwner_Returns204AndMarksRead()
@@ -53,11 +67,7 @@ public sealed class MarkReadEndpointTests(SimpleModuleWebApplicationFactory fact
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-
-        using var scope = factory.Services.CreateScope();
-        var contracts = scope.ServiceProvider.GetRequiredService<INotificationsContracts>();
-        var refreshed = await contracts.FindAsync(notification.Id);
-        refreshed!.ReadAt.Should().NotBeNull();
+        (await GetReadAtAsync(notification.Id)).Should().NotBeNull();
     }
 
     [Fact]
@@ -71,14 +81,27 @@ public sealed class MarkReadEndpointTests(SimpleModuleWebApplicationFactory fact
             null
         );
 
-        // NotificationsModule maps denied markRead to 404 via PolicyAuthorizationOptions
-        // so callers cannot probe other users' notification IDs.
+        // NotificationPolicy denies ownership violations with DenyAsNotFound so
+        // callers cannot probe other users' notification IDs.
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await GetReadAtAsync(notification.Id)).Should().BeNull();
+    }
 
-        using var scope = factory.Services.CreateScope();
-        var contracts = scope.ServiceProvider.GetRequiredService<INotificationsContracts>();
-        var refreshed = await contracts.FindAsync(notification.Id);
-        refreshed!.ReadAt.Should().BeNull();
+    [Fact]
+    public async Task MarkRead_AsAdminForOthersNotification_Returns404AndDoesNotMutate()
+    {
+        // Admins are not exempt from the ownership rule — marking read mutates the
+        // recipient's inbox state.
+        var notification = await SeedAsync("owner-1");
+        var client = CreateClientFor("admin-1", WellKnownRoles.Admin);
+
+        var response = await client.PostAsync(
+            $"/api/notifications/{notification.Id.Value}/read",
+            null
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await GetReadAtAsync(notification.Id)).Should().BeNull();
     }
 
     [Fact]
