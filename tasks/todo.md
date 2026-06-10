@@ -77,3 +77,27 @@ Notable finds while fixing:
   `SaveChangesAndFlushMessagesAsync`, which per Wolverine commits the open transaction
   before flushing. `FakeDbContextOutbox` now mirrors that commit behavior.
 
+# Task: Module distribution — Session 1 (package contract)
+
+Full plan: docs/superpowers/plans/2026-06-10-module-packaging-session1.md
+Branch: worktree-module-packaging-s1
+(Previous todo — design-system consistency pass — shipped in PR #243.)
+
+## Plan
+
+- [x] Marketplace-module audit → already deleted in b2698964 (PR #145); recommend leaving deleted, harvest NuGet-client patterns from history for Session 3 `sm search`
+- [x] Core: `ModuleManifest` model + `ModuleManifestAttribute` + `ModuleManifestReader` (schemaVersion gate, forward-compat parsing)
+- [x] Generator: `EventFinder` — events published (IEvent implementors) / consumed (Wolverine-convention handlers)
+- [x] Generator: `ModuleManifestEmitter` + `[Module(DisplayName=…)]` + `SimpleModuleProjectKind`/`SimpleModuleFrameworkCompat` build-property switches
+- [x] modules/Directory.Build.props: attach generator in module-kind to module impl projects
+- [x] Hosting: `IModuleManifestRegistry` + `sm-module-assets` JSON script injection in the HTML shell
+- [x] Client: manifest-first bundle resolution in resolve-page.ts (convention probing kept as fallback)
+- [x] Hosting: apply EF migrations for module DbContexts that bundle them
+- [x] Docs: docs/site/advanced/module-packaging.md (manifest schema v1, nupkg layout, externals contract, compat rules)
+- [x] Checkpoint: FeatureFlags packed → local feed → PackageReference in Host → page renders in browser (verified via Playwright, logged in as admin)
+
+## Review
+
+- All suites green: solution build 0 warnings; Core 258, Generator 213, Database 93, DevTools 35, CLI 136 (xunit v3 exe), 15 module suites all pass; `npm run check` + `validate-pages` clean.
+- Deviation: manifest is an assembly-level attribute, not an embedded resource — Roslyn generators cannot emit resources. `sm pack` (Session 2) will additionally extract `module-manifest.json` into the nupkg.
+- Next (Session 2): `sm pack` / `sm add` / `sm remove` / `sm list`; handle CPM (NU1008) on add; force production frontend build on pack.
