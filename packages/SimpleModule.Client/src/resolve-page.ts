@@ -24,7 +24,7 @@ function getModuleAssets(): Record<string, string> | null {
   } catch {
     moduleAssets = null;
   }
-  return moduleAssets;
+  return moduleAssets ?? null;
 }
 
 /**
