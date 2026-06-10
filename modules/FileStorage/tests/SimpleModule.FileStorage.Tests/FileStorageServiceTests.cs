@@ -38,7 +38,7 @@ public sealed partial class FileStorageServiceTests : IDisposable
         _service = new FileStorageService(
             _db,
             _storageProvider,
-            new TestMessageBus(),
+            new FakeDbContextOutbox<FileStorageDbContext>(_db),
             NullLogger<FileStorageService>.Instance
         );
     }
@@ -229,7 +229,7 @@ public sealed partial class FileStorageServiceTests : IDisposable
         var failingService = new FileStorageService(
             _db,
             failingProvider,
-            new TestMessageBus(),
+            new FakeDbContextOutbox<FileStorageDbContext>(_db),
             NullLogger<FileStorageService>.Instance
         );
 

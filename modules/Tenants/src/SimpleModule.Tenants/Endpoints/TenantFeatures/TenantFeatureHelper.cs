@@ -14,16 +14,24 @@ internal static class TenantFeatureHelper
         var tenantIdStr = tenantId.Value.ToString(
             System.Globalization.CultureInfo.InvariantCulture
         );
-        var overrideTasks = flags
-            .Where(f => !f.IsDeprecated)
-            .Select(f => featureFlags.GetOverridesAsync(f.Name));
-        var allOverrides = await Task.WhenAll(overrideTasks);
-        return allOverrides
-            .SelectMany(o => o)
-            .Where(o =>
-                o.OverrideType == OverrideType.Tenant
-                && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
-            )
-            .ToList();
+
+        // Await sequentially, not via Task.WhenAll: every GetOverridesAsync call
+        // hits the same scoped FeatureFlagsDbContext, and EF Core forbids
+        // concurrent operations on one context instance. With 2+ active flags
+        // the parallel version reliably threw "A second operation was started
+        // on this context instance..." → HTTP 500 (same class as #242).
+        var result = new List<FeatureFlagOverride>();
+        foreach (var flag in flags.Where(f => !f.IsDeprecated))
+        {
+            var overrides = await featureFlags.GetOverridesAsync(flag.Name);
+            result.AddRange(
+                overrides.Where(o =>
+                    o.OverrideType == OverrideType.Tenant
+                    && string.Equals(o.OverrideValue, tenantIdStr, StringComparison.Ordinal)
+                )
+            );
+        }
+
+        return result;
     }
 }

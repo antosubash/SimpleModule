@@ -58,9 +58,49 @@ public static partial class SimpleModuleHostExtensions
         {
             fhOptions.ForwardedHeaders =
                 ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            // Allow any proxy in containerized/cloud environments
-            fhOptions.KnownIPNetworks.Clear();
-            fhOptions.KnownProxies.Clear();
+
+            // Proxy trust must be explicit. The previous behavior cleared
+            // KnownProxies/KnownIPNetworks, which let any client spoof
+            // X-Forwarded-For and bypass per-IP rate limiting. By default only
+            // loopback is trusted (the ASP.NET Core default); deployments behind
+            // a reverse proxy list it under ForwardedHeaders:KnownProxies /
+            // ForwardedHeaders:KnownNetworks, or — for closed networks where the
+            // proxy address is not static — opt into
+            // ForwardedHeaders:TrustAllProxies.
+            var section = builder.Configuration.GetSection("ForwardedHeaders");
+
+            if (section.GetValue<bool>("TrustAllProxies"))
+            {
+                fhOptions.KnownIPNetworks.Clear();
+                fhOptions.KnownProxies.Clear();
+                return;
+            }
+
+            foreach (var proxy in ReadConfigList(section, "KnownProxies"))
+            {
+                if (!System.Net.IPAddress.TryParse(proxy, out var address))
+                {
+                    throw new InvalidOperationException(
+                        $"ForwardedHeaders:KnownProxies contains '{proxy}', which is not a valid "
+                            + "IP address."
+                    );
+                }
+
+                fhOptions.KnownProxies.Add(address);
+            }
+
+            foreach (var network in ReadConfigList(section, "KnownNetworks"))
+            {
+                if (!System.Net.IPNetwork.TryParse(network, out var ipNetwork))
+                {
+                    throw new InvalidOperationException(
+                        $"ForwardedHeaders:KnownNetworks contains '{network}', which is not a valid "
+                            + "CIDR network (e.g. 10.0.0.0/8)."
+                    );
+                }
+
+                fhOptions.KnownIPNetworks.Add(ipNetwork);
+            }
         });
 
         builder.Services.AddProblemDetails();
@@ -145,7 +185,10 @@ public static partial class SimpleModuleHostExtensions
         // cleared by `sm up`. Resolved as singleton because it caches state
         // for a short interval.
         builder.Services.Configure<MaintenanceModeOptions>(_ => { });
-        builder.Services.TryAddSingleton<IMaintenanceStateProvider, FileSystemMaintenanceStateProvider>();
+        builder.Services.TryAddSingleton<
+            IMaintenanceStateProvider,
+            FileSystemMaintenanceStateProvider
+        >();
 
         if (options.EnableHealthChecks)
         {

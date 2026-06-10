@@ -2,13 +2,11 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using NSubstitute;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Database;
 using SimpleModule.Tenants;
 using SimpleModule.Tenants.Contracts;
 using SimpleModule.Tests.Shared.Fakes;
-using Wolverine;
 
 namespace Tenants.Tests.Unit;
 
@@ -16,7 +14,6 @@ public sealed class TenantServiceTests : IDisposable
 {
     private readonly TenantsDbContext _db;
     private readonly TenantService _sut;
-    private readonly IMessageBus _bus = Substitute.For<IMessageBus>();
     private readonly FakeDbContextOutbox<TenantsDbContext> _outbox;
 
     public TenantServiceTests()
@@ -37,7 +34,7 @@ public sealed class TenantServiceTests : IDisposable
         _db.Database.OpenConnection();
         _db.Database.EnsureCreated();
         _outbox = new FakeDbContextOutbox<TenantsDbContext>(_db);
-        _sut = new TenantService(_db, _bus, _outbox, NullLogger<TenantService>.Instance);
+        _sut = new TenantService(_db, _outbox, NullLogger<TenantService>.Instance);
     }
 
     public void Dispose() => _db.Dispose();
@@ -89,10 +86,12 @@ public sealed class TenantServiceTests : IDisposable
         tenant.Status.Should().Be(TenantStatus.Active);
         tenant.Hosts.Should().HaveCount(1);
         tenant.Hosts[0].HostName.Should().Be("new.localhost");
-        await _bus.Received(1)
-            .PublishAsync(
-                Arg.Any<SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent>(),
-                Arg.Any<DeliveryOptions?>()
+        _outbox
+            .PublishedMessages.Should()
+            .ContainSingle(m =>
+                m is SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent
+                && ((SimpleModule.Tenants.Contracts.Events.TenantCreatedEvent)m).TenantId
+                    == tenant.Id
             );
     }
 
@@ -105,9 +104,7 @@ public sealed class TenantServiceTests : IDisposable
         updated.Name.Should().Be("Updated Acme");
         _outbox
             .PublishedMessages.Should()
-            .ContainSingle(m =>
-                m is SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent
-            );
+            .ContainSingle(m => m is SimpleModule.Tenants.Contracts.Events.TenantUpdatedEvent);
     }
 
     [Fact]

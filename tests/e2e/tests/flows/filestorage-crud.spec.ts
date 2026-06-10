@@ -138,6 +138,36 @@ test.describe
     });
   });
 
+test.describe('FileStorage upload validation', () => {
+  test('rejects a file whose extension is not in the allowlist', async ({ request }) => {
+    const response = await request.post('/api/files', {
+      multipart: {
+        file: {
+          name: `blocked-${faker.string.alphanumeric(8)}.exe`,
+          mimeType: 'application/octet-stream',
+          buffer: Buffer.from('MZ'),
+        },
+      },
+    });
+
+    // UploadEndpoint enforces FileStorageModuleOptions.AllowedExtensions.
+    expect(response.status()).toBe(400);
+  });
+
+  test('accepts a file whose extension is in the allowlist', async ({ request }) => {
+    const name = `allowed-${faker.string.alphanumeric(8)}.txt`;
+    const response = await request.post('/api/files', {
+      multipart: {
+        file: { name, mimeType: 'text/plain', buffer: Buffer.from('hello') },
+      },
+    });
+
+    expect(response.status()).toBe(201);
+    const data = await response.json();
+    await request.delete(`/api/files/${data.id}`).catch(() => {});
+  });
+});
+
 test.describe('FileStorage permissions', () => {
   test.describe('unauthenticated', () => {
     test.use({ storageState: { cookies: [], origins: [] } });

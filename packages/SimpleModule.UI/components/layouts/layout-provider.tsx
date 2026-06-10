@@ -24,7 +24,9 @@ function AutoLayout({ children }: { children: React.ReactNode }) {
 }
 
 interface PageModule {
-  default: { layout?: (content: React.ReactNode) => React.ReactNode };
+  default: React.ComponentType & {
+    layout?: (content: React.ReactNode) => React.ReactNode;
+  };
 }
 
 export function resolveLayout(page: PageModule) {

@@ -1,0 +1,10 @@
+{
+  "extends": "@simplemodule/tsconfig/base",
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

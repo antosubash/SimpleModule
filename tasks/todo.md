@@ -1,106 +1,79 @@
-# Issue #162 — Policy classes for entity-level authorization — DONE
+# Fix critical issues from framework review (2026-06-09)
 
-Laravel-style `IPolicy<TResource>` + `IAuthorizer` layered over string permissions.
+## Critical 1 — page-registry guard broken on both ends
+- [x] Fix `validate-pages.mjs` path: scan `modules/*/src/*/` (real layout is `src/SimpleModule.<Name>`), skip `obj`/`bin`
+- [x] Add self-check: fail when zero C# files or zero view endpoints are found repo-wide (path drift can never silently disable the guard again)
+- [x] Fix `app.tsx:232` `showErrorToast(...)` → `showToast({ variant: 'error', ... })` (ReferenceError on failed page load)
+- [x] Add `ClientApp/tsconfig.json` and include ClientApp in `scripts/typecheck.mjs`
+
+## Critical 2 — default deployment one request from admin token
+- [x] `UserSeedService`: fail fast in non-Development when `Seed:AdminPassword` unset; never seed test user with default password outside Development
+- [x] OpenIddict: refuse `AllowPasswordFlow` in Production; fail fast on ephemeral signing/encryption keys in Production
+- [x] `SimpleModuleHostExtensions`: stop clearing `KnownProxies`/`KnownIPNetworks` unconditionally — config-driven (`ForwardedHeaders:KnownProxies`/`KnownNetworks`/`TrustAllProxies`)
+- [x] `docker-compose.yml`: explicit `OpenIddict__AllowPasswordGrant: "false"`, required seed-password env vars
+- [x] Enforce `FileStorageModuleOptions` (MaxFileSizeMb / AllowedExtensions) in UploadEndpoint
+
+## Critical 3 — remaining #242-class DbContext races
+- [x] `AdminService.GetAdminOverviewAsync` — sequential awaits
+- [x] `Admin/Pages/Admin/UsersEditEndpoint` — sequential awaits
+- [x] `TenantFeatureHelper.GetOverridesForTenantAsync` — sequential awaits (throws with 2+ active flags)
+
+## Outbox gaps (events lost on crash after SaveChanges)
+- [x] `TenantService.CreateTenantAsync` — use `IDbContextOutbox` like UpdateTenantAsync already does
+- [x] `FileStorageService.UploadFileAsync` — same
+
+## Critical 4 — docs describe phantom modules
+- [x] CLAUDE.md: load-test section lists 11 scenarios incl. Products/Orders/Marketplace/PageBuilder — only 6 exist (Admin, AuditLogs, FeatureFlags, FileStorage, Settings, Users)
+- [x] CLAUDE.md: `modules/Products/src/Products` examples use wrong layout (`src/SimpleModule.<Name>`) — likely origin of the validate-pages bug
+- [x] Sweep docs/CONSTITUTION.md + skills for phantom-module/wrong-layout references
+- (untracked WIP dirs in the main checkout are stale build artifacts — left alone)
+
+## CI gaps
+- [ ] PostgreSQL test leg — DEFERRED: `SimpleModuleWebApplicationFactory` is deeply SQLite-coupled (shared in-memory connection, static env bootstrap, Wolverine SQLite file); a reliable dual-provider factory is its own change. Docs no longer claim it exists.
+- [x] CodeQL workflow
+- [x] Dependabot config (nuget, npm, github-actions)
+- [x] `dotnet list package --vulnerable` CI step
+
+## Code-review round 1 — fixes applied
+- [x] ForwardedHeaders KnownProxies/KnownNetworks: accept comma-separated scalar (the form the docker-compose comment documents) as well as arrays; TryParse with a clear error instead of an opaque FormatException
+- [x] docker-compose worker: add Seed__AdminPassword/Seed__UserPassword — the worker runs UserSeedService too and would otherwise race-seed the default admin password
+- [x] FileStorageService.UploadFileAsync: scope blob-rollback to the pre-commit window so a post-commit outbox-flush failure can't dangle a committed row against a deleted blob
+- [x] Env-predicate consistency: shared HostEnvironmentExtensions.IsLocalOrTest (Development+Testing) used by both UserSeedService and OpenIddictProductionGuard — closes the Staging bypass and the Testing-startup-crash in one predicate
+- [x] UsersEditEndpoint: reverted to Task.WhenAll — the three contracts use distinct DbContexts (Users/Permissions/OpenIddict), so there was no race; corrected the misleading comment
+- [x] ConfigKeys.OpenIddictAllowPasswordGrant constant — replaced the three hardcoded "OpenIddict:AllowPasswordGrant" string literals (drift would silently disable the guard)
+- [x] validate-pages: detect interpolated Inertia.Render($"…") as unresolved instead of silently skipping it
+- [x] validate-i18n: same fail-on-zero self-check as validate-pages (locale dirs exist today; zero = path drift)
+- [x] UploadEndpoint: hoist size/extension parse to Map() time (resolve IOptions once, capture) instead of allocating a HashSet per request
+
+## Deferred (follow-ups — recorded, not silently dropped)
+- **Roslyn diagnostic (SM0060)** for Task.WhenAll-over-shared-DbContext and SaveChanges+Publish-without-outbox — durable fix for the recurring race/outbox classes (fixed by hand 3× now). Analyzer-grade flow analysis; separate PR. An interim regex guard like validate-framework-scope.mjs is a cheaper stopgap.
+- **Shared outbox helper** (`SaveAndPublishAsync<TDb>`) in SimpleModule.Database to encode the BeginTransaction→SaveChanges→Publish→flush ritual once — currently duplicated across TenantService/FileStorageService. Also: WolverineConfiguration wires PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents> but no entity implements it (dead idiom) — reconcile.
+- **Framework production-config validation abstraction** (IValidateOptions/ValidateOnStart) — OpenIddictProductionGuard + UserSeedService are two ad-hoc startup guards; a shared mechanism is the right altitude and fixes implicit guard ordering.
+- **Module options ↔ Settings store / appsettings binding**: generated RegisterModuleOptionsDefaults only calls AddOptions<T>() with no config binding, so the FileStorage admin Settings/appsettings keys don't drive the enforced IOptions values (enforcement honors code-configured/default values only).
+- **TenantFeatureHelper N+1**: serial GetOverridesAsync per flag; needs a bulk IFeatureFlagContracts method to collapse to one query.
+- **ForwardedHeaders typed options** on SimpleModuleOptions (typo'd keys currently silently yield loopback-only trust).
+- Generator decomposition to ForAttributeWithMetadataName.
+- @simplemodule/ui vendoring + stale wwwroot chunk cleanup.
 
 ## Review
 
-All phases complete. Verification: full `dotnet build` clean; Core.Tests 259 ✓,
-Generator.Tests 211 ✓ (incl. 5 new policy tests + catalog baseline), Database 93 ✓,
-DevTools 35 ✓, all 15 module suites ✓ (Notifications 23 incl. 4 new e2e policy tests);
-`npx biome check` clean on touched files; `npm run validate-pages` ✓. Generated
-`AddModules()` verified to contain the generated `TryAddEnumerable(ServiceDescriptor.Scoped<IPolicy<Notification>, NotificationPolicy>())` registration.
+All four criticals addressed, plus the concrete improvements. Verified with:
+`dotnet build` (0 warnings/errors), `dotnet test` (19/19 assemblies, 0 failures),
+`npm run check` (biome + validate-pages + i18n + framework-scope + typecheck 14/14),
+`npm run build` (production bundles), plus a negative test proving validate-pages
+now fails when a page registration is removed.
 
-Notable decisions:
-- Reference module is **Notifications** (issue suggested Products, which no longer exists).
-- Missing policy at check time throws `MissingPolicyException` (fail closed).
-- Deny→404 mapping: `AuthorizationResult.DenyAsNotFound()` per decision (what
-  NotificationPolicy uses); `PolicyAuthorizationOptions.NotFoundActions` is an
-  empty-by-default host-level override.
-- Declarative `.AuthorizeResource<T>()` ships with `IResourceResolver<T>` (documented,
-  not yet used by a module — imperative `IAuthorizer` is the primary path).
+Notable finds while fixing:
+- The resurrected guard immediately caught that `UnlockAccountEndpoint` renders via a
+  `const string ComponentName` — the script now resolves same-file string consts and
+  reports unresolvable `Inertia.Render` arguments as failures.
+- The new ClientApp typecheck exposed two latent runtime bugs beyond the reported
+  `showErrorToast`: `router.on('exception', ...)` is not an Inertia v3 event (the
+  network-error toast was dead code — now `networkError`), and the page resolver
+  returned a module where Inertia's types want the component.
+- `FileStorageService.DeleteFileAsync` had the same lost-event bug as Upload (worse:
+  a failed blob delete also skipped the event after the DB commit) — fixed via outbox.
+- Create flows with DB-generated ids (Tenant, StoredFile) use an explicit transaction +
+  `SaveChangesAndFlushMessagesAsync`, which per Wolverine commits the open transaction
+  before flushing. `FakeDbContextOutbox` now mirrors that commit behavior.
 
-## Code-review round 2 (all 10 findings addressed)
-
-1. Host-assembly + unmapped-contracts policies now discovered (PolicyFinder scans
-   the compiling assembly and ALL contracts assemblies, deduped by assembly).
-2. Effective accessibility: SM0059 now uses the containing-type chain; internal
-   resource types fail SM0058 (generated code can't reference them).
-3. SM0061 (Error): generic policy classes rejected (were emitted as uncompilable code).
-4. TryAddEnumerable factory gap: accurate emitted comment + docs (two-generic
-   overload), plus [ManualContractRegistration] opt-out honored for policies.
-5. AuthorizeResourceFilterTests: env pinned to Production (5/6 failed under
-   ASPNETCORE_ENVIRONMENT=Development), shared IClassFixture (1 boot, not 7).
-6. PolicyAuthorizationOptions.NotFoundActions defaults to EMPTY — DenyAsNotFound is
-   the per-decision mechanism; option is a host-only override.
-7. AuthorizeResource: template-aware absence handling — optional/catch-all param
-   omitted at runtime → 404; param not in template → InvalidOperationException.
-8. ".Contracts" via AssemblyConventions.ContractsSuffix with Ordinal (matches
-   ContractFinder; kills the case-variant SM0060 silent skip).
-9. SM0059/SM0061 deduped per class for multi-interface policies.
-10. Reference module now uses the declarative form: NotificationResolver +
-    .AuthorizeResource<Notification>(MarkRead); MarkReadAsync is a single
-    CancellationToken propagated through FindAsync.
-    CreateMultiAssemblyCompilation promoted to GeneratorTestHelper.
-    (Round 3 later reverted MarkReadAsync to tracked load-modify-save so the
-    SaveChanges interceptors run, and kept Authorizer's zero-alloc flag; round 4
-    made concurrent duplicate mark-read an idempotent success.)
-
-## Code-review round 1 (all 10 findings addressed)
-
-1. Unscoped contract surface → `INotificationsContracts` restored to owner-scoped
-   `MarkReadAsync(id, userId)`; unscoped `FindAsync` moved to module-internal
-   `INotificationStore`. Also restores 404-on-race (bool result back).
-2. Internal policies silently skipped → SM0059 (Error: policy must be public).
-3. SM0058 false positive for `[NoDtoGeneration]`/`IEvent` contracts entities →
-   resource classified symbolically at discovery ([Dto] OR .Contracts assembly).
-4. Discovery scope → PolicyFinder now scans contracts assemblies and nested types.
-5. Global NotFoundActions mutation → `AuthorizationResult.DenyAsNotFound()` per
-   decision; NotificationsModule no longer touches host options.
-6. Worker host asymmetry → `AddSimpleModuleWorker` registers IAuthorizer + options.
-7. Duplicate-registration double execution → generated code uses `TryAddEnumerable`.
-8. Admin behavior widening → NotificationPolicy is owner-only again (admins not
-   exempt from instance rules; documented as deliberate).
-9. AuthorizeResource misconfig → missing route value throws InvalidOperationException;
-   6 new TestServer-based filter tests (allow/deny/hide/missing/misnamed/no-resolver).
-10. Foreign-module policies → SM0060 (Error: policy owned by resource's module).
-
-## Plan
-
-### Phase 1 — Core types (`framework/SimpleModule.Core/Authorization/Policies/`)
-- [x] `AuthorizationResult` — Allowed/Reason, `Allow()` / `Deny(reason)`
-- [x] `IPolicy<TResource>` — `AuthorizeAsync(ClaimsPrincipal, string action, TResource, CancellationToken)`
-- [x] `PolicyActions` — common action constants (View/Create/Update/Delete)
-- [x] `IAuthorizer` — `CheckAsync<T>` (result) + `AuthorizeAsync<T>` (throws)
-- [x] `Authorizer` — resolves all `IPolicy<T>` from DI; deny wins; missing policy → `MissingPolicyException` (fail closed)
-- [x] `PolicyAuthorizationOptions` — `NotFoundActions` host-level override (empty by default; superseded by per-decision `DenyAsNotFound`)
-- [x] `IResourceResolver<TResource>` + `AuthorizeResource<TResource>(action, routeParam)` endpoint filter
-- [x] Register `IAuthorizer` in `SimpleModule.Hosting.AddSimpleModuleInfrastructure`
-
-### Phase 2 — Source generator
-- [x] `CoreSymbols`: resolve `IPolicy`1`
-- [x] `PolicyFinder` + `PolicyInfo`/`PolicyRecord`, wire into `SymbolDiscovery` / `DiscoveryData` / `DiscoveryDataBuilder`
-- [x] `ModuleExtensionsEmitter`: emit `services.AddScoped<IPolicy<X>, XPolicy>()`
-- [x] SM0058 diagnostic — policy resource type must be a contracts DTO ([Dto]/convention)
-- [x] CONSTITUTION diagnostics table + AnalyzerReleases.Unshipped.md
-
-### Phase 3 — Tests
-- [x] `tests/SimpleModule.Core.Tests/Authorization/AuthorizerTests.cs` — resolution, deny reason, missing policy, multi-policy precedence, 404 mapping
-- [x] `tests/SimpleModule.Generator.Tests/PolicyAutoDiscoveryTests.cs` — registration emitted, SM0058 reported
-- [x] Notifications policy unit tests
-
-### Phase 4 — Reference refactor (Notifications)
-- [x] `NotificationPolicy : IPolicy<Notification>` (owner or admin)
-- [x] Refactor `MarkReadEndpoint` to load → authorize → act via `IAuthorizer`
-
-### Phase 5 — Docs
-- [x] `docs/site/guide/policies.md` + VitePress sidebar entry
-- [x] CONSTITUTION.md authorization section update
-
-### Phase 6 — Verify & ship
-- [x] `dotnet build` clean (TreatWarningsAsErrors)
-- [x] `dotnet test` — Core, Generator, Notifications
-- [x] Commit, push branch, open PR closing #162
-
-## Notes
-- Products/Orders modules no longer exist (CLAUDE.md stale) → Notifications is the reference module
-- Highest existing diagnostic: SM0057 → new one is SM0058

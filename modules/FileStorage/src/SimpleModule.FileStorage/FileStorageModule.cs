@@ -70,7 +70,7 @@ public class FileStorageModule : IModule
                     "Comma-separated list of allowed file extensions (e.g., .jpg,.pdf,.zip).",
                 Group = "FileStorage",
                 Scope = SettingScope.Application,
-                DefaultValue = "\".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip\"",
+                DefaultValue = ".txt,.csv,.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.zip",
                 Type = SettingType.Text,
             }
         );
