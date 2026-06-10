@@ -87,34 +87,32 @@ dotnet test --filter "FullyQualifiedName~ClassName"    # single test class
 dotnet test --filter "FullyQualifiedName~MethodName"   # single test method
 ```
 
-Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing. SQLite in-memory for unit tests, PostgreSQL for integration tests in CI.
+Test stack: xUnit.v3, FluentAssertions, Bogus, Microsoft.AspNetCore.Mvc.Testing. SQLite in-memory for unit and integration tests (a PostgreSQL CI leg is a known gap — the test factory is SQLite-only today).
 
 ### Benchmarks (BenchmarkDotNet)
 
 ```bash
 dotnet run -c Release --project tests/SimpleModule.Benchmarks          # all benchmarks
-dotnet run -c Release --project tests/SimpleModule.Benchmarks -- --filter "*Products*"  # specific module
+dotnet run -c Release --project tests/SimpleModule.Benchmarks -- --filter "*Users*"  # specific module
 ```
 
-Micro-benchmarks for every module: endpoint latency (CRUD operations via in-process TestServer), JSON serialization/deserialization of DTOs. Uses `SimpleModuleWebApplicationFactory` with test auth headers for low-overhead measurement.
+Micro-benchmarks for Admin, AuditLogs, FileStorage, Settings, and Users: endpoint latency (CRUD operations via in-process TestServer), JSON serialization/deserialization of DTOs. Uses `SimpleModuleWebApplicationFactory` with test auth headers for low-overhead measurement.
 
 ### Load Tests (NBomber)
 
 ```bash
-dotnet test tests/SimpleModule.LoadTests                               # all 11 scenarios (50 concurrent, ~5 min)
-dotnet test tests/SimpleModule.LoadTests --filter "Products_Crud"      # single scenario
+dotnet test tests/SimpleModule.LoadTests                               # all scenarios
+dotnet test tests/SimpleModule.LoadTests --filter "Users_Crud"         # single scenario
 ```
 
-HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant) from OpenIddict. Runs against the full ASP.NET pipeline with file-based SQLite in WAL mode. 11 scenarios covering all modules at 50 concurrent copies:
+HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant) from OpenIddict. Runs against the full ASP.NET pipeline with file-based SQLite in WAL mode. Six scenarios (`tests/SimpleModule.LoadTests/Scenarios/`), each runnable individually or combined via `All_Scenarios`:
 
-- **Products, Orders, Users** — full CRUD lifecycle (create → read → update → delete)
-- **Settings** — read operations (settings, definitions, menus, available pages)
-- **AuditLogs, FileStorage** — read operations (list, get by ID, folders)
-- **PageBuilder** — full lifecycle (create → get → update → publish → unpublish → delete + tags/templates)
-- **Admin** — role create/delete (handles 302 redirects)
-- **FeatureFlags** — get all flags, check flag status
-- **Marketplace** — search and browse (anonymous)
-- **Mixed Realistic** — weighted workload (70% reads, 20% creates, 10% updates)
+- **Users** (`Users_Crud`) — full CRUD lifecycle
+- **Settings** (`Settings_Ops`) — read operations
+- **AuditLogs** (`AuditLogs_Read`) — read operations
+- **FileStorage** (`Files_Ops`) — file operations
+- **Admin** (`Admin_Ops`) — role create/delete (handles 302 redirects)
+- **FeatureFlags** (`FeatureFlags_Ops`) — get all flags, check flag status
 
 **Key infrastructure:**
 - `LoadTestWebApplicationFactory` — extends `WebApplicationFactory` with file-based SQLite + WAL, seeds OAuth client/user/permissions, acquires Bearer tokens via `/connect/token`
@@ -131,13 +129,13 @@ HTTP load tests using real OAuth Bearer tokens acquired via ROPC (password grant
 
 ### Frontend (React + Inertia.js)
 
-- **ClientApp** (`template/SimpleModule.Host/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Products/Browse` → imports `/_content/Products/Products.pages.js`).
+- **ClientApp** (`template/SimpleModule.Host/ClientApp/app.tsx`) — Inertia bootstrap. Resolves pages by splitting route name (e.g., `Tenants/Browse` → imports `/_content/Tenants/Tenants.pages.js`).
 - **Module pages** — Each module builds its React pages via Vite in library mode → `{ModuleName}.pages.js` in module's `wwwroot/`. Entry point: `Pages/index.ts` exporting a `pages` record mapping route names to components.
 - **Type generation** — `[Dto]` types → source generator embeds TS interfaces → `scripts/extract-ts-types.mjs` writes `.ts` files to `ClientApp/types/`.
 
 ### Request Flow
 
-1. ASP.NET route handler calls `Inertia.Render("Products/Browse", props)`
+1. ASP.NET route handler calls `Inertia.Render("Tenants/Browse", props)`
 2. Inertia middleware renders static HTML shell with embedded JSON props
 3. React ClientApp dynamically imports module's `pages.js` bundle
 4. Component hydrates with server-provided props
@@ -177,15 +175,15 @@ When you add a new `IViewEndpoint`, you **must** register it in your module's `P
 **Pattern:**
 
 ```typescript
-// modules/Products/src/Products/Pages/index.ts
-export const pages: Record<string, any> = {
-    "Products/Browse": () => import("./Browse"),
-    "Products/Manage": () => import("./Manage"),
-    "Products/Create": () => import("./Create"),
+// modules/Tenants/src/SimpleModule.Tenants/Pages/index.ts
+export const pages: Record<string, unknown> = {
+  'Tenants/Browse': () => import('./Browse'),
+  'Tenants/Manage': () => import('./Manage'),
+  'Tenants/Create': () => import('./Create'),
 };
 ```
 
-**The Rule:** For every `IViewEndpoint` with `Inertia.Render("Products/Something", ...)`, add a matching entry in `pages`. The component name in Inertia.Render (e.g., `"Products/Manage"`) is your key.
+**The Rule:** For every `IViewEndpoint` with `Inertia.Render("Tenants/Something", ...)`, add a matching entry in `pages`. The component name in Inertia.Render (e.g., `"Tenants/Manage"`) is your key.
 
 **Validation:** After adding endpoints, run:
 

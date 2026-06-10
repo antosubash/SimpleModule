@@ -70,7 +70,7 @@ public partial class OpenIddictSeedService(
         };
 
         // Allow password grant in Development for load testing (k6, etc.)
-        if (configuration.GetValue<bool>("OpenIddict:AllowPasswordGrant"))
+        if (configuration.GetValue<bool>(ConfigKeys.OpenIddictAllowPasswordGrant))
         {
             descriptor.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
         }

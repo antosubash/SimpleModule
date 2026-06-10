@@ -16,6 +16,30 @@ public static partial class SimpleModuleHostExtensions
     private const string ModuleContentPathPrefix = "/_content/";
     private const string ModuleScriptExtension = ".mjs";
 
+    /// <summary>
+    /// Reads a config list that may be expressed either as a JSON/indexed array
+    /// (<c>ForwardedHeaders:KnownProxies:0</c>) or as a single comma-separated
+    /// scalar (<c>ForwardedHeaders__KnownProxies=10.0.0.5,10.0.0.6</c>, the form
+    /// natural for environment variables). Binding only the array form silently
+    /// dropped scalar env vars, leaving the proxy untrusted.
+    /// </summary>
+    private static string[] ReadConfigList(IConfigurationSection section, string key)
+    {
+        var array = section.GetSection(key).Get<string[]>();
+        if (array is { Length: > 0 })
+        {
+            return array;
+        }
+
+        var scalar = section[key];
+        return string.IsNullOrWhiteSpace(scalar)
+            ? []
+            : scalar.Split(
+                ',',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            );
+    }
+
     private static IResult RenderErrorPage(int statusCode)
     {
         var (title, message) = statusCode switch

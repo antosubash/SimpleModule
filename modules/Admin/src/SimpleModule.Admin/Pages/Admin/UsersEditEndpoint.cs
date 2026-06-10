@@ -35,6 +35,13 @@ public class UsersEditEndpoint : IViewEndpoint
                     if (user is null)
                         return TypedResults.NotFound();
 
+                    // These three contracts are backed by DISTINCT stores —
+                    // IRoleAdminContracts → UsersDbContext, IPermissionContracts →
+                    // PermissionsDbContext, ISessionContracts → the OpenIddict token
+                    // store / Keycloak — so unlike the AdminService case (#242) there
+                    // is no shared-DbContext concurrency hazard and they run in
+                    // parallel. (GetAdminUserByIdAsync above already completed, so no
+                    // other in-flight UsersDbContext operation overlaps GetAllRolesAsync.)
                     var rolesTask = roleAdmin.GetAllRolesAsync();
                     var permsTask = permissionContracts.GetPermissionsForUserAsync(UserId.From(id));
                     var sessionsTask = sessionContracts.GetActiveSessionsForUserAsync(id);
