@@ -32,36 +32,102 @@ public sealed partial class ListCommand : Command<ListSettings>
             return 1;
         }
 
-        if (solution.ExistingModules.Count == 0)
+        var packagedModules = CollectPackagedModules(solution);
+
+        if (solution.ExistingModules.Count == 0 && packagedModules.Count == 0)
         {
             AnsiConsole.MarkupLine(
-                "[yellow]No modules found.[/] Create one with [green]sm new module <Name>[/]."
+                "[yellow]No modules found.[/] Create one with [green]sm new module <Name>[/] "
+                    + "or install one with [green]sm add <package-id>[/]."
             );
             return 0;
         }
 
-        var table = new Table().RoundedBorder();
-        table.AddColumn("Module");
-        table.AddColumn("Route prefix");
-        table.AddColumn(new TableColumn("Endpoints").RightAligned());
-
-        foreach (var module in solution.ExistingModules)
+        if (solution.ExistingModules.Count > 0)
         {
-            var routePrefix = ReadRoutePrefix(solution, module);
-            var endpointCount = CountEndpoints(solution, module);
+            var table = new Table().RoundedBorder();
+            table.AddColumn("Module");
+            table.AddColumn("Route prefix");
+            table.AddColumn(new TableColumn("Endpoints").RightAligned());
 
-            table.AddRow(
-                $"[green]{Markup.Escape(module)}[/]",
-                Markup.Escape(routePrefix ?? "—"),
-                endpointCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
-            );
+            foreach (var module in solution.ExistingModules)
+            {
+                var routePrefix = ReadRoutePrefix(solution, module);
+                var endpointCount = CountEndpoints(solution, module);
+
+                table.AddRow(
+                    $"[green]{Markup.Escape(module)}[/]",
+                    Markup.Escape(routePrefix ?? "—"),
+                    endpointCount.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                );
+            }
+
+            AnsiConsole.Write(table);
         }
 
-        AnsiConsole.Write(table);
+        if (packagedModules.Count > 0)
+        {
+            var hostVersion = HostFrameworkVersionResolver.Resolve(solution.RootPath);
+            var packagedTable = new Table().RoundedBorder();
+            packagedTable.AddColumn("Installed package");
+            packagedTable.AddColumn("Version");
+            packagedTable.AddColumn("Module");
+            packagedTable.AddColumn("Framework compat");
+
+            foreach (var (reference, manifest) in packagedModules)
+            {
+                var compatCell = "[dim]unknown[/]";
+                if (hostVersion is not null)
+                {
+                    var compat = FrameworkCompatChecker.Check(
+                        manifest.FrameworkCompat,
+                        hostVersion
+                    );
+                    compatCell = compat.Compatible
+                        ? $"[green]✓[/] {Markup.Escape(manifest.FrameworkCompat)}"
+                        : $"[red]✗[/] {Markup.Escape(manifest.FrameworkCompat)}";
+                }
+
+                packagedTable.AddRow(
+                    $"[blue]{Markup.Escape(reference.Id)}[/]",
+                    Markup.Escape(reference.Version ?? "?"),
+                    Markup.Escape(manifest.DisplayName),
+                    compatCell
+                );
+            }
+
+            AnsiConsole.Write(packagedTable);
+        }
+
         AnsiConsole.MarkupLine(
-            $"\n[dim]{solution.ExistingModules.Count} module(s) in {Markup.Escape(solution.RootPath)}[/]"
+            $"\n[dim]{solution.ExistingModules.Count} source module(s), {packagedModules.Count} packaged module(s) in {Markup.Escape(solution.RootPath)}[/]"
         );
         return 0;
+    }
+
+    private static List<(
+        PackageReferenceEntry Reference,
+        ModuleManifestData Manifest
+    )> CollectPackagedModules(SolutionContext solution)
+    {
+        var packaged = new List<(PackageReferenceEntry, ModuleManifestData)>();
+        foreach (
+            var reference in PackageReferenceManipulator.GetPackageReferences(
+                solution.ApiCsprojPath,
+                solution.RootPath
+            )
+        )
+        {
+            // Only packages carrying a module manifest are SimpleModule modules;
+            // framework packages (SimpleModule.Hosting, ...) have none.
+            var manifest = GlobalPackagesCache.TryReadManifest(reference.Id, reference.Version);
+            if (manifest is not null)
+            {
+                packaged.Add((reference, manifest));
+            }
+        }
+
+        return packaged;
     }
 
     private static string? ReadRoutePrefix(SolutionContext solution, string module)

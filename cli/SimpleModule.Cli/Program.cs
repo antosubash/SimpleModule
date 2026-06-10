@@ -1,3 +1,4 @@
+using SimpleModule.Cli.Commands.Add;
 using SimpleModule.Cli.Commands.Dev;
 using SimpleModule.Cli.Commands.Doctor;
 using SimpleModule.Cli.Commands.Install;
@@ -6,6 +7,7 @@ using SimpleModule.Cli.Commands.List;
 using SimpleModule.Cli.Commands.Maintenance;
 using SimpleModule.Cli.Commands.New;
 using SimpleModule.Cli.Commands.Pack;
+using SimpleModule.Cli.Commands.Remove;
 using SimpleModule.Cli.Commands.Skill;
 using SimpleModule.Cli.Commands.Version;
 using Spectre.Console.Cli;
@@ -59,6 +61,21 @@ app.Configure(config =>
     config
         .AddCommand<InstallCommand>("install")
         .WithDescription("Install a SimpleModule package from NuGet");
+
+    config
+        .AddCommand<AddCommand>("add")
+        .WithDescription(
+            "Install a packaged SimpleModule module: compat check, CPM-aware reference, build, migrations, doctor"
+        )
+        .WithExample("add", "SimpleModule.Products")
+        .WithExample("add", "SimpleModule.Products", "--version", "1.2.0", "--source", "./feed");
+
+    config
+        .AddCommand<RemoveCommand>("remove")
+        .WithDescription(
+            "Remove an installed module's reference (database schema and data are left in place)"
+        )
+        .WithExample("remove", "SimpleModule.Products");
 
     config
         .AddCommand<PackCommand>("pack")
