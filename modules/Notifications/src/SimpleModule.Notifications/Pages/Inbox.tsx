@@ -17,21 +17,21 @@ function formatDate(value: string): string {
 }
 
 export default function Inbox({ items, totalCount, unreadCount }: Props) {
-  const markRead = (id: string) => {
-    router.post(
-      `/api/notifications/${id}/read`,
-      {},
-      { preserveScroll: true, onSuccess: () => router.reload({ only: ['items', 'unreadCount'] }) },
-    );
+  // These are plain JSON API endpoints that return 204 No Content, not Inertia
+  // responses — call them with fetch and refresh the props on success. (router.post
+  // expects an Inertia-protocol response and treats a 204 as a server error.)
+  const postAndReload = async (url: string) => {
+    const res = await fetch(url, { method: 'POST', credentials: 'same-origin' });
+    if (!res.ok) {
+      console.error(`Notification action failed: ${res.status} ${url}`);
+      return;
+    }
+    router.reload({ only: ['items', 'unreadCount'] });
   };
 
-  const markAllRead = () => {
-    router.post(
-      '/api/notifications/read-all',
-      {},
-      { preserveScroll: true, onSuccess: () => router.reload({ only: ['items', 'unreadCount'] }) },
-    );
-  };
+  const markRead = (id: string) => postAndReload(`/api/notifications/${id}/read`);
+
+  const markAllRead = () => postAndReload('/api/notifications/read-all');
 
   return (
     <PageShell
