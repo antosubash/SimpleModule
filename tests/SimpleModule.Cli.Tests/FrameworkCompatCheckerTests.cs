@@ -23,7 +23,11 @@ public class FrameworkCompatCheckerTests
 
     [Theory]
     [InlineData(">=0.0.39-local <1.0.0", "0.0.39-local", true)]
-    [InlineData(">=0.0.39 <1.0.0", "0.0.39-local", false)] // prerelease < release
+    // A bare lower bound means ">=X.Y.Z-0": the generator derives it from the
+    // numeric assembly version, so prereleases of that exact version satisfy it.
+    [InlineData(">=0.0.39 <1.0.0", "0.0.39-local", true)]
+    [InlineData(">=0.0.39 <1.0.0", "0.0.38", false)] // older release still refused
+    [InlineData(">=0.0.39 <1.0.0", "0.0.38-zz", false)] // prerelease of older version refused
     [InlineData(">=0.0.39-alpha <1.0.0", "0.0.39", true)] // release > prerelease
     public void IsCompatible_HandlesPrereleaseOrdering(string range, string version, bool expected)
     {

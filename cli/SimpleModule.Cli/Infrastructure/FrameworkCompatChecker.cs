@@ -40,6 +40,16 @@ public static class FrameworkCompatChecker
                     return Unparseable(range);
                 }
 
+                // The generator derives the lower bound from the referenced
+                // assembly's numeric version, which cannot carry a prerelease tag.
+                // A bare ">=X.Y.Z" therefore means ">=X.Y.Z-0": prereleases of
+                // X.Y.Z (e.g. a host on 0.0.99-local with a module built against
+                // that same prerelease) satisfy the bound.
+                if (parsed.Prerelease.Length == 0)
+                {
+                    parsed = parsed with { Prerelease = "0" };
+                }
+
                 lower = parsed;
             }
             else if (part.StartsWith('<'))
