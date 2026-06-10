@@ -204,6 +204,8 @@ internal readonly record struct PolicyInfoRecord(
     string ResourceTypeFqn,
     string ModuleName,
     bool IsPublic,
+    bool IsGeneric,
+    bool IsManuallyRegistered,
     bool ResourceIsContractsDto,
     string ResourceModuleName,
     SourceLocationRecord? Location

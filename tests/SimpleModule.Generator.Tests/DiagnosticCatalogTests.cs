@@ -194,6 +194,11 @@ public class DiagnosticCatalogTests
             DiagnosticSeverity.Error,
             "SimpleModule.Generator"
         ),
+        ["PolicyMustNotBeGeneric"] = (
+            "SM0061",
+            DiagnosticSeverity.Error,
+            "SimpleModule.Generator"
+        ),
     };
 
     [Fact]

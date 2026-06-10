@@ -55,11 +55,12 @@ internal static class PolicyFinder
         List<PolicyInfo> results
     )
     {
-        if (
-            typeSymbol.TypeKind == TypeKind.Class
-            && !typeSymbol.IsAbstract
-            && !typeSymbol.IsStatic
-        )
+        // Policies can only be classes; pruning here also keeps the nested-type
+        // recursion below from visiting struct/enum/delegate members.
+        if (typeSymbol.TypeKind != TypeKind.Class)
+            return;
+
+        if (!typeSymbol.IsAbstract && !typeSymbol.IsStatic)
         {
             // A class may implement IPolicy<T> for more than one resource type;
             // each closed interface becomes its own DI registration.
@@ -85,7 +86,13 @@ internal static class PolicyFinder
                             SymbolDisplayFormat.FullyQualifiedFormat
                         ),
                         ModuleName = moduleName,
-                        IsPublic = typeSymbol.DeclaredAccessibility == Accessibility.Public,
+                        // Effective accessibility: a public class nested inside a
+                        // non-public outer type is unreachable from generated code.
+                        IsPublic = IsEffectivelyPublic(typeSymbol),
+                        IsGeneric = typeSymbol.IsGenericType,
+                        IsManuallyRegistered = ContractFinder.HasManualRegistrationAttribute(
+                            typeSymbol
+                        ),
                         ResourceIsContractsDto = IsContractsDto(resourceType, dtoAttributeSymbol),
                         ResourceModuleName = ResolveResourceModule(
                             resourceType,
@@ -113,17 +120,32 @@ internal static class PolicyFinder
         }
     }
 
+    private static bool IsEffectivelyPublic(ITypeSymbol type)
+    {
+        for (var current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.DeclaredAccessibility != Accessibility.Public)
+                return false;
+        }
+        return true;
+    }
+
     /// <summary>
-    /// A valid policy resource is a contracts DTO: either marked [Dto] or declared in a
-    /// .Contracts assembly. Checked symbolically (not via the DtoTypes list) so contracts
-    /// entities excluded from TS/JSON generation ([NoDtoGeneration], IEvent) still qualify.
+    /// A valid policy resource is an effectively-public contracts DTO: either marked
+    /// [Dto] or declared in a .Contracts assembly. Checked symbolically (not via the
+    /// DtoTypes list) so contracts entities excluded from TS/JSON generation
+    /// ([NoDtoGeneration], IEvent) still qualify. Non-public resources are rejected
+    /// because the generated registration could not reference them.
     /// </summary>
     private static bool IsContractsDto(ITypeSymbol resourceType, INamedTypeSymbol? dtoAttribute)
     {
+        if (resourceType is not INamedTypeSymbol named || !IsEffectivelyPublic(named))
+            return false;
+
         if (
-            resourceType.ContainingAssembly?.Name.EndsWith(
-                ".Contracts",
-                StringComparison.OrdinalIgnoreCase
+            named.ContainingAssembly?.Name.EndsWith(
+                AssemblyConventions.ContractsSuffix,
+                StringComparison.Ordinal
             ) == true
         )
         {
@@ -133,7 +155,7 @@ internal static class PolicyFinder
         if (dtoAttribute is null)
             return false;
 
-        foreach (var attribute in resourceType.GetAttributes())
+        foreach (var attribute in named.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, dtoAttribute))
                 return true;
@@ -166,15 +188,18 @@ internal static class PolicyFinder
     }
 
     /// <summary>
-    /// Scans every module's implementation assembly and every contracts assembly for
-    /// IPolicy&lt;T&gt; implementors. No-op when the policy interface isn't resolvable.
+    /// Scans every module implementation assembly, every contracts assembly (mapped to a
+    /// module or not), and the compiling (host) assembly for IPolicy&lt;T&gt; implementors,
+    /// visiting each assembly exactly once. No-op when the policy interface isn't
+    /// resolvable.
     /// </summary>
     internal static void Discover(
         List<ModuleInfo> modules,
         Dictionary<string, INamedTypeSymbol> moduleSymbols,
-        Dictionary<string, IAssemblySymbol> contractsAssemblySymbols,
+        IReadOnlyList<IAssemblySymbol> contractsAssemblies,
         Dictionary<string, string> contractsAssemblyMap,
         Dictionary<string, string> moduleAssemblyMap,
+        IAssemblySymbol hostAssembly,
         CoreSymbols symbols,
         List<PolicyInfo> policies
     )
@@ -182,37 +207,41 @@ internal static class PolicyFinder
         if (symbols.PolicyInterface is null)
             return;
 
-        SymbolHelpers.ScanModuleAssemblies(
-            modules,
-            moduleSymbols,
-            (assembly, module) =>
-            {
-                FindPolicyTypes(
-                    assembly.GlobalNamespace,
-                    symbols.PolicyInterface,
-                    symbols.DtoAttribute,
-                    contractsAssemblyMap,
-                    moduleAssemblyMap,
-                    module.ModuleName,
-                    policies
-                );
-            }
-        );
+        var scanned = new HashSet<IAssemblySymbol>(SymbolEqualityComparer.Default);
 
-        foreach (var kvp in contractsAssemblySymbols)
+        void Scan(IAssemblySymbol assembly, string moduleName)
         {
-            if (contractsAssemblyMap.TryGetValue(kvp.Key, out var moduleName))
-            {
-                FindPolicyTypes(
-                    kvp.Value.GlobalNamespace,
-                    symbols.PolicyInterface,
-                    symbols.DtoAttribute,
-                    contractsAssemblyMap,
-                    moduleAssemblyMap,
-                    moduleName,
-                    policies
-                );
-            }
+            if (!scanned.Add(assembly))
+                return;
+
+            FindPolicyTypes(
+                assembly.GlobalNamespace,
+                symbols.PolicyInterface,
+                symbols.DtoAttribute,
+                contractsAssemblyMap,
+                moduleAssemblyMap,
+                moduleName,
+                policies
+            );
         }
+
+        foreach (var module in modules)
+        {
+            if (moduleSymbols.TryGetValue(module.FullyQualifiedName, out var typeSymbol))
+                Scan(typeSymbol.ContainingAssembly, module.ModuleName);
+        }
+
+        // All contracts assemblies — including ones whose name maps to no module, so a
+        // policy there is still registered (its SM0060 ownership check is skipped).
+        foreach (var contractsAssembly in contractsAssemblies)
+        {
+            contractsAssemblyMap.TryGetValue(contractsAssembly.Name, out var moduleName);
+            Scan(contractsAssembly, moduleName ?? "");
+        }
+
+        // The compiling assembly: hosts may declare policies too (already covered when
+        // the host itself contains a [Module] class).
+        moduleAssemblyMap.TryGetValue(hostAssembly.Name, out var hostModule);
+        Scan(hostAssembly, hostModule ?? "");
     }
 }

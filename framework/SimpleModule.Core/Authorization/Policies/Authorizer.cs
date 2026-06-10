@@ -17,10 +17,15 @@ public sealed class Authorizer(
         CancellationToken cancellationToken = default
     )
     {
-        var anyPolicy = false;
-        foreach (var policy in serviceProvider.GetServices<IPolicy<TResource>>())
+        // Fail closed first: a resource type without any policy is a developer error.
+        var policies = serviceProvider.GetServices<IPolicy<TResource>>().ToList();
+        if (policies.Count == 0)
         {
-            anyPolicy = true;
+            throw MissingPolicyException.ForResource(typeof(TResource));
+        }
+
+        foreach (var policy in policies)
+        {
             var result = await policy
                 .AuthorizeAsync(user, action, resource, cancellationToken)
                 .ConfigureAwait(false);
@@ -28,11 +33,6 @@ public sealed class Authorizer(
             {
                 return result;
             }
-        }
-
-        if (!anyPolicy)
-        {
-            throw MissingPolicyException.ForResource(typeof(TResource));
         }
 
         return AuthorizationResult.Allow();

@@ -63,27 +63,22 @@ public class NotificationService(NotificationsDbContext db)
             n.Id == id && n.UserId == userId
         );
 
-    public async Task<Notification?> FindAsync(NotificationId id) =>
-        await db.Notifications.AsNoTracking().FirstOrDefaultAsync(n => n.Id == id);
+    public async Task<Notification?> FindAsync(
+        NotificationId id,
+        CancellationToken cancellationToken = default
+    ) =>
+        await db.Notifications.AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
 
     public async Task<bool> MarkReadAsync(NotificationId id, UserId userId)
     {
-        var notification = await db.Notifications.FirstOrDefaultAsync(n =>
-            n.Id == id && n.UserId == userId
-        );
-        if (notification is null)
-        {
-            return false;
-        }
-
-        if (notification.ReadAt is not null)
-        {
-            return true;
-        }
-
-        notification.ReadAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
-        return true;
+        // Single owner-scoped statement; the coalesce keeps an existing ReadAt so the
+        // call stays idempotent. Affected == 0 means missing or not owned by the caller.
+        var now = DateTimeOffset.UtcNow;
+        var affected = await db
+            .Notifications.Where(n => n.Id == id && n.UserId == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.ReadAt, n => n.ReadAt ?? now));
+        return affected > 0;
     }
 
     public async Task<int> MarkAllReadAsync(UserId userId)

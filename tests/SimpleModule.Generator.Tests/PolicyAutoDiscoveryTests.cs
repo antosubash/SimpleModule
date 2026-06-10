@@ -261,91 +261,164 @@ public class PolicyAutoDiscoveryTests
         moduleExt.Should().NotContain("Auto-discovered resource policies");
     }
 
+    [Fact]
+    public void GenericPolicy_ReportsSm0061AndIsNotRegistered()
+    {
+        var source = """
+            using System.Security.Claims;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using SimpleModule.Core;
+            using SimpleModule.Core.Authorization.Policies;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace TestApp
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+
+                [Dto]
+                public class Product
+                {
+                    public string OwnerId { get; set; } = "";
+                }
+
+                public class OpenPolicy<T> : IPolicy<T>
+                {
+                    public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, string action, T resource, CancellationToken cancellationToken = default) =>
+                        Task.FromResult(AuthorizationResult.Allow());
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (result, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Where(d => d.Id == "SM0061").Should().ContainSingle();
+        diagnostics.Should().NotContain(d => d.Id == "SM0058"); // suppressed for generics
+        var moduleExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+        moduleExt.Should().NotContain("OpenPolicy");
+    }
+
+    [Fact]
+    public void PublicPolicyInInternalOuterClass_ReportsSm0059AndIsNotRegistered()
+    {
+        var source = """
+            using System.Security.Claims;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using SimpleModule.Core;
+            using SimpleModule.Core.Authorization.Policies;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace TestApp
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+
+                [Dto]
+                public class Product
+                {
+                    public string OwnerId { get; set; } = "";
+                }
+
+                internal class ProductFeature
+                {
+                    // Declared public, but unreachable from generated code because the
+                    // outer class is internal.
+                    public sealed class HiddenNestedPolicy : IPolicy<Product>
+                    {
+                        public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, string action, Product resource, CancellationToken cancellationToken = default) =>
+                            Task.FromResult(AuthorizationResult.Allow());
+                    }
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var (result, diagnostics) = GeneratorTestHelper.RunGeneratorWithDiagnostics(compilation);
+
+        diagnostics.Where(d => d.Id == "SM0059").Should().ContainSingle();
+        var moduleExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
+            )
+            .GetText()
+            .ToString();
+        moduleExt.Should().NotContain("HiddenNestedPolicy");
+    }
+
     // --- Multi-assembly scenarios -------------------------------------------------
 
-    /// <summary>
-    /// Compiles one or more contracts assemblies, then a host assembly referencing all
-    /// of them (each contracts source may also reference the previously compiled ones).
-    /// </summary>
-    private static CSharpCompilation CreateMultiAssemblyCompilation(
-        (string AssemblyName, string Source)[] contractsAssemblies,
-        string hostSource
-    )
+    [Fact]
+    public void PolicyInHostAssembly_IsDiscoveredAndRegistered()
     {
-        var runtimeDir = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
-        var baseRefs = new List<MetadataReference>
-        {
-            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location),
-            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Runtime.dll")),
-            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Collections.dll")),
-            MetadataReference.CreateFromFile(typeof(SimpleModule.Core.IModule).Assembly.Location),
-            MetadataReference.CreateFromFile(
-                typeof(System.Security.Claims.ClaimsPrincipal).Assembly.Location
-            ),
-            MetadataReference.CreateFromFile(
-                typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection)
-                    .Assembly
-                    .Location
-            ),
-            MetadataReference.CreateFromFile(
-                typeof(Microsoft.Extensions.Configuration.IConfiguration).Assembly.Location
-            ),
-        };
+        // The module lives in a referenced assembly; the policy lives in the compiling
+        // (host) assembly, which has no [Module] class of its own.
+        var productsModule = """
+            using SimpleModule.Core;
+            using Microsoft.Extensions.DependencyInjection;
 
-        var contractsRefs = new List<MetadataReference>();
-        foreach (var (assemblyName, source) in contractsAssemblies)
-        {
-            var compilation = CSharpCompilation.Create(
-                assemblyName,
-                [CSharpSyntaxTree.ParseText(source)],
-                [.. baseRefs, .. contractsRefs],
-                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-            );
+            namespace Products
+            {
+                [Module("Products")]
+                public class ProductsModule : IModule
+                {
+                    public void ConfigureServices(IServiceCollection services, Microsoft.Extensions.Configuration.IConfiguration configuration) { }
+                }
+            }
+            """;
 
-            using var ms = new MemoryStream();
-            var emit = compilation.Emit(ms);
-            emit.Success.Should()
-                .BeTrue(
-                    $"contracts assembly {assemblyName} should compile. Diagnostics: "
-                        + string.Join(
-                            ", ",
-                            emit.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)
-                        )
-                );
-            contractsRefs.Add(MetadataReference.CreateFromImage(ms.ToArray()));
-        }
+        var productsContracts = """
+            namespace Products.Contracts
+            {
+                public class Product
+                {
+                    public string OwnerId { get; set; } = "";
+                }
+            }
+            """;
 
-        var hostRefs = new List<MetadataReference>([.. baseRefs, .. contractsRefs]);
-        var aspNetDir = Path.GetDirectoryName(
-            typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection).Assembly.Location
+        var hostSource = """
+            using System.Security.Claims;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using SimpleModule.Core.Authorization.Policies;
+
+            namespace TestApp
+            {
+                public sealed class HostProductPolicy : IPolicy<Products.Contracts.Product>
+                {
+                    public Task<AuthorizationResult> AuthorizeAsync(ClaimsPrincipal user, string action, Products.Contracts.Product resource, CancellationToken cancellationToken = default) =>
+                        Task.FromResult(AuthorizationResult.Allow());
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateMultiAssemblyCompilation(
+            [("Products", productsModule), ("Products.Contracts", productsContracts)],
+            hostSource
         );
-        if (aspNetDir is not null)
-        {
-            var diAbstractions = Path.Combine(
-                aspNetDir,
-                "Microsoft.Extensions.DependencyInjection.Abstractions.dll"
-            );
-            if (File.Exists(diAbstractions))
-                hostRefs.Add(MetadataReference.CreateFromFile(diAbstractions));
-        }
-        hostRefs.Add(
-            MetadataReference.CreateFromFile(
-                typeof(Microsoft.Extensions.Configuration.IConfiguration).Assembly.Location
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        var moduleExt = result
+            .GeneratedTrees.First(t =>
+                t.FilePath.EndsWith("ModuleExtensions.g.cs", StringComparison.Ordinal)
             )
-        );
-        hostRefs.Add(
-            MetadataReference.CreateFromFile(
-                typeof(Microsoft.AspNetCore.Http.IResult).Assembly.Location
-            )
-        );
-
-        return CSharpCompilation.Create(
-            "TestAssembly",
-            [CSharpSyntaxTree.ParseText(hostSource)],
-            hostRefs,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
-        );
+            .GetText()
+            .ToString();
+        moduleExt.Should().Contain("global::TestApp.HostProductPolicy");
     }
 
     [Fact]
@@ -388,7 +461,7 @@ public class PolicyAutoDiscoveryTests
             }
             """;
 
-        var compilation = CreateMultiAssemblyCompilation(
+        var compilation = GeneratorTestHelper.CreateMultiAssemblyCompilation(
             [("TestAssembly.Contracts", contractsSource)],
             hostSource
         );
@@ -460,7 +533,7 @@ public class PolicyAutoDiscoveryTests
             }
             """;
 
-        var compilation = CreateMultiAssemblyCompilation(
+        var compilation = GeneratorTestHelper.CreateMultiAssemblyCompilation(
             [("Products", productsModule), ("Products.Contracts", productsContracts)],
             hostSource
         );

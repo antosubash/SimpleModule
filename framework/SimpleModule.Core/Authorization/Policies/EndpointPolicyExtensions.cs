@@ -25,15 +25,27 @@ public static class EndpointPolicyExtensions
         return builder.AddEndpointFilter(async (context, next) =>
         {
             var httpContext = context.HttpContext;
-            // A missing route value is static misconfiguration (the parameter either
-            // exists in the route template or never does) — fail loudly, don't 404.
             var routeValue = httpContext.GetRouteValue(routeParameterName)?.ToString();
             if (string.IsNullOrEmpty(routeValue))
             {
+                // Distinguish runtime absence from misconfiguration: an optional or
+                // catch-all parameter that exists in the template but wasn't supplied
+                // is a 404; a parameter name that isn't in the template at all is a
+                // developer error and must fail loudly.
+                var templateHasParameter =
+                    (httpContext.GetEndpoint() as RouteEndpoint)?.RoutePattern.GetParameter(
+                        routeParameterName
+                    )
+                        is not null;
+                if (templateHasParameter)
+                {
+                    throw new NotFoundException();
+                }
+
                 throw new InvalidOperationException(
                     $"AuthorizeResource<{typeof(TResource).Name}> found no '{routeParameterName}' "
-                        + "route value. Pass the route parameter name used in the endpoint's "
-                        + "route template (default is \"id\")."
+                        + "route parameter in the endpoint's route template. Pass the route "
+                        + "parameter name used in the template (default is \"id\")."
                 );
             }
 

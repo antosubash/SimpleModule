@@ -45,3 +45,4 @@ SM0057 | SimpleModule.Generator | Error | FormRequest class must extend FormRequ
 SM0058 | SimpleModule.Generator | Error | Policy resource type must be a contracts DTO
 SM0059 | SimpleModule.Generator | Error | Policy class must be public
 SM0060 | SimpleModule.Generator | Error | Policy must be owned by the resource's module
+SM0061 | SimpleModule.Generator | Error | Policy class must not be generic

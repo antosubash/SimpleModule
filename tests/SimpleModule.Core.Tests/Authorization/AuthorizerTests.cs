@@ -188,8 +188,10 @@ public class AuthorizerTests
     }
 
     [Fact]
-    public async Task AuthorizeAsync_DeniedViewAction_ThrowsNotFoundByDefault()
+    public async Task AuthorizeAsync_DeniedViewAction_ThrowsForbiddenByDefault()
     {
+        // NotFoundActions is empty by default — DenyAsNotFound is the per-decision way
+        // to surface 404; a plain Deny keeps its 403 + reason.
         var authorizer = CreateAuthorizer(s => s.AddScoped<IPolicy<Widget>, WidgetOwnerPolicy>());
 
         var act = () =>
@@ -199,7 +201,7 @@ public class AuthorizerTests
                 new Widget("user-1")
             );
 
-        await act.Should().ThrowAsync<NotFoundException>();
+        await act.Should().ThrowAsync<ForbiddenException>().WithMessage("Not the owner");
     }
 
     [Fact]
@@ -250,11 +252,12 @@ public class AuthorizerTests
     }
 
     [Fact]
-    public async Task AuthorizeAsync_ViewRemovedFromNotFoundActions_ThrowsForbidden()
+    public async Task AuthorizeAsync_ViewAddedToNotFoundActions_ThrowsNotFound()
     {
+        // Host-level opt-in override: a listed action maps every denial to 404.
         var authorizer = CreateAuthorizer(
             s => s.AddScoped<IPolicy<Widget>, WidgetOwnerPolicy>(),
-            o => o.NotFoundActions.Remove(PolicyActions.View)
+            o => o.NotFoundActions.Add(PolicyActions.View)
         );
 
         var act = () =>
@@ -264,6 +267,6 @@ public class AuthorizerTests
                 new Widget("user-1")
             );
 
-        await act.Should().ThrowAsync<ForbiddenException>();
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 }

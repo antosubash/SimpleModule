@@ -373,10 +373,10 @@ public sealed class CreateProductRequest : FormRequest<CreateProductRequest>
 
 String permissions answer "can this user perform this kind of action?". Policies answer "can this user perform this action on *this* resource?" — ownership, tenancy, and state-machine rules.
 
-- Implement `IPolicy<TResource>` (in `SimpleModule.Core.Authorization.Policies`) in the module that owns the resource (SM0060). Policy classes must be `public` (SM0059); they are auto-discovered by the source generator — in implementation and contracts assemblies, including nested classes — and registered as scoped services, deduplicated against manual registrations.
+- Implement `IPolicy<TResource>` (in `SimpleModule.Core.Authorization.Policies`) in the module that owns the resource (SM0060). Policy classes must be effectively `public` (SM0059) and non-generic (SM0061); they are auto-discovered by the source generator — in implementation, contracts, and host assemblies, including nested classes — and registered as scoped services. Type-based manual registrations are deduplicated; factory registrations must use the two-generic `AddScoped<TService, TImpl>(factory)` overload, or opt out with `[ManualContractRegistration]`.
 - The resource type must be a contracts DTO — a `[Dto]` type or a type declared in a `.Contracts` assembly (SM0058). Policies guard resources that cross module boundaries.
-- Policies **complement** permissions, they do not replace them: keep `.RequirePermission()` on the endpoint as the coarse capability gate, then check the instance rule via `IAuthorizer`.
-- Endpoints follow load → authorize → act: fetch the resource, call `IAuthorizer.AuthorizeAsync(user, action, resource)`, then perform the operation. Denial throws `ForbiddenException` (403). For anti-enumeration, return `AuthorizationResult.DenyAsNotFound(...)` from the policy (per-decision 404), or list actions in the host-level `PolicyAuthorizationOptions.NotFoundActions` (default: `view`). Modules must not mutate the host-level option set.
+- Policies **complement** permissions, they do not replace them: keep `.RequirePermission()` on the endpoint as the coarse capability gate, then check the instance rule via `IAuthorizer` (or the declarative `.AuthorizeResource<T>()` filter backed by an `IResourceResolver<T>`).
+- Endpoints follow load → authorize → act: fetch the resource, call `IAuthorizer.AuthorizeAsync(user, action, resource)`, then perform the operation. Denial throws `ForbiddenException` (403). For anti-enumeration, return `AuthorizationResult.DenyAsNotFound(...)` from the policy — the decision travels with the policy that knows the resource. The host-level `PolicyAuthorizationOptions.NotFoundActions` set (empty by default) is a blunt host-wide override; modules must not mutate it.
 - Use `PolicyActions` constants for CRUD verbs; declare module-specific actions as `public const string` on the policy class.
 - Multiple policies may target the same resource type (e.g. a tenancy policy plus an ownership policy); a single deny wins.
 - Keep contract methods owner-scoped (defense in depth for in-process callers); unscoped loaders used by the load → authorize → act flow belong on a module-internal interface, never on the public contract.
@@ -558,6 +558,7 @@ All SM diagnostics are emitted by the Roslyn source generator at compile time. `
 | SM0058 | Error | Policy resource type must be a contracts DTO |
 | SM0059 | Error | Policy class must be public |
 | SM0060 | Error | Policy must be owned by the resource's module |
+| SM0061 | Error | Policy class must not be generic |
 
 ### Module Metadata
 

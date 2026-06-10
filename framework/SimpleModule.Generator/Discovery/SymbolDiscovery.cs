@@ -216,9 +216,10 @@ internal static class SymbolDiscovery
         PolicyFinder.Discover(
             modules,
             moduleSymbols,
-            contractsAssemblySymbols,
+            contractsAssemblies,
             contractsAssemblyMap,
             moduleAssemblyMap,
+            compilation.Assembly,
             s,
             policies
         );

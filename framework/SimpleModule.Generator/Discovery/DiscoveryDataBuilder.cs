@@ -191,6 +191,8 @@ internal static class DiscoveryDataBuilder
                     p.ResourceTypeFqn,
                     p.ModuleName,
                     p.IsPublic,
+                    p.IsGeneric,
+                    p.IsManuallyRegistered,
                     p.ResourceIsContractsDto,
                     p.ResourceModuleName,
                     p.Location

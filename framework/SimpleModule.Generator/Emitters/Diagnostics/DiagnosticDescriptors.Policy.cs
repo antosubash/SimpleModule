@@ -30,4 +30,13 @@ internal static partial class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true
     );
+
+    internal static readonly DiagnosticDescriptor PolicyMustNotBeGeneric = new(
+        id: "SM0061",
+        title: "Policy class must not be generic",
+        messageFormat: "Policy '{0}' is a generic class. Open generic policies cannot be auto-registered — declare one closed policy class per resource type instead.",
+        category: "SimpleModule.Generator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
 }

@@ -10,7 +10,7 @@ A policy is a class that encapsulates every per-resource authorization rule for 
 
 ## Defining a Policy
 
-Implement `IPolicy<TResource>` in the module that owns the resource (SM0060). The class must be `public` (SM0059), and the resource type must be a contracts DTO — a `[Dto]` type or a type declared in your `.Contracts` assembly (SM0058).
+Implement `IPolicy<TResource>` in the module that owns the resource (SM0060). The class must be effectively `public` (SM0059) and non-generic (SM0061), and the resource type must be a contracts DTO — a `[Dto]` type or a type declared in your `.Contracts` assembly (SM0058).
 
 ```csharp
 using System.Security.Claims;
@@ -54,84 +54,26 @@ Two things worth noting in this example:
 - **Admins are not exempt.** Permission checks bypass for the Admin role; policies do not. If an admin should pass an instance rule, the policy must say so explicitly — here it deliberately doesn't, because marking read mutates the recipient's inbox state.
 - **`DenyAsNotFound`** makes the denial surface as 404 instead of 403, so callers cannot probe which notification IDs exist.
 
-There is no registration step. The source generator discovers every `IPolicy<T>` implementation — in implementation and contracts assemblies, including nested classes — and registers it as a scoped service in the generated `AddModules()`, deduplicated against any manual registration:
+### Registration
+
+There is no registration step. The source generator discovers every `IPolicy<T>` implementation — in implementation, contracts, and host assemblies, including nested classes — and registers it as a scoped service in the generated `AddModules()`:
 
 ```csharp
 // generated
 services.TryAddEnumerable(ServiceDescriptor.Scoped<IPolicy<Notification>, NotificationPolicy>());
 ```
 
+`TryAddEnumerable` deduplicates **type-based** manual registrations (`AddScoped<IPolicy<X>, XPolicy>()`). If you must register via factory, use the two-generic overload — `AddScoped<IPolicy<X>, XPolicy>(sp => ...)` — so the implementation type is visible to dedup, or opt out of auto-registration entirely with `[ManualContractRegistration]` on the policy class.
+
 Use the `PolicyActions` constants (`view`, `create`, `update`, `delete`) for conventional verbs, and declare module-specific actions as `public const string` on the policy class so endpoints never hardcode action strings.
 
-## Checking a Policy in an Endpoint
+## Declarative Checks: AuthorizeResource
 
-Inject `IAuthorizer` and follow **load → authorize → act**:
-
-```csharp
-app.MapPost(
-        Route,
-        async Task<IResult> (
-            Guid id,
-            HttpContext context,
-            INotificationStore store,             // module-internal unscoped loader
-            INotificationsContracts notifications, // public, owner-scoped contract
-            IAuthorizer authorizer
-        ) =>
-        {
-            // Load: the unscoped read exists only for this flow and is module-internal.
-            var notification = await store.FindAsync(NotificationId.From(id));
-            if (notification is null)
-            {
-                return TypedResults.NotFound();
-            }
-
-            // Authorize: throws on deny — translated by the global exception handler.
-            await authorizer.AuthorizeAsync(
-                context.User,
-                NotificationPolicy.MarkRead,
-                notification,
-                context.RequestAborted
-            );
-
-            // Act: the contract call stays owner-scoped (defense in depth).
-            var ok = await notifications.MarkReadAsync(
-                notification.Id,
-                UserId.From(context.User.GetUserId()!)
-            );
-            return ok ? TypedResults.NoContent() : TypedResults.NotFound();
-        }
-    )
-    .RequirePermission(NotificationsPermissions.ViewOwn); // permission gate stays
-```
-
-`AuthorizeAsync` throws on denial, so the happy path stays free of authorization if-statements. To branch instead of throwing, use `CheckAsync`, which returns the `AuthorizationResult`.
-
-### Keep contracts owner-scoped
-
-The policy check protects the *endpoint*, not in-process callers. Methods on your public `I{Module}Contracts` interface should stay scoped (`MarkReadAsync(id, userId)` filters by owner) so another module can never mutate or read a foreign user's data by accident. The unscoped loader the policy flow needs (`FindAsync(id)`) belongs on a **module-internal** interface — in Notifications that is `INotificationStore`.
-
-## Denial Semantics: 403 vs 404
-
-A denied check throws `ForbiddenException` (403) with the policy's denial reason. Reasons are returned verbatim in the response detail — write them for the end user and never include internal identifiers.
-
-Two ways to surface a denial as 404 instead (anti-enumeration):
-
-1. **Per decision (preferred):** return `AuthorizationResult.DenyAsNotFound(...)` from the policy. The policy knows whether a resource's existence is secret; the decision travels with it.
-2. **Per action, host-wide:** `PolicyAuthorizationOptions.NotFoundActions` lists actions whose denials always map to 404 — `view` by default. This is host-level configuration; modules must not mutate it, because action names are not namespaced and a module-added entry would change semantics for every other module in the host.
-
-Calling `AuthorizeAsync`/`CheckAsync` for a resource type with **no registered policy throws `MissingPolicyException`** — authorization fails closed and loudly rather than silently allowing.
-
-## Multiple Policies per Resource
-
-More than one policy may target the same resource type — for example a tenancy-scoping policy plus an ownership policy, both owned by the resource's module (SM0060 rejects policies for other modules' resources). Policies run in registration order and evaluation stops at the first deny: **a single deny wins**, and its reason is surfaced. Allow requires every policy to allow.
-
-## Declarative Form
-
-When the endpoint does nothing with the resource except authorize it, skip the manual load with `AuthorizeResource`. Register an `IResourceResolver<TResource>` once per resource type:
+When the handler doesn't need the resource beyond authorizing it, declare the check on the endpoint. This is what the reference module does — register an `IResourceResolver<TResource>` once per resource type:
 
 ```csharp
-// In the module
-public sealed class NotificationResolver(INotificationStore store)
+// modules/Notifications/.../Endpoints/Notifications/NotificationResolver.cs
+internal sealed class NotificationResolver(INotificationStore store)
     : IResourceResolver<Notification>
 {
     public async ValueTask<Notification?> ResolveAsync(
@@ -139,7 +81,7 @@ public sealed class NotificationResolver(INotificationStore store)
         CancellationToken cancellationToken = default
     ) =>
         Guid.TryParse(routeValue, out var id)
-            ? await store.FindAsync(NotificationId.From(id))
+            ? await store.FindAsync(NotificationId.From(id), cancellationToken)
             : null;
 }
 
@@ -150,12 +92,59 @@ services.AddScoped<IResourceResolver<Notification>, NotificationResolver>();
 Then the endpoint declares the check instead of performing it:
 
 ```csharp
-app.MapPost(Route, handler)
-    .RequirePermission(NotificationsPermissions.ViewOwn)
+app.MapPost(
+        Route,
+        async Task<IResult> (Guid id, HttpContext context, INotificationsContracts notifications) =>
+        {
+            // AuthorizeResource already loaded the notification and ran the policy;
+            // the contract call stays owner-scoped (defense in depth).
+            var ok = await notifications.MarkReadAsync(
+                NotificationId.From(id),
+                UserId.From(context.User.GetUserId()!)
+            );
+            return ok ? TypedResults.NoContent() : TypedResults.NotFound();
+        }
+    )
+    .RequirePermission(NotificationsPermissions.ViewOwn) // permission gate stays
     .AuthorizeResource<Notification>(NotificationPolicy.MarkRead); // route param "id" by default
 ```
 
-The filter loads the resource (404 when missing), authorizes the action, and only then invokes the handler. Misconfiguration fails loudly: a route template without the named parameter, or a missing resolver registration, throws `InvalidOperationException` rather than masquerading as 404.
+The filter loads the resource (404 when missing — including when an optional route parameter is omitted), authorizes the action, and only then invokes the handler. True misconfiguration fails loudly: a route parameter name that doesn't exist in the template, or a missing resolver registration, throws `InvalidOperationException` rather than masquerading as 404.
+
+## Imperative Checks: IAuthorizer
+
+When the handler needs the loaded resource (to render it, mutate it in place, or branch on its state), inject `IAuthorizer` and follow **load → authorize → act**:
+
+```csharp
+var order = await store.FindAsync(OrderId.From(id), ct);
+if (order is null)
+{
+    return TypedResults.NotFound();
+}
+
+// Throws on deny — translated by the global exception handler.
+await authorizer.AuthorizeAsync(context.User, PolicyActions.Update, order, ct);
+
+// ... act on the loaded order
+```
+
+To branch instead of throwing, use `CheckAsync`, which returns the `AuthorizationResult` (with `IsAllowed`, `Reason`, and `TreatAsNotFound`).
+
+### Keep contracts owner-scoped
+
+The policy check protects the *endpoint*, not in-process callers. Methods on your public `I{Module}Contracts` interface should stay scoped (`MarkReadAsync(id, userId)` filters by owner) so another module can never mutate or read a foreign user's data by accident. The unscoped loader the policy flow needs (`FindAsync(id)`) belongs on a **module-internal** interface — in Notifications that is `INotificationStore`.
+
+## Denial Semantics: 403 vs 404
+
+A denied check throws `ForbiddenException` (403) with the policy's denial reason. Reasons are returned verbatim in the response detail — write them for the end user and never include internal identifiers.
+
+To surface a denial as 404 instead (anti-enumeration), return `AuthorizationResult.DenyAsNotFound(...)` from the policy: the policy knows whether a resource's existence is secret, and the decision travels with it. The host-level `PolicyAuthorizationOptions.NotFoundActions` set (empty by default) additionally maps every denial for the listed action names to 404 — it is a blunt host-wide override that also swallows explicit `Deny(reason)` messages, so prefer `DenyAsNotFound` and configure the option only at the host level; modules must not mutate it.
+
+Calling `AuthorizeAsync`/`CheckAsync` for a resource type with **no registered policy throws `MissingPolicyException`** — authorization fails closed and loudly rather than silently allowing.
+
+## Multiple Policies per Resource
+
+More than one policy may target the same resource type — for example a tenancy-scoping policy plus an ownership policy, both owned by the resource's module (SM0060 rejects policies for other modules' resources). Policies run in registration order and evaluation stops at the first deny: **a single deny wins**, and its reason is surfaced. Allow requires every policy to allow.
 
 ## What Policies Are Not For
 
@@ -169,12 +158,13 @@ The filter loads the resource (404 when missing), authorizes the action, and onl
 | Rule | Enforced by |
 |------|-------------|
 | Resource type must be a contracts DTO | SM0058 (build error) |
-| Policy class must be public | SM0059 (build error) |
+| Policy class must be effectively public | SM0059 (build error) |
 | Policy must be owned by the resource's module | SM0060 (build error) |
-| Policies auto-registered as scoped services (dedup vs manual) | Source generator (`TryAddEnumerable`) |
+| Policy class must not be generic | SM0061 (build error) |
+| Policies auto-registered as scoped services | Source generator (`TryAddEnumerable`) |
 | Missing policy at check time fails closed | `MissingPolicyException` |
 | Deny wins across multiple policies | `IAuthorizer` |
-| Denial as 404 | `DenyAsNotFound` per decision, or `PolicyAuthorizationOptions` per action (default: `view`) |
+| Denial as 404 | `DenyAsNotFound` per decision (preferred); `PolicyAuthorizationOptions` host override |
 
 ## Testing Policies
 

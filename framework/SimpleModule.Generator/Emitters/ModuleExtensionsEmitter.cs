@@ -143,12 +143,19 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
             sb.AppendLine();
             sb.AppendLine("        // Auto-discovered resource policies (IPolicy<T>).");
             sb.AppendLine(
-                "        // TryAddEnumerable dedups against manual registrations in ConfigureServices."
+                "        // TryAddEnumerable dedups type-based manual registrations; factory"
+            );
+            sb.AppendLine(
+                "        // registrations must use the two-generic AddScoped<TService, TImpl>(factory)"
+            );
+            sb.AppendLine(
+                "        // overload or opt out entirely with [ManualContractRegistration]."
             );
             foreach (var policy in data.Policies)
             {
-                // Non-public policies can't be referenced here; SM0059 reports them.
-                if (!policy.IsPublic)
+                // Non-public (SM0059) and generic (SM0061) policies can't be referenced
+                // here; manually-registered ones are wired by their module.
+                if (!policy.IsPublic || policy.IsGeneric || policy.IsManuallyRegistered)
                     continue;
 
                 sb.AppendLine(
