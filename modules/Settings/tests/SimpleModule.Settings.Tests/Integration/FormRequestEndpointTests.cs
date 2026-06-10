@@ -195,7 +195,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task CreateMenuItem_ValidRequest_Returns201WithLocation()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.ManageMenus]);
 
         var response = await client.PostAsJsonAsync(
             "/api/settings/menus",
@@ -216,7 +216,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     public async Task CreateMenuItem_MinimalRequest_Returns201()
     {
         // Only Label is required; all other fields are optional.
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.ManageMenus]);
 
         var response = await client.PostAsJsonAsync(
             "/api/settings/menus",
@@ -229,7 +229,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task CreateMenuItem_LabelTrimmedByPrepare_EntityHasTrimmedLabel()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.ManageMenus]);
 
         var response = await client.PostAsJsonAsync(
             "/api/settings/menus",
@@ -248,7 +248,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task CreateMenuItem_EmptyLabel_Returns422()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.ManageMenus]);
 
         var response = await client.PostAsJsonAsync(
             "/api/settings/menus",
@@ -262,7 +262,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task CreateMenuItem_LabelTooLong_Returns422()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.ManageMenus]);
 
         var response = await client.PostAsJsonAsync(
             "/api/settings/menus",
@@ -276,7 +276,7 @@ public class FormRequestEndpointTests(SimpleModuleWebApplicationFactory factory)
     [Fact]
     public async Task CreateMenuItem_UrlTooLong_Returns422()
     {
-        var client = factory.CreateAuthenticatedClient();
+        var client = factory.CreateAuthenticatedClient([SettingsPermissions.ManageMenus]);
 
         var response = await client.PostAsJsonAsync(
             "/api/settings/menus",

@@ -42,3 +42,7 @@ SM0054 | SimpleModule.Generator | Info | Endpoint missing Route const field
 SM0055 | SimpleModule.Generator | Error | Entity class must live in a Contracts assembly
 SM0056 | SimpleModule.Generator | Error | FormRequest class must be sealed
 SM0057 | SimpleModule.Generator | Error | FormRequest class must extend FormRequest<TSelf>
+SM0058 | SimpleModule.Generator | Error | Policy resource type must be a contracts DTO
+SM0059 | SimpleModule.Generator | Error | Policy class must be public
+SM0060 | SimpleModule.Generator | Error | Policy must be owned by the resource's module
+SM0061 | SimpleModule.Generator | Error | Policy class must not be generic

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SimpleModule.BackgroundJobs.Contracts;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization.Policies;
 using SimpleModule.Core.Settings;
 using SimpleModule.Database;
 using SimpleModule.Notifications.Channels;
@@ -43,6 +44,12 @@ public class NotificationsModule : IModule, IModuleServices
         services.Configure<NotificationsModuleOptions>(configuration.GetSection("Notifications"));
 
         services.AddScoped<INotificationsContracts, NotificationService>();
+        services.AddScoped<INotificationStore, NotificationService>();
+        // Loader for the declarative AuthorizeResource<Notification> endpoint filter.
+        services.AddScoped<
+            IResourceResolver<Notification>,
+            Endpoints.Notifications.NotificationResolver
+        >();
         services.AddScoped<INotifier, Notifier>();
 
         // Channels — registered as INotificationChannel so the registry can enumerate them.

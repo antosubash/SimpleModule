@@ -26,6 +26,7 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
         sb.AppendLine("using Microsoft.AspNetCore.Http.Json;");
         sb.AppendLine("using Microsoft.Extensions.Configuration;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection.Extensions;");
         sb.AppendLine("using Microsoft.Extensions.Hosting;");
         sb.AppendLine("using Microsoft.AspNetCore.Authorization;");
         sb.AppendLine("using SimpleModule.Core.Authorization;");
@@ -133,6 +134,32 @@ internal sealed class ModuleExtensionsEmitter : IEmitter
                 };
                 sb.AppendLine(
                     $"        services.{method}<{impl.InterfaceFqn}, {impl.ImplementationFqn}>();"
+                );
+            }
+        }
+
+        if (data.Policies.Length > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        // Auto-discovered resource policies (IPolicy<T>).");
+            sb.AppendLine(
+                "        // TryAddEnumerable dedups type-based manual registrations; factory"
+            );
+            sb.AppendLine(
+                "        // registrations must use the two-generic AddScoped<TService, TImpl>(factory)"
+            );
+            sb.AppendLine(
+                "        // overload or opt out entirely with [ManualContractRegistration]."
+            );
+            foreach (var policy in data.Policies)
+            {
+                // Non-public (SM0059) and generic (SM0061) policies can't be referenced
+                // here; manually-registered ones are wired by their module.
+                if (!policy.IsPublic || policy.IsGeneric || policy.IsManuallyRegistered)
+                    continue;
+
+                sb.AppendLine(
+                    $"        services.TryAddEnumerable(global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Scoped<global::SimpleModule.Core.Authorization.Policies.IPolicy<{policy.ResourceTypeFqn}>, {policy.FullyQualifiedName}>());"
                 );
             }
         }

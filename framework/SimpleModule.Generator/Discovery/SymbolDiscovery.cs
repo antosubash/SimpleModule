@@ -211,6 +211,19 @@ internal static class SymbolDiscovery
             moduleOptionsList
         );
 
+        // Step 3f': IPolicy<T> implementors (instance-level authorization)
+        var policies = new List<PolicyInfo>();
+        PolicyFinder.Discover(
+            modules,
+            moduleSymbols,
+            contractsAssemblies,
+            contractsAssemblyMap,
+            moduleAssemblyMap,
+            compilation.Assembly,
+            s,
+            policies
+        );
+
         // Step 3g: FormRequest types
         var formRequests = new List<FormRequestInfo>();
         FormRequestFinder.Discover(
@@ -264,6 +277,7 @@ internal static class SymbolDiscovery
             agentToolProviders,
             knowledgeSources,
             formRequests,
+            policies,
             contractsAssemblyMap,
             s.HasAgentsAssembly,
             s.HasRagAssembly,

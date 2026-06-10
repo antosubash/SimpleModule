@@ -5,7 +5,9 @@ using SimpleModule.Users.Contracts;
 
 namespace SimpleModule.Notifications.Services;
 
-public class NotificationService(NotificationsDbContext db) : INotificationsContracts
+public class NotificationService(NotificationsDbContext db)
+    : INotificationsContracts,
+        INotificationStore
 {
     public async Task<PagedResult<Notification>> ListAsync(
         UserId userId,
@@ -61,8 +63,18 @@ public class NotificationService(NotificationsDbContext db) : INotificationsCont
             n.Id == id && n.UserId == userId
         );
 
+    public async Task<Notification?> FindAsync(
+        NotificationId id,
+        CancellationToken cancellationToken = default
+    ) =>
+        await db.Notifications.AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
+
     public async Task<bool> MarkReadAsync(NotificationId id, UserId userId)
     {
+        // Deliberately load-modify-save rather than ExecuteUpdateAsync: the SaveChanges
+        // pipeline runs the framework interceptors (audit log entry, UpdatedAt,
+        // concurrency stamp rotation) that a set-based update would silently skip.
         var notification = await db.Notifications.FirstOrDefaultAsync(n =>
             n.Id == id && n.UserId == userId
         );
@@ -77,7 +89,16 @@ public class NotificationService(NotificationsDbContext db) : INotificationsCont
         }
 
         notification.ReadAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // A concurrent request rotated the concurrency stamp (e.g. a double-click
+            // marking the same notification read) — the outcome the caller wanted
+            // already holds, so this is an idempotent success, not an error.
+        }
         return true;
     }
 

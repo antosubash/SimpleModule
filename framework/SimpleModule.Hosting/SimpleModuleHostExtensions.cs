@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using SimpleModule.Core.Authorization;
+using SimpleModule.Core.Authorization.Policies;
 using SimpleModule.Core.Constants;
 using SimpleModule.Core.Exceptions;
 using SimpleModule.Core.Health;
@@ -147,6 +148,11 @@ public static partial class SimpleModuleHostExtensions
         // Required by EntityInterceptor to access the current HTTP context
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUser, HttpContextCurrentUser>();
+
+        // Instance-level authorization (IPolicy<T> dispatch). Policies themselves are
+        // auto-discovered by the source generator and registered in AddModules().
+        builder.Services.AddOptions<PolicyAuthorizationOptions>();
+        builder.Services.AddScoped<IAuthorizer, Authorizer>();
 
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityInterceptor>();
         builder.Services.AddScoped<ISaveChangesInterceptor, EntityChangeInterceptor>();

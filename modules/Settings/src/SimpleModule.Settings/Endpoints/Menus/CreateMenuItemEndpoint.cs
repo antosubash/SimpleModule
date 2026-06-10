@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.FormRequests;
 using SimpleModule.Settings.Services;
@@ -48,5 +49,5 @@ public class CreateMenuItemEndpoint : IEndpoint
                     return TypedResults.Created($"/api/settings/menus/{entity.Id}", result);
                 }
             )
-            .RequireAuthorization();
+            .RequirePermission(SettingsPermissions.ManageMenus);
 }

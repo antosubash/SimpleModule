@@ -77,6 +77,13 @@ public static class GeneratorTestHelper
         if (File.Exists(tasksPath))
             references.Add(MetadataReference.CreateFromFile(tasksPath));
 
+        // Add System.Security.Claims for ClaimsPrincipal (used by IPolicy<T> implementors)
+        references.Add(
+            MetadataReference.CreateFromFile(
+                typeof(System.Security.Claims.ClaimsPrincipal).Assembly.Location
+            )
+        );
+
         return CSharpCompilation.Create(
             "TestAssembly",
             syntaxTrees,
@@ -152,6 +159,68 @@ public static class GeneratorTestHelper
             efCoreReferences.Add(MetadataReference.CreateFromFile(identityStoresPath));
 
         return compilation.AddReferences(efCoreReferences);
+    }
+
+    /// <summary>
+    /// Compiles one or more referenced assemblies in order (later sources may reference
+    /// earlier ones), then a host assembly ("TestAssembly") referencing all of them.
+    /// Mirrors the real layout where modules and their *.Contracts assemblies are
+    /// separate compilations.
+    /// </summary>
+    public static CSharpCompilation CreateMultiAssemblyCompilation(
+        (string AssemblyName, string Source)[] referencedAssemblies,
+        string hostSource
+    )
+    {
+        var runtimeDir = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+        var baseRefs = new List<MetadataReference>
+        {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Runtime.dll")),
+            MetadataReference.CreateFromFile(Path.Combine(runtimeDir, "System.Collections.dll")),
+            MetadataReference.CreateFromFile(typeof(SimpleModule.Core.IModule).Assembly.Location),
+            MetadataReference.CreateFromFile(
+                typeof(System.Security.Claims.ClaimsPrincipal).Assembly.Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.Extensions.DependencyInjection.IServiceCollection)
+                    .Assembly
+                    .Location
+            ),
+            MetadataReference.CreateFromFile(
+                typeof(Microsoft.Extensions.Configuration.IConfiguration).Assembly.Location
+            ),
+        };
+
+        var builtRefs = new List<MetadataReference>();
+        foreach (var (assemblyName, source) in referencedAssemblies)
+        {
+            var compilation = CSharpCompilation.Create(
+                assemblyName,
+                [CSharpSyntaxTree.ParseText(source)],
+                [.. baseRefs, .. builtRefs],
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            );
+
+            using var ms = new MemoryStream();
+            var emit = compilation.Emit(ms);
+            if (!emit.Success)
+            {
+                var errors = string.Join(
+                    ", ",
+                    emit.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)
+                );
+                throw new InvalidOperationException(
+                    $"Referenced assembly {assemblyName} failed to compile: {errors}"
+                );
+            }
+            builtRefs.Add(MetadataReference.CreateFromImage(ms.ToArray()));
+        }
+
+        // Compose the host side from CreateCompilation so the two paths share one
+        // reference list and can't drift.
+        return CreateCompilation(hostSource).AddReferences(builtRefs);
     }
 
     public static GeneratorDriverRunResult RunGenerator(CSharpCompilation compilation)

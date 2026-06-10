@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using SimpleModule.Core;
+using SimpleModule.Core.Authorization;
 using SimpleModule.Settings.Contracts;
 using SimpleModule.Settings.FormRequests;
 using SimpleModule.Settings.Services;
@@ -37,5 +38,5 @@ public class UpdateMenuItemEndpoint : IEndpoint
                     return entity is not null ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )
-            .RequireAuthorization();
+            .RequirePermission(SettingsPermissions.ManageMenus);
 }

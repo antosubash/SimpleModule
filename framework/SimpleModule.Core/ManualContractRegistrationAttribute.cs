@@ -18,6 +18,11 @@ namespace SimpleModule.Core;
 /// <para>The contract is still considered implemented, so <c>SM0025</c> "no implementation"
 /// does not fire. Apply this to every implementation of a contract that the module
 /// registers manually so the generator never tries to auto-wire any of them.</para>
+/// <para>The attribute applies the same way to <c>IPolicy&lt;T&gt;</c> implementations:
+/// a policy carrying it is not auto-registered, and the auto-registration rules
+/// <c>SM0059</c> "policy must be public" and <c>SM0061</c> "policy must not be generic"
+/// are waived — the module can register an internal or closed-generic policy itself.
+/// The resource rules (<c>SM0058</c>, <c>SM0060</c>) still apply.</para>
 /// </remarks>
 /// <example>
 /// <code>

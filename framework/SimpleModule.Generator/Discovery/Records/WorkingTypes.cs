@@ -164,6 +164,22 @@ internal sealed class DiscoveredTypeInfo
     public string ModuleName { get; set; } = "";
 }
 
+internal sealed class PolicyInfo
+{
+    public string FullyQualifiedName { get; set; } = "";
+    public string ResourceTypeFqn { get; set; } = "";
+    public string ModuleName { get; set; } = "";
+    public bool IsPublic { get; set; }
+    public bool IsGeneric { get; set; }
+    public bool IsManuallyRegistered { get; set; }
+    public bool ResourceIsTypeParameter { get; set; }
+    public bool ResourceIsContractsDto { get; set; }
+
+    /// <summary>Module owning the resource type's assembly; "" when unattributable.</summary>
+    public string ResourceModuleName { get; set; } = "";
+    public SourceLocationRecord? Location { get; set; }
+}
+
 internal sealed class FormRequestInfo
 {
     public string FullyQualifiedName { get; set; } = "";

@@ -30,6 +30,7 @@ internal static class DiscoveryDataBuilder
         List<DiscoveredTypeInfo> agentToolProviders,
         List<DiscoveredTypeInfo> knowledgeSources,
         List<FormRequestInfo> formRequests,
+        List<PolicyInfo> policies,
         Dictionary<string, string> contractsAssemblyMap,
         bool hasAgentsAssembly,
         bool hasRagAssembly,
@@ -182,6 +183,20 @@ internal static class DiscoveryDataBuilder
                     f.IsSealed,
                     f.ExtendsFormRequest,
                     f.Location
+                ))
+                .ToImmutableArray(),
+            policies
+                .Select(p => new PolicyInfoRecord(
+                    p.FullyQualifiedName,
+                    p.ResourceTypeFqn,
+                    p.ModuleName,
+                    p.IsPublic,
+                    p.IsGeneric,
+                    p.IsManuallyRegistered,
+                    p.ResourceIsTypeParameter,
+                    p.ResourceIsContractsDto,
+                    p.ResourceModuleName,
+                    p.Location
                 ))
                 .ToImmutableArray(),
             contractsAssemblyMap.Keys.ToImmutableArray(),
