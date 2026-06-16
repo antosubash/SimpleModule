@@ -13,11 +13,11 @@
     "./use-translation": "./src/use-translation.ts"
   },
   "peerDependencies": {
-    "@inertiajs/react": "^3.0.0",
+    "@inertiajs/react": "^3.4.0",
     "@simplemodule/ui": "*",
     "esbuild": "*",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "vite": "^8.0.0"
   }
 }
