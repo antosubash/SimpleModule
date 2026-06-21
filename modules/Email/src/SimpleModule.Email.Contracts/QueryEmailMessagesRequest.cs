@@ -12,6 +12,14 @@ public class QueryEmailMessagesRequest
     public string? Subject { get; set; }
     public DateTimeOffset? DateFrom { get; set; }
     public DateTimeOffset? DateTo { get; set; }
+
+    /// <summary>
+    /// Opt-in keyset cursor. When set (with the default CreatedAt-descending ordering),
+    /// the page is fetched via <c>WHERE CreatedAt &lt; Before</c> instead of OFFSET,
+    /// skipping the per-request <c>COUNT(*)</c> and the O(offset) row-skip. Pass the
+    /// <c>CreatedAt</c> of the last item from the previous page to fetch the next one.
+    /// </summary>
+    public DateTimeOffset? Before { get; set; }
     public string? SortBy { get; set; }
     public bool? SortDescending { get; set; }
 

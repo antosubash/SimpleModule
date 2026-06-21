@@ -18,9 +18,14 @@ internal sealed partial class UserService(
     ILogger<UserService> logger
 ) : IUserContracts
 {
-    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserDto>> GetAllUsersAsync(int skip = 0, int take = 30)
     {
-        var users = await userManager.Users.ToListAsync();
+        var users = await userManager
+            .Users.AsNoTracking()
+            .OrderBy(u => u.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
         return users.Select(MapToDto);
     }
 

@@ -69,6 +69,7 @@
   "History.Of": "of",
   "History.Previous": "Previous",
   "History.Next": "Next",
+  "History.Newest": "Newest",
   "History.FilterApply": "Apply",
   "History.FilterClear": "Clear",
   "History.EmptyWithFilters": "No emails match the current filters.",

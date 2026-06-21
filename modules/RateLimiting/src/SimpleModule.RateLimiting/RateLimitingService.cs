@@ -11,8 +11,13 @@ public partial class RateLimitingService(
     ILogger<RateLimitingService> logger
 ) : IRateLimitingContracts
 {
-    public async Task<IEnumerable<RateLimitRule>> GetAllRulesAsync() =>
-        await db.Rules.AsNoTracking().OrderBy(r => r.PolicyName).ToListAsync();
+    public async Task<IEnumerable<RateLimitRule>> GetAllRulesAsync(int skip = 0, int take = 30) =>
+        await db
+            .Rules.AsNoTracking()
+            .OrderBy(r => r.PolicyName)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
 
     public async Task<RateLimitRule?> GetRuleByIdAsync(RateLimitRuleId id)
     {

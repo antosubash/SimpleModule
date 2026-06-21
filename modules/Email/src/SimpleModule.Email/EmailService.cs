@@ -110,10 +110,40 @@ public partial class EmailService(
         if (request.DateTo.HasValue)
             query = query.Where(m => m.CreatedAt <= request.DateTo.Value);
 
+        var sortDescending = request.EffectiveSortDescending;
+        var sortBy = request.EffectiveSortBy;
+        var page = request.EffectivePage;
+        var pageSize = request.EffectivePageSize;
+
+        // Keyset (cursor) pagination on CreatedAt (indexed): opt-in via request.Before
+        // for the default CreatedAt-descending ordering. Skips the per-request COUNT(*)
+        // and the OFFSET row-skip (see AuditLogService for rationale). Non-cursor
+        // requests keep the exact prior behavior; TotalCount is -1 in cursor mode.
+        if (
+            request.Before.HasValue
+            && sortDescending
+            && sortBy is not ("To" or "Subject" or "Status")
+        )
+        {
+            var cursor = request.Before.Value;
+            var keysetItems = await query
+                .Where(m => m.CreatedAt < cursor)
+                .OrderByDescending(m => m.CreatedAt)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<EmailMessage>
+            {
+                Items = keysetItems,
+                TotalCount = -1,
+                Page = page,
+                PageSize = pageSize,
+            };
+        }
+
         var totalCount = await query.CountAsync();
 
-        var sortDescending = request.EffectiveSortDescending;
-        query = request.EffectiveSortBy switch
+        query = sortBy switch
         {
             "To" => sortDescending ? query.OrderByDescending(m => m.To) : query.OrderBy(m => m.To),
             "Subject" => sortDescending
@@ -126,9 +156,6 @@ public partial class EmailService(
                 ? query.OrderByDescending(m => m.CreatedAt)
                 : query.OrderBy(m => m.CreatedAt),
         };
-
-        var page = request.EffectivePage;
-        var pageSize = request.EffectivePageSize;
 
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 

@@ -17,10 +17,23 @@ public class GetAllEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                (string? folder, HttpContext context, IFileStorageContracts files) =>
+                (
+                    string? folder,
+                    int? skip,
+                    int? take,
+                    HttpContext context,
+                    IFileStorageContracts files
+                ) =>
                 {
                     var userId = context.User.GetScopedUserId();
-                    return CrudEndpoints.GetAll(() => files.GetFilesAsync(folder, userId));
+                    return CrudEndpoints.GetAll(() =>
+                        files.GetFilesAsync(
+                            folder,
+                            userId,
+                            Math.Max(0, skip ?? 0),
+                            Math.Clamp(take ?? 30, 1, 200)
+                        )
+                    );
                 }
             )
             .RequirePermission(FileStoragePermissions.View);

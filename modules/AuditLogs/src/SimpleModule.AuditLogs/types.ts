@@ -65,6 +65,7 @@ export interface AuditExportRequest {
   searchText: string;
   page: number | null;
   pageSize: number | null;
+  before: string | null;
   sortBy: string;
   sortDescending: boolean | null;
   effectivePage: number;
@@ -86,6 +87,7 @@ export interface AuditQueryRequest {
   searchText: string;
   page: number | null;
   pageSize: number | null;
+  before: string | null;
   sortBy: string;
   sortDescending: boolean | null;
   effectivePage: number;

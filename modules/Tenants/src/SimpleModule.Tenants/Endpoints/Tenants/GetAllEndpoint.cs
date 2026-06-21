@@ -14,7 +14,13 @@ public class GetAllEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                (ITenantContracts contracts) => CrudEndpoints.GetAll(contracts.GetAllTenantsAsync)
+                (ITenantContracts contracts, int? skip, int? take) =>
+                    CrudEndpoints.GetAll(() =>
+                        contracts.GetAllTenantsAsync(
+                            Math.Max(0, skip ?? 0),
+                            Math.Clamp(take ?? 30, 1, 500)
+                        )
+                    )
             )
             .RequirePermission(TenantsPermissions.View);
 }

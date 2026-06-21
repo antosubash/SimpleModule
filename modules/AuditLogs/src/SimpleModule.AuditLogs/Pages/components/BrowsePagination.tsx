@@ -1,24 +1,5 @@
 import { Button } from '@simplemodule/ui';
 
-/** Build a compact pagination range: 1 ... 4 5 [6] 7 8 ... 20 */
-function paginationRange(
-  current: number,
-  total: number,
-): (number | 'ellipsis-start' | 'ellipsis-end')[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-  const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = [];
-  pages.push(1);
-  if (current > 3) pages.push('ellipsis-start');
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  for (let i = start; i <= end; i++) pages.push(i);
-  if (current < total - 2) pages.push('ellipsis-end');
-  pages.push(total);
-  return pages;
-}
-
 function ChevronLeft() {
   return (
     <svg
@@ -50,47 +31,50 @@ function ChevronRight() {
 }
 
 interface Props {
-  currentPage: number;
-  totalPages: number;
-  onGoToPage: (page: number) => void;
+  /** Whether a previous (newer) page exists in the cursor trail. */
+  canPrev: boolean;
+  /** Whether the current page is full, implying more (older) rows exist. */
+  canNext: boolean;
+  /** Show the "jump to newest" reset action (hidden on the first page). */
+  showNewest: boolean;
+  newestLabel: string;
+  prevLabel: string;
+  nextLabel: string;
+  onPrev: () => void;
+  onNext: () => void;
+  onNewest: () => void;
 }
 
-export function BrowsePagination({ currentPage, totalPages, onGoToPage }: Props) {
-  if (totalPages <= 1) return null;
+/**
+ * Keyset (cursor) pagination control. Unlike numbered pagination, keyset paging is
+ * sequential — it walks newest → older via a `before` cursor — so the UI exposes
+ * Newest / Previous / Next rather than arbitrary page jumps. This avoids the
+ * per-request COUNT(*) and deep-OFFSET row-skip on large tables.
+ */
+export function BrowsePagination({
+  canPrev,
+  canNext,
+  showNewest,
+  newestLabel,
+  prevLabel,
+  nextLabel,
+  onPrev,
+  onNext,
+  onNewest,
+}: Props) {
+  if (!canPrev && !canNext) return null;
 
   return (
     <div className="flex items-center gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={currentPage <= 1}
-        onClick={() => onGoToPage(currentPage - 1)}
-      >
+      {showNewest && (
+        <Button variant="ghost" size="sm" onClick={onNewest}>
+          {newestLabel}
+        </Button>
+      )}
+      <Button variant="ghost" size="sm" disabled={!canPrev} onClick={onPrev} aria-label={prevLabel}>
         <ChevronLeft />
       </Button>
-      {paginationRange(currentPage, totalPages).map((p) =>
-        p === 'ellipsis-start' || p === 'ellipsis-end' ? (
-          <span key={p} className="px-1 text-sm text-text-muted">
-            ...
-          </span>
-        ) : (
-          <Button
-            key={p}
-            variant={p === currentPage ? 'secondary' : 'ghost'}
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => onGoToPage(p as number)}
-          >
-            {p}
-          </Button>
-        ),
-      )}
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={currentPage >= totalPages}
-        onClick={() => onGoToPage(currentPage + 1)}
-      >
+      <Button variant="ghost" size="sm" disabled={!canNext} onClick={onNext} aria-label={nextLabel}>
         <ChevronRight />
       </Button>
     </div>

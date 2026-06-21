@@ -16,7 +16,9 @@ public sealed partial class FileStorageService(
 {
     public async Task<IEnumerable<StoredFile>> GetFilesAsync(
         string? folder = null,
-        string? userId = null
+        string? userId = null,
+        int skip = 0,
+        int take = 30
     )
     {
         var query = db.StoredFiles.AsNoTracking();
@@ -36,7 +38,7 @@ public sealed partial class FileStorageService(
             query = query.Where(f => f.CreatedByUserId == userId);
         }
 
-        return await query.OrderBy(f => f.FileName).ToListAsync();
+        return await query.OrderBy(f => f.FileName).Skip(skip).Take(take).ToListAsync();
     }
 
     public async Task<StoredFile?> GetFileByIdAsync(FileStorageId id)
@@ -188,7 +190,8 @@ public sealed partial class FileStorageService(
             query = query.Where(f => f.Folder!.StartsWith(normalizedParent + "/"));
         }
 
-        var allFolders = await query.Select(f => f.Folder!).Distinct().ToListAsync();
+        // Distinct folder paths build a folder tree consumed wholesale; bound defensively.
+        var allFolders = await query.Select(f => f.Folder!).Distinct().Take(1000).ToListAsync();
 
         return allFolders
             .Select(f => normalizedParent is not null ? f[(normalizedParent.Length + 1)..] : f)

@@ -18,7 +18,7 @@ public class AdminEndpoint : IViewEndpoint
                 Route,
                 async (IRateLimitingContracts contracts, IRateLimitPolicyRegistry policyRegistry) =>
                 {
-                    var rules = await contracts.GetAllRulesAsync();
+                    var rules = await contracts.GetAllRulesAsync(take: 500);
                     var activePolicies = policyRegistry.GetPolicies();
                     return Inertia.Render(
                         "RateLimiting/Admin",

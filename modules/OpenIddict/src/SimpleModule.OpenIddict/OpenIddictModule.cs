@@ -74,6 +74,13 @@ public class OpenIddictModule : IModule
                     options.AllowPasswordFlow();
                 }
 
+                // Issue access tokens as signed JWTs rather than encrypted JWE.
+                // Resource-server validation then verifies a signature (cheap, cached
+                // public key) instead of an RSA-OAEP private-key decrypt on every
+                // request — a large per-request CPU saving under load. Authorization
+                // codes and refresh tokens remain encrypted.
+                options.DisableAccessTokenEncryption();
+
                 options
                     .SetAuthorizationEndpointUris(ConnectRouteConstants.ConnectAuthorize)
                     .SetTokenEndpointUris(ConnectRouteConstants.ConnectToken)

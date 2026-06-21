@@ -13,16 +13,50 @@ public sealed partial class AuditLogService(
     ILogger<AuditLogService> logger
 ) : IAuditLogContracts
 {
+    private static readonly string[] CustomSortColumns =
+    [
+        "UserId",
+        "Module",
+        "Path",
+        "StatusCode",
+        "DurationMs",
+    ];
+
     public async Task<PagedResult<AuditEntry>> QueryAsync(AuditQueryRequest request)
     {
         var query = BuildQuery(request);
-
-        var totalCount = await query.CountAsync();
 
         var sortBy = request.EffectiveSortBy;
         var sortDesc = request.EffectiveSortDescending;
         var page = request.EffectivePage;
         var pageSize = request.EffectivePageSize;
+
+        // Keyset (cursor) pagination: when the caller supplies a cursor and uses the
+        // default Timestamp-descending ordering, page via WHERE Timestamp < cursor
+        // instead of OFFSET. This avoids both the per-request COUNT(*) and the O(offset)
+        // row-skip that make deep pages slow, using the IX_AuditEntries_Timestamp index.
+        // TotalCount is reported as -1 (not computed) in cursor mode. (Entries sharing
+        // the exact boundary timestamp could be skipped, negligible at this resolution.)
+        if (request.Before.HasValue && sortDesc && !CustomSortColumns.Contains(sortBy))
+        {
+            var cursor = request.Before.Value;
+            var keysetItems = await query
+                .Where(e => e.Timestamp < cursor)
+                .OrderByDescending(e => e.Timestamp)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return new PagedResult<AuditEntry>
+            {
+                Items = keysetItems,
+                TotalCount = -1,
+                Page = page,
+                PageSize = pageSize,
+            };
+        }
+
+        var totalCount = await query.CountAsync();
 
         // Apply sorting
         query = sortBy switch
