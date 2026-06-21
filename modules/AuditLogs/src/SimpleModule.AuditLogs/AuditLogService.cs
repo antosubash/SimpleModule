@@ -30,19 +30,29 @@ public sealed partial class AuditLogService(
         var sortDesc = request.EffectiveSortDescending;
         var page = request.EffectivePage;
         var pageSize = request.EffectivePageSize;
+        var provider = DatabaseProviderDetector.Detect(
+            dbOptions.Value.DefaultConnection,
+            dbOptions.Value.Provider
+        );
+        var isDefaultSort = sortDesc && !CustomSortColumns.Contains(sortBy);
 
         // Keyset (cursor) pagination: when the caller supplies a cursor and uses the
         // default Timestamp-descending ordering, page via WHERE Timestamp < cursor
         // instead of OFFSET. This avoids both the per-request COUNT(*) and the O(offset)
         // row-skip that make deep pages slow, using the IX_AuditEntries_Timestamp index.
-        // TotalCount is reported as -1 (not computed) in cursor mode. (Entries sharing
-        // the exact boundary timestamp could be skipped, negligible at this resolution.)
-        if (request.Before.HasValue && sortDesc && !CustomSortColumns.Contains(sortBy))
+        // The ordering (Timestamp DESC, Id DESC) matches the offset default below, so a
+        // cursor page is a true continuation of the offset first page. SQLite cannot
+        // ORDER BY DateTimeOffset, so keyset only applies on managed providers (SQLite
+        // requests fall through to Id-ordered offset paging). TotalCount is -1 (not
+        // computed) in cursor mode. Note: rows sharing the exact boundary Timestamp can
+        // be skipped (strict <); with microsecond-resolution UtcNow this is rare.
+        if (request.Before.HasValue && isDefaultSort && provider != DatabaseProvider.Sqlite)
         {
             var cursor = request.Before.Value;
             var keysetItems = await query
                 .Where(e => e.Timestamp < cursor)
                 .OrderByDescending(e => e.Timestamp)
+                .ThenByDescending(e => e.Id)
                 .Take(pageSize)
                 .AsNoTracking()
                 .ToListAsync();
@@ -74,9 +84,16 @@ public sealed partial class AuditLogService(
             "DurationMs" => sortDesc
                 ? query.OrderByDescending(e => e.DurationMs)
                 : query.OrderBy(e => e.DurationMs),
-            // SQLite does not support DateTimeOffset in ORDER BY, so sort by Id
-            // (auto-increment, correlates with insertion order) as a fallback.
-            _ => sortDesc ? query.OrderByDescending(e => e.Id) : query.OrderBy(e => e.Id),
+            // Default (Timestamp) sort. SQLite cannot ORDER BY DateTimeOffset, so it
+            // falls back to Id (auto-increment, insertion order). Managed providers order
+            // by Timestamp with Id as a tiebreaker — this is the ordering keyset cursor
+            // pagination continues, so the offset first page and cursor pages agree.
+            _ when provider == DatabaseProvider.Sqlite => sortDesc
+                ? query.OrderByDescending(e => e.Id)
+                : query.OrderBy(e => e.Id),
+            _ => sortDesc
+                ? query.OrderByDescending(e => e.Timestamp).ThenByDescending(e => e.Id)
+                : query.OrderBy(e => e.Timestamp).ThenBy(e => e.Id),
         };
 
         var items = await query

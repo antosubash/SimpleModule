@@ -32,7 +32,6 @@ export const AuditLogsKeys = {
     NextPage: 'Browse.NextPage',
     PrevPage: 'Browse.PrevPage',
     QuickRange: 'Browse.QuickRange',
-    Showing: 'Browse.Showing',
     Title: 'Browse.Title',
     TotalEntries: 'Browse.TotalEntries',
   },

@@ -33,7 +33,6 @@
   "Browse.ColPath": "Path",
   "Browse.ColStatus": "Status",
   "Browse.ColDuration": "Duration",
-  "Browse.Showing": "Showing {start}\u2013{end} of {total} entries",
   "Dashboard.Title": "Audit Dashboard",
   "Dashboard.Description": "System activity overview and metrics",
   "Dashboard.FilterFrom": "From",

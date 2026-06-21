@@ -254,7 +254,11 @@ public sealed partial class SettingsService(
 
         var entities = await query
             .AsNoTracking()
+            // Key is not unique (a key can exist at multiple scopes/users); order by the
+            // full identity so skip/take paging is deterministic across requests.
             .OrderBy(e => e.Key)
+            .ThenBy(e => e.Scope)
+            .ThenBy(e => e.UserId)
             .Skip(skip)
             .Take(take)
             .Select(e => new

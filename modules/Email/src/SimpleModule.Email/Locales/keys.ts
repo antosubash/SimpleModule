@@ -75,7 +75,6 @@ export const EmailKeys = {
     FilterTo: 'History.FilterTo',
     Newest: 'History.Newest',
     Next: 'History.Next',
-    Of: 'History.Of',
     Previous: 'History.Previous',
     Showing: 'History.Showing',
     Title: 'History.Title',

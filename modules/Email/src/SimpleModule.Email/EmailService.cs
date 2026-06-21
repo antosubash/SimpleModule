@@ -129,6 +129,7 @@ public partial class EmailService(
             var keysetItems = await query
                 .Where(m => m.CreatedAt < cursor)
                 .OrderByDescending(m => m.CreatedAt)
+                .ThenByDescending(m => m.Id)
                 .Take(pageSize)
                 .ToListAsync();
 
@@ -152,9 +153,11 @@ public partial class EmailService(
             "Status" => sortDescending
                 ? query.OrderByDescending(m => m.Status)
                 : query.OrderBy(m => m.Status),
+            // Default (CreatedAt) sort with Id tiebreaker — matches the keyset cursor
+            // ordering above so the offset first page and cursor pages agree.
             "CreatedAt" or _ => sortDescending
-                ? query.OrderByDescending(m => m.CreatedAt)
-                : query.OrderBy(m => m.CreatedAt),
+                ? query.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+                : query.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id),
         };
 
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
