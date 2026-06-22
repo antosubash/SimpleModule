@@ -1,6 +1,12 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Pin transitive dependencies to the central versions below. Needed so the
+         "Security overrides" at the bottom of this file actually replace the vulnerable
+         versions pulled in transitively by EF Core / Aspire (they are not direct refs).
+         Requires every centrally-managed version to be >= what the graph needs
+         transitively (e.g. Npgsql was bumped 9.0.4 -> 10.0.3 to match EF Core PG 10). -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
     <!-- Aspire -->
@@ -22,7 +28,7 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.3" />
-    <PackageVersion Include="Npgsql" Version="9.0.4" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.3" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
@@ -97,5 +103,17 @@
       Include="Microsoft.SemanticKernel.Connectors.Postgres"
       Version="1.51.0-preview"
     />
+    <!-- Security overrides: patched versions of transitive packages flagged by the CI
+         vulnerable-packages audit gate. Not referenced directly anywhere; transitive
+         pinning (top of file) is what makes these apply. -->
+    <!-- GHSA-hv8m-jj95-wg3x (High): MessagePack before 2.5.301, pulled via Aspire/Wolverine. -->
+    <PackageVersion Include="MessagePack" Version="2.5.302" />
+    <!-- GHSA-2m69-gcr7-jv3q (High): the SQLite native lib bundled by SQLitePCLRaw 2.1.11
+         (via Microsoft.EntityFrameworkCore.Sqlite). The patched line is 3.x; the family is
+         version-split there (core/bundle/provider = 3.0.3, native lib = SQLite-versioned 3.50.3). -->
+    <PackageVersion Include="SQLitePCLRaw.core" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="3.0.3" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.50.3" />
   </ItemGroup>
 </Project>
