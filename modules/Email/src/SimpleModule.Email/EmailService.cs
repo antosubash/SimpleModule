@@ -110,10 +110,41 @@ public partial class EmailService(
         if (request.DateTo.HasValue)
             query = query.Where(m => m.CreatedAt <= request.DateTo.Value);
 
+        var sortDescending = request.EffectiveSortDescending;
+        var sortBy = request.EffectiveSortBy;
+        var page = request.EffectivePage;
+        var pageSize = request.EffectivePageSize;
+
+        // Keyset (cursor) pagination on CreatedAt (indexed): opt-in via request.Before
+        // for the default CreatedAt-descending ordering. Skips the per-request COUNT(*)
+        // and the OFFSET row-skip (see AuditLogService for rationale). Non-cursor
+        // requests keep the exact prior behavior; TotalCount is -1 in cursor mode.
+        if (
+            request.Before.HasValue
+            && sortDescending
+            && sortBy is not ("To" or "Subject" or "Status")
+        )
+        {
+            var cursor = request.Before.Value;
+            var keysetItems = await query
+                .Where(m => m.CreatedAt < cursor)
+                .OrderByDescending(m => m.CreatedAt)
+                .ThenByDescending(m => m.Id)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<EmailMessage>
+            {
+                Items = keysetItems,
+                TotalCount = -1,
+                Page = page,
+                PageSize = pageSize,
+            };
+        }
+
         var totalCount = await query.CountAsync();
 
-        var sortDescending = request.EffectiveSortDescending;
-        query = request.EffectiveSortBy switch
+        query = sortBy switch
         {
             "To" => sortDescending ? query.OrderByDescending(m => m.To) : query.OrderBy(m => m.To),
             "Subject" => sortDescending
@@ -122,13 +153,12 @@ public partial class EmailService(
             "Status" => sortDescending
                 ? query.OrderByDescending(m => m.Status)
                 : query.OrderBy(m => m.Status),
+            // Default (CreatedAt) sort with Id tiebreaker — matches the keyset cursor
+            // ordering above so the offset first page and cursor pages agree.
             "CreatedAt" or _ => sortDescending
-                ? query.OrderByDescending(m => m.CreatedAt)
-                : query.OrderBy(m => m.CreatedAt),
+                ? query.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+                : query.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id),
         };
-
-        var page = request.EffectivePage;
-        var pageSize = request.EffectivePageSize;
 
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 

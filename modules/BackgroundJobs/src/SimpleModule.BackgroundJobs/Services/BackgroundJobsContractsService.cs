@@ -100,6 +100,7 @@ public sealed class BackgroundJobsContractsService(IJobQueue queue, BackgroundJo
             .JobQueueEntries.AsNoTracking()
             .Where(e => e.RecurringName != null)
             .OrderByDescending(e => e.CreatedAt)
+            .Take(500) // recurring-jobs dashboard is consumed wholesale; bound defensively
             .ToListAsync(ct);
 
         var now = DateTime.UtcNow;

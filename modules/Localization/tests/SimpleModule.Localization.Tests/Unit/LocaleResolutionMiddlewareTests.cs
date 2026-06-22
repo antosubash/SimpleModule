@@ -271,7 +271,9 @@ public sealed class LocaleResolutionMiddlewareTests : IDisposable
         }
 
         public Task<IEnumerable<SettingValueDto>> GetSettingValuesAsync(
-            SettingsFilter? filter = null
+            SettingsFilter? filter = null,
+            int skip = 0,
+            int take = 30
         )
         {
             return Task.FromResult<IEnumerable<SettingValueDto>>([]);

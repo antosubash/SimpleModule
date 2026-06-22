@@ -22,7 +22,7 @@ public class BrowseEndpoint : IViewEndpoint
                 {
                     var userId = context.User.GetScopedUserId();
 
-                    var files = await fileStorage.GetFilesAsync(folder, userId);
+                    var files = await fileStorage.GetFilesAsync(folder, userId, skip: 0, take: 200);
                     var folders = await fileStorage.GetFoldersAsync(folder, userId);
 
                     var parentFolder = folder is not null

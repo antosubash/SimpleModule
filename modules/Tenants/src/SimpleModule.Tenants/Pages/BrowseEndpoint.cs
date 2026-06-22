@@ -16,7 +16,7 @@ public class BrowseEndpoint : IViewEndpoint
                 Route,
                 async (ITenantContracts contracts) =>
                 {
-                    var tenants = (await contracts.GetAllTenantsAsync()).Select(t => new
+                    var tenants = (await contracts.GetAllTenantsAsync(take: 500)).Select(t => new
                     {
                         t.Id,
                         t.Name,

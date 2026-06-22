@@ -1,6 +1,9 @@
 {
   "Browse.Title": "Audit Logs",
   "Browse.TotalEntries": "{count} total entries",
+  "Browse.Newest": "Newest",
+  "Browse.NextPage": "Next page",
+  "Browse.PrevPage": "Previous page",
   "Browse.ExportCsv": "Export CSV",
   "Browse.ExportJson": "Export JSON",
   "Browse.QuickRange": "Quick range:",
@@ -30,7 +33,6 @@
   "Browse.ColPath": "Path",
   "Browse.ColStatus": "Status",
   "Browse.ColDuration": "Duration",
-  "Browse.Showing": "Showing {start}\u2013{end} of {total} entries",
   "Dashboard.Title": "Audit Dashboard",
   "Dashboard.Description": "System activity overview and metrics",
   "Dashboard.FilterFrom": "From",

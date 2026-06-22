@@ -15,7 +15,13 @@ public class GetSettingsEndpoint : IEndpoint
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
                 Route,
-                async (ISettingsContracts settings, SettingScope? scope, string? group) =>
+                async (
+                    ISettingsContracts settings,
+                    SettingScope? scope,
+                    string? group,
+                    int? skip,
+                    int? take
+                ) =>
                 {
                     SettingsFilter? filter = null;
                     if (scope is not null || group is not null)
@@ -23,7 +29,11 @@ public class GetSettingsEndpoint : IEndpoint
                         filter = new SettingsFilter { Scope = scope, Group = group };
                     }
 
-                    var results = await settings.GetSettingValuesAsync(filter);
+                    var results = await settings.GetSettingValuesAsync(
+                        filter,
+                        Math.Max(0, skip ?? 0),
+                        Math.Clamp(take ?? 30, 1, 500)
+                    );
 
                     // This admin list serves global (System/Application) configuration.
                     // User-scoped values are per-user and must not be enumerable here —

@@ -15,9 +15,15 @@ internal sealed partial class ExternalUserService(
     ILogger<ExternalUserService> logger
 ) : IUserContracts
 {
-    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserDto>> GetAllUsersAsync(int skip = 0, int take = 30)
     {
-        return await db.Set<ApplicationUser>().Select(u => MapToDto(u)).ToListAsync();
+        return await db.Set<ApplicationUser>()
+            .AsNoTracking()
+            .OrderBy(u => u.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(u => MapToDto(u))
+            .ToListAsync();
     }
 
     public async Task<UserDto?> GetUserByIdAsync(UserId id)

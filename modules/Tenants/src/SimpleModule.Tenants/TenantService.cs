@@ -13,10 +13,13 @@ public sealed partial class TenantService(
     ILogger<TenantService> logger
 ) : ITenantContracts
 {
-    public async Task<IEnumerable<Tenant>> GetAllTenantsAsync() =>
+    public async Task<IEnumerable<Tenant>> GetAllTenantsAsync(int skip = 0, int take = 30) =>
         await db
             .Tenants.AsNoTracking()
             .Include(t => t.Hosts)
+            .OrderBy(t => t.Id)
+            .Skip(skip)
+            .Take(take)
             .Select(t => MapToDto(t))
             .ToListAsync();
 

@@ -15,8 +15,13 @@ public class GetAllEndpoint : IEndpoint
     {
         app.MapGet(
                 Route,
-                (IUserContracts userContracts) =>
-                    CrudEndpoints.GetAll(userContracts.GetAllUsersAsync)
+                (IUserContracts userContracts, int? skip, int? take) =>
+                    CrudEndpoints.GetAll(() =>
+                        userContracts.GetAllUsersAsync(
+                            Math.Max(0, skip ?? 0),
+                            Math.Clamp(take ?? 30, 1, 200)
+                        )
+                    )
             )
             .WithTags(UsersConstants.ModuleName)
             .RequireAuthorization();

@@ -18,7 +18,7 @@ public class ManageEndpoint : IViewEndpoint
                 async (ITenantContracts contracts) =>
                     Inertia.Render(
                         "Tenants/Manage",
-                        new { tenants = await contracts.GetAllTenantsAsync() }
+                        new { tenants = await contracts.GetAllTenantsAsync(take: 500) }
                     )
             )
             .RequirePermission(TenantsPermissions.View);

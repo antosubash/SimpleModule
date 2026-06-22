@@ -13,7 +13,11 @@ public interface ISettingsContracts
     Task SetManyAsync(IReadOnlyList<BulkSettingUpdate> updates);
     Task DeleteSettingAsync(string key, SettingScope scope, string? userId = null);
     Task ResetToDefaultAsync(string key, SettingScope scope, string? userId = null);
-    Task<IEnumerable<SettingValueDto>> GetSettingValuesAsync(SettingsFilter? filter = null);
+    Task<IEnumerable<SettingValueDto>> GetSettingValuesAsync(
+        SettingsFilter? filter = null,
+        int skip = 0,
+        int take = 30
+    );
     Task<SettingValueDto?> GetSettingValueAsync(
         string key,
         SettingScope scope,
