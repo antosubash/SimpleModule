@@ -230,7 +230,10 @@ createInertiaApp({
 
     try {
       const page = await resolvePage(name);
-      return resolveLayout(page).default;
+      // resolveLayout attaches a persistent `layout` to the component (read by Inertia
+      // at runtime); narrow to ComponentType so the resolver's union matches the
+      // error-page branch and satisfies Inertia's ComponentResolver type.
+      return resolveLayout(page).default as React.ComponentType;
     } catch (err) {
       showToast({
         variant: 'error',

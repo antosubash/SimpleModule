@@ -7,7 +7,10 @@
     <!-- SM0012: contract interface size warning — keep as warning, don't promote to error -->
     <!-- SM0039: interceptor DbContext dependency — keep as warning, runtime fix handles it -->
     <!-- NU5104: NetEscapades.EnumGenerators is a prerelease source generator (PrivateAssets=all, not shipped) -->
-    <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039;NU5104</WarningsNotAsErrors>
+    <!-- NU1903: high-severity advisory in the TRANSITIVE native lib SQLitePCLRaw.lib.e_sqlite3
+         (pulled by Microsoft.Data.Sqlite/EFCore.Sqlite 10.0.3 — not a direct reference, so it
+         can't be bumped here). Kept visible as a warning; remove once a patched transitive ships. -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);SM0012;SM0039;NU5104;NU1903</WarningsNotAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <RunAnalyzers>true</RunAnalyzers>
     <!-- Reference assemblies: downstream projects skip recompile when only method bodies change -->

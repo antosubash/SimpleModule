@@ -72,6 +72,7 @@ export interface QueryEmailMessagesRequest {
   subject: string;
   dateFrom: string | null;
   dateTo: string | null;
+  before: string | null;
   sortBy: string;
   sortDescending: boolean | null;
   effectivePage: number;

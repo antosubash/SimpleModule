@@ -29,6 +29,7 @@ public sealed class PublicMenuService(
                 var entities = await db
                     .PublicMenuItems.Where(e => e.IsVisible)
                     .OrderBy(e => e.SortOrder)
+                    .Take(1000) // navigation tree is consumed wholesale; bound defensively
                     .ToListAsync(ct);
                 return BuildPublicTree(entities, parentId: null);
             },
@@ -59,7 +60,8 @@ public sealed class PublicMenuService(
 
     public async Task<List<PublicMenuItemDto>> GetAllAsync()
     {
-        var entities = await db.PublicMenuItems.OrderBy(e => e.SortOrder).ToListAsync();
+        // Menu items form a navigation tree consumed wholesale; bound defensively.
+        var entities = await db.PublicMenuItems.OrderBy(e => e.SortOrder).Take(1000).ToListAsync();
 
         return BuildDtoTree(entities, parentId: null);
     }

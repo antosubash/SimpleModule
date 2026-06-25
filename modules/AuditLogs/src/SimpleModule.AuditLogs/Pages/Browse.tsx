@@ -27,7 +27,25 @@ interface Props {
   filters: AuditQueryRequest;
 }
 
-function buildFilterParams(f: Partial<AuditQueryRequest>, page?: number): Record<string, string> {
+// Cursor trail persisted across Inertia (server-rendered) navigations within the
+// same browser session, so "Previous" can return to an already-visited cursor.
+const CURSOR_STACK_KEY = 'auditlogs-browse-cursors';
+function readCursorStack(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.sessionStorage.getItem(CURSOR_STACK_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+function writeCursorStack(stack: string[]): void {
+  if (typeof window !== 'undefined') {
+    window.sessionStorage.setItem(CURSOR_STACK_KEY, JSON.stringify(stack));
+  }
+}
+
+function buildFilterParams(f: Partial<AuditQueryRequest>, before?: string): Record<string, string> {
   const params: Record<string, string> = {};
   if (f.from) params.from = String(f.from);
   if (f.to) params.to = String(f.to);
@@ -36,7 +54,8 @@ function buildFilterParams(f: Partial<AuditQueryRequest>, page?: number): Record
   if (f.module) params.module = f.module;
   if (f.searchText) params.searchText = f.searchText;
 
-  if (page && page > 1) params.page = String(page);
+  // Keyset cursor: fetch the page of entries older than `before`.
+  if (before) params.before = before;
   return params;
 }
 
@@ -49,8 +68,14 @@ export default function Browse({ result, filters }: Props) {
   const [module, setModule] = useState(filters.module ?? '');
   const [searchText, setSearchText] = useState(filters.searchText ?? '');
 
-  const totalPages = Math.max(1, Math.ceil(result.totalCount / result.pageSize));
-  const currentPage = result.page;
+  const before = filters.before ? String(filters.before) : undefined;
+  const isFirstPage = !before;
+  // Total is only computed for the first page (offset); keyset pages report -1.
+  const knownTotal = result.totalCount >= 0;
+  const items = result.items;
+  // A full page implies more (older) rows likely exist.
+  const canNext = items.length >= result.pageSize;
+  const nextCursor = items.length > 0 ? String(items[items.length - 1].timestamp) : undefined;
 
   function currentFilters() {
     return {
@@ -63,34 +88,54 @@ export default function Browse({ result, filters }: Props) {
     };
   }
 
+  // Any change of filter set resets the cursor trail and returns to the newest page.
+  function navigateNewest(f: Partial<AuditQueryRequest>) {
+    writeCursorStack([]);
+    router.get('/audit-logs/browse', buildFilterParams(f));
+  }
+
   function applyFilters(e?: FormEvent) {
     e?.preventDefault();
-    router.get('/audit-logs/browse', buildFilterParams(currentFilters()));
+    navigateNewest(currentFilters());
   }
 
   function clearFilters() {
+    writeCursorStack([]);
     router.get('/audit-logs/browse');
   }
 
   function applyDatePreset(hours: number) {
     const now = new Date();
     const past = new Date(now.getTime() - hours * 60 * 60 * 1000);
-    const toLocal = now.toISOString().slice(0, 16);
-    const fromLocal = past.toISOString().slice(0, 16);
-    router.get(
-      '/audit-logs/browse',
-      buildFilterParams({
-        ...currentFilters(),
-        from: fromLocal,
-        to: toLocal,
-      }),
-    );
+    navigateNewest({
+      ...currentFilters(),
+      from: past.toISOString().slice(0, 16),
+      to: now.toISOString().slice(0, 16),
+    });
   }
 
-  function goToPage(page: number) {
-    router.get('/audit-logs/browse', buildFilterParams(currentFilters(), page), {
-      preserveState: true,
+  function goNext() {
+    if (!nextCursor) return;
+    const stack = readCursorStack();
+    stack.push(before ?? ''); // remember current cursor ('' marks the first page)
+    writeCursorStack(stack);
+    router.get('/audit-logs/browse', buildFilterParams(currentFilters(), nextCursor), {
+      preserveScroll: true,
     });
+  }
+
+  function goPrev() {
+    const stack = readCursorStack();
+    const prev = stack.pop();
+    writeCursorStack(stack);
+    const target = prev && prev.length > 0 ? prev : undefined;
+    router.get('/audit-logs/browse', buildFilterParams(currentFilters(), target), {
+      preserveScroll: true,
+    });
+  }
+
+  function goNewest() {
+    navigateNewest(currentFilters());
   }
 
   function exportLogs(format: string) {
@@ -105,17 +150,18 @@ export default function Browse({ result, filters }: Props) {
     from || to || source !== '__all__' || action !== '__all__' || module || searchText,
   );
 
-  const startItem = (currentPage - 1) * result.pageSize + 1;
-  const endItem = Math.min(currentPage * result.pageSize, result.totalCount);
-
   return (
     <TooltipProvider>
       <PageShell
         className="space-y-4 sm:space-y-6"
         title={t(AuditLogsKeys.Browse.Title)}
-        description={t(AuditLogsKeys.Browse.TotalEntries, {
-          count: result.totalCount.toLocaleString(),
-        })}
+        description={
+          knownTotal
+            ? t(AuditLogsKeys.Browse.TotalEntries, {
+                count: result.totalCount.toLocaleString(),
+              })
+            : undefined
+        }
         actions={
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="secondary" onClick={() => exportLogs('csv')}>
@@ -146,7 +192,7 @@ export default function Browse({ result, filters }: Props) {
           onApplyDatePreset={applyDatePreset}
         />
 
-        {result.items.length === 0 ? (
+        {items.length === 0 ? (
           <Card>
             <CardContent>
               <EmptyState
@@ -186,25 +232,31 @@ export default function Browse({ result, filters }: Props) {
           <Card>
             <CardContent className="p-0">
               <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                <BrowseResultsTable items={result.items} />
+                <BrowseResultsTable items={items} />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {result.totalCount > 0 && (
+        {items.length > 0 && (
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
             <span className="text-sm text-text-muted">
-              {t(AuditLogsKeys.Browse.Showing, {
-                start: String(startItem),
-                end: String(endItem),
-                total: result.totalCount.toLocaleString(),
-              })}
+              {knownTotal
+                ? t(AuditLogsKeys.Browse.TotalEntries, {
+                    count: result.totalCount.toLocaleString(),
+                  })
+                : null}
             </span>
             <BrowsePagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onGoToPage={goToPage}
+              canPrev={!isFirstPage}
+              canNext={canNext}
+              showNewest={!isFirstPage}
+              newestLabel={t(AuditLogsKeys.Browse.Newest)}
+              prevLabel={t(AuditLogsKeys.Browse.PrevPage)}
+              nextLabel={t(AuditLogsKeys.Browse.NextPage)}
+              onPrev={goPrev}
+              onNext={goNext}
+              onNewest={goNewest}
             />
           </div>
         )}

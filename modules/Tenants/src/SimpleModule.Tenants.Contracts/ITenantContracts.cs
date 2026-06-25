@@ -2,7 +2,7 @@ namespace SimpleModule.Tenants.Contracts;
 
 public interface ITenantContracts
 {
-    Task<IEnumerable<Tenant>> GetAllTenantsAsync();
+    Task<IEnumerable<Tenant>> GetAllTenantsAsync(int skip = 0, int take = 30);
     Task<Tenant?> GetTenantByIdAsync(TenantId id);
     Task<Tenant?> GetTenantBySlugAsync(string slug);
     Task<Tenant?> GetTenantByHostNameAsync(string hostName);

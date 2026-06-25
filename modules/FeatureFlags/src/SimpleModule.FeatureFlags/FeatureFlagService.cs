@@ -65,7 +65,12 @@ public sealed partial class FeatureFlagService(
     public async Task<IEnumerable<FeatureFlag>> GetAllFlagsAsync()
     {
         var definitions = registry.GetAllDefinitions();
-        var dbFlags = await db.FeatureFlags.AsNoTracking().ToListAsync();
+        // Feature flags are a small, code-defined config set consumed wholesale; bound defensively.
+        var dbFlags = await db
+            .FeatureFlags.AsNoTracking()
+            .OrderBy(f => f.Name)
+            .Take(500)
+            .ToListAsync();
         var dbMap = dbFlags.ToDictionary(f => f.Name);
 
         var result = new List<FeatureFlag>();

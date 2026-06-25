@@ -7,8 +7,8 @@ public class FakeUserContracts : IUserContracts
 {
     public List<UserDto> Users { get; set; } = FakeDataGenerators.UserFaker.Generate(3);
 
-    public Task<IEnumerable<UserDto>> GetAllUsersAsync() =>
-        Task.FromResult<IEnumerable<UserDto>>(Users);
+    public Task<IEnumerable<UserDto>> GetAllUsersAsync(int skip = 0, int take = 30) =>
+        Task.FromResult<IEnumerable<UserDto>>(Users.Skip(skip).Take(take).ToList());
 
     public Task<UserDto?> GetUserByIdAsync(UserId id) =>
         Task.FromResult(Users.FirstOrDefault(u => u.Id == id));

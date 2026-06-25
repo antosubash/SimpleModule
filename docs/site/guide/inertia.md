@@ -270,7 +270,7 @@ export const pages: Record<string, unknown> = {
 ```
 
 ::: danger Critical
-Every `IViewEndpoint` that calls `Inertia.Render("Module/Page", ...)` **must** have a matching entry in the module's `Pages/index.ts`. Missing entries silently fail with no error in the console. Run `npm run validate-pages` to catch mismatches.
+Every `IViewEndpoint` that calls `Inertia.Render("Module/Page", ...)` **must** have a matching entry in the module's `Pages/index.ts`. Missing entries throw a descriptive client-side error (the resolver lists the available pages) and surface an error toast — they do not fail silently. Run `npm run validate-pages` to catch mismatches at build time.
 :::
 
 ### Writing a Page Component

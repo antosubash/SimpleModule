@@ -232,7 +232,9 @@ public sealed partial class SettingsService(
         DeleteSettingAsync(key, scope, userId);
 
     public async Task<IEnumerable<SettingValueDto>> GetSettingValuesAsync(
-        SettingsFilter? filter = null
+        SettingsFilter? filter = null,
+        int skip = 0,
+        int take = 30
     )
     {
         var query = db.Settings.AsQueryable();
@@ -252,6 +254,13 @@ public sealed partial class SettingsService(
 
         var entities = await query
             .AsNoTracking()
+            // Key is not unique (a key can exist at multiple scopes/users); order by the
+            // full identity so skip/take paging is deterministic across requests.
+            .OrderBy(e => e.Key)
+            .ThenBy(e => e.Scope)
+            .ThenBy(e => e.UserId)
+            .Skip(skip)
+            .Take(take)
             .Select(e => new
             {
                 e.Key,

@@ -14,6 +14,15 @@ public class AuditQueryRequest
     public string? SearchText { get; set; }
     public int? Page { get; set; }
     public int? PageSize { get; set; }
+
+    /// <summary>
+    /// Opt-in keyset cursor. When set (and the default Timestamp-descending ordering
+    /// is used), the page is fetched via <c>WHERE Timestamp &lt; Before</c> instead of
+    /// OFFSET, skipping the per-request <c>COUNT(*)</c> and the O(offset) row-skip that
+    /// make deep pages slow. Pass the <c>Timestamp</c> of the last item from the
+    /// previous page to fetch the next one.
+    /// </summary>
+    public DateTimeOffset? Before { get; set; }
     public string? SortBy { get; set; }
     public bool? SortDescending { get; set; }
 

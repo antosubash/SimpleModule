@@ -43,25 +43,47 @@ interface PagedResult<T> {
   pageSize: number;
 }
 
-interface Props {
-  result: PagedResult<EmailMessage>;
-  filters: {
-    status?: string;
-    to?: string;
-    subject?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  };
+interface Filters {
+  status?: string;
+  to?: string;
+  subject?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  before?: string;
 }
 
-function buildFilterParams(f: Props['filters'], page?: number): Record<string, string> {
+interface Props {
+  result: PagedResult<EmailMessage>;
+  filters: Filters;
+}
+
+// Cursor trail persisted across Inertia navigations within the browser session, so
+// "Previous" can return to an already-visited cursor.
+const CURSOR_STACK_KEY = 'email-history-cursors';
+function readCursorStack(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.sessionStorage.getItem(CURSOR_STACK_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+function writeCursorStack(stack: string[]): void {
+  if (typeof window !== 'undefined') {
+    window.sessionStorage.setItem(CURSOR_STACK_KEY, JSON.stringify(stack));
+  }
+}
+
+function buildFilterParams(f: Filters, before?: string): Record<string, string> {
   const params: Record<string, string> = {};
   if (f.status) params.status = f.status;
   if (f.to) params.to = f.to;
   if (f.subject) params.subject = f.subject;
   if (f.dateFrom) params.dateFrom = f.dateFrom;
   if (f.dateTo) params.dateTo = f.dateTo;
-  if (page && page > 1) params.page = String(page);
+  // Keyset cursor: fetch the page of messages older than `before`.
+  if (before) params.before = before;
   return params;
 }
 
@@ -73,10 +95,15 @@ export default function History({ result, filters }: Props) {
   const [dateFrom, setDateFrom] = useState(filters.dateFrom ?? '');
   const [dateTo, setDateTo] = useState(filters.dateTo ?? '');
 
-  const totalPages = Math.max(1, Math.ceil(result.totalCount / result.pageSize));
-  const currentPage = result.page;
+  const before = filters.before ? String(filters.before) : undefined;
+  const isFirstPage = !before;
+  // Total is only computed for the first page (offset); keyset pages report -1.
+  const knownTotal = result.totalCount >= 0;
+  const items = result.items;
+  const canNext = items.length >= result.pageSize;
+  const nextCursor = items.length > 0 ? String(items[items.length - 1].createdAt) : undefined;
 
-  function currentFilters(): Props['filters'] {
+  function currentFilters(): Filters {
     return {
       status: status !== '__all__' ? status : undefined,
       to: to || undefined,
@@ -86,25 +113,46 @@ export default function History({ result, filters }: Props) {
     };
   }
 
+  function navigateNewest(f: Filters) {
+    writeCursorStack([]);
+    router.get('/email/history', buildFilterParams(f));
+  }
+
   function applyFilters(e?: FormEvent) {
     e?.preventDefault();
-    router.get('/email/history', buildFilterParams(currentFilters()));
+    navigateNewest(currentFilters());
   }
 
   function clearFilters() {
+    writeCursorStack([]);
     router.get('/email/history');
   }
 
-  function goToPage(page: number) {
-    router.get('/email/history', buildFilterParams(currentFilters(), page), {
-      preserveState: true,
+  function goNext() {
+    if (!nextCursor) return;
+    const stack = readCursorStack();
+    stack.push(before ?? ''); // remember current cursor ('' marks the first page)
+    writeCursorStack(stack);
+    router.get('/email/history', buildFilterParams(currentFilters(), nextCursor), {
+      preserveScroll: true,
     });
   }
 
-  const hasActiveFilters = Boolean(status !== '__all__' || to || subject || dateFrom || dateTo);
+  function goPrev() {
+    const stack = readCursorStack();
+    const prev = stack.pop();
+    writeCursorStack(stack);
+    const target = prev && prev.length > 0 ? prev : undefined;
+    router.get('/email/history', buildFilterParams(currentFilters(), target), {
+      preserveScroll: true,
+    });
+  }
 
-  const startItem = (currentPage - 1) * result.pageSize + 1;
-  const endItem = Math.min(currentPage * result.pageSize, result.totalCount);
+  function goNewest() {
+    navigateNewest(currentFilters());
+  }
+
+  const hasActiveFilters = Boolean(status !== '__all__' || to || subject || dateFrom || dateTo);
 
   return (
     <PageShell
@@ -128,7 +176,7 @@ export default function History({ result, filters }: Props) {
         onClearFilters={clearFilters}
       />
 
-      {result.items.length === 0 ? (
+      {items.length === 0 ? (
         <Card>
           <CardContent>
             <EmptyState
@@ -180,7 +228,7 @@ export default function History({ result, filters }: Props) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {result.items.map((m) => (
+                  {items.map((m) => (
                     <TableRow key={m.id}>
                       <TableCell className="font-medium">{m.to}</TableCell>
                       <TableCell>{m.subject}</TableCell>
@@ -203,16 +251,23 @@ export default function History({ result, filters }: Props) {
         </Card>
       )}
 
-      {result.totalCount > 0 && (
+      {items.length > 0 && (
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
           <span className="text-sm text-text-muted">
-            {t(EmailKeys.History.Showing)} {startItem}-{endItem} {t(EmailKeys.History.Of)}{' '}
-            {result.totalCount.toLocaleString()}
+            {knownTotal
+              ? `${t(EmailKeys.History.Showing)} ${result.totalCount.toLocaleString()}`
+              : null}
           </span>
           <HistoryPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onGoToPage={goToPage}
+            canPrev={!isFirstPage}
+            canNext={canNext}
+            showNewest={!isFirstPage}
+            newestLabel={t(EmailKeys.History.Newest)}
+            prevLabel={t(EmailKeys.History.Previous)}
+            nextLabel={t(EmailKeys.History.Next)}
+            onPrev={goPrev}
+            onNext={goNext}
+            onNewest={goNewest}
           />
         </div>
       )}

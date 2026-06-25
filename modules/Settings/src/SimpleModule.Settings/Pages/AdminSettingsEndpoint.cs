@@ -19,7 +19,7 @@ public class AdminSettingsEndpoint : IViewEndpoint
                 async (ISettingsContracts settings, ISettingsDefinitionRegistry registry) =>
                 {
                     var definitions = registry.GetDefinitions();
-                    var settingValues = await settings.GetSettingValuesAsync();
+                    var settingValues = await settings.GetSettingValuesAsync(take: 500);
                     return Inertia.Render(
                         "Settings/AdminSettings",
                         new { definitions, settings = settingValues }

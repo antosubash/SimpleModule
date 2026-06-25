@@ -2,7 +2,12 @@ namespace SimpleModule.FileStorage.Contracts;
 
 public interface IFileStorageContracts
 {
-    Task<IEnumerable<StoredFile>> GetFilesAsync(string? folder = null, string? userId = null);
+    Task<IEnumerable<StoredFile>> GetFilesAsync(
+        string? folder = null,
+        string? userId = null,
+        int skip = 0,
+        int take = 30
+    );
     Task<StoredFile?> GetFileByIdAsync(FileStorageId id);
     Task<StoredFile> UploadFileAsync(
         Stream content,
