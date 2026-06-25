@@ -9,7 +9,8 @@ description: >
   "event bus", "permissions", "menu", "settings", "database context", "contracts",
   "IModule", "IEndpoint", "IViewEndpoint", "Inertia", "CrudEndpoints",
   "debug module", "review module", "module status", "SM00", "source generator diagnostic",
-  "module not found", "page 404", "event bus", "settings", "IMessageBus", "Wolverine", "SettingDefinition".
+  "module not found", "page 404", "event bus", "settings", "IMessageBus", "Wolverine", "SettingDefinition",
+  "policy", "IPolicy", "IAuthorizer", "entity-level authorization", "FormRequest", "Route const".
 ---
 
 # SimpleModule Framework Guide
@@ -147,6 +148,8 @@ public class {Name}Module : IModule
 
 ## Endpoint Patterns
 
+Every endpoint (`IEndpoint` / `IViewEndpoint`) declares a `public const string Route` and passes it to its `MapXxx` call (enforced by **SM0054**); one endpoint class per file (**SM0049**). Form posts bind a `[FormRequest]` class — `sealed partial`, extending `FormRequest<TSelf>` (**SM0056** / **SM0057**) — directly as a handler parameter, with validation auto-run before the handler.
+
 See [references/endpoints.md](references/endpoints.md) for complete endpoint patterns.
 
 ## Database & Data Access
@@ -188,6 +191,7 @@ When adding a new module, ensure:
 | SM0014 diagnostic | No public interfaces in Contracts assembly | Add `I{Name}Contracts` to the Contracts project |
 | SM0025 diagnostic | No implementation for contract interface | Create `{Name}ContractsService` implementing `I{Name}Contracts` and register in `ConfigureServices` |
 | SM0041/SM0042 diagnostic | View endpoint misconfigured | Ensure `Inertia.Render` name is prefixed with module name; add `ViewPrefix` to `[Module]` attribute |
+| SM0054 diagnostic | Endpoint has no `Route` const | Add `public const string Route = {Name}Constants.Routes.X;` and pass `Route` to the `MapXxx` call |
 | `TreatWarningsAsErrors` build failure | Nullable, unused variable, or analyzer warning | Fix the warning; suppress in `.editorconfig` only if genuinely intentional |
 | Event handler never called | Class/method doesn't match Wolverine's convention | Name the class `*Handler`/`*Consumer` with a `Handle`/`Consume` method (first param = the event); Wolverine auto-discovers it — no DI registration |
 | Cross-module data wrong | Injecting impl class directly | Always inject `I{Name}Contracts` interface, never the concrete service class |
@@ -265,9 +269,39 @@ var max = await _settings.GetSettingAsync<int>("Orders.MaxItemsPerOrder", Settin
 
 **Scopes:** `System` = application-wide (e.g., feature flags), `Application` = per tenant/deployment, `User` = per authenticated user.
 
+## Policies (instance-level authorization)
+
+String permissions (`.RequirePermission(...)`) are the coarse capability gate. **Policies** add per-resource rules — ownership, tenancy, state-machine checks. Declare a `public sealed class {Name}Policy : IPolicy<{Resource}Dto>` in the module that owns the resource; the source generator auto-discovers and registers it as a scoped service (no manual registration).
+
+```csharp
+using SimpleModule.Core.Authorization.Policies;
+
+public sealed class ProductPolicy : IPolicy<ProductDto>
+{
+    public Task<AuthorizationResult> AuthorizeAsync(
+        ClaimsPrincipal user, string action, ProductDto resource, CancellationToken ct = default)
+    {
+        var result = action switch
+        {
+            PolicyActions.Update or PolicyActions.Delete =>
+                resource.OwnerId == user.GetUserId()
+                    ? AuthorizationResult.Allow()
+                    : AuthorizationResult.Deny("You can only modify your own products."),
+            PolicyActions.View => AuthorizationResult.Allow(),
+            _ => AuthorizationResult.Deny($"Unknown action '{action}'."),
+        };
+        return Task.FromResult(result);
+    }
+}
+```
+
+Check it from an endpoint or service by injecting `IAuthorizer` and calling `AuthorizeAsync(user, PolicyActions.Update, resource)` (throws `ForbiddenException`, or `NotFoundException` for anti-enumeration via `AuthorizationResult.DenyAsNotFound(...)`), or `CheckAsync(...)` for a non-throwing `AuthorizationResult`. Semantics are **deny-wins**: every registered policy must allow; the first deny short-circuits.
+
+Diagnostics: resource type must be a contracts `[Dto]` (**SM0058**), policy class must be `public` (**SM0059**) and owned by the resource's module (**SM0060**), and must not be generic (**SM0061**).
+
 ## Constitution Diagnostics (SM00xx)
 
-The source generator enforces these rules at build time. Run `/debug-module {Name}` to check all at once.
+The source generator enforces these rules at build time. Run `/debug-module {Name}` to check all at once. Codes currently span **SM0001–SM0061** (non-contiguous); the most commonly hit are:
 
 | Code | Rule | Common cause |
 |------|------|-------------|
@@ -283,6 +317,11 @@ The source generator enforces these rules at build time. Run `/debug-module {Nam
 | SM0041 | View page name must be prefixed with module name | Inertia component name doesn't start with the module name |
 | SM0042 | `ViewPrefix` required when module has view endpoints | Module has `IViewEndpoint`s but no `ViewPrefix` on `[Module]` |
 | SM0043 | Module must override at least one `IModule` method | Empty or placeholder module class |
+| SM0049 | One endpoint class per file | Two endpoint classes declared in the same `.cs` file |
+| SM0054 | Endpoint missing `Route` const | Endpoint has no `public const string Route` field (Info) |
+| SM0056 | FormRequest class must be `sealed` | `[FormRequest]` class is not sealed |
+| SM0057 | FormRequest must extend `FormRequest<TSelf>` | `[FormRequest]` class has the wrong base type |
+| SM0058–SM0061 | Policy class rules | Resource not a `[Dto]`, policy not public, policy in foreign module, or generic policy |
 
 For the full list of diagnostics, see `docs/CONSTITUTION.md`.
 

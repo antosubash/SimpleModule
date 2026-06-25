@@ -18,15 +18,17 @@
 
 ## Full CRUD Endpoint Set
 
-Each operation is a separate file in `Endpoints/{Feature}/`.
+Each operation is a separate file in `Endpoints/{Feature}/` (one endpoint per file, **SM0049**). Every endpoint declares a `public const string Route` and passes it to its `MapXxx` call (**SM0054**); route literals live in a `Routes` nested class on the module constants.
 
 ### GetAllEndpoint.cs
 ```csharp
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/",
+                Route,
                 (IProductContracts productContracts) =>
                     CrudEndpoints.GetAll(productContracts.GetAllProductsAsync)
             )
@@ -38,9 +40,11 @@ public class GetAllEndpoint : IEndpoint
 ```csharp
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapGet(
-                "/{id}",
+                Route,
                 (ProductId id, IProductContracts productContracts) =>
                     CrudEndpoints.GetById(() => productContracts.GetProductByIdAsync(id))
             )
@@ -52,9 +56,11 @@ public class GetByIdEndpoint : IEndpoint
 ```csharp
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Create;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
-                "/",
+                Route,
                 async (
                     CreateProductRequest request,
                     IValidator<CreateProductRequest> validator,
@@ -79,9 +85,11 @@ public class CreateEndpoint : IEndpoint
 ```csharp
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Update;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPut(
-                "/{id}",
+                Route,
                 async (
                     ProductId id,
                     UpdateProductRequest request,
@@ -106,9 +114,11 @@ public class UpdateEndpoint : IEndpoint
 ```csharp
 public class DeleteEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Delete;
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapDelete(
-                "/{id}",
+                Route,
                 (ProductId id, IProductContracts productContracts) =>
                     CrudEndpoints.Delete(() => productContracts.DeleteProductAsync(id))
             )
@@ -116,35 +126,75 @@ public class DeleteEndpoint : IEndpoint
 }
 ```
 
+For soft-delete-aware modules, `CrudEndpoints` also exposes `Restore(() => contracts.RestoreAsync(id))` and `ForceDelete(() => contracts.ForceDeleteAsync(id))`.
+
 ---
 
 ## View Endpoint with Form Submission
 
-GET renders the form page, POST handles the form data. Form data ALWAYS needs `[FromForm]`.
+GET renders the form page; POST binds and validates the submission. The preferred binding is a `[FormRequest]` class — `sealed partial`, extending `FormRequest<TSelf>` (**SM0056** / **SM0057**), in the module's `FormRequests/` folder. It binds **directly** as a handler parameter: the framework hydrates it from the form body, runs `Prepare()`, then validates via `ConfigureRules` before the handler runs (no manual `IValidator`, no `.DisableAntiforgery()`).
 
 ```csharp
-public class CreateEndpoint : IViewEndpoint
-{
-    public void Map(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/create", () => Inertia.Render("Products/Create"));
+// FormRequests/CreateProductFormRequest.cs
+using FluentValidation;
+using SimpleModule.Core.FormRequests;
 
-        app.MapPost(
-                "/",
-                async (
-                    [FromForm] string name,
-                    [FromForm] decimal price,
-                    IProductContracts products
-                ) =>
-                {
-                    var request = new CreateProductRequest { Name = name, Price = price };
-                    await products.CreateProductAsync(request);
-                    return Results.Redirect("/products/manage");
-                }
-            )
-            .DisableAntiforgery();
+[FormRequest]
+public sealed partial class CreateProductFormRequest : FormRequest<CreateProductFormRequest>
+{
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+
+    public override void Prepare() => Name = Name.Trim();
+
+    protected override void ConfigureRules(RuleConfigurator<CreateProductFormRequest> rules)
+    {
+        rules.RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.");
+        rules.RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
     }
 }
+
+// Pages/CreateEndpoint.cs
+public class CreateEndpoint : IViewEndpoint
+{
+    public const string Route = ProductsConstants.Routes.CreatePage;
+
+    public void Map(IEndpointRouteBuilder app)
+    {
+        app.MapGet(Route, () => Inertia.Render("Products/Create"));
+
+        app.MapPost(
+                "/products",
+                async (CreateProductFormRequest form, IProductContracts products) =>
+                {
+                    await products.CreateProductAsync(
+                        new CreateProductRequest { Name = form.Name, Price = form.Price });
+                    return Results.Redirect("/products/manage");
+                }
+            );
+    }
+}
+```
+
+### Alternative: inline `[FromForm]` record
+
+For one-off forms, bind a private `sealed record` of `[FromForm]` fields with `[AsParameters]` and validate manually with `IValidator<T>` (as the Email module's `EditTemplateEndpoint` does):
+
+```csharp
+app.MapPost(
+        "/templates/{id}",
+        async (int id, [AsParameters] UpdateTemplateForm form,
+               IValidator<UpdateEmailTemplateRequest> validator, IEmailContracts email) =>
+        {
+            var request = new UpdateEmailTemplateRequest { Name = form.Name, Subject = form.Subject };
+            var validation = await validator.ValidateAsync(request);
+            if (!validation.IsValid)
+                throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
+            await email.UpdateTemplateAsync(EmailTemplateId.From(id), request);
+            return Results.Redirect("/email/templates");
+        });
+
+// private sealed record UpdateTemplateForm([FromForm] string Name, [FromForm] string Subject);
 ```
 
 ---

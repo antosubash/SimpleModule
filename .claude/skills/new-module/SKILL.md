@@ -147,3 +147,7 @@ Run `dotnet build` to confirm the source generator discovers the new module.
 - Constants go in the Contracts project (shared dependency)
 - Use `ConfigureServices(IServiceCollection services, IConfiguration configuration)` signature (two params)
 - Follow naming: `PascalCase` public, `_camelCase` private fields, file-scoped namespaces
+
+## Adding endpoints later
+
+When you add endpoints to the module, follow the current conventions (see the `minimal-api` skill): one endpoint class per file (**SM0049**), each declaring a `public const string Route = {Name}Constants.Routes.X;` passed to its `MapXxx` call (**SM0054**), with route literals centralized in a `Routes` nested class on `{Name}Constants`. Bind form posts with a `[FormRequest]` class (`sealed partial : FormRequest<TSelf>`, **SM0056** / **SM0057**) in a `FormRequests/` folder. Register every `IViewEndpoint` page in `Pages/index.ts`.

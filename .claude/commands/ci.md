@@ -4,7 +4,7 @@ Execute these steps in order, stopping on first failure. Report results as a sum
 
 ## Step 1: Lint & Format Check
 
-Run `npm run check` from the project root. This runs biome lint, format check, page validation, and i18n validation.
+Run `npm run check` from the project root. This runs biome lint + format check, page validation (`validate-pages`), i18n validation (`validate:i18n`), framework-scope validation (`validate:framework-scope`), and TypeScript type checking (`typecheck`).
 
 ## Step 2: Frontend Build
 

@@ -7,7 +7,8 @@ description: >
   CrudEndpoints helpers, Inertia.Render, or form handling. Triggers on: "add endpoint",
   "create endpoint", "new endpoint", "API endpoint", "view endpoint", "MapGet", "MapPost",
   "MapPut", "MapDelete", "Inertia.Render", route handling, parameter binding questions,
-  or any work touching files in Endpoints/ or Pages/ directories.
+  "FormRequest", "Route const", "IAuthorizer", "policy", "RequirePermission",
+  or any work touching files in Endpoints/, Pages/, or FormRequests/ directories.
 ---
 
 # SimpleModule Minimal API Endpoints
@@ -23,9 +24,25 @@ Both implement `void Map(IEndpointRouteBuilder app)`. The source generator disco
 
 ## Endpoint File Structure
 
-One endpoint per file. Class name = `{Action}Endpoint`. Place in:
+One endpoint per file (enforced by **SM0049**). Class name = `{Action}Endpoint`. Place in:
 - `Endpoints/{Feature}/` for `IEndpoint`
 - `Pages/` for `IViewEndpoint` (co-located with its `.tsx` component; optionally grouped in feature subfolders)
+
+### Route const (required)
+
+Every endpoint declares a `public const string Route` and passes it to its `MapXxx` call — enforced by **SM0054**. Route values live in a `Routes` nested class on the module constants:
+
+```csharp
+public class GetAllProductsEndpoint : IEndpoint
+{
+    public const string Route = ProductsConstants.Routes.GetAll;
+
+    public void Map(IEndpointRouteBuilder app) =>
+        app.MapGet(Route, (IProductContracts contracts) =>
+            CrudEndpoints.GetAll(contracts.GetAllAsync))
+        .RequirePermission(ProductsPermissions.View);
+}
+```
 
 ## Parameter Binding Rules
 
@@ -76,6 +93,10 @@ CrudEndpoints.Update(() => contracts.UpdateAsync(id, request))
 
 // DELETE
 CrudEndpoints.Delete(() => contracts.DeleteAsync(id))
+
+// Soft-delete-aware modules also have (204 on success, 404 if no rows affected):
+CrudEndpoints.Restore(() => contracts.RestoreAsync(id))
+CrudEndpoints.ForceDelete(() => contracts.ForceDeleteAsync(id))
 ```
 
 ## View Endpoint Patterns
@@ -84,13 +105,36 @@ CrudEndpoints.Delete(() => contracts.DeleteAsync(id))
 // Render page with props (props serialize to camelCase)
 Inertia.Render("Module/PageName", new { items = await svc.GetAllAsync() })
 
-// Form: GET renders form, POST processes submission
-app.MapGet("/create", () => Inertia.Render("Module/Create"));
-app.MapPost("/", async ([FromForm] string name, [FromForm] decimal price, ISvc svc) => {
-    await svc.CreateAsync(new CreateRequest { Name = name, Price = price });
+// Form: GET renders form, POST binds + validates a [FormRequest] directly
+app.MapGet(Route, () => Inertia.Render("Module/Create"));
+app.MapPost("/things", async (CreateThingFormRequest form, ISvc svc) => {
+    await svc.CreateAsync(new CreateRequest { Name = form.Name, Price = form.Price });
     return Results.Redirect("/module/manage");
-}).DisableAntiforgery();
+});
 ```
+
+### Form binding with `FormRequest<TSelf>`
+
+Form posts bind a `[FormRequest]` class — `sealed partial`, extending `FormRequest<TSelf>` (**SM0056** / **SM0057**), in the module's `FormRequests/` folder. The framework hydrates it from the form body, runs `Prepare()`, then validates via `ConfigureRules` before the handler runs (no manual `IValidator`, no `.DisableAntiforgery()`):
+
+```csharp
+using FluentValidation;
+using SimpleModule.Core.FormRequests;
+
+[FormRequest]
+public sealed partial class CreateThingFormRequest : FormRequest<CreateThingFormRequest>
+{
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+
+    public override void Prepare() => Name = Name.Trim();
+
+    protected override void ConfigureRules(RuleConfigurator<CreateThingFormRequest> rules) =>
+        rules.RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+}
+```
+
+For one-off forms, a private `sealed record` of `[FromForm]` fields bound with `[AsParameters]` (plus manual `IValidator`) still works — see [references/patterns.md](references/patterns.md).
 
 **Critical**: Every `IViewEndpoint` with `Inertia.Render("Module/Page", ...)` MUST have a matching entry in `Pages/index.ts`. Run `npm run validate-pages` to verify.
 
@@ -110,6 +154,14 @@ app.MapPost("/", async ([FromForm] string name, [FromForm] decimal price, ISvc s
 ```
 
 Note: `.RequireAuthorization()` is already applied to the route group by the source generator. Endpoint-level auth narrows or overrides this.
+
+For **per-resource** rules (ownership, tenancy, state) beyond the coarse permission gate, inject `IAuthorizer` and call it after loading the resource — it dispatches to the resource's `IPolicy<TResource>` (deny-wins; throws `ForbiddenException` / `NotFoundException` on deny):
+
+```csharp
+await authorizer.AuthorizeAsync(user, PolicyActions.Update, product);
+```
+
+See the `simplemodule` skill's "Policies" section (diagnostics SM0058–SM0061).
 
 ## Validation
 

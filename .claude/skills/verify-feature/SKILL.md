@@ -13,7 +13,7 @@ Run this skill after a feature is implemented and committed locally. It is a gat
 Before starting, confirm these from conversation context (do not ask the user unless missing):
 
 - **Feature description** — what was implemented (used to pick the page and assertions for stage 2)
-- **Page route** — the Inertia route (e.g. `Products/Browse`) or URL path to exercise
+- **Page route** — the Inertia route (e.g. `AuditLogs/Browse`) or URL path to exercise
 - **Branch** — current branch (must not be `main`)
 
 If route/path is unknown, grep the diff for `Inertia.Render("...")` calls to infer it.
