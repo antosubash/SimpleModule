@@ -42,8 +42,9 @@ public interface IModule
 | `ConfigurePermissions` | Application startup | Register permission definitions |
 | `ConfigureSettings` | Application startup | Register settings definitions |
 | `ConfigureFeatureFlags` | Application startup | Register feature flag definitions |
+| `ConfigureAgents` | Application startup | Register AI agent definitions |
 | `ConfigureRateLimits` | Application startup | Register rate limit policies |
-| `ConfigureHost` | After host is built | Configure host-level integrations (TickerQ, DB init) |
+| `ConfigureHost` | After host is built | Configure host-level integrations (database init, schema creation) |
 | `OnStartAsync` | After services registered | One-time async initialization |
 | `OnStopAsync` | Graceful shutdown | Cleanup, flush buffers, drain work |
 | `CheckHealthAsync` | Health check endpoint | Report module health status |

@@ -227,7 +227,7 @@ export const pages: Record<string, unknown> = {
 ```
 
 ::: danger Don't Forget the Page Registry
-Every `IViewEndpoint` that calls `Inertia.Render("Customers/Something", ...)` **must** have a matching entry in `Pages/index.ts`. If you forget, the endpoint works on the server but silently 404s on the client with no error message.
+Every `IViewEndpoint` that calls `Inertia.Render("Customers/Something", ...)` **must** have a matching entry in `Pages/index.ts`. If you forget, the endpoint works on the server but the client throws a descriptive error (and shows an error toast) instead of rendering the page.
 
 Run `npm run validate-pages` to catch mismatches.
 :::
@@ -285,7 +285,7 @@ This starts:
 - The SimpleModule host app on **http://localhost:8080**
 - A **PostgreSQL** instance for production-like database behavior
 
-::: tip Development vs Customerion Database
+::: tip Development vs Production Database
 During local development with `npm run dev`, the app uses SQLite by default -- no database server needed. Docker Compose switches to PostgreSQL to match production behavior.
 :::
 
@@ -294,8 +294,8 @@ During local development with `npm run dev`, the app uses SQLite by default -- n
 | Command                  | What it does                                    |
 | ------------------------ | ----------------------------------------------- |
 | `npm run dev`            | Start backend + all frontend watchers           |
-| `npm run build`          | Customerion build (minified, optimized)          |
-| `npm run dev:build`      | Dev build (unminified, source maps)             |
+| `npm run build`          | Production build (minified, optimized)          |
+| `npm run build:dev`      | Dev build (unminified, source maps)             |
 | `npm run check`          | Lint + format check (Biome)                     |
 | `npm run check:fix`      | Auto-fix lint + formatting                      |
 | `npm run validate-pages` | Verify all endpoints have page registry entries |

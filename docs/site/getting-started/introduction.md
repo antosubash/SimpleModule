@@ -188,7 +188,7 @@ You don't write registration code, startup configuration, or reflection-based di
 | Testing | xUnit.v3, FluentAssertions, Bogus, Playwright, BenchmarkDotNet, NBomber |
 | Database | SQLite, PostgreSQL, SQL Server via EF Core |
 | File storage | Local, AWS S3, Azure Blob Storage |
-| Job scheduling | TickerQ with CRON support |
+| Job scheduling | Database-backed queue with CRON (Cronos) support |
 | CLI | System.CommandLine |
 
 ## Next Steps

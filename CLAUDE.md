@@ -45,7 +45,7 @@ dotnet run --project template/SimpleModule.Host     # runs on https://localhost:
 ```bash
 npm install                          # install all workspace dependencies
 npm run dev                          # start development (dotnet + all module watches, unminified JS)
-npm run dev:build                    # build all modules in dev mode (unminified, with source maps)
+npm run build:dev                    # build all modules in dev mode (unminified, with source maps)
 npm run build                        # production build (minified, optimized)
 npm run check                        # biome lint + format check
 npm run check:fix                    # auto-fix lint + formatting
@@ -146,7 +146,7 @@ See [docs/CONSTITUTION.md](docs/CONSTITUTION.md) for the authoritative reference
 - Module boundaries, dependencies, and data ownership
 - Communication patterns (contracts and events)
 - Endpoint, frontend, and authorization rules
-- Compiler-enforced diagnostics (SM0001-SM0054)
+- Compiler-enforced diagnostics (SM0001-SM0061)
 - Framework contributor guidelines
 
 ## Key Constraints
@@ -169,8 +169,8 @@ When you add a new `IViewEndpoint`, you **must** register it in your module's `P
 **Why:** The C# source generator discovers your new endpoint and validates it's properly decorated, but React needs a corresponding entry in the page registry. If you forget:
 
 - The endpoint compiles and runs fine on the server
-- Navigating to that page in React silently 404s client-side (no error in console, no error response shown to user)
-- The developer won't know for hours or until QA finds it
+- Navigating to that page throws a descriptive client-side error — the page resolver names the missing page and lists the available ones, the ClientApp shows an error toast, and the error is logged to the browser console
+- `npm run validate-pages` catches the mismatch at build time (and in CI) before it reaches the browser
 
 **Pattern:**
 
