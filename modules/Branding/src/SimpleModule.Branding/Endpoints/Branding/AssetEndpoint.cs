@@ -58,6 +58,8 @@ public class AssetEndpoint : IEndpoint
                         return Results.NotFound();
 
                     context.Response.Headers.CacheControl = "public, max-age=3600";
+                    // Never let the browser sniff a stored asset into an executable type.
+                    context.Response.Headers.XContentTypeOptions = "nosniff";
                     return Results.File(stream, file.ContentType);
                 }
             )

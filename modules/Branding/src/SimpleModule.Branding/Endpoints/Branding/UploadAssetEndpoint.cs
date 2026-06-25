@@ -17,6 +17,21 @@ public class UploadAssetEndpoint : IEndpoint
 {
     private const long MaxBytes = 2 * 1024 * 1024;
 
+    // Raster + icon formats only. SVG is intentionally excluded: it is served
+    // anonymously and can carry inline script that executes on direct navigation
+    // (stored XSS). Raster formats cannot.
+    private static readonly HashSet<string> AllowedContentTypes = new(
+        StringComparer.OrdinalIgnoreCase
+    )
+    {
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/x-icon",
+        "image/vnd.microsoft.icon",
+    };
+
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/api/branding/assets/{kind}",
@@ -32,8 +47,10 @@ public class UploadAssetEndpoint : IEndpoint
                         return TypedResults.BadRequest("Invalid asset kind.");
                     if (file is null || file.Length == 0)
                         return TypedResults.BadRequest("A file is required.");
-                    if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
-                        return TypedResults.BadRequest("Only image files are allowed.");
+                    if (!AllowedContentTypes.Contains(file.ContentType))
+                        return TypedResults.BadRequest(
+                            "Unsupported image type. Allowed: PNG, JPEG, GIF, WebP, ICO."
+                        );
                     if (file.Length > MaxBytes)
                         return TypedResults.BadRequest("File too large (max 2 MB).");
 
