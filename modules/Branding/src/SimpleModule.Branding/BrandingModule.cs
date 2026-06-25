@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +6,6 @@ using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Menu;
-using SimpleModule.Core.Settings;
 
 namespace SimpleModule.Branding;
 
@@ -45,98 +43,9 @@ public class BrandingModule : IModule
             }
         );
 
-    public void ConfigureSettings(ISettingsBuilder settings)
-    {
-        settings
-            .Add(
-                Def(
-                    BrandingSettingKeys.AppName,
-                    "Application name",
-                    SettingType.Text,
-                    JsonSerializer.Serialize(BrandingDefaults.AppName),
-                    order: 0
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.ColorPrimary,
-                    "Primary color (light)",
-                    SettingType.Color,
-                    JsonSerializer.Serialize(BrandingDefaults.ColorPrimary),
-                    order: 1
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.ColorPrimaryDark,
-                    "Primary color (dark)",
-                    SettingType.Color,
-                    JsonSerializer.Serialize(BrandingDefaults.ColorPrimaryDark),
-                    order: 2
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.CustomCss,
-                    "Custom CSS",
-                    SettingType.MultilineText,
-                    "\"\"",
-                    order: 3
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.LogoFileId,
-                    "Logo file id",
-                    SettingType.Text,
-                    "\"\"",
-                    order: 4
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.FaviconFileId,
-                    "Favicon file id",
-                    SettingType.Text,
-                    "\"\"",
-                    order: 5
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.TopBar,
-                    "Top bar",
-                    SettingType.Json,
-                    JsonSerializer.Serialize(new TopBarConfig()),
-                    order: 6
-                )
-            )
-            .Add(
-                Def(
-                    BrandingSettingKeys.Footer,
-                    "Footer",
-                    SettingType.Json,
-                    JsonSerializer.Serialize(new FooterConfig()),
-                    order: 7
-                )
-            );
-    }
-
-    private static SettingDefinition Def(
-        string key,
-        string name,
-        SettingType type,
-        string defaultValue,
-        int order
-    ) =>
-        new()
-        {
-            Key = key,
-            DisplayName = name,
-            Group = "Branding",
-            Scope = SettingScope.Application,
-            Type = type,
-            DefaultValue = defaultValue,
-            Order = order,
-        };
+    // Branding values are stored via ISettingsContracts by key but intentionally NOT
+    // registered as SettingDefinitions: they are an implementation detail edited through
+    // the dedicated /branding/manage page, not the generic Settings admin UI. Defaults
+    // live in BrandingDefaults / BrandingService. (SettingsService stores/reads keys
+    // without a definition; it only validates when one exists.)
 }
