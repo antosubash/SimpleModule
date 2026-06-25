@@ -2,7 +2,6 @@ using System.Globalization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using SimpleModule.Branding.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Settings;
 using SimpleModule.FileStorage.Contracts;
@@ -27,15 +26,11 @@ public class AssetEndpoint : IEndpoint
                     IFileStorageContracts files
                 ) =>
                 {
-                    if (kind is not ("logo" or "favicon"))
+                    if (!BrandingAssets.IsValidKind(kind))
                         return Results.NotFound();
 
-                    var key =
-                        kind == "logo"
-                            ? BrandingSettingKeys.LogoFileId
-                            : BrandingSettingKeys.FaviconFileId;
                     var idStr = await settings.GetSettingAsync<string>(
-                        key,
+                        BrandingAssets.SettingKey(kind),
                         SettingScope.Application
                     );
                     if (
@@ -53,12 +48,19 @@ public class AssetEndpoint : IEndpoint
                     if (file is null)
                         return Results.NotFound();
 
+                    // Re-validate the stored content type on the serve path, not just at
+                    // upload: the file id lives in a Text setting that the generic Settings
+                    // admin UI can repoint at ANY FileStorage id (e.g. an SVG uploaded via
+                    // FileStorage). Serving a non-raster type anonymously would reintroduce
+                    // the SVG stored-XSS vector that the upload allowlist guards against.
+                    if (!BrandingAssets.AllowedContentTypes.Contains(file.ContentType))
+                        return Results.NotFound();
+
                     var stream = await files.DownloadFileAsync(file);
                     if (stream is null)
                         return Results.NotFound();
 
                     context.Response.Headers.CacheControl = "public, max-age=3600";
-                    // Never let the browser sniff a stored asset into an executable type.
                     context.Response.Headers.XContentTypeOptions = "nosniff";
                     return Results.File(stream, file.ContentType);
                 }

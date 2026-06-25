@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using SimpleModule.Branding.Contracts;
@@ -38,13 +39,13 @@ public sealed partial class BrandingHeadContributor(IBrandingContracts branding)
                     .Append(";}");
             }
             if (hasCss)
-                sb.Append(StripClosingStyle(css));
+                sb.Append(StripStyleEndTag(css));
             sb.Append("</style>");
         }
 
         if (!string.IsNullOrWhiteSpace(b.FaviconUrl))
             sb.Append("<link rel=\"icon\" href=\"")
-                .Append(EncodeAttr(b.FaviconUrl))
+                .Append(HtmlEncoder.Default.Encode(b.FaviconUrl))
                 .Append("\" />");
 
         return sb.Length == 0 ? null : sb.ToString();
@@ -56,15 +57,14 @@ public sealed partial class BrandingHeadContributor(IBrandingContracts branding)
     private static string SanitizeColor(string color) =>
         HexColor().IsMatch(color) ? color : BrandingDefaults.ColorPrimary;
 
-    private static string StripClosingStyle(string css) =>
-        ClosingStyle().Replace(css, string.Empty);
-
-    private static string EncodeAttr(string value) =>
-        value.Replace("\"", "&quot;", StringComparison.Ordinal);
+    // Strip any "</style" sequence (not just the exact "</style>"): the HTML raw-text
+    // parser ends a <style> element on "</style" followed by whitespace, "/", or ">",
+    // so admin custom CSS like "}</style ><img ...>" must not be able to break out.
+    private static string StripStyleEndTag(string css) => StyleEndTag().Replace(css, string.Empty);
 
     [GeneratedRegex("^#[0-9a-fA-F]{3,8}$")]
     private static partial Regex HexColor();
 
-    [GeneratedRegex("</style>", RegexOptions.IgnoreCase)]
-    private static partial Regex ClosingStyle();
+    [GeneratedRegex("</style", RegexOptions.IgnoreCase)]
+    private static partial Regex StyleEndTag();
 }

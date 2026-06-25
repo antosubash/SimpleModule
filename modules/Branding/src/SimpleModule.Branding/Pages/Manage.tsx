@@ -14,37 +14,8 @@ import {
   Textarea,
 } from '@simplemodule/ui';
 import * as React from 'react';
-
-interface BrandingLink {
-  label: string;
-  url: string;
-}
-interface TopBarConfig {
-  enabled: boolean;
-  message: string;
-  backgroundColor: string;
-  textColor: string;
-  links: BrandingLink[];
-  dismissible: boolean;
-}
-interface FooterConfig {
-  enabled: boolean;
-  text: string;
-  links: BrandingLink[];
-  showCopyright: boolean;
-}
-interface BrandingEditModel {
-  appName: string;
-  logoFileId: string | null;
-  logoUrl: string | null;
-  faviconFileId: string | null;
-  faviconUrl: string | null;
-  colorPrimary: string;
-  colorPrimaryDark: string;
-  customCss: string;
-  topBar: TopBarConfig;
-  footer: FooterConfig;
-}
+// Generated from the [Dto] types in SimpleModule.Branding.Contracts — do not re-declare.
+import type { BrandingEditModel, FooterConfig, TopBarConfig } from '../types';
 
 export default function Manage() {
   const { branding } = usePage<{ branding: BrandingEditModel }>().props;
@@ -132,7 +103,7 @@ export default function Manage() {
                       variant="outline"
                       onClick={() => {
                         set('logoFileId', '');
-                        set('logoUrl', null);
+                        set('logoUrl', '');
                       }}
                     >
                       Remove logo
@@ -217,6 +188,16 @@ export default function Manage() {
                     type="color"
                     value={model.topBar.backgroundColor}
                     onChange={(e) => setTopBar('backgroundColor', e.target.value)}
+                    className="h-9 w-16 cursor-pointer rounded border-0 bg-transparent p-0"
+                  />
+                </Field>
+                <Field>
+                  <Label htmlFor="topbar-text">Text color</Label>
+                  <input
+                    id="topbar-text"
+                    type="color"
+                    value={model.topBar.textColor}
+                    onChange={(e) => setTopBar('textColor', e.target.value)}
                     className="h-9 w-16 cursor-pointer rounded border-0 bg-transparent p-0"
                   />
                 </Field>

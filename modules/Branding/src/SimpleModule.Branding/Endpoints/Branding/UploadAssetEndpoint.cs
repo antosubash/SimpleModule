@@ -3,7 +3,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using SimpleModule.Branding.Contracts;
 using SimpleModule.Core;
 using SimpleModule.Core.Authorization;
 using SimpleModule.Core.Extensions;
@@ -17,21 +16,6 @@ public class UploadAssetEndpoint : IEndpoint
 {
     private const long MaxBytes = 2 * 1024 * 1024;
 
-    // Raster + icon formats only. SVG is intentionally excluded: it is served
-    // anonymously and can carry inline script that executes on direct navigation
-    // (stored XSS). Raster formats cannot.
-    private static readonly HashSet<string> AllowedContentTypes = new(
-        StringComparer.OrdinalIgnoreCase
-    )
-    {
-        "image/png",
-        "image/jpeg",
-        "image/gif",
-        "image/webp",
-        "image/x-icon",
-        "image/vnd.microsoft.icon",
-    };
-
     public void Map(IEndpointRouteBuilder app) =>
         app.MapPost(
                 "/api/branding/assets/{kind}",
@@ -43,11 +27,11 @@ public class UploadAssetEndpoint : IEndpoint
                     ISettingsContracts settings
                 ) =>
                 {
-                    if (kind is not ("logo" or "favicon"))
+                    if (!BrandingAssets.IsValidKind(kind))
                         return TypedResults.BadRequest("Invalid asset kind.");
                     if (file is null || file.Length == 0)
                         return TypedResults.BadRequest("A file is required.");
-                    if (!AllowedContentTypes.Contains(file.ContentType))
+                    if (!BrandingAssets.AllowedContentTypes.Contains(file.ContentType))
                         return TypedResults.BadRequest(
                             "Unsupported image type. Allowed: PNG, JPEG, GIF, WebP, ICO."
                         );
@@ -64,20 +48,14 @@ public class UploadAssetEndpoint : IEndpoint
                         userId
                     );
 
-                    var key =
-                        kind == "logo"
-                            ? BrandingSettingKeys.LogoFileId
-                            : BrandingSettingKeys.FaviconFileId;
                     var fileId = stored.Id.Value.ToString(CultureInfo.InvariantCulture);
                     await settings.SetSettingAsync(
-                        key,
+                        BrandingAssets.SettingKey(kind),
                         JsonSerializer.SerializeToElement(fileId),
                         SettingScope.Application
                     );
 
-                    return TypedResults.Ok(
-                        new { fileId, url = $"/api/branding/assets/{kind}?v={fileId}" }
-                    );
+                    return TypedResults.Ok(new { fileId, url = BrandingAssets.Url(kind, fileId) });
                 }
             )
             .RequirePermission(BrandingPermissions.Manage)
