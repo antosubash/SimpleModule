@@ -125,13 +125,17 @@ public void ConfigurePermissions(PermissionRegistryBuilder builder)
 ### Use on Endpoints
 
 ```csharp
-app.MapGet("/", handler).RequirePermission(ProductsPermissions.View);
+app.MapGet(Route, handler).RequirePermission(ProductsPermissions.View);
 ```
 
 ### Wildcard Matching
 - `"Products.*"` matches all Products permissions
 - `"*"` matches any single-segment permission
 - Users with "Admin" role bypass all permission checks
+
+## Policies (instance-level authorization)
+
+Permissions are coarse capability gates. **Policies** add per-resource rules (ownership, tenancy, state). Declare `public sealed class {Name}Policy : IPolicy<{Resource}Dto>` in the module that **owns** the resource — the resource type must be a contracts `[Dto]` (**SM0058**) and the policy must live in the resource's owning module (**SM0060**), since policies run with deny-wins semantics across modules. They are auto-discovered (no registration). Check them by injecting `IAuthorizer` and calling `AuthorizeAsync(user, PolicyActions.Update, resource)`. See the SimpleModule skill's "Policies" section.
 
 ## Settings
 

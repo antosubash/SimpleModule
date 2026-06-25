@@ -43,6 +43,20 @@ Register in the module's `ConfigureServices`:
 services.AddModuleDbContext<ProductsDbContext>(configuration, ProductsConstants.ModuleName);
 ```
 
+The helper has two optional parameters:
+
+```csharp
+services.AddModuleDbContext<ProductsDbContext>(
+    configuration,
+    ProductsConstants.ModuleName,
+    configureOptions: opts => opts.UseOpenIddict(), // optional: extra DbContextOptions config
+    enableSpatial: true                             // optional: NetTopologySuite for GIS/PostGIS
+);
+```
+
+- `configureOptions` — an `Action<DbContextOptionsBuilder>` for provider-specific setup (e.g. `UseOpenIddict()`).
+- `enableSpatial` — enables NetTopologySuite spatial types when `true` (default `false`).
+
 ## Schema Isolation
 
 - **PostgreSQL/SQL Server**: Uses database schemas (e.g., `products.Products`)

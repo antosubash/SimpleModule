@@ -17,12 +17,16 @@ One endpoint per file. Class name = `{Action}Endpoint`. Place in:
 
 ## API Endpoints with CrudEndpoints Helper
 
+Every endpoint declares a `public const string Route` (enforced by **SM0054**) and passes it to the `MapXxx` call. Route values are centralized in a `Routes` nested class on the module's constants (e.g. `ProductsConstants.Routes.GetAll`).
+
 ```csharp
 // GET all — returns 200 OK
 public class GetAllEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.GetAll;
+
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/", (IProductContracts contracts) =>
+        app.MapGet(Route, (IProductContracts contracts) =>
             CrudEndpoints.GetAll(contracts.GetAllProductsAsync))
         .RequirePermission(ProductsPermissions.View);
 }
@@ -30,8 +34,10 @@ public class GetAllEndpoint : IEndpoint
 // GET by ID — returns 200 OK or 404 NotFound
 public class GetByIdEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.GetById;
+
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/{id}", (ProductId id, IProductContracts contracts) =>
+        app.MapGet(Route, (ProductId id, IProductContracts contracts) =>
             CrudEndpoints.GetById(() => contracts.GetProductByIdAsync(id)))
         .RequirePermission(ProductsPermissions.View);
 }
@@ -39,8 +45,10 @@ public class GetByIdEndpoint : IEndpoint
 // POST create — returns 201 Created with Location header
 public class CreateEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Create;
+
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPost("/", async (CreateProductRequest request, IValidator<CreateProductRequest> validator, IProductContracts contracts) =>
+        app.MapPost(Route, async (CreateProductRequest request, IValidator<CreateProductRequest> validator, IProductContracts contracts) =>
         {
             var validation = await validator.ValidateAsync(request);
             if (!validation.IsValid) throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
@@ -54,8 +62,10 @@ public class CreateEndpoint : IEndpoint
 // PUT update — returns 200 OK
 public class UpdateEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Update;
+
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapPut("/{id}", async (ProductId id, UpdateProductRequest request, IValidator<UpdateProductRequest> validator, IProductContracts contracts) =>
+        app.MapPut(Route, async (ProductId id, UpdateProductRequest request, IValidator<UpdateProductRequest> validator, IProductContracts contracts) =>
         {
             var validation = await validator.ValidateAsync(request);
             if (!validation.IsValid) throw new Core.Exceptions.ValidationException(validation.ToValidationErrors());
@@ -67,12 +77,16 @@ public class UpdateEndpoint : IEndpoint
 // DELETE — returns 204 NoContent
 public class DeleteEndpoint : IEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Delete;
+
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapDelete("/{id}", (ProductId id, IProductContracts contracts) =>
+        app.MapDelete(Route, (ProductId id, IProductContracts contracts) =>
             CrudEndpoints.Delete(() => contracts.DeleteProductAsync(id)))
         .RequirePermission(ProductsPermissions.Delete);
 }
 ```
+
+`CrudEndpoints` also provides `Restore(() => contracts.RestoreAsync(id))` and `ForceDelete(() => contracts.ForceDeleteAsync(id))` for soft-delete-aware modules.
 
 ## View Endpoints with Inertia
 
@@ -80,8 +94,10 @@ public class DeleteEndpoint : IEndpoint
 // Browse page (public)
 public class BrowseEndpoint : IViewEndpoint
 {
+    public const string Route = ProductsConstants.Routes.Browse;
+
     public void Map(IEndpointRouteBuilder app) =>
-        app.MapGet("/browse", async (IProductContracts products) =>
+        app.MapGet(Route, async (IProductContracts products) =>
             Inertia.Render("Products/Browse",
                 new { products = await products.GetAllProductsAsync() }))
         .AllowAnonymous();
@@ -90,21 +106,51 @@ public class BrowseEndpoint : IViewEndpoint
 // Form page with GET (render) + POST (submit)
 public class CreateEndpoint : IViewEndpoint
 {
+    public const string Route = ProductsConstants.Routes.CreatePage;
+
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapGet("/create", () => Inertia.Render("Products/Create"));
+        app.MapGet(Route, () => Inertia.Render("Products/Create"));
 
-        app.MapPost("/", async (
-            [FromForm] string name,
-            [FromForm] decimal price,
-            IProductContracts products) =>
+        // Bind + validate a [FormRequest] directly (see "Form Binding" below).
+        app.MapPost("/products", async (CreateProductFormRequest form, IProductContracts products) =>
         {
-            await products.CreateProductAsync(new CreateProductRequest { Name = name, Price = price });
+            await products.CreateProductAsync(new CreateProductRequest { Name = form.Name, Price = form.Price });
             return Results.Redirect("/products/manage");
-        }).DisableAntiforgery();
+        });
     }
 }
 ```
+
+A view endpoint with several routes (GET page + POST submit + DELETE) still declares a single `public const string Route` for the primary route; the remaining `MapXxx` calls may use literals or additional consts.
+
+## Form Binding (FormRequest)
+
+For form posts, declare a `[FormRequest]` class in the module's `FormRequests/` folder. It must be `sealed partial` and extend `FormRequest<TSelf>` (enforced by **SM0056** / **SM0057**). Bind it **directly** as a handler parameter — the framework hydrates it from the form body, runs `Prepare()`, then validates via `ConfigureRules` before your handler executes. No manual `IValidator` call and no `.DisableAntiforgery()` needed.
+
+```csharp
+using FluentValidation;
+using SimpleModule.Core.FormRequests;
+
+namespace SimpleModule.Products.FormRequests;
+
+[FormRequest]
+public sealed partial class CreateProductFormRequest : FormRequest<CreateProductFormRequest>
+{
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+
+    public override void Prepare() => Name = Name.Trim();
+
+    protected override void ConfigureRules(RuleConfigurator<CreateProductFormRequest> rules)
+    {
+        rules.RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+        rules.RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+    }
+}
+```
+
+For one-off forms you can still bind a private `sealed record` of `[FromForm]` fields via `[AsParameters]` and validate manually with `IValidator<T>`, but `FormRequest<TSelf>` is preferred for anything reused or validated.
 
 ## Parameter Binding Rules
 
@@ -147,6 +193,23 @@ var body = await JsonSerializer.DeserializeAsync<MyType>(context.Request.Body);
 ```
 
 `.RequireAuthorization()` is already applied to the route group by the source generator.
+
+### Instance-level authorization (policies)
+
+`.RequirePermission(...)` is the coarse capability gate. For per-resource rules (ownership, tenancy, state), inject `IAuthorizer` and call it after loading the resource — it dispatches to the resource type's `IPolicy<TResource>` with deny-wins semantics:
+
+```csharp
+async (ProductId id, IAuthorizer authorizer, ClaimsPrincipal user, IProductContracts products) =>
+{
+    var product = await products.GetProductByIdAsync(id);
+    if (product is null) return Results.NotFound();
+    // Throws ForbiddenException (or NotFoundException for anti-enumeration actions) on deny.
+    await authorizer.AuthorizeAsync(user, PolicyActions.Update, product);
+    // ... proceed
+}
+```
+
+See the SimpleModule skill's "Policies" section for declaring `IPolicy<TResource>` (diagnostics SM0058–SM0061).
 
 ## Validation
 
