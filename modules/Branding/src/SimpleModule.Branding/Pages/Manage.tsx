@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import {
   Button,
   Card,
@@ -57,8 +57,10 @@ export default function Manage() {
       });
       if (res.ok) {
         setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-        router.reload();
+        // Full reload (not Inertia's XHR router.reload): colors, custom CSS, and the
+        // favicon are injected into the document <head> server-side and only refresh
+        // on a full page load. A partial visit would leave them showing stale values.
+        window.location.reload();
       }
     } finally {
       setSaving(false);
