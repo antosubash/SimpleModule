@@ -18,7 +18,7 @@
 ### Assumptions (confirm at review)
 
 1. **"Top-navbar management" = a configurable top utility/announcement bar.** The authenticated layout (`app-layout.tsx`) has only a left sidebar today — there is no top navbar for logged-in users. So "top bar" is interpreted as a thin, full-width bar above the content (announcement message + optional links + background color + show/hide + dismissible), rendered in both the authenticated and public layouts. It is **not** about editing module-contributed sidebar menu items.
-2. **v1 color control = primary (light + dark) + one accent color.** The theme defines many CSS variables (OKLCH); v1 exposes the few that matter most and leaves deep theming to the custom-CSS box. (Easy to add more swatches later.)
+2. **v1 color control = primary color (light + dark only).** The theme defines `--color-primary`, `--color-primary-hover`, `--color-success`, `--color-danger`, `--color-surface`, `--color-text` — there is **no** `--color-accent`, so overriding an "accent" would be a no-op. `--color-primary` is the high-impact one (buttons, logo badge, progress bar, links), so v1 exposes only primary light + primary dark and leaves deeper theming to the custom-CSS box. (Default primary hex `#059669` — already the established fallback in `app.tsx`.)
 3. **Favicon + brand-color application is server-side** (head injection) to avoid a flash of the default theme on first paint. This requires a small, generic framework addition (see §5).
 
 ---
@@ -89,10 +89,9 @@ All `Scope.Application`, `Group = "Branding"`.
 | `branding.app_name` | `Text` | `"SimpleModule"` | Shown in sidebar/header/title. |
 | `branding.logo_file_id` | `Text` | `""` (empty → badge fallback) | FileStorage id. |
 | `branding.favicon_file_id` | `Text` | `""` (empty → `/favicon.svg`) | FileStorage id. |
-| `branding.color_primary` | `Color` | theme primary (light) | Overrides `--color-primary`. |
-| `branding.color_primary_dark` | `Color` | theme primary (dark) | Overrides `--color-primary` under `.dark`. |
-| `branding.color_accent` | `Color` | theme accent | Overrides accent var. |
-| `branding.custom_css` | `MultilineText` | `""` | Injected verbatim into a nonce'd `<style>`. Power-user footgun — documented. |
+| `branding.color_primary` | `Color` | `#059669` | Overrides `--color-primary` (light). |
+| `branding.color_primary_dark` | `Color` | `#34d399` | Overrides `--color-primary` under `.dark`. |
+| `branding.custom_css` | `MultilineText` | `""` | Injected verbatim into an inline `<style>` (style-src already allows `'unsafe-inline'`). Power-user footgun — documented. |
 | `branding.topbar` | `Json` | `{ "enabled": false, ... }` | `TopBarConfig`. |
 | `branding.footer` | `Json` | `{ "enabled": false, ... }` | `FooterConfig`. |
 
@@ -103,7 +102,7 @@ All `Scope.Application`, `Group = "Branding"`.
 **`BrandingDto`** has two faces:
 
 - **Shared-prop face** (what reaches every page as the `branding` Inertia prop, for React to render): `appName`, `logoUrl` (resolved from file id → public file URL, or null), `topBar: TopBarConfig`, `footer: FooterConfig`. This is the minimal payload React chrome needs.
-- **Head-applied values** (NOT in the shared prop): `colorPrimary`, `colorPrimaryDark`, `colorAccent`, `customCss`, `faviconUrl`. These are applied server-side via the head contributor (§5) so they take effect before first paint; sending them to the client too would be redundant.
+- **Head-applied values** (NOT in the shared prop): `colorPrimary`, `colorPrimaryDark`, `customCss`, `faviconUrl`. These are applied server-side via the head contributor (§5) so they take effect before first paint. (`customCss` in particular is kept off the per-page payload.)
 
 The admin **live preview** (§6) uses the form's local state, not the shared prop, so it does not need colors in the prop. The editable `GET /api/branding` response (admin-only) returns the full set including colors and custom CSS for the form to populate.
 
@@ -129,10 +128,17 @@ Minimal, generic, reusable extension so colors/favicon apply with **no flash** a
 2. **Template:** add `<!--HEAD_CONTRIBUTIONS-->` placeholder inside `<head>` of `template/SimpleModule.Host/wwwroot/index.html` (just before `</head>`).
 3. **Renderer:** in `HtmlFileInertiaPageRenderer.RenderPageAsync`, resolve `IEnumerable<IInertiaHeadContributor>` from `httpContext.RequestServices`, concatenate their output, and replace `<!--HEAD_CONTRIBUTIONS-->` in `before` **before** the existing nonce replacement (so contributor `<style nonce="<!--CSP_NONCE-->">` tags get a real nonce). If no contributors are registered, the placeholder is replaced with empty string.
 4. **Branding:** `BrandingHeadContributor` emits:
-   - `<style nonce="<!--CSP_NONCE-->">:root{--color-primary:<p>;...}.dark{--color-primary:<pd>;...}\n<customCss></style>` (only the vars that differ from defaults).
-   - `<link rel="icon" href="<faviconUrl>">` when a custom favicon is set (later in head → wins over the static one).
+   - `<style>:root{--color-primary:<light>;}.dark{--color-primary:<dark>;}<customCss></style>` — only emitting the `:root`/`.dark` blocks when the color differs from the default, and always appending custom CSS if non-empty.
+   - `<link rel="icon" href="/api/branding/assets/favicon?v=<id>">` when a custom favicon is set (placed after the static favicon `<link>` → wins).
 
-**CSP:** verify the style-src policy allows nonce'd inline styles (the renderer already nonces scripts). If style-src lacks `'nonce-...'`/`'unsafe-inline'`, add the nonce to style-src in the CSP config. (Implementation must check the actual CSP setup and adjust, or fall back to client-side injection for custom CSS only.)
+**CSP:** confirmed `style-src 'self' 'unsafe-inline' ...` in `SimpleModuleHostExtensions.cs` — inline `<style>` is allowed without a nonce. (Do **not** add a nonce to the style tag: since `style-src` has no nonce/hash source, plain inline styles are permitted by `'unsafe-inline'`.)
+
+### 5c. Asset serving (logo + favicon) — anonymous
+
+FileStorage's `DownloadEndpoint` (`GET /api/files/{id}`) requires `FileStorage.View` **and** passes a `FileOwnershipCheck` — so it cannot serve a logo/favicon to anonymous visitors (e.g. on the login page). Branding therefore exposes its own **anonymous** asset endpoint:
+
+- `GET /api/branding/assets/{kind}` (`kind` ∈ `logo|favicon`), `.AllowAnonymous()` — resolves the configured file id from settings, streams the bytes via `IFileStorageContracts.DownloadFileAsync(id)`, sets a long cache header. Returns 404 when unset.
+- `logoUrl`/`faviconUrl` in the DTO point at `/api/branding/assets/logo?v=<fileId>` (the file-id query busts the cache when the asset changes).
 
 ---
 
@@ -140,8 +146,8 @@ Minimal, generic, reusable extension so colors/favicon apply with **no flash** a
 
 - `ManageEndpoint : IViewEndpoint` → `GET /branding`, `.RequirePermission(BrandingPermissions.Manage)`, `Inertia.Render("Branding/Manage", new { branding = <editable values incl. custom css>, defaults })`.
 - **Registered in `Pages/index.ts`** (`"Branding/Manage"`) — mandatory per project rule.
-- `Manage.tsx` sections: **Identity** (app name text; logo upload + preview + clear; favicon upload + preview + clear), **Colors** (primary light, primary dark, accent — color pickers with swatches), **Top bar** (enable toggle, message, bg/text color, links editor, dismissible toggle), **Footer** (enable toggle, text, links editor, show-copyright toggle), **Advanced** (custom CSS textarea with a warning note). A **live preview** pane shows a mock sidebar header + top bar + footer reflecting current form state.
-- Uploads: `UploadAssetEndpoint` (`POST /api/branding/asset?kind=logo|favicon`, `.DisableAntiforgery()`, admin-only) forwards the `IFormFile` to `IFileStorageContracts.UploadFileAsync(stream, name, contentType, folder: "branding", userId)` and returns the new file id + URL. The form stores the id; save persists it.
+- `Manage.tsx` sections: **Identity** (app name text; logo upload + preview + clear; favicon upload + preview + clear), **Colors** (primary light, primary dark — color pickers with swatches), **Top bar** (enable toggle, message, bg/text color, links editor, dismissible toggle), **Footer** (enable toggle, text, links editor, show-copyright toggle), **Advanced** (custom CSS textarea with a warning note). A **live preview** pane shows a mock sidebar header + top bar + footer reflecting current form state.
+- Uploads: `UploadAssetEndpoint` (`POST /api/branding/assets/{kind}` with `kind=logo|favicon`, `.DisableAntiforgery()`, admin-only) forwards the `IFormFile` to `IFileStorageContracts.UploadFileAsync(stream, name, contentType, folder: "branding", userId)`, persists the returned file id into the matching setting, and returns the new file id + URL. Save of the rest of the form persists via `SetManyAsync`.
 - Save: `PUT /api/branding` validates and calls `ISettingsContracts.SetManyAsync([...])`. `BrandingService` cache invalidates so the next page render reflects the change.
 
 ---
@@ -174,7 +180,7 @@ Minimal, generic, reusable extension so colors/favicon apply with **no flash** a
 
 - Per-tenant branding (global only).
 - Theme presets / multiple saved themes / import-export.
-- Full OKLCH palette editing (only primary + accent in v1; rest via custom CSS).
+- Full OKLCH palette editing and secondary/accent colors (only primary light+dark in v1; rest via custom CSS).
 - Editing module-contributed sidebar/nav menu items (the top bar is a separate, branding-owned bar).
 - Font customization (could be a fast-follow via custom CSS).
 
@@ -182,8 +188,9 @@ Minimal, generic, reusable extension so colors/favicon apply with **no flash** a
 
 ## 10. Risk notes
 
-- **CSP for inline styles** — the single most likely friction point. Must confirm style-src allows nonce'd styles; otherwise adjust CSP or fall back to client-side custom-CSS injection.
+- **CSP for inline styles** — RESOLVED: `style-src` already includes `'unsafe-inline'`, so the injected `<style>` works. (Keep no nonce on it.)
 - **Framework touch** — this feature necessarily edits framework (renderer + Core interface + index.html) and the shared UI package (layouts), not just a self-contained module. That is inherent to branding the shell. Kept minimal and generic (`IInertiaHeadContributor` benefits any module).
-- **FileStorage URL shape** — confirm the exact public URL for a stored file (e.g. `/api/files/{id}`) during implementation; `logoUrl`/`faviconUrl` resolution depends on it.
-- **FileStorage as a hard dependency** — Branding will reference `SimpleModule.FileStorage.Contracts`. Confirm FileStorage is always present in the shipping host (it is in the load-test/host set).
+- **Asset serving** — RESOLVED: FileStorage's download endpoint is permissioned + ownership-checked, so Branding serves logo/favicon via its own anonymous `GET /api/branding/assets/{kind}` (§5c).
+- **Middleware ordering** — the branding shared-prop middleware (registered via `IModule.ConfigureMiddleware`) must run within the request pipeline before the Inertia response renders. `SimpleModule.Localization` already uses `ConfigureMiddleware` for per-request work, confirming the pattern; verify ordering during implementation.
+- **FileStorage as a hard dependency** — Branding references `SimpleModule.FileStorage.Contracts`. FileStorage is in the shipping/load-test host set, so this is safe.
 ```
