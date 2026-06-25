@@ -44,8 +44,9 @@ public interface IModule
 | `ConfigurePermissions` | Define module-specific permissions for authorization |
 | `ConfigureSettings` | Register configurable settings for the module |
 | `ConfigureFeatureFlags` | Register feature flag definitions |
+| `ConfigureAgents` | Register AI agent definitions |
 | `ConfigureRateLimits` | Register rate limit policies |
-| `ConfigureHost` | Configure host-level integrations after the host is built (e.g., TickerQ, database initialization) |
+| `ConfigureHost` | Configure host-level integrations after the host is built (e.g., database initialization and schema creation) |
 | `OnStartAsync` | One-time async initialization after all services are registered |
 | `OnStopAsync` | Graceful shutdown cleanup |
 | `CheckHealthAsync` | Report per-module health status |

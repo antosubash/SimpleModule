@@ -50,7 +50,7 @@ All hooks are optional. All have default no-op implementations.
 7. **ConfigureFeatureFlags** -- register feature flag definitions
 8. **ConfigureAgents** -- register AI agent definitions
 9. **ConfigureRateLimits** -- register rate limit policies
-10. **ConfigureHost** -- configure host-level integrations (e.g., TickerQ, database initialization) after the host is built
+10. **ConfigureHost** -- configure host-level integrations (e.g., database initialization and schema creation) after the host is built
 11. **OnStartAsync** -- one-time initialization after all services are registered
 12. **OnStopAsync** -- graceful shutdown cleanup
 13. **CheckHealthAsync** -- report module health status (Healthy, Degraded, Unhealthy)
@@ -316,7 +316,7 @@ public sealed class CreateProductRequest : FormRequest<CreateProductRequest>
 
 - Every `IViewEndpoint` must have a matching entry in `Pages/index.ts`.
 - The key must match the component name passed to `Inertia.Render()`.
-- Missing entries cause silent client-side 404s with no error in the console.
+- Missing entries throw a descriptive client-side error (the resolver names the missing page and lists the available ones) and surface an error toast -- they do not fail silently.
 - Run `npm run validate-pages` to verify all endpoints have matching page entries.
 
 ### Dynamic Imports
