@@ -15,6 +15,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
     private const string NoncePlaceholder = "<!--CSP_NONCE-->";
     private const string VersionPlaceholder = "<!--DEPLOY_VERSION-->";
     private const string ModuleCssPlaceholder = "<!--MODULE_CSS_LINKS-->";
+    private const string HeadContributionsPlaceholder = "<!--HEAD_CONTRIBUTIONS-->";
 
     private readonly string _beforePlaceholder;
     private readonly string _afterPlaceholder;
@@ -69,7 +70,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         }
     }
 
-    public Task RenderPageAsync(HttpContext httpContext, string pageJson)
+    public async Task RenderPageAsync(HttpContext httpContext, string pageJson)
     {
         var nonce = httpContext.RequestServices.GetRequiredService<ICspNonce>().Value;
         var useViteDev =
@@ -82,8 +83,14 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
                 ? "<script nonce=\"" + nonce + "\">" + LiveReloadClientScript + "</script>"
                 : "";
 
+        // Resolve per-request <head> contributions (e.g. branding color overrides,
+        // custom CSS, favicon). Replaced before the nonce pass so any nonce
+        // placeholders a contributor emits still get a real nonce.
+        var headHtml = await BuildHeadContributionsAsync(httpContext);
+        before = before.Replace(HeadContributionsPlaceholder, headHtml, StringComparison.Ordinal);
+
         httpContext.Response.ContentType = "text/html; charset=utf-8";
-        return httpContext.Response.WriteAsync(
+        await httpContext.Response.WriteAsync(
             string.Concat(
                 before.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal),
                 $"<script data-page=\"app\" type=\"application/json\" nonce=\"{nonce}\">{pageJson}</script>",
@@ -91,6 +98,20 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
                 after.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal)
             )
         );
+    }
+
+    private static async Task<string> BuildHeadContributionsAsync(HttpContext httpContext)
+    {
+        var contributors = httpContext.RequestServices.GetServices<IInertiaHeadContributor>();
+        StringBuilder? sb = null;
+        foreach (var contributor in contributors)
+        {
+            var html = await contributor.GetHeadHtmlAsync(httpContext);
+            if (string.IsNullOrEmpty(html))
+                continue;
+            (sb ??= new StringBuilder()).Append(html);
+        }
+        return sb?.ToString() ?? string.Empty;
     }
 
     private static string BuildModuleCssLinks(IWebHostEnvironment env, string version)
