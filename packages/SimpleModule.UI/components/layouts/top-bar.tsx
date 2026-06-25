@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import * as React from 'react';
+import { safeUrl } from './safe-url';
 import type { SharedProps } from './types';
 
 const DISMISS_KEY = 'branding-topbar-dismissed';
@@ -35,7 +36,7 @@ export function TopBar() {
       {topBar.links.map((link) => (
         <a
           key={`${link.label}-${link.url}`}
-          href={link.url}
+          href={safeUrl(link.url)}
           className="underline font-medium"
           style={{ color: topBar.textColor }}
         >

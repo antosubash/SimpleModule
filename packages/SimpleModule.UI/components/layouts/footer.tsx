@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { safeUrl } from './safe-url';
 import type { SharedProps } from './types';
 
 /**
@@ -27,7 +28,7 @@ export function Footer() {
           {footer.links.map((link) => (
             <a
               key={`${link.label}-${link.url}`}
-              href={link.url}
+              href={safeUrl(link.url)}
               className="hover:text-text no-underline"
             >
               {link.label}
