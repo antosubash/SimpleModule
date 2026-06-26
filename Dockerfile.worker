@@ -78,6 +78,8 @@ COPY modules/Notifications/src/SimpleModule.Notifications.Contracts/*.csproj mod
 COPY modules/Notifications/src/SimpleModule.Notifications/*.csproj modules/Notifications/src/SimpleModule.Notifications/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
+COPY modules/Branding/src/SimpleModule.Branding.Contracts/*.csproj modules/Branding/src/SimpleModule.Branding.Contracts/
+COPY modules/Branding/src/SimpleModule.Branding/*.csproj modules/Branding/src/SimpleModule.Branding/
 
 RUN dotnet restore template/SimpleModule.Worker/SimpleModule.Worker.csproj
 
