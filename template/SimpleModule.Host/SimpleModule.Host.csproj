@@ -21,6 +21,7 @@
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />
+    <ProjectReference Include="..\..\modules\Branding\src\SimpleModule.Branding\SimpleModule.Branding.csproj" />
     <ProjectReference Include="..\..\modules\Dashboard\src\SimpleModule.Dashboard\SimpleModule.Dashboard.csproj" />
     <ProjectReference Include="..\..\modules\Users\src\SimpleModule.Users\SimpleModule.Users.csproj" />
     <ProjectReference Include="..\..\modules\OpenIddict\src\SimpleModule.OpenIddict\SimpleModule.OpenIddict.csproj" />

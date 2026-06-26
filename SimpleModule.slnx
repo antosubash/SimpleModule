@@ -22,6 +22,11 @@
     <Project Path="tools/SimpleModule.DevTools/SimpleModule.DevTools.csproj" />
   </Folder>
   <Folder Name="/modules/" />
+  <Folder Name="/modules/Branding/">
+    <Project Path="modules/Branding/src/SimpleModule.Branding.Contracts/SimpleModule.Branding.Contracts.csproj" />
+    <Project Path="modules/Branding/src/SimpleModule.Branding/SimpleModule.Branding.csproj" />
+    <Project Path="modules/Branding/tests/SimpleModule.Branding.Tests/SimpleModule.Branding.Tests.csproj" />
+  </Folder>
   <Folder Name="/modules/Dashboard/">
     <Project Path="modules/Dashboard/src/SimpleModule.Dashboard.Contracts/SimpleModule.Dashboard.Contracts.csproj" />
     <Project Path="modules/Dashboard/src/SimpleModule.Dashboard/SimpleModule.Dashboard.csproj" />

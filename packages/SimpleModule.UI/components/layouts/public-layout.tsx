@@ -1,18 +1,26 @@
 import { Link, usePage } from '@inertiajs/react';
 import * as React from 'react';
+import { BrandMark } from './brand-mark';
 import { DarkModeToggle } from './dark-mode-toggle';
+import { Footer } from './footer';
 import { MobileOverlay } from './public-layout-mobile';
 import { DesktopMenu } from './public-layout-nav';
+import { TopBar } from './top-bar';
 import type { SharedProps } from './types';
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   const { props } = usePage<SharedProps & Record<string, unknown>>();
-  const { publicMenu = [] } = props;
+  const { publicMenu = [], branding } = props;
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const closeMobile = React.useCallback(() => setMobileOpen(false), []);
 
+  React.useEffect(() => {
+    if (branding?.appName) document.title = branding.appName;
+  }, [branding?.appName]);
+
   return (
     <>
+      <TopBar />
       <nav
         className="sticky top-0 z-50 border-b border-border bg-surface-overlay"
         style={{
@@ -27,15 +35,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
               className="flex items-center gap-2.5 no-underline font-bold text-text group"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              <span
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105"
-                style={{
-                  background: 'var(--color-primary)',
-                }}
-              >
-                S
-              </span>
-              <span className="text-base">SimpleModule</span>
+              <BrandMark />
             </Link>
             <DesktopMenu items={publicMenu} />
           </div>
@@ -78,6 +78,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
       <MobileOverlay items={publicMenu} isOpen={mobileOpen} onClose={closeMobile} />
 
       <main className="max-w-7xl mx-auto mt-8 mb-16 px-4 sm:px-6">{children}</main>
+      <Footer />
     </>
   );
 }

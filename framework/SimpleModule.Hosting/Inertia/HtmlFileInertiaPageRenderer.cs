@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Security;
 using SimpleModule.DevTools;
@@ -15,12 +16,14 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
     private const string NoncePlaceholder = "<!--CSP_NONCE-->";
     private const string VersionPlaceholder = "<!--DEPLOY_VERSION-->";
     private const string ModuleCssPlaceholder = "<!--MODULE_CSS_LINKS-->";
+    private const string HeadContributionsPlaceholder = "<!--HEAD_CONTRIBUTIONS-->";
 
     private readonly string _beforePlaceholder;
     private readonly string _afterPlaceholder;
     private readonly string _beforePlaceholderViteDev;
     private readonly string _afterPlaceholderViteDev;
     private readonly bool _isDevelopment;
+    private readonly bool _hasHeadPlaceholder;
 
     public HtmlFileInertiaPageRenderer(IWebHostEnvironment env)
     {
@@ -56,6 +59,14 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         _afterPlaceholder = html[(idx + PagePlaceholder.Length)..];
         _isDevelopment = env.IsDevelopment();
 
+        // The head-contribution placeholder lives in <head>, i.e. before the page-data
+        // placeholder. If the host's shell omits it, skip the contributor pass entirely
+        // rather than resolving contributions that have nowhere to go.
+        _hasHeadPlaceholder = _beforePlaceholder.Contains(
+            HeadContributionsPlaceholder,
+            StringComparison.Ordinal
+        );
+
         if (_isDevelopment)
         {
             _beforePlaceholderViteDev = TransformForViteDev(_beforePlaceholder);
@@ -69,7 +80,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         }
     }
 
-    public Task RenderPageAsync(HttpContext httpContext, string pageJson)
+    public async Task RenderPageAsync(HttpContext httpContext, string pageJson)
     {
         var nonce = httpContext.RequestServices.GetRequiredService<ICspNonce>().Value;
         var useViteDev =
@@ -82,8 +93,21 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
                 ? "<script nonce=\"" + nonce + "\">" + LiveReloadClientScript + "</script>"
                 : "";
 
+        // Resolve per-request <head> contributions (e.g. branding color overrides,
+        // custom CSS, favicon). Replaced before the nonce pass so any nonce
+        // placeholders a contributor emits still get a real nonce.
+        if (_hasHeadPlaceholder)
+        {
+            var headHtml = await BuildHeadContributionsAsync(httpContext);
+            before = before.Replace(
+                HeadContributionsPlaceholder,
+                headHtml,
+                StringComparison.Ordinal
+            );
+        }
+
         httpContext.Response.ContentType = "text/html; charset=utf-8";
-        return httpContext.Response.WriteAsync(
+        await httpContext.Response.WriteAsync(
             string.Concat(
                 before.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal),
                 $"<script data-page=\"app\" type=\"application/json\" nonce=\"{nonce}\">{pageJson}</script>",
@@ -91,6 +115,41 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
                 after.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal)
             )
         );
+    }
+
+    private static async Task<string> BuildHeadContributionsAsync(HttpContext httpContext)
+    {
+        var contributors = httpContext.RequestServices.GetServices<IInertiaHeadContributor>();
+        StringBuilder? sb = null;
+        foreach (var contributor in contributors)
+        {
+            string? html;
+            try
+            {
+                html = await contributor.GetHeadHtmlAsync(httpContext);
+            }
+#pragma warning disable CA1031
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                // Head contributions are decorative; a failing contributor must not
+                // 500 the entire page (and every other page) — fail open and skip it.
+                httpContext
+                    .RequestServices.GetService<ILoggerFactory>()
+                    ?.CreateLogger<HtmlFileInertiaPageRenderer>()
+                    .LogWarning(
+                        ex,
+                        "Inertia head contributor {Contributor} threw; skipping its contribution.",
+                        contributor.GetType().Name
+                    );
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(html))
+                continue;
+            (sb ??= new StringBuilder()).Append(html);
+        }
+        return sb?.ToString() ?? string.Empty;
     }
 
     private static string BuildModuleCssLinks(IWebHostEnvironment env, string version)
