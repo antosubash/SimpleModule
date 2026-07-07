@@ -3,6 +3,6 @@
   "name": "@simplemodule/k6",
   "version": "0.0.0",
   "devDependencies": {
-    "@types/k6": "^1.0.0"
+    "@types/k6": "^2.0.0"
   }
 }
