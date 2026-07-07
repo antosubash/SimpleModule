@@ -43,10 +43,10 @@ Read `modules/{Name}/src/SimpleModule.{Name}/SimpleModule.{Name}.csproj`.
 
 Verify:
 - The file exists.
-- `Sdk="Microsoft.NET.Sdk"` (must NOT be `Microsoft.NET.Sdk.Razor` or `Microsoft.NET.Sdk.Web`).
+- `Sdk="Microsoft.NET.Sdk.StaticWebAssets"` (the implementation project ships the module's static frontend bundle; must NOT be `Microsoft.NET.Sdk.Razor` or `Microsoft.NET.Sdk.Web`).
 - Contains `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 
-Fix if failing: Set `Sdk="Microsoft.NET.Sdk"` if it is wrong. If `<FrameworkReference Include="Microsoft.AspNetCore.App" />` is missing, add it inside an `<ItemGroup>`.
+Fix if failing: Set `Sdk="Microsoft.NET.Sdk.StaticWebAssets"` if it is wrong. If `<FrameworkReference Include="Microsoft.AspNetCore.App" />` is missing, add it inside an `<ItemGroup>`.
 
 ---
 
@@ -80,18 +80,24 @@ Run:
 dotnet build --no-incremental 2>&1 | grep -E "SM0|error" | head -50
 ```
 
-Surface any SM00xx source generator diagnostic codes. Their meanings:
+Surface any SM00xx source generator diagnostic codes. Codes currently span **SM0001–SM0061** (non-contiguous); `docs/CONSTITUTION.md` is the authoritative catalog. The most commonly hit:
 
 | Code | Meaning |
 |------|---------|
-| SM0001 | Module class must be public and non-sealed |
-| SM0010 | IEndpoint implementation must be internal sealed |
-| SM0020 | IViewEndpoint implementation must be internal sealed |
-| SM0030 | [Dto] types must live in a Contracts assembly |
-| SM0040 | No impl→impl project references allowed between modules |
-| SM0044 | Inertia.Render component name not found in Pages/index.ts |
+| SM0011 | Direct module→module implementation reference (reference the `.Contracts` project instead) |
+| SM0014 | Referenced Contracts assembly has no public interfaces |
+| SM0025 | No implementation found for a contract interface (create the `{Name}ContractsService`) |
+| SM0032 | Permission class is not `sealed` |
+| SM0040 | Duplicate module name across modules |
+| SM0041 | View page name not prefixed with the module name |
+| SM0042 | Module has view endpoints but no `ViewPrefix` on `[Module]` |
+| SM0043 | Module overrides no `IModule` method |
+| SM0049 | More than one endpoint class in a single file |
+| SM0054 | Endpoint missing `public const string Route` (Info) |
+| SM0056 / SM0057 | `[FormRequest]` class not sealed / not extending `FormRequest<TSelf>` |
+| SM0058–SM0061 | Policy class rules (resource not a `[Dto]`, not public, foreign module, or generic) |
 
-Fix each reported code using the guidance above before continuing.
+For any code not listed here, look it up in `docs/CONSTITUTION.md`. Fix each reported code before continuing.
 
 ---
 
@@ -102,13 +108,13 @@ Run:
 npm run validate-pages
 ```
 
-If it exits with an error, identify each missing entry and show the exact line to add to `modules/{Name}/src/SimpleModule.{Name}/Pages/index.ts`:
+If it exits with an error, identify each missing entry and show the exact line to add to `modules/{Name}/src/SimpleModule.{Name}/Pages/index.ts` (pages are co-located in `Pages/`, so the import path is relative to that folder):
 
 ```typescript
-'{Name}/{ViewName}': () => import('../Views/{ViewName}'),
+'{Name}/{ViewName}': () => import('./{ViewName}'),
 ```
 
-Derive `{ViewName}` from the component name reported missing by `npm run validate-pages` (e.g., if it reports `Products/Browse`, the ViewName is `Browse`).
+Derive `{ViewName}` from the component name reported missing by `npm run validate-pages` (e.g., if it reports `AuditLogs/Browse`, the ViewName is `Browse`).
 
 Add the missing entries to the `pages` record in `Pages/index.ts`, then re-run `npm run validate-pages` to confirm it passes.
 

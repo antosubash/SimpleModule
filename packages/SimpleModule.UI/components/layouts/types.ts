@@ -16,6 +16,37 @@ export interface PublicMenuItem {
   children: PublicMenuItem[];
 }
 
+export interface BrandingLink {
+  label: string;
+  url: string;
+}
+
+export interface TopBarConfig {
+  enabled: boolean;
+  message: string;
+  backgroundColor: string;
+  textColor: string;
+  links: BrandingLink[];
+  dismissible: boolean;
+}
+
+export interface FooterConfig {
+  enabled: boolean;
+  text: string;
+  links: BrandingLink[];
+  showCopyright: boolean;
+}
+
+export interface BrandingProps {
+  appName: string;
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  colorPrimary: string;
+  colorPrimaryDark: string;
+  topBar: TopBarConfig;
+  footer: FooterConfig;
+}
+
 export interface SharedProps {
   auth: {
     isAuthenticated: boolean;
@@ -30,4 +61,5 @@ export interface SharedProps {
   };
   publicMenu: PublicMenuItem[];
   csrfToken: string;
+  branding?: BrandingProps;
 }

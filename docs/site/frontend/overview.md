@@ -25,7 +25,7 @@ Each module compiles its React pages into a single ES module bundle (`{ModuleNam
 | Technology | Version | Purpose |
 |---|---|---|
 | React | 19 | UI rendering |
-| Inertia.js | 2.x | SPA-like navigation without a client-side router |
+| Inertia.js | 3.x | SPA-like navigation without a client-side router |
 | Vite | 6.x | Build tooling and dev server |
 | Tailwind CSS | 4.x | Utility-first styling |
 | TypeScript | 5.8 | Type safety |

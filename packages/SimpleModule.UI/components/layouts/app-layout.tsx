@@ -1,6 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
 import * as React from 'react';
+import { BrandMark } from './brand-mark';
 import { DarkModeToggle } from './dark-mode-toggle';
+import { Footer } from './footer';
+import { TopBar } from './top-bar';
 import type { MenuItem, SharedProps } from './types';
 import { UserDropdown } from './user-dropdown';
 
@@ -38,8 +41,12 @@ function NavLink({
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { props } = usePage<SharedProps & Record<string, unknown>>();
-  const { auth, menus, csrfToken } = props;
+  const { auth, menus, csrfToken, branding } = props;
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+
+  React.useEffect(() => {
+    if (branding?.appName) document.title = branding.appName;
+  }, [branding?.appName]);
 
   const [collapsed, setCollapsed] = React.useState(
     () => localStorage.getItem('sidebar-collapsed') === 'true',
@@ -61,6 +68,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-layout">
+      <TopBar />
       {/* Mobile header */}
       <div className="app-mobile-header">
         <button
@@ -83,18 +91,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </button>
         <Link
           href="/"
-          className="flex items-center gap-2 no-underline font-bold text-text"
+          className="flex items-center gap-2 no-underline font-bold text-text group"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          <span
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-            style={{
-              background: 'var(--color-primary)',
-            }}
-          >
-            S
-          </span>
-          <span className="text-sm">SimpleModule</span>
+          <BrandMark />
         </Link>
       </div>
 
@@ -109,15 +109,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               className="flex items-center gap-2.5 no-underline font-bold text-text group"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              <span
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow-md transition-transform duration-200 group-hover:scale-105 shrink-0"
-                style={{
-                  background: 'var(--color-primary)',
-                }}
-              >
-                S
-              </span>
-              <span className="text-base sidebar-label">SimpleModule</span>
+              <BrandMark />
             </Link>
           </div>
 
@@ -175,6 +167,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       <main className="app-content">
         <div className="mt-8 mb-16">{children}</div>
+        <Footer />
       </main>
     </div>
   );

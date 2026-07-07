@@ -246,7 +246,7 @@ public class EditEndpoint : IViewEndpoint
 ```
 
 ::: warning
-When adding a new `IViewEndpoint`, you **must** also register the corresponding component in your module's `Pages/index.ts`. The Inertia component name in `Inertia.Render("Customers/Edit", ...)` must have a matching key in the pages record. If you forget, the page will silently 404 on the client side with no error.
+When adding a new `IViewEndpoint`, you **must** also register the corresponding component in your module's `Pages/index.ts`. The Inertia component name in `Inertia.Render("Customers/Edit", ...)` must have a matching key in the pages record. If you forget, the client throws a descriptive error (and shows an error toast) instead of rendering the page.
 
 Run `npm run validate-pages` to verify all endpoints have matching frontend entries.
 :::

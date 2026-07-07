@@ -55,26 +55,30 @@ This starts the .NET backend and Vite watchers for all modules and the ClientApp
 SimpleModule.AppHost           # .NET Aspire orchestration (app + PostgreSQL + pgAdmin)
 SimpleModule.ServiceDefaults   # Aspire service defaults (OpenTelemetry, health checks)
 framework/
-  SimpleModule.Core            # IModule, IEndpoint, IViewEndpoint, [Dto], [Module], IEventBus
+  SimpleModule.Core            # IModule, IEndpoint, IViewEndpoint, [Dto], [Module], events, menus
   SimpleModule.Generator       # Roslyn IIncrementalGenerator (netstandard2.0)
   SimpleModule.Database        # Multi-provider DB (SQLite, PostgreSQL, SQL Server)
   SimpleModule.Hosting         # ASP.NET host builder extensions, Inertia page rendering
-  SimpleModule.DevTools        # Developer tooling and diagnostics
-  SimpleModule.Storage         # File storage abstraction with Local, Azure Blob, and S3 providers
+  SimpleModule.Storage(.Local/.Azure/.S3)  # File storage abstraction + provider implementations
+  SimpleModule.Testing         # Shared testing utilities for module test projects
 modules/
-  Admin, Agents, AuditLogs, BackgroundJobs, Dashboard, Email,
-  FeatureFlags, FileStorage, Localization, Marketplace, Orders,
-  PageBuilder, Products, Rag, RateLimiting, Settings, Tenants, Users
+  Admin, AuditLogs, BackgroundJobs, Dashboard, Email, FeatureFlags,
+  FileStorage, Identity, Keycloak, Localization, Notifications,
+  RateLimiting, Settings, Tenants, Users
   OpenIddict                   # OpenID Connect / OAuth 2.0 via OpenIddict
   Permissions                  # RBAC and access control
 packages/
   SimpleModule.Client          # Vite plugin + page resolution for module frontends
   SimpleModule.UI              # Radix UI component library with Tailwind
   SimpleModule.Theme.Default   # Tailwind CSS base theme
+  SimpleModule.Echo            # Real-time client for the broadcasting hub (wraps SignalR)
+  SimpleModule.TsConfig        # Shared TypeScript configuration
 template/
   SimpleModule.Host            # Host app (net10.0) — wires modules via generated code
 cli/
   SimpleModule.Cli             # `sm` CLI tool for scaffolding and validation
+tools/
+  SimpleModule.DevTools        # Developer tooling and diagnostics
 tests/                         # Framework tests, shared test infrastructure, and e2e tests
 scripts/                       # Build/dev orchestrators, type extraction, component scaffolding
 ```
@@ -83,9 +87,9 @@ scripts/                       # Build/dev orchestrators, type extraction, compo
 
 ```
 Browser request
-  → ASP.NET route handler calls Inertia.Render("Products/Browse", { products })
+  → ASP.NET route handler calls Inertia.Render("Tenants/Browse", { tenants })
   → Inertia middleware renders static HTML shell with JSON props
-  → Client loads React, dynamically imports module's Products.pages.js bundle
+  → Client loads React, dynamically imports module's Tenants.pages.js bundle
   → React component hydrates with server-provided props
 ```
 
@@ -93,31 +97,31 @@ Subsequent navigations are XHR — Inertia fetches JSON props and swaps the Reac
 
 ### Module Anatomy
 
-Each module follows the same structure. Using Products as an example:
+Each module follows the same structure. Using the Tenants module as an example:
 
 ```
-modules/Products/
+modules/Tenants/
   src/
-    Products.Contracts/        # Public interface + DTOs (what other modules depend on)
-      IProductContracts.cs     # Service interface
-      Product.cs               # [Dto] — generates TypeScript types
-      ProductId.cs             # Strongly-typed ID
-      CreateProductRequest.cs  # Request DTO
-    Products/                  # Implementation (never referenced by other modules)
-      ProductsModule.cs        # [Module("Products")] + IModule — DI, menus, permissions
-      ProductsDbContext.cs     # Module-scoped EF Core context
-      ProductService.cs        # Implements IProductContracts
-      Endpoints/Products/      # IEndpoint classes (auto-discovered, auto-mapped)
-      Views/                   # React .tsx pages
-      Pages/index.ts           # Page registry — maps route names to lazy component imports
+    SimpleModule.Tenants.Contracts/   # Public interface + DTOs (what other modules depend on)
+      ITenantContracts.cs             # Service interface
+      Tenant.cs                       # [Dto] — generates TypeScript types
+      TenantId.cs                     # Strongly-typed ID
+      CreateTenantRequest.cs          # Request DTO
+    SimpleModule.Tenants/             # Implementation (never referenced by other modules)
+      TenantsModule.cs                # [Module("Tenants")] + IModule — DI, menus, permissions
+      TenantsDbContext.cs             # Module-scoped EF Core context
+      TenantService.cs                # Implements ITenantContracts
+      Endpoints/Tenants/              # IEndpoint classes (auto-discovered, auto-mapped)
+      Pages/                          # IViewEndpoint classes + co-located React .tsx pages
+      Pages/index.ts                  # Page registry — maps route names to lazy component imports
   tests/
-    Products.Tests/            # xUnit tests for this module
+    SimpleModule.Tenants.Tests/       # xUnit tests for this module
 ```
 
 ### Module Communication
 
-- **Contracts** — Modules expose a `.Contracts` project with a public interface (e.g., `IProductContracts`) and `[Dto]` types. Other modules depend on contract interfaces, never on implementation projects.
-- **Event bus** — `IEventBus.PublishAsync<T>()` broadcasts to all `IEventHandler<T>` implementations. Handlers execute sequentially; failures are isolated and collected into an `AggregateException`.
+- **Contracts** — Modules expose a `.Contracts` project with a public interface (e.g., `ITenantContracts`) and `[Dto]` types. Other modules depend on contract interfaces, never on implementation projects.
+- **Event bus** — Modules publish domain events via Wolverine's `IMessageBus.PublishAsync<T>()`. Handlers are discovered by naming convention (a class ending in `Handler`/`Consumer` with a `Handle`/`Consume` method) and dispatched in-process through a durable inbox/outbox — no manual registration needed.
 
 ### Database
 

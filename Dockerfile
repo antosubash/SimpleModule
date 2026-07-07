@@ -70,6 +70,8 @@ COPY modules/Notifications/src/SimpleModule.Notifications.Contracts/*.csproj mod
 COPY modules/Notifications/src/SimpleModule.Notifications/*.csproj modules/Notifications/src/SimpleModule.Notifications/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting.Contracts/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/*.csproj modules/RateLimiting/src/SimpleModule.RateLimiting/
+COPY modules/Branding/src/SimpleModule.Branding.Contracts/*.csproj modules/Branding/src/SimpleModule.Branding.Contracts/
+COPY modules/Branding/src/SimpleModule.Branding/*.csproj modules/Branding/src/SimpleModule.Branding/
 
 RUN dotnet restore template/SimpleModule.Host/SimpleModule.Host.csproj
 
@@ -96,6 +98,7 @@ COPY modules/BackgroundJobs/src/SimpleModule.BackgroundJobs/package.json modules
 COPY modules/Email/src/SimpleModule.Email/package.json modules/Email/src/SimpleModule.Email/
 COPY modules/Notifications/src/SimpleModule.Notifications/package.json modules/Notifications/src/SimpleModule.Notifications/
 COPY modules/RateLimiting/src/SimpleModule.RateLimiting/package.json modules/RateLimiting/src/SimpleModule.RateLimiting/
+COPY modules/Branding/src/SimpleModule.Branding/package.json modules/Branding/src/SimpleModule.Branding/
 COPY packages/SimpleModule.Client/package.json packages/SimpleModule.Client/
 COPY packages/SimpleModule.Theme.Default/package.json packages/SimpleModule.Theme.Default/
 COPY packages/SimpleModule.TsConfig/package.json packages/SimpleModule.TsConfig/

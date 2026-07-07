@@ -28,7 +28,7 @@ public sealed class ProductsModule : IModule
 - **IModule** interface for defining self-contained modules
 - **IEndpoint** interface for auto-discovered Minimal API endpoints
 - **[Dto]** attribute for cross-module data transfer types with TypeScript generation
-- **IEventBus** for decoupled module-to-module communication
+- **Domain events** (`IEvent` / `DomainEvent`) dispatched in-process via Wolverine's `IMessageBus` for decoupled module-to-module communication
 - **IMenuRegistry** for dynamic navigation menu registration
 - **Inertia.js integration** for server-driven React page rendering
 

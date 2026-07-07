@@ -34,11 +34,15 @@ Check each match:
 
 3. **RequirePermission** — Endpoints must use `.RequirePermission(...)` not bare `.RequireAuthorization()`. Flag any `.RequireAuthorization()` call without a permission argument.
 
+4. **Route const** — Every endpoint class must declare `public const string Route = {Name}Constants.Routes.X;` and pass `Route` to its `MapXxx` call (enforced by **SM0054**). Flag any endpoint that hardcodes the route literal in the `MapXxx` call instead of declaring/using the const.
+
+5. **FormRequest binding** — Form posts should bind a `[FormRequest]` class from the module's `FormRequests/` folder, declared `sealed partial` and extending `FormRequest<TSelf>` (**SM0056** / **SM0057**), bound directly as a handler parameter. Flag `[FormRequest]` classes that are not sealed or do not extend `FormRequest<TSelf>`.
+
 ---
 
 ## Area 3 — Naming conventions
 
-Grep for class definitions (`class `) in `modules/{Name}/src/SimpleModule.{Name}/Endpoints/` and `modules/{Name}/src/SimpleModule.{Name}/Views/`.
+Grep for class definitions (`class `) in `modules/{Name}/src/SimpleModule.{Name}/Endpoints/` and `modules/{Name}/src/SimpleModule.{Name}/Pages/`.
 
 For each source file found:
 
@@ -60,26 +64,26 @@ Compare the two sets: every component key from an `Inertia.Render` call must app
 
 Then run `npm run validate-pages` for authoritative output and report any additional mismatches it finds.
 
-Violation fix: Add a matching entry to `Pages/index.ts`:
+Violation fix: Add a matching entry to `Pages/index.ts` (pages are co-located in `Pages/`):
 ```typescript
-"{Name}/{ViewName}": () => import("../Views/{ViewName}"),
+"{Name}/{ViewName}": () => import("./{ViewName}"),
 ```
 
 ---
 
-## Area 5 — Events: Proper definition and registration
+## Area 5 — Events: Wolverine definition and handler conventions
 
-Grep for `: IEvent` in `modules/{Name}/src/SimpleModule.{Name}.Contracts/`.
+Events use [Wolverine](https://wolverinefx.net/) in-process messaging — there is **no** `IEventHandler<>` interface and **no** DI registration for handlers.
+
+Grep for `: DomainEvent` in `modules/{Name}/src/SimpleModule.{Name}.Contracts/`.
 
 For each event type found:
 
-1. **Record type** — events must be `record` types, not `class`. Flag any `class` that implements `IEvent`.
+1. **Record + Contracts** — events must be `record` types inheriting `DomainEvent` (from `SimpleModule.Core.Events`) and live in the `.Contracts` assembly. Flag any `class`-based event, any event missing the `DomainEvent` base, or any event defined in the implementation assembly.
 
-Grep for `IEventHandler<` in `modules/{Name}/src/SimpleModule.{Name}/`.
+Handlers are auto-discovered by Wolverine convention — class name ending in `Handler`/`Consumer`, method named `Handle`/`HandleAsync`/`Consume`/`ConsumeAsync`, first parameter is the event, remaining parameters resolved from DI.
 
-For each handler found, check that a corresponding `services.AddScoped<IEventHandler<TEvent>, THandler>()` call exists in `ConfigureServices` (or wherever DI is configured in the module class). Flag any handler with no registration.
-
-Violation fix for missing registration: Add `services.AddScoped<IEventHandler<{EventType}>, {HandlerType}>();` in `ConfigureServices`.
+2. **Handler convention** — flag any would-be handler whose class/method names don't match the convention (and isn't opted in with `[WolverineHandler]`), since it will silently never fire. Do **not** flag a missing `services.AddScoped(...)` registration — handlers need none.
 
 ---
 
@@ -87,7 +91,7 @@ Violation fix for missing registration: Add `services.AddScoped<IEventHandler<{E
 
 List all files matching `*Endpoint.cs` in:
 - `modules/{Name}/src/SimpleModule.{Name}/Endpoints/`
-- `modules/{Name}/src/SimpleModule.{Name}/Views/`
+- `modules/{Name}/src/SimpleModule.{Name}/Pages/`
 
 List all test files in `modules/{Name}/tests/SimpleModule.{Name}.Tests/`.
 
@@ -97,7 +101,7 @@ Note: integration tests using `SimpleModuleWebApplicationFactory` with `CreateAu
 
 ---
 
-## Area 7 — Permissions: Sealed class with const strings
+## Area 7 — Permissions & policies
 
 Grep for `IModulePermissions` in `modules/{Name}/src/` (covers both the implementation assembly and the `.Contracts` assembly).
 
@@ -110,8 +114,12 @@ If a permissions class implementing `IModulePermissions` was found above, grep f
 
 3. **ConfigurePermissions registration** — This check is conditional:
    - If a permissions class implementing `IModulePermissions` exists **and** `builder.AddPermissions<{Name}Permissions>()` is absent from `{Name}Module.cs`: flag it as a violation.
-   - If no permissions class exists and no `AddPermissions` call exists: mark Area 7 as N/A.
+   - If no permissions class exists and no `AddPermissions` call exists: mark this check as N/A.
    - If both exist and the type matches: OK.
+
+**Policies (instance-level authorization).** Grep for `: IPolicy<` in `modules/{Name}/src/SimpleModule.{Name}/`. For each policy class found:
+
+4. **Policy rules** — the class must be `public sealed`, non-generic, and target a resource type that is a contracts `[Dto]` owned by **this** module (enforced by **SM0058**–**SM0061**). Flag any policy that is non-public, generic, targets a non-`[Dto]` or foreign-module resource. Policies are auto-discovered — do **not** flag a missing DI registration. If the module has no `IPolicy<>` classes, mark this check as N/A.
 
 ---
 
