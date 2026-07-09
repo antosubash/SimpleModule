@@ -60,11 +60,15 @@ SimpleModule/
 │   ├── Admin/
 │   ├── AuditLogs/
 │   ├── BackgroundJobs/
+│   ├── Branding/
 │   ├── Dashboard/
 │   ├── Email/
 │   ├── FeatureFlags/
 │   ├── FileStorage/
+│   ├── Identity/
+│   ├── Keycloak/
 │   ├── Localization/
+│   ├── Notifications/
 │   ├── OpenIddict/
 │   ├── Permissions/
 │   ├── RateLimiting/
