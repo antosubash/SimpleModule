@@ -137,6 +137,21 @@ app.Use(async (context, next) =>
 
 Shared data has **lower priority** than endpoint props. If an endpoint sets a prop with the same key as shared data, the endpoint's value wins.
 
+### Head Contributions
+
+To inject HTML into the document `<head>` of every full server-rendered page (styles, meta tags, favicon links), implement `IInertiaHeadContributor` and register it as a **scoped** service:
+
+```csharp
+public interface IInertiaHeadContributor
+{
+    ValueTask<string?> GetHeadHtmlAsync(HttpContext context);
+}
+```
+
+The renderer resolves all registered contributors per request and substitutes their combined output for the `<!--HEAD_CONTRIBUTIONS-->` placeholder just before `</head>`. Because this happens server-side, the injected markup (e.g. CSS variable overrides) applies before first paint. Contributors are responsible for their own escaping, and a throwing contributor is skipped rather than failing the page.
+
+The [Branding module](/guide/branding) uses this to inject brand colors, custom CSS, and the favicon.
+
 ### Version Detection
 
 The Inertia middleware handles asset versioning to prevent stale JavaScript from running after deployments:
@@ -178,6 +193,7 @@ The host's `wwwroot/index.html` contains these placeholders:
         }
     }
     </script>
+    <!--HEAD_CONTRIBUTIONS-->
 </head>
 <body>
     <!--INERTIA_PAGE_DATA-->
@@ -199,7 +215,7 @@ At request time, `RenderPageAsync` writes:
 before + <script data-page="app" type="application/json" nonce="…">{pageJson}</script> + after
 ```
 
-and swaps `<!--CSP_NONCE-->` with the per-request nonce from `ICspNonce`. In development it also strips the import map and app.js script tag and injects Vite's `/@vite/client` and `/app.tsx` entries when the Vite dev server is active (via `DevToolsConstants.ViteDevServerKey`).
+and swaps `<!--CSP_NONCE-->` with the per-request nonce from `ICspNonce` and `<!--HEAD_CONTRIBUTIONS-->` with the combined output of all registered `IInertiaHeadContributor` services (see [Head Contributions](#head-contributions)). In development it also strips the import map and app.js script tag and injects Vite's `/@vite/client` and `/app.tsx` entries when the Vite dev server is active (via `DevToolsConstants.ViteDevServerKey`).
 
 To swap the renderer, replace the `IInertiaPageRenderer` registration with your own implementation — there is no `InertiaOptions.ShellComponent` or `AddSimpleModuleBlazor` hook.
 

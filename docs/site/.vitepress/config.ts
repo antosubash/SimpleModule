@@ -68,6 +68,7 @@ export default defineConfig({
             { text: 'Rate Limiting', link: '/guide/rate-limiting' },
             { text: 'Identity & Sessions', link: '/guide/identity' },
             { text: 'Localization', link: '/guide/localization' },
+            { text: 'Branding', link: '/guide/branding' },
             { text: 'Error Pages', link: '/guide/error-pages' },
           ],
         },

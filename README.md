@@ -62,7 +62,7 @@ framework/
   SimpleModule.Storage(.Local/.Azure/.S3)  # File storage abstraction + provider implementations
   SimpleModule.Testing         # Shared testing utilities for module test projects
 modules/
-  Admin, AuditLogs, BackgroundJobs, Dashboard, Email, FeatureFlags,
+  Admin, AuditLogs, BackgroundJobs, Branding, Dashboard, Email, FeatureFlags,
   FileStorage, Identity, Keycloak, Localization, Notifications,
   RateLimiting, Settings, Tenants, Users
   OpenIddict                   # OpenID Connect / OAuth 2.0 via OpenIddict
