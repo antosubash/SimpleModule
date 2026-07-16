@@ -69,6 +69,9 @@ internal static class DtoFinder
                                 FullyQualifiedName = fqn,
                                 SafeName = safeName,
                                 BaseTypeFqn = baseTypeFqn,
+                                HasParameterlessConstructor = HasPublicParameterlessConstructor(
+                                    typeSymbol
+                                ),
                                 Properties = DtoPropertyExtractor.Extract(typeSymbol),
                             }
                         );
@@ -202,11 +205,32 @@ internal static class DtoFinder
                         FullyQualifiedName = fqn,
                         SafeName = safeName,
                         BaseTypeFqn = baseTypeFqn,
+                        HasParameterlessConstructor = HasPublicParameterlessConstructor(
+                            typeSymbol
+                        ),
                         Properties = DtoPropertyExtractor.Extract(typeSymbol),
                     }
                 );
             }
         }
+    }
+
+    /// <summary>
+    /// True when <c>new T()</c> is valid for the type: non-abstract with a public
+    /// parameterless instance constructor. Positional records and ctor-only types
+    /// return false so the JSON resolver skips <c>CreateObject</c> for them.
+    /// </summary>
+    private static bool HasPublicParameterlessConstructor(INamedTypeSymbol typeSymbol)
+    {
+        if (typeSymbol.IsAbstract)
+            return false;
+
+        foreach (var ctor in typeSymbol.InstanceConstructors)
+        {
+            if (ctor.Parameters.Length == 0 && ctor.DeclaredAccessibility == Accessibility.Public)
+                return true;
+        }
+        return false;
     }
 
     /// <summary>

@@ -1,5 +1,8 @@
 using FluentAssertions;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace SimpleModule.Database.Tests;
 
@@ -51,6 +54,67 @@ public sealed partial class EntityInterceptorTests
             .Context.MultiTenantEntities.IgnoreQueryFilters()
             .ToListAsync();
         allResults.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task MultiTenant_Filter_Reads_Executing_Context_Tenant_Across_Shared_Model()
+    {
+        // Regression for the cross-tenant leak: two contexts of the same type share one
+        // cached EF model (same internal service provider) and one database (same
+        // connection) but carry different tenants. The filter must read each executing
+        // context's tenant — not the tenant frozen into the model when the first context
+        // built it. Under the previous Expression.Constant(tenantContext) implementation,
+        // contextB below would still filter by tenant-a and return the wrong row.
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+
+        using var internalProvider = new ServiceCollection()
+            .AddEntityFrameworkSqlite()
+            .BuildServiceProvider();
+
+        var dbOptions = Options.Create(
+            new DatabaseOptions { DefaultConnection = "Data Source=:memory:" }
+        );
+
+        DbContextOptions<MultiTenantTestDbContext> BuildOptions() =>
+            new DbContextOptionsBuilder<MultiTenantTestDbContext>()
+                .UseSqlite(connection)
+                .UseInternalServiceProvider(internalProvider)
+                .Options;
+
+        // Context for tenant-a builds the shared model first and seeds both tenants' rows.
+        await using (
+            var contextA = new MultiTenantTestDbContext(
+                BuildOptions(),
+                dbOptions,
+                new TestTenantContext("tenant-a")
+            )
+        )
+        {
+            await contextA.Database.EnsureCreatedAsync();
+            contextA.MultiTenantEntities.AddRange(
+                new MultiTenantTestEntity { Name = "A", TenantId = "tenant-a" },
+                new MultiTenantTestEntity { Name = "B", TenantId = "tenant-b" }
+            );
+            await contextA.SaveChangesAsync();
+
+            var aResults = await contextA.MultiTenantEntities.ToListAsync();
+            aResults.Should().ContainSingle().Which.Name.Should().Be("A");
+        }
+
+        // A second context reuses the cached model and shared data but with a different
+        // tenant; it must see only tenant-b's row.
+        await using (
+            var contextB = new MultiTenantTestDbContext(
+                BuildOptions(),
+                dbOptions,
+                new TestTenantContext("tenant-b")
+            )
+        )
+        {
+            var bResults = await contextB.MultiTenantEntities.ToListAsync();
+            bResults.Should().ContainSingle().Which.Name.Should().Be("B");
+        }
     }
 
     [Fact]

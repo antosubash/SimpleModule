@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using SimpleModule.Core.Extensions;
 
 namespace SimpleModule.Core.FeatureFlags;
 
@@ -22,8 +22,8 @@ public static class EndpointFeatureFlagExtensions
                     return await next(context);
                 }
 
-                var userId = context.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var roles = context.HttpContext.User.FindAll(ClaimTypes.Role).Select(c => c.Value);
+                var userId = context.HttpContext.User.GetUserId();
+                var roles = context.HttpContext.User.GetRoles();
 
                 var isEnabled = await featureFlagService.IsEnabledAsync(featureName, userId, roles);
 

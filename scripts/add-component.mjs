@@ -7,7 +7,11 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
-const UI_DIR = resolve(ROOT, 'src/SimpleModule.UI');
+// This framework repo keeps the UI package under packages/; downstream scaffolded
+// apps keep it under src/. Pick whichever exists so `ui:add` works in both.
+const UI_DIR = [resolve(ROOT, 'packages/SimpleModule.UI'), resolve(ROOT, 'src/SimpleModule.UI')].find(
+  (dir) => existsSync(dir),
+) ?? resolve(ROOT, 'packages/SimpleModule.UI');
 const REGISTRY_PATH = resolve(UI_DIR, 'registry/registry.json');
 const TEMPLATES_DIR = resolve(UI_DIR, 'registry/templates');
 const COMPONENTS_DIR = resolve(UI_DIR, 'components');

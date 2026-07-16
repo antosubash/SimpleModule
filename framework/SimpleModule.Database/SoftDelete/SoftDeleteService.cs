@@ -202,9 +202,45 @@ public sealed class SoftDeleteService<T, TContext>(TContext context) : ISoftDele
     private static object CoerceId(object id, Type keyType)
     {
         ArgumentNullException.ThrowIfNull(id);
-        return id.GetType() == keyType
-            ? id
-            : Convert.ChangeType(id, keyType, System.Globalization.CultureInfo.InvariantCulture);
+
+        if (keyType.IsInstanceOfType(id))
+        {
+            return id;
+        }
+
+        var targetType = Nullable.GetUnderlyingType(keyType) ?? keyType;
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+
+        // Guid does not implement IConvertible, so Convert.ChangeType throws for it —
+        // the common "string route value for a Guid PK" case. Parse it explicitly.
+        if (targetType == typeof(Guid))
+        {
+            return id is Guid guid ? guid : Guid.Parse(Convert.ToString(id, culture)!);
+        }
+
+        // Primitive/IConvertible keys (int, long, string, ...).
+        if (id is IConvertible)
+        {
+            try
+            {
+                return Convert.ChangeType(id, targetType, culture);
+            }
+            catch (InvalidCastException)
+            {
+                // Fall through to a TypeConverter (covers Vogen value-object keys, which
+                // Convert.ChangeType can't handle but usually expose a TypeConverter).
+            }
+        }
+
+        var converter = System.ComponentModel.TypeDescriptor.GetConverter(targetType);
+        if (converter.CanConvertFrom(id.GetType()))
+        {
+            return converter.ConvertFrom(null, culture, id)!;
+        }
+
+        throw new InvalidOperationException(
+            $"Cannot convert id of type '{id.GetType()}' to key type '{keyType}'."
+        );
     }
 
     private sealed record KeyMetadata(string KeyName, Type KeyType)

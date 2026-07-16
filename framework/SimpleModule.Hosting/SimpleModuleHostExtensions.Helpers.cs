@@ -16,6 +16,18 @@ public static partial class SimpleModuleHostExtensions
     private const string ModuleContentPathPrefix = "/_content/";
     private const string ModuleScriptExtension = ".mjs";
 
+    // Path prefixes that only ever serve immutable, versioned static assets. The
+    // "?v=" cache-buster is appended exclusively to URLs under these prefixes
+    // (module CSS/JS, the JS bundle), so the immutable cache header must be scoped
+    // to them — a "?v=" on any other path (e.g. a rendered page at /dashboard?v=1)
+    // must NOT be marked publicly cacheable.
+    private static readonly string[] StaticAssetPathPrefixes =
+    [
+        ModuleContentPathPrefix,
+        "/js/",
+        "/css/",
+    ];
+
     /// <summary>
     /// Reads a config list that may be expressed either as a JSON/indexed array
     /// (<c>ForwardedHeaders:KnownProxies:0</c>) or as a single comma-separated
@@ -102,7 +114,9 @@ public static partial class SimpleModuleHostExtensions
                     return;
                 }
 
-                bool hasVersionParam = context.Request.Query.ContainsKey("v");
+                bool isStaticAssetPath = IsStaticAssetPath(path);
+                bool hasVersionParam =
+                    isStaticAssetPath && context.Request.Query.ContainsKey("v");
                 bool isVendorJs = path.StartsWith(
                     VendorJsPathPrefix,
                     StringComparison.OrdinalIgnoreCase
@@ -124,6 +138,19 @@ public static partial class SimpleModuleHostExtensions
                 await next();
             }
         );
+    }
+
+    private static bool IsStaticAssetPath(string path)
+    {
+        foreach (var prefix in StaticAssetPathPrefixes)
+        {
+            if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void UseHomePageRewrite(WebApplication app)

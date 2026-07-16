@@ -64,8 +64,10 @@ public sealed partial class EntityInterceptorTests
         DbContextOptions<EntityTestDbContext> options,
         IOptions<DatabaseOptions> dbOptions,
         ITenantContext? tenantContext = null
-    ) : DbContext(options)
+    ) : DbContext(options), ITenantScopedDbContext
     {
+        public string? CurrentTenantId => tenantContext?.TenantId;
+
         public DbSet<TimestampedTestEntity> TimestampedEntities => Set<TimestampedTestEntity>();
         public DbSet<AuditableTestEntity> AuditableEntities => Set<AuditableTestEntity>();
         public DbSet<SoftDeleteTestEntity> SoftDeleteEntities => Set<SoftDeleteTestEntity>();
@@ -98,7 +100,7 @@ public sealed partial class EntityInterceptorTests
 
             if (tenantContext is not null)
             {
-                modelBuilder.ApplyMultiTenantFilters(tenantContext);
+                modelBuilder.ApplyMultiTenantFilters(this);
             }
         }
     }
@@ -107,15 +109,17 @@ public sealed partial class EntityInterceptorTests
         DbContextOptions<MultiTenantTestDbContext> options,
         IOptions<DatabaseOptions> dbOptions,
         ITenantContext tenantContext
-    ) : DbContext(options)
+    ) : DbContext(options), ITenantScopedDbContext
     {
+        public string? CurrentTenantId => tenantContext.TenantId;
+
         public DbSet<MultiTenantTestEntity> MultiTenantEntities => Set<MultiTenantTestEntity>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<MultiTenantTestEntity>(e => e.HasKey(x => x.Id));
             modelBuilder.ApplyModuleSchema("MultiTenantTest", dbOptions.Value);
-            modelBuilder.ApplyMultiTenantFilters(tenantContext);
+            modelBuilder.ApplyMultiTenantFilters(this);
         }
     }
 }

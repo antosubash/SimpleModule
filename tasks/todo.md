@@ -1,79 +1,79 @@
-# Fix critical issues from framework review (2026-06-09)
+# Framework review fixes (2026-07-16)
 
-## Critical 1 — page-registry guard broken on both ends
-- [x] Fix `validate-pages.mjs` path: scan `modules/*/src/*/` (real layout is `src/SimpleModule.<Name>`), skip `obj`/`bin`
-- [x] Add self-check: fail when zero C# files or zero view endpoints are found repo-wide (path drift can never silently disable the guard again)
-- [x] Fix `app.tsx:232` `showErrorToast(...)` → `showToast({ variant: 'error', ... })` (ReferenceError on failed page load)
-- [x] Add `ClientApp/tsconfig.json` and include ClientApp in `scripts/typecheck.mjs`
+Fixes from the July 2026 5-area framework review. The review initially ran against a
+stale local main (12 behind origin/main); every item below was re-verified against
+origin/main. Already fixed upstream (dropped): showErrorToast, validate-pages path,
+ClientApp typecheck, ForwardedHeaders config, download-link click guard.
 
-## Critical 2 — default deployment one request from admin token
-- [x] `UserSeedService`: fail fast in non-Development when `Seed:AdminPassword` unset; never seed test user with default password outside Development
-- [x] OpenIddict: refuse `AllowPasswordFlow` in Production; fail fast on ephemeral signing/encryption keys in Production
-- [x] `SimpleModuleHostExtensions`: stop clearing `KnownProxies`/`KnownIPNetworks` unconditionally — config-driven (`ForwardedHeaders:KnownProxies`/`KnownNetworks`/`TrustAllProxies`)
-- [x] `docker-compose.yml`: explicit `OpenIddict__AllowPasswordGrant: "false"`, required seed-password env vars
-- [x] Enforce `FileStorageModuleOptions` (MaxFileSizeMb / AllowedExtensions) in UploadEndpoint
+Deferred (recorded, not dropped): generator pipeline split onto
+MetadataReferencesProvider / ForAttributeWithMetadataName (upstream todo already
+tracks it), @simplemodule/ui shared-chunk vendoring, generated-literal escaping
+helper, test-claim `;` escaping.
 
-## Critical 3 — remaining #242-class DbContext races
-- [x] `AdminService.GetAdminOverviewAsync` — sequential awaits
-- [x] `Admin/Pages/Admin/UsersEditEndpoint` — sequential awaits
-- [x] `TenantFeatureHelper.GetOverridesForTenantAsync` — sequential awaits (throws with 2+ active flags)
+## High
+- [x] 1. FeatureFlags endpoint gate reads NameIdentifier only — use sub-aware helper (Core/FeatureFlags/EndpointFeatureFlagExtensions.cs)
+- [x] 2. `?v=` query alone applies 1-year public+immutable cache header to any response incl. authed HTML — gate on static-asset path (Hosting/SimpleModuleHostExtensions.Helpers.cs)
+- [x] 3. LocalStorageProvider: ListAsync bypasses traversal guard; GetFullPath boundary check lacks separator + uses OrdinalIgnoreCase (Storage.Local)
+- [x] 4. Multi-tenant filter bakes scoped ITenantContext into cached EF model (first tenant frozen forever); null-tenant coalesces to "" matching empty-tenant rows (Database/ModuleModelBuilderExtensions.cs)
+- [~] 6. Generator scans every referenced assembly (BCL, ASP.NET) on each compile; [FormRequest] scanned twice (Generator/Discovery/SymbolDiscovery.cs) — IN PROGRESS (subagent)
 
-## Outbox gaps (events lost on crash after SaveChanges)
-- [x] `TenantService.CreateTenantAsync` — use `IDbContextOutbox` like UpdateTenantAsync already does
-- [x] `FileStorageService.UploadFileAsync` — same
+## Medium
+- [x] 7. InertiaResult.MergeProps double-serializes props on every shared-data render (Core/Inertia/InertiaResult.cs)
+- [x] 8. InertiaLayoutDataMiddleware does antiforgery crypto + menu work for static assets/probes/APIs — gate to Inertia/HTML requests (Hosting/Middleware)
+- [~] 10. Generated JSON resolver uncompilable for init-only props / missing parameterless ctor (Generator DtoPropertyExtractor + JsonResolverEmitter) — IN PROGRESS (subagent)
+- [x] 11. EntityInterceptor/EntityChangeInterceptor only override async SaveChanges — sync path hard-deletes soft-delete entities silently (Database/Interceptors)
+- [x] 12. vite-plugin-vendor skips rebuild when outputs exist — stale React after version bump (packages/SimpleModule.Client)
 
-## Critical 4 — docs describe phantom modules
-- [x] CLAUDE.md: load-test section lists 11 scenarios incl. Products/Orders/Marketplace/PageBuilder — only 6 exist (Admin, AuditLogs, FeatureFlags, FileStorage, Settings, Users)
-- [x] CLAUDE.md: `modules/Products/src/Products` examples use wrong layout (`src/SimpleModule.<Name>`) — likely origin of the validate-pages bug
-- [x] Sweep docs/CONSTITUTION.md + skills for phantom-module/wrong-layout references
-- (untracked WIP dirs in the main checkout are stale build artifacts — left alone)
+## Low
+- [x] 13. PermissionMatcher wildcard allocates substring per check — span it
+- [x] 14. GlobalExceptionHandler maps ArgumentNullException to client 400 at Warning
+- [x] 15. InertiaMiddleware.Version throws on single-file publish (empty Assembly.Location)
+- [~] 16. SymbolHelpers module-namespace prefix match lacks trailing-dot boundary — IN PROGRESS (subagent)
+- [~] 17. ViewPagesEmitter hint name collides for same-named module classes in different namespaces — IN PROGRESS (subagent)
+- [x] 18. SoftDeleteService.CoerceId: Convert.ChangeType throws for Guid keys
+- [x] 19. Maintenance-gate comment claims static assets are spared — they aren't
+- [x] 20. PermissionRegistryBuilder O(n²) list.Contains dedup
+- [x] 21. app.tsx click interceptor: hash-only anchors re-request page instead of scrolling
+- [x] 22. add-component.mjs UI path wrong for this repo (src/SimpleModule.UI vs packages/)
+- [x] 23. typecheck.mjs unbounded tsc parallelism
 
-## CI gaps
-- [ ] PostgreSQL test leg — DEFERRED: `SimpleModuleWebApplicationFactory` is deeply SQLite-coupled (shared in-memory connection, static env bootstrap, Wolverine SQLite file); a reliable dual-provider factory is its own change. Docs no longer claim it exists.
-- [x] CodeQL workflow
-- [x] Dependabot config (nuget, npm, github-actions)
-- [x] `dotnet list package --vulnerable` CI step
-
-## Code-review round 1 — fixes applied
-- [x] ForwardedHeaders KnownProxies/KnownNetworks: accept comma-separated scalar (the form the docker-compose comment documents) as well as arrays; TryParse with a clear error instead of an opaque FormatException
-- [x] docker-compose worker: add Seed__AdminPassword/Seed__UserPassword — the worker runs UserSeedService too and would otherwise race-seed the default admin password
-- [x] FileStorageService.UploadFileAsync: scope blob-rollback to the pre-commit window so a post-commit outbox-flush failure can't dangle a committed row against a deleted blob
-- [x] Env-predicate consistency: shared HostEnvironmentExtensions.IsLocalOrTest (Development+Testing) used by both UserSeedService and OpenIddictProductionGuard — closes the Staging bypass and the Testing-startup-crash in one predicate
-- [x] UsersEditEndpoint: reverted to Task.WhenAll — the three contracts use distinct DbContexts (Users/Permissions/OpenIddict), so there was no race; corrected the misleading comment
-- [x] ConfigKeys.OpenIddictAllowPasswordGrant constant — replaced the three hardcoded "OpenIddict:AllowPasswordGrant" string literals (drift would silently disable the guard)
-- [x] validate-pages: detect interpolated Inertia.Render($"…") as unresolved instead of silently skipping it
-- [x] validate-i18n: same fail-on-zero self-check as validate-pages (locale dirs exist today; zero = path drift)
-- [x] UploadEndpoint: hoist size/extension parse to Map() time (resolve IOptions once, capture) instead of allocating a HashSet per request
-
-## Deferred (follow-ups — recorded, not silently dropped)
-- **Roslyn diagnostic (SM0060)** for Task.WhenAll-over-shared-DbContext and SaveChanges+Publish-without-outbox — durable fix for the recurring race/outbox classes (fixed by hand 3× now). Analyzer-grade flow analysis; separate PR. An interim regex guard like validate-framework-scope.mjs is a cheaper stopgap.
-- **Shared outbox helper** (`SaveAndPublishAsync<TDb>`) in SimpleModule.Database to encode the BeginTransaction→SaveChanges→Publish→flush ritual once — currently duplicated across TenantService/FileStorageService. Also: WolverineConfiguration wires PublishDomainEventsFromEntityFrameworkCore<IHasDomainEvents> but no entity implements it (dead idiom) — reconcile.
-- **Framework production-config validation abstraction** (IValidateOptions/ValidateOnStart) — OpenIddictProductionGuard + UserSeedService are two ad-hoc startup guards; a shared mechanism is the right altitude and fixes implicit guard ordering.
-- **Module options ↔ Settings store / appsettings binding**: generated RegisterModuleOptionsDefaults only calls AddOptions<T>() with no config binding, so the FileStorage admin Settings/appsettings keys don't drive the enforced IOptions values (enforcement honors code-configured/default values only).
-- **TenantFeatureHelper N+1**: serial GetOverridesAsync per flag; needs a bulk IFeatureFlagContracts method to collapse to one query.
-- **ForwardedHeaders typed options** on SimpleModuleOptions (typo'd keys currently silently yield loopback-only trust).
-- Generator decomposition to ForAttributeWithMetadataName.
-- @simplemodule/ui vendoring + stale wwwroot chunk cleanup.
+## Verification
+- [x] Regression tests added: cross-tenant isolation across shared model (#4), sub-claim GetUserId/GetRoles (#1), wildcard module-boundary (#13), ViewPages same-name collision (#17)
+- [x] dotnet build — succeeded, 0 errors (warnings-as-errors)
+- [x] dotnet test — Core 280, Database 94, Generator 220, DevTools 35 all pass; CLI exit 0
+- [x] npm checks — biome clean, validate-pages (74 endpoints/577 files), framework-scope, i18n, typecheck 15/15
+- [x] Review section (below)
 
 ## Review
 
-All four criticals addressed, plus the concrete improvements. Verified with:
-`dotnet build` (0 warnings/errors), `dotnet test` (19/19 assemblies, 0 failures),
-`npm run check` (biome + validate-pages + i18n + framework-scope + typecheck 14/14),
-`npm run build` (production bundles), plus a negative test proving validate-pages
-now fails when a page registration is removed.
+All 22 findings addressed except the two strategic rewrites intentionally deferred
+(generator pipeline split onto MetadataReferencesProvider; @simplemodule/ui shared-chunk
+vendoring) plus a few defense-in-depth notes. Generator fixes (#6/#10/#16/#17) done by
+subagent; verified by full generator test suite + new collision test.
 
-Notable finds while fixing:
-- The resurrected guard immediately caught that `UnlockAccountEndpoint` renders via a
-  `const string ComponentName` — the script now resolves same-file string consts and
-  reports unresolvable `Inertia.Render` arguments as failures.
-- The new ClientApp typecheck exposed two latent runtime bugs beyond the reported
-  `showErrorToast`: `router.on('exception', ...)` is not an Inertia v3 event (the
-  network-error toast was dead code — now `networkError`), and the page resolver
-  returned a module where Inertia's types want the component.
-- `FileStorageService.DeleteFileAsync` had the same lost-event bug as Upload (worse:
-  a failed blob delete also skipped the event after the DB commit) — fixed via outbox.
-- Create flows with DB-generated ids (Tenant, StoredFile) use an explicit transaction +
-  `SaveChangesAndFlushMessagesAsync`, which per Wolverine commits the open transaction
-  before flushing. `FakeDbContextOutbox` now mirrors that commit behavior.
+Notable while fixing:
+- The tenant-filter fix (#4) required a design change, not a patch: EF caches the model
+  per context type, so capturing a scoped ITenantContext as an Expression.Constant froze
+  the first request's tenant. Fixed by referencing the *executing* DbContext instance via
+  a new `ITenantScopedDbContext.CurrentTenantId` — EF re-evaluates the context reference
+  per query. New regression test (two contexts, one shared cached model + DB, different
+  tenants) proves isolation and would fail under the old code. API change is safe: zero
+  production callers today.
+- Same sub-claim bug as #1 also lived in EntityInterceptor's audit stamping
+  (ClaimTypes.NameIdentifier → GetUserId()); fixed alongside — CreatedBy/UpdatedBy would
+  have been null under Keycloak.
+- Sync SaveChanges gap (#11) fixed on BOTH interceptors; EntityChangeInterceptor's sync
+  dispatch blocks on the async path (safe — ASP.NET Core has no SynchronizationContext).
+- InertiaResult merge (#7): a correct flat merge needs props' keys, so props is still
+  materialized once, but the extra Dictionary + full re-serialize is gone — now one
+  Utf8JsonWriter pass, props win on collision, no duplicate keys. Integration tests
+  (InertiaResultTests) confirm the JSON envelope is unchanged.
+- Layout middleware gate (#8) keys on X-Inertia OR Accept: text/html — real browsers and
+  Inertia nav both qualify; static-asset/probe/JSON requests skip the antiforgery crypto.
 
+Deferred / documented (not silently dropped):
+- Generator pipeline decomposition (metadata vs source providers) — upstream todo already
+  tracks it; assembly-prefix filter is the cheap high-value win applied now.
+- @simplemodule/ui bundled per module — payload-size only, correctness verified fine.
+- LocalStorage traversal (#3) & CoerceId Guid (#18) verified by inspection + build; no
+  dedicated storage test project exists (adding one needs slnx + Dockerfile wiring).

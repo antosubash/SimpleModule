@@ -37,6 +37,28 @@ function getExportNames(require_: NodeRequire, pkg: string): string[] {
   }
 }
 
+// The top-level package name for a (possibly subpath) specifier:
+// 'react/jsx-runtime' -> 'react', '@inertiajs/react' -> '@inertiajs/react'.
+function rootPackage(pkg: string): string {
+  const segments = pkg.split('/');
+  return pkg.startsWith('@') ? segments.slice(0, 2).join('/') : segments[0];
+}
+
+function resolveVersion(require_: NodeRequire, pkg: string): string {
+  try {
+    return (require_(`${rootPackage(pkg)}/package.json`) as { version?: string }).version ?? '0';
+  } catch {
+    return '0';
+  }
+}
+
+// Fingerprint of the resolved versions of every vendored package. Written next to the
+// bundles so a version bump (e.g. React upgrade) forces a rebuild instead of reusing
+// stale copies that were compiled against the previous versions.
+function versionFingerprint(require_: NodeRequire, vendors: VendorEntry[]): string {
+  return vendors.map((v) => `${v.pkg}@${resolveVersion(require_, v.pkg)}`).join('\n');
+}
+
 export function vendorBuildPlugin(options?: { vendors?: VendorEntry[]; outDir: string }): Plugin {
   const vendors = options?.vendors ?? defaultVendors;
 
@@ -46,8 +68,17 @@ export function vendorBuildPlugin(options?: { vendors?: VendorEntry[]; outDir: s
     async buildStart() {
       const outDir = options?.outDir ?? path.resolve(process.cwd(), '../wwwroot/js/vendor');
       const require_ = createRequire(import.meta.url);
+      const manifestPath = path.join(outDir, '.vendor-manifest');
+      const fingerprint = versionFingerprint(require_, vendors);
 
-      if (vendors.every((v) => existsSync(path.join(outDir, `${v.file}.js`)))) return;
+      // Reuse existing bundles only when every output is present AND the vendored
+      // package versions still match. Otherwise a version bump (e.g. React upgrade)
+      // would silently keep stale copies compiled against the previous versions.
+      const outputsExist = vendors.every((v) => existsSync(path.join(outDir, `${v.file}.js`)));
+      const manifestMatches =
+        existsSync(manifestPath) && readFileSync(manifestPath, 'utf-8') === fingerprint;
+      if (outputsExist && manifestMatches) return;
+
       mkdirSync(outDir, { recursive: true });
 
       for (const v of vendors) {
@@ -95,6 +126,10 @@ export function vendorBuildPlugin(options?: { vendors?: VendorEntry[]; outDir: s
 
         writeFileSync(outfile, code);
       }
+
+      // Record the versions these bundles were built from so the next build can
+      // detect a package bump and rebuild instead of reusing stale copies.
+      writeFileSync(manifestPath, fingerprint);
     },
   };
 }

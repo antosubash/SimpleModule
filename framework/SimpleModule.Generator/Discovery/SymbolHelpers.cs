@@ -128,7 +128,16 @@ internal static class SymbolHelpers
     {
         foreach (var (ns, moduleName) in index.Entries)
         {
-            if (typeFqn.StartsWith(ns, StringComparison.Ordinal))
+            // A module in the global namespace (empty ns) matches everything.
+            if (ns.Length == 0)
+                return moduleName;
+
+            // Match only on a namespace boundary: "App.Order" must not claim
+            // types in "App.OrderArchive" — require exact match or "ns." prefix.
+            if (
+                typeFqn.StartsWith(ns, StringComparison.Ordinal)
+                && (typeFqn.Length == ns.Length || typeFqn[ns.Length] == '.')
+            )
                 return moduleName;
         }
         return index.FirstModuleName;

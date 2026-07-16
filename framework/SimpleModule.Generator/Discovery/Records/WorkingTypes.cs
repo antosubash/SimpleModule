@@ -49,6 +49,13 @@ internal sealed class DtoTypeInfo
     public string FullyQualifiedName { get; set; } = "";
     public string SafeName { get; set; } = "";
     public string? BaseTypeFqn { get; set; }
+
+    /// <summary>
+    /// True when the type is non-abstract and has a public parameterless constructor.
+    /// Gates the generated <c>info.CreateObject = () =&gt; new T()</c> — emitting it
+    /// for e.g. positional records without one would not compile (CS7036).
+    /// </summary>
+    public bool HasParameterlessConstructor { get; set; }
     public List<DtoPropertyInfo> Properties { get; set; } = new();
 }
 

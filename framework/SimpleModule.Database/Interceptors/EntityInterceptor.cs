@@ -1,9 +1,9 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using SimpleModule.Core.Entities;
+using SimpleModule.Core.Extensions;
 using SimpleModule.Database.SoftDelete;
 
 namespace SimpleModule.Database.Interceptors;
@@ -25,18 +25,35 @@ public sealed class EntityInterceptor(
     ITenantContext? tenantContext = null
 ) : SaveChangesInterceptor
 {
+    // EF calls the sync SavingChanges for DbContext.SaveChanges() and the async
+    // SavingChangesAsync for SaveChangesAsync(); it never cross-calls. Both must run
+    // the same stamping logic or a sync save would hard-delete soft-delete entities
+    // and skip audit/tenant/concurrency fields silently.
+    public override InterceptionResult<int> SavingChanges(
+        DbContextEventData eventData,
+        InterceptionResult<int> result
+    )
+    {
+        ApplyChanges(eventData);
+        return base.SavingChanges(eventData, result);
+    }
+
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default
     )
     {
-        if (eventData.Context is null)
-            return base.SavingChangesAsync(eventData, result, cancellationToken);
+        ApplyChanges(eventData);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
 
-        var userId = httpContextAccessor.HttpContext?.User?.FindFirstValue(
-            ClaimTypes.NameIdentifier
-        );
+    private void ApplyChanges(DbContextEventData eventData)
+    {
+        if (eventData.Context is null)
+            return;
+
+        var userId = httpContextAccessor.HttpContext?.User?.GetUserId();
         var now = DateTimeOffset.UtcNow;
 
         foreach (var entry in eventData.Context.ChangeTracker.Entries())
@@ -82,8 +99,6 @@ public sealed class EntityInterceptor(
                     break;
             }
         }
-
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
     private static void SetCreationFields(EntityEntry entry, DateTimeOffset now, string? userId)

@@ -55,6 +55,45 @@ public class ClaimsPrincipalExtensionsTests
         user.HasPermission("Anything").Should().BeFalse();
     }
 
+    [Fact]
+    public void HasPermission_WildcardClaim_DoesNotMatchAcrossModuleBoundary()
+    {
+        // "Products.*" must not match a permission outside the "Products." prefix.
+        var user = CreateUser(new Claim("permission", "Products.*"));
+
+        user.HasPermission("ProductsArchive.View").Should().BeFalse();
+        user.HasPermission("Products.View").Should().BeTrue();
+    }
+
+    [Fact]
+    public void GetUserId_PrefersSubClaim_ForOpenIddictAndKeycloak()
+    {
+        // OpenIddict/Keycloak with MapInboundClaims=false emit the id as "sub",
+        // never ClaimTypes.NameIdentifier.
+        var user = CreateUser(new Claim("sub", "keycloak-user-1"));
+
+        user.GetUserId().Should().Be("keycloak-user-1");
+    }
+
+    [Fact]
+    public void GetUserId_FallsBackToNameIdentifier_ForAspNetIdentity()
+    {
+        var user = CreateUser(new Claim(ClaimTypes.NameIdentifier, "identity-user-1"));
+
+        user.GetUserId().Should().Be("identity-user-1");
+    }
+
+    [Fact]
+    public void GetRoles_ReadsBothRoleClaimTypes()
+    {
+        var user = CreateUser(
+            new Claim("role", "editor"),
+            new Claim(ClaimTypes.Role, "admin")
+        );
+
+        user.GetRoles().Should().BeEquivalentTo("editor", "admin");
+    }
+
     private static ClaimsPrincipal CreateUser(params Claim[] claims)
     {
         var identity = new ClaimsIdentity(claims, "Test");
