@@ -157,6 +157,14 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 # Writable directory for SQLite database and local storage
 RUN mkdir -p /app/data /app/storage && chown appuser:appgroup /app/data /app/storage
 
+# Default the SQLite database into the writable /app/data dir. The app's built-in
+# default is "Data Source=app.db", which resolves to the root-owned /app workdir
+# that the non-root appuser cannot write — a bare `docker run` of this image would
+# otherwise crash at startup with "SQLite Error 14: unable to open database file".
+# docker-compose overrides this (Database__Provider=PostgreSQL + its own connection
+# string), so the Postgres deployment path is unaffected.
+ENV Database__DefaultConnection="Data Source=/app/data/app.db"
+
 # Deployment version for JS/CSS cache-busting and Inertia stale-version detection.
 # Left empty by default so InertiaMiddleware.GetVersion() falls back to the entry
 # assembly's last-write timestamp (yyyyMMddHHmmss), which changes on every publish
