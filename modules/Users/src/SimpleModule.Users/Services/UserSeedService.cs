@@ -149,9 +149,12 @@ public partial class UserSeedService(
     /// app boots and is usable out of the box in every environment — the login page
     /// advertises these same credentials via its quick-login buttons, so seeding
     /// them is what makes those buttons work. The defaults are published in this
-    /// repository: any deployment that is reachable by anyone else must set
-    /// <c>Seed:AdminPassword</c> (and disable the <c>Users:ShowTestAccounts</c>
-    /// setting), or rotate the password after first login.
+    /// repository: any deployment that is reachable by anyone else must set the
+    /// <c>Seed:AdminPassword</c> configuration key (or rotate the password after
+    /// first login), and turn off the "Show Test Accounts" system setting
+    /// (<c>auth.show_test_accounts</c>) from the Settings UI — that one is a
+    /// <c>SettingDefinition</c> read through <c>ISettingsContracts</c>, not an
+    /// <c>IConfiguration</c> key, so it cannot be set via an environment variable.
     /// </remarks>
     /// <param name="configuredPassword">The password from configuration, if any.</param>
     /// <param name="defaultPassword">The compiled-in fallback.</param>

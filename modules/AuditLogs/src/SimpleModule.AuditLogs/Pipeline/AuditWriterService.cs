@@ -104,7 +104,21 @@ public sealed partial class AuditWriterService(
         }
         if (batch.Count > 0)
         {
-            await FlushBatchAsync(batch);
+            // The service provider is frequently already disposed by the time a
+            // failed startup unwinds to here, so this final flush can throw. It
+            // runs outside the loop's try, so letting it escape would surface a
+            // normal shutdown as a crashed BackgroundService — the exact noise
+            // this class of fix exists to remove — and skip LogStopped too.
+            try
+            {
+                await FlushBatchAsync(batch);
+            }
+#pragma warning disable CA1031
+            catch (Exception ex)
+#pragma warning restore CA1031
+            {
+                LogFlushError(logger, ex);
+            }
         }
 
         LogStopped(logger);

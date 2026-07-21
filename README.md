@@ -50,7 +50,7 @@ credentials:
 | `user@simplemodule.dev` | `User123!` | `Seed__UserPassword` |
 
 The defaults apply in every environment so the app boots and is usable out of the box. Outside
-`Development` the app logs a warning when it falls back to them.
+`Development` and `Testing` the app logs a warning when it falls back to them.
 
 > **These passwords are published in this repository.** Before exposing a deployment to anyone else,
 > set `Seed__AdminPassword` (or change the password after first login) and turn off the
@@ -65,6 +65,13 @@ docker run -e Seed__AdminPassword='<strong-password>' -p 8080:8080 simplemodule
 key — use the latter in `appsettings.*.json`. Accounts are seeded only when they don't already
 exist, so changing these values later will **not** rotate an existing password; change it from the
 account page instead.
+
+> **Upgrading an existing deployment.** Previously the demo `user@simplemodule.dev` account was
+> skipped outside `Development` when `Seed__UserPassword` was unset, so deployments that set only
+> `Seed__AdminPassword` have no such account today. They will gain one, seeded with `User123!`, on
+> the next restart. Set `Seed__UserPassword`, or delete the account after it appears, if you don't
+> want it. The admin account is unaffected — it already exists, and existing accounts are never
+> re-seeded or rotated.
 
 Note that `Production` additionally requires OpenIddict signing and encryption certificates
 (`OpenIddict__SigningCertificatePath` / `OpenIddict__EncryptionCertificatePath`, PKCS#12), and

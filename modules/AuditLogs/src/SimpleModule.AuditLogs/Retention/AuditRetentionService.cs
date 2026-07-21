@@ -49,6 +49,8 @@ public sealed partial class AuditRetentionService(
             // path, which would otherwise log a critical "BackgroundService failed"
             // on top of — and obscuring — whatever actually stopped the host.
         }
+
+        LogStopped(logger);
     }
 
     private async Task RunCleanupAsync(CancellationToken ct)
@@ -97,4 +99,7 @@ public sealed partial class AuditRetentionService(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Retention cleanup failed")]
     private static partial void LogError(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "AuditRetentionService stopped")]
+    private static partial void LogStopped(ILogger logger);
 }
