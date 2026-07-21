@@ -44,8 +44,7 @@ public partial class UserSeedService(
                 SeedConstants.AdminDisplayName,
                 ConfigKeys.SeedAdminPassword,
                 SeedConstants.DefaultAdminPassword,
-                SeedConstants.AdminRole,
-                requiredOutsideDevelopment: true
+                SeedConstants.AdminRole
             );
             await SeedUserAsync(
                 userManager,
@@ -53,12 +52,11 @@ public partial class UserSeedService(
                 SeedConstants.UserDisplayName,
                 ConfigKeys.SeedUserPassword,
                 SeedConstants.DefaultUserPassword,
-                SeedConstants.UserRole,
-                requiredOutsideDevelopment: false
+                SeedConstants.UserRole
             );
         }
 #pragma warning disable CA1031 // Seed service must not crash the host on database errors
-        catch (Exception ex) when (ex is not SeedConfigurationException)
+        catch (Exception ex)
 #pragma warning restore CA1031
         {
             LogSeedError(logger, ex.Message);
@@ -102,32 +100,18 @@ public partial class UserSeedService(
         string displayName,
         string passwordConfigKey,
         string defaultPassword,
-        string role,
-        bool requiredOutsideDevelopment
+        string role
     )
     {
         if (await userManager.FindByEmailAsync(email) is not null)
             return;
 
-        var outcome = ResolveSeedPassword(
-            configuration[passwordConfigKey],
-            defaultPassword,
-            environment.IsLocalOrTest(),
-            requiredOutsideDevelopment,
-            out var password
-        );
+        var configuredPassword = configuration[passwordConfigKey];
+        var password = ResolveSeedPassword(configuredPassword, defaultPassword);
 
-        switch (outcome)
+        if (string.IsNullOrEmpty(configuredPassword) && !environment.IsLocalOrTest())
         {
-            case SeedPasswordOutcome.Fail:
-                throw new SeedConfigurationException(
-                    $"'{passwordConfigKey}' must be configured in the '{environment.EnvironmentName}' "
-                        + $"environment. Refusing to create '{email}' with the compiled-in default "
-                        + "password."
-                );
-            case SeedPasswordOutcome.Skip:
-                LogSkippingSeedUser(logger, email, passwordConfigKey);
-                return;
+            LogDefaultPasswordWarning(logger, email, passwordConfigKey);
         }
 
         LogSeedingUser(logger, email);
@@ -141,9 +125,7 @@ public partial class UserSeedService(
             CreatedAt = DateTime.UtcNow,
         };
 
-        // Only SeedPasswordOutcome.Seed falls through the switch above, and it
-        // always yields a non-null password.
-        var result = await userManager.CreateAsync(user, password!);
+        var result = await userManager.CreateAsync(user, password);
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(user, role);
@@ -158,45 +140,25 @@ public partial class UserSeedService(
     }
 
     /// <summary>
-    /// Decides how to seed a user's password. Extracted as a pure function so the
-    /// security-critical branching — never seed a real deployment with the
-    /// compiled-in default — is unit-testable without an Identity stack.
+    /// Resolves the password to seed an account with: the configured value when one
+    /// is present, otherwise the compiled-in default. Extracted as a pure function
+    /// so the fallback is unit-testable without an Identity stack.
     /// </summary>
+    /// <remarks>
+    /// Both seeded accounts always fall back to their compiled-in defaults so the
+    /// app boots and is usable out of the box in every environment — the login page
+    /// advertises these same credentials via its quick-login buttons, so seeding
+    /// them is what makes those buttons work. The defaults are published in this
+    /// repository: any deployment that is reachable by anyone else must set
+    /// <c>Seed:AdminPassword</c> (and disable the <c>Users:ShowTestAccounts</c>
+    /// setting), or rotate the password after first login.
+    /// </remarks>
     /// <param name="configuredPassword">The password from configuration, if any.</param>
-    /// <param name="defaultPassword">The compiled-in fallback (local/CI only).</param>
-    /// <param name="isLocalOrTest">True for Development/Testing environments.</param>
-    /// <param name="requiredOutsideLocal">
-    /// True for the admin account (must fail closed); false for the optional demo
-    /// user (skipped when unconfigured in a real deployment).
-    /// </param>
-    /// <param name="password">The password to use when the outcome is <c>Seed</c>.</param>
-    internal static SeedPasswordOutcome ResolveSeedPassword(
+    /// <param name="defaultPassword">The compiled-in fallback.</param>
+    internal static string ResolveSeedPassword(
         string? configuredPassword,
-        string defaultPassword,
-        bool isLocalOrTest,
-        bool requiredOutsideLocal,
-        out string? password
-    )
-    {
-        if (!string.IsNullOrEmpty(configuredPassword))
-        {
-            password = configuredPassword;
-            return SeedPasswordOutcome.Seed;
-        }
-
-        // The compiled-in default passwords are a local/CI convenience only. In a
-        // real deployment (anything but Development/Testing) the configured
-        // password is mandatory: seeding the admin with a published default would
-        // leave it one POST /connect/token away from a fully-privileged token.
-        if (isLocalOrTest)
-        {
-            password = defaultPassword;
-            return SeedPasswordOutcome.Seed;
-        }
-
-        password = null;
-        return requiredOutsideLocal ? SeedPasswordOutcome.Fail : SeedPasswordOutcome.Skip;
-    }
+        string defaultPassword
+    ) => string.IsNullOrEmpty(configuredPassword) ? defaultPassword : configuredPassword;
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Seeding role: {RoleName}")]
     private static partial void LogSeedingRole(ILogger logger, string roleName);
@@ -205,10 +167,14 @@ public partial class UserSeedService(
     private static partial void LogSeedingUser(ILogger logger, string email);
 
     [LoggerMessage(
-        Level = LogLevel.Information,
-        Message = "Skipping seed user {Email}: '{ConfigKey}' is not configured and default passwords are disabled outside Development."
+        Level = LogLevel.Warning,
+        Message = "Seeded {Email} with the compiled-in default password because '{ConfigKey}' is not configured. This password is published in the SimpleModule repository — set '{ConfigKey}' or change the password after first login before exposing this deployment."
     )]
-    private static partial void LogSkippingSeedUser(ILogger logger, string email, string configKey);
+    private static partial void LogDefaultPasswordWarning(
+        ILogger logger,
+        string email,
+        string configKey
+    );
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Seed error: {ErrorDescription}")]
     private static partial void LogSeedError(ILogger logger, string errorDescription);

@@ -22,11 +22,12 @@ services:
       # combined with seeded credentials it would hand out fully-privileged
       # tokens with a single POST /connect/token.
       OpenIddict__AllowPasswordGrant: "false"
-      # Required: password for the seeded admin account. There is deliberately
-      # no default — put SEED_ADMIN_PASSWORD in your .env file.
-      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
-      # Optional: password for the seeded demo user (outside Development the
-      # demo user is skipped entirely when this is unset).
+      # Optional: passwords for the seeded accounts. When unset, both fall back to
+      # the compiled-in defaults (Admin123! / User123!) so the stack comes up
+      # usable — those are the same credentials the login page's quick-login
+      # buttons use. They are published in this repository, so set these (or
+      # change the passwords after first login) before exposing the deployment.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
       Seed__UserPassword: ${SEED_USER_PASSWORD:-}
       # api stays in Producer mode — it enqueues jobs but never runs them.
       # All IModuleJob execution lives in the worker service below.
@@ -56,11 +57,10 @@ services:
       Database__Provider: PostgreSQL
       BackgroundJobs__WorkerMode: Consumer
       # The worker runs the same module set as the api, including the user
-      # seeder. It must see the SAME seed passwords — otherwise whichever
-      # process wins the startup race seeds the admin account, and a worker
-      # without these would silently seed the compiled-in default password,
-      # defeating the api's required SEED_ADMIN_PASSWORD.
-      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      # seeder. It must see the SAME seed passwords as the api — whichever
+      # process wins the startup race is the one that creates the accounts, so a
+      # mismatch here makes the seeded password depend on that race.
+      Seed__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
       Seed__UserPassword: ${SEED_USER_PASSWORD:-}
     volumes:
       - storage_data:/app/storage
