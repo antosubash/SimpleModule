@@ -94,7 +94,12 @@ RUN dotnet publish template/SimpleModule.Worker/SimpleModule.Worker.csproj \
     --no-restore \
     -p:ErrorOnDuplicatePublishOutputFiles=false
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+# The worker hosts the same modules as the api, and every module carries a
+# <FrameworkReference Include="Microsoft.AspNetCore.App" />. The plain runtime
+# image does not ship that shared framework, so the worker started and then died
+# with "No frameworks were found" on every boot. This must stay in sync with the
+# api image in ./Dockerfile.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 RUN apt-get update \
