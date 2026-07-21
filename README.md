@@ -36,8 +36,45 @@ dotnet run --project template/SimpleModule.Host      # https://localhost:5001
 ### Docker
 
 ```bash
+cp .env.example .env                                 # then set SEED_ADMIN_PASSWORD
 docker compose up                                    # http://localhost:8080 with PostgreSQL 16
 ```
+
+Compose has no default for the seeded admin password, so it stops immediately with
+`Set SEED_ADMIN_PASSWORD in .env` until you provide one.
+
+#### Seed credentials
+
+The seeded accounts (`admin@simplemodule.dev`, `user@simplemodule.dev`) only fall back to the
+compiled-in default passwords in `Development` and `Testing`. Anywhere else the fallback is refused,
+because seeding an admin with a password that ships in a public repo would leave the account one
+`POST /connect/token` away from a fully-privileged token.
+
+The image sets no environment of its own, so running it outside compose (`docker run`, Kubernetes,
+a deploy pipeline) inherits the base image's `Production` default and **refuses to start**:
+
+```
+Hosting failed to start
+SimpleModule.Users.Services.SeedConfigurationException: 'Seed:AdminPassword' must be configured
+in the 'Production' environment. Refusing to create 'admin@simplemodule.dev' with the
+compiled-in default password.
+```
+
+That is the guard working as intended, not a bug. Supply the password explicitly:
+
+```bash
+docker build -t simplemodule .
+docker run -e Seed__AdminPassword='<strong-password>' -p 8080:8080 simplemodule
+```
+
+| Variable | Outside Development/Testing | Behaviour when unset |
+|----------|-----------------------------|----------------------|
+| `Seed__AdminPassword` | **Required** | Startup fails with `SeedConfigurationException` |
+| `Seed__UserPassword` | Optional | The demo `user@simplemodule.dev` account is skipped |
+
+`Seed__AdminPassword` is the environment-variable spelling of the `Seed:AdminPassword` configuration
+key — use the latter in `appsettings.*.json`. Both accounts are seeded only when they don't already
+exist, so changing these values later will not rotate an existing password.
 
 ### Development
 

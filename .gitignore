@@ -451,3 +451,9 @@ baseline/
 # Verification artifacts
 .verify/
 .qa/
+
+# Local environment files — docker-compose reads SEED_ADMIN_PASSWORD and
+# POSTGRES_PASSWORD from here, so these must never be committed.
+.env
+.env.*
+!.env.example

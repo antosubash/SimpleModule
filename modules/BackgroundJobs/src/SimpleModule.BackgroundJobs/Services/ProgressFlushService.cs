@@ -57,7 +57,18 @@ public sealed partial class ProgressFlushService(
 #pragma warning restore CA1031
             {
                 LogFlushError(logger, ex);
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+
+                // This backoff runs inside a catch block, so the enclosing try
+                // cannot observe its cancellation — guard it here or a shutdown
+                // during the backoff escapes ExecuteAsync as a spurious crash.
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
             }
         }
 
