@@ -67,7 +67,7 @@ exist, so changing these values later will **not** rotate an existing password; 
 account page instead.
 
 > **Upgrading an existing deployment.** Previously the demo `user@simplemodule.dev` account was
-> skipped outside `Development` when `Seed__UserPassword` was unset, so deployments that set only
+> skipped outside `Development` and `Testing` when `Seed__UserPassword` was unset, so deployments that set only
 > `Seed__AdminPassword` have no such account today. They will gain one, seeded with `User123!`, on
 > the next restart. Set `Seed__UserPassword`, or delete the account after it appears, if you don't
 > want it. The admin account is unaffected — it already exists, and existing accounts are never
