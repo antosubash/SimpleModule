@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,13 @@ public sealed class InertiaLayoutDataMiddleware(RequestDelegate next)
     public async Task InvokeAsync(HttpContext context)
     {
         var sharedData = context.RequestServices.GetService<InertiaSharedData>();
-        if (sharedData is not null)
+
+        // Only requests that will actually render an Inertia page consume this shared
+        // data. Populating it eagerly for every request runs antiforgery token
+        // generation (DataProtection crypto) and menu filtering for static assets,
+        // health probes, and JSON API calls — all wasted. An Inertia navigation carries
+        // the X-Inertia header; a full-page browser load sends Accept: text/html.
+        if (sharedData is not null && ShouldPopulateLayoutData(context.Request))
         {
             var user = context.User;
             var isAuthenticated = user.Identity?.IsAuthenticated == true;
@@ -85,5 +92,35 @@ public sealed class InertiaLayoutDataMiddleware(RequestDelegate next)
         }
 
         await next(context);
+    }
+
+    private static bool ShouldPopulateLayoutData(HttpRequest request)
+    {
+        // Inertia AJAX navigations (any method) consume the shared data on re-render.
+        if (request.IsInertia())
+        {
+            return true;
+        }
+
+        // Full-page loads are navigational GETs that accept HTML. Anything else
+        // (asset fetches, health probes, JSON APIs, form POSTs without X-Inertia)
+        // never reaches an Inertia.Render, so skip the work.
+        if (!HttpMethods.IsGet(request.Method))
+        {
+            return false;
+        }
+
+        foreach (var accept in request.Headers.Accept)
+        {
+            if (
+                accept is not null
+                && accept.Contains(MediaTypeNames.Text.Html, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

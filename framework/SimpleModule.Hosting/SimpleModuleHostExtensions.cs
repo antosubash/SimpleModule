@@ -350,9 +350,11 @@ public static partial class SimpleModuleHostExtensions
         // files are intentionally public.
         app.MapStaticAssets().AllowAnonymous();
 
-        // Maintenance gate runs after static assets (so the 503 page can load
-        // its CSS) but before auth (so anonymous users get 503 rather than a
-        // login redirect). Health probes are exempt inside the middleware.
+        // Maintenance gate runs before auth (so anonymous users get 503 rather
+        // than a login redirect). Static assets are endpoint-routed and execute at
+        // the end of the pipeline, so this plain middleware runs before them —
+        // health probes and static-asset paths are exempted inside the middleware
+        // so error pages / cached shells can still load their assets during maintenance.
         app.UseMiddleware<MaintenanceModeMiddleware>();
 
         app.UseAuthentication();

@@ -79,10 +79,7 @@ public sealed class LocalStorageProvider(IOptions<LocalStorageOptions> options) 
         CancellationToken cancellationToken = default
     )
     {
-        var normalized = StoragePathHelper.Normalize(prefix);
-        var fullPath = string.IsNullOrEmpty(normalized)
-            ? _basePath
-            : Path.Combine(_basePath, normalized.Replace('/', Path.DirectorySeparatorChar));
+        var fullPath = GetFullPath(StoragePathHelper.Normalize(prefix));
 
         if (!Directory.Exists(fullPath))
         {
@@ -126,16 +123,40 @@ public sealed class LocalStorageProvider(IOptions<LocalStorageOptions> options) 
         return Task.FromResult<IReadOnlyList<StorageEntry>>(entries);
     }
 
+    // File systems are case-insensitive on Windows but case-sensitive on Linux/macOS;
+    // matching that here keeps the containment check from both over- and under-rejecting.
+    private static readonly StringComparison PathComparison = OperatingSystem.IsWindows()
+        ? StringComparison.OrdinalIgnoreCase
+        : StringComparison.Ordinal;
+
     private string GetFullPath(string normalizedPath)
     {
         var localPath = normalizedPath.Replace('/', Path.DirectorySeparatorChar);
         var fullPath = Path.GetFullPath(Path.Combine(_basePath, localPath));
 
-        if (!fullPath.StartsWith(_basePath, StringComparison.OrdinalIgnoreCase))
+        if (!IsWithinBase(fullPath))
         {
             throw new InvalidOperationException("Path traversal detected.");
         }
 
         return fullPath;
+    }
+
+    private bool IsWithinBase(string fullPath)
+    {
+        // Exact-root match is allowed (e.g. listing the storage root itself).
+        if (string.Equals(fullPath, _basePath, PathComparison))
+        {
+            return true;
+        }
+
+        // Otherwise require a directory-separator boundary so a sibling directory that
+        // merely shares the root's name prefix (e.g. "/app/storage-backup" vs
+        // "/app/storage") cannot escape the root.
+        var baseWithSeparator = _basePath.EndsWith(Path.DirectorySeparatorChar)
+            ? _basePath
+            : _basePath + Path.DirectorySeparatorChar;
+
+        return fullPath.StartsWith(baseWithSeparator, PathComparison);
     }
 }

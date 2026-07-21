@@ -67,6 +67,10 @@ document.addEventListener('click', (event) => {
   // Only same-origin
   if (link.origin !== window.location.origin) return;
 
+  // In-page anchors (e.g. href="#section") must scroll natively, not re-request the
+  // page through Inertia — let the browser handle any hash link to the current path.
+  if (link.hash && link.pathname === window.location.pathname) return;
+
   // Skip non-Inertia server routes (Identity, Swagger, health checks, OAuth)
   const path = link.pathname;
   if (nonInertiaPathPrefixes.some((prefix) => path.startsWith(prefix))) return;

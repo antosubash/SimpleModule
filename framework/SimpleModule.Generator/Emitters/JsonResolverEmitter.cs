@@ -52,9 +52,15 @@ internal sealed class JsonResolverEmitter : IEmitter
             sb.AppendLine(
                 $"        var info = JsonTypeInfo.CreateJsonTypeInfo<{dto.FullyQualifiedName}>(options);"
             );
-            sb.AppendLine(
-                $"        info.CreateObject = static () => new {dto.FullyQualifiedName}();"
-            );
+            // Only types with an accessible parameterless ctor can be constructed by STJ.
+            // Positional records etc. stay serializable; deserialization simply has no
+            // CreateObject (STJ reports it at runtime instead of failing the build).
+            if (dto.HasParameterlessConstructor)
+            {
+                sb.AppendLine(
+                    $"        info.CreateObject = static () => new {dto.FullyQualifiedName}();"
+                );
+            }
 
             foreach (var prop in dto.Properties)
             {

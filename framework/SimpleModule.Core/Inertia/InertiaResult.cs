@@ -1,3 +1,6 @@
+using System.Buffers;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
@@ -29,27 +32,17 @@ internal sealed class InertiaResult : IResult
     {
         var options = GetSerializerOptions(httpContext);
         var sharedData = httpContext.RequestServices.GetService<InertiaSharedData>();
-        var mergedProps = MergeProps(_props, sharedData, options);
-
-        var pageData = new
-        {
-            component = _component,
-            props = mergedProps,
-            url = httpContext.Request.Path + httpContext.Request.QueryString,
-            version = InertiaMiddleware.Version,
-        };
+        var url = httpContext.Request.Path + httpContext.Request.QueryString;
+        var pageJson = SerializePage(_component, _props, sharedData, url, options);
 
         if (httpContext.Request.IsInertia())
         {
             httpContext.Response.Headers[InertiaHttpExtensions.InertiaHeader] = "true";
             httpContext.Response.Headers["Vary"] = InertiaHttpExtensions.InertiaHeader;
             httpContext.Response.ContentType = "application/json";
-            var json = JsonSerializer.Serialize(pageData, options);
-            await httpContext.Response.WriteAsync(json);
+            await httpContext.Response.WriteAsync(pageJson);
             return;
         }
-
-        var pageJson = JsonSerializer.Serialize(pageData, options);
 
         var renderer = httpContext.RequestServices.GetRequiredService<IInertiaPageRenderer>();
         await renderer.RenderPageAsync(httpContext, pageJson);
@@ -84,36 +77,89 @@ internal sealed class InertiaResult : IResult
         return fallback;
     }
 
-    private static object MergeProps(
+    /// <summary>
+    /// Serializes the Inertia page envelope in a single pass. When there is no shared
+    /// data, endpoint props stream straight to the output with no intermediate DOM.
+    /// When shared data is present, endpoint props must be materialized once (to know
+    /// their keys), then shared data and props are written into one object — endpoint
+    /// props keep priority (shared keys they define are skipped), so no key is emitted
+    /// twice.
+    /// </summary>
+    private static string SerializePage(
+        string component,
         object? props,
         InertiaSharedData? sharedData,
+        string url,
         JsonSerializerOptions options
     )
     {
-        if (sharedData is null || sharedData.All.Count == 0)
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer))
         {
-            return props ?? new { };
+            writer.WriteStartObject();
+            writer.WriteString("component", component);
+
+            writer.WritePropertyName("props");
+            if (sharedData is null || sharedData.All.Count == 0)
+            {
+                JsonSerializer.Serialize(writer, props ?? EmptyProps, options);
+            }
+            else
+            {
+                WriteMergedProps(writer, props, sharedData, options);
+            }
+
+            writer.WriteString("url", url);
+            writer.WriteString("version", InertiaMiddleware.Version);
+            writer.WriteEndObject();
         }
 
-        var result = new Dictionary<string, object?>();
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
+    }
 
-        // Add shared data first (lower priority)
+    private static void WriteMergedProps(
+        Utf8JsonWriter writer,
+        object? props,
+        InertiaSharedData sharedData,
+        JsonSerializerOptions options
+    )
+    {
+        // Endpoint props are materialized once so their top-level keys are known;
+        // this is unavoidable for a correct merge but happens a single time.
+        using var propsDoc =
+            props is null ? null : JsonSerializer.SerializeToDocument(props, options);
+
+        var propKeys =
+            propsDoc is null
+                ? null
+                : new HashSet<string>(
+                    propsDoc.RootElement.EnumerateObject().Select(p => p.Name),
+                    StringComparer.Ordinal
+                );
+
+        writer.WriteStartObject();
+
+        // Shared data (lower priority) — skip any key the endpoint props also define.
         foreach (var kvp in sharedData.All)
         {
-            result[kvp.Key] = kvp.Value;
+            if (propKeys is not null && propKeys.Contains(kvp.Key))
+                continue;
+
+            writer.WritePropertyName(kvp.Key);
+            JsonSerializer.Serialize(writer, kvp.Value, options);
         }
 
-        // Add endpoint props (higher priority — overwrites shared data)
-        // Use JSON round-trip to merge endpoint props into shared data
-        if (props is not null)
+        // Endpoint props (higher priority).
+        if (propsDoc is not null)
         {
-            var json = JsonSerializer.SerializeToElement(props, options);
-            foreach (var property in json.EnumerateObject())
+            foreach (var property in propsDoc.RootElement.EnumerateObject())
             {
-                result[property.Name] = property.Value;
+                property.WriteTo(writer);
             }
         }
 
-        return result;
+        writer.WriteEndObject();
     }
+
+    private static readonly object EmptyProps = new();
 }

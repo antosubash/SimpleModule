@@ -24,42 +24,41 @@ public sealed class EntityChangeInterceptor(
 
     private List<(object Entity, EntityChangeType ChangeType)>? _capturedChanges;
 
+    // EF invokes the sync SavingChanges/SavedChanges for DbContext.SaveChanges() and the
+    // async pair for SaveChangesAsync(); it never cross-calls. Both paths must capture and
+    // dispatch or a sync save would silently skip all IEntityChangeHandler dispatch.
+    public override InterceptionResult<int> SavingChanges(
+        DbContextEventData eventData,
+        InterceptionResult<int> result
+    )
+    {
+        CaptureChanges(eventData);
+        return base.SavingChanges(eventData, result);
+    }
+
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData,
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default
     )
     {
-        if (eventData.Context is not null)
+        CaptureChanges(eventData);
+        return base.SavingChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
+    {
+        var changes = _capturedChanges;
+        _capturedChanges = null;
+
+        // ASP.NET Core has no SynchronizationContext, so blocking here does not deadlock.
+        // The sync save path is rare; async callers use the awaited path below.
+        if (changes is { Count: > 0 })
         {
-            var changes = new List<(object Entity, EntityChangeType ChangeType)>();
-
-            foreach (var entry in eventData.Context.ChangeTracker.Entries())
-            {
-                if (
-                    entry.State
-                    is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)
-                )
-                    continue;
-
-                var changeType = entry.State switch
-                {
-                    EntityState.Added => EntityChangeType.Created,
-                    EntityState.Deleted => EntityChangeType.Deleted,
-                    EntityState.Modified
-                        when entry.Entity is ISoftDelete { IsDeleted: true }
-                            && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified =>
-                        EntityChangeType.Deleted,
-                    _ => EntityChangeType.Updated,
-                };
-
-                changes.Add((entry.Entity, changeType));
-            }
-
-            _capturedChanges = changes.Count > 0 ? changes : null;
+            DispatchAllAsync(changes, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        return base.SavingChangesAsync(eventData, result, cancellationToken);
+        return base.SavedChanges(eventData, result);
     }
 
     public override async ValueTask<int> SavedChangesAsync(
@@ -73,13 +72,16 @@ public sealed class EntityChangeInterceptor(
 
         if (changes is { Count: > 0 })
         {
-            foreach (var (entity, changeType) in changes)
-            {
-                await DispatchToHandlersAsync(entity, changeType, cancellationToken);
-            }
+            await DispatchAllAsync(changes, cancellationToken);
         }
 
         return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
+    public override void SaveChangesFailed(DbContextErrorEventData eventData)
+    {
+        _capturedChanges = null;
+        base.SaveChangesFailed(eventData);
     }
 
     public override Task SaveChangesFailedAsync(
@@ -89,6 +91,49 @@ public sealed class EntityChangeInterceptor(
     {
         _capturedChanges = null;
         return base.SaveChangesFailedAsync(eventData, cancellationToken);
+    }
+
+    private void CaptureChanges(DbContextEventData eventData)
+    {
+        if (eventData.Context is null)
+            return;
+
+        var changes = new List<(object Entity, EntityChangeType ChangeType)>();
+
+        foreach (var entry in eventData.Context.ChangeTracker.Entries())
+        {
+            if (
+                entry.State
+                is not (EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            )
+                continue;
+
+            var changeType = entry.State switch
+            {
+                EntityState.Added => EntityChangeType.Created,
+                EntityState.Deleted => EntityChangeType.Deleted,
+                EntityState.Modified
+                    when entry.Entity is ISoftDelete { IsDeleted: true }
+                        && entry.Property(nameof(ISoftDelete.IsDeleted)).IsModified =>
+                    EntityChangeType.Deleted,
+                _ => EntityChangeType.Updated,
+            };
+
+            changes.Add((entry.Entity, changeType));
+        }
+
+        _capturedChanges = changes.Count > 0 ? changes : null;
+    }
+
+    private async Task DispatchAllAsync(
+        List<(object Entity, EntityChangeType ChangeType)> changes,
+        CancellationToken cancellationToken
+    )
+    {
+        foreach (var (entity, changeType) in changes)
+        {
+            await DispatchToHandlersAsync(entity, changeType, cancellationToken);
+        }
     }
 
     private async Task DispatchToHandlersAsync(

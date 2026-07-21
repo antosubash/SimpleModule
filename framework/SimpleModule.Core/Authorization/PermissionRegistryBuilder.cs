@@ -8,6 +8,7 @@ namespace SimpleModule.Core.Authorization;
 public sealed class PermissionRegistryBuilder
 {
     private readonly Dictionary<string, List<string>> _byModule = new();
+    private readonly HashSet<string> _seen = new(StringComparer.Ordinal);
 
     public void AddPermissions<T>()
         where T : class
@@ -28,16 +29,18 @@ public sealed class PermissionRegistryBuilder
         var dotIndex = permission.IndexOf('.', StringComparison.Ordinal);
         var module = dotIndex >= 0 ? permission[..dotIndex] : "Global";
 
+        if (!_seen.Add(permission))
+        {
+            return;
+        }
+
         if (!_byModule.TryGetValue(module, out var list))
         {
             list = [];
             _byModule[module] = list;
         }
 
-        if (!list.Contains(permission))
-        {
-            list.Add(permission);
-        }
+        list.Add(permission);
     }
 
     public PermissionRegistry Build()

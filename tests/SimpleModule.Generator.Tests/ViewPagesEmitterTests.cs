@@ -54,7 +54,7 @@ public class ViewPagesEmitterTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t => t.FilePath.EndsWith("ViewPages_Products.g.cs", StringComparison.Ordinal));
+            .Contain(t => t.FilePath.EndsWith("ViewPages_TestApp_ProductsModule.g.cs", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class ViewPagesEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        var viewPages = GetGeneratedSource(result, "ViewPages_Items.g.cs");
+        var viewPages = GetGeneratedSource(result, "ViewPages_TestApp_ItemsModule.g.cs");
 
         viewPages.Should().Contain("'Items/Create': () => import('./Create')");
     }
@@ -120,7 +120,7 @@ public class ViewPagesEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        var viewPages = GetGeneratedSource(result, "ViewPages_Orders.g.cs");
+        var viewPages = GetGeneratedSource(result, "ViewPages_TestApp_OrdersModule.g.cs");
 
         viewPages.Should().Contain("export const pages: Record<string, any> = {");
         viewPages.Should().Contain("'Orders/Detail': () => import('./Detail')");
@@ -171,7 +171,7 @@ public class ViewPagesEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
+        var viewPages = GetGeneratedSource(result, "ViewPages_TestApp_TestModule.g.cs");
 
         viewPages.Should().Contain("'Test/Browse': () => import('./Browse')");
         viewPages.Should().Contain("'Test/Create': () => import('./Create')");
@@ -207,7 +207,7 @@ public class ViewPagesEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
+        var viewPages = GetGeneratedSource(result, "ViewPages_TestApp_TestModule.g.cs");
 
         viewPages.Should().Contain("#if SIMPLEMODULE_TS");
         viewPages.Should().Contain("/*");
@@ -244,9 +244,63 @@ public class ViewPagesEmitterTests
         var compilation = GeneratorTestHelper.CreateCompilation(source);
         var result = GeneratorTestHelper.RunGenerator(compilation);
 
-        var viewPages = GetGeneratedSource(result, "ViewPages_Test.g.cs");
+        var viewPages = GetGeneratedSource(result, "ViewPages_TestApp_TestModule.g.cs");
 
         viewPages.Should().Contain("'Test/Detail': () => import('./Detail')");
+    }
+
+    [Fact]
+    public void SameSimpleName_DifferentNamespaces_DoNotCollide()
+    {
+        // Two module classes with the same simple name ("ProductsModule") in different
+        // namespaces must produce distinct ViewPages hint names, or AddSource throws a
+        // duplicate-hint-name ArgumentException and the whole generator fails.
+        var source = """
+            using Microsoft.AspNetCore.Builder;
+            using Microsoft.AspNetCore.Routing;
+            using SimpleModule.Core;
+
+            namespace Alpha
+            {
+                [Module("AlphaProducts", ViewPrefix = "/alpha")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace Alpha.Pages
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app) => app.MapGet("/browse", () => "a");
+                }
+            }
+
+            namespace Beta
+            {
+                [Module("BetaProducts", ViewPrefix = "/beta")]
+                public class ProductsModule : IModule { }
+            }
+
+            namespace Beta.Pages
+            {
+                public class BrowseEndpoint : IViewEndpoint
+                {
+                    public void Map(IEndpointRouteBuilder app) => app.MapGet("/browse", () => "b");
+                }
+            }
+            """;
+
+        var compilation = GeneratorTestHelper.CreateCompilation(source);
+        var result = GeneratorTestHelper.RunGenerator(compilation);
+
+        // Both ViewPages files are emitted with distinct, namespace-qualified hint names.
+        result
+            .GeneratedTrees.Should()
+            .Contain(t =>
+                t.FilePath.EndsWith("ViewPages_Alpha_ProductsModule.g.cs", StringComparison.Ordinal)
+            )
+            .And.Contain(t =>
+                t.FilePath.EndsWith("ViewPages_Beta_ProductsModule.g.cs", StringComparison.Ordinal)
+            );
     }
 
     private static string GetGeneratedSource(

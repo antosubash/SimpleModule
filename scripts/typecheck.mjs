@@ -5,7 +5,7 @@
  *
  * Runs `tsc --noEmit` in every module and package that has a tsconfig.json,
  * plus the Host ClientApp. Each project is checked independently so @/* path
- * aliases resolve correctly. All checks run in parallel for speed.
+ * aliases resolve correctly. Checks run in parallel (bounded concurrency) for speed.
  *
  * Exit codes:
  *   0 = All projects pass type checking
@@ -15,7 +15,25 @@
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+
+// Cap concurrent tsc processes so a machine with ~25 projects doesn't spawn 25
+// type-checkers at once and spike memory on constrained CI runners.
+const MAX_CONCURRENCY = Math.max(1, Math.min(4, os.availableParallelism?.() ?? os.cpus().length));
+
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await fn(items[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const modulesDir = path.join(projectRoot, 'modules');
@@ -90,7 +108,7 @@ const projects = [
   clientAppDir,
 ];
 
-const results = await Promise.all(projects.map(checkProject));
+const results = await mapWithConcurrency(projects, MAX_CONCURRENCY, checkProject);
 
 const failures = [];
 for (const { dir, code, output } of results) {

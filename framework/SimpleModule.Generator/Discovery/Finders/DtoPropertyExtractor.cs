@@ -44,9 +44,13 @@ internal static class DtoPropertyExtractor
                             Name = prop.Name,
                             TypeFqn = actualType,
                             UnderlyingTypeFqn = resolvedType != actualType ? resolvedType : null,
+                            // init-only setters (get; init;) cannot be assigned outside a
+                            // constructor/initializer, so treat them as not settable —
+                            // emitting a Set delegate for them would not compile (CS8852).
                             HasSetter =
                                 prop.SetMethod is not null
-                                && prop.SetMethod.DeclaredAccessibility == Accessibility.Public,
+                                && prop.SetMethod.DeclaredAccessibility == Accessibility.Public
+                                && !prop.SetMethod.IsInitOnly,
                         }
                     );
                 }

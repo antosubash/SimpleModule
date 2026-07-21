@@ -77,6 +77,7 @@ internal static class DiscoveryDataBuilder
                     d.FullyQualifiedName,
                     d.SafeName,
                     d.BaseTypeFqn,
+                    d.HasParameterlessConstructor,
                     d.Properties.Select(p => new DtoPropertyInfoRecord(
                             p.Name,
                             p.TypeFqn,

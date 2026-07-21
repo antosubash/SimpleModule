@@ -23,6 +23,14 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 ErrorMessages.ValidationErrorTitle,
                 ve.Errors
             ),
+            // ArgumentNullException almost always signals an internal bug (a null
+            // reaching a guard clause), not bad client input — let it fall through to
+            // the 500 branch so it logs at Error and doesn't leak the parameter name.
+            ArgumentNullException => (
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.InternalServerErrorTitle,
+                null
+            ),
             ArgumentException => (
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationErrorTitle,

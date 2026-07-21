@@ -7,6 +7,54 @@ namespace SimpleModule.Generator;
 
 internal static class SymbolDiscovery
 {
+    // Assembly-name prefixes that can never contain SimpleModule modules, DTOs,
+    // or form requests (BCL, ASP.NET Core, EF Core, common third-party packages).
+    // Skipping them keeps the recursive GlobalNamespace/GetAttributes walks in
+    // ModuleFinder, DtoFinder, and FormRequestFinder off those huge symbol trees.
+    private static readonly string[] s_skippedAssemblyPrefixes =
+    {
+        "System.",
+        "Microsoft.",
+        "netstandard",
+        "mscorlib",
+        "WindowsBase",
+        "Newtonsoft.",
+        "Swashbuckle.",
+        "FluentValidation",
+        "Wolverine",
+        "Npgsql",
+        "OpenIddict",
+        "Serilog",
+        "Polly",
+        "Scalar",
+        "Vogen",
+    };
+
+    /// <summary>
+    /// Returns true for framework/third-party assemblies that discovery can skip.
+    /// Module and contracts assemblies (including the framework's own
+    /// SimpleModule.* assemblies) are never skipped, whatever their name.
+    /// </summary>
+    private static bool IsSkippedAssembly(string name)
+    {
+        if (
+            name.EndsWith(".Contracts", StringComparison.OrdinalIgnoreCase)
+            || name.IndexOf("SimpleModule", StringComparison.Ordinal) >= 0
+        )
+            return false;
+
+        if (name == "System" || name == "netstandard" || name == "mscorlib")
+            return true;
+
+        foreach (var prefix in s_skippedAssemblyPrefixes)
+        {
+            if (name.StartsWith(prefix, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
+    }
+
     internal static DiscoveryData Extract(
         Compilation compilation,
         CancellationToken cancellationToken
@@ -29,6 +77,9 @@ internal static class SymbolDiscovery
             cancellationToken.ThrowIfCancellationRequested();
 
             if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol asm)
+                continue;
+
+            if (IsSkippedAssembly(asm.Name))
                 continue;
 
             refAssemblies.Add(asm);

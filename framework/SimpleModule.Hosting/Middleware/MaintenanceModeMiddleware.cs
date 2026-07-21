@@ -65,6 +65,10 @@ public sealed class MaintenanceModeMiddleware
         await WriteMaintenanceResponseAsync(context, state);
     }
 
+    // Static-asset roots that must keep loading during maintenance so the 503 page
+    // (or a cached app shell) can still fetch its CSS/JS/favicon.
+    private static readonly string[] StaticAssetPrefixes = ["/_content/", "/js/", "/css/"];
+
     private static bool IsExempt(HttpContext context)
     {
         var path = context.Request.Path.Value;
@@ -73,8 +77,23 @@ public sealed class MaintenanceModeMiddleware
             return false;
         }
 
-        return path.StartsWith(RouteConstants.HealthLive, StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith(RouteConstants.HealthReady, StringComparison.OrdinalIgnoreCase);
+        if (
+            path.StartsWith(RouteConstants.HealthLive, StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith(RouteConstants.HealthReady, StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return true;
+        }
+
+        foreach (var prefix in StaticAssetPrefixes)
+        {
+            if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool TryConsumeBypassQuery(HttpContext context, MaintenanceState state)

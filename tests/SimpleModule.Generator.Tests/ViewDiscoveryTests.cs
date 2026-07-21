@@ -121,11 +121,11 @@ public class ViewDiscoveryTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t => t.FilePath.EndsWith("ViewPages_Products.g.cs", StringComparison.Ordinal));
+            .Contain(t => t.FilePath.EndsWith("ViewPages_TestApp_ProductsModule.g.cs", StringComparison.Ordinal));
 
         var viewPages = result
             .GeneratedTrees.First(t =>
-                t.FilePath.EndsWith("ViewPages_Products.g.cs", StringComparison.Ordinal)
+                t.FilePath.EndsWith("ViewPages_TestApp_ProductsModule.g.cs", StringComparison.Ordinal)
             )
             .GetText()
             .ToString();
@@ -172,11 +172,11 @@ public class ViewDiscoveryTests
 
         result
             .GeneratedTrees.Should()
-            .Contain(t => t.FilePath.EndsWith("ViewPages_Test.g.cs", StringComparison.Ordinal));
+            .Contain(t => t.FilePath.EndsWith("ViewPages_TestApp_TestModule.g.cs", StringComparison.Ordinal));
 
         var viewPages = result
             .GeneratedTrees.First(t =>
-                t.FilePath.EndsWith("ViewPages_Test.g.cs", StringComparison.Ordinal)
+                t.FilePath.EndsWith("ViewPages_TestApp_TestModule.g.cs", StringComparison.Ordinal)
             )
             .GetText()
             .ToString();
@@ -276,7 +276,7 @@ public class ViewDiscoveryTests
 
         var viewPages = result
             .GeneratedTrees.First(t =>
-                t.FilePath.EndsWith("ViewPages_Test.g.cs", StringComparison.Ordinal)
+                t.FilePath.EndsWith("ViewPages_TestApp_TestModule.g.cs", StringComparison.Ordinal)
             )
             .GetText()
             .ToString();
@@ -355,7 +355,7 @@ public class ViewDiscoveryTests
 
         var viewPages = result
             .GeneratedTrees.First(t =>
-                t.FilePath.EndsWith("ViewPages_Users.g.cs", StringComparison.Ordinal)
+                t.FilePath.EndsWith("ViewPages_TestApp_UsersModule.g.cs", StringComparison.Ordinal)
             )
             .GetText()
             .ToString();

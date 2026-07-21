@@ -156,25 +156,42 @@ public static class ModuleModelBuilderExtensions
 
     /// <summary>
     /// Applies multi-tenant query filters to all <see cref="IMultiTenant"/> entities.
-    /// Call this from your DbContext's <c>OnModelCreating</c> after <see cref="ApplyModuleSchema"/>.
+    /// Call this from your DbContext's <c>OnModelCreating</c> after <see cref="ApplyModuleSchema"/>,
+    /// passing the context itself (<c>this</c>).
     /// <para>
-    /// The filter expression closes over the <paramref name="tenantContext"/> field reference,
-    /// so EF Core evaluates the current tenant ID at query time (parameterized).
+    /// The filter references <see cref="ITenantScopedDbContext.CurrentTenantId"/> on the
+    /// <em>context instance</em>. EF Core caches the model per context type, but re-evaluates a
+    /// reference to the executing context on every query — so each request is filtered by its own
+    /// tenant. (A previous version captured the <see cref="ITenantContext"/> instance as a constant,
+    /// which froze the first request's tenant into the cached model and leaked rows across tenants.)
+    /// </para>
+    /// <para>
+    /// When <see cref="ITenantScopedDbContext.CurrentTenantId"/> is <c>null</c> (no tenant resolved),
+    /// the filter matches only rows whose <c>TenantId</c> is also <c>null</c>. Store <c>null</c> on
+    /// un-tenanted/global rows if they should be visible without a tenant; rows with a non-null
+    /// tenant are hidden.
     /// </para>
     /// <example>
     /// <code>
-    /// protected override void OnModelCreating(ModelBuilder modelBuilder)
+    /// public sealed class ProductsDbContext(DbContextOptions&lt;ProductsDbContext&gt; options,
+    ///     ITenantContext tenant) : DbContext(options), ITenantScopedDbContext
     /// {
-    ///     modelBuilder.ApplyModuleSchema("Products", dbOptions.Value);
-    ///     modelBuilder.ApplyMultiTenantFilters(tenantContext);
+    ///     public string? CurrentTenantId =&gt; tenant.TenantId;
+    ///
+    ///     protected override void OnModelCreating(ModelBuilder modelBuilder)
+    ///     {
+    ///         modelBuilder.ApplyModuleSchema("Products", dbOptions.Value);
+    ///         modelBuilder.ApplyMultiTenantFilters(this);
+    ///     }
     /// }
     /// </code>
     /// </example>
     /// </summary>
-    public static void ApplyMultiTenantFilters(
+    public static void ApplyMultiTenantFilters<TContext>(
         this ModelBuilder modelBuilder,
-        ITenantContext tenantContext
+        TContext context
     )
+        where TContext : DbContext, ITenantScopedDbContext
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -183,19 +200,16 @@ public static class ModuleModelBuilderExtensions
 
             var parameter = Expression.Parameter(entityType.ClrType, "e");
             var tenantIdProperty = Expression.Property(parameter, nameof(IMultiTenant.TenantId));
-            var tenantContextExpr = Expression.Constant(tenantContext);
+
+            // Reference the current tenant via the executing DbContext instance so EF
+            // re-evaluates it per query instead of freezing a captured instance.
             var currentTenantId = Expression.Property(
-                tenantContextExpr,
-                nameof(ITenantContext.TenantId)
+                Expression.Constant(context),
+                nameof(ITenantScopedDbContext.CurrentTenantId)
             );
 
-            // Handle null tenant: when no tenant is set, the filter becomes e.TenantId == null
-            // which effectively returns no rows (TenantId is non-nullable string).
             var filter = Expression.Lambda(
-                Expression.Equal(
-                    tenantIdProperty,
-                    Expression.Coalesce(currentTenantId, Expression.Constant(""))
-                ),
+                Expression.Equal(tenantIdProperty, currentTenantId),
                 parameter
             );
 

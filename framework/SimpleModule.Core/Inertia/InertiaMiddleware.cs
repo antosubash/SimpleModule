@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
@@ -63,11 +64,29 @@ public static class InertiaMiddleware
         // This changes on every recompile/publish, ensuring cache-busting without manual config.
         var entryAssembly =
             System.Reflection.Assembly.GetEntryAssembly() ?? typeof(InertiaMiddleware).Assembly;
-        var buildTime = File.GetLastWriteTimeUtc(entryAssembly.Location);
-        return buildTime.ToString(
-            "yyyyMMddHHmmss",
-            System.Globalization.CultureInfo.InvariantCulture
-        );
+
+        // Assembly.Location is empty for single-file–published apps; File.GetLastWriteTimeUtc("")
+        // would throw and abort all Inertia rendering (this runs in a static initializer). Fall
+        // back to the informational/assembly version so the app still starts.
+        var location = entryAssembly.Location;
+        if (!string.IsNullOrEmpty(location) && File.Exists(location))
+        {
+            var buildTime = File.GetLastWriteTimeUtc(location);
+            return buildTime.ToString(
+                "yyyyMMddHHmmss",
+                System.Globalization.CultureInfo.InvariantCulture
+            );
+        }
+
+        var informationalVersion = entryAssembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+            .FirstOrDefault()
+            ?.InformationalVersion;
+
+        return !string.IsNullOrEmpty(informationalVersion)
+            ? informationalVersion
+            : entryAssembly.GetName().Version?.ToString() ?? "1.0.0";
     }
 
     private static string GetEncodedUrl(this HttpRequest request)

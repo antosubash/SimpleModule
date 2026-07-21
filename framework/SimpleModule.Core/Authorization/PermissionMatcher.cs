@@ -23,12 +23,12 @@ public static class PermissionMatcher
         if (string.Equals(claim, requirement, StringComparison.Ordinal))
             return true;
 
-        // Wildcard: claim ends with ".*"
+        // Wildcard: claim ends with ".*" — match the "Prefix." span without allocating.
         if (
             claim.Length > 2
             && claim[^1] == '*'
             && claim[^2] == '.'
-            && requirement.StartsWith(claim[..^1], StringComparison.Ordinal)
+            && requirement.AsSpan().StartsWith(claim.AsSpan(0, claim.Length - 1), StringComparison.Ordinal)
         )
         {
             return true;

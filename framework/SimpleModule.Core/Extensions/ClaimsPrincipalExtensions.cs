@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using SimpleModule.Core.Authorization;
 
@@ -12,6 +14,17 @@ public static class ClaimsPrincipalExtensions
     {
         return principal.FindFirstValue("sub")
             ?? principal.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    /// <summary>
+    /// Gets the user's role values, supporting both OpenIddict/JWT ("role", emitted when
+    /// <c>MapInboundClaims = false</c>) and ASP.NET Identity (<see cref="ClaimTypes.Role"/>).
+    /// </summary>
+    public static IEnumerable<string> GetRoles(this ClaimsPrincipal principal)
+    {
+        return principal
+            .Claims.Where(c => c.Type == "role" || c.Type == ClaimTypes.Role)
+            .Select(c => c.Value);
     }
 
     /// <summary>

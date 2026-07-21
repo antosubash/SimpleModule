@@ -7,6 +7,7 @@ internal readonly record struct DtoTypeInfoRecord(
     string FullyQualifiedName,
     string SafeName,
     string? BaseTypeFqn,
+    bool HasParameterlessConstructor,
     ImmutableArray<DtoPropertyInfoRecord> Properties
 )
 {
@@ -15,6 +16,7 @@ internal readonly record struct DtoTypeInfoRecord(
         return FullyQualifiedName == other.FullyQualifiedName
             && SafeName == other.SafeName
             && BaseTypeFqn == other.BaseTypeFqn
+            && HasParameterlessConstructor == other.HasParameterlessConstructor
             && Properties.SequenceEqual(other.Properties);
     }
 
@@ -24,6 +26,7 @@ internal readonly record struct DtoTypeInfoRecord(
         hash = HashHelper.Combine(hash, FullyQualifiedName.GetHashCode());
         hash = HashHelper.Combine(hash, SafeName.GetHashCode());
         hash = HashHelper.Combine(hash, BaseTypeFqn?.GetHashCode() ?? 0);
+        hash = HashHelper.Combine(hash, HasParameterlessConstructor.GetHashCode());
         hash = HashHelper.HashArray(hash, Properties);
         return hash;
     }
