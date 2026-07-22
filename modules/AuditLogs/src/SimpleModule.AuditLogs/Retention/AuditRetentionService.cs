@@ -16,29 +16,41 @@ public sealed partial class AuditRetentionService(
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-
-        var checkInterval = moduleOptions.Value.RetentionCheckInterval;
-
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
-            {
-                await RunCleanupAsync(stoppingToken);
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
-            {
-                break;
-            }
-#pragma warning disable CA1031
-            catch (Exception ex)
-#pragma warning restore CA1031
-            {
-                LogError(logger, ex);
-            }
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 
-            await Task.Delay(checkInterval, stoppingToken);
+            var checkInterval = moduleOptions.Value.RetentionCheckInterval;
+
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await RunCleanupAsync(stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+#pragma warning disable CA1031
+                catch (Exception ex)
+#pragma warning restore CA1031
+                {
+                    LogError(logger, ex);
+                }
+
+                await Task.Delay(checkInterval, stoppingToken);
+            }
         }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Normal shutdown while waiting on the startup delay or the interval
+            // delay. Returning quietly keeps this off the BackgroundService failure
+            // path, which would otherwise log a critical "BackgroundService failed"
+            // on top of — and obscuring — whatever actually stopped the host.
+        }
+
+        LogStopped(logger);
     }
 
     private async Task RunCleanupAsync(CancellationToken ct)
@@ -87,4 +99,7 @@ public sealed partial class AuditRetentionService(
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Retention cleanup failed")]
     private static partial void LogError(ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "AuditRetentionService stopped")]
+    private static partial void LogStopped(ILogger logger);
 }
