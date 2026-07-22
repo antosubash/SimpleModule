@@ -67,6 +67,32 @@ public class OpenIddictProductionGuardTests
         warning.Message.Should().Contain("restart");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task StartAsync_RealDeployment_HalfConfigured_ThrowsNamingMissingKey(
+        bool signingConfigured
+    )
+    {
+        // Exactly one path set: the module would ignore the configured cert and
+        // run fully ephemeral — always an operator mistake, so fail loudly.
+        var configuredKey = signingConfigured
+            ? ConfigKeys.OpenIddictSigningCertPath
+            : ConfigKeys.OpenIddictEncryptionCertPath;
+        var missingKey = signingConfigured
+            ? ConfigKeys.OpenIddictEncryptionCertPath
+            : ConfigKeys.OpenIddictSigningCertPath;
+        var (guard, logger) = CreateGuard("Production", (configuredKey, CertPath));
+
+        (
+            await guard
+                .Invoking(g => g.StartAsync(default))
+                .Should()
+                .ThrowAsync<InvalidOperationException>()
+        ).WithMessage($"*'{missingKey}' is not configured but '{configuredKey}' is*");
+        logger.Entries.Should().BeEmpty();
+    }
+
     [Fact]
     public async Task StartAsync_RealDeployment_FullyConfigured_DoesNotThrowOrWarn()
     {

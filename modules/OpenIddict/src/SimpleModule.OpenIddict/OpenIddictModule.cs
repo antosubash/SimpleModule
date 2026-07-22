@@ -140,7 +140,8 @@ public class OpenIddictModule : IModule
                 options.UseAspNetCore();
             });
 
-        // Refuses unsafe Production configurations (password grant, ephemeral keys)
+        // Fails host startup on unsafe config (password grant, half-configured
+        // certificates); missing certificates only log a warning (ephemeral keys)
         services.AddHostedService<OpenIddictProductionGuard>();
 
         // Seed service

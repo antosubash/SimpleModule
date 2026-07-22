@@ -10,13 +10,16 @@ namespace SimpleModule.OpenIddict.Services;
 /// Guards the OpenIddict configuration in real deployments (anything but
 /// Development/Testing). The ROPC password grant fails host startup — it lets
 /// anyone exchange leaked or default credentials for a fully-privileged token
-/// in a single request. Missing token signing/encryption certificates only log
-/// a prominent warning: the app starts on ephemeral keys so a plain
-/// <c>docker run</c> of the image works out of the box, but those keys are
-/// regenerated on every restart, invalidating all issued tokens and signing
-/// everyone out on each redeploy. Configure real certificates for anything
-/// beyond a throwaway deployment. Shares
-/// <see cref="HostEnvironmentExtensions.IsLocalOrTest"/> with
+/// in a single request. A half-configured certificate pair (exactly one of the
+/// signing/encryption paths set) also fails startup: the module only uses real
+/// certificates when both are present, so the configured one would be silently
+/// ignored — that is always an operator mistake, not a deliberate choice.
+/// Only the fully-unconfigured case logs a prominent warning instead: the app
+/// starts on ephemeral keys so a plain <c>docker run</c> of the image works
+/// out of the box, but those keys are regenerated on every restart,
+/// invalidating all issued tokens and signing everyone out on each redeploy.
+/// Configure real certificates for anything beyond a throwaway deployment.
+/// Shares <see cref="HostEnvironmentExtensions.IsLocalOrTest"/> with
 /// <c>UserSeedService</c> so the two guards never disagree about whether an
 /// environment is a real deployment.
 /// </summary>
@@ -44,8 +47,24 @@ public sealed partial class OpenIddictProductionGuard(
 
         var encryptionCertPath = configuration[ConfigKeys.OpenIddictEncryptionCertPath];
         var signingCertPath = configuration[ConfigKeys.OpenIddictSigningCertPath];
+        var hasEncryptionCert = !string.IsNullOrEmpty(encryptionCertPath);
+        var hasSigningCert = !string.IsNullOrEmpty(signingCertPath);
 
-        if (string.IsNullOrEmpty(encryptionCertPath) || string.IsNullOrEmpty(signingCertPath))
+        if (hasEncryptionCert != hasSigningCert)
+        {
+            var (missingKey, presentKey) = hasSigningCert
+                ? (ConfigKeys.OpenIddictEncryptionCertPath, ConfigKeys.OpenIddictSigningCertPath)
+                : (ConfigKeys.OpenIddictSigningCertPath, ConfigKeys.OpenIddictEncryptionCertPath);
+
+            throw new InvalidOperationException(
+                $"'{missingKey}' is not configured but '{presentKey}' is. Both certificates "
+                    + "are required together — with only one configured it would be ignored "
+                    + "and both token keys would fall back to ephemeral. Configure both, or "
+                    + "neither to explicitly run on ephemeral keys."
+            );
+        }
+
+        if (!hasEncryptionCert)
         {
             LogEphemeralKeys(
                 logger,

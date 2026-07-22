@@ -78,8 +78,9 @@ Note that `Production` expects OpenIddict signing and encryption certificates
 optional shared `OpenIddict__CertificatePassword`). Without them the app still starts — so a plain
 `docker run` or a PaaS deploy (Dokploy, Coolify, …) works out of the box — but it falls back to
 ephemeral token keys and logs a warning: every restart or redeploy then regenerates the keys,
-invalidating all issued tokens and signing everyone out. Configure real certificates for anything
-beyond a throwaway deployment:
+invalidating all issued tokens and signing everyone out. Setting only one of the two paths fails
+startup — the certificates only work as a pair, so configure both or neither. Configure real
+certificates for anything beyond a throwaway deployment:
 
 ```bash
 openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \

@@ -111,7 +111,8 @@ Production expects signing and encryption certificates (PKCS#12, one shared pass
 
 Development uses ephemeral keys automatically. A real deployment without certificates still
 starts, but falls back to ephemeral keys and logs a warning — every restart then regenerates
-the keys, invalidating all issued tokens and signing everyone out. Configure certificates for
+the keys, invalidating all issued tokens and signing everyone out. Configuring only one of the
+two certificate paths fails startup (the pair only works together). Configure certificates for
 anything beyond a throwaway deployment.
 
 ### OpenIddict Session Management
