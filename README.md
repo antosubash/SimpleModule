@@ -73,9 +73,23 @@ account page instead.
 > want it. The admin account is unaffected — it already exists, and existing accounts are never
 > re-seeded or rotated.
 
-Note that `Production` additionally requires OpenIddict signing and encryption certificates
-(`OpenIddict__SigningCertificatePath` / `OpenIddict__EncryptionCertificatePath`, PKCS#12), and
-refuses to start without them.
+Note that `Production` expects OpenIddict signing and encryption certificates
+(`OpenIddict__SigningCertificatePath` / `OpenIddict__EncryptionCertificatePath`, PKCS#12, with an
+optional shared `OpenIddict__CertificatePassword`). Without them the app still starts — so a plain
+`docker run` or a PaaS deploy (Dokploy, Coolify, …) works out of the box — but it falls back to
+ephemeral token keys and logs a warning: every restart or redeploy then regenerates the keys,
+invalidating all issued tokens and signing everyone out. Configure real certificates for anything
+beyond a throwaway deployment:
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+  -subj "/CN=simplemodule-oidc-signing" -keyout signing.key -out signing.crt
+openssl pkcs12 -export -inkey signing.key -in signing.crt \
+  -out signing.pfx -passout pass:YOUR_CERT_PASSWORD
+# repeat with -subj "/CN=simplemodule-oidc-encryption" for encryption.pfx
+```
+
+Mount the two `.pfx` files into the container and point the environment variables at them.
 
 ### Development
 

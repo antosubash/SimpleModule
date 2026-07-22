@@ -112,9 +112,11 @@ public class OpenIddictModule : IModule
                 }
                 else
                 {
-                    // Development/Testing: use ephemeral keys (avoids macOS keychain
-                    // issues). OpenIddictProductionGuard fails host startup if
-                    // Production runs without certificates.
+                    // No certificates configured: use ephemeral keys (avoids macOS
+                    // keychain issues locally). OpenIddictProductionGuard logs a
+                    // prominent warning when a real deployment runs this way —
+                    // ephemeral keys regenerate on every restart, invalidating all
+                    // issued tokens.
                     options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
                 }
 
