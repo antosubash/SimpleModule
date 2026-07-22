@@ -6,8 +6,8 @@ services:
     environment:
       # Development enables auto-migration and ephemeral signing keys for a
       # local quickstart. Do NOT expose this stack to the internet as-is: set
-      # ASPNETCORE_ENVIRONMENT=Production (which additionally enforces signing
-      # certificates and refuses the password grant), apply migrations
+      # ASPNETCORE_ENVIRONMENT=Production (which refuses the password grant and
+      # warns when signing certificates are missing), apply migrations
       # externally, and trust your reverse proxy via a comma-separated
       # ForwardedHeaders__KnownProxies=10.0.0.5,10.0.0.6 (or
       # ForwardedHeaders__KnownNetworks=10.0.0.0/8). Without it X-Forwarded-For

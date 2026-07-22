@@ -97,19 +97,23 @@ Self-hosted OAuth2/OIDC server. No external dependencies.
 
 ### Certificate Management
 
-Production requires signing and encryption certificates:
+Production expects signing and encryption certificates (PKCS#12, one shared password):
 
 ```json
 {
   "OpenIddict": {
-    "SigningCertPath": "/certs/signing.pfx",
-    "EncryptionCertPath": "/certs/encryption.pfx",
-    "CertPassword": "your-cert-password"
+    "SigningCertificatePath": "/certs/signing.pfx",
+    "EncryptionCertificatePath": "/certs/encryption.pfx",
+    "CertificatePassword": "your-cert-password"
   }
 }
 ```
 
-Development uses ephemeral keys automatically.
+Development uses ephemeral keys automatically. A real deployment without certificates still
+starts, but falls back to ephemeral keys and logs a warning — every restart then regenerates
+the keys, invalidating all issued tokens and signing everyone out. Configuring only one of the
+two certificate paths fails startup (the pair only works together). Configure certificates for
+anything beyond a throwaway deployment.
 
 ### OpenIddict Session Management
 

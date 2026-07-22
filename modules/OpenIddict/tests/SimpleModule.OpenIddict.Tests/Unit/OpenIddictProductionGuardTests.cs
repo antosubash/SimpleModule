@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using SimpleModule.OpenIddict.Contracts;
 using SimpleModule.OpenIddict.Services;
 
@@ -16,11 +17,15 @@ public class OpenIddictProductionGuardTests
     [InlineData("Testing")]
     public async Task StartAsync_LocalOrTest_DoesNotThrow_EvenWithUnsafeConfig(string environment)
     {
-        // Password grant on + no certs would be refused in a real deployment,
-        // but is tolerated locally.
-        var guard = CreateGuard(environment, (ConfigKeys.OpenIddictAllowPasswordGrant, "true"));
+        // Password grant on + no certs is tolerated locally, without warnings —
+        // ephemeral keys are the expected local setup.
+        var (guard, logger) = CreateGuard(
+            environment,
+            (ConfigKeys.OpenIddictAllowPasswordGrant, "true")
+        );
 
         await guard.Invoking(g => g.StartAsync(default)).Should().NotThrowAsync();
+        logger.Entries.Should().BeEmpty();
     }
 
     [Theory]
@@ -29,7 +34,7 @@ public class OpenIddictProductionGuardTests
     [InlineData("QA")]
     public async Task StartAsync_RealDeployment_PasswordGrantEnabled_Throws(string environment)
     {
-        var guard = CreateGuard(
+        var (guard, _) = CreateGuard(
             environment,
             (ConfigKeys.OpenIddictAllowPasswordGrant, "true"),
             (ConfigKeys.OpenIddictEncryptionCertPath, CertPath),
@@ -47,31 +52,61 @@ public class OpenIddictProductionGuardTests
     [Theory]
     [InlineData("Production")]
     [InlineData("Staging")]
-    public async Task StartAsync_RealDeployment_MissingCertificates_Throws(string environment)
+    public async Task StartAsync_RealDeployment_MissingCertificates_StartsAndLogsWarning(
+        string environment
+    )
     {
-        var guard = CreateGuard(environment); // no cert paths configured
+        var (guard, logger) = CreateGuard(environment); // no cert paths configured
+
+        await guard.Invoking(g => g.StartAsync(default)).Should().NotThrowAsync();
+
+        var warning = logger.Entries.Should().ContainSingle().Subject;
+        warning.Level.Should().Be(LogLevel.Warning);
+        warning.Message.Should().Contain(ConfigKeys.OpenIddictSigningCertPath);
+        warning.Message.Should().Contain(ConfigKeys.OpenIddictEncryptionCertPath);
+        warning.Message.Should().Contain("restart");
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task StartAsync_RealDeployment_HalfConfigured_ThrowsNamingMissingKey(
+        bool signingConfigured
+    )
+    {
+        // Exactly one path set: the module would ignore the configured cert and
+        // run fully ephemeral — always an operator mistake, so fail loudly.
+        var configuredKey = signingConfigured
+            ? ConfigKeys.OpenIddictSigningCertPath
+            : ConfigKeys.OpenIddictEncryptionCertPath;
+        var missingKey = signingConfigured
+            ? ConfigKeys.OpenIddictEncryptionCertPath
+            : ConfigKeys.OpenIddictSigningCertPath;
+        var (guard, logger) = CreateGuard("Production", (configuredKey, CertPath));
 
         (
             await guard
                 .Invoking(g => g.StartAsync(default))
                 .Should()
                 .ThrowAsync<InvalidOperationException>()
-        ).WithMessage("*certificate*");
+        ).WithMessage($"*'{missingKey}' is not configured but '{configuredKey}' is*");
+        logger.Entries.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task StartAsync_RealDeployment_FullyConfigured_DoesNotThrow()
+    public async Task StartAsync_RealDeployment_FullyConfigured_DoesNotThrowOrWarn()
     {
-        var guard = CreateGuard(
+        var (guard, logger) = CreateGuard(
             "Production",
             (ConfigKeys.OpenIddictEncryptionCertPath, CertPath),
             (ConfigKeys.OpenIddictSigningCertPath, CertPath)
         );
 
         await guard.Invoking(g => g.StartAsync(default)).Should().NotThrowAsync();
+        logger.Entries.Should().BeEmpty();
     }
 
-    private static OpenIddictProductionGuard CreateGuard(
+    private static (OpenIddictProductionGuard Guard, CollectingLogger Logger) CreateGuard(
         string environment,
         params (string Key, string Value)[] settings
     )
@@ -80,7 +115,13 @@ public class OpenIddictProductionGuardTests
             .AddInMemoryCollection(settings.ToDictionary(s => s.Key, s => (string?)s.Value))
             .Build();
 
-        return new OpenIddictProductionGuard(configuration, new FakeHostEnvironment(environment));
+        var logger = new CollectingLogger();
+        var guard = new OpenIddictProductionGuard(
+            configuration,
+            new FakeHostEnvironment(environment),
+            logger
+        );
+        return (guard, logger);
     }
 
     private sealed class FakeHostEnvironment(string environmentName) : IHostEnvironment
@@ -89,5 +130,23 @@ public class OpenIddictProductionGuardTests
         public string ApplicationName { get; set; } = "Tests";
         public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class CollectingLogger : ILogger<OpenIddictProductionGuard>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter
+        ) => Entries.Add((logLevel, formatter(state, exception)));
     }
 }
