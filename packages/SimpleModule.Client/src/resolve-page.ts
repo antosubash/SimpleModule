@@ -4,21 +4,44 @@
 // module. We only ever store a name that actually resolved.
 const resolvedAssemblies = new Map<string, string>();
 
+// The server emits the module name -> RCL assembly name mapping into the page shell
+// (see HtmlFileInertiaPageRenderer). Reading it means the very first request for a
+// module's bundle goes to the path that actually serves it, instead of guessing and
+// eating a 404 (#287). Parsed once — the shell is static for the life of the document.
+let declaredAssemblies: Record<string, string> | undefined;
+
+function getDeclaredAssemblies(): Record<string, string> {
+  if (declaredAssemblies) return declaredAssemblies;
+
+  const json = document.querySelector('script[data-module-assemblies]')?.textContent;
+  try {
+    declaredAssemblies = json ? JSON.parse(json) : {};
+  } catch {
+    // A malformed map is not worth failing navigation over — fall back to probing.
+    declaredAssemblies = {};
+  }
+  return declaredAssemblies as Record<string, string>;
+}
+
 export async function resolvePage(name: string) {
   const moduleName = name.split('/')[0];
   const cacheBuster = (document.querySelector('meta[name="cache-buster"]') as HTMLMetaElement)
     ?.content;
   const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
 
-  // Framework modules serve their bundle under the assembly-qualified path
-  // "SimpleModule.<Module>" (their RCL AssemblyName), whereas downstream apps
-  // frequently ship modules under a bare assembly name (e.g. "Customers"). Try
-  // the assembly-qualified form first so framework modules — the common, always-
-  // present case — resolve without a 404 (#224), then fall back to the bare name
-  // for consumer modules. Once a module resolves, reuse that name directly so
-  // later navigations never re-probe.
+  // A module's bundle is served under its RCL AssemblyName: "SimpleModule.<Module>"
+  // for framework modules, a bare "<Module>" for ones scaffolded by `sm new module`.
+  // Prefer the name the server declared; only guess when the shell predates that
+  // mapping, and then try the assembly-qualified form first (#224). Once a module
+  // resolves, reuse that name directly so later navigations never re-probe.
   const cached = resolvedAssemblies.get(moduleName);
-  const candidates = cached ? [cached] : [`SimpleModule.${moduleName}`, moduleName];
+  const declared = getDeclaredAssemblies()[moduleName];
+  const guesses = [`SimpleModule.${moduleName}`, moduleName];
+  const candidates = cached
+    ? [cached]
+    : declared
+      ? [declared, ...guesses.filter((guess) => guess !== declared)]
+      : guesses;
   // biome-ignore lint/suspicious/noExplicitAny: matches existing dynamic-import shape
   let mod: any;
   let assemblyName = candidates[0];

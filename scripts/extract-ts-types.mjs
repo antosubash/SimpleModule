@@ -6,7 +6,7 @@ import {
   readdirSync,
   readFileSync,
   writeFileSync,
-  mkdirSync,
+  statSync,
   existsSync,
 } from 'fs';
 import { resolve, join } from 'path';
@@ -17,6 +17,45 @@ function writeIfChanged(path, contents) {
   }
   writeFileSync(path, contents);
   return true;
+}
+
+function isDirectory(path) {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolves the directory of a module's primary source project, or null when the
+ * module has no source under `modulesDir`.
+ *
+ * The generator emits a DtoTypeScript_*.g.cs for every module in the compilation,
+ * which includes modules that arrived as NuGet packages. Those have no source in
+ * the consumer's repo, and the directory layout is not guessable either: framework
+ * modules use `src/SimpleModule.<Name>/` while `sm new module` scaffolds a bare
+ * `src/<Name>/`. So only ever write into a project directory that already exists —
+ * never create one.
+ */
+function findProjectDir(modulesDir, moduleName) {
+  const srcDir = resolve(modulesDir, moduleName, 'src');
+  if (!isDirectory(srcDir)) return null;
+
+  for (const candidate of [`SimpleModule.${moduleName}`, moduleName]) {
+    const dir = join(srcDir, candidate);
+    if (existsSync(join(dir, `${candidate}.csproj`))) return dir;
+  }
+
+  // Non-conventional project name: accept it when there is exactly one candidate
+  // left after excluding the companion Contracts and Tests projects.
+  const projects = readdirSync(srcDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => !name.endsWith('.Contracts') && !name.endsWith('.Tests'))
+    .filter((name) => existsSync(join(srcDir, name, `${name}.csproj`)));
+
+  return projects.length === 1 ? join(srcDir, projects[0]) : null;
 }
 
 const generatedDir = process.argv[2];
@@ -38,6 +77,8 @@ if (files.length === 0) {
   process.exit(0);
 }
 
+const skipped = [];
+
 for (const file of files) {
   const content = readFileSync(join(generatedDir, file), 'utf-8').replace(
     /\r\n/g,
@@ -54,20 +95,22 @@ for (const file of files) {
   if (!tsMatch) continue;
 
   const tsContent = tsMatch[1];
-  const projectDir = `SimpleModule.${moduleName}`;
-  const outPath = resolve(
-    modulesDir,
-    moduleName,
-    'src',
-    projectDir,
-    'types.ts',
-  );
+  const projectDir = findProjectDir(modulesDir, moduleName);
 
-  mkdirSync(resolve(modulesDir, moduleName, 'src', projectDir), {
-    recursive: true,
-  });
+  if (!projectDir) {
+    skipped.push(moduleName);
+    continue;
+  }
+
+  const outPath = join(projectDir, 'types.ts');
   const next = `// Auto-generated from [Dto] types \u2014 do not edit\n${tsContent}`;
   if (writeIfChanged(outPath, next)) {
     console.log(`Wrote ${moduleName} types to ${outPath}`);
   }
+}
+
+if (skipped.length > 0) {
+  console.log(
+    `Skipped ${skipped.length} module(s) with no source project under ${modulesDir}: ${skipped.join(', ')}`,
+  );
 }

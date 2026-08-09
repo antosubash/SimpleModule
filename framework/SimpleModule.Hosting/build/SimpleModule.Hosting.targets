@@ -38,13 +38,31 @@
     <ExtractDtoStamp>$(IntermediateOutputPath)extractdto.stamp</ExtractDtoStamp>
     <ExtractRoutesStamp>$(IntermediateOutputPath)extractroutes.stamp</ExtractRoutesStamp>
   </PropertyGroup>
-  <!-- Incremental Tailwind: track CSS source files + theme + Razor layouts -->
+  <!-- Incremental Tailwind: the up-to-date check has to see every file Tailwind
+       scans, not just the stylesheets. Styles/app.css declares the module pages as
+       @source globs, so unless those pages are inputs here, adding or editing one
+       leaves the compiled CSS untouched and its utility classes are silently never
+       generated (#288). Hosts with extra @source directives of their own can add to
+       @(TailwindExtraSourceFiles). -->
   <ItemGroup Condition="Exists('$(TailwindInput)')">
     <TailwindSourceFiles
       Include="$(MSBuildProjectDirectory)/Styles/**/*.css"
       Exclude="$(MSBuildProjectDirectory)/Styles/_scan/**"
     />
     <TailwindSourceFiles Include="$(SimpleModuleThemeCss)" Condition="Exists('$(SimpleModuleThemeCss)')" />
+    <TailwindSourceFiles
+      Include="$(SimpleModuleModulesDir)/**/Pages/**/*.tsx;$(SimpleModuleModulesDir)/**/Views/**/*.tsx"
+      Exclude="$(SimpleModuleModulesDir)/**/node_modules/**"
+      Condition="Exists('$(SimpleModuleModulesDir)')"
+    />
+    <TailwindSourceFiles
+      Include="$(MSBuildProjectDirectory)/ClientApp/**/*.tsx"
+      Exclude="$(MSBuildProjectDirectory)/ClientApp/node_modules/**"
+      Condition="Exists('$(MSBuildProjectDirectory)/ClientApp')"
+    />
+    <!-- Module bundles staged by CollectModuleAssets and scanned via @source "./_scan/",
+         which is how a packaged module's classes reach the CSS. -->
+    <TailwindSourceFiles Include="$(MSBuildProjectDirectory)/Styles/_scan/**/*.js" />
   </ItemGroup>
   <!-- Incremental Vite: track ClientApp source files -->
   <ItemGroup Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(RepoRoot)node_modules'))">
@@ -83,7 +101,7 @@
     Name="TailwindBuild"
     BeforeTargets="Build"
     Condition="Exists('$(TailwindInput)') And Exists('$(RepoRoot)node_modules')"
-    Inputs="@(TailwindSourceFiles)"
+    Inputs="@(TailwindSourceFiles);@(TailwindExtraSourceFiles)"
     Outputs="$(TailwindOutput)"
   >
     <Exec Command="&quot;$(TailwindCli)&quot; -i &quot;$(TailwindInput)&quot; -o &quot;$(TailwindOutput)&quot; --minify" />

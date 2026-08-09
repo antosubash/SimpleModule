@@ -104,9 +104,12 @@ export async function resolvePage(name: string) {
 
 For a route name like `Customers/Browse`:
 1. The module name `Customers` is extracted from the first segment
-2. The bundle `/_content/SimpleModule.Customers/SimpleModule.Customers.pages.js` is dynamically imported
-3. The `pages` record is looked up for the key `Customers/Browse`
-4. Lazy entries (functions) are resolved, eager entries are returned directly
+2. The assembly serving that module is read from the `<script data-module-assemblies>` map the server renders into the page shell
+3. The bundle `/_content/{assembly}/{assembly}.pages.js` is dynamically imported
+4. The `pages` record is looked up for the key `Customers/Browse`
+5. Lazy entries (functions) are resolved, eager entries are returned directly
+
+A module's static web assets are served under its RCL `AssemblyName`, which is not derivable from the module name — framework modules build as `SimpleModule.Customers`, while `sm new module` scaffolds a bare `Customers`. The server declares the mapping so the first request goes to the path that actually serves the bundle; if the map is missing (an older page shell), the resolver falls back to trying both forms.
 
 A cache-buster query parameter is appended from a `<meta name="cache-buster">` tag when present, ensuring browsers pick up new builds without stale caches.
 
@@ -122,7 +125,7 @@ The `@simplemodule/client` package (`packages/SimpleModule.Client/`) provides th
 
 ## Type Safety
 
-The source generator discovers C# types marked with the `[Dto]` attribute and embeds TypeScript interface definitions. The `scripts/extract-ts-types.mjs` script extracts these into `.ts` files under `ClientApp/types/`, giving React components full type safety over server-provided props:
+The source generator discovers C# types marked with the `[Dto]` attribute and embeds TypeScript interface definitions. The `scripts/extract-ts-types.mjs` script extracts these into a `types.ts` in each module's own source project, next to its `Pages/`, giving React components full type safety over server-provided props:
 
 ```tsx
 import type { Customer } from '../types';
