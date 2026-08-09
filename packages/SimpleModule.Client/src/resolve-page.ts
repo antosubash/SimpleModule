@@ -46,6 +46,7 @@ export async function resolvePage(name: string) {
   let mod: any;
   let assemblyName = candidates[0];
   let lastError: unknown;
+  let declaredError: unknown;
   for (const candidate of candidates) {
     try {
       mod = await import(
@@ -57,13 +58,17 @@ export async function resolvePage(name: string) {
       break;
     } catch (err) {
       lastError = err;
+      if (candidate === declared) declaredError = err;
     }
   }
 
   if (!mod) {
+    // When the server declared an assembly, that bundle failing is the real cause —
+    // report it rather than the 404 from a fallback probe that was never going to
+    // resolve, which would bury e.g. a syntax error inside the module's own bundle.
     throw new Error(
       `Could not load pages bundle for module "${moduleName}". ` +
-        `Tried ${candidates.join(', ')}. Last error: ${String(lastError)}`,
+        `Tried ${candidates.join(', ')}. Error: ${String(declaredError ?? lastError)}`,
     );
   }
 

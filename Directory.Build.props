@@ -59,7 +59,14 @@
     <SimpleModuleThemeCss>$(RepoRoot)packages/SimpleModule.Theme.Default/theme.css</SimpleModuleThemeCss>
     <SimpleModuleModulesDir>$(RepoRoot)modules</SimpleModuleModulesDir>
     <SimpleModuleRoutesOutput>$(RepoRoot)packages/SimpleModule.Client/src/routes.ts</SimpleModuleRoutesOutput>
+    <SimpleModuleUiDir>$(RepoRoot)packages/SimpleModule.UI</SimpleModuleUiDir>
+    <SimpleModuleClientDir>$(RepoRoot)packages/SimpleModule.Client</SimpleModuleClientDir>
   </PropertyGroup>
+  <!-- The monorepo's app.css has one @source root with no consumer equivalent. Tracking
+       it through the extension point keeps the Tailwind up-to-date check complete (#288). -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)docs/design-system')">
+    <TailwindExtraSourceFiles Include="$(RepoRoot)docs/design-system/**/*" />
+  </ItemGroup>
   <!-- .NET SDK analyzers only work on net5.0+ -->
   <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <AnalysisLevel>latest-all</AnalysisLevel>

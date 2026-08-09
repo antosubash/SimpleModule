@@ -23,6 +23,12 @@
     <SimpleModuleRoutesOutput Condition="'$(SimpleModuleRoutesOutput)' == ''"
       >$(MSBuildProjectDirectory)/ClientApp/routes.ts</SimpleModuleRoutesOutput
     >
+    <SimpleModuleUiDir Condition="'$(SimpleModuleUiDir)' == ''"
+      >$(RepoRoot)node_modules/@simplemodule/ui</SimpleModuleUiDir
+    >
+    <SimpleModuleClientDir Condition="'$(SimpleModuleClientDir)' == ''"
+      >$(RepoRoot)node_modules/@simplemodule/client</SimpleModuleClientDir
+    >
   </PropertyGroup>
   <!-- Build configuration -->
   <PropertyGroup>
@@ -39,11 +45,12 @@
     <ExtractRoutesStamp>$(IntermediateOutputPath)extractroutes.stamp</ExtractRoutesStamp>
   </PropertyGroup>
   <!-- Incremental Tailwind: the up-to-date check has to see every file Tailwind
-       scans, not just the stylesheets. Styles/app.css declares the module pages as
-       @source globs, so unless those pages are inputs here, adding or editing one
-       leaves the compiled CSS untouched and its utility classes are silently never
-       generated (#288). Hosts with extra @source directives of their own can add to
-       @(TailwindExtraSourceFiles). -->
+       scans, not just the stylesheets. Styles/app.css declares the module pages, the
+       UI and client packages, and the design system as @source roots; unless those are
+       inputs here, editing one leaves the compiled CSS untouched and its utility
+       classes are silently never generated (#288). Globs are anchored rather than
+       rooted at ** so evaluation does not walk every module's bin/ and obj/. Hosts with
+       @source directives of their own can add to @(TailwindExtraSourceFiles). -->
   <ItemGroup Condition="Exists('$(TailwindInput)')">
     <TailwindSourceFiles
       Include="$(MSBuildProjectDirectory)/Styles/**/*.css"
@@ -51,25 +58,33 @@
     />
     <TailwindSourceFiles Include="$(SimpleModuleThemeCss)" Condition="Exists('$(SimpleModuleThemeCss)')" />
     <TailwindSourceFiles
-      Include="$(SimpleModuleModulesDir)/**/Pages/**/*.tsx;$(SimpleModuleModulesDir)/**/Views/**/*.tsx"
-      Exclude="$(SimpleModuleModulesDir)/**/node_modules/**"
+      Include="$(SimpleModuleModulesDir)/*/src/*/Pages/**/*.tsx;$(SimpleModuleModulesDir)/*/src/*/Views/**/*.tsx"
       Condition="Exists('$(SimpleModuleModulesDir)')"
+    />
+    <TailwindSourceFiles
+      Include="$(SimpleModuleUiDir)/**/*.tsx;$(SimpleModuleUiDir)/**/*.ts"
+      Exclude="$(SimpleModuleUiDir)/node_modules/**"
+      Condition="Exists('$(SimpleModuleUiDir)')"
+    />
+    <TailwindSourceFiles
+      Include="$(SimpleModuleClientDir)/**/*.tsx;$(SimpleModuleClientDir)/**/*.ts"
+      Exclude="$(SimpleModuleClientDir)/node_modules/**"
+      Condition="Exists('$(SimpleModuleClientDir)')"
     />
     <TailwindSourceFiles
       Include="$(MSBuildProjectDirectory)/ClientApp/**/*.tsx"
       Exclude="$(MSBuildProjectDirectory)/ClientApp/node_modules/**"
       Condition="Exists('$(MSBuildProjectDirectory)/ClientApp')"
     />
-    <!-- Module bundles staged by CollectModuleAssets and scanned via @source "./_scan/",
-         which is how a packaged module's classes reach the CSS. -->
-    <TailwindSourceFiles Include="$(MSBuildProjectDirectory)/Styles/_scan/**/*.js" />
   </ItemGroup>
   <!-- Incremental Vite: track ClientApp source files -->
   <ItemGroup Condition="Exists('ClientApp/package.json') And (Exists('ClientApp/node_modules') Or Exists('$(RepoRoot)node_modules'))">
     <ViteSourceFiles Include="$(MSBuildProjectDirectory)/ClientApp/**/*.ts;$(MSBuildProjectDirectory)/ClientApp/**/*.tsx" />
     <ViteSourceFiles Include="$(MSBuildProjectDirectory)/ClientApp/package.json" />
   </ItemGroup>
-  <!-- Collect module .pages.js assets for Tailwind CSS scanning -->
+  <!-- Collect module .pages.js assets for Tailwind CSS scanning. Only the monorepo's
+       app.css actually carries the matching @source "./_scan/" — the CLI scaffold strips
+       that line, so a scaffolded host stages these bundles but never scans them (#290). -->
   <Target
     Name="CollectModuleAssets"
     BeforeTargets="TailwindBuild"
@@ -87,6 +102,14 @@
       DestinationFolder="$(MSBuildProjectDirectory)/Styles/_scan/"
       SkipUnchangedFiles="true"
     />
+    <!-- Tracked here rather than in the evaluation-time ItemGroup above: these files
+         are staged by the Copy that just ran, so on the first build after installing a
+         packaged module the glob would otherwise expand to nothing and TailwindBuild
+         would be judged up to date. This target runs before TailwindBuild's
+         Inputs/Outputs check, so items added now are seen by it. -->
+    <ItemGroup>
+      <TailwindSourceFiles Include="$(MSBuildProjectDirectory)/Styles/_scan/**/*.js" />
+    </ItemGroup>
   </Target>
   <!-- Warn when Tailwind input exists but node_modules is missing -->
   <Target
