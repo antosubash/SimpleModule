@@ -14,13 +14,19 @@ function getDeclaredAssemblies(): Record<string, string> {
   if (declaredAssemblies) return declaredAssemblies;
 
   const json = document.querySelector('script[data-module-assemblies]')?.textContent;
+  let parsed: unknown;
   try {
-    declaredAssemblies = json ? JSON.parse(json) : {};
+    parsed = json ? JSON.parse(json) : undefined;
   } catch {
     // A malformed map is not worth failing navigation over — fall back to probing.
-    declaredAssemblies = {};
+    parsed = undefined;
   }
-  return declaredAssemblies as Record<string, string>;
+  // Anything that isn't a plain object (including `null`, which is truthy-checked
+  // away below but would still throw on property access) becomes an empty map, so
+  // the memo always sticks and lookups never blow up.
+  declaredAssemblies =
+    typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, string>) : {};
+  return declaredAssemblies;
 }
 
 export async function resolvePage(name: string) {

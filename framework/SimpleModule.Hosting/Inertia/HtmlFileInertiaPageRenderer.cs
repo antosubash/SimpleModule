@@ -191,26 +191,11 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         if (moduleAssemblies.Count == 0)
             return string.Empty;
 
-        var sb = new StringBuilder(
-            "<script data-module-assemblies type=\"application/json\" nonce=\""
-        )
-            .Append(NoncePlaceholder)
-            .Append("\">{");
+        // The default encoder escapes '<', '>' and '&', so a module or assembly name
+        // can never break out of the <script> element.
+        var json = JsonSerializer.Serialize(moduleAssemblies);
 
-        var first = true;
-        foreach (var (name, assembly) in moduleAssemblies)
-        {
-            if (!first)
-                sb.Append(',');
-            first = false;
-            sb.Append('"')
-                .Append(JsonEncodedText.Encode(name))
-                .Append("\":\"")
-                .Append(JsonEncodedText.Encode(assembly))
-                .Append('"');
-        }
-
-        return sb.Append("}</script>").ToString();
+        return $"<script data-module-assemblies type=\"application/json\" nonce=\"{NoncePlaceholder}\">{json}</script>";
     }
 
     private static string BuildModuleCssLinks(

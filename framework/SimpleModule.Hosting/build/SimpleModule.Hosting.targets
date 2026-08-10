@@ -72,7 +72,7 @@
       Condition="Exists('$(SimpleModuleClientDir)')"
     />
     <TailwindSourceFiles
-      Include="$(MSBuildProjectDirectory)/ClientApp/**/*.tsx"
+      Include="$(MSBuildProjectDirectory)/ClientApp/**/*.tsx;$(MSBuildProjectDirectory)/ClientApp/**/*.ts"
       Exclude="$(MSBuildProjectDirectory)/ClientApp/node_modules/**"
       Condition="Exists('$(MSBuildProjectDirectory)/ClientApp')"
     />
