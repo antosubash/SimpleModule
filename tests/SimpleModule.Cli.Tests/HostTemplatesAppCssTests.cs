@@ -29,6 +29,16 @@ public sealed class HostTemplatesAppCssTests
     }
 
     [Fact]
+    public void AppCss_DropsMonorepoOnlyDesignSystemSource()
+    {
+        // docs/design-system is a monorepo-only @source root (tracked there through
+        // @(TailwindExtraSourceFiles)). A scaffold has no such directory, so keeping
+        // the directive would leave a dangling root — and would silently start
+        // scanning unrelated files if the user ever created that path.
+        HostTemplates.AppCss().Should().NotContain("docs/design-system");
+    }
+
+    [Fact]
     public void AppCss_RewritesModuleRoots_ToScaffoldDepth()
     {
         var css = HostTemplates.AppCss();

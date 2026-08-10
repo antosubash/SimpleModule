@@ -181,6 +181,11 @@ public sealed class HostTemplates
     /// that is the only way Tailwind sees classes from packaged modules (and from module
     /// components that live outside <c>Pages/</c>). Stripping it left scaffolded apps
     /// missing those utility classes (#290).</item>
+    /// <item><c>@source "../../../docs/design-system/"</c> is dropped: it is a monorepo-only
+    /// root with no consumer equivalent (the monorepo tracks it through
+    /// <c>@(TailwindExtraSourceFiles)</c>), so in a scaffold it would dangle at a
+    /// directory that never exists — and would silently start scanning unrelated files
+    /// if one were ever created there.</item>
     /// </list>
     /// We rewrite each <c>@import</c>/<c>@source</c> directive directly rather than blindly
     /// rewriting path prefixes, since the original substrings overlap.
@@ -188,6 +193,7 @@ public sealed class HostTemplates
     public static string AppCss()
     {
         var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Styles.app.css");
+        lines.RemoveAll(line => line.Contains("docs/design-system", StringComparison.Ordinal));
 
         var result = new List<string>(lines.Count);
         foreach (var line in lines)
