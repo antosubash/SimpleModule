@@ -166,7 +166,7 @@ public sealed class HostTemplates
 
     /// <summary>
     /// Return a clean Styles/app.css with tailwindcss import, theme import,
-    /// and @source directives for modules. Strip _scan/ import if present.
+    /// and @source directives for modules.
     /// </summary>
     /// <remarks>
     /// The embedded template lives in <c>template/SimpleModule.Host/Styles/</c> and uses
@@ -176,6 +176,11 @@ public sealed class HostTemplates
     /// <item>Framework packages live in <c>node_modules/@simplemodule/*</c> at the project root
     /// (3 ups from Styles/) — installed via npm.</item>
     /// <item>Modules live at <c>src/modules/</c> (2 ups from Styles/).</item>
+    /// <item><c>@source "./_scan/"</c> is already relative to Styles/ and is kept as-is:
+    /// SimpleModule.Hosting.targets stages every module's built <c>.pages.js</c> there, and
+    /// that is the only way Tailwind sees classes from packaged modules (and from module
+    /// components that live outside <c>Pages/</c>). Stripping it left scaffolded apps
+    /// missing those utility classes (#290).</item>
     /// </list>
     /// We rewrite each <c>@import</c>/<c>@source</c> directive directly rather than blindly
     /// rewriting path prefixes, since the original substrings overlap.
@@ -183,7 +188,6 @@ public sealed class HostTemplates
     public static string AppCss()
     {
         var lines = EmbeddedResourceReader.ReadTemplateLines("Templates.Host.Styles.app.css");
-        lines.RemoveAll(line => line.Contains("_scan/", StringComparison.Ordinal));
 
         var result = new List<string>(lines.Count);
         foreach (var line in lines)

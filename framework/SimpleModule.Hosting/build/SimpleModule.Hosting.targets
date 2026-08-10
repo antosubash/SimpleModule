@@ -85,9 +85,9 @@
     <ViteSourceFiles Include="$(MSBuildProjectDirectory)/ClientApp/**/*.ts;$(MSBuildProjectDirectory)/ClientApp/**/*.tsx" />
     <ViteSourceFiles Include="$(MSBuildProjectDirectory)/ClientApp/package.json" />
   </ItemGroup>
-  <!-- Collect module .pages.js assets for Tailwind CSS scanning. Only the monorepo's
-       app.css actually carries the matching @source "./_scan/" — the CLI scaffold strips
-       that line, so a scaffolded host stages these bundles but never scans them (#290). -->
+  <!-- Collect module .pages.js assets for Tailwind CSS scanning. The host's app.css must
+       carry the matching @source "./_scan/" for these to be scanned — it is relative to
+       Styles/, so the same line works in the monorepo and in a CLI scaffold (#290). -->
   <Target
     Name="CollectModuleAssets"
     BeforeTargets="TailwindBuild"
