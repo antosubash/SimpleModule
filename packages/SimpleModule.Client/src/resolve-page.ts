@@ -48,9 +48,11 @@ export async function resolvePage(name: string) {
 
   // A module's bundle is served under its RCL AssemblyName: "SimpleModule.<Module>"
   // for framework modules, a bare "<Module>" for ones scaffolded by `sm new module`.
-  // Prefer the name the server declared; only guess when the shell predates that
-  // mapping, and then try the assembly-qualified form first (#224). Once a module
-  // resolves, reuse that name directly so later navigations never re-probe.
+  // Try the name the server declared first so the common case costs zero 404s; the
+  // guesses stay on as a fallback for shells that predate the mapping (and for a
+  // declared name that somehow does not serve the bundle), assembly-qualified form
+  // first (#224). Once a module resolves, reuse that name directly so later
+  // navigations never re-probe.
   const cached = resolvedAssemblies.get(moduleName);
   const declared = getDeclaredAssembly(moduleName);
   const guesses = [`SimpleModule.${moduleName}`, moduleName];
