@@ -61,13 +61,16 @@
       Include="$(SimpleModuleModulesDir)/*/src/*/Pages/**/*.tsx;$(SimpleModuleModulesDir)/*/src/*/Views/**/*.tsx"
       Condition="Exists('$(SimpleModuleModulesDir)')"
     />
+    <!-- These two are declared as directory @source roots, so Tailwind scans every
+         source extension under them — not just TypeScript. Track the JS forms as well
+         or a utility class added in a .js/.jsx file there never reaches the output. -->
     <TailwindSourceFiles
-      Include="$(SimpleModuleUiDir)/**/*.tsx;$(SimpleModuleUiDir)/**/*.ts"
+      Include="$(SimpleModuleUiDir)/**/*.tsx;$(SimpleModuleUiDir)/**/*.ts;$(SimpleModuleUiDir)/**/*.jsx;$(SimpleModuleUiDir)/**/*.js"
       Exclude="$(SimpleModuleUiDir)/node_modules/**"
       Condition="Exists('$(SimpleModuleUiDir)')"
     />
     <TailwindSourceFiles
-      Include="$(SimpleModuleClientDir)/**/*.tsx;$(SimpleModuleClientDir)/**/*.ts"
+      Include="$(SimpleModuleClientDir)/**/*.tsx;$(SimpleModuleClientDir)/**/*.ts;$(SimpleModuleClientDir)/**/*.jsx;$(SimpleModuleClientDir)/**/*.js"
       Exclude="$(SimpleModuleClientDir)/node_modules/**"
       Condition="Exists('$(SimpleModuleClientDir)')"
     />

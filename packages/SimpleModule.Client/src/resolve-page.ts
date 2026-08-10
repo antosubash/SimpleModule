@@ -8,9 +8,9 @@ const resolvedAssemblies = new Map<string, string>();
 // (see HtmlFileInertiaPageRenderer). Reading it means the very first request for a
 // module's bundle goes to the path that actually serves it, instead of guessing and
 // eating a 404 (#287). Parsed once — the shell is static for the life of the document.
-let declaredAssemblies: Record<string, string> | undefined;
+let declaredAssemblies: Record<string, unknown> | undefined;
 
-function getDeclaredAssemblies(): Record<string, string> {
+function getDeclaredAssemblies(): Record<string, unknown> {
   if (declaredAssemblies) return declaredAssemblies;
 
   const json = document.querySelector('script[data-module-assemblies]')?.textContent;
@@ -25,8 +25,19 @@ function getDeclaredAssemblies(): Record<string, string> {
   // away below but would still throw on property access) becomes an empty map, so
   // the memo always sticks and lookups never blow up.
   declaredAssemblies =
-    typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, string>) : {};
+    typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
   return declaredAssemblies;
+}
+
+/**
+ * Reads a module's declared assembly. Values are typed `unknown` and narrowed here
+ * because the map is a plain JSON object: a module name that collides with an
+ * inherited `Object.prototype` member ("constructor", "toString", …) would otherwise
+ * hand back a function and build a nonsense bundle URL.
+ */
+function getDeclaredAssembly(moduleName: string): string | undefined {
+  const value = getDeclaredAssemblies()[moduleName];
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
 export async function resolvePage(name: string) {
@@ -41,7 +52,7 @@ export async function resolvePage(name: string) {
   // mapping, and then try the assembly-qualified form first (#224). Once a module
   // resolves, reuse that name directly so later navigations never re-probe.
   const cached = resolvedAssemblies.get(moduleName);
-  const declared = getDeclaredAssemblies()[moduleName];
+  const declared = getDeclaredAssembly(moduleName);
   const guesses = [`SimpleModule.${moduleName}`, moduleName];
   const candidates = cached
     ? [cached]

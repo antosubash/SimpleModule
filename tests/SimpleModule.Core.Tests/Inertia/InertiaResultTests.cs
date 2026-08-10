@@ -105,11 +105,14 @@ public class InertiaResultTests
         declared.Should().NotBeEmpty("the client needs the mapping to build a bundle URL");
 
         // Every module that renders pages needs an entry, or the client is back to
-        // guessing the bundle URL for it (#287).
+        // guessing the bundle URL for it (#287). Key on the first segment of the page
+        // name — that is what the client looks up, and it is only the [Module] name the
+        // map is built from by convention, so asserting on the module name directly
+        // would just restate how the map is built.
         var pages = _factory.Services.GetRequiredService<IReadOnlyList<AvailablePage>>();
         declared
             .Keys.Should()
-            .Contain(pages.Select(p => p.Module).Distinct(StringComparer.Ordinal));
+            .Contain(pages.Select(p => p.PageRoute.Split('/')[0]).Distinct(StringComparer.Ordinal));
 
         // A module's RCL serves its assets under its AssemblyName. Declaring anything
         // else — such as the "SimpleModule."-prefixed module name, which is not an
