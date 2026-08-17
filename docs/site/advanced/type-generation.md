@@ -124,10 +124,14 @@ You must build the .NET project before running type generation, since the tool r
 
 ## Output Location
 
-Each module gets its own `types.ts` file at:
+Each module gets its own `types.ts` file inside its primary source project, so the
+generated types sit next to the `Pages/` that consume them and are covered by that
+project's `tsconfig.json`. The project directory is resolved from what is on disk,
+which differs between layouts:
 
 ```
-modules/{ModuleName}/src/SimpleModule.{ModuleName}/types.ts
+modules/{ModuleName}/src/SimpleModule.{ModuleName}/types.ts   # framework repo
+src/modules/{ModuleName}/src/{ModuleName}/types.ts            # sm new module
 ```
 
 For example, the Customers module produces:
@@ -135,6 +139,10 @@ For example, the Customers module produces:
 ```
 modules/Customers/src/SimpleModule.Customers/types.ts
 ```
+
+Modules that arrived as NuGet packages are skipped — they have no source project in
+your repo, so nothing is written and no directory is created for them. The tool
+reports how many it skipped.
 
 The file is marked as auto-generated and should not be edited manually:
 
@@ -264,7 +272,8 @@ The `extract-ts-types.mjs` tool then:
 1. Reads all `DtoTypeScript_*.g.cs` files from the generated output directory
 2. Extracts the module name from the `// @module` comment
 3. Parses the TypeScript interfaces from the comment block
-4. Writes a `types.ts` file to the module's source directory
+4. Locates the module's existing source project, and writes a `types.ts` into it —
+   skipping the module when it has no source project locally
 
 Property names are automatically converted from `PascalCase` (C#) to `camelCase` (TypeScript) during generation, matching the default `System.Text.Json` serialization behavior.
 

@@ -4,25 +4,68 @@
 // module. We only ever store a name that actually resolved.
 const resolvedAssemblies = new Map<string, string>();
 
+// The server emits the module name -> RCL assembly name mapping into the page shell
+// (see HtmlFileInertiaPageRenderer). Reading it means the very first request for a
+// module's bundle goes to the path that actually serves it, instead of guessing and
+// eating a 404 (#287). Parsed once — the shell is static for the life of the document.
+let declaredAssemblies: Record<string, unknown> | undefined;
+
+function getDeclaredAssemblies(): Record<string, unknown> {
+  if (declaredAssemblies) return declaredAssemblies;
+
+  const json = document.querySelector('script[data-module-assemblies]')?.textContent;
+  let parsed: unknown;
+  try {
+    parsed = json ? JSON.parse(json) : undefined;
+  } catch {
+    // A malformed map is not worth failing navigation over — fall back to probing.
+    parsed = undefined;
+  }
+  // Anything that isn't a plain object (including `null`, which is truthy-checked
+  // away below but would still throw on property access) becomes an empty map, so
+  // the memo always sticks and lookups never blow up.
+  declaredAssemblies =
+    typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : {};
+  return declaredAssemblies;
+}
+
+/**
+ * Reads a module's declared assembly. Values are typed `unknown` and narrowed here
+ * because the map is a plain JSON object: a module name that collides with an
+ * inherited `Object.prototype` member ("constructor", "toString", …) would otherwise
+ * hand back a function and build a nonsense bundle URL.
+ */
+function getDeclaredAssembly(moduleName: string): string | undefined {
+  const value = getDeclaredAssemblies()[moduleName];
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
 export async function resolvePage(name: string) {
   const moduleName = name.split('/')[0];
   const cacheBuster = (document.querySelector('meta[name="cache-buster"]') as HTMLMetaElement)
     ?.content;
   const suffix = cacheBuster ? `?v=${cacheBuster}` : '';
 
-  // Framework modules serve their bundle under the assembly-qualified path
-  // "SimpleModule.<Module>" (their RCL AssemblyName), whereas downstream apps
-  // frequently ship modules under a bare assembly name (e.g. "Customers"). Try
-  // the assembly-qualified form first so framework modules — the common, always-
-  // present case — resolve without a 404 (#224), then fall back to the bare name
-  // for consumer modules. Once a module resolves, reuse that name directly so
-  // later navigations never re-probe.
+  // A module's bundle is served under its RCL AssemblyName: "SimpleModule.<Module>"
+  // for framework modules, a bare "<Module>" for ones scaffolded by `sm new module`.
+  // Try the name the server declared first so the common case costs zero 404s; the
+  // guesses stay on as a fallback for shells that predate the mapping (and for a
+  // declared name that somehow does not serve the bundle), assembly-qualified form
+  // first (#224). Once a module resolves, reuse that name directly so later
+  // navigations never re-probe.
   const cached = resolvedAssemblies.get(moduleName);
-  const candidates = cached ? [cached] : [`SimpleModule.${moduleName}`, moduleName];
+  const declared = getDeclaredAssembly(moduleName);
+  const guesses = [`SimpleModule.${moduleName}`, moduleName];
+  const candidates = cached
+    ? [cached]
+    : declared
+      ? [declared, ...guesses.filter((guess) => guess !== declared)]
+      : guesses;
   // biome-ignore lint/suspicious/noExplicitAny: matches existing dynamic-import shape
   let mod: any;
   let assemblyName = candidates[0];
   let lastError: unknown;
+  let declaredError: unknown;
   for (const candidate of candidates) {
     try {
       mod = await import(
@@ -34,13 +77,17 @@ export async function resolvePage(name: string) {
       break;
     } catch (err) {
       lastError = err;
+      if (candidate === declared) declaredError = err;
     }
   }
 
   if (!mod) {
+    // When the server declared an assembly, that bundle failing is the real cause —
+    // report it rather than the 404 from a fallback probe that was never going to
+    // resolve, which would bury e.g. a syntax error inside the module's own bundle.
     throw new Error(
       `Could not load pages bundle for module "${moduleName}". ` +
-        `Tried ${candidates.join(', ')}. Last error: ${String(lastError)}`,
+        `Tried ${candidates.join(', ')}. Error: ${String(declaredError ?? lastError)}`,
     );
   }
 

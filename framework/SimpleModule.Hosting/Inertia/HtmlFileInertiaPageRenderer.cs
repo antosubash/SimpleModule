@@ -1,9 +1,12 @@
+using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SimpleModule.Core;
 using SimpleModule.Core.Inertia;
 using SimpleModule.Core.Security;
 using SimpleModule.DevTools;
@@ -24,9 +27,18 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
     private readonly string _afterPlaceholderViteDev;
     private readonly bool _isDevelopment;
     private readonly bool _hasHeadPlaceholder;
+    private readonly string _moduleAssembliesScript;
 
-    public HtmlFileInertiaPageRenderer(IWebHostEnvironment env)
+    public HtmlFileInertiaPageRenderer(IWebHostEnvironment env, IEnumerable<IModule> modules)
     {
+        // A module's static web assets are served under its RCL AssemblyName, which is
+        // not derivable from the module name: framework modules build as
+        // SimpleModule.<Module>, while `sm new module` scaffolds a bare <Module>. The
+        // client used to guess and eat a 404 per module on every page load (#287), so
+        // hand it the mapping the server already knows.
+        var moduleAssemblies = BuildModuleAssemblyMap(modules);
+        _moduleAssembliesScript = BuildModuleAssembliesScript(moduleAssemblies);
+
         var path = Path.Combine(env.WebRootPath, "index.html");
         var html = File.ReadAllText(path);
 
@@ -45,7 +57,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         // the host's physical wwwroot and every RCL's static web assets.
         html = html.Replace(
             ModuleCssPlaceholder,
-            BuildModuleCssLinks(env, InertiaMiddleware.Version),
+            BuildModuleCssLinks(env, InertiaMiddleware.Version, moduleAssemblies.Values),
             StringComparison.Ordinal
         );
 
@@ -110,6 +122,7 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         await httpContext.Response.WriteAsync(
             string.Concat(
                 before.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal),
+                _moduleAssembliesScript.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal),
                 $"<script data-page=\"app\" type=\"application/json\" nonce=\"{nonce}\">{pageJson}</script>",
                 devScript,
                 after.Replace(NoncePlaceholder, nonce, StringComparison.Ordinal)
@@ -152,18 +165,63 @@ public sealed class HtmlFileInertiaPageRenderer : IInertiaPageRenderer
         return sb?.ToString() ?? string.Empty;
     }
 
-    private static string BuildModuleCssLinks(IWebHostEnvironment env, string version)
+    /// <summary>
+    /// Maps each module's <c>[Module]</c> name to the assembly its static web assets
+    /// are served under. The Inertia page name's first segment is the module name, so
+    /// this is what the client needs to build a bundle URL that resolves.
+    /// </summary>
+    private static Dictionary<string, string> BuildModuleAssemblyMap(IEnumerable<IModule> modules)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var module in modules)
+        {
+            var type = module.GetType();
+            var name = type.GetCustomAttribute<ModuleAttribute>()?.Name;
+            var assembly = type.Assembly.GetName().Name;
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(assembly))
+                continue;
+
+            map[name] = assembly;
+        }
+        return map;
+    }
+
+    private static string BuildModuleAssembliesScript(Dictionary<string, string> moduleAssemblies)
+    {
+        if (moduleAssemblies.Count == 0)
+            return string.Empty;
+
+        // The default encoder escapes '<', '>' and '&', so a module or assembly name
+        // can never break out of the <script> element.
+        var json = JsonSerializer.Serialize(moduleAssemblies);
+
+        return $"<script data-module-assemblies type=\"application/json\" nonce=\"{NoncePlaceholder}\">{json}</script>";
+    }
+
+    private static string BuildModuleCssLinks(
+        IWebHostEnvironment env,
+        string version,
+        IEnumerable<string> moduleAssemblies
+    )
     {
         var contents = env.WebRootFileProvider.GetDirectoryContents("_content");
         if (!contents.Exists)
             return string.Empty;
 
+        // An RCL serves its assets under its AssemblyName, so a module scaffolded as a
+        // bare <Module> (rather than SimpleModule.<Module>) lands in a directory the
+        // prefix check alone would skip — and its stylesheet would never be linked.
+        var known = new HashSet<string>(moduleAssemblies, StringComparer.Ordinal);
+
         var sb = new StringBuilder();
         foreach (var entry in contents)
         {
+            if (!entry.IsDirectory)
+                continue;
+
             if (
-                !entry.IsDirectory
-                || !entry.Name.StartsWith("SimpleModule.", StringComparison.Ordinal)
+                !entry.Name.StartsWith("SimpleModule.", StringComparison.Ordinal)
+                && !known.Contains(entry.Name)
             )
                 continue;
 

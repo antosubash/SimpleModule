@@ -50,6 +50,15 @@ jobs:
       - name: Test
         run: dotnet test --no-build
 
+      # SimpleModule.Cli.Tests sets IsTestProject=false (its scaffolding tests
+      # spawn `dotnet build` and take ~15min), so `dotnet test` above skips the
+      # whole project. Run the fast, pure template tests explicitly — otherwise
+      # they guard nothing.
+      - name: Test CLI templates
+        run: >-
+          dotnet run --project tests/SimpleModule.Cli.Tests --no-build --
+          -class SimpleModule.Cli.Tests.HostTemplatesAppCssTests
+
   vulnerable-packages:
     runs-on: ubuntu-latest
     needs: lint
